@@ -66,7 +66,7 @@ void AerospikeScan::Init()
     cons->SetClassName(String::NewSymbol("AerospikeScan"));
     cons->InstanceTemplate()->SetInternalFieldCount(3);
     // Prototype
-    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(select)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("applyEach"), FunctionTemplate::New(applyEach)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("foreach"), FunctionTemplate::New(foreach)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
@@ -112,7 +112,8 @@ Handle<Value> AerospikeScan::New(const Arguments& args)
 		as_v8_debug(log, "namespace to scan %s", ns);
 	}
 
-	if( !args[1]->IsString())
+	//set can be optional parameter. Handle that
+	if( args.Length() > 2 && !args[1]->IsString())
 	{
 		return scope.Close(Undefined());
 	}
@@ -146,19 +147,19 @@ Handle<Value> AerospikeScan::NewInstance( const Arguments& args)
     return scope.Close(instance);
 }
 
-Handle<Value> AerospikeScan::Select(const Arguments& args)
+Handle<Value> AerospikeScan::select(const Arguments& args)
 {
 	HANDLESCOPE;
 	AerospikeScan * asScan    = ObjectWrap::Unwrap<AerospikeScan>(args.This());
 	as_scan * scan			  = &asScan->scan; 
 	LogInfo * log			  = asScan->log;
-	// Parse the bin names and set the bin values to scan object
+	// Parse the bin names and set the bin values to C scan structure.
 	if ( args[0]->IsArray() ) 
 	{ 
 		Local<Array> bins	= Local<Array>::Cast(args[0]);
 		int size			= bins->Length();
 		as_v8_debug(log, "Number of bins to select in scan %d", size);
-		as_scan_select_init(scan, size);
+		as_scan_select_init(scan, (uint16_t) size);
 		for (int i=0; i < size; i++) {
 			Local<Value> bin = bins->Get(i);
 			as_scan_select( scan, *String::Utf8Value(bin));
@@ -167,6 +168,7 @@ Handle<Value> AerospikeScan::Select(const Arguments& args)
 	}   
 	else 
 	{
+		as_v8_error(log, "Select takes an array of bins");
 		// Throw an Exception here.
 	}   
 	return scope.Close(asScan->handle_);
@@ -186,6 +188,7 @@ Handle<Value> AerospikeScan::setPriority( const Arguments& args)
 	}
 	else
 	{
+		as_v8_error(log, "Scan priority must be an enumerator of type scanPriority");
 		//Throw an exception.
 	}
 	return scope.Close(asScan->handle_);
@@ -197,7 +200,7 @@ Handle<Value> AerospikeScan::setPercent( const Arguments& args)
 	as_scan * scan			= &asScan->scan;
 	LogInfo * log			= asScan->log;
 
-	//Set the priority of the scan.
+	//Set the percentage to be scanned in each partition.
 	if( args[0]->IsNumber() )
 	{
 		as_scan_set_percent( scan, (uint8_t) args[0]->ToObject()->IntegerValue());
@@ -206,6 +209,7 @@ Handle<Value> AerospikeScan::setPercent( const Arguments& args)
 	else
 	{
 		//Throw an exception.
+		as_v8_error(log, "scan percentage is a number less than 100");
 	}
 	return scope.Close(asScan->handle_);
 }
@@ -218,6 +222,8 @@ Handle<Value> AerospikeScan::setNobins( const Arguments& args)
 	LogInfo * log		= asScan->log;
 
 	// Set the nobins value here.
+	// When nobins is true in a scan, only metadata of the record
+	// is returned not bins
 	if( args[0]->IsBoolean() ) 
 	{
 		
@@ -227,6 +233,7 @@ Handle<Value> AerospikeScan::setNobins( const Arguments& args)
 	else
 	{
 		// Throw exception.
+		as_v8_error(log," setNobins should be a boolean value");
 	}
 	return scope.Close(asScan->handle_);
 }
@@ -245,6 +252,7 @@ Handle<Value> AerospikeScan::setConcurrent( const Arguments& args)
 	}
 	else
 	{
+		as_v8_error(log, "setConcuurent should be a boolean value");
 		// Throw exception.
 	}
 	return scope.Close(asScan->handle_);
@@ -256,7 +264,8 @@ Handle<Value> AerospikeScan::setRecordQsize( const Arguments& args)
 	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
 	LogInfo * log			= asScan->log;
 
-	//Set the concurrent value here.
+	//Set the record queue size.
+	//In this Queue records from scan callback is pushed into.
 	if(args[0]->IsNumber())
 	{
 		asScan->q_size = (int) args[0]->ToObject()->IntegerValue();
@@ -266,6 +275,7 @@ Handle<Value> AerospikeScan::setRecordQsize( const Arguments& args)
 	else
 	{
 		// Throw exception.
+		as_v8_error(log, "Record q size must be an integer");
 	}
 	return scope.Close(asScan->handle_);
 }
@@ -288,6 +298,10 @@ Handle<Value> AerospikeScan::applyEach(const Arguments& args)
 	if( ret == AS_NODE_PARAM_OK) 
 	{
 		as_scan_apply_each( &scan->scan, filename, funcname, (as_list*) arglist);
+	}
+	else
+	{
+		as_v8_error(scan->log, "Error parsing udfArgs for scan applyEach");
 	}
 
 	return scope.Close(scan->handle_);

@@ -20,10 +20,13 @@ With a new client, you can use any of the methods specified below:
   - [batch_get()](#batch_get)
   - [close()](#close)
   - [connect()](#connect)
+  - [createIntegerIndex()](#createIntegerIndex())
+  - [createStringIndex()](#createStringIndex())
   - [execute()](#execute)
   - [exists()](#exists)
   - [get()](#get)
   - [info()](#info)
+  - [indexRemove()](#indexRemove)
   - [operate()](#operate)
   - [put()](#put)
   - [remove()](#remove)
@@ -195,6 +198,77 @@ client.connect(function (error) {
 ```
 <!--
 ################################################################################
+createIntegerIndex()
+################################################################################
+-->
+<a name="createIntegerIndex"></a>
+
+### createIntegerIndex(args, callback)
+
+Creates an integer index.
+
+Parameters:
+- `args`      - An object with these entries. ns, set, bin, index, policy.
+- `ns`		  - namespace on which index is to be created
+- `set`       - set on which index is to be created
+- `bin`		  - bin to be indexed
+- `index`     - name of the index to be created
+- `policy`    - (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`  – The function to call when the operation completes.
+
+The parameters for the `callback` argument:
+
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call. 
+
+Example:
+```js
+client.createIntegerIndex(function (error) {
+  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
+    // handle success
+  }
+  else {
+    // handle failure
+  }
+})
+```
+<!--
+################################################################################
+createStringIndex()
+################################################################################
+-->
+<a name="createStringIndex"></a>
+
+### createStringIndex(args, callback)
+
+Creates a string index.
+
+Parameters:
+- `args`      - An object with these entries. ns, set, bin, index, policy.
+- `ns`		  - namespace on which index is to be created
+- `set`       - set on which index is to be created
+- `bin`		  - bin to be indexed
+- `index`     - name of the index to be created
+- `policy`    - (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`  – The function to call when the operation completes.
+
+The parameters for the `callback` argument:
+
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call. 
+
+Example:
+```js
+client.createStringIndex(function (error) {
+  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
+    // handle success
+  }
+  else {
+    // handle failure
+  }
+})
+```
+
+<!--
+################################################################################
 execute()
 ################################################################################
 -->
@@ -298,6 +372,38 @@ client.gey(key('test','demo','key1'), function(error, record, metadata) {
   // do something
 });
 ```
+<!--
+################################################################################
+indexRemove()
+################################################################################
+-->
+<a name="indexRemove"></a>
+
+### indexRemove(namespace, index, policy, callback)
+
+Remove the index provided.
+
+Parameters:
+
+- `namespace`   – The namespace on which the index is present.
+- `index`		– The name of the index to be created.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+
+
+Example:
+
+```js
+
+client.indexRemove('test', 'index', function(error) {
+  // do something
+});
+```
 
 <!--
 ################################################################################
@@ -335,7 +441,7 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-client.operate("statistics", function(err, response, host) {
+client.info("statistics", function(err, response, host) {
   // do something
 });
 ```
@@ -343,7 +449,7 @@ client.operate("statistics", function(err, response, host) {
 Example of sending the request to a single host:
 
 ```js
-client.operate("statistics", {addr: "127.0.0.1", port: 3000}, function(error, response, host) {
+client.info("statistics", {addr: "127.0.0.1", port: 3000}, function(error, response, host) {
   // do something
 });
 ```

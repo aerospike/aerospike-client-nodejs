@@ -171,5 +171,24 @@ class AerospikeClient : public ObjectWrap {
          */
         static Handle<Value> ScanInfo(const Arguments& args);
 
+
+		/*
+		 * undefined client.scan(ns, set, options)
+		 */ 
 		static Handle<Value> Scan(const Arguments& args);
+
+		/*
+		 * undefined client.query(ns, set, options)
+		 */ 
+		static Handle<Value> Query(const Arguments& args);
+
+		/*
+		 * undefined client.indexCreate(ns, set, bin, indexName, indexType)
+		 */ 
+		static Handle<Value> sindexCreate(const Arguments& args);
+
+		/*
+		 * undefined client.indexRemove(ns, indexName )
+		 */ 
+		static Handle<Value> sindexRemove(const Arguments& args);
 };

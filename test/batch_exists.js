@@ -89,6 +89,10 @@ describe('client.batchExists()', function() {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
                 }
+				for ( j = 0; j < nrecords; j++) {
+					client.remove(keys[j], function(err, key){
+					});
+				}
 
                 done();
             });
@@ -169,6 +173,9 @@ describe('client.batchExists()', function() {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
                 }
+				for ( j = 0; j < results.length; j++) {
+					client.remove(keys[j], function(err, key){});
+				}
 
                 done();
             });

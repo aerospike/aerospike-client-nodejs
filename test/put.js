@@ -80,7 +80,7 @@ describe('client.put()', function() {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(_record).to.eql(record);
-
+					client.remove(_key, function(err, key){});
                     count++;
                     if ( count >= total ) {
                         done();
@@ -111,7 +111,7 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-
+				client.remove(key, function(err, key){});
                 done();
             });
         });
@@ -134,6 +134,7 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
+				client.remove(key, function(err, key){});
 
                 done();
             });
@@ -155,7 +156,7 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-
+				client.remove(key, function(err, key){});
                 done();
             });
         });
@@ -179,6 +180,7 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
+				client.remove(key, function(err, key){});
                 done();
             });
         });
@@ -202,6 +204,7 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
+				client.remove(key, function(err, key){});
                 done();
             });
         });
@@ -256,7 +259,7 @@ describe('client.put()', function() {
                         expect(record5).to.eql(record3);
                         expect(metadata5.gen).to.equal(metadata2.gen+1);
                         expect(record5.i).to.equal(record3.i);
-
+						client.remove(key5, function(err, key){});
                         done();
                     }); 
                 });
@@ -324,7 +327,7 @@ describe('client.put()', function() {
 								expect(key6).to.have.property('key', key.key);
                                 expect(record6).to.eql(record);
                                 expect(metadata6.gen).to.equal(1);
-
+								client.remove(key6, function(err, key){});
                                 done();
                             }); 
                         });

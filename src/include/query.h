@@ -21,7 +21,7 @@ extern "C" {
 	#include <aerospike/as_bin.h>
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_udf.h>
-	#include <aerospike/as_scan.h>
+	#include <aerospike/as_query.h>
 }
 
 #include <node.h>
@@ -34,7 +34,7 @@ using namespace v8;
  *  CLASS
  ******************************************************************************/
 
-class AerospikeScan: public ObjectWrap {
+class AerospikeQuery: public ObjectWrap {
 
     /***************************************************************************
      *  PUBLIC
@@ -45,9 +45,9 @@ class AerospikeScan: public ObjectWrap {
         static Handle<Value> NewInstance(const Arguments& args);
 
 		// C structure to store all the scan properties.
-		as_scan scan;
+		as_query query;
 
-		// Size of queye that's used in the scan_callback, it's user adjustable.
+		// Size of queue that's used in the scan_callback, it's user adjustable.
 		int q_size;
 
 		// stores all aerospike related information. One common structure for 
@@ -62,8 +62,8 @@ class AerospikeScan: public ObjectWrap {
 
     private:
 
-        AerospikeScan();
-        ~AerospikeScan();
+        AerospikeQuery();
+        ~AerospikeQuery();
 
         static Persistent<Function> constructor;
         static Handle<Value> New(const Arguments& args);
@@ -73,42 +73,27 @@ class AerospikeScan: public ObjectWrap {
          **********************************************************************/
 
         /**
-         * undefined scan.applyEach(udf_arg_list)
+         * undefined query.apply(udf_arg_list)
          */
-        static Handle<Value> applyEach(const Arguments& args);
+        static Handle<Value> apply(const Arguments& args);
 
         /**
-         *  undefined scan.foreach(callback())
+         *  undefined query.foreach(callback())
          */
         static Handle<Value> foreach(const Arguments& args);
 		
 		/**
-         *  undefined scan.select(String[])
+         *  undefined query.select(String[])
          */
         static Handle<Value> select(const Arguments& args);
 
 		/**
-         *  undefined scan.setPriority(SCAN_PRIORITY)
+         *  undefined query.where(@TO-DO)
          */
-        static Handle<Value> setPriority(const Arguments& args);
-
+        static Handle<Value> where(const Arguments& args);
+		
 		/**
-         *  undefined scan.setNobins(Boolean)
-         */
-        static Handle<Value> setNobins(const Arguments& args);
-
-		/**
-         *  undefined scan.setPercent(integer)
-         */
-        static Handle<Value> setPercent(const Arguments& args);
-
-		/**
-         *  undefined scan.setConcurrent(Boolean)
-         */
-        static Handle<Value> setConcurrent(const Arguments& args);
-
-		/**
-         *  undefined scan.setRecordQsize(integer)
+         *  undefined query.setRecordQsize(integer)
          */
         static Handle<Value> setRecordQsize(const Arguments& args);
 

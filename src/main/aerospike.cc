@@ -67,6 +67,8 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(String::NewSymbol("language"), languages()); 
     exports->Set(String::NewSymbol("log"),      log());
 	exports->Set(String::NewSymbol("scanPriority"), scanPriority());
+	exports->Set(String::NewSymbol("filter"),	filter());
+	exports->Set(String::NewSymbol("indexType"),indexType());
 }
 
 NODE_MODULE(aerospike, Aerospike)

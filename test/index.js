@@ -15,7 +15,7 @@
  ******************************************************************************/
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike');
+var aerospike = require('../lib/aerospike');
 var options = require('./util/options');
 var assert = require('assert');
 var expect = require('expect.js');
@@ -24,12 +24,11 @@ var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
-var valgen = require('./generators/value');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
 
-describe('client.exists()', function() {
+describe('client.index()', function() {
 
     var client = aerospike.client({
         hosts: [
@@ -54,54 +53,41 @@ describe('client.exists()', function() {
         client = null;
         done();
     });
-    
-    it('should find the record', function(done) {
 
-        // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/exists/"});
-        var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
-
-        // values
-        var key     = kgen();
-        var meta    = mgen(key);
-        var record  = rgen(key,meta);
-
-        // write the record then check
-        client.put(key, record, meta, function(err, key) {
-            client.exists(key, function(err, metadata, key) {
-                expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
-            });
+    it('should create an integer index', function(done) {
+		var args = { ns: options.namespace, set: options.set, bin : "integer_bin",
+						index: "integer_index" }
+        client.createIntegerIndex(args, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            done();
         });
     });
-
-    it('should not find the record', function(done) {
-
-        // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/exists/fail/"});
-
-        // values
-        var key = kgen();
-
-        // write the record then check
-        client.exists(key, function(err, metadata, key) {
+    it('should create an string index', function(done) {
+		var args = { ns: options.namespace, set: options.set, bin : "string_bin",
+						index: "string_index" }
+        client.createStringIndex(args, function(err) {
             expect(err).to.be.ok();
-			if(err.code != 602) 
-			{
-	            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-			} 
-			else 
-			{
-				
-	            expect(err.code).to.equal(602);
-			}
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            done();
+        });
+    });
+    it('should create an integer index with info policy', function(done) {
+		var args = { ns: options.namespace, set: options.set, bin : "policy_bin",
+						index: "policy_index", policy:{ timeout : 1000, send_as_is: true, check_bounds: false }}
+        client.createIntegerIndex(args, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            done();
+        });
+    });
+    it('should drop an index', function(done) {
+        client.indexRemove(options.namespace, "string_integer", function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
         });
     });
 
+
 });
-
-

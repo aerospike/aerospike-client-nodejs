@@ -134,6 +134,5 @@ Handle<Object> operators()
     set(obj, "prepend", operator_prepend);
     set(obj, "append",  operator_append);
     set(obj, "touch", operator_touch);
-    //set(obj, "touch",   Integer::New(8));
     return scope.Close(obj);
 }

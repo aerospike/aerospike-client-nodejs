@@ -22,10 +22,12 @@ extern "C" {
     #include <aerospike/as_record.h>
 }
 
+#include <unistd.h>
 #include <node.h>
 #include "client.h"
 #include "conversions.h"
 #include "scan.h"
+#include "query.h"
 using namespace v8;
 
 /*******************************************************************************
@@ -68,8 +70,11 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("exists"), FunctionTemplate::New(Exists)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("indexCreate"), FunctionTemplate::New(sindexCreate)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("indexRemove"), FunctionTemplate::New(sindexRemove)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("query"), FunctionTemplate::New(Query)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("scan"), FunctionTemplate::New(Scan)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
@@ -171,5 +176,13 @@ Handle<Value> AerospikeClient::Scan(const Arguments& args)
 
 	AerospikeScan::Init();
 	return scope.Close(AerospikeScan::NewInstance(args));
+}
+
+Handle<Value> AerospikeClient::Query(const Arguments& args)
+{
+	HANDLESCOPE;
+
+	AerospikeQuery::Init();
+	return scope.Close(AerospikeQuery::NewInstance(args));
 }
 

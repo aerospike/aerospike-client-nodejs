@@ -38,6 +38,7 @@ extern "C" {
     #include <aerospike/aerospike_scan.h>  
     #include <aerospike/as_arraylist.h>
     #include <aerospike/as_arraylist_iterator.h>
+    #include <aerospike/as_boolean.h>
     #include <aerospike/as_hashmap.h>
     #include <aerospike/as_hashmap_iterator.h>
     #include <aerospike/as_pair.h>
@@ -52,6 +53,7 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "enums.h"
+#include "async.h"
 
 using namespace node;
 using namespace v8;
@@ -148,6 +150,67 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         }
         as_v8_debug(log, "Parsing global policies : Done");
     }
+	if ( obj->Has(String::NewSymbol("luaSyspath")))
+	{
+		 Local<Value> v8syspath = obj->Get(String::NewSymbol("luaSyspath"));
+		 strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
+		 as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
+	}
+	else
+	{
+		//set the default modlua system path here.
+		char const *syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
+		int rc = access(syspath, R_OK);
+		if(rc == 0)
+		{
+			strcpy(config->lua.system_path, syspath);
+		}
+		else
+		{
+			char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
+			rc = access(syspath, R_OK);
+			if ( rc== 0)
+			{
+				strcpy(config->lua.system_path, syspath);
+			}
+			else
+			{
+				as_v8_debug(log,"Could not find a valid LUA system path %s", syspath);
+			}
+		}
+	}
+	if( obj->Has(String::NewSymbol("luaUsrpath")))
+	{
+		Local<Value> v8usrpath = obj->Get(String::NewSymbol("luaUsrpath"));
+		strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
+		as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
+	}
+	else
+	{
+		//set the default modlua user path here.
+		char const *usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
+		int rc = access(usrpath, R_OK);
+		if ( rc == 0) 
+		{
+			strcpy(config->lua.user_path, usrpath);
+		}
+		else
+		{
+			usrpath = "./aerospike-client-c/package/opt/aerospike/client/usr/udf/lua";
+			rc = access(usrpath, R_OK);
+			if( rc == 0)
+			{
+				strcpy(config->lua.user_path, usrpath);
+			}
+			else
+			{
+				as_v8_debug(log, "Could not find valid LUA user path %s", usrpath);
+			}
+
+		}
+	}
+
+	
     return AS_NODE_PARAM_OK;
 }
 
@@ -230,11 +293,17 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
 
     return AS_NODE_PARAM_OK;
 }
+
 as_val* asval_clone( as_val* val, LogInfo* log)
 {
     as_val_t t = as_val_type( (as_val*)val);
     as_val* clone_val = NULL;
     switch(t) {
+		case AS_BOOLEAN: {
+			as_boolean *bool_val = as_boolean_fromval(val);
+			clone_val			 = as_boolean_toval(as_boolean_new(bool_val->value));
+			break;
+		}
         case AS_INTEGER: {
             as_integer* int_val = as_integer_fromval( val );
             int64_t ival        = as_integer_get( int_val);
@@ -296,6 +365,7 @@ as_val* asval_clone( as_val* val, LogInfo* log)
     }
     return clone_val;
 }
+
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
 {
     if(src == NULL || dest== NULL ) {
@@ -385,10 +455,6 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
     return scope.Close(err);
 }
 
-void map_callback(const as_val* key, const as_val * val, void * udata) 
-{
-    
-}
 
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
@@ -669,7 +735,123 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 
     return AS_NODE_PARAM_OK;
 }
-     
+
+
+// Clone the as_val into a new val. And push the cloned value 
+// into the queue. When the queue size reaches 1/20th of total queue size
+// send an async signal to v8 thread to process the records in the queue.
+
+
+// This is common function used by both scan and query.
+// scan populates only as_val of type record.
+// In case of query it can be record - in case of query without aggregation
+// In query aggregation, the value can be any as_val.
+bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
+{
+	if(data->result_q == NULL) 
+	{
+		// in case result_q is not initialized, return from the callback.
+		// But this should never happen.
+		as_v8_error(data->log,"Internal Error: Queue not initialized");
+		return false;
+	}
+
+	// if the record queue is full sleep for n microseconds.
+	if( cf_queue_sz(data->result_q) > data->max_q_size) {
+		// why 20 - no reason right now.
+		usleep(20);
+	}
+	as_val_t type = as_val_type(val);
+	switch(type)
+	{
+		case AS_REC:
+		{
+			as_record* p_rec = as_record_fromval(val);
+			as_record* rec   = NULL;
+			if( !p_rec) {
+				as_v8_error(data->log, "record returned in the callback is NULL");
+				return false;
+			}
+			int numbins = p_rec->bins.size;
+			rec         = as_record_new(numbins);
+			// clone the record into Asyncdata structure here.
+			// as_val is freed up after the callback. We need to retain a copy of this
+			// as_val until we pass this structure to nodejs
+			record_clone( p_rec, &rec, data->log);
+
+			cf_queue_push( data->result_q, (as_val*) &rec);
+			data->signal_interval++;
+			break;
+		}
+		case AS_BOOLEAN:
+		case AS_INTEGER:
+		case AS_STRING:
+		case AS_BYTES:
+		case AS_LIST:
+		case AS_MAP:
+		{
+			as_val* clone = asval_clone((as_val*) val, data->log);
+			cf_queue_push( data->result_q, &clone);
+			data->signal_interval++;
+			break;
+		}
+		default:
+			as_v8_debug(data->log, "Query returned - unrecognizable type");
+			break;
+
+	}
+
+	int async_signal_sz = (data->max_q_size)/20;
+	if ( data->signal_interval% async_signal_sz == 0) {
+		data->async_handle.data     = data;
+		async_send( &data->async_handle);
+	}
+	return true;
+}
+void async_queue_process(AsyncCallbackData * data)
+{
+	int rv;
+	as_val * val = NULL;
+
+	// Pop each record from the queue and invoke the node callback with this record.
+	while(data->result_q && cf_queue_sz(data->result_q) > 0) {
+		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
+		if( rv == CF_QUEUE_OK) {
+			if(as_val_type(val) == AS_REC)
+			{
+				as_record* record = as_record_fromval(val);
+				Handle<Value> cbargs[3] = { recordbins_to_jsobject(record, data->log),
+											recordmeta_to_jsobject(record, data->log),
+											key_to_jsobject(&record->key, data->log)};
+				data->data_cb->Call(Context::GetCurrent()->Global(), 3, cbargs);
+				as_record_destroy(record);
+			}
+			else
+			{
+				Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
+				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
+				as_val_destroy(val);
+			}
+		}
+	}
+	return;
+
+}
+
+// Callback that gets invoked when an async signal is sent.
+void async_callback(uv_async_t * handle, int status)
+{
+	AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
+
+	if (data == NULL && data->result_q == NULL)
+	{
+		as_v8_error(data->log, "Internal error: data or result q is not initialized");
+		return;
+	}
+	async_queue_process(data);
+	return;
+
+}
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
     if ( obj->Has(String::NewSymbol("ttl"))) {
@@ -794,6 +976,10 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo
 
 int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInfo * log)
 {
+	if ( obj->IsUndefined() || obj->IsNull())
+	{
+		return AS_NODE_PARAM_ERR;
+	}
     as_policy_info_init(policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
@@ -903,6 +1089,19 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
 	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
 	as_v8_detail( log, "Parsing apply policy : success");
+    
+    scope.Close(Undefined());
+	return AS_NODE_PARAM_OK;
+}
+
+int querypolicy_from_jsobject( as_policy_query* policy, Local<Object> obj, LogInfo* log)
+{
+    HANDLESCOPE;
+
+	as_policy_query_init( policy);
+	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+	as_v8_detail( log, "Parsing query policy : success");
     
     scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
@@ -1299,96 +1498,6 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		return AS_NODE_PARAM_OK;
 	}
     scope.Close(Undefined());
-	return AS_NODE_PARAM_OK;
-}
-
-int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
-	if ( scan == NULL) {
-		// should never land in here.
-		as_v8_error(log, "scan object is NULL, internal error");
-		return AS_NODE_PARAM_ERR;
-	}
-
-	as_namespace ns = {'\0'};
-	as_set set		= {'\0'};
-	
-	if ( obj->Has(String::NewSymbol("ns"))) {
-		Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
-		if ( ! ns_obj->IsString()) {
-			as_v8_error( log, "namespace for scan must be a string");
-			return AS_NODE_PARAM_ERR;
-		}
-		strncpy( ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
-		as_v8_detail( log, "namespace for scan operation is set to value %s", ns);
-	}
-	else {
-		as_v8_error( log, "namespace should be set for scan object");
-		return AS_NODE_PARAM_ERR;
-	}
-
-	if ( obj->Has(String::NewSymbol("set"))) {
-		Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
-		if ( !set_obj->IsString()) {
-			as_v8_error( log, "set for scan must be a string");
-			return AS_NODE_PARAM_ERR;
-		}
-		strncpy( set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
-		as_v8_detail( log, "set for scan operation is set to value %s", set);
-	}
-
-	if( ns == NULL || set == NULL) {
-		// Should never land here.
-		// If one of them is not present in the object, error is returned from there.
-		as_v8_error( log, "namespace/set is NULL. Internal Error !!!");
-		return AS_NODE_PARAM_ERR;
-	}
-	as_scan_init( scan, ns, set);
-	as_v8_detail( log, "scan object is initialized");
-	if ( obj->Has(String::NewSymbol("noBins"))) {
-		Local<Value> noBins = obj->Get(String::NewSymbol("noBins"));
-		if ( ! noBins->IsBoolean()) {
-			as_v8_error( log, "noBins value should be of type boolean in a scan object");
-			return AS_NODE_PARAM_ERR;
-		}
-		scan->no_bins = (bool) noBins->ToBoolean()->Value();
-		as_v8_detail( log, "no_bins value for scan operation is set to %d ", scan->no_bins);
-	}
-	if ( obj->Has(String::NewSymbol("concurrent"))) {
-		Local<Value> concurrent = obj->Get(String::NewSymbol("concurrent"));
-		if ( ! concurrent->IsBoolean()) {
-			as_v8_error( log, "concurrent value in a scan object should be a boolean type");
-			return AS_NODE_PARAM_ERR;
-		}
-		scan->concurrent = concurrent->ToBoolean()->Value();
-		as_v8_detail( log, "concurrent in scan object is set to %d", scan->concurrent);
-	}
-	//Parsing binlist from an array of bins
-	//Two APIs use this feature. 1. select and scan
-	//@TO-DO  Gayathri
-	//Move the parsing function to conversion.cc and use it 
-	//in both APIs. -- Do not replicate code.
-
-	if( obj->Has(String::NewSymbol("applyEach"))) {
-		Local<Value> applyEach = obj->Get(String::NewSymbol("applyEach"));
-		char file[255] = {'\0'};
-		char* filename = file; 
-		char* funcname ;  
-		as_arraylist *list = NULL;
-		int ret = udfargs_from_jsobject(&filename, &funcname, &list, applyEach->ToObject(), log);
-		if ( funcname == NULL || filename == NULL) {
-			return AS_NODE_PARAM_ERR;
-		}
-		if ( ret == AS_NODE_PARAM_ERR) {
-			as_v8_error( log, "parsing udf args for scan failed");
-			return ret;
-		}
-		as_v8_detail(log, "Invoking scan apply each with filename %s, funcname %s", filename, funcname);
-		as_scan_apply_each( scan, (const char*)filename, (const char*) funcname, (as_list*) list);
-	}
-	else {
-		as_v8_error( log, "applyEach value should be an argument for scan operation");
-		return AS_NODE_PARAM_ERR;
-	}
 	return AS_NODE_PARAM_OK;
 }
 

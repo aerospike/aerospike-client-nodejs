@@ -96,6 +96,9 @@ describe('client.batchGet()', function() {
 
                     expect(record).to.eql(_record);
                 }
+				for ( j = 0; j < nrecords; j++) {
+					client.remove(keys[j], function(err, key) {});
+				}
 
                 done();
             });
@@ -184,6 +187,9 @@ describe('client.batchGet()', function() {
 
                     expect(record).to.eql(_record);
                 }
+				for ( j = 0; j < nrecords; j++) {
+					client.remove(keys[j], function(err,key){});
+				}
 
                 done();
             });

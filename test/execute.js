@@ -66,6 +66,7 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
+			client.remove(key, function(err, key){});
 			done();
 		}); 
 	});
@@ -77,6 +78,7 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
+			client.remove(key, function(err, key) {});
 			done();
 		});
 	});
@@ -89,6 +91,7 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
+			client.remove(key, function(err, key){});
 			done();
 		});
 	});

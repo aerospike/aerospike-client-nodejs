@@ -30,6 +30,7 @@ extern "C" {
 	#include <aerospike/aerospike_batch.h>
 	#include <aerospike/aerospike_scan.h>
 	#include <aerospike/as_arraylist.h>
+	#include <citrusleaf/cf_queue.h>
 }
 
 #include "client.h"
@@ -54,11 +55,21 @@ __err.func = __func__;
 #define AS_NODE_PARAM_OK   0
 #define HOST_ADDRESS_SIZE 50
 
-
-typedef struct llist{
-    void * ptr;
-    llist *next;
-}llist;
+/*******************************************************************************
+ * STRUCTURES
+ *******************************************************************************/
+// This structure is used by query and scan async handles.
+// To process the records from the callback and pass it to nodejs
+typedef struct AsyncCallbackData {
+	Persistent<Function> data_cb;
+	Persistent<Function> error_cb;
+	Persistent<Function> end_cb;
+	cf_queue * result_q;
+	int max_q_size;
+	LogInfo * log;
+	int signal_interval;
+	uv_async_t async_handle;
+}AsyncCallbackData;
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -85,14 +96,13 @@ int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
 int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
 int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log ); 
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log);
-int scan_from_jsobject( as_scan* scan, Local<Object> obj, LogInfo * log);
 
-//clone function for record and key
+//clone functions for record and key
 bool record_clone(const as_record * src, as_record ** dest, LogInfo * log );
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key = true );
+as_val* asval_clone( as_val* val, LogInfo * log);
 
-
-// Function to convert v8 policies to C structures
+// Functions to convert v8 policies to C structures
 int writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj, LogInfo * log );
 int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj, LogInfo * log );
 int removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj, LogInfo * log );
@@ -101,10 +111,18 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
 int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj, LogInfo * log );
 int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo * log);
 int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo * log);
+int querypolicy_from_jsobject( as_policy_query * policy, Local<Object> obj, LogInfo * log);
 
+// Functions to handle query and scan kind of API which returns a bunch of records.
+// Callback that's invoked when an async signal is sent by a scan or query callback.
+void async_callback( uv_async_t * handle, int status);
+// Process each element in the queue and call the nodejs callback with the processed data.
+void async_queue_process( AsyncCallbackData * data);
+// Push the result from C callback into a queue.
+bool async_queue_populate(const as_val * val, AsyncCallbackData* data);
+
+// Functions to set metadata of the record.
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log );
 
-//linked list utility function
-void AddElement( llist ** list, void * element);
-void RemoveList(llist ** list);
+

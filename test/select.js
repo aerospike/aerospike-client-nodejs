@@ -78,7 +78,8 @@ describe('client.select()', function() {
                 for ( var bin in _record ) {
                     expect(_record[bin]).to.be(record[bin]);
                 }
-
+				
+				client.remove(key, function(err, key){});
                 done();
             });
         });
@@ -137,7 +138,7 @@ describe('client.select()', function() {
                 for ( var bin in _record ) {
                     expect(_record[bin]).to.be(record[bin]);
                 }
-
+				client.remove(key, function(err, key){});
                 done();
             });
         });
