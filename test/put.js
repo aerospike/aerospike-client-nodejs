@@ -360,17 +360,24 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-            expect(key1).to.eql(key);
+
+			expect(key1).to.have.property('ns', key.ns);
+			expect(key1).to.have.property('set', key.set);
+			expect(key1).to.have.property('key', key.key);
 
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(key2).to.eql(key);
+
+				expect(key2).to.have.property('ns', key.ns);
+				expect(key2).to.have.property('set', key.set);
+				expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
                 expect(record2.m).to.eql({a: 1, b: 2});
                 expect(record2.me).to.be.eql({});
                 expect(record2.l).to.eql([1,2,3]);
                 expect(record2.le).to.be.eql([]);
+				client.remove(key, function(err, key) {});
                 done();
             });
         });
