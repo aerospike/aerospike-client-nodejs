@@ -101,10 +101,10 @@ describe('client.select()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key1) {
 			var select_key = { ns:options.namespace, set: options.set}
-            client.select(select_key, bins, function(err, _record, metadata, key) {
+            client.select(select_key, bins, function(err, _record, metadata, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-
+				client.remove(key, function(err, key){});
                 done();
             });
         });
