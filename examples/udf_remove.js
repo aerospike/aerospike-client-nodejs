@@ -137,7 +137,7 @@ aerospike.client(config).connect(function (err, client) {
         console.time("udfRemove");
     }
 
-    client.udfRemove(file, function(err) {
+    client.udfRemove(module, function(err) {
 
         var exitCode = 0;
 

@@ -511,6 +511,10 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 		as_v8_detail(log, "The as_val is NULL");
         return (as_val*) &as_nil;
     }
+	else if(obj->IsUndefined()) {
+		as_v8_error(log, "Object passed is undefined");
+		return NULL;
+	}
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
@@ -525,6 +529,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         int size ;
         uint8_t* data ;
         if (extract_blob_from_jsobject(obj->ToObject(), &data, &size, log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Extractingb blob from a js object failed");
             return NULL;
         }
         as_bytes *bytes = as_bytes_new_wrap( data, size, true);
@@ -535,6 +540,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         Local<Array> js_list = Local<Array>::Cast(obj);
         as_arraylist *list = as_arraylist_new( js_list->Length(), 0);
         if (list == NULL) {
+			as_v8_error(log, "List allocation failed");
             return NULL;
         }
         for ( uint32_t i = 0; i < js_list->Length(); i++ ) {
@@ -548,9 +554,11 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
     else {
         const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
         const uint32_t count = props->Length();
-         as_hashmap *map = as_hashmap_new(count);
-         if( map == NULL)
-              return NULL;
+        as_hashmap *map = as_hashmap_new(count);
+        if( map == NULL){
+			as_v8_error(log, "Map allocation failed");
+			return NULL;
+		}
         for ( uint32_t i = 0; i < count; i++) {
             const Local<Value> name = props->Get(i);
             const Local<Value> value = obj->ToObject()->Get(name);

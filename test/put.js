@@ -36,7 +36,8 @@ describe('client.put()', function() {
             { addr: options.host, port: options.port }
         ],
         log: {
-            level: options.log
+            level: options.log,
+			file:  options.log_file
         },
         policies: {
             timeout: options.timeout
@@ -351,6 +352,28 @@ describe('client.put()', function() {
                 expect(record2.le).to.be.eql([]);
                 done();
             });
+        });
+    });
+    it('should write a bin of type undefined and write should fail', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l	  :  valgen.constant([1,2,3]),
+            m	  :  valgen.constant({a: 1, b: 2}),
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+		record.bin_un = undefined;
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+            done();
         });
     });
 

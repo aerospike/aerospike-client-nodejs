@@ -19,7 +19,6 @@ var aerospike = require('../build/Release/aerospike');
 var options   = require('./util/options');
 var assert    = require('assert');
 var expect    = require('expect.js');
-var fs	      = require('fs');
 
 var keygen  = require('./generators/key');
 var metagen = require('./generators/metadata');
@@ -38,7 +37,7 @@ describe('client.select()', function() {
         ],
         log: {
             level: options.log,
-			file: fs.openSync("test.log", "a")
+			file:  options.log_file
         },
         policies: {
             timeout: options.timeout
