@@ -16,15 +16,15 @@
 
 // we want to test the built aerospike module
 var aerospike = require('../build/Release/aerospike');
-var options = require('./util/options');
-var assert = require('assert');
-var expect = require('expect.js');
+var options   = require('./util/options');
+var assert    = require('assert');
+var expect    = require('expect.js');
 
-var keygen = require('./generators/key');
+var keygen  = require('./generators/key');
 var metagen = require('./generators/metadata');
-var recgen = require('./generators/record');
-var putgen = require('./generators/put');
-var valgen = require('./generators/value');
+var recgen  = require('./generators/record');
+var putgen  = require('./generators/put');
+var valgen  = require('./generators/value');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -36,7 +36,8 @@ describe('client.select()', function() {
             { addr: options.host, port: options.port }
         ],
         log: {
-            level: options.log
+            level: options.log,
+			file:  options.log_file
         },
         policies: {
             timeout: options.timeout
@@ -80,6 +81,30 @@ describe('client.select()', function() {
                 }
 				
 				client.remove(key, function(err, key){});
+                done();
+            });
+        });
+    });
+	it('should fail - when a select is called without key ', function(done) {
+        
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/select/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+        var bins    = Object.keys(record).slice(0,1);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+			var select_key = { ns:options.namespace, set: options.set}
+            client.select(select_key, bins, function(err, _record, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+
                 done();
             });
         });

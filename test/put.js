@@ -36,7 +36,8 @@ describe('client.put()', function() {
             { addr: options.host, port: options.port }
         ],
         log: {
-            level: options.log
+            level: options.log,
+			file:  options.log_file
         },
         policies: {
             timeout: options.timeout
@@ -210,6 +211,7 @@ describe('client.put()', function() {
         });
 
     });
+
     it('should write, read, write, and check gen', function(done) {
 
         // generators
@@ -334,6 +336,65 @@ describe('client.put()', function() {
                     }); 
                 });
             });
+        });
+    });
+
+    it('should write null for bins with empty list and map', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l:  valgen.constant([1,2,3]),
+            le: valgen.constant([]),
+            m:  valgen.constant({a: 1, b: 2}),
+            me: valgen.constant({})
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(key1).to.eql(key);
+
+            client.get(key1, function(err, record2, metadata2, key2) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(key2).to.eql(key);
+                expect(record2).to.eql(record);
+                expect(record2.m).to.eql({a: 1, b: 2});
+                expect(record2.me).to.be.eql({});
+                expect(record2.l).to.eql([1,2,3]);
+                expect(record2.le).to.be.eql([]);
+                done();
+            });
+        });
+    });
+    it('should write a bin of type undefined and write should fail', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l	  :  valgen.constant([1,2,3]),
+            m	  :  valgen.constant({a: 1, b: 2}),
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+		record.bin_un = undefined;
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+            done();
         });
     });
 

@@ -17,7 +17,7 @@
 
 var aerospike = require('../../build/Release/aerospike');
 var yargs = require('yargs');
-
+var fs    = require('fs');
 /*******************************************************************************
  *
  * Options parsing
@@ -51,6 +51,11 @@ var parser = yargs
             default: aerospike.log.INFO,
             describe: "Log level [0-5]"
         },
+		log_file: {
+			alias: "f",
+			default: fs.openSync("test.log", "a"),
+			describe: "Log file to redirect the log messages"
+		},
         namespace: {
             alias: "n",
             default: "test",
