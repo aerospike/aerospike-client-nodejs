@@ -6,11 +6,17 @@ Get a record from the database via a key.
 
 	client.get(Key, Options?, function(Error, Bins, Key, Metadata))
 
-Example:
+#### Example
 
 	client.get(["test", "demo", "a"], function(err, bins) {
 		// process result
 	})
+
+#### Options
+
+The following are options for the `get` operation:
+
+- none (currently)
 
 ## put()
 
@@ -28,3 +34,9 @@ Example:
 	client.put(["test", "demo", "a"], bins, function(err) {
 		// process result
 	})
+
+#### Options
+
+The following are options for the `put` operation:
+
+- none (currently)

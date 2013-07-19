@@ -7,19 +7,25 @@ var client = aerospike.connect({
 	]
 })
 
-var n = 10000
+var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 7000
 var m = 0
 
-console.time(n + " put and get")
+console.time(n + " put+get")
 for (var i = 1; i <= n; i++ ) {
 
-	var k0 = ["test", "test", "test"+i]
-	var r0 = { 'i': i, 's': i.toString() }
+	var key0 = ["test", "test", "test"+1]
+	var bins0 = { 'i': i, 's': i.toString() }
 	
-	client.put(k0, r0, function(err, k1){
-		client.get(k1, function(err, r1){
+	client.put(key0, bins0, function(err, meta1, key1) {
+    if ( err.code != 0 ) {
+      console.log("put error: %s", err.message)
+    }
+		client.get(key1, function(err, bins2, meta2, key2) {
+	    if ( err.code != 0 ) {
+	      console.log("get error: %s", err.message)
+	    }
 			if ( (++m) == n ) {
-				var ms = console.timeEnd(n + " put and get")
+				var ms = console.timeEnd(n + " put+get")
 			}
 		});
 	});

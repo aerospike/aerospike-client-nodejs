@@ -7,7 +7,7 @@ var client = aerospike.connect({
   ]
 })
 
-var n = 14000
+var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
 console.time(n + " get")
@@ -15,7 +15,7 @@ for (var i = 1; i <= n; i++ ) {
 
   var k1 = ["test", "test", "test"+i]
     
-  client.get(k1, function(err, bins){
+  client.get(k1, function(err, bins, meta){
     if ( err.code != 0 ) {
       console.log("error: %s", err.message)
     }

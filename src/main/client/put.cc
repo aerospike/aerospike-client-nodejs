@@ -141,15 +141,15 @@ static void respond(uv_work_t * req, int status)
 	// Build the arguments array for the callback
 	Handle<Value> argv[] = {
 		error_to_jsobject(err),
-		key_to_jsobject(key),
-		recordmeta_to_jsobject(rec)
+		recordmeta_to_jsobject(rec),
+		key_to_jsobject(key)
 	};
 
 	// Surround the callback in a try/catch for safety
 	TryCatch try_catch;
 
 	// Execute the callback.
-	data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+	data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
