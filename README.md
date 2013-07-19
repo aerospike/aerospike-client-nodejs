@@ -24,7 +24,16 @@ To build:
 		]
 	})
 	
-	client.get(["test", "demo", "a"], function(err, rec) {
-	  //
+	var bins = {
+		a: 123,
+		b: "xyz"
+	}
+
+	client.put(["test", "demo", "a"], bins, function(err, bins, meta, key) {
+	  // handle the response
+	})
+	
+	client.get(["test", "demo", "b"], function(err, bins, meta, key) {
+	  // hanlde the response
 	})
 
