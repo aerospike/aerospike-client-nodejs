@@ -24,7 +24,7 @@ To build:
 		]
 	})
 	
-	client.put(["test", "demo", "a"], function(err, key) {
+	client.get(["test", "demo", "a"], function(err, rec) {
 	  //
 	})
 
