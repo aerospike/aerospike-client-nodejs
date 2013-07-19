@@ -41,11 +41,23 @@ using namespace v8;
 
 /*******************************************************************************
  *  FUNCTIONS
- /*****************************************************************************/
+ ******************************************************************************/
 
 as_config * config_from_jsobject(as_config * config, Local<Object> obj)
 {
 	return config;
+}
+
+Handle<Object> error_to_jsobject(as_error * error)
+{
+	HandleScope scope;
+	Local<Object> err = Object::New();
+	err->Set(String::NewSymbol("code"), Integer::New(error->code));
+	err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
+	err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
+	err->Set(String::NewSymbol("file"), error->file ? String::NewSymbol(error->file) : Null() );
+	err->Set(String::NewSymbol("line"), error->line ? Integer::New(error->line) : Null() );
+	return scope.Close(err);
 }
 
 
@@ -70,7 +82,8 @@ Handle<Value> val_to_jsvalue(as_val * val)
 	return Undefined();
 }
 
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
+
+Handle<Object> recordbins_to_jsobject(const as_record * record)
 {
 	HandleScope scope;
 
@@ -83,24 +96,37 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
 		as_bin * bin = as_record_iterator_next(&it);
 		char * name = as_bin_get_name(bin);
 		as_val * val = (as_val *) as_bin_get_value(bin);
-		Handle<Value> obj = val_to_object(val);
+		Handle<Value> obj = val_to_jsvalue(val);
 		bins->Set(String::NewSymbol(name), obj);
 	}
 
+	return scope.Close(bins);
+}
+
+Handle<Object> recordmeta_to_jsobject(const as_record * record)
+{
+	HandleScope scope;
+	Local<Object> meta = Object::New();
+	meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
+	meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
+	return scope.Close(meta);
+}
+
+Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
+{
+	HandleScope scope;
+
+	Handle<Object> okey	= key_to_jsobject(key ? key : &record->key);
+	Handle<Object> bins	= recordbins_to_jsobject(record);
+	Handle<Object> meta	= recordmeta_to_jsobject(record);
+
 	Local<Object> rec = Object::New();
-
-	if ( key ) {
-		rec->Set(String::NewSymbol("key"), key_to_object(key));
-	}
-	else {
-		rec->Set(String::NewSymbol("key"), key_to_object(&record->key));
-	}
-
+	rec->Set(String::NewSymbol("key"), okey);
+	rec->Set(String::NewSymbol("meta"), meta);
 	rec->Set(String::NewSymbol("bins"), bins);
 
 	return scope.Close(rec);
 }
-
 
 as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 {
@@ -168,7 +194,7 @@ Handle<Object> key_to_jsobject(const as_key * key)
 	return scope.Close(obj);
 }
 
-as_key * key_from_object(as_key * key, Local<Object> obj)
+as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 {
 	as_namespace ns = { '\0' };
 	as_set set = { '\0' };

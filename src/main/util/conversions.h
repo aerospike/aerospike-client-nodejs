@@ -40,14 +40,23 @@ using namespace v8;
 
 /*******************************************************************************
  *  FUNCTIONS
- /*****************************************************************************/
+ ******************************************************************************/
+
+as_config * config_from_jsobject(as_config * config, Local<Object> obj);
+
+Handle<Object> error_to_jsobject(as_error * error);
+
 
 Handle<Value> val_to_jsvalue(as_val * val);
 
+Handle<Object> recordbins_to_jsobject(const as_record * record);
+Handle<Object> recordmeta_to_jsobject(const as_record * record);
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key);
-as_record * record_from_object(as_record * rec, Local<Object> obj);
+
+as_record * record_from_jsobject(as_record * rec, Local<Object> obj);
 
 Handle<Object> key_to_jsobject(const as_key * key);
-as_key * key_from_jsobject(as_key * key, Local<Object> obj);
 
+as_key * key_from_jsobject(as_key * key, Local<Object> obj);
 as_key * key_from_jsarray(as_key * key, Local<Array> arr);
+

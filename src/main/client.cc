@@ -35,7 +35,7 @@ using namespace v8;
 
 /*******************************************************************************
  *  Fields
- /*****************************************************************************/
+ ******************************************************************************/
 
 /**
  *  JavaScript constructor for AerospikeClient
@@ -44,7 +44,7 @@ Persistent<Function> AerospikeClient::constructor;
 
 /*******************************************************************************
  *  Constructor and Destructor
- /*****************************************************************************/
+ ******************************************************************************/
 
 AerospikeClient::AerospikeClient() {}
 
@@ -52,7 +52,7 @@ AerospikeClient::~AerospikeClient() {}
 
 /*******************************************************************************
  *  Methods
- /*****************************************************************************/
+ ******************************************************************************/
 
 /**
  *  Initialize a client object. 
@@ -85,11 +85,14 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     config.hosts[0].addr = "127.0.0.1";
     config.hosts[0].port = 3000;
 
+
     AerospikeClient * client = new AerospikeClient();
 
     aerospike_init(&client->as, &config);
+
+    as_error err;
     
-    aerospike_connect(&client->as, &client->err);
+    aerospike_connect(&client->as, &err);
 
     client->Wrap(args.This());
 

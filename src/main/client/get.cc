@@ -49,7 +49,7 @@ using namespace v8;
  */
 typedef struct AsyncData {
 	aerospike * as;
-	as_error * err;
+	as_error err;
 	as_key key;
 	as_record rec;
 	Persistent<Function> callback;
@@ -73,19 +73,19 @@ static void * prepare(const Arguments& args)
 	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
 	// Build the async data
-	AsyncData * data	= new AsyncData;
-	as_key *	key		= &data->key;
-	as_record *	rec		= &data->rec;
+	AsyncData *	data = new AsyncData;
+	data->as = &client->as;
 
-	data->as    = &client->as;
-	data->err   = &client->err;
+	// Local variables
+	as_key *	key = &data->key;
+	as_record *	rec = &data->rec;
 
 	if ( args[0]->IsArray() ) {
 		Local<Array> arr = Local<Array>::Cast(args[0]);
-		key_from_array(key, arr);
+		key_from_jsarray(key, arr);
 	}
 	else if ( args[0]->IsObject() ) {
-		key_from_object(key, args[0]->ToObject());
+		key_from_jsobject(key, args[0]->ToObject());
 	}
 
 	as_record_init(rec, 0);
@@ -106,15 +106,14 @@ static void execute(uv_work_t * req)
 	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
 	// Data to be used.
-	aerospike *    as	= data->as;
-	as_error *     err	= data->err;
-	as_key *       key	= &data->key;
-	as_record *    rec	= &data->rec;
+	aerospike *	as	= data->as;
+	as_error *	err	= &data->err;
+	as_key *	key	= &data->key;
+	as_record *	rec	= &data->rec;
 
-	// Use the data to access things you need to invoke the operation.
-	if ( aerospike_key_get(as, err, NULL, key, &rec) != AEROSPIKE_OK ) {
-		fprintf(stderr, "error(%d) %s at [%s:%d]\n", err->code, err->message, err->file, err->line);
-	}
+	// Invoke the blocking call.
+	// The error is handled in the calling JS code.
+	aerospike_key_get(as, err, NULL, key, &rec);
 }
 
 /**
@@ -131,14 +130,17 @@ static void respond(uv_work_t * req, int status)
 	HandleScope scope;
 
 	// Fetch the AsyncData structure
-	AsyncData *		data	= reinterpret_cast<AsyncData *>(req->data);
-	as_key *		key		= &data->key;
-	as_record *		rec		= &data->rec;
+	AsyncData *	data	= reinterpret_cast<AsyncData *>(req->data);
+	as_error *	err		= &data->err;
+	as_key *	key		= &data->key;
+	as_record *	rec		= &data->rec;
 
 	// Build the arguments array for the callback
 	Handle<Value> argv[] = {
-		Null(),
-		record_to_object(rec, key)
+		error_to_jsobject(err),
+		recordbins_to_jsobject(rec),
+		key_to_jsobject(key),
+		recordmeta_to_jsobject(rec)
 	};
 
 	// Surround the callback in a try/catch for safety

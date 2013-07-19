@@ -7,10 +7,10 @@ var client = aerospike.connect({
 	]
 })
 
-var n = 1000
+var n = 10000
 var m = 0
 
-console.time("ops")
+console.time(n + " put and get")
 for (var i = 1; i <= n; i++ ) {
 
 	var k0 = ["test", "test", "test"+i]
@@ -19,7 +19,7 @@ for (var i = 1; i <= n; i++ ) {
 	client.put(k0, r0, function(err, k1){
 		client.get(k1, function(err, r1){
 			if ( (++m) == n ) {
-				console.timeEnd("ops")
+				var ms = console.timeEnd(n + " put and get")
 			}
 		});
 	});
