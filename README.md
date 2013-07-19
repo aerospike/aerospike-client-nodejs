@@ -29,7 +29,7 @@ To build:
 		b: "xyz"
 	}
 
-	client.put(["test", "demo", "a"], bins, function(err, bins, meta, key) {
+	client.put(["test", "demo", "a"], bins, function(err, meta, key) {
 	  // handle the response
 	})
 	
