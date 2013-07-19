@@ -13,7 +13,7 @@ var m = 0
 console.time(n + " put+get")
 for (var i = 1; i <= n; i++ ) {
 
-	var key0 = ["test", "test", "test"+1]
+	var key0 = ["test", "test", "test"+i]
 	var bins0 = { 'i': i, 's': i.toString() }
 	
 	client.put(key0, bins0, function(err, meta1, key1) {
