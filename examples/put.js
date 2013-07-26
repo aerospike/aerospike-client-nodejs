@@ -13,10 +13,14 @@ var m = 0
 console.time(n + " put")
 for (var i = 1; i <= n; i++ ) {
 
-  var k0 = ["test", "test", "test"+i]
+  var k1 = new 	Object();
+  k1.ns = "test";
+  k1.set = "demo";
+  k1.value = "value" + i
+  var k0 = ["test", "test", "test" + i ]
   var r0 = { 'i': i, 's': i.toString() }
   
-  client.put(k0, r0, function(err) {
+  client.put(k1, r0, function(err) {
     if ( err.code != 0 ) {
       console.log("error: %s", err.message)
     }

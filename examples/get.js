@@ -10,17 +10,47 @@ var client = aerospike.connect({
 var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
-console.time(n + " get")
+function callback(err, bins, meta){
+	if ( err.code != 0 ) {
+		console.log("error %s",err.message);
+	}
+	console.log(bins);
+	console.log(meta);
+	if ( (++m) == n ) {
+		console.timeEnd(n + " get");
+	}
+ 	console.time(n + " get");
+}
+
 for (var i = 1; i <= n; i++ ) {
 
-  var k1 = ["test", "test", "test"+i]
-    
-  client.get(k1, function(err, bins, meta){
-    if ( err.code != 0 ) {
-      console.log("error: %s", err.message)
-    }
-    if ( (++m) == n ) {
-      console.timeEnd(n + " get")
-    }
+  var k1 = ["test", "demo", "value"+i]
+  var k2 = { 'ns':'test','set':'demo','value':'value' + i}
+  var bins =['i'];  
+
+  //This function gets the bins specified in the bins variable.
+  client.get(k2, bins,function (err, bins, meta){
+	 if ( err.code != 0 ) {
+        console.log("error %s",err.message);
+     }
+     console.log(bins);
+     console.log(meta);
+     if ( (++m) == n ) {
+        console.timeEnd(n + " get");
+     }
+     console.time(n + " get");
   });
-}
+
+  //This function gets the complete record with all the bins.	
+  client.get(k1,function (err, bins, meta){
+	 if ( err.code != 0 ) {
+        console.log("error %s",err.message);
+    }
+    console.log(meta);
+    if ( (++m) == n ) {
+        console.timeEnd(n + " get");
+    }
+    console.time(n + " get");
+	});
+ }
+	
