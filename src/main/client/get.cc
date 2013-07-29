@@ -53,9 +53,6 @@ typedef struct AsyncData {
 	as_key key;
 	as_record rec;
 	Persistent<Function> callback;
-	bool get_all_bins;
-	int num_bins;
-	char** bins;
 } AsyncData;
 
 /*******************************************************************************
@@ -93,28 +90,7 @@ static void * prepare(const Arguments& args)
 
 	as_record_init(rec, 0);
 
-	// To select the values of given bin, not complete record.
-	if ( args.Length() == 3  && args[1]->IsArray() ) {
-	
-		Local<Array> barray = Local<Array>::Cast(args[1]);	
-		data->get_all_bins = false;
-		int num_bins = barray->Length();
-		data->num_bins = num_bins;
-		data->bins = (char **)calloc(sizeof(char *), num_bins+1);
-		for (int i=0; i < num_bins; i++) {
-			Local<Value> bname = barray->Get(i);
-			data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
-			strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
-		}
-		// The last entry should be NULL because we are passing to aerospike_key_select
-		data->bins[num_bins] = NULL;
-		
-	}
-	else {
-		data->get_all_bins = true;
-	}
-
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[args.Length() - 1]));
+	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
 		
 	return data;
 }
@@ -136,16 +112,11 @@ static void execute(uv_work_t * req)
 	as_record *	rec	= &data->rec;
 		
 
+
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
-	if (data->get_all_bins == true) {	
-		aerospike_key_get(as, err, NULL, key, &rec);
-	}
+	aerospike_key_get(as, err, NULL, key, &rec);
 
-	else {
-		aerospike_key_select(as, err, NULL, key, (const char **)data->bins, &rec);	
-	}
-	
 }
 
 /**

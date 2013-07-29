@@ -73,5 +73,10 @@ class AerospikeClient : public ObjectWrap {
 		 *	undefined client.put(Key, Record, function(Error))
 		 */
 		static Handle<Value> Put(const Arguments& args);
+		
+		/**
+ 		 *  undefined client.select(Key,bins,function(Error,Record))
+ 		 */ 
+		static Handle<Value> Select(const Arguments& args);
 
 };

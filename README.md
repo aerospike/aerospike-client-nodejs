@@ -2,6 +2,9 @@
 
 The Aerospike client for node.js is an add-on module, written in C++. 
 
+Download the C client from the aerospike website.
+Follow the instruction in C client README and build the C client.
+Set the environment variable AS_C_CLIENT to the downloaded C client directory.
 
 ## Building
 
@@ -34,6 +37,11 @@ To build:
 	})
 	
 	client.get(["test", "demo", "b"], function(err, bins, meta, key) {
-	  // hanlde the response
+	  // handle the response
+	})
+
+	var bins = { a };
+	client.select(["test","demo","a"],bins, function(err, bins, meta) {
+		//handle the response
 	})
 

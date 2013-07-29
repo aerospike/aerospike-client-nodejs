@@ -8,16 +8,17 @@
         'src/main/client/close.cc',
         'src/main/client/get.cc',
         'src/main/client/put.cc',
+		'src/main/client/select.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
       ],
       'link_settings': {
           'libraries': [
-              '/home/vagrant/projects/citrusleaf/aerospike-client-c/aerospike/target/Linux-x86_64/lib/libaerospike.a'
+			'<!@(echo $AS_C_CLIENT/aerospike/target/Linux-x86_64/lib/libaerospike.a)'
           ]
       },
       'cflags': [
-        '-I/home/vagrant/projects/citrusleaf/aerospike-client-c/aerospike/target/Linux-x86_64/include'
+        '-O0 -I<!@(echo $AS_C_CLIENT/aerospike/target/Linux-x86_64/include)'
       ]
     }
   ],
