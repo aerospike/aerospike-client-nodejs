@@ -10,6 +10,12 @@ Set the environment variable AS_C_CLIENT to the downloaded C client directory.
 
 The add-on module is built using [node-gyp](https://github.com/TooTallNate/node-gyp). 
 
+
+To install node-gyp
+
+ npm install node-gyp.
+
+
 To build:
 
 	node-gyp rebuild
@@ -18,14 +24,11 @@ To build:
 
 ## Usage
 	
-	var aerospike = require('aerospike')
+	var aerospike = require('./build/Release/aerospike')
 	var key = aerospike.key
+	var hosts = { addr:"127.0.0.1", port : 3000 }
 	
-	var client = aerospike.connect({
-		hosts: [
-			{ addr: "127.0.0.1", port: 3000 }
-		]
-	})
+	var client = aerospike.connect(hosts)
 	
 	var bins = {
 		a: 123,
@@ -45,3 +48,4 @@ To build:
 		//handle the response
 	})
 
+Refer to examples folder which demonstrates the above functionality.

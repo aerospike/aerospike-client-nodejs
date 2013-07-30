@@ -30,7 +30,7 @@ extern "C" {
 
 #include <node.h>
 #include "client.h"
-
+#include "util/conversions.h"
 using namespace v8;
 
 /*******************************************************************************
@@ -83,8 +83,10 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     as_config config;
     as_config_init(&config);
-    config.hosts[0].addr = "127.0.0.1";
-    config.hosts[0].port = 3000;
+
+	if (args[0]->IsObject() ) {
+		config_from_jsobject(&config, args[0]->ToObject());	
+	}
 
 
     AerospikeClient * client = new AerospikeClient();

@@ -45,6 +45,17 @@ using namespace v8;
 
 as_config * config_from_jsobject(as_config * config, Local<Object> obj)
 {
+
+	Local<Value> addr = obj->Get(String::NewSymbol("addr"));
+	Local<Value> port = obj->Get(String::NewSymbol("port"));
+	
+    if ( addr->IsString() ) {
+		config->hosts[0].addr = strdup(*String::Utf8Value(addr));
+    }
+
+	if ( port->IsNumber() ) {	
+		config->hosts[0].port = port->ToInteger()->Value();		
+	}
 	return config;
 }
 

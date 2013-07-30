@@ -1,11 +1,8 @@
 var aerospike = require('../build/Release/aerospike')
 var key = aerospike.key
 
-var client = aerospike.connect({
-  hosts: [
-    { addr: "127.0.0.1", port: 3000 }
-  ]
-})
+hosts = {addr:"127.0.0.1", port:3000}
+var client = aerospike.connect(hosts)
 
 var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
