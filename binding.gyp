@@ -14,11 +14,11 @@
       ],
       'link_settings': {
           'libraries': [
-			'<!@(echo $AS_C_CLIENT/aerospike/target/Linux-x86_64/lib/libaerospike.a)'
+			'<!@(echo $CLIENTREPO/aerospike/target/Linux-x86_64/lib/libaerospike.a)'
           ]
       },
       'cflags': [
-        '-O0 -I<!@(echo $AS_C_CLIENT/aerospike/target/Linux-x86_64/include)'
+        '-O0 -I<!@(echo $CLIENTREPO/aerospike/target/Linux-x86_64/include)'
       ]
     }
   ],
