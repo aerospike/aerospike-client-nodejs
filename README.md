@@ -48,9 +48,10 @@ To build:
 	  // handle the response
 	})
 
-	var bins = { a };
-	client.select(["test","demo","a"],bins, function(err, bins, meta) {
-		//handle the response
+	var bins = [ 'a','b' ];
+	client.select(["test","demo","a"],bins, function(err, rec, meta) {
+		//handle the response 
+		console.log(rec);
 	})
 
 Refer to examples folder which demonstrates the above functionality.
