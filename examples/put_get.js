@@ -1,4 +1,4 @@
-var aerospike = require('../build/Release/aerospike')
+var aerospike = require('aerospike')
 var key = aerospike.key
 
 var client = aerospike.connect({

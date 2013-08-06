@@ -1,4 +1,4 @@
-var aerospike = require('../build/Release/aerospike')
+var aerospike = require('aerospike')
 var key = aerospike.key
 
 hosts = {addr:"127.0.0.1", port:3000}
