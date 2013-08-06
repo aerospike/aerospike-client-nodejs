@@ -54,8 +54,9 @@ Test the working of aerospike-client-node.js
 ## Usage
 	
 	var aerospike = require('aerospike')
-	var key = aerospike.key
-	var hosts = { addr:"127.0.0.1", port : 3000 }
+	
+	var config = {
+		hosts: { addr:"127.0.0.1", port : 3000 }
 	
 	var client = aerospike.connect(hosts)
 	
