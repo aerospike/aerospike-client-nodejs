@@ -6,22 +6,14 @@ The Aerospike client for node.js is an add-on module, written in C++.
 
 The add-on module is built using [node-gyp](https://github.com/TooTallNate/node-gyp). 
 
-node,npm and node-gyp must to be installed to compile this client library
+nodejs ,npm and node-gyp must to be installed to compile this client library
 
 The nodejs installed must be of version >= v0.10.*
 
-For Debian-based distributions (Debian, Ubuntu, etc.):
 
-        $ sudo apt-get install node
-	$ sudo apt-get install npm
- 	$ sudo npm install -g node-gyp
+Install the latest stable version of nodejs available at http://nodejs.org/download/
 
-For Redhat-based distributions (RHEL, CentOS, etc.):
-   1.Enable EPEL repository for yum.
-
-   2.Install nodejs,npm and node-gyp
-        $ sudo yum install nodejs
-	$ sudo yum install npm
+Install node-gyp using the package manager of nodejs
 	$ sudo npm install -g node-gyp
 
 ## Building
