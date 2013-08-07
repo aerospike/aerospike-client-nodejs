@@ -54,10 +54,16 @@ Test the working of aerospike-client-node.js
 ## Usage
 	
 	var aerospike = require('aerospike')
+<<<<<<< HEAD
 	var config = {
 		hosts:[{ addr:"127.0.0.1", port : 3000 
 			//specify the list of node ip and port in the
 			//aerospike cluster, following the above format.
+=======
+	
+	var config = {
+		hosts: { addr:"127.0.0.1", port : 3000 }
+>>>>>>> c5c4da1eb07942dbb7d1e2debbfa3042ecd44115
 	
 	var client = aerospike.connect(config)
 	
