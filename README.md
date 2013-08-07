@@ -8,6 +8,8 @@ The add-on module is built using [node-gyp](https://github.com/TooTallNate/node-
 
 node,npm and node-gyp must to be installed to compile this client library
 
+The nodejs installed must be of version >= v0.10.*
+
 For Debian-based distributions (Debian, Ubuntu, etc.):
 
         $ sudo apt-get install node

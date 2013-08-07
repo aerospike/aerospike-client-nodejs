@@ -4,7 +4,7 @@
 	"version" : "v0.1.0",
 	"description" : "Aerospike Client Library",
 	"tags" : [ "aerospike", "database", "nosql" ],
-	"homepage" : "https://github.com/aerospike/aerospike-nodejs",
+	"homepage" : "https://github.com/aerospike/client-nodejs",
 	"main" : "./build/Release/aerospike.node",
 	"scripts" : {
 		"preinstall" : "node-gyp rebuild",
@@ -17,6 +17,6 @@
 	"cpu" : [ "x64" ],
 	"repository" : {
 		"type" : "git",
-		"url" : "https://github.com/aerospike/aerospike-nodejs"
+		"url" : "https://github.com/aerospike/client-nodejs"
 	}
 }
