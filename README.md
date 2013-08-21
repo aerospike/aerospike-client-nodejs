@@ -10,7 +10,7 @@ Node.js, visit http://nodejs.org/download/
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is used for building the 
 library. To install the latest version, run:
 
-    $ sudo npm install -g node-gyp
+    sudo npm install -g node-gyp
 
 ## Building
 
@@ -20,8 +20,8 @@ The aerospike-client-node.js uses aerospike-client-c library.
 
 2. Extract and go to the resulting directory.
 
-        $ tar -xzvf  aerospike-client-c-<version>-<os>-x86_64.tgz
-        $ cd aerospike-client-c-<version>-<os>-x86_64
+        tar -xzvf  aerospike-client-c-<version>-<os>-x86_64.tgz
+        cd aerospike-client-c-<version>-<os>-x86_64
 
 3. Install aerospike-client-c library
     
@@ -35,15 +35,15 @@ The aerospike-client-node.js uses aerospike-client-c library.
 
 4. cd to aerospike-client-node.js-0.1.0 directory.
     
-        $cd path/to/aerospike-client-node.js-0.1.0
+        cd path/to/aerospike-client-node.js-0.1.0
 
 5. Install `aerospike-node.js` client as a addon node_module
     
-        $ sudo npm install -g 
+        sudo npm install -g 
 
 6. Set the environment variable `NODE_PATH` to `/usr/lib/node_modules`.
     
-        $ export NODE_PATH=/usr/lib/node_modules
+        export NODE_PATH=/usr/lib/node_modules
 
 ## Test
 
