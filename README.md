@@ -10,7 +10,7 @@ Node.js, visit http://nodejs.org/download/
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is used for building the 
 library. To install the latest version, run:
 
-        $ sudo npm install -g node-gyp
+    $ sudo npm install -g node-gyp
 
 ## Building
 
