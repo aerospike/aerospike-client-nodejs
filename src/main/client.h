@@ -75,8 +75,18 @@ class AerospikeClient : public ObjectWrap {
 		static Handle<Value> Put(const Arguments& args);
 		
 		/**
- 		 *  undefined client.select(Key,bins,function(Error,Record))
+ 		 *  	undefined client.select(Key,bins,function(Error,Record))
  		 */ 
 		static Handle<Value> Select(const Arguments& args);
-
+	
+		/**
+ 		 * 	undefined client.batch_get(Key[],function(Error,Record))
+		 */
+		static Handle<Value> Batch_Get(const Arguments& args);
+		
+		/**
+ 		 *	undefined client.batch_select(Key[],bins,function(Error,Record))
+ 		 */
+		//static Handle<Value> Batch_Select(const Arguments& args);
+ 
 };

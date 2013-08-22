@@ -32,6 +32,7 @@ extern "C" {
     #include <aerospike/as_config.h>
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
+	#include <aerospike/aerospike_batch.h>
 }
 
 #include "../client.h"
@@ -60,3 +61,4 @@ Handle<Object> key_to_jsobject(const as_key * key);
 as_key * key_from_jsobject(as_key * key, Local<Object> obj);
 as_key * key_from_jsarray(as_key * key, Local<Array> arr);
 
+as_batch * batch_from_jsarray(as_batch * batch, Local<Array> arr);

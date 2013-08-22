@@ -13,8 +13,6 @@ The nodejs installed must be of version >= v0.10.*
 
 Install the latest stable version of nodejs available at http://nodejs.org/download/
 
-Install node-gyp using the package manager of nodejs
-	$ sudo npm install -g node-gyp
 
 ## Building
 

@@ -69,7 +69,8 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("close"), FunctionTemplate::New(Close)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("select"),FunctionTemplate::New(Select)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("batch_get"), FunctionTemplate::New(Batch_Get)->GetFunction());
 
     constructor = Persistent<Function>::New(cons->GetFunction());
 }

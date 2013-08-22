@@ -31,6 +31,7 @@ extern "C" {
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_record.h>
 	#include <aerospike/as_record_iterator.h>
+	#include <aerospike/aerospike_batch.h>	
 }
 
 #include "../client.h"
@@ -50,7 +51,7 @@ as_config * config_from_jsobject(as_config * config, Local<Object> obj)
 
 	if(hosts->IsArray()) {
 		Local<Array> hostlist = Local<Array>::Cast(hosts);
-		for ( int i=0; i<hostlist->Length(); i++) {
+		for ( uint32_t i=0; i<hostlist->Length(); i++) {
 	
 			Local<Value> addr = hostlist->Get(i)->ToObject()->Get(String::NewSymbol("addr"));
 			Local<Value> port = hostlist->Get(i)->ToObject()->Get(String::NewSymbol("port"));
@@ -306,4 +307,19 @@ as_key * key_from_jsarray(as_key * key, Local<Array> arr)
 	}
 
 	return NULL;
+}
+
+as_batch* batch_from_jsarray(as_batch *batch, Local<Array> arr)
+{
+	uint32_t capacity = arr->Length();
+	
+	if(capacity > 0) {
+		as_batch_init(batch, capacity);
+	}
+	for ( uint32_t i=0; i < capacity; i++) {
+		Local<Object> key = arr->Get(i)->ToObject();
+		key_from_jsobject(as_batch_keyat(batch, i), key);
+	}
+
+	return batch;
 }
