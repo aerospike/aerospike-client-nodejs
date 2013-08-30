@@ -65,13 +65,12 @@ typedef struct AsyncData {
 
 bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
 {
-	printf("V8 callback being called \n");
 	// Fetch the AsyncData structure
 	AsyncData *     data    = reinterpret_cast<AsyncData *>(udata);
 	//copy the batch result to the shared data structure AsyncData,
 	//so that response can send it back to nodejs layer
 	//as_batch_read  *batch_result = &data->results;
-	if( results != NULL) {
+	if( results != NULL && results[0].result == AEROSPIKE_OK) {
 		data->n = n;
 		data->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
 		for ( uint32_t i = 0; i < n; i++) {
@@ -142,6 +141,10 @@ static void execute(uv_work_t * req)
     // The error is handled in the calling JS code.
     if( data->param_err == 0) {
 	    aerospike_batch_get(as, err, NULL, batch, batch_callback, (void*) req->data);
+		if( err->code != AEROSPIKE_OK) {
+			data->results = NULL;
+			data->n = 0;
+		}
 	}
 	
 }
@@ -214,7 +217,7 @@ static void respond(uv_work_t * req, int status)
 	data->callback.Dispose();
 
 	// clean up any memory we allocated
-	
+	free(data->results);	
 	delete data;
 	delete req;
 }
