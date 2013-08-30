@@ -62,3 +62,5 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj);
 as_key * key_from_jsarray(as_key * key, Local<Array> arr);
 
 as_batch * batch_from_jsarray(as_batch * batch, Local<Array> arr);
+bool record_copy_constructor(const as_record * src, as_record ** dest);
+bool key_copy_constructor(const as_key* src, as_key** dest);

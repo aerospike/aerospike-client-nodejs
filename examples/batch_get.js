@@ -9,15 +9,17 @@ var client = aerospike.connect(config)
 
 
   var k1 = [
-	 {ns:'test',set:'demo',value:"value"+1},
-	 {ns:'test',set:'demo',value:'value'+2},
-	 {ns:'test',set:'demo',value:'value'+3}] 
+	 {ns:'test',set:'demo',key:"value"+1},
+	 {ns:'test',set:'demo',key:'value'+2},
+	 {ns:'test',set:'demo',key:'value'+3},
+	 {ns:'test',set:'demo',key:'valuexyz'},
+	 {ns:'test',set:'demo1',key:'value'+4}]
 
  //This function gets the complete record with all the bins.	
- client.batch_get(k1,function (err, rec_list){
-	 if ( err.code != 0 ) {
-        	console.log("error %s",err.message);
-    	}
-	console.log(rec_list);
+ client.batch_get(k1,function (err, n, rec_list){
+	console.log(err);
+	for(i=0; i<n; i++) {
+		console.log(rec_list[i]);
+	}
 });
 	

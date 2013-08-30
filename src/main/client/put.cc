@@ -53,6 +53,7 @@ using namespace v8;
  */
 typedef struct AsyncData {
 	aerospike * as;
+	int param_err;
 	as_error err;
 	as_key key;
 	as_record rec;
@@ -92,6 +93,7 @@ static void * prepare(const Arguments& args)
 	else if ( args[0]->IsObject() ) {
 		key_from_jsobject(key, args[0]->ToObject());
 	}
+	
 
 	record_from_jsobject(rec, args[1]->ToObject());
 	

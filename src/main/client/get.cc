@@ -48,6 +48,7 @@ using namespace v8;
  *	AsyncData — Data to be used in async calls.
  */
 typedef struct AsyncData {
+	int param_err;
 	aerospike * as;
 	as_error err;
 	as_key key;
@@ -76,6 +77,7 @@ static void * prepare(const Arguments& args)
 	AsyncData *	data = new AsyncData;
 	data->as = &client->as;
 
+	data->param_err = 0;
 	// Local variables
 	as_key *	key = &data->key;
 	as_record *	rec = &data->rec;
@@ -86,6 +88,9 @@ static void * prepare(const Arguments& args)
 	}
 	else if ( args[0]->IsObject() ) {
 		key_from_jsobject(key, args[0]->ToObject());
+	}
+	else {
+		data->param_err = 1;
 	}
 
 	as_record_init(rec, 0);
@@ -115,7 +120,9 @@ static void execute(uv_work_t * req)
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
-	aerospike_key_get(as, err, NULL, key, &rec);
+	if ( data->param_err == 0) {
+		aerospike_key_get(as, err, NULL, key, &rec);	
+	}
 
 }
 
@@ -134,17 +141,32 @@ static void respond(uv_work_t * req, int status)
 
 	// Fetch the AsyncData structure
 	AsyncData *	data	= reinterpret_cast<AsyncData *>(req->data);
+	
 	as_error *	err		= &data->err;
 	as_key *	key		= &data->key;
 	as_record *	rec		= &data->rec;
 
+	int nargs=4;
+	Handle<Value> argv[nargs];
 	// Build the arguments array for the callback
-	Handle<Value> argv[] = {
-		error_to_jsobject(err),
-		recordbins_to_jsobject(rec),
-		recordmeta_to_jsobject(rec),
-		key_to_jsobject(key)
-	};
+	if( data->param_err == 0) {	
+		argv[0] = error_to_jsobject(err),
+		argv[1] = recordbins_to_jsobject(rec),
+		argv[2] = recordmeta_to_jsobject(rec),
+		argv[3] = key_to_jsobject(key);
+	
+	}
+	else {
+		err->code = AEROSPIKE_ERR_PARAM;
+		err->message[0] = '\0';
+		err->func = NULL;
+		err->line = NULL;
+		err->file = NULL;
+		argv[0] = error_to_jsobject(err);
+		argv[1] = Null();
+		argv[2] = Null();
+		argv[3] = Null();
+	}
 
 	// Surround the callback in a try/catch for safety
 	TryCatch try_catch;
@@ -162,10 +184,11 @@ static void respond(uv_work_t * req, int status)
 	data->callback.Dispose();
 
 	// clean up any memory we allocated
-	
-	as_key_destroy(key);
-	as_record_destroy(rec);
 
+	if( data->param_err == 0) {	
+		as_key_destroy(key);
+		as_record_destroy(rec);
+	}
 	delete data;
 	delete req;
 }

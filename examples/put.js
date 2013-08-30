@@ -14,7 +14,7 @@ for (var i = 1; i <= n; i++ ) {
   var k1 = new 	Object();
   k1.ns = "test";
   k1.set = "demo";
-  k1.value = "value" + i
+  k1.key = "value" + i
   var k0 = ["test", "test", "test" + i ]
   var r0 = { 'i': i, 's': i.toString() }
   

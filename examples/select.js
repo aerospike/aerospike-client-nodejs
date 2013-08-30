@@ -8,7 +8,7 @@ var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 for (var i = 1; i <= n; i++ ) {
 
-  var k2 = { 'ns':'test','set':'demo','value':'value' + i}
+  var k2 = { 'ns':'test','set':'demo','key':'value' + i}
   var bins =['s'];
 
   //This function gets the bins specified in the bins variable.

@@ -60,19 +60,91 @@ as_config * config_from_jsobject(as_config * config, Local<Object> obj)
     		if ( addr->IsString() ) {
 				config->hosts[i].addr = strdup(*String::Utf8Value(addr));
 			}
+			else {
+				return NULL;
+			}
 	
 			if ( port->IsNumber() ) {	
 				config->hosts[i].port = port->ToInteger()->Value();		
 			}
+			else {
+				return NULL;
+			}
 		}
+	}
+	else{
+		return NULL;
 	}
 	return config;
 }
 
+bool key_copy_constructor(const as_key* src, as_key** dest)
+{
+	if(src == NULL || dest == NULL) {
+		return false;
+	}
+
+	as_key_value* val = src->valuep;
+	as_val_t t = as_val_type((as_val*)val);
+	switch(t){
+		case AS_INTEGER: {
+			*dest = as_key_new_int64(src->ns, src->set, val->integer.value);
+			break;
+		 }
+		case AS_STRING: {
+			char* strval = strdup(val->string.value);
+			*dest = as_key_new_strp( src->ns, src->set, strval,true);
+			strcpy((*dest)->ns,src->ns);
+			strcpy((*dest)->set,src->set);
+			break;
+		 }
+		default: 
+			break;
+	}
+	
+	return true;
+	
+}
+
+bool record_copy_constructor(const as_record* src, as_record** dest) 
+{
+	if(src == NULL || dest == NULL) {
+		return false;
+	}
+	(*dest)->ttl = src->ttl;
+	(*dest)->gen = src->gen;
+	as_record_iterator it;
+    	as_record_iterator_init(&it, src);
+	while (as_record_iterator_has_next(&it)) {
+		as_bin * bin = as_record_iterator_next(&it);
+		as_bin_value * val = as_bin_get_value(bin);
+		as_val_t t = as_bin_get_type(bin);
+		switch(t) {
+			case AS_INTEGER: {
+				as_record_set_int64(*dest, as_bin_get_name(bin), val->integer.value); 
+				break;
+				
+			}
+			case AS_STRING: {
+				char* strval = strdup(val->string.value);
+				as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
+				break;
+			}
+			default:
+				break;
+		}
+	}           
+                        
+	return true;
+}
+	
 Handle<Object> error_to_jsobject(as_error * error)
 {
-	HandleScope scope;
+	HandleScope scope;	
 	Local<Object> err = Object::New();
+	if (error == NULL) {
+		return scope.Close(err);
+	}
 	err->Set(String::NewSymbol("code"), Integer::New(error->code));
 	err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
 	err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
@@ -84,6 +156,9 @@ Handle<Object> error_to_jsobject(as_error * error)
 
 Handle<Value> val_to_jsvalue(as_val * val)
 {
+	if( val == NULL) {
+		return Undefined();
+	}
 	switch ( as_val_type(val) ) {
 		case AS_INTEGER : {
 			as_integer * ival = as_integer_fromval(val);
@@ -93,7 +168,7 @@ Handle<Value> val_to_jsvalue(as_val * val)
 		}
 		case AS_STRING : {
 			as_string * sval = as_string_fromval(val);
-			if ( sval ) {
+			if ( sval ) {	
 				return String::NewSymbol(as_string_get(sval));
 			}
 		}
@@ -108,8 +183,12 @@ Handle<Object> recordbins_to_jsobject(const as_record * record)
 {
 	HandleScope scope;
 
-	Local<Object> bins = Object::New();
+	Local<Object> bins ;
+	if (record == NULL) {
+		return scope.Close(bins);
+	}
 
+	bins = Object::New();
 	as_record_iterator it;
 	as_record_iterator_init(&it, record);
 
@@ -120,14 +199,17 @@ Handle<Object> recordbins_to_jsobject(const as_record * record)
 		Handle<Value> obj = val_to_jsvalue(val);
 		bins->Set(String::NewSymbol(name), obj);
 	}
-
 	return scope.Close(bins);
 }
 
 Handle<Object> recordmeta_to_jsobject(const as_record * record)
 {
 	HandleScope scope;
-	Local<Object> meta = Object::New();
+	Local<Object> meta ;
+	if(record == NULL) {
+		return scope.Close(meta);
+	}
+	meta = Object::New();
 	meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
 	meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
 	return scope.Close(meta);
@@ -136,11 +218,15 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record)
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
 {
 	HandleScope scope;
-
-	Handle<Object> okey	= key_to_jsobject(key ? key : &record->key);
+	
+	Handle<Object> okey;
+	
+	if(record == NULL) {
+		return scope.Close(okey);
+	}
+	okey	= key_to_jsobject(key ? key : &record->key);
 	Handle<Object> bins	= recordbins_to_jsobject(record);
 	Handle<Object> meta	= recordmeta_to_jsobject(record);
-
 	Local<Object> rec = Object::New();
 	rec->Set(String::NewSymbol("key"), okey);
 	rec->Set(String::NewSymbol("meta"), meta);
@@ -172,6 +258,9 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 			int64_t v = value->IntegerValue();
 			as_record_set_int64(rec, *n, v);
 		}
+		else {
+			return NULL;
+		}
 	}
 
 	return rec;
@@ -180,14 +269,17 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 Handle<Object> key_to_jsobject(const as_key * key)
 {
 	HandleScope scope;
+	Local<Object> obj;
+	if (key == NULL) {
+		return scope.Close(obj);
+	}
 
-	Local<Object> obj = Object::New();
-
-	if ( strlen(key->ns) > 0 ) {
+	obj = Object::New();
+	if ( key->ns && strlen(key->ns) > 0 ) {
 		obj->Set(String::NewSymbol("ns"), String::NewSymbol(key->ns));
 	}
 
-	if ( strlen(key->set) > 0 ) {
+	if ( key->set && strlen(key->set) > 0 ) {
 		obj->Set(String::NewSymbol("set"), String::NewSymbol(key->set));
 	}
 
@@ -197,11 +289,11 @@ Handle<Object> key_to_jsobject(const as_key * key)
 		switch(type) {
 			case AS_INTEGER: {
 				as_integer * ival = as_integer_fromval(val);
-				obj->Set(String::NewSymbol("value"), Integer::New(as_integer_get(ival)));
+				obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
 			}
 			case AS_STRING: {
 				as_string * sval = as_string_fromval(val);
-				obj->Set(String::NewSymbol("value"), String::NewSymbol(as_string_get(sval)));
+				obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
 			}
 			case AS_BYTES: {
 				// Use v8's ByteArray
@@ -244,7 +336,7 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 		return NULL;
 	}
 
-	Local<Value> val_obj = obj->Get(String::NewSymbol("value"));
+	Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 	if ( val_obj->IsString() ) {
 		char * value = strdup(*String::Utf8Value(val_obj));
 		as_key_init(key, ns, set, value);

@@ -1,6 +1,8 @@
 ## Aerospike Client for node.js
 
-The Aerospike client for node.js is an add-on module, written in C++. 
+The Aerospike client for node.js is an add-on module, written in C++.
+ 
+The Aerospike node.js client supports Integer and String datatypes. 
 
 ## Prerequisites
 
@@ -10,7 +12,6 @@ Node.js, visit http://nodejs.org/download/
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is used for building the 
 library. To install the latest version, run:
 
-<<<<<<< HEAD
 The nodejs installed must be of version >= v0.10.*
 
 
@@ -63,6 +64,7 @@ Test the working of aerospike-client-node.js
 		hosts:[{ addr:"127.0.0.1", port : 3000 
 			//specify the list of node ip and port in the
 			//aerospike cluster, following the above format.
+		    }
 		    ]}
 	
 	
@@ -86,5 +88,17 @@ Test the working of aerospike-client-node.js
 		//handle the response 
 		console.log(rec);
 	})
+	
+	var k1 = [
+         {ns:'test',set:'demo',value:"value"+1},
+         {ns:'test',set:'demo',value:'value'+2},
+         {ns:'test',set:'demo',value:'value'+3}]
+	client.batch_get(k1,function (err, num_records, rec_list){
+	        console.log(err);
+        	for (i=0; i<num_records; i++) {
+                	console.log(rec_list[i]);
+        	}
+	}
+
 
 Refer to examples folder which demonstrates the above functionality.

@@ -11,7 +11,7 @@ var m = 0
 
 for (var i = 1; i <= n; i++ ) {
 
-  var k1 = ["test", "demo", "value"+i]
+  var k1 = ['test','demo','value'+i]; 
 
   //This function gets the complete record with all the bins.	
   client.get(k1,function (err, rec, meta){
