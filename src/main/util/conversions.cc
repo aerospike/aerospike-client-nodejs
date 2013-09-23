@@ -21,6 +21,8 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <node_buffer.h>
+#include <v8.h>
 #include <cstdlib>
 #include <unistd.h>
 
@@ -38,6 +40,7 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
+using namespace node;
 using namespace v8;
 
 /*******************************************************************************
@@ -172,6 +175,19 @@ Handle<Value> val_to_jsvalue(as_val * val)
 				return String::NewSymbol(as_string_get(sval));
 			}
 		}
+		case AS_BYTES : {
+			as_bytes * bval = as_bytes_fromval(val);
+			if ( bval ) {
+				int size = as_bytes_size(bval);
+				Buffer * buf = Buffer::New(size);
+				memcpy(node::Buffer::Data(buf), bval->value, size);
+				v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+				v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+				v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
+				v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+				return actualBuffer;
+			} 
+		}
 		default:
 			break;
 	}
@@ -239,6 +255,7 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 {
 	const Local<Array> props = obj->GetOwnPropertyNames();
 	const uint32_t count = props->Length();
+	
 
 	as_record_init(rec, count);
 
@@ -258,9 +275,18 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 			int64_t v = value->IntegerValue();
 			as_record_set_int64(rec, *n, v);
 		}
-		else {
-			return NULL;
+		else if ( value->IsObject() ) {
+			Local<Object> obj = value->ToObject();
+			if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+				return NULL;
+			}
+			int len = obj->GetIndexedPropertiesExternalArrayDataLength();
+			uint8_t* data = static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData());	
+			String::Utf8Value n(name);
+			as_record_set_raw(rec, *n, data, len);
 		}
+		else 
+			return NULL;
 	}
 
 	return rec;
@@ -296,8 +322,18 @@ Handle<Object> key_to_jsobject(const as_key * key)
 				obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
 			}
 			case AS_BYTES: {
-				// Use v8's ByteArray
-				// key->Set(String::NewSymbol("value"), String::NewSymbol(key->ns));
+				 as_bytes * bval = as_bytes_fromval(val);
+            	if ( bval ) {
+                	int size = as_bytes_size(bval);
+                	Buffer * buf = Buffer::New(size);
+                	memcpy(node::Buffer::Data(buf), bval->value, size);
+               		v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+                	v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+                	v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
+                	v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+					obj->Set(String::NewSymbol("key"), actualBuffer);
+            }
+
 			}
 			default:
 				break;
