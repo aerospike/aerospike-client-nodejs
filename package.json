@@ -8,7 +8,7 @@
 	"main" : "./build/Release/aerospike.node",
 	"scripts" : {
 		"preinstall" : "node-gyp rebuild",
-		"test" :  "node examples/put.js"
+		"test" :  "mocha test"
 	},
 	"engines" : {
 		"node" : ">=0.10"

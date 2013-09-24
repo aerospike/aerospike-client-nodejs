@@ -67,7 +67,9 @@ Test the working of aerospike-client-node.js
 		    }
 		    ]}
 	
-	
+	// Connect call connects to the aerospike cluster.
+	// Only one instance of AerospikeClient should be used across a
+	// an application.	
 	var client = aerospike.connect(config)
 	
 	var bins = {
@@ -100,5 +102,7 @@ Test the working of aerospike-client-node.js
         	}
 	}
 
-
+	//For graceful shutdown of Aerospike Cluster, invoke client.close()
+	// when the application shuts down
+	client.close();
 Refer to examples folder which demonstrates the above functionality.

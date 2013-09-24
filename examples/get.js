@@ -1,6 +1,7 @@
 var aerospike = require('aerospike')
 var assert = require('assert')
 var msgpack = require('msgpack')
+var sleep = require('sleep')
 var key = aerospike.key
 var config = {
 	hosts:[{ addr:"127.0.0.1", port: 3000 }
@@ -24,12 +25,16 @@ for (var i = 1; i <= n; i++ ) {
 	console.log(rec['i']);
 	console.log(rec['s']);
 	//Unpack the Buffer using msgpack
-	var unbuf = msgpack.unpack(rec['b']);
-	console.log(unbuf);
+	if ( rec['b'] instanceof Buffer) {
+		var unbuf = msgpack.unpack(rec['b']);
+		console.log(unbuf);
+	}
     console.log(meta);
     if ( (++m) == n ) {
         console.timeEnd(n + " get");
+	    client.close();
     }
 	});
- }
-	
+ 
+}
+

@@ -1,7 +1,7 @@
 var aerospike = require('aerospike')
 var assert = require('assert');
 var msgpack = require('msgpack');
-
+var sleep = require('sleep');
 
 var config = {
 	  hosts:[{ addr:"127.0.0.1",port : 3000 }
@@ -26,6 +26,9 @@ for (var i = 1; i <= n; i++ ) {
     }
     if ( (++m) == n ) {
       console.timeEnd(n + " put")
+	  client.close();
     }
   });
+
 }
+
