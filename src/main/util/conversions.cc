@@ -133,6 +133,13 @@ bool record_copy_constructor(const as_record* src, as_record** dest)
 				as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
 				break;
 			}
+			case AS_BYTES: {
+				uint8_t *bytes = (uint8_t*) malloc(sizeof(val->bytes.value));
+				memcpy(bytes, val->bytes.value, sizeof(val->bytes.value));
+				as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, sizeof(val->bytes.value), true);
+				break;
+			}
+				
 			default:
 				break;
 		}

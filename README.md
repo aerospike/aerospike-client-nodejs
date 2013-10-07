@@ -2,15 +2,15 @@
 
 The Aerospike client for node.js is an add-on module, written in C++.
  
-The Aerospike node.js client supports Integer and String datatypes. 
+The Aerospike node.js client supports Integer, String, Binary datatypes. 
 
 ## Prerequisites
 
-[Node.js](http://nodejs.org) version v0.10.x is required. To install the latest stable version of 
-Node.js, visit http://nodejs.org/download/
+[Node.js](http://nodejs.org) version v0.10.x is required. 
+To install the latest stable version of  Node.js, visit http://nodejs.org/download/
 
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is used for building the 
-library. To install the latest version, run:
+library. 
 
 The nodejs installed must be of version >= v0.10.*
 
@@ -85,11 +85,16 @@ Test the working of aerospike-client-node.js
 	  // handle the response
 	})
 
+	client.delete(["test","demo","a"], function(err, key) {
+		//handle the response
+	})
+
 	var bins = [ 'a','b' ];
 	client.select(["test","demo","a"],bins, function(err, rec, meta) {
 		//handle the response 
 		console.log(rec);
 	})
+
 	
 	var k1 = [
          {ns:'test',set:'demo',value:"value"+1},

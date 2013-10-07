@@ -1,0 +1,33 @@
+var aerospike = require('aerospike')
+var assert = require('assert')
+var msgpack = require('msgpack')
+var sleep = require('sleep')
+var key = aerospike.key
+var config = {
+	hosts:[{ addr:"127.0.0.1", port: 3000 }
+	      ]}
+
+var client = aerospike.connect(config)
+
+var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
+var m = 0
+
+console.time(n + " delete");
+for (var i = 1; i <= n; i++ ) {
+
+  var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
+
+  //This function gets the complete record with all the bins.	
+  client.delete(k1,function (err, key){
+	 if ( err.code != 0 ) {
+        console.log("error %s",err.message);
+    }
+	console.log(key);
+    if ( (++m) == n ) {
+        console.timeEnd(n + " delete");
+	    client.close();
+    }
+	});
+ 
+}
+
