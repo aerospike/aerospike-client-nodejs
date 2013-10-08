@@ -71,21 +71,32 @@ Test the working of aerospike-client-node.js
 	// Only one instance of AerospikeClient should be used across a
 	// an application.	
 	var client = aerospike.connect(config)
-	
+
+	// Error codes/ Status returned by the Aerospike Cluster for every operation
+	var status = aeropsike.Status;	
 	var bins = {
 		a: 123,
 		b: "xyz"
 	}
 
 	client.put(["test", "demo", "a"], bins, function(err, meta, key) {
+	 if (err.code == status.AEROSPIKE_OK) {
 	  // handle the response
+	 }
+	 else {
+		// Error -- Record is not written to aerospike server
+	 }
 	})
 	
 	client.get(["test", "demo", "b"], function(err, bins, meta, key) {
-	  // handle the response
+	  if (err.code == status.AEROSPIKE_OK) {
+	  	// handle the response
+	  }	else {
+		// Error -  Record is not retrieved
+	  }
 	})
 
-	client.delete(["test","demo","a"], function(err, key) {
+	client.remove(["test","demo","a"], function(err, key) {
 		//handle the response
 	})
 
@@ -100,14 +111,22 @@ Test the working of aerospike-client-node.js
          {ns:'test',set:'demo',value:"value"+1},
          {ns:'test',set:'demo',value:'value'+2},
          {ns:'test',set:'demo',value:'value'+3}]
-	client.batch_get(k1,function (err, num_records, rec_list){
-	        console.log(err);
+	client.batch_get(k1,function (err, rec_list){
+			if (err.code == status.AEROSPIKE_OK) {
+			num_records = rec_list.length;
         	for (i=0; i<num_records; i++) {
+				 if(rec_list[i].RecStatus == status.AEROSPIKE_OK) {
                 	console.log(rec_list[i]);
+				 }else {
+					// Record was not retrieved 
+				}
         	}
+		}
 	}
 
 	//For graceful shutdown of Aerospike Cluster, invoke client.close()
 	// when the application shuts down
 	client.close();
 Refer to examples folder which demonstrates the above functionality.
+
+

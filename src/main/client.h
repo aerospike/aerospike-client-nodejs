@@ -46,7 +46,6 @@ class AerospikeClient : public ObjectWrap {
 		static Handle<Value> NewInstance(const Arguments& args);
 
 		aerospike as;
-		
 	private:
 		
 		AerospikeClient();
@@ -82,7 +81,7 @@ class AerospikeClient : public ObjectWrap {
 		/**
  		 *		undefined client.delete(Key, function(Error,Key))
  		 */
-		static Handle<Value> Delete(const Arguments& args);		
+		static Handle<Value> Remove(const Arguments& args);		
 	
 		/**
  		 * 	undefined client.batch_get(Key[],function(Error,Record))

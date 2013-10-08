@@ -38,15 +38,6 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
-#define AS_ERR_CODE_NAME(__code) \
-	(__code == AEROSPIKE_OK ? "AEROSPIKE_OK" :\
-		(__code == AEROSPIKE_ERR_PARAM ? "AEROSPIKE_ERR_PARAM" :\
-			(__code == AEROSPIKE_ERR_RECORD_NOT_FOUND ? "AEROSPIKE_RECORD_NOT_FOUND" : "AEROSPIKE_ERR" )))
-
-#define ERR_ASSIGN(__error, __enum) \
-        __error->code = __enum; \
-        strcpy(__error->message, AS_ERR_CODE_NAME(__enum));
-
 
 using namespace v8;
 
@@ -59,10 +50,10 @@ using namespace v8;
  */
 typedef struct AsyncData {
 	aerospike * as;
-	int param_err;
+	int param_err;			 // To Keep track of the parameter errors from Nodejs 
 	as_error err;
-	as_batch batch;
-	as_batch_read  *results;
+	as_batch batch; 	     // Passed as input to aerospike_batch_get
+	as_batch_read  *results; // Results from a aerospike_batch_get operation
 	uint32_t n;
 	Persistent<Function> callback;
 } AsyncData;
@@ -129,6 +120,7 @@ static void * prepare(const Arguments& args)
             batch_from_jsarray(batch, keys);
         }
 		else {
+			//Parameter passed is not an array of Key Objects "ERROR..!"
 			data->param_err = 1;
 		}
 
@@ -153,7 +145,7 @@ static void execute(uv_work_t * req)
 	as_batch  * 	batch   = &data->batch;
 
  	// Invoke the blocking call.
-    // The error is handled in the calling JS code.
+    // Check for no parameter errors from Nodejs 
     if( data->param_err == 0) {
 	    aerospike_batch_get(as, err, NULL, batch, batch_callback, (void*) req->data);
 		if( err->code != AEROSPIKE_OK) {
@@ -191,7 +183,8 @@ static void respond(uv_work_t * req, int status)
 	Handle<Array> arr;
 	if(data->param_err == 1) {
 		// Sets the err->code and err->message in the 'err' variable
-		ERR_ASSIGN(err, AEROSPIKE_ERR_PARAM);
+		err->code = AEROSPIKE_ERR_PARAM;
+		strcpy(err->message,"AEROSPIKE_ERR_PARAM");
         err->func = NULL;
         err->line = NULL;
         err->file = NULL;
@@ -207,13 +200,7 @@ static void respond(uv_work_t * req, int status)
 		arr=Array::New(num_rec);	
 		for ( uint32_t i = 0; i< num_rec; i++) {
 			Handle<Object> obj = Object::New();
-			as_error _err;
-			as_error *err = &_err;
-			err->func = NULL;
-			err->line = NULL;
-			err->file = NULL;
-			ERR_ASSIGN(err, batch_results[i].result);
-			obj->Set(String::NewSymbol("Error"), error_to_jsobject(err));
+			obj->Set(String::NewSymbol("RecStatus"), Integer::New(batch_results[i].result));
 			if(batch_results[i].result == AEROSPIKE_OK) {	
 				obj->Set(String::NewSymbol("Record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key));
 				as_key_destroy((as_key*) batch_results[i].key);

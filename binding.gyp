@@ -9,7 +9,7 @@
         'src/main/client/get.cc',
         'src/main/client/put.cc',
 		'src/main/client/select.cc',
-		'src/main/client/delete.cc',
+		'src/main/client/remove.cc',
 		'src/main/client/batch_get.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
