@@ -1,5 +1,7 @@
 var aerospike = require('aerospike')
+var msgpack = require('msgpack')
 var status = aerospike.Status;
+var sleep = require('sleep');
 var config = {
 	hosts:[{ addr:"127.0.0.1", port: 3000 }
 	      ]}
@@ -8,10 +10,10 @@ var SegfaultHandler = require('segfault-handler');
 SegfaultHandler.registerHandler();
 
 var client = aerospike.connect(config)
-
+ 
 // Currently the batch operation is supported only for a set of 
 // keys from the same namespace.
-for (var i = 0 ;i < 5000; i++) {
+for (var i = 0 ;i < 3500; i++) {
   var k1 = [
 	 {ns:'test',set:'demo',key:"value" + (i*4) },
 	 {ns:'test',set:'demo',key:"value" + (i*4 + 1) },
@@ -34,7 +36,14 @@ for (var i = 0 ;i < 5000; i++) {
 			if ( rec_list[i].RecStatus != status.AEROSPIKE_OK) {
 				console.log(rec_list[i].RecStatus);
 			} else {
-				console.log(rec_list[i].Record);
+				var bin = rec_list[i].Record.bins['b'];
+				console.log(bin);
+				 if ( bin instanceof Buffer) {
+    		    	var unbuf = msgpack.unpack(bin);
+	        	 	console.log(unbuf);
+    			 } else {
+					console.log("Not Buffer");
+				 }
 			}
 		}
 	}else {

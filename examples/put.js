@@ -15,7 +15,8 @@ var m = 0
 console.time(n + " put")
 for (var i = 1; i <= n; i++ ) {
 
-  var o = {"a" : 1, "b" : 2, "c" : [1, 2, 3]};
+  var str = "This is abnormally lengthy string. This is to test batch_get functioning for more than 8 bytes";
+  var o = {"a" : 1, "b" : 2, "c" : [1, 2, 3],"d": str};
   // pack the object o using msgpack
   var pbuf = msgpack.pack(o);
   var k1 = {'ns':"test", 'set':"demo", 'key':"value" + i }
