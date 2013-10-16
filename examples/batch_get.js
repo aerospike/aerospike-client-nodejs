@@ -10,10 +10,14 @@ var SegfaultHandler = require('segfault-handler');
 SegfaultHandler.registerHandler();
 
 var client = aerospike.connect(config)
+var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 3500
+var m = 0
+
+console.time(n + " batch_get")
  
 // Currently the batch operation is supported only for a set of 
 // keys from the same namespace.
-for (var i = 0 ;i < 3500; i++) {
+for (var i = 0 ;i < n; i++) {
   var k1 = [
 	 {ns:'test',set:'demo',key:"value" + (i*4) },
 	 {ns:'test',set:'demo',key:"value" + (i*4 + 1) },
@@ -31,8 +35,8 @@ for (var i = 0 ;i < 3500; i++) {
   **/  
  client.batch_get(k1,function (err, rec_list){
 	if ( err.code == status.AEROSPIKE_OK ) {
-		var n = rec_list.length;
-		for(i=0; i<n; i++) {
+		var num = rec_list.length;
+		for(i=0; i<num; i++) {
 			if ( rec_list[i].RecStatus != status.AEROSPIKE_OK) {
 				console.log(rec_list[i].RecStatus);
 			} else {
@@ -41,8 +45,6 @@ for (var i = 0 ;i < 3500; i++) {
 				 if ( bin instanceof Buffer) {
     		    	var unbuf = msgpack.unpack(bin);
 	        	 	console.log(unbuf);
-    			 } else {
-					console.log("Not Buffer");
 				 }
 			}
 		}
@@ -50,7 +52,10 @@ for (var i = 0 ;i < 3500; i++) {
 			console.log("Error");
 			console.log(err.message);
 	}
-
+	if ( (++m) == n ) {
+      console.timeEnd(n + " batch_get")
+      client.close();
+    }
 });
 
 }

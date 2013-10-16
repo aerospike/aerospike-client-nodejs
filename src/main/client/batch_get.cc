@@ -50,7 +50,7 @@ using namespace v8;
  */
 typedef struct AsyncData {
 	aerospike * as;
-	int param_err;			 // To Keep track of the parameter errors from Nodejs 
+	int node_err;			 // To Keep track of the parameter errors from Nodejs 
 	as_error err;
 	as_batch batch; 	     // Passed as input to aerospike_batch_get
 	as_batch_read  *results; // Results from a aerospike_batch_get operation
@@ -108,7 +108,7 @@ static void * prepare(const Arguments& args)
         // Build the async data
         AsyncData *     data = new AsyncData;
         data->as = &client->as;
-		data->param_err = 0;
+		data->node_err = 0;
 		data->n = 0;
 		data->results = NULL;
 
@@ -121,7 +121,9 @@ static void * prepare(const Arguments& args)
         }
 		else {
 			//Parameter passed is not an array of Key Objects "ERROR..!"
-			data->param_err = 1;
+			data->node_err = 1;
+			strcpy(data->err.message,"AEROSPIKE_ERR_PARAM");
+			data->err.code = AEROSPIKE_ERR_PARAM;
 		}
 
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));	
@@ -144,9 +146,14 @@ static void execute(uv_work_t * req)
     as_error  *     err     = &data->err;
 	as_batch  * 	batch   = &data->batch;
 
+	if( as->cluster == NULL) {
+		data->node_err = 1;
+		strcpy(err->message,"AEROSPIKE_ERR_CLIENT");
+		err->code = AEROSPIKE_ERR_CLIENT;
+	}
  	// Invoke the blocking call.
     // Check for no parameter errors from Nodejs 
-    if( data->param_err == 0) {
+    if( data->node_err == 0) {
 	    aerospike_batch_get(as, err, NULL, batch, batch_callback, (void*) req->data);
 		if( err->code != AEROSPIKE_OK) {
 			data->results = NULL;
@@ -181,10 +188,8 @@ static void respond(uv_work_t * req, int status)
 	int num_args = 2;
 	Handle<Value> argv[num_args] ;
 	Handle<Array> arr;
-	if(data->param_err == 1) {
+	if(data->node_err == 1) {
 		// Sets the err->code and err->message in the 'err' variable
-		err->code = AEROSPIKE_ERR_PARAM;
-		strcpy(err->message,"AEROSPIKE_ERR_PARAM");
         err->func = NULL;
         err->line = NULL;
         err->file = NULL;

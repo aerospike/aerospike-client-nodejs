@@ -99,6 +99,9 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     
     aerospike_connect(&client->as, &err);
 
+	if (err.code != AEROSPIKE_OK) {
+		client->as.cluster = NULL;
+	}
     client->Wrap(args.This());
 
     return args.This();
