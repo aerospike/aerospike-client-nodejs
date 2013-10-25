@@ -38,6 +38,16 @@ extern "C" {
 #include "../client.h"
 
 using namespace v8;
+/****************************************************************************
+ * MACROS
+ ****************************************************************************/ 
+
+#define COPY_ERR_MESSAGE(__err,__message) \
+    strcpy(__err.message, #__message); \
+	    __err.code = __message; 
+
+#define V8INTEGER_TO_CINTEGER(__num) \
+	__num->ToInteger()->Value();
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -55,6 +65,10 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record);
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key);
 
 as_record * record_from_jsobject(as_record * rec, Local<Object> obj);
+as_policy_write * writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj);
+as_policy_read * readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj);
+as_policy_remove * removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj);
+as_policy_batch * batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
 
 Handle<Object> key_to_jsobject(const as_key * key);
 

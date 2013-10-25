@@ -51,14 +51,17 @@ using namespace v8;
  *  running asynchronous functions. We create a data structure to hold the 
  *  data we need during and after async work.
  */
+
 typedef struct AsyncData {
 	aerospike * as;
 	int param_err;
 	as_error err;
+	as_policy_write policy;
 	as_key key;
 	as_record rec;
 	Persistent<Function> callback;
 } AsyncData;
+
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -76,28 +79,55 @@ static void * prepare(const Arguments& args)
 	HandleScope scope;
 
 	// Unwrap 'this'
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
 	// Build the async data
-	AsyncData * data = new AsyncData;
-	data->as = &client->as;
+	AsyncData * data			= new AsyncData;
+	data->as					= &client->as;
 
 	// Local variables
-	as_key *    key = &data->key;
-	as_record * rec = &data->rec;
-
+	as_key *    key				= &data->key;
+	as_record * rec				= &data->rec;
+	as_policy_write * policy	= &data->policy;
+	data->param_err				= 0;
+	int arglength = args.Length();
 	if ( args[0]->IsArray() ) {
 		Local<Array> arr = Local<Array>::Cast(args[0]);
 		key_from_jsarray(key, arr);
 	}
 	else if ( args[0]->IsObject() ) {
 		key_from_jsobject(key, args[0]->ToObject());
+	} 
+	else {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 	
 
-	record_from_jsobject(rec, args[1]->ToObject());
-	
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+	if ( args[1]->IsObject() ) {
+		record_from_jsobject(rec, args[1]->ToObject());
+	} else {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
+
+	if ( arglength > 3 ) {
+		if ( args[2]->IsObject() ) {
+			writepolicy_from_jsobject(policy, args[2]->ToObject());
+		} else {
+			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		}
+	} else {
+		// When node application does not pass any write policy where should the default be 
+		// initialized,
+		// 1. Initialize in v8.
+		// 2. Pass a NULL and let C initialize
+		// Which is better way..
+		as_policy_write_init(policy);
+	}
+
+	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 	
 	return data;
 }
@@ -111,15 +141,23 @@ static void * prepare(const Arguments& args)
 static void execute(uv_work_t * req)
 {
 	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
-	aerospike * as		= data->as;
-	as_error *  err		= &data->err;
-	as_key *    key		= &data->key;
-	as_record * rec		= &data->rec;
+	AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
+	aerospike * as			 = data->as;
+	as_error *  err			 = &data->err;
+	as_key *    key			 = &data->key;
+	as_record * rec			 = &data->rec;
+	as_policy_write * policy = &data->policy;
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
-	aerospike_key_put(as, err, NULL, key, rec);
+	if (as->cluster == NULL) {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+	}
+	
+	if ( data->param_err == 0) {
+		aerospike_key_put(as, err, policy, key, rec);
+	}
 }
 
 /**
@@ -139,13 +177,22 @@ static void respond(uv_work_t * req, int status)
 	as_error *	err		= &data->err;
 	as_key *    key		= &data->key;
 	as_record *	rec		= &data->rec;
-	
+
+	Handle<Value> argv[3];
 	// Build the arguments array for the callback
-	Handle<Value> argv[] = {
-		error_to_jsobject(err),
-		recordmeta_to_jsobject(rec),
-		key_to_jsobject(key)
-	};
+	if (data->param_err == 0) {
+		argv[0] = error_to_jsobject(err);
+		argv[1] = recordmeta_to_jsobject(rec);
+		argv[2] = key_to_jsobject(key);
+	}
+	else {
+		err->func = NULL;
+		err->line = NULL;
+		err->file = NULL;
+		argv[0] = error_to_jsobject(err);
+		argv[1] = Null();
+		argv[2] = Null();
+	}	
 
 	// Surround the callback in a try/catch for safety
 	TryCatch try_catch;

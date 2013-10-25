@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-        #include <aerospike/aerospike.h>
-        #include <aerospike/aerospike_key.h>
-        #include <aerospike/as_config.h>
-        #include <aerospike/as_key.h>
-        #include <aerospike/as_record.h>
-		#include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/aerospike_batch.h>
 }
 
 #include <node.h>
@@ -52,6 +52,7 @@ typedef struct AsyncData {
 	aerospike * as;
 	int node_err;			 // To Keep track of the parameter errors from Nodejs 
 	as_error err;
+	as_policy_batch policy;
 	as_batch batch; 	     // Passed as input to aerospike_batch_get
 	as_batch_read  *results; // Results from a aerospike_batch_get operation
 	uint32_t n;
@@ -100,35 +101,45 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
  */
 static void * prepare(const Arguments& args)
 {
-        // The current scope of the function
-        HandleScope scope;
+	// The current scope of the function
+	HandleScope scope;
 
-        AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-        // Build the async data
-        AsyncData *     data = new AsyncData;
-        data->as = &client->as;
-		data->node_err = 0;
-		data->n = 0;
-		data->results = NULL;
+	// Build the async data
+	AsyncData *     data = new AsyncData;
+	data->as = &client->as;
+	data->node_err = 0;
+	data->n = 0;
+	data->results = NULL;
 
-        // Local variables
-        as_batch * batch = &data->batch;
+	// Local variables
+	as_batch * batch = &data->batch;
+	as_policy_batch * policy = &data->policy;
 
-        if ( args[0]->IsArray() ) {
-			Local<Array> keys = Local<Array>::Cast(args[0]);
-            batch_from_jsarray(batch, keys);
-        }
-		else {
-			//Parameter passed is not an array of Key Objects "ERROR..!"
+	int arglength = args.Length();
+
+	if ( args[0]->IsArray() ) {
+		Local<Array> keys = Local<Array>::Cast(args[0]);
+		batch_from_jsarray(batch, keys);
+	}
+	else {
+		//Parameter passed is not an array of Key Objects "ERROR..!"
+		data->node_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
+
+	if (arglength > 2 ) {
+		if ( args[1]->IsObject() ){
+			batchpolicy_from_jsobject(policy, args[1]->ToObject());
+		} else {
 			data->node_err = 1;
-			strcpy(data->err.message,"AEROSPIKE_ERR_PARAM");
-			data->err.code = AEROSPIKE_ERR_PARAM;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		}
+	}
+	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
 
-        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));	
-
-        return data;
+	return data;
 }
 /**
  *      execute() — Function to execute inside the worker-thread.
@@ -138,29 +149,29 @@ static void * prepare(const Arguments& args)
  */
 static void execute(uv_work_t * req)
 {
-    // Fetch the AsyncData structure
-    AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+	// Fetch the AsyncData structure
+	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
-    // Data to be used.
-    aerospike *     as      = data->as;
-    as_error  *     err     = &data->err;
+	// Data to be used.
+	aerospike *     as      = data->as;
+	as_error  *     err     = &data->err;
 	as_batch  * 	batch   = &data->batch;
-
+	as_policy_batch * policy= &data->policy;
+	
 	if( as->cluster == NULL) {
 		data->node_err = 1;
-		strcpy(err->message,"AEROSPIKE_ERR_CLIENT");
-		err->code = AEROSPIKE_ERR_CLIENT;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
 	}
- 	// Invoke the blocking call.
-    // Check for no parameter errors from Nodejs 
-    if( data->node_err == 0) {
-	    aerospike_batch_get(as, err, NULL, batch, batch_callback, (void*) req->data);
+	// Invoke the blocking call.
+	// Check for no parameter errors from Nodejs 
+	if( data->node_err == 0) {
+		aerospike_batch_get(as, err, policy, batch, batch_callback, (void*) req->data);
 		if( err->code != AEROSPIKE_OK) {
 			data->results = NULL;
 			data->n = 0;
 		}
 	}
-	
+
 }
 
 
@@ -190,16 +201,16 @@ static void respond(uv_work_t * req, int status)
 	Handle<Array> arr;
 	if(data->node_err == 1) {
 		// Sets the err->code and err->message in the 'err' variable
-        err->func = NULL;
-        err->line = NULL;
-        err->file = NULL;
+		err->func = NULL;
+		err->line = NULL;
+		err->file = NULL;
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
 		argv[2] = Null();
 	}else if (num_rec == 0 || batch_results == NULL) {
-		 argv[0] = error_to_jsobject(err);
-		 argv[1] = Null();
-		 argv[2] = Null();
+		argv[0] = error_to_jsobject(err);
+		argv[1] = Null();
+		argv[2] = Null();
 	}
 	else {
 		arr=Array::New(num_rec);	
@@ -227,7 +238,7 @@ static void respond(uv_work_t * req, int status)
 	if ( try_catch.HasCaught() ) {
 		node::FatalException(try_catch);
 	}
-	
+
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();
@@ -247,6 +258,6 @@ static void respond(uv_work_t * req, int status)
  */
 Handle<Value> AerospikeClient::Batch_Get(const Arguments& args)
 {
-        return async_invoke(args, prepare, execute, respond);
+	return async_invoke(args, prepare, execute, respond);
 }
 

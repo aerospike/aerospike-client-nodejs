@@ -53,6 +53,7 @@ typedef struct AsyncData {
 	as_error err;
 	as_key key;
 	as_record rec;
+	as_policy_read policy;
 	Persistent<Function> callback;
 } AsyncData;
 
@@ -76,12 +77,14 @@ static void * prepare(const Arguments& args)
 	// Build the async data
 	AsyncData *	data = new AsyncData;
 	data->as = &client->as;
-
+	
 	data->param_err = 0;
 	// Local variables
-	as_key *	key = &data->key;
-	as_record *	rec = &data->rec;
+	as_key *	key			= &data->key;
+	as_record *	rec			= &data->rec;
+	as_policy_read* policy	= &data->policy;
 
+	int arglength = args.Length();
 	if ( args[0]->IsArray() ) {
 		Local<Array> arr = Local<Array>::Cast(args[0]);
 		key_from_jsarray(key, arr);
@@ -91,11 +94,22 @@ static void * prepare(const Arguments& args)
 	}
 	else {
 		data->param_err = 1;
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+	}
+	if ( arglength > 2 ) {
+		if ( args[1]->IsObject() ) {
+			readpolicy_from_jsobject( policy, args[1]->ToObject());
+		}else {
+			data->param_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+		}
+	} else {
+		as_policy_read_init(policy);
 	}
 
 	as_record_init(rec, 0);
 
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 		
 	return data;
 }
@@ -111,17 +125,17 @@ static void execute(uv_work_t * req)
 	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
 	// Data to be used.
-	aerospike *	as	= data->as;
-	as_error *	err	= &data->err;
-	as_key *	key	= &data->key;
-	as_record *	rec	= &data->rec;
-		
+	aerospike *	as			= data->as;
+	as_error *	err			= &data->err;
+	as_key *	key			= &data->key;
+	as_record *	rec			= &data->rec;
+	as_policy_read* policy	= &data->policy;
 
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
 	if ( data->param_err == 0) {
-		aerospike_key_get(as, err, NULL, key, &rec);	
+		aerospike_key_get(as, err, policy, key, &rec);	
 	}
 
 }
@@ -140,12 +154,11 @@ static void respond(uv_work_t * req, int status)
 	HandleScope scope;
 
 	// Fetch the AsyncData structure
-	AsyncData *	data	= reinterpret_cast<AsyncData *>(req->data);
+	AsyncData *	data		= reinterpret_cast<AsyncData *>(req->data);
 	
-	as_error *	err		= &data->err;
-	as_key *	key		= &data->key;
-	as_record *	rec		= &data->rec;
-
+	as_error *	err			= &data->err;
+	as_key *	key			= &data->key;
+	as_record *	rec			= &data->rec;
 	int nargs=4;
 	Handle<Value> argv[nargs];
 	// Build the arguments array for the callback
@@ -157,8 +170,6 @@ static void respond(uv_work_t * req, int status)
 	
 	}
 	else {
-		err->code = AEROSPIKE_ERR_PARAM;
-		err->message[0] = '\0';
 		err->func = NULL;
 		err->line = NULL;
 		err->file = NULL;

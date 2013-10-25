@@ -50,9 +50,11 @@ using namespace v8;
 
 typedef struct AsyncData {
     aerospike * as;
+	int param_err;
     as_error err;
     as_key key;
     as_record rec;
+	as_policy_read policy;
     Persistent<Function> callback;
     int num_bins;
     char** bins;
@@ -80,20 +82,25 @@ static void * prepare(const Arguments& args)
     data->as = &client->as;
 
 	// Local variables
-	 as_key *    key = &data->key;
+	as_key *    key = &data->key;
     as_record * rec = &data->rec;
+	as_policy_read * policy = &data->policy;
 
+	int arglength = args.Length();
     if ( args[0]->IsArray() ) {
         Local<Array> arr = Local<Array>::Cast(args[0]);
         key_from_jsarray(key, arr);
     }
     else if ( args[0]->IsObject() ) {
         key_from_jsobject(key, args[0]->ToObject());
-    }
+    } else {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
 
     as_record_init(rec, 0);
 	// To select the values of given bin, not complete record.
-	 if ( args.Length() == 3  && args[1]->IsArray() ) {
+	 if ( args[1]->IsArray() ) {
 
         Local<Array> barray = Local<Array>::Cast(args[1]);
         int num_bins = barray->Length();
@@ -106,10 +113,24 @@ static void * prepare(const Arguments& args)
         }
 		// The last entry should be NULL because we are passing to aerospike_key_select
 		data->bins[num_bins] = NULL;
+    } else {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
 
-    }
+	if ( arglength > 3) {
+		if ( args[2]->IsObject() ) {
+			readpolicy_from_jsobject( policy, args[2]->ToObject());
+		} else {
+			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		}
+	} else {
+		as_policy_read_init(policy);
+	}
 
-    data->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+
+    data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 
     return data;
 }
@@ -130,11 +151,14 @@ static void execute(uv_work_t * req)
     as_error *  err = &data->err;
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
-
+	as_policy_read * policy = &data->policy;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
-    aerospike_key_select(as, err, NULL, key, (const char **)data->bins, &rec);
+	if ( data->param_err == 0 ) {
+		aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
+
+	}
 
 }
 
@@ -158,12 +182,22 @@ static void respond(uv_work_t * req, int status)
     as_record * rec     = &data->rec;
 
     // Build the arguments array for the callback
-    Handle<Value> argv[] = {
-        error_to_jsobject(err),
-        recordbins_to_jsobject(rec),
-        recordmeta_to_jsobject(rec),
-        key_to_jsobject(key)
-    };
+    Handle<Value> argv[4];
+	if ( data->param_err == 0 )
+	{
+        argv[0] = error_to_jsobject(err);
+        argv[1] = recordbins_to_jsobject(rec);
+        argv[2] = recordmeta_to_jsobject(rec);
+        argv[3] = key_to_jsobject(key);
+    } else {
+		err->func = NULL;
+		err->line = NULL;
+		err->file = NULL;
+		argv[0] = error_to_jsobject(err);
+		argv[1] = Null();
+		argv[2] = Null();
+		argv[3] = Null();
+	}
 	// Surround the callback in a try/catch for safety
 	 TryCatch try_catch;
 

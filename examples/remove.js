@@ -3,6 +3,7 @@ var assert = require('assert')
 var msgpack = require('msgpack')
 var sleep = require('sleep')
 var key = aerospike.key
+var policy = aerospike.Policy;
 var config = {
 	hosts:[{ addr:"127.0.0.1", port: 3000 }
 	      ]}
@@ -18,8 +19,10 @@ for (var i = 1; i <= n; i++ ) {
 
   var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
 
+var removepolicy = { timeout : 10, gen : 1, Retry : policy.RetryPolicy.AS_POLICY_RETRY_ONCE,
+					 Key: policy.KeyPolicy.AS_POLICY_KEY_SEND }
   //This function deletes the complete record with all the bins.	
-  client.remove(k1,function (err, key){
+  client.remove(k1,removepolicy, function (err, key){
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
     }

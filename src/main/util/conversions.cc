@@ -68,7 +68,7 @@ as_config * config_from_jsobject(as_config * config, Local<Object> obj)
 			}
 	
 			if ( port->IsNumber() ) {	
-				config->hosts[i].port = port->ToInteger()->Value();		
+				config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);		
 			}
 			else {
 				return NULL;
@@ -258,46 +258,177 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
 
 	return scope.Close(rec);
 }
+//Forward references;
+uint32_t setTTL ( Local<Object> obj, uint32_t *ttl);
+uint16_t setGeneration( Local<Object> obj, uint16_t * generation);
 
 as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 {
-	const Local<Array> props = obj->GetOwnPropertyNames();
-	const uint32_t count = props->Length();
-	
+	HandleScope scope;
+	Local<Value> binlist = obj->Get(String::NewSymbol("bins"));
 
-	as_record_init(rec, count);
 
-	for ( uint32_t i = 0; i < count; i++ ) {
+	if ( binlist->IsObject() ) {
+		Local<Object> bins = binlist->ToObject();
+		const Local<Array> props = bins->GetOwnPropertyNames();
+		const uint32_t count = props->Length();
+
+		as_record_init(rec, count);
+		for ( uint32_t i = 0; i < count; i++ ) {
+
+			const Local<Value> name = props->Get(i);
+			const Local<Value> value = bins->Get(name);
+
+			String::Utf8Value n(name);
+
 		
-		const Local<Value> name = props->Get(i);
-		const Local<Value> value = obj->Get(name);
+			String::Utf8Value p(value);
+			if ( value->IsString() ) {
+				String::Utf8Value v(value);
+				as_record_set_str(rec, *n, strdup(*v));
+				as_record_get_string(rec, *n)->free = true;
+			}
+			else if ( value->IsNumber() ) {
+				int64_t v = value->IntegerValue();
+				as_record_set_int64(rec, *n, v);
+			}
+			else if ( value->IsObject() ) {
+				Local<Object> obj = value->ToObject();
+				if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+					return NULL;
+				}
+				int len = obj->GetIndexedPropertiesExternalArrayDataLength();
+				uint8_t* data = static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData());	
+				as_record_set_raw(rec, *n, data, len);
 
-		if ( value->IsString() ) {
-			String::Utf8Value n(name);
-			String::Utf8Value v(value);
-			as_record_set_str(rec, *n, strdup(*v));
-			as_record_get_string(rec, *n)->free = true;
-		}
-		else if ( value->IsNumber() ) {
-			String::Utf8Value n(name);
-			int64_t v = value->IntegerValue();
-			as_record_set_int64(rec, *n, v);
-		}
-		else if ( value->IsObject() ) {
-			Local<Object> obj = value->ToObject();
-			if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+			}
+			else {
 				return NULL;
 			}
-			int len = obj->GetIndexedPropertiesExternalArrayDataLength();
-			uint8_t* data = static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData());	
-			String::Utf8Value n(name);
-			as_record_set_raw(rec, *n, data, len);
 		}
-		else 
-			return NULL;
 	}
+	setTTL( obj, &rec->ttl);
+	setGeneration( obj, &rec->gen);
 
 	return rec;
+}
+
+uint32_t setTTL ( Local<Object> obj, uint32_t *ttl)
+{
+	HandleScope scope;
+	Local<Value> v8ttl = obj->Get(String::NewSymbol("ttl")) ;
+	if ( v8ttl->IsNumber() ) {
+		(*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
+	}
+	return (*ttl);
+}
+
+uint32_t setTimeOut( Local<Object> obj, uint32_t *timeout)
+{
+	HandleScope scope;
+	Local<Value> v8timeout = obj->Get(String::NewSymbol("timeout")) ;
+	if ( v8timeout->IsNumber() ) {
+		(*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
+	}
+	return (*timeout);
+}
+
+uint16_t setGeneration( Local<Object> obj, uint16_t * generation)
+{
+	HandleScope scope;
+	Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
+	if ( v8gen->IsNumber() ) {
+		(*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
+	}
+	return (*generation);
+}
+
+as_policy_key * setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy)
+{
+	HandleScope scope;
+	Local<Value> v8keypolicy = obj->Get(String::NewSymbol("Key"));
+	if ( v8keypolicy->IsNumber()) {
+		(*keypolicy) = (as_policy_key) V8INTEGER_TO_CINTEGER(v8keypolicy);
+	}
+	return keypolicy;
+}
+
+as_policy_gen * setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy)
+{
+	HandleScope scope;
+	Local<Value> v8genpolicy = obj->Get(String::NewSymbol("Gen"));
+	if ( v8genpolicy->IsNumber() ) {
+		(*genpolicy) = (as_policy_gen) V8INTEGER_TO_CINTEGER(v8genpolicy);
+	}
+	return genpolicy;
+}
+
+as_policy_retry * setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy) 
+{
+	HandleScope scope;
+	Local<Value> v8retrypolicy = obj->Get(String::NewSymbol("Retry"));
+	if ( v8retrypolicy->IsNumber() ) {
+		(*retrypolicy) = (as_policy_retry) V8INTEGER_TO_CINTEGER(v8retrypolicy)
+	}
+	return retrypolicy;
+}
+
+as_policy_exists * setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
+{
+	HandleScope scope;
+	Local<Value> v8existspolicy = obj->Get(String::NewSymbol("Exists"));
+	if ( v8existspolicy->IsNumber() ) {
+		(*existspolicy) = (as_policy_exists) V8INTEGER_TO_CINTEGER(v8existspolicy)
+	}
+	return existspolicy;
+}
+as_policy_batch * batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj)
+{
+	HandleScope scope;
+
+	as_policy_batch_init(policy);
+
+	setTimeOut( obj, &policy->timeout);
+
+	return policy;
+}
+
+as_policy_remove * removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj)
+{
+	HandleScope scope;
+
+	as_policy_remove_init(policy);
+
+	setTimeOut( obj, &policy->timeout );
+	setGeneration( obj, &policy->generation);
+	setRetryPolicy( obj, &policy->retry);
+	setKeyPolicy( obj, &policy->key);
+
+	return policy;
+}
+
+as_policy_read * readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj)
+{
+	HandleScope scope;
+	as_policy_read_init( policy );
+	setTimeOut( obj, &policy->timeout);
+	setKeyPolicy( obj, &policy->key);
+	return policy;
+}
+
+as_policy_write * writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj)
+{
+	HandleScope scope;
+
+	as_policy_write_init( policy );	
+
+	setTimeOut( obj, &policy->timeout);
+	setGenPolicy(obj, &policy->gen);
+	setRetryPolicy(obj, &policy->retry);
+	setKeyPolicy( obj, &policy->key);	
+	setExistsPolicy( obj, &policy->exists);
+
+	return policy;
 }
 
 Handle<Object> key_to_jsobject(const as_key * key)
@@ -388,7 +519,7 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 		return key;
 	}
 	else if ( val_obj->IsNumber() ) {
-		int64_t value = val_obj->ToInteger()->Value();
+		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
 		return key;
 	}
@@ -437,7 +568,7 @@ as_key * key_from_jsarray(as_key * key, Local<Array> arr)
 		return key;
 	}
 	else if ( val_obj->IsNumber() ) {
-		int64_t value = val_obj->ToInteger()->Value();
+		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
 		return key;
 	}
