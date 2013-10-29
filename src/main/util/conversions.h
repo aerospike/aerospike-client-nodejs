@@ -49,32 +49,40 @@ using namespace v8;
 #define V8INTEGER_TO_CINTEGER(__num) \
 	__num->ToInteger()->Value();
 
+#define AS_NODE_PARAM_ERR -1
+#define AS_NODE_PARAM_OK   0
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
 
-as_config * config_from_jsobject(as_config * config, Local<Object> obj);
-
+// Functions to convert C client structure to v8 object(map)
 Handle<Object> error_to_jsobject(as_error * error);
-
-
 Handle<Value> val_to_jsvalue(as_val * val);
-
 Handle<Object> recordbins_to_jsobject(const as_record * record);
 Handle<Object> recordmeta_to_jsobject(const as_record * record);
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key);
-
-as_record * record_from_jsobject(as_record * rec, Local<Object> obj);
-as_policy_write * writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj);
-as_policy_read * readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj);
-as_policy_remove * removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj);
-as_policy_batch * batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
-
 Handle<Object> key_to_jsobject(const as_key * key);
 
-as_key * key_from_jsobject(as_key * key, Local<Object> obj);
-as_key * key_from_jsarray(as_key * key, Local<Array> arr);
 
-as_batch * batch_from_jsarray(as_batch * batch, Local<Array> arr);
+// Functions to convert v8 objects(maps) to C client structures
+int config_from_jsobject(as_config * config, Local<Object> obj);
+int record_from_jsobject(as_record * rec, Local<Object> obj);
+int key_from_jsobject(as_key * key, Local<Object> obj);
+int key_from_jsarray(as_key * key, Local<Array> arr);
+int batch_from_jsarray(as_batch * batch, Local<Array> arr);
+int operations_from_jsarray(as_operations * ops, Local<Array> arr); 
+
+//clone function for record and key
 bool record_copy_constructor(const as_record * src, as_record ** dest);
 bool key_copy_constructor(const as_key* src, as_key** dest);
+
+
+// Function to convert v8 policies to C structures
+int writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj);
+int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj);
+int removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj);
+int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
+int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj);
+
+

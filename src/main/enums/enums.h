@@ -28,3 +28,6 @@ using namespace v8;
 //Eg < AS_POLICY_EXISTS_IGNORE, 1 >
  Handle<Object> Exists_Policy();
 
+// Exposes as_operator in C to nodejs application as a map <String, Int>
+// Eg < AS_OPERATOR_WRITE, 0 >
+ Handle<Object> Operators_Enum();

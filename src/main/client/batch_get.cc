@@ -38,7 +38,11 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
-
+#define BGET_ARG_POS_KEY	 0
+#define BGET_ARG_POS_BPOLICY 1 // Batch policy position and callback position is not same 
+#define BGET_ARG_POS_CB		 2 // in the argument list for every invoke of batch_get. If 
+							   // writepolicy is not passed from node application, argument 
+						       // position for callback changes.
 using namespace v8;
 
 /*******************************************************************************
@@ -119,24 +123,33 @@ static void * prepare(const Arguments& args)
 
 	int arglength = args.Length();
 
-	if ( args[0]->IsArray() ) {
-		Local<Array> keys = Local<Array>::Cast(args[0]);
-		batch_from_jsarray(batch, keys);
+	if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
+		Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
+		if( batch_from_jsarray(batch, keys) != AS_NODE_PARAM_OK) {
+			data->node_err = 1;
+		}
 	}
 	else {
 		//Parameter passed is not an array of Key Objects "ERROR..!"
 		data->node_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
 	if (arglength > 2 ) {
-		if ( args[1]->IsObject() ){
-			batchpolicy_from_jsobject(policy, args[1]->ToObject());
-		} else {
+		if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
+			if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+				data->node_err = 1;
+			}
+		}else {
 			data->node_err = 1;
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		}
+	} else {
+		as_policy_batch_init(policy);
 	}
+
+	if ( data->node_err == 1 ) {
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+	}
+
 	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
 
 	return data;

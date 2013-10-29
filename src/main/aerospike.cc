@@ -86,6 +86,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
 	exports->Set(String::NewSymbol("Status"), Error_Codes());
 	exports->Set(String::NewSymbol("Policy"),GetAllPolicy());
+	exports->Set(String::NewSymbol("Operators"), Operators_Enum());
 }
 
 NODE_MODULE(aerospike, Aerospike)

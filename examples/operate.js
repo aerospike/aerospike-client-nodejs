@@ -4,6 +4,7 @@ var msgpack = require('msgpack')
 var sleep = require('sleep')
 var status = aerospike.Status;
 var policy = aerospike.Policy;
+var operations = aerospike.Operators;
 var config = {
 	hosts:[{ addr:"127.0.0.1", port: 3000 }
 	      ]}
@@ -16,14 +17,15 @@ var m = 0
 console.time(n + " get");
 for (var i = 1; i <= n; i++ ) {
 
-  var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
+  var k1 = {ns:"test",set:"demo",key:"value"+i}; 
 
-  var readpolicy = { timeout : 10, Key : policy.KeyPolicy.AS_POLICY_KEY_SEND };
+  var op_list = [ { operation: operations.AS_OPERATOR_INCR, binName:'i', binValue:i }]
   //This function gets the complete record with all the bins.	
-  client.get(k1,function (err, rec, meta){
+  client.operate(k1,op_list, function (err, rec, meta){
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
     }
+	console.log(err);
 	console.log(rec['i']);
 	console.log(rec['s']);
 	//Unpack the Buffer using msgpack

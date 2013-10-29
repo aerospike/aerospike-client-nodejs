@@ -40,6 +40,12 @@ extern "C" {
 
 using namespace v8;
 
+#define REMOVE_ARG_POS_KEY     0
+#define REMOVE_ARG_POS_WPOLICY 1 // remove policy position and callback position is not same 
+#define REMOVE_ARG_POS_CB      2 // for every invoke of remove. If removepolicy is not passed from node
+							     // application, argument position for callback changes.
+						  
+
 /*******************************************************************************
  *	TYPES
  ******************************************************************************/
@@ -84,28 +90,29 @@ static void * prepare(const Arguments& args)
 	as_policy_remove * policy = &data->policy;
 	int arglength = args.Length();
 
-	if ( args[0]->IsArray() ) {
-		Local<Array> arr = Local<Array>::Cast(args[0]);
-		key_from_jsarray(key, arr);
-	}
-	else if ( args[0]->IsObject() ) {
-		key_from_jsobject(key, args[0]->ToObject());
+	if ( args[ REMOVE_ARG_POS_KEY ]->IsObject() ) {
+		if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+			data->param_err = 1;
+		}
 	}
 	else {
 		data->param_err = 1;
 	}
 
 	if ( arglength > 2 ) {
-		if ( args[1]->IsObject() ) {
-			removepolicy_from_jsobject( policy, args[1]->ToObject() );
+		if ( args[REMOVE_ARG_POS_WPOLICY]->IsObject() ) {
+			if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject() ) != AS_NODE_PARAM_OK) {
+				data->param_err = 1;
+			}
 		} else {
 			data->param_err = 1;
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		}
 	} else {
 		as_policy_remove_init(policy);
 	}
-
+	if ( data->param_err == 1) {
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+	}
 	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 		
 	return data;

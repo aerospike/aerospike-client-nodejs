@@ -38,6 +38,12 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
+#define SELECT_ARG_POS_KEY     0
+#define SELECT_ARG_POS_BINS    1
+#define SELECT_ARG_POS_RPOLICY 2 // Read policy position and callback position is not same 
+#define SELECT_ARG_POS_CB      3 // for every invoke of select. If readpolicy is not passed from node
+                                 // application, argument position for callback changes.
+						  
 using namespace v8;
 
 /*******************************************************************************
@@ -85,22 +91,20 @@ static void * prepare(const Arguments& args)
 	as_key *    key = &data->key;
     as_record * rec = &data->rec;
 	as_policy_read * policy = &data->policy;
+	data->param_err = 0;
 
 	int arglength = args.Length();
-    if ( args[0]->IsArray() ) {
-        Local<Array> arr = Local<Array>::Cast(args[0]);
-        key_from_jsarray(key, arr);
-    }
-    else if ( args[0]->IsObject() ) {
-        key_from_jsobject(key, args[0]->ToObject());
+    if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
+        if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK) {
+			data->param_err = 1;
+		}
     } else {
 		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
     as_record_init(rec, 0);
 	// To select the values of given bin, not complete record.
-	 if ( args[1]->IsArray() ) {
+	 if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
 
         Local<Array> barray = Local<Array>::Cast(args[1]);
         int num_bins = barray->Length();
@@ -115,20 +119,22 @@ static void * prepare(const Arguments& args)
 		data->bins[num_bins] = NULL;
     } else {
 		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
 	if ( arglength > 3) {
-		if ( args[2]->IsObject() ) {
-			readpolicy_from_jsobject( policy, args[2]->ToObject());
+		if ( args[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
+			if (readpolicy_from_jsobject( policy, args[SELECT_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+				data->param_err = 1;
+			}
 		} else {
 			data->param_err = 1;
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		}
 	} else {
 		as_policy_read_init(policy);
 	}
-
+	if ( data->param_err == 1 ) {
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
 
     data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 

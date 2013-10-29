@@ -38,136 +38,131 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
-#define PUT_ARG_POS_KEY 0
-#define PUT_ARG_POS_REC 1
-#define PUT_ARG_POS_WPOLICY 2 // Write policy position and callback position is not same 
-#define PUT_ARG_POS_CB 3  // for every invoke of put. If writepolicy is not passed from node
-						  // application, argument position for callback changes.
-
 using namespace v8;
-
+#define OP_ARG_POS_KEY     0
+#define OP_ARG_POS_OP	   1
+#define OP_ARG_POS_OPOLICY 2 // operate policy position and callback position is not same 
+#define OP_ARG_POS_CB	   3 // for every invoke of operate. If operatepolicy is not passed from node
+							  // application, argument position for callback changes.
+							  
 /*******************************************************************************
- *  TYPES
+ *	TYPES
  ******************************************************************************/
 
 /**
- *  AsyncData — Data to be used in async calls.
- *
- *  libuv allows us to pass around a pointer to an arbitraty object when
- *  running asynchronous functions. We create a data structure to hold the 
- *  data we need during and after async work.
+ *	AsyncData — Data to be used in async calls.
  */
-
 typedef struct AsyncData {
-	aerospike * as;
 	int param_err;
+	aerospike * as;
 	as_error err;
-	as_policy_write policy;
 	as_key key;
+	as_operations op;
 	as_record rec;
+	as_policy_operate policy;
 	Persistent<Function> callback;
 } AsyncData;
 
-
 /*******************************************************************************
- *  FUNCTIONS
+ *	FUNCTIONS
  ******************************************************************************/
 
 /**
- *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
+ *	prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
  *  
- *  This should only keep references to V8 or V8 structures for use in 
- *  `respond()`, because it is unsafe for use in `execute()`.
+ *	This should only keep references to V8 or V8 structures for use in 
+ *	`respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(const Arguments& args)
 {
 	// The current scope of the function
 	HandleScope scope;
 
-	// Unwrap 'this'
-	AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
 	// Build the async data
-	AsyncData * data			= new AsyncData;
-	data->as					= &client->as;
-
+	AsyncData *	data = new AsyncData;
+	data->as = &client->as;
+	
+	data->param_err = 0;
 	// Local variables
-	as_key *    key				= &data->key;
-	as_record * rec				= &data->rec;
-	as_policy_write * policy	= &data->policy;
-	data->param_err				= 0;
+	as_key *	key			= &data->key;
+	as_record *	rec			= &data->rec;
+	as_policy_operate* policy	= &data->policy;
+	as_operations* op = &data->op;
+
 	int arglength = args.Length();
-
-	if ( args[PUT_ARG_POS_KEY]->IsObject()) {
-		if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+	if ( args[OP_ARG_POS_KEY]->IsObject() ) {
+		if (key_from_jsobject(key, args[OP_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+			data->param_err = 1;
+		}
+	}
+	else {
+		data->param_err = 1;
+	}
+	if ( args[OP_ARG_POS_OP]->IsArray() ) {
+		if ( operations_from_jsarray( op, Local<Array>::Cast(args[OP_ARG_POS_OP]) ) != AS_NODE_PARAM_OK ) {
 			data->param_err = 1;
 		}
 	} else {
 		data->param_err = 1;
 	}
-
-
-	if ( args[PUT_ARG_POS_REC]->IsObject() ) {
-		if (record_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject()) != AS_NODE_PARAM_OK) { 
-			data->param_err = 1;
-		}
-	} else {
-		data->param_err = 1;
-	}
-
 	if ( arglength > 3 ) {
-		if ( args[PUT_ARG_POS_WPOLICY]->IsObject() &&
-			writepolicy_from_jsobject(policy, args[PUT_ARG_POS_WPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+		if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
+			if (operatepolicy_from_jsobject( policy, args[OP_ARG_POS_OPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
 				data->param_err = 1;
-		} 
+			}
+		}else {
+			data->param_err = 1;
+		}
 	} else {
-		// When node application does not pass any write policy should be 
-		// initialized to defaults,
-		as_policy_write_init(policy);
+		as_policy_operate_init(policy);
 	}
 
 	if ( data->param_err == 1) {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 	}
+	as_record_init(rec, 0);
+
 	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-	
+		
 	return data;
 }
-
 /**
- *  execute() — Function to execute inside the worker-thread.
+ *	execute() — Function to execute inside the worker-thread.
  *  
- *  It is not safe to access V8 or V8 data structures here, so everything
- *  we need for input and output should be in the AsyncData structure.
+ *	It is not safe to access V8 or V8 data structures here, so everything
+ *	we need for input and output should be in the AsyncData structure.
  */
 static void execute(uv_work_t * req)
 {
 	// Fetch the AsyncData structure
-	AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
-	aerospike * as			 = data->as;
-	as_error *  err			 = &data->err;
-	as_key *    key			 = &data->key;
-	as_record * rec			 = &data->rec;
-	as_policy_write * policy = &data->policy;
+	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+
+	// Data to be used.
+	aerospike *	as				= data->as;
+	as_error *	err				= &data->err;
+	as_key *	key				= &data->key;
+	as_record *	rec				= &data->rec;
+	as_policy_operate* policy	= &data->policy;
+	as_operations * op			= &data->op;
+
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
-	if (as->cluster == NULL) {
-		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
-	}
-	
 	if ( data->param_err == 0) {
-		aerospike_key_put(as, err, policy, key, rec);
+		aerospike_key_operate(as, err, policy, key, op, &rec);	
 	}
+
 }
 
 /**
- *  AfterWork — Function to execute when the Work is complete
- *
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
- *  call the callback function with those results.
+ *	respond() — Function to be called after `execute()`. Used to send response
+ *  to the callback.
+ *  
+ *	This function will be run inside the main event loop so it is safe to use 
+ *	V8 again. This is where you will convert the results into V8 types, and 
+ *	call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
@@ -175,17 +170,20 @@ static void respond(uv_work_t * req, int status)
 	HandleScope scope;
 
 	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
-	as_error *	err		= &data->err;
-	as_key *    key		= &data->key;
-	as_record *	rec		= &data->rec;
-
-	Handle<Value> argv[3];
+	AsyncData *	data		= reinterpret_cast<AsyncData *>(req->data);
+	
+	as_error *	err			= &data->err;
+	as_key *	key			= &data->key;
+	as_record *	rec			= &data->rec;
+	int nargs=4;
+	Handle<Value> argv[nargs];
 	// Build the arguments array for the callback
-	if (data->param_err == 0) {
-		argv[0] = error_to_jsobject(err);
-		argv[1] = recordmeta_to_jsobject(rec);
-		argv[2] = key_to_jsobject(key);
+	if( data->param_err == 0) {	
+		argv[0] = error_to_jsobject(err),
+		argv[1] = recordbins_to_jsobject(rec),
+		argv[2] = recordmeta_to_jsobject(rec),
+		argv[3] = key_to_jsobject(key);
+	
 	}
 	else {
 		err->func = NULL;
@@ -194,28 +192,30 @@ static void respond(uv_work_t * req, int status)
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
 		argv[2] = Null();
-	}	
+		argv[3] = Null();
+	}
 
 	// Surround the callback in a try/catch for safety
 	TryCatch try_catch;
 
 	// Execute the callback.
-	data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+	data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
 		node::FatalException(try_catch);
 	}
-
+	
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();
 
 	// clean up any memory we allocated
-	
-	as_key_destroy(key);
-	as_record_destroy(rec);
 
+	if( data->param_err == 0) {	
+		as_key_destroy(key);
+		as_record_destroy(rec);
+	}
 	delete data;
 	delete req;
 }
@@ -225,9 +225,9 @@ static void respond(uv_work_t * req, int status)
  ******************************************************************************/
 
 /**
- *  The 'put()' Operation
+ *	The 'get()' Operation
  */
-Handle<Value> AerospikeClient::Put(const Arguments& args)
+Handle<Value> AerospikeClient::Operate(const Arguments& args)
 {
 	return async_invoke(args, prepare, execute, respond);
 }

@@ -43,11 +43,12 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
 
-as_config * config_from_jsobject(as_config * config, Local<Object> obj)
+int config_from_jsobject(as_config * config, Local<Object> obj)
 {
 
 	Local<Value> hosts = obj->Get(String::NewSymbol("hosts"));
@@ -64,21 +65,21 @@ as_config * config_from_jsobject(as_config * config, Local<Object> obj)
 				config->hosts[i].addr = strdup(*String::Utf8Value(addr));
 			}
 			else {
-				return NULL;
+				return AS_NODE_PARAM_ERR;
 			}
 	
 			if ( port->IsNumber() ) {	
 				config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);		
 			}
 			else {
-				return NULL;
+				return AS_NODE_PARAM_ERR;
 			}
 		}
 	}
 	else{
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
-	return config;
+	return AS_NODE_PARAM_OK;
 }
 
 bool key_copy_constructor(const as_key* src, as_key** dest)
@@ -173,12 +174,14 @@ Handle<Value> val_to_jsvalue(as_val * val)
 	switch ( as_val_type(val) ) {
 		case AS_INTEGER : {
 			as_integer * ival = as_integer_fromval(val);
+			printf("Integer value %d \n", as_integer_get(ival));
 			if ( ival ) {
 				return Integer::New(as_integer_get(ival));
 			}
 		}
 		case AS_STRING : {
 			as_string * sval = as_string_fromval(val);
+			printf("String value %s \n", as_string_get(sval));
 			if ( sval ) {	
 				return String::NewSymbol(as_string_get(sval));
 			}
@@ -219,6 +222,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record)
 	while ( as_record_iterator_has_next(&it) ) {
 		as_bin * bin = as_record_iterator_next(&it);
 		char * name = as_bin_get_name(bin);
+		printf("Bin Name %s \n", name);
 		as_val * val = (as_val *) as_bin_get_value(bin);
 		Handle<Value> obj = val_to_jsvalue(val);
 		bins->Set(String::NewSymbol(name), obj);
@@ -259,12 +263,11 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
 	return scope.Close(rec);
 }
 //Forward references;
-uint32_t setTTL ( Local<Object> obj, uint32_t *ttl);
-uint16_t setGeneration( Local<Object> obj, uint16_t * generation);
+void setTTL ( Local<Object> obj, uint32_t *ttl);
+void setGeneration( Local<Object> obj, uint16_t * generation);
 
-as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
+int record_from_jsobject(as_record * rec, Local<Object> obj)
 {
-	HandleScope scope;
 	Local<Value> binlist = obj->Get(String::NewSymbol("bins"));
 
 
@@ -295,7 +298,7 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 			else if ( value->IsObject() ) {
 				Local<Object> obj = value->ToObject();
 				if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
-					return NULL;
+					return AS_NODE_PARAM_ERR;
 				}
 				int len = obj->GetIndexedPropertiesExternalArrayDataLength();
 				uint8_t* data = static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData());	
@@ -303,99 +306,97 @@ as_record * record_from_jsobject(as_record * rec, Local<Object> obj)
 
 			}
 			else {
-				return NULL;
+				return AS_NODE_PARAM_ERR;
 			}
 		}
 	}
 	setTTL( obj, &rec->ttl);
 	setGeneration( obj, &rec->gen);
 
-	return rec;
+	return AS_NODE_PARAM_OK;
 }
 
-uint32_t setTTL ( Local<Object> obj, uint32_t *ttl)
+void setTTL ( Local<Object> obj, uint32_t *ttl)
 {
-	HandleScope scope;
 	Local<Value> v8ttl = obj->Get(String::NewSymbol("ttl")) ;
 	if ( v8ttl->IsNumber() ) {
 		(*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
 	}
-	return (*ttl);
 }
 
-uint32_t setTimeOut( Local<Object> obj, uint32_t *timeout)
+void setTimeOut( Local<Object> obj, uint32_t *timeout)
 {
-	HandleScope scope;
 	Local<Value> v8timeout = obj->Get(String::NewSymbol("timeout")) ;
 	if ( v8timeout->IsNumber() ) {
 		(*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
 	}
-	return (*timeout);
 }
 
-uint16_t setGeneration( Local<Object> obj, uint16_t * generation)
+void setGeneration( Local<Object> obj, uint16_t * generation)
 {
-	HandleScope scope;
 	Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
 	if ( v8gen->IsNumber() ) {
 		(*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
 	}
-	return (*generation);
 }
 
-as_policy_key * setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy)
+void setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue) 
 {
-	HandleScope scope;
-	Local<Value> v8keypolicy = obj->Get(String::NewSymbol("Key"));
-	if ( v8keypolicy->IsNumber()) {
-		(*keypolicy) = (as_policy_key) V8INTEGER_TO_CINTEGER(v8keypolicy);
+	Local<Value> policy = obj->Get(String::NewSymbol(policyname));
+
+	// Check if node layer is passing a legal integer value
+	if (policy->IsNumber()) {
+		*policyEnumValue = V8INTEGER_TO_CINTEGER(policy);
+	} else {
+		// The returnEnumValue will/should be inited to the default value by the caller
+		// So, do not change anything if we get an non-integer from node layer
 	}
-	return keypolicy;
 }
 
-as_policy_gen * setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy)
+void setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy)
 {
-	HandleScope scope;
-	Local<Value> v8genpolicy = obj->Get(String::NewSymbol("Gen"));
-	if ( v8genpolicy->IsNumber() ) {
-		(*genpolicy) = (as_policy_gen) V8INTEGER_TO_CINTEGER(v8genpolicy);
-	}
-	return genpolicy;
+	setPolicyGeneric(obj, "Key", (int *) keypolicy);
 }
 
-as_policy_retry * setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy) 
+void setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy)
 {
-	HandleScope scope;
-	Local<Value> v8retrypolicy = obj->Get(String::NewSymbol("Retry"));
-	if ( v8retrypolicy->IsNumber() ) {
-		(*retrypolicy) = (as_policy_retry) V8INTEGER_TO_CINTEGER(v8retrypolicy)
-	}
-	return retrypolicy;
+	setPolicyGeneric(obj, "Gen", (int *) genpolicy);
 }
 
-as_policy_exists * setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
+void setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy) 
 {
-	HandleScope scope;
-	Local<Value> v8existspolicy = obj->Get(String::NewSymbol("Exists"));
-	if ( v8existspolicy->IsNumber() ) {
-		(*existspolicy) = (as_policy_exists) V8INTEGER_TO_CINTEGER(v8existspolicy)
-	}
-	return existspolicy;
+	setPolicyGeneric(obj, "Retry", (int *) retrypolicy);
 }
-as_policy_batch * batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj)
+
+void setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
 {
-	HandleScope scope;
+	setPolicyGeneric(obj, "Exists", (int *) existspolicy);
+}
+
+int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj)
+{
+	as_policy_operate_init( policy);
+
+	setTimeOut( obj, &policy->timeout);
+	setGenPolicy( obj, &policy->gen);
+	setRetryPolicy( obj, &policy->retry);
+	setKeyPolicy( obj, &policy->key);
+
+	return AS_NODE_PARAM_OK;
+}
+
+int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj)
+{
 
 	as_policy_batch_init(policy);
 
 	setTimeOut( obj, &policy->timeout);
 
-	return policy;
+	return AS_NODE_PARAM_OK;
 }
 
-as_policy_remove * removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj)
+int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj)
 {
-	HandleScope scope;
 
 	as_policy_remove_init(policy);
 
@@ -404,21 +405,21 @@ as_policy_remove * removepolicy_from_jsobject( as_policy_remove * policy, Local<
 	setRetryPolicy( obj, &policy->retry);
 	setKeyPolicy( obj, &policy->key);
 
-	return policy;
+	return AS_NODE_PARAM_OK;
 }
 
-as_policy_read * readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj)
+int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj)
 {
-	HandleScope scope;
 	as_policy_read_init( policy );
+
 	setTimeOut( obj, &policy->timeout);
 	setKeyPolicy( obj, &policy->key);
-	return policy;
+
+	return AS_NODE_PARAM_OK;
 }
 
-as_policy_write * writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj)
+int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj)
 {
-	HandleScope scope;
 
 	as_policy_write_init( policy );	
 
@@ -428,7 +429,7 @@ as_policy_write * writepolicy_from_jsobject( as_policy_write * policy, Local<Obj
 	setKeyPolicy( obj, &policy->key);	
 	setExistsPolicy( obj, &policy->exists);
 
-	return policy;
+	return AS_NODE_PARAM_OK;
 }
 
 Handle<Object> key_to_jsobject(const as_key * key)
@@ -482,7 +483,7 @@ Handle<Object> key_to_jsobject(const as_key * key)
 	return scope.Close(obj);
 }
 
-as_key * key_from_jsobject(as_key * key, Local<Object> obj)
+int key_from_jsobject(as_key * key, Local<Object> obj)
 {
 	as_namespace ns = { '\0' };
 	as_set set = { '\0' };
@@ -492,11 +493,11 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 		strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
 	}
 	else {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 	
 	if ( strlen(ns) == 0 ) {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 	
 	Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
@@ -504,11 +505,11 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 		strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
 	}
 	else {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 
 	if ( strlen(set) == 0 ) {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 
 	Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
@@ -516,24 +517,24 @@ as_key * key_from_jsobject(as_key * key, Local<Object> obj)
 		char * value = strdup(*String::Utf8Value(val_obj));
 		as_key_init(key, ns, set, value);
 		((as_string *) key->valuep)->free = true;
-		return key;
+		return AS_NODE_PARAM_OK;
 	}
 	else if ( val_obj->IsNumber() ) {
 		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
-		return key;
+		return AS_NODE_PARAM_OK;
 	}
 
-	return NULL;
+	return AS_NODE_PARAM_ERR;
 }
 
-as_key * key_from_jsarray(as_key * key, Local<Array> arr)
+int key_from_jsarray(as_key * key, Local<Array> arr)
 {
 	as_namespace ns = { '\0' };
 	as_set set = { '\0' };
 
 	if ( arr->Length() != 3 ) {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 
 	Local<Value> ns_obj = arr->Get(0);
@@ -541,11 +542,11 @@ as_key * key_from_jsarray(as_key * key, Local<Array> arr)
 		strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
 	}
 	else {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 	
 	if ( strlen(ns) == 0 ) {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 	
 	Local<Value> set_obj = arr->Get(1);
@@ -553,11 +554,11 @@ as_key * key_from_jsarray(as_key * key, Local<Array> arr)
 		strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
 	}
 	else {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 
 	if ( strlen(set) == 0 ) {
-		return NULL;
+		return AS_NODE_PARAM_ERR;
 	}
 
 	Local<Value> val_obj = arr->Get(2);
@@ -565,28 +566,229 @@ as_key * key_from_jsarray(as_key * key, Local<Array> arr)
 		char * value = strdup(*String::Utf8Value(val_obj));
 		as_key_init(key, ns, set, value);
 		((as_string *) key->valuep)->free = true;
-		return key;
+		return AS_NODE_PARAM_OK;
 	}
 	else if ( val_obj->IsNumber() ) {
 		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
-		return key;
+		return AS_NODE_PARAM_OK;
 	}
 
-	return NULL;
+	return AS_NODE_PARAM_ERR;
 }
 
-as_batch* batch_from_jsarray(as_batch *batch, Local<Array> arr)
+int batch_from_jsarray(as_batch *batch, Local<Array> arr)
 {
 	uint32_t capacity = arr->Length();
-	
+
 	if(capacity > 0) {
 		as_batch_init(batch, capacity);
+	} else {
+		return AS_NODE_PARAM_ERR;
 	}
 	for ( uint32_t i=0; i < capacity; i++) {
 		Local<Object> key = arr->Get(i)->ToObject();
 		key_from_jsobject(as_batch_keyat(batch, i), key);
 	}
 
-	return batch;
+	return AS_NODE_PARAM_OK;
+}
+
+int GetBinName( char** binName, Local<Object> obj) {
+	Local<Value> val = obj->Get(String::NewSymbol("binName"));
+	if ( !val->IsString()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	(*binName) = strdup(*String::Utf8Value(val));
+	return AS_NODE_PARAM_OK;
+}
+
+Local<Value> GetBinValue( Local<Object> obj) {
+	HandleScope scope;
+	Local<Value> val = obj->Get(String::NewSymbol("binValue"));
+	return scope.Close(val);
+}
+int populate_write_op ( as_operations * op, Local<Object> obj) 
+{
+	if ( op == NULL ) { return AS_NODE_PARAM_ERR; }
+	char* binName;
+	if ( GetBinName(&binName, obj) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Value> v8val = GetBinValue(obj);
+	if ( v8val->IsNumber() ) {
+		int64_t val = v8val->IntegerValue();
+		as_operations_add_write_int64(op, binName, val);
+		return AS_NODE_PARAM_OK;
+	}
+	else if ( v8val->IsString() ) {
+		char* binVal = strdup(*String::Utf8Value(v8val)); 	
+		as_operations_add_write_str(op, binName, binVal);
+		return AS_NODE_PARAM_OK;
+	}			
+	else if ( v8val->IsObject() ) {
+		Local<Object> binObj = v8val->ToObject();
+		if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+			return AS_NODE_PARAM_ERR;
+		}
+		uint32_t len = binObj->GetIndexedPropertiesExternalArrayDataLength();
+		uint8_t* data = static_cast<uint8_t*>(binObj->GetIndexedPropertiesExternalArrayData());	
+		as_operations_add_write_raw(op, binName, data, len);
+		return AS_NODE_PARAM_OK;
+	}
+	else {
+		return AS_NODE_PARAM_ERR;
+	}
+}
+
+int populate_read_op( as_operations * ops, Local<Object> obj) 
+{
+	if ( ops == NULL ) { return AS_NODE_PARAM_ERR; }
+	char* binName;
+	if ( GetBinName(&binName, obj) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+	as_operations_add_read(ops, binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int populate_incr_op ( as_operations * ops, Local<Object> obj) 
+{
+	
+	if ( ops == NULL ) { return AS_NODE_PARAM_ERR; }
+	char* binName;
+	if ( GetBinName(&binName, obj) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Value> v8val = GetBinValue(obj);
+	if ( v8val->IsNumber()) {
+		int64_t binValue = v8val->IntegerValue();
+		as_operations_add_incr( ops, binName, binValue);
+		return AS_NODE_PARAM_OK;
+	}else {
+		return AS_NODE_PARAM_ERR;
+	}
+}
+
+int populate_prepend_op( as_operations* ops, Local<Object> obj)
+{
+	
+	if ( ops == NULL ) { return AS_NODE_PARAM_ERR; }
+	char* binName;
+	if ( GetBinName(&binName, obj) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Value> v8val = GetBinValue(obj);
+	if ( v8val->IsString() ) {
+		char* binVal = strdup(*String::Utf8Value(v8val)); 	
+		as_operations_add_prepend_str(ops, binName, binVal);
+		return AS_NODE_PARAM_OK;
+	}			
+	else if ( v8val->IsObject() ) {
+		Local<Object> binObj = v8val->ToObject();
+		if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+			return AS_NODE_PARAM_ERR;
+		}
+		uint32_t len = binObj->GetIndexedPropertiesExternalArrayDataLength();
+		uint8_t* data = static_cast<uint8_t*>(binObj->GetIndexedPropertiesExternalArrayData());	
+		as_operations_add_prepend_raw(ops, binName, data, len);
+		return AS_NODE_PARAM_OK;
+	}
+	else {
+		return AS_NODE_PARAM_ERR;
+	}
+}
+	
+
+int populate_append_op( as_operations * ops, Local<Object> obj)
+{
+	if ( ops == NULL ) { return AS_NODE_PARAM_ERR; }
+	char* binName;
+	if ( GetBinName(&binName, obj) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Value> v8val = GetBinValue(obj);
+	if ( v8val->IsString() ) {
+		char* binVal = strdup(*String::Utf8Value(v8val)); 	
+		as_operations_add_append_str(ops, binName, binVal);
+		return AS_NODE_PARAM_OK;
+	}			
+	else if ( v8val->IsObject() ) {
+		Local<Object> binObj = v8val->ToObject();
+		if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+			return AS_NODE_PARAM_ERR;
+		}
+		uint32_t len = binObj->GetIndexedPropertiesExternalArrayDataLength();
+		uint8_t* data = static_cast<uint8_t*>(binObj->GetIndexedPropertiesExternalArrayData());	
+		as_operations_add_append_raw(ops, binName, data, len);
+		return AS_NODE_PARAM_OK;
+	}
+	else {
+		return AS_NODE_PARAM_ERR;
+	}
+}
+
+int populate_touch_op( as_operations* ops)
+{
+	if ( ops == NULL) return AS_NODE_PARAM_ERR;
+
+	as_operations_add_touch(ops);
+	return AS_NODE_PARAM_OK;
+}
+int operations_from_jsarray( as_operations * ops, Local<Array> arr) 
+{
+	uint32_t capacity = arr->Length();
+	
+	if ( capacity > 0 ) {
+		as_operations_init( ops, capacity );
+	} else {
+		return AS_NODE_PARAM_ERR;
+	}
+	for ( uint32_t i = 0; i < capacity; i++ ) {
+		Local<Object> obj = arr->Get(i)->ToObject();
+		Local<Value> v8op = obj->Get(String::NewSymbol("operation"));
+		if ( v8op->IsNumber() ) {
+			as_operator op = (as_operator) v8op->ToInteger()->Value();
+			switch ( op ) {
+				case AS_OPERATOR_WRITE: 
+				{
+					populate_write_op(ops, obj);
+					break;
+				}
+				case AS_OPERATOR_READ:
+				{
+					populate_read_op(ops, obj);
+					break;
+				}
+				case AS_OPERATOR_INCR: 
+				{
+					populate_incr_op(ops, obj);
+					break;
+				}
+				case AS_OPERATOR_PREPEND:
+				{
+					populate_prepend_op(ops, obj);
+					break;
+				}
+				case AS_OPERATOR_APPEND:
+				{
+					populate_append_op(ops, obj);
+					break;
+				}
+				case AS_OPERATOR_TOUCH:
+				{
+					populate_touch_op(ops);
+					break;
+				}
+				default :
+					return AS_NODE_PARAM_ERR;
+			}
+		}
+	}
+	return AS_NODE_PARAM_OK;
+
 }

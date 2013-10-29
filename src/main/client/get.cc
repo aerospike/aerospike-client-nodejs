@@ -39,7 +39,11 @@ extern "C" {
 #include "../util/log.h"
 
 using namespace v8;
-
+#define GET_ARG_POS_KEY     0
+#define GET_ARG_POS_RPOLICY 1 // Write policy position and callback position is not same 
+#define GET_ARG_POS_CB      2 // for every invoke of put. If writepolicy is not passed from node
+							  // application, argument position for callback changes.
+							  
 /*******************************************************************************
  *	TYPES
  ******************************************************************************/
@@ -85,28 +89,29 @@ static void * prepare(const Arguments& args)
 	as_policy_read* policy	= &data->policy;
 
 	int arglength = args.Length();
-	if ( args[0]->IsArray() ) {
-		Local<Array> arr = Local<Array>::Cast(args[0]);
-		key_from_jsarray(key, arr);
-	}
-	else if ( args[0]->IsObject() ) {
-		key_from_jsobject(key, args[0]->ToObject());
+	if ( args[GET_ARG_POS_KEY]->IsObject() ) {
+		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+			data->param_err = 1;
+		}
 	}
 	else {
 		data->param_err = 1;
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 	}
 	if ( arglength > 2 ) {
-		if ( args[1]->IsObject() ) {
-			readpolicy_from_jsobject( policy, args[1]->ToObject());
+		if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
+			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+				data->param_err = 1;
+			}
 		}else {
 			data->param_err = 1;
-			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		}
 	} else {
 		as_policy_read_init(policy);
 	}
 
+	if ( data->param_err == 1) {
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+	}
 	as_record_init(rec, 0);
 
 	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
