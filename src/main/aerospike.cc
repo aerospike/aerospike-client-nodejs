@@ -67,10 +67,10 @@ Handle<Object> GetAllPolicy() {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();
 
-	obj->Set(String::NewSymbol("KeyPolicy"), Key_Policy());
-	obj->Set(String::NewSymbol("RetryPolicy"), Retry_Policy());
-	obj->Set(String::NewSymbol("GenerationPolicy"), Generation_Policy());
-	obj->Set(String::NewSymbol("ExistsPolicy"), Exists_Policy());
+	obj->Set(String::NewSymbol("Key"), Key_Policy());
+	obj->Set(String::NewSymbol("Retry"), Retry_Policy());
+	obj->Set(String::NewSymbol("Generation"), Generation_Policy());
+	obj->Set(String::NewSymbol("Exists"), Exists_Policy());
 
 	return scope.Close(obj);
 }

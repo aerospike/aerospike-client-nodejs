@@ -92,40 +92,53 @@ static void * prepare(const Arguments& args)
 	as_operations* op = &data->op;
 
 	int arglength = args.Length();
+
+	if ( args[arglength-1]->IsFunction() ){
+		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+	}else {
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
+	}
 	if ( args[OP_ARG_POS_KEY]->IsObject() ) {
 		if (key_from_jsobject(key, args[OP_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
 		}
 	}
 	else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
 	}
-	if ( args[OP_ARG_POS_OP]->IsArray() ) {
-		if ( operations_from_jsarray( op, Local<Array>::Cast(args[OP_ARG_POS_OP]) ) != AS_NODE_PARAM_OK ) {
-			data->param_err = 1;
+	if ( args[OP_ARG_POS_OP]->IsObject() ) {
+		if ( operations_from_jsobject( op, args[OP_ARG_POS_OP]->ToObject() ) != AS_NODE_PARAM_OK ) {
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				goto Err_Return;
 		}
 	} else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
 	}
 	if ( arglength > 3 ) {
 		if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
 			if (operatepolicy_from_jsobject( policy, args[OP_ARG_POS_OPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				data->param_err = 1;
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				goto Err_Return;
 			}
 		}else {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
 		}
 	} else {
 		as_policy_operate_init(policy);
 	}
 
-	if ( data->param_err == 1) {
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-	}
 	as_record_init(rec, 0);
 
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 		
+	return data;
+
+Err_Return:
+	data->param_err = 1;
 	return data;
 }
 /**

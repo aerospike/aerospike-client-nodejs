@@ -89,33 +89,45 @@ static void * prepare(const Arguments& args)
 	as_policy_read* policy	= &data->policy;
 
 	int arglength = args.Length();
+
+	if ( args[arglength-1]->IsFunction()) {
+		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+	} else {
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
+	}
+
 	if ( args[GET_ARG_POS_KEY]->IsObject() ) {
 		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
 		}
 	}
 	else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
 	}
 	if ( arglength > 2 ) {
 		if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
 			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				data->param_err = 1;
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				goto Err_Return;
 			}
 		}else {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
 		}
 	} else {
 		as_policy_read_init(policy);
 	}
 
-	if ( data->param_err == 1) {
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-	}
 	as_record_init(rec, 0);
 
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 		
+	return data;
+
+Err_Return:
+	data->param_err = 1;
 	return data;
 }
 /**
@@ -176,8 +188,6 @@ static void respond(uv_work_t * req, int status)
 	}
 	else {
 		err->func = NULL;
-		err->line = NULL;
-		err->file = NULL;
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
 		argv[2] = Null();

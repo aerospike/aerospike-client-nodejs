@@ -4,7 +4,7 @@ eval(fs.readFileSync('test.js')+'');
 describe( 'BATCH-GET FUNCTION', function() {
 	it ( 'SIMPLE BATCH-GET TEST' , function() {
 		console.log('SIMPLE BATCH-GET TEST');
-		//for ( var i = 0; i < n/4; i++) {
+		for ( var i = 0; i < n/4; i++) {
 			var K_array = [ {ns:'test',set:'demo',key:"value" +  1 },
 							{ns:'test',set:'demo',key:"value" +  2 },
 							{ns:'test',set:'demo',key:"value" +  3 },
@@ -24,7 +24,7 @@ describe( 'BATCH-GET FUNCTION', function() {
 					expect(obj.c).to.eql([1,2,3]);
 				}
 			});
-		//}
+		}
 	});
 });
 

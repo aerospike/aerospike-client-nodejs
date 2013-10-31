@@ -94,12 +94,21 @@ static void * prepare(const Arguments& args)
 	data->param_err = 0;
 
 	int arglength = args.Length();
+
+	if ( args[arglength-1]->IsFunction()) {
+		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+	}else {
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
+	}
     if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
         if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK) {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		}
     } else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
 	}
 
     as_record_init(rec, 0);
@@ -118,27 +127,29 @@ static void * prepare(const Arguments& args)
 		// The last entry should be NULL because we are passing to aerospike_key_select
 		data->bins[num_bins] = NULL;
     } else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
 	}
 
 	if ( arglength > 3) {
 		if ( args[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
 			if (readpolicy_from_jsobject( policy, args[SELECT_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				data->param_err = 1;
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+				goto Err_Return;
 			}
 		} else {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		}
 	} else {
 		as_policy_read_init(policy);
 	}
-	if ( data->param_err == 1 ) {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-	}
-
-    data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 
     return data;
+
+Err_Return:
+	data->param_err = 1;
+	return data;
 }
 /**
  *  execute() — Function to execute inside the worker-thread.
@@ -197,8 +208,6 @@ static void respond(uv_work_t * req, int status)
         argv[3] = key_to_jsobject(key);
     } else {
 		err->func = NULL;
-		err->line = NULL;
-		err->file = NULL;
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
 		argv[2] = Null();
@@ -220,8 +229,10 @@ static void respond(uv_work_t * req, int status)
 	data->callback.Dispose();
 	
 	 // clean up any memory we allocated
-	 as_key_destroy(key);
-    as_record_destroy(rec);
+	 if ( data->param_err == 0) {
+		as_key_destroy(key);
+		as_record_destroy(rec);
+	}
 
     delete data;
     delete req;

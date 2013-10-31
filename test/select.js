@@ -1,22 +1,61 @@
+
 var fs = require('fs');
 eval(fs.readFileSync('test.js')+'');
 
+function GetSelectPolicy()
+{
+	var selectpolicy = { timeout : 10, Key :Policy.Key.SEND }
+	return selectpolicy;
+}
 
 describe( 'SELECT FUNCTIONALITY', function() {
-	it (' SIMPLE SELECT TEST', function() {
-		console.log('SIMPLE SELECT TEST');
-			//for ( var i = 1; i <= n; i++ ) {
-				var K = { ns: 'test', set : 'demo', key: 'value' + 1};
-				var rec = ["i","s"];
-				client.select(K, rec, function (err, bins, meta, key_val) {
-					expect(err).to.exist;
-					expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-					expect(key_val).not.to.be.null;
-					var ind = key_val.key.substr(5);
-					expect(bins.s).to.equal(ind);
-					expect(bins.i).to.equal(parseInt(ind));
-				});
-			//}
+	it( 'SIMPLE SELECT TEST', function() {
+		for ( var i = 1; i <= n; i++) {
+		var rec = GetRecord(i);
+		var Key = { ns: 'test', set: 'demo',key: 'SELECT' + i }
+		client.put (Key, rec, function (err, meta, key) {
+			if ( err.code == return_code.AEROSPIKE_OK) {
+				var bins = ['string_bin', 'integer_bin'];
+			client.get(key, bins, function ( err, bins, meta, key) {
+				expect(err).to.exist;
+				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
+				var ind = key.key.substr(6);
+				expect(bins.string_bin).to.equal(ind);
+				expect(bins.integer_bin).to.equal(parseInt(ind));
+				if ( ++m == n) {
+					m = 0;
+					console.log("SELECT TEST SUCCESS");
+					CleanRecords('SELECT');
+				}
+			});
+			}
+		});
+	}
 	});
 });
 
+describe( 'SELECT FUNCTIONALITY', function() {
+	it( 'SELECT TEST WITH READ POLICY', function() {
+		for ( var i = 1; i <= n; i++) {
+		var rec = GetRecord(i);
+		var Key = { ns: 'test', set: 'demo',key: 'READPOLICY' + i }
+		client.put (Key, rec, function (err, meta, key) {
+			if ( err.code == return_code.AEROSPIKE_OK) { 
+				var readpolicy = new GetSelectPolicy();
+				var bins = [ 'string_bin', 'integer_bin'];
+			client.get(key, readpolicy, function ( err, bins, meta, key) {
+				expect(err).to.exist;
+				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
+				var ind = key.key.substr(10);
+				expect(bins.string_bin).to.equal(ind);
+				expect(bins.integer_bin).to.equal(parseInt(ind));
+				if ( ++m == n) {
+					console.log("GET TEST WITH READ POLICY SUCCESS");
+					CleanRecords('READPOLICY');
+				}
+			});
+			}
+		});
+	}
+	});
+});

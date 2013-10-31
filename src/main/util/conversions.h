@@ -44,7 +44,9 @@ using namespace v8;
 
 #define COPY_ERR_MESSAGE(__err,__message) \
     strcpy(__err.message, #__message); \
-	    __err.code = __message; 
+	    __err.code = __message;\
+		__err.line = __LINE__; \
+		__err.file = __FILE__; 
 
 #define V8INTEGER_TO_CINTEGER(__num) \
 	__num->ToInteger()->Value();
@@ -71,7 +73,7 @@ int record_from_jsobject(as_record * rec, Local<Object> obj);
 int key_from_jsobject(as_key * key, Local<Object> obj);
 int key_from_jsarray(as_key * key, Local<Array> arr);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr);
-int operations_from_jsarray(as_operations * ops, Local<Array> arr); 
+int operations_from_jsobject(as_operations * ops, Local<Object> obj); 
 
 //clone function for record and key
 bool record_copy_constructor(const as_record * src, as_record ** dest);

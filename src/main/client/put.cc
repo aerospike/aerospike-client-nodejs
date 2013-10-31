@@ -98,27 +98,38 @@ static void * prepare(const Arguments& args)
 	data->param_err				= 0;
 	int arglength = args.Length();
 
+	if ( args[arglength-1]->IsFunction()) {
+		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+	} else {
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
+	}
 	if ( args[PUT_ARG_POS_KEY]->IsObject()) {
 		if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
-			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		}
 	} else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
 	}
 
 
 	if ( args[PUT_ARG_POS_REC]->IsObject() ) {
 		if (record_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject()) != AS_NODE_PARAM_OK) { 
-			data->param_err = 1;
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		}
 	} else {
-		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
 	}
 
 	if ( arglength > 3 ) {
 		if ( args[PUT_ARG_POS_WPOLICY]->IsObject() &&
 			writepolicy_from_jsobject(policy, args[PUT_ARG_POS_WPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				data->param_err = 1;
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+				goto Err_Return;
 		} 
 	} else {
 		// When node application does not pass any write policy should be 
@@ -126,11 +137,11 @@ static void * prepare(const Arguments& args)
 		as_policy_write_init(policy);
 	}
 
-	if ( data->param_err == 1) {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
-	}
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-	
+
+	return data;
+
+Err_Return:
+	data->param_err = 1;
 	return data;
 }
 
@@ -154,7 +165,7 @@ static void execute(uv_work_t * req)
 	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
 		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 	
 	if ( data->param_err == 0) {
@@ -189,8 +200,6 @@ static void respond(uv_work_t * req, int status)
 	}
 	else {
 		err->func = NULL;
-		err->line = NULL;
-		err->file = NULL;
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
 		argv[2] = Null();
@@ -200,7 +209,9 @@ static void respond(uv_work_t * req, int status)
 	TryCatch try_catch;
 
 	// Execute the callback.
-	data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+	if ( data->callback != Null() ) {
+		data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+	}
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
@@ -212,9 +223,11 @@ static void respond(uv_work_t * req, int status)
 	data->callback.Dispose();
 
 	// clean up any memory we allocated
-	
-	as_key_destroy(key);
-	as_record_destroy(rec);
+
+	if ( data->param_err == 0) {
+		as_key_destroy(key);
+		as_record_destroy(rec);
+	}
 
 	delete data;
 	delete req;

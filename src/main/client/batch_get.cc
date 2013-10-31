@@ -123,35 +123,44 @@ static void * prepare(const Arguments& args)
 
 	int arglength = args.Length();
 
+	if ( args[arglength-1]->IsFunction()) { 
+		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
+	} else {
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+		goto Err_Return;
+	}
+
 	if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
 		Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
 		if( batch_from_jsarray(batch, keys) != AS_NODE_PARAM_OK) {
-			data->node_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+			goto Err_Return;
 		}
 	}
 	else {
 		//Parameter passed is not an array of Key Objects "ERROR..!"
-		data->node_err = 1;
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+		goto Err_Return;
 	}
 
 	if (arglength > 2 ) {
 		if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
 			if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				data->node_err = 1;
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+				goto Err_Return;
 			}
 		}else {
-			data->node_err = 1;
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+			goto Err_Return;
 		}
 	} else {
 		as_policy_batch_init(policy);
 	}
 
-	if ( data->node_err == 1 ) {
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
-	}
+	return data;
 
-	data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
-
+Err_Return:
+	data->node_err = 1;
 	return data;
 }
 /**
@@ -257,7 +266,9 @@ static void respond(uv_work_t * req, int status)
 	data->callback.Dispose();
 
 	// clean up any memory we allocated
-	free(data->results);	
+	if ( data->node_err == 1) {
+		free(data->results);	
+	}
 	delete data;
 	delete req;
 }
