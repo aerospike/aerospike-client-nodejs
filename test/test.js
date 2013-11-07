@@ -28,7 +28,8 @@ function GetRecord(i)
 	var obj = { 'integer' : i, 'string' : "Some String" , 'array' : [1,2,3] };
 	var packed_obj = msgpack.pack(obj); 
 	var binlist = { 'string_bin' : i.toString(), 'integer_bin': i, 'blob_bin' : packed_obj };
-	var rec = { ttl:100, gen : 0, bins : binlist };
+	var meta = { ttl : 100, gen : 0 }
+	var rec = { metadata : meta, bins : binlist };
 	return rec;
 }
 

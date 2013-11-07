@@ -308,8 +308,13 @@ int record_from_jsobject(as_record * rec, Local<Object> obj)
 			}
 		}
 	}
-	setTTL( obj, &rec->ttl);
-	setGeneration( obj, &rec->gen);
+
+	Local<Value> meta = obj->Get(String::NewSymbol("metadata"));
+	if ( meta->IsObject()) {
+		
+		setTTL( meta->ToObject(), &rec->ttl);
+		setGeneration( meta->ToObject(), &rec->gen);
+	}
 
 	return AS_NODE_PARAM_OK;
 }

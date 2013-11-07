@@ -238,9 +238,9 @@ static void respond(uv_work_t * req, int status)
 		arr=Array::New(num_rec);	
 		for ( uint32_t i = 0; i< num_rec; i++) {
 			Handle<Object> obj = Object::New();
-			obj->Set(String::NewSymbol("RecStatus"), Integer::New(batch_results[i].result));
+			obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
 			if(batch_results[i].result == AEROSPIKE_OK) {	
-				obj->Set(String::NewSymbol("Record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key));
+				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key));
 				as_key_destroy((as_key*) batch_results[i].key);
 				as_record_destroy(&batch_results[i].record);
 			}

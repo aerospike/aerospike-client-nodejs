@@ -23,13 +23,14 @@ for (var i = 1; i <= n; i++ ) {
   var k1 = {'ns':"test", 'set':"demo", 'key':"value" + i }
  
   var binlist = { "s": i.toString(),"i" : i, "b": pbuf}
-  var rec = {ttl: 10000, gen: 0, bins: binlist}
+  var meta = { ttl : 10000, gen : 0 }
+  var rec = {metadata: meta, bins: binlist}
 
   var write_policy = {timeout : 10, 
-					  Retry: policy.RetryPolicy.AS_POLICY_RETRY_ONCE, 
-					  Key: policy.KeyPolicy.AS_POLICY_KEY_SEND, 
-					  Gen: policy.GenerationPolicy.AS_POLICY_GEN_EQ,
-					  Exists: policy.ExistsPolicy.AS_POLICY_EXISTS_IGNORE }
+					  Retry: policy.Retry.ONCE, 
+					  Key: policy.Key.SEND, 
+					  Gen: policy.Generation.EQ,
+					  Exists: policy.Exists.IGNORE }
 
   client.put(k1, rec, write_policy, function(err) {
     if ( err.code != status.AEROSPIKE_OK ) {
@@ -40,7 +41,7 @@ for (var i = 1; i <= n; i++ ) {
 	  //client.close();
     }
   });
-  var readpolicy = { timeout : 10, Key : policy.KeyPolicy.AS_POLICY_KEY_SEND }
+  var readpolicy = { timeout : 10, Key : policy.Key.SEND }
   client.get(k1, function(err,bins,meta) {
 	console.log(meta);
 	console.log(bins.s);
