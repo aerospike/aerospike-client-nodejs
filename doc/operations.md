@@ -13,13 +13,19 @@
 
 	1. The error codes returned by the aerospike server
 		var status = aerospike.Status
+	##Example
+		status.AEROSPIKE_OK. 
 	
 	2. All kinds Policies used for client operation
 		var Policy = aerospike.Policy 
+	##Example
+		Policy.Key.SEND.
 	
 	3.All kinds of operators provided by Aerospike API, for
 	  operate functionality
 		var operations = aerospike.Operators
+	##Example
+		operations.INCR
 	
 
 
@@ -30,6 +36,7 @@
 Get a record from the database via a key.
 
 	client.get(Key, ReadPolicy?, function(Error, Bins, Metadata, Key))
+	ReadPolicy is an optional parameter here
 
 #### Example
 
@@ -57,6 +64,7 @@ Get a record from the database via a key.
 Put a record into the database via key.
 
 	client.put(Key, Record, WritePolicy?, function(Error, Metadata, Key))
+	WritePolicy is an optional parameter
 
 Example:
 
@@ -74,7 +82,7 @@ Example:
 
 	Put operation without WritePolicy
 
-	client.put(["test", "demo", "a"], rec, function(err) {
+	client.put({ns:"test", set:"demo", key:"a"}, rec, function(err) {
 		if ( err.code == status.AEROSPIKE_OK) {
 			// process result
 		}
@@ -88,7 +96,7 @@ Example:
 						  Key : Policy.KeyPolicy.SEND,
 						  Exists: Policy.ExistsPolicy.IGNORE}
 
-	client.put(["test", "demo", "a"], rec, writepolicy, function(err) {
+	client.put({ns: "test", set: "demo", key : "a"}, rec, writepolicy, function(err) {
 		if ( err.code == status.AEROSPIKE_OK) {
 			// process result
 		}
@@ -97,6 +105,7 @@ Example:
 ## Get a batch of records from the database using an array of keys
 
 	client.batch_get( [Key], ReadPolicy?, function(Error, RecList))
+	ReadPolicy is an optional parameter
 
 Example:
 
@@ -147,6 +156,7 @@ Example:
 ##Retrieve a selected number of columns (bins) from a record, using the key.
 
 	client.select( Key, binNames, ReadPolicy?, function (Error, bins, Metadata, Key))
+	ReadPolicy is an optional parameter
 
 Example:
 
@@ -175,6 +185,7 @@ Example:
 ## Delete a record in the database using the key
 
 	client.remove( Key, RemovePolicy?, function ( Error, Key))
+	RemovePolicy is an optional parameter
 
 Example:
 	
@@ -213,14 +224,15 @@ Example:
   request to a database.
 
 	client.operate ( Key, OpList, OperatePolicy?, function (Error, bins, Metadata, Key))
+	OperatePolicy is an optional parameter
 
 Example:
 	
 	var key = { ns: 'test', set:'demo', key : 'value' }
 	var val_to_increment = 10;
 	var str_to_append = 'append'
-	var op_list = [ { operation : operations.AS_OPERATOR_INCR, binName : 'Integer_bin', binValue : val_to_increment },
-					{ operation : operations.AS_OPERATOR_APPEND, binName : 'String_bin', binValue: str_to_append} ]
+	var op_list = [ { operation : operations.INCR, binName : 'Integer_bin', binValue : val_to_increment },
+					{ operation : operations.APPEND, binName : 'String_bin', binValue: str_to_append} ]
 
 	Operate without OperatePolicy
 

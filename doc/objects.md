@@ -1,13 +1,12 @@
-# Objects
-	1. EnumObjects
-	2. MapObjects
+# DataStructures
+	1. Constants 
+	2. Objects.
 
-##ENUMOBJECTS
+##CONSTANTS
 	
-	###Status Enum
-		All Error Codes in C. 
-		Point to C Error codes link
-	
+	###Status
+		The error codes returned by aerospike server is exposed to nodejs.
+		Refer to status.md for all the error codes returned and explanations. 
 	###Policy.
 		1. KeyPolicy 
 			UNDEF
@@ -39,9 +38,9 @@
 
 2.MapObjects
 
-## Error
+## Error{}
 
-    Error := {
+    Error {
       code: Integer,
       message: String,
       file: String,
@@ -49,32 +48,32 @@
       func: String
     }
 
-## Config
+## Config{}
 
-    Config := {
+    Config {
       hosts: [ { addr: String, port: Integer } ]
     }
 
-## Key
+## Key{}
 
-    Key := {
+    Key {
       ns: String,
       set: String,
       value: Object,
       digest: Buffer
     }
 
-## Metadata
+## Metadata{}
 
-    Metadata := {
+    Metadata {
       ttl: Integer,
       gen: Integer,
     }
 
 
-## Record
+## Record{}
 
-    Record := {
+    Record {
       key: Key,
       metadata: Metadata,
       bins: {
@@ -82,24 +81,24 @@
       }
     }
 
-##RecList
+##RecList[]
 
-	RecList := {
-		[recstatus : Status,
-		 record	  : Record]
-	}
+	RecList [
+		{recstatus : Status,
+		 record	  : Record}
+	]
 
-##OpList
+##OpList[]
 
-	OpList := {
-		[operation : Operators,
+	OpList [
+		{operation : Operators,
 		 binname   : String,
-		 binvalue  : Object]
-	}
+		 binvalue  : Object}
+	]
 
-##WritePolicy
+##WritePolicy{}
  
-	WritePolicy := {
+	WritePolicy {
 		timeout : Integer,
 		Retry	: RetryPolicy,
 		Key		: KeyPolicy,
@@ -107,25 +106,25 @@
 		Exists	: ExistsPolicy
 	}
 
-##ReadPolicy
+##ReadPolicy{}
 	
-	ReadPolicy := {
+	ReadPolicy {
 		timeout : Integer,
 		Key		: keyPolicy,
 	}
 
-##OperatePolicy
+##OperatePolicy{}
 
-	OperatePolicy := {
+	OperatePolicy {
 		timeout : Integer,
 		Gen		: GenerationPolicy,
 		Key		: KeyPolicy,
 		Retry	: RetryPolicy
 	}
 
-##RemovePolicy
+##RemovePolicy{}
 	
-	RemovePolicy := {
+	RemovePolicy {
 		timeout : Integer,
 		gen		: Integer,
 		Retry	: RetryPolicy,
