@@ -97,5 +97,9 @@ class AerospikeClient : public ObjectWrap {
 		 *undefined client.operate( Key, Operation, function(Error, Record))
 		 */ 
 		static Handle<Value> Operate(const Arguments& args);
- 
+
+		/*
+		 *undefined client.info( host, port, function(Error, Response))
+		 */ 
+		static Handle<Value> Info(const Arguments& args);
 };

@@ -10,7 +10,7 @@ var config = {
 
 var client = aerospike.connect(config)
 
-var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 12
+var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
 console.time(n + " get");
@@ -18,7 +18,7 @@ for (var i = 1; i <= n; i++ ) {
 
   var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
 
-  var readpolicy = { timeout : 10, Key : policy.KeyPolicy.AS_POLICY_KEY_SEND };
+  var readpolicy = { timeout : 10, Key : policy.Key.KEY };
   //This function gets the complete record with all the bins.	
   client.get(k1,function (err, rec, meta){
 	 if ( err.code != status.AEROSPIKE_OK ) {

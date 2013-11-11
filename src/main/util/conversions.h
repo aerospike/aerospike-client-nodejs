@@ -86,5 +86,5 @@ int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj);
 int removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj);
 int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj);
-
+int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj);
 

@@ -16,7 +16,8 @@
         'src/main/util/conversions.cc',
 		'src/main/enums/error_codes.cc',
 		'src/main/enums/policy_enums.cc',
-		'src/main/enums/operators.cc'
+		'src/main/enums/operators.cc',
+		'src/main/client/info.cc'
       ],
      'link_settings': {
           'libraries': [

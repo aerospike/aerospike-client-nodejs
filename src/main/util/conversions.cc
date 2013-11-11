@@ -413,6 +413,10 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
 	return setPolicyGeneric(obj, "Exists", (int *) existspolicy);
 }
 
+int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj)
+{
+	return 	AS_NODE_PARAM_OK;
+}
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj)
 {
 	as_policy_operate_init( policy);
