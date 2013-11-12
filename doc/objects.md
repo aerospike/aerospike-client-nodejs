@@ -1,51 +1,64 @@
+###Objects
 
-	
-	###Status
-		The error codes returned by aerospike server is exposed to nodejs.
-		Refer to status.md for all the error codes returned and explanations. 
+####Connecting to Aerospike Database
+#####[Config](#confheader)
+#####[Host](#hostheader)
 
-	##Operators.
-		WRITE
-		READ
-		INCR
-		PREPEND
-		APPEND
-		TOUCH
+###Error
+#####[Error](#errheader)
 
-## Error{}
+####Related to Database operations
+#####[Key](#keyheader)
+#####[Metadata](#metaheader)
+#####[OpList](#oplistheader)
+#####[Record](#recordheader)
+#####[RecList](#reclistheader)
 
-    Error {
-      code: Integer,
+####Defining policies for various database operations
+#####[BatchPolicy](#bpolicyheader)
+#####[InfoPolicy](#ipolicyheader)
+#####[OperatePolicy](#opolicyheader)
+#####[ReadPolicy](#rpolicyheader)
+#####[RemovePolicy](#rempolicyheader)
+#####[WritePolicy](#wpolicyheader)
+
+####<a name="confheader"></a>Config{}
+>Config {
+	[\[Host\]](#hostheader)
+}
+
+####<a name="hostheader"></a>Host{}
+>Host{
+	addr:String,
+	port:Integer
+}
+
+####<a name="errheader"></a>Error{}
+>Error {
+      code: [Status](#statusheader),
       message: String,
       file: String,
       line: Integer,
       func: String
     }
 
-## Config{}
-
-    Config {
-      hosts: [ { addr: String, port: Integer } ]
-    }
-
-## Key{}
-
-    Key {
+####<a name="keyheader"></a> Key{}
+>Key {
       ns: String,
       set: String,
       value: Object,
       digest: Buffer
     }
 
-## Metadata{}
+####<a name="metaheader"></a>Metadata{}
 
-    Metadata {
+>Metadata {
       ttl: Integer,
       gen: Integer,
     }
 
 
-## Record{}
+####<a name="recordheader"></a>Record{}
 
     Record {
       key: Key,
@@ -53,14 +66,14 @@
       bins: [Object]
     }
 
-##RecList[]
+####<a name="reclistheader"></a>RecList[]
 
 	RecList [
 		{recstatus : Status,
 		 record	  : Record}
 	]
 
-##OpList[]
+####<a name="oplistheader"></a>OpList[]
 
 	OpList [
 		{operation : Operators,
@@ -80,7 +93,7 @@
 		Policy Values are constants.
 		The following are the policy values
 
-		[link KeyPolicy](#KeyPolicy)
+		[link KeyPolicy]KeyPolicy
 		2. RetryPolicy
 			UNDEF
 			NONE
@@ -157,7 +170,7 @@
 	}
 
 #Constants
-		### <a name="KeyPolicy"></a>KeyPolicy
+		##KeyPolicy
 			UNDEF
 			DIGEST
 			SEND
@@ -176,3 +189,16 @@
 			IGNORE
 			CREATE
 			UPDATE
+
+
+##Status
+>The error codes returned by aerospike server is exposed to nodejs.
+Refer to status.md for all the error codes returned and explanations. 
+
+##Operators.
+	WRITE
+	READ
+	INCR
+	PREPEND
+	APPEND
+	TOUCH
