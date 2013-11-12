@@ -14,13 +14,6 @@
 #####[Record](#recordheader)
 #####[RecList](#reclistheader)
 
-####Defining policies for various database operations
-#####[BatchPolicy](#bpolicyheader)
-#####[InfoPolicy](#ipolicyheader)
-#####[OperatePolicy](#opolicyheader)
-#####[ReadPolicy](#rpolicyheader)
-#####[RemovePolicy](#rempolicyheader)
-#####[WritePolicy](#wpolicyheader)
 
 ####<a name="confheader"></a>Config{}
 >Config {
@@ -60,131 +53,129 @@
 
 ####<a name="recordheader"></a>Record{}
 
-    Record {
-      key: Key,
-      metadata: Metadata,
+>Record {
+      key:[Key](#keyheader),
+      metadata:[Metadata](#metaheader),
       bins: [Object]
     }
 
 ####<a name="reclistheader"></a>RecList[]
 
-	RecList [
-		{recstatus : Status,
-		 record	  : Record}
+>RecList [
+		{recstatus :[Status](#statusheader),
+		 record	  :[Record](#recordheader)}
 	]
 
 ####<a name="oplistheader"></a>OpList[]
 
-	OpList [
-		{operation : Operators,
+>OpList [
+		{operation :[Operators](#opheader),
 		 binname   : String,
 		 binvalue  : Object}
 	]
 
 
 ##Client Policies.
-	Policies define the behavior of database operations.
+>Policies define the behavior of database operations.
 	Policies fall into two groups: policy values and operation policies. 
 	A policy value is a single value which defines how the client behaves. 
 	An operation policy is a group of policy values which affect an operation.
 
 
-	1.Policy Values
-		Policy Values are constants.
-		The following are the policy values
+####Policy Values
+>Policy Values are constants.
+	The following are the policy values
 
-		[link KeyPolicy]KeyPolicy
-		2. RetryPolicy
+#####[KeyPolicy](#kpolicyheader)
+#####[RetryPolicy](#retpolicyheader)
 			UNDEF
 			NONE
 			ONCE
-		3. GenerationPolicy
+#####[GenerationPolicy](#genpolicyheader)
 			UNDEF
 			IGNORE
 			EQ  
 			GT  
 			DUP 
-		4. ExistsPolicy
+#####[ExistsPolicy](#expolicyheader)
 			UNDEF
 			IGNORE
 			CREATE
 			UPDATE
-	2.Operation Policies
-		The following are the operation policies
+####Operation Policies
+>The following are the operation policies
 
-			BatchPolicy
-			InfoPolicy
-			OperatePolicy
-			ReadPolicy
-			RemovePolicy
-			WritePolicy
+#####[BatchPolicy](#bpolicyheader)
+#####[InfoPolicy](#ipolicyheader)
+#####[OperatePolicy](#opolicyheader)
+#####[ReadPolicy](#rpolicyheader)
+#####[RemovePolicy](#rempolicyheader)
+#####[WritePolicy](#wpolicyheader)
 
-#DataStructures
-	##BatchPolicy{}
+#####<a name="bpolicyheader"></a>BatchPolicy{}
 
-	BatchPolicy {
+>BatchPolicy {
 		timeout: Integer
 	}
 
-	##InfoPolicy{}
+####<a name="ipolicyheader"></a>InfoPolicy{}
 
-	InfoPolicy{
+>InfoPolicy{
 		timeout	: Integer,
 		send_as_is : Boolean,
 		check_bounds : Boolean
 	}
 	
-	##WritePolicy{}
+####<a name="policyheader"></a>WritePolicy{}
  
-	WritePolicy {
+>WritePolicy {
 		timeout : Integer,
-		Retry	: RetryPolicy,
-		Key		: KeyPolicy,
-		Gen		: GenerationPolicy,
-		Exists	: ExistsPolicy
+		Retry	: [RetryPolicy](#retpolicyheader),
+		Key		: [KeyPolicy](#keypolicyheader),
+		Gen		: [GenerationPolicy](#genpolicyheader),
+		Exists	: [ExistsPolicy](#expolicyheader)
 	}
 
-	##ReadPolicy{}
+####<a name="rpolicyheader"></a>ReadPolicy{}
+
+>ReadPolicy {
+		timeout : Integer,
+		Key		: [KeyPolicy](#keypolicyheader)
+	}
+
+####<a name="opolicyheader"></a>OperatePolicy{}
+
+>OperatePolicy {
+		timeout : Integer,
+		Gen		: [GenerationPolicy](#genpolicyheader),
+		Key		: [KeyPolicy](#keypolicyheader),
+		Retry	: [RetryPolicy](#retpolicyheader)
+	}
+
+####<a name="rempolicyheader"></a>RemovePolicy{}
 	
-	ReadPolicy {
-		timeout : Integer,
-		Key		: keyPolicy,
-	}
-
-	##OperatePolicy{}
-
-	OperatePolicy {
-		timeout : Integer,
-		Gen		: GenerationPolicy,
-		Key		: KeyPolicy,
-		Retry	: RetryPolicy
-	}
-
-	##RemovePolicy{}
-	
-	RemovePolicy {
+>RemovePolicy {
 		timeout : Integer,
 		gen		: Integer,
-		Retry	: RetryPolicy,
-		Key		: KeyPolicy
+		Retry	: [RetryPolicy](#retpolicyheader),
+		Key		: [KeyPolicy](#keypolicyheader)
 	}
 
-#Constants
-		##KeyPolicy
+#####<a name="keypolicyheader"></a>KeyPolicy
 			UNDEF
 			DIGEST
 			SEND
-		2. RetryPolicy
+#####<a name="retpolicyheader"></a>RetryPolicy
 			UNDEF
 			NONE
 			ONCE
-		3. GenerationPolicy
+#####<a name="gempolicyheader"></a>GenerationPolicy
 			UNDEF
 			IGNORE
 			EQ  
 			GT  
 			DUP 
-		4. ExistsPolicy
+#####<a name="expolicyheader"></a>ExistsPolicy
 			UNDEF
 			IGNORE
 			CREATE
