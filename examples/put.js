@@ -31,32 +31,38 @@ for (var i = 1; i <= n; i++ ) {
 					  Key: policy.Key.SEND, 
 					  Gen: policy.Generation.EQ,
 					  Exists: policy.Exists.IGNORE }
-
+// Write a record with gen policy EQUAL
   client.put(k1, rec, write_policy, function(err) {
     if ( err.code != status.AEROSPIKE_OK ) {
       console.log("error: %s", err.message);
     }
     if ( (++m) == n ) {
-      //console.timeEnd(n + " put")
-	  //client.close();
+      console.timeEnd(n + " put")
     }
   });
+
+
+// Read the record
   var readpolicy = { timeout : 10, Key : policy.Key.SEND }
   client.get(k1, function(err,bins,meta) {
 	console.log(meta);
 	console.log(bins.s);
   });
 
+// Write the record with same generation.
   rec.gen = 1;
   rec.bins.s = i.toString() + "GEN";
   client.put(k1, rec,  function(err) {
 	console.log(err);
   });
   
+
   client.get(k1, function(err,bins,meta) {
 	console.log(bins.s);
   });
  
+// Increment the record to some artibitrary value
+// This write operation is expected to fail
   rec.bins.s = i.toString()+"GENFAIL";
   rec.gen = 60;
   client.put(k1, rec, write_policy, function(err) {

@@ -23,20 +23,20 @@ for (var i = 1; i <= n; i++ ) {
   client.get(k1,function (err, rec, meta){
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
-    }
-	console.log(rec['i']);
-	console.log(rec['s']);
-	//Unpack the Buffer using msgpack
-	if ( rec['b'] instanceof Buffer) {
-		var unbuf = msgpack.unpack(rec['b']);
-		console.log(unbuf);
+    } else {
+		console.log(rec['i']);
+		console.log(rec['s']);
+		//Unpack the Buffer using msgpack
+		if ( rec['b'] instanceof Buffer) {
+			var unbuf = msgpack.unpack(rec['b']);
+			console.log(unbuf);
+		}
+	    console.log(meta);
+		if ( (++m) == n ) {
+			console.timeEnd(n + " get");
+			client.close();
+		}
 	}
-    console.log(meta);
-    if ( (++m) == n ) {
-        console.timeEnd(n + " get");
-	    client.close();
-    }
-	});
- 
+  });
 }
 

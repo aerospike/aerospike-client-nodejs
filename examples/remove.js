@@ -19,8 +19,8 @@ for (var i = 1; i <= n; i++ ) {
 
   var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
 
-var removepolicy = { timeout : 10, gen : 1, Retry : policy.RetryPolicy.AS_POLICY_RETRY_ONCE,
-					 Key: policy.KeyPolicy.AS_POLICY_KEY_SEND }
+var removepolicy = { timeout : 10, gen : 1, Retry : policy.Retry.ONCE,
+					 Key: policy.Key.SEND }
   //This function deletes the complete record with all the bins.	
   client.remove(k1,removepolicy, function (err, key){
 	 if ( err.code != status.AEROSPIKE_OK ) {

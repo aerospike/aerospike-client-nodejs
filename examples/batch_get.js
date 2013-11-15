@@ -37,11 +37,10 @@ for (var i = 0 ;i < n; i++) {
 	if ( err.code == status.AEROSPIKE_OK ) {
 		var num = rec_list.length;
 		for(i=0; i<num; i++) {
-			if ( rec_list[i].RecStatus != status.AEROSPIKE_OK) {
+			if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
 				console.log(rec_list[i].recstatus);
 			} else {
 				var bin = rec_list[i].record.bins['b'];
-				console.log(bin);
 				 if ( bin instanceof Buffer) {
     		    	var unbuf = msgpack.unpack(bin);
 	        	 	console.log(unbuf);

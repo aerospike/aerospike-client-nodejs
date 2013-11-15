@@ -7,8 +7,7 @@
 	"homepage" : "https://github.com/aerospike/client-nodejs",
 	"main" : "./build/Release/aerospike.node",
 	"scripts" : {
-		"preinstall" : "node-gyp rebuild",
-		"test" :  "mocha test"
+		"preinstall" : "node-gyp rebuild"
 	},
 	"engines" : {
 		"node" : ">=0.10"

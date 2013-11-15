@@ -12,7 +12,7 @@ To install the latest stable version of  Node.js, visit http://nodejs.org/downlo
 [Node-gyp](https://github.com/TooTallNate/node-gyp) is used for building the 
 library. 
 
-The nodejs installed must be of version >= v0.10.*
+The nodejs installed must be of version >= v0.10.16
 
 
 Install the latest stable version of nodejs available at http://nodejs.org/download/
@@ -51,13 +51,11 @@ The aerospike-client-node.js uses aerospike-client-c library.
     
         export NODE_PATH=/usr/lib/node_modules
 
-## Test
+## Examples
 
-Test the working of aerospike-client-node.js 
+	Refer to examples folder which demonstrates the all the operations available in Aerospike Database.
 
-    $ npm test
-
-## Usage
+## Sample Programming
 	
 	var aerospike = require('aerospike')
 	var config = {
@@ -127,6 +125,5 @@ Test the working of aerospike-client-node.js
 	//For graceful shutdown of Aerospike Cluster, invoke client.close()
 	// when the application shuts down
 	client.close();
-Refer to examples folder which demonstrates the above functionality.
 
 
