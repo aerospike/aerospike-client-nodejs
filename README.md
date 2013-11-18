@@ -17,8 +17,11 @@ The nodejs installed must be of version >= v0.10.16
 
 Install the latest stable version of nodejs available at http://nodejs.org/download/
 
-
 ## Building
+
+Downloading and installing C client has been moved as a part of 
+npm install.
+Just perform step no.5 for installing.
 
 The aerospike-client-node.js uses aerospike-client-c library.
 
@@ -60,75 +63,5 @@ The aerospike-client-node.js uses aerospike-client-c library.
 	To generate documentation cd to docs folder and do make html
 	cd doc/
 	make html
-## Sample Programming
-	
-	var aerospike = require('aerospike')
-	var config = {
-		hosts:[{ addr:"127.0.0.1", port : 3000 
-			//specify the list of node ip and port in the
-			//aerospike cluster, following the above format.
-		    }
-		    ]}
-	
-	// Connect call connects to the aerospike cluster.
-	// Only one instance of AerospikeClient should be used across a
-	// an application.	
-	var client = aerospike.connect(config)
-
-	// Error codes/ Status returned by the Aerospike Cluster for every operation
-	var status = aeropsike.Status;	
-	var bins = {
-		a: 123,
-		b: "xyz"
-	}
-
-	client.put(["test", "demo", "a"], bins, function(err, meta, key) {
-	 if (err.code == status.AEROSPIKE_OK) {
-	  // handle the response
-	 }
-	 else {
-		// Error -- Record is not written to aerospike server
-	 }
-	})
-	
-	client.get(["test", "demo", "b"], function(err, bins, meta, key) {
-	  if (err.code == status.AEROSPIKE_OK) {
-	  	// handle the response
-	  }	else {
-		// Error -  Record is not retrieved
-	  }
-	})
-
-	client.remove(["test","demo","a"], function(err, key) {
-		//handle the response
-	})
-
-	var bins = [ 'a','b' ];
-	client.select(["test","demo","a"],bins, function(err, rec, meta) {
-		//handle the response 
-		console.log(rec);
-	})
-
-	
-	var k1 = [
-         {ns:'test',set:'demo',value:"value"+1},
-         {ns:'test',set:'demo',value:'value'+2},
-         {ns:'test',set:'demo',value:'value'+3}]
-	client.batch_get(k1,function (err, rec_list){
-			if (err.code == status.AEROSPIKE_OK) {
-			num_records = rec_list.length;
-        	for (i=0; i<num_records; i++) {
-				 if(rec_list[i].RecStatus == status.AEROSPIKE_OK) {
-                	console.log(rec_list[i]);
-				 }else {
-					// Record was not retrieved 
-				}
-        	}
-		}
-	}
-
-	//For graceful shutdown of Aerospike Cluster, invoke client.close()
-	// when the application shuts down
-	client.close();
 
 

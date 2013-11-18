@@ -1,5 +1,5 @@
-arg=$1
+#!bin/bash
 
-cd doc
-make $1
+cd ../doc
+make html 
 cd ..
