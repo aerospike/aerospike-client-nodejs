@@ -55,6 +55,11 @@ The aerospike-client-node.js uses aerospike-client-c library.
 
 	Refer to examples folder which demonstrates the all the operations available in Aerospike Database.
 
+## Documentation.
+
+	To generate documentation cd to docs folder and do make html
+	cd doc/
+	make html
 ## Sample Programming
 	
 	var aerospike = require('aerospike')
