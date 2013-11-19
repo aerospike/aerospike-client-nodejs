@@ -1,29 +1,58 @@
-OS=' '
 
-if [ -f /etc/lsb-release ]; then
-	OS=ubuntu12.04
+[ $SKIP_C_CLIENT ] && exit 0
+
+OS=' '
+# This script is yet to be tested on debian and ubuntu platforms
+
+if [ -f /etc/redhat-release ]; then
+	dist=`cat /etc/redhat-release | grep "CentOS"`
+	echo $dist
+	if [ ! -z "$dist" ]; then
+		OS=el6
+		echo $OS
+	fi
 elif [ -f /etc/debian_version ]; then
-	OS=debian6  # XXX or Ubuntu??
-elif [ -f /etc/redhat-release ]; then
-	OS=el6
+	dist=`lsb_release -a | grep Debian`
+	if [ ! -z "$dist" ]; then
+		OS=debian6  
+	fi
+elif [ -f /etc/lsb-release ]; then
+	dist=`lsb_release -a | grep Ubuntu`
+	if [ ! -z "$dist" ]; then
+		OS=ubuntu12.04
+	fi
+else
+	echo "OS not supported"
+	exit 1
 fi
 
 url="http://www.aerospike.com/latest.php?package=client-c&os=$OS"
 echo $url
-wget -O aerospike.tgz $url
 
+wget -O aerospike.tgz $url
 tar -xvf aerospike.tgz
 
 dir="aerospike-client-c-*"
 cd $dir
 
 if [ "$OS" == "el6" ]; then
-	sudo rpm -i aerospike-client-c-devel-*.el6.x86_64.rpm
+	installed=`rpm -qa aerospike-client-c-devel`
+	echo $installed
+	if [ -z ${installed} ]; then
+		rpm -i aerospike-client-c-devel-*.el6.x86_64.rpm
+	else 
+		rpm -U aerospike-client-c-devel-*.el6.x86_64.rpm
+	fi
 elif [ "$OS" == "ubuntu12.04" ]; then
-	sudo dpkg -i aerospike-client-c-devel-*.ubuntu12.04x86_64.deb
+	dpkg -i aerospike-client-c-devel-*.ubuntu12.04x86_64.deb
 elif [ "$OS" == "debian6" ]; then
-	sudo dpkg -i aerospike-client-c-devel-*.debian6x86_b4.deb
+	dpkg -i aerospike-client-c-devel-*.debian6x86_b4.deb
+else
+	echo "OS not supported"
+	exit 1;
 fi
+
 cd ..
-export NODE_PATH=/usr/lib/node_modules
-echo $NODE_PATH
+
+NODE_PATH=/usr/lib/node_modules
+export NODE_PATH

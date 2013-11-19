@@ -544,18 +544,20 @@ int key_from_jsobject(as_key * key, Local<Object> obj)
 	if ( strlen(ns) == 0 ) {
 		return AS_NODE_PARAM_ERR;
 	}
-	
-	Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
-	if ( set_obj->IsString() ) {
-		strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
-	}
-	else {
-		return AS_NODE_PARAM_ERR;
+
+	if (obj->Has(String::NewSymbol("set"))) {
+		Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+		if ( set_obj->IsString() ) {
+			strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+		}
+		else {
+			return AS_NODE_PARAM_ERR;
+		}	
+		if ( strlen(set) == 0 ) {
+			return AS_NODE_PARAM_ERR;
+		}
 	}
 
-	if ( strlen(set) == 0 ) {
-		return AS_NODE_PARAM_ERR;
-	}
 
 	Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 	if ( val_obj->IsString() ) {

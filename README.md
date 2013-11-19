@@ -19,40 +19,24 @@ Install the latest stable version of nodejs available at http://nodejs.org/downl
 
 ## Building
 
-Downloading and installing C client has been moved as a part of 
-npm install.
-Just perform step no.5 for installing.
+Aerospike Nodejs client requires C client to be installed.
 
-The aerospike-client-node.js uses aerospike-client-c library.
+	Downloading and installing C client has been moved as a part of 
+	npm install. So no nedd to explicitly download and install the C client.
 
-1. Download the C client from Aerospike website
+If the aerospike C client is already installed in the system, and if you want to 
+avoid downloading from the website, set the environment variable,
 
-2. Extract and go to the resulting directory.
+	$export SKIP_C_CLIENT=1
 
-        tar -xzvf  aerospike-client-c-<version>-<os>-x86_64.tgz
-        cd aerospike-client-c-<version>-<os>-x86_64
 
-3. Install aerospike-client-c library
+Install `aerospike-node.js` client as a addon node_module
     
-    Centos/RHEL: 
+	$sudo npm install -g 
 
-        sudo rpm -i aerospike-client-c-devel-<version>-<os>.x86_64.rpm
-        
-    Debian/Ubuntu: 
+Set the environment variable `NODE_PATH` to `/usr/lib/node_modules`.
     
-        sudo dpkg -i aerospike-client-c-devel-<version>-<os>.x86_64.deb
-
-4. cd to aerospike-client-node.js-0.1.0 directory.
-    
-        cd path/to/aerospike-client-node.js-0.1.0
-
-5. Install `aerospike-node.js` client as a addon node_module
-    
-        sudo npm install -g 
-
-6. Set the environment variable `NODE_PATH` to `/usr/lib/node_modules`.
-    
-        export NODE_PATH=/usr/lib/node_modules
+	$export NODE_PATH=/usr/lib/node_modules
 
 ## Examples
 

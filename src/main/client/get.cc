@@ -151,7 +151,12 @@ static void execute(uv_work_t * req)
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
-	if ( data->param_err == 0) {
+	if (as->cluster == NULL) {
+         data->param_err = 1;
+         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+    }
+
+	if ( data->param_err == 0 ) {
 		aerospike_key_get(as, err, policy, key, &rec);	
 	}
 
