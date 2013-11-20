@@ -23,7 +23,11 @@ environment variable before installing the module:
 	$sudo SKIP_C_CLIENT=1 npm install -g 
 
 After installation, set the environment variable `NODE_PATH` to where node modules path is:
-    
+Some installation of nodejs puts the node_modules directory in /usr/lib/node_modules, then set 
+the NODE_PATH as
+	$export NODE_PATH=/usr/lib/node_modules
+Some other installation off nodejs puts the node_modules directory in /usr/local/lib/node_modules,
+in this case set NODE_PATH as
 	$export NODE_PATH=/usr/lib/node_modules
 
 ## Examples

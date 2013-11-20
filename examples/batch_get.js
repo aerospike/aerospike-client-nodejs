@@ -1,7 +1,6 @@
 var aerospike = require('aerospike')
 var msgpack = require('msgpack')
 var status = aerospike.Status;
-var sleep = require('sleep');
 var config = {
 	hosts:[{ addr:"127.0.0.1", port: 3000 }
 	      ]}

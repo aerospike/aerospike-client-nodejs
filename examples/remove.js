@@ -1,7 +1,5 @@
 var aerospike = require('aerospike')
-var assert = require('assert')
 var msgpack = require('msgpack')
-var sleep = require('sleep')
 var key = aerospike.key
 var policy = aerospike.Policy;
 var config = {
