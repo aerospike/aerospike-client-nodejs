@@ -25,8 +25,8 @@ var removepolicy = { timeout : 10, gen : 1, Retry : policy.Retry.ONCE,
   client.remove(k1,removepolicy, function (err, key){
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
+		console.log(key);
     }
-	console.log(key);
     if ( (++m) == n ) {
         console.timeEnd(n + " delete");
 	    client.close();

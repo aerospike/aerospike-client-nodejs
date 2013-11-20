@@ -14,7 +14,7 @@ var n = process.argv.length >= 3 ? parseInt(process.argv[2]) :14000
 var m = 0
 
 console.time(n + " put")
-for (var i = 1; i <= n; i++ ) {
+for (var i = 0; i < n; i++ ) {
 
   var str = "This is abnormally lengthy string. This is to test batch_get functioning for more than 8 bytes";
   var o = {"a" : 1, "b" : 2, "c" : [1, 2, 3],"d": str};
@@ -29,7 +29,7 @@ for (var i = 1; i <= n; i++ ) {
   var write_policy = {timeout : 10, 
 					  Retry: policy.Retry.ONCE, 
 					  Key: policy.Key.SEND, 
-					  Gen: policy.Generation.EQ,
+					  Gen: policy.Generation.IGNORE,
 					  Exists: policy.Exists.IGNORE }
 // Write a record with gen policy EQUAL
   client.put(k1, rec, write_policy, function(err) {
@@ -39,34 +39,6 @@ for (var i = 1; i <= n; i++ ) {
     if ( (++m) == n ) {
       console.timeEnd(n + " put")
     }
-  });
-
-
-// Read the record
-  var readpolicy = { timeout : 10, Key : policy.Key.SEND }
-  client.get(k1, function(err,bins,meta) {
-	console.log(meta);
-	console.log(bins.s);
-  });
-
-// Write the record with same generation.
-  rec.gen = 1;
-  rec.bins.s = i.toString() + "GEN";
-  client.put(k1, rec,  function(err) {
-	console.log(err);
-  });
-  
-
-  client.get(k1, function(err,bins,meta) {
-	console.log(bins.s);
-  });
- 
-// Increment the record to some artibitrary value
-// This write operation is expected to fail
-  rec.bins.s = i.toString()+"GENFAIL";
-  rec.gen = 60;
-  client.put(k1, rec, write_policy, function(err) {
-	console.log(err);
   });
 
 }

@@ -17,11 +17,10 @@ This is done automatically as part of the addon module installation:
 
 	$sudo npm install -g 
 
-If the Aerospike C client is already installed on the system, set the following environment
-before installing the module:
+If the Aerospike C client is already installed on the system, set the following SKIP_C_CLIENT 
+environment variable before installing the module:
 
-	$export SKIP_C_CLIENT=1
-	$sudo npm install -g 
+	$sudo SKIP_C_CLIENT=1 npm install -g 
 
 After installation, set the environment variable `NODE_PATH` to where node modules path is:
     
@@ -30,6 +29,9 @@ After installation, set the environment variable `NODE_PATH` to where node modul
 ## Examples
 
 Refer to examples folder which demonstrates the all the operations available in Aerospike Database.
+To demonstrate Buffer datatype usage, examples use msgpack package. To install msgpack,
+     
+	$sudo npm install -g msgpack.
 
 ## Documentation.
 

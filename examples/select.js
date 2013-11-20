@@ -7,7 +7,8 @@ var client = aerospike.connect(config)
 var policy = aerospike.Policy;
 var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
-for (var i = 0; i <= n; i++ ) {
+console.time(n + " select");
+for (var i = 0; i < n; i++ ) {
 
   var k2 = { 'ns':'test','set':'demo','key':'value' + i}
   var bins =['s', 'i'];
@@ -18,15 +19,10 @@ for (var i = 0; i <= n; i++ ) {
      if ( err.code != 0 ) {
         console.log("error %s",err.message);
      }
-     console.log(rec);
-     console.log(meta);
-	 console.log(key);
      if ( (++m) == n ) {
-        console.timeEnd(n + " get");
+        console.timeEnd(n + " select");
      }
-     console.time(n + " get");
   });
-
 }
 
 

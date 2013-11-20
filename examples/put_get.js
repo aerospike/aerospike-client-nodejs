@@ -11,12 +11,13 @@ var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 7000
 var m = 0
 
 console.time(n + " put+get")
-for (var i = 1; i <= n; i++ ) {
+for (var i = 0; i < n; i++ ) {
 
-	var key0 = ["test", "test", "test"+i]
+	var key0 = { ns:"test", set:"demo", key:"test"+i}
 	var bins0 = { 'i': i, 's': i.toString() }
-	
-	client.put(key0, bins0, function(err, meta1, key1) {
+
+	var rec = { bins:bins0 }
+	client.put(key0, rec, function(err, meta1, key1) {
     if ( err.code != 0 ) {
       console.log("put error: %s", err.message)
     }

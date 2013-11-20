@@ -14,8 +14,8 @@ var client = aerospike.connect(config)
 var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
-console.time(n + " get");
-for (var i = 1; i <= n; i++ ) {
+console.time(n + " operate");
+for (var i = 0; i < n; i++ ) {
 
   var k1 = {ns:"test",set:"demo",key:"value"+i}; 
 
@@ -26,9 +26,8 @@ for (var i = 1; i <= n; i++ ) {
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
     }
-	console.log(err);
     if ( (++m) == n ) {
-        console.timeEnd(n + " get");
+        console.timeEnd(n + " operate");
     }
 	});
  

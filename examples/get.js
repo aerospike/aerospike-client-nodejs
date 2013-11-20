@@ -14,7 +14,7 @@ var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
 console.time(n + " get");
-for (var i = 1; i <= n; i++ ) {
+for (var i = 0; i < n; i++ ) {
 
   var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
 
@@ -23,20 +23,11 @@ for (var i = 1; i <= n; i++ ) {
   client.get(k1,function (err, rec, meta){
 	 if ( err.code != status.AEROSPIKE_OK ) {
         console.log("error %s",err.message);
-    } else {
-		console.log(rec['i']);
-		console.log(rec['s']);
-		//Unpack the Buffer using msgpack
-		if ( rec['b'] instanceof Buffer) {
-			var unbuf = msgpack.unpack(rec['b']);
-			console.log(unbuf);
-		}
-	    console.log(meta);
+    } 
 		if ( (++m) == n ) {
 			console.timeEnd(n + " get");
 			client.close();
 		}
-	}
   });
 }
 

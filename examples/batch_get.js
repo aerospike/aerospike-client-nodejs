@@ -22,9 +22,7 @@ for (var i = 0 ;i < n; i++) {
 	 {ns:'test',set:'demo',key:"value" + (i*4) },
 	 {ns:'test',set:'demo',key:"value" + (i*4 + 1) },
 	 {ns:'test',set:'demo',key:"value" + (i*4 + 2) },
-	 {ns:'test',set:'demo',key:'valuexyz'},
-	 {ns:'test',set:'demo',key:"value" + (i* 4 + 3) },
-	 {ns:'test',set:'demo1',key:'value'+5}]
+	 {ns:'test',set:'demo',key:"value" + (i* 4 + 3) }]
 
  /** arguments to callback
   *  err -- error returned by the callee.
@@ -39,13 +37,7 @@ for (var i = 0 ;i < n; i++) {
 		for(i=0; i<num; i++) {
 			if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
 				console.log(rec_list[i].recstatus);
-			} else {
-				var bin = rec_list[i].record.bins['b'];
-				 if ( bin instanceof Buffer) {
-    		    	var unbuf = msgpack.unpack(bin);
-	        	 	console.log(unbuf);
-				 }
-			}
+			} 
 		}
 	}else {
 			console.log("Error");
