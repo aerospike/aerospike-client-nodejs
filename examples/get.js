@@ -24,8 +24,8 @@ for (var i = 0; i < n; i++ ) {
     } 
 		if ( (++m) == n ) {
 			console.timeEnd(n + " get");
-			client.close();
 		}
   });
 }
+
 

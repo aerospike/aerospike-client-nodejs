@@ -1,6 +1,8 @@
 var fs = require('fs');
 eval(fs.readFileSync('test.js')+'');
 
+var params = new Object;
+ParseConfig(params);
 
 function GetOperatePolicy()
 {
@@ -15,7 +17,7 @@ function GetOperatePolicy()
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'INCR OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'INCR' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'INCR' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
@@ -46,7 +48,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'PREPEND STRING OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'PREPENDSTRING' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'PREPENDSTRING' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
@@ -77,7 +79,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 describe( 'OPERATE FUNCTIONALITY', function() {
 	it( 'APPEND STRING OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'APPENDSTRING' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'APPENDSTRING' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
@@ -108,7 +110,7 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'TOUCH OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'TOUCHSTRING' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'TOUCHSTRING' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
@@ -142,7 +144,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'READ OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'READ' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'READ' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
@@ -172,7 +174,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'WRITE OPERATION  TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'WRITE' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'WRITE' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){

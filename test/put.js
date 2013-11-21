@@ -1,6 +1,8 @@
 var fs = require('fs');
 eval(fs.readFileSync('test.js')+'');
+var params = new Object;
 
+ParseConfig(params);
 
 
 function GetWritePolicyDefault()
@@ -17,7 +19,7 @@ function GetWritePolicyDefault()
 describe ( 'PUT FUNCTIONALITY', function() {
 	it( 'SIMPLE PUT TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var Key = { ns : 'test', set : 'demo', key : 'PUT' + i }
+			var Key = { ns : params.ns, set : params.set, key : 'PUT' + i }
 			var rec = new GetRecord(i);
 			client.put(Key, rec,function(err) {
 				expect(err).to.exist;
@@ -37,7 +39,7 @@ describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- SHOULD SUCCEED', function() {
 		var recGen = 0;
 		for ( var i = 1; i <= n; i++) {
-			var K = { ns:'test', set: 'demo', key:'GEN_SUCCESS' + i };
+			var K = { ns:params.ns, set: params.set, key:'GEN_SUCCESS' + i };
 			var rec = new GetRecord(i);
 			client.put(K, rec,function(err, meta, key) {
 			client.get(key, function (err, bins, meta, key) {
@@ -68,7 +70,7 @@ describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- NEGATIVE', function() {
 		var recGen = 0;
 		for ( var i = 1; i <= n; i++) {
-			var K = { ns:'test', set: 'demo', key:'GEN_FAILURE' + i };
+			var K = { ns:params.ns, set: params.set, key:'GEN_FAILURE' + i };
 			var rec = new GetRecord(i);
 			client.put(K, rec,function(err, meta, key) {
 			client.get(key, function (err, bins, meta, key) {
@@ -101,7 +103,7 @@ describe('WRITE POLICY TEST', function() {
 		m = 0;
 		n = 10000;
 		for ( var i = 1; i <= n; i++) {
-			var K = { ns: 'test', set : 'demo', key : 'TIMEOUT' + i };
+			var K = { ns: params.ns, set : params.set, key : 'TIMEOUT' + i };
 			var writepolicy = { timeout : 1 }
 			var obj = { a : 1, b: "Some String", c: [1,2,3] };
 			var packed_obj = msgpack.pack(obj);
@@ -128,7 +130,7 @@ describe('WRITE POLICY TEST', function() {
 describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE-- SHOULD SUCCEED', function() {
 		for ( var i = 1; i <= n; i++) {
-			var K = { ns:'test', set: 'demo', key:'EXIST_SUCCESS' + i };
+			var K = { ns:params.ns, set: params.set, key:'EXIST_SUCCESS' + i };
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
 			writepolicy.Exists = Policy.Exists.CREATE;
@@ -150,7 +152,7 @@ describe('WRITE POLICY TEST', function() {
 describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE -- NEGATIVE TEST', function() {
 		for ( var i = 1; i <= n; i++) {
-			var K = { ns:'test', set: 'demo', key:'EXIST_FAIL' + i };
+			var K = { ns:params.ns, set: params.set, key:'EXIST_FAIL' + i };
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
 			writepolicy.Exists = Policy.Exists.CREATE;

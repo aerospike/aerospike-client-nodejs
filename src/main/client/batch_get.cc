@@ -126,31 +126,31 @@ static void * prepare(const Arguments& args)
 	if ( args[arglength-1]->IsFunction()) { 
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
 	} else {
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
 		Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
 		if( batch_from_jsarray(batch, keys) != AS_NODE_PARAM_OK) {
-			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	}
 	else {
 		//Parameter passed is not an array of Key Objects "ERROR..!"
-		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if (arglength > 2 ) {
 		if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
 			if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
 			}
 		}else {
-			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_CLIENT);
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	} else {
@@ -182,7 +182,7 @@ static void execute(uv_work_t * req)
 	
 	if( as->cluster == NULL) {
 		data->node_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 	// Invoke the blocking call.
 	// Check for no parameter errors from Nodejs 

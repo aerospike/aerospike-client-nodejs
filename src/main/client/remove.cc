@@ -92,28 +92,28 @@ static void * prepare(const Arguments& args)
 	if ( args[arglength-1]->IsFunction() ){
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
 	} else {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 	if ( args[ REMOVE_ARG_POS_KEY ]->IsObject() ) {
 		if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	}
 	else {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if ( arglength > 2 ) {
 		if ( args[REMOVE_ARG_POS_WPOLICY]->IsObject() ) {
 			if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject() ) != AS_NODE_PARAM_OK) {
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
 			}
 		} else {
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_CLIENT);
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	} else {
@@ -146,6 +146,11 @@ static void execute(uv_work_t * req)
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
+	if (as->cluster == NULL) {
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+    }
+
 	if ( data->param_err == 0) {
 		aerospike_key_remove(as, err, policy, key);	
 	}

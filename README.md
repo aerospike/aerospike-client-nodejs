@@ -37,6 +37,11 @@ To demonstrate Buffer datatype usage, examples use msgpack package. To install m
      
 	$sudo npm install -g msgpack.
 
+##Testing
+
+The test cases are written using mocha. Refer to README under the test directory to run
+all the test cases.
+
 ## Documentation.
 
 Documentation is generated using sphinx-doc. Please download from http://sphinx-doc.org/

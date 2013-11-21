@@ -13,7 +13,7 @@ var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
 var m = 0
 
 console.time(n + " delete");
-for (var i = 1; i <= n; i++ ) {
+for (var i = 0; i < n; i++ ) {
 
   var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
 

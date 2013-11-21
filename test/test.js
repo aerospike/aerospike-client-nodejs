@@ -6,11 +6,16 @@ var msgpack = require('msgpack');
 var return_code = aerospike.Status;
 var Policy = aerospike.Policy;
 var Operator = aerospike.Operators;
-var config = { 
+var con = require('./config');
+
+/*var config = { 
 		hosts:[{ addr:"127.0.0.1",port : 3000 }
-		]}  
+		]}  */
+var config = { 
+	hosts: [{addr:con.config.host, port : con.config.port}
+	]}
 var client = aerospike.connect(config);
-var n = 1000;
+var n = con.config.NoOfObjects;
 var m = 0
 
 function CleanRecords( str )
@@ -33,6 +38,12 @@ function GetRecord(i)
 	return rec;
 }
 
+function ParseConfig( param )
+{
+	console.log(con);
+	param.ns = con.config.namespace;
+	param.set = con.config.set;
+}
 exports.CleanRecords = CleanRecords;
 exports.GetRecord = GetRecord;
-
+exports.ParseConfig = ParseConfig;

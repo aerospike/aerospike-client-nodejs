@@ -1,6 +1,9 @@
-
 var fs = require('fs');
 eval(fs.readFileSync('test.js')+'');
+
+var params = new Object;
+
+ParseConfig(params);
 
 function GetSelectPolicy()
 {
@@ -12,7 +15,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 	it( 'SIMPLE SELECT TEST', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
-		var Key = { ns: 'test', set: 'demo',key: 'SELECT' + i }
+		var Key = { ns: params.ns, set: params.set, key: 'SELECT' + i }
 		client.put (Key, rec, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) {
 				var bins = ['string_bin', 'integer_bin'];
@@ -38,7 +41,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 	it( 'SELECT TEST WITH READ POLICY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
-		var Key = { ns: 'test', set: 'demo',key: 'READPOLICY' + i }
+		var Key = { ns: params.ns, set: params.set, key: 'READPOLICY' + i }
 		client.put (Key, rec, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) { 
 				var readpolicy = new GetSelectPolicy();
