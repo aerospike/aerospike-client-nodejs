@@ -4,6 +4,15 @@ The test cases are written using mocha. To install mocha
 	
 	$sudo npm install -g mocha
 
+The following node packages are required to run the test.
+	
+	superagent.
+	expect.js
+To install the above packages
+	
+	$sudo npm install -g superagent
+	$sudo npm install -g expect.js
+
 The config parameters to run the test cases are given through
 config.json file. The following config informations are necessary for the
 test to run.

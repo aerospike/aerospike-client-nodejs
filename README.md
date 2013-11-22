@@ -33,9 +33,7 @@ in this case set NODE_PATH as
 ## Examples
 
 Refer to examples folder which demonstrates the all the operations available in Aerospike Database.
-To demonstrate Buffer datatype usage, examples use msgpack package. To install msgpack,
      
-	$sudo npm install -g msgpack.
 
 ##Testing
 
@@ -44,8 +42,18 @@ all the test cases.
 
 ## Documentation.
 
-Documentation is generated using sphinx-doc. Please download from http://sphinx-doc.org/
-To generate documentation:
+Documentation is generated using sphinx-doc. 
+Sphinx needs atleast python2.6 or python 3.1.
+Sphinx is installed using python's pip installer.
+To install pip: 
+	
+	$ sudo yum install python-pip.
+
+To install sphinx:
+	
+	$sudo pip install sphinx
+
+To generate documentation using sphinx:
 	cd doc/
 	make html
 
