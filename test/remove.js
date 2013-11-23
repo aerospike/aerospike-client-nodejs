@@ -24,6 +24,10 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 			client.remove(key, function ( err, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
+				client.get( key, function ( err, rec, meta) {
+					expect(err).to.exist;
+					expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				});
 				if ( ++m == n) {
 					m = 0;
 					console.log("REMOVE TEST SUCCESS");
@@ -36,7 +40,7 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 });
 
 describe( 'REMOVE FUNCTIONALITY', function() {
-	it( 'REMOVE TEST WITH READ POLICY', function() {
+	it( 'REMOVE TEST WITH REMOVE POLICY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'REMOVEPOLICY' + i }
@@ -46,6 +50,10 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 			client.remove(key, removepolicy, function ( err, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
+				client.get( key, function (err) {
+					expect(err).to.exist;
+					expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				});
 				if ( ++m == n) {
 					console.log("REMOVE TEST WITH REMOVE POLICY SUCCESS");
 				}

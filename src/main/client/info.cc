@@ -21,9 +21,9 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/aerospike_info.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/as_config.h>
+#include <aerospike/aerospike_info.h>
 }
 
 #include <node.h>
@@ -40,7 +40,7 @@ extern "C" {
 #define INFO_ARG_POS_REQ     2
 #define INFO_ARG_POS_IPOLICY 3 //Info  policy position and callback position is not same 
 #define INFO_ARG_POS_CB      4 // for every invoke of info. If infopolicy is not passed from node
-						       // application, argument position for callback changes.
+// application, argument position for callback changes.
 #define HOST_ADDRESS_SIZE 50
 #define INFO_REQUEST_LEN  50
 using namespace v8;
@@ -130,9 +130,9 @@ static void * prepare(const Arguments& args)
 	}
 	if ( arglength > 4 ) {
 		if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
-			infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-				goto Err_Return;
+				infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		} 
 	} else {
 		// When node application does not pass any write policy should be 
@@ -172,7 +172,7 @@ static void execute(uv_work_t * req)
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
-	
+
 	if ( data->param_err == 0) {
 		aerospike_info_host(as, err, policy, addr, port, request, response);
 	}
@@ -242,7 +242,7 @@ static void respond(uv_work_t * req, int status)
  ******************************************************************************/
 
 /**
- *  The 'put()' Operation
+ *  The 'info()' Operation
  */
 Handle<Value> AerospikeClient::Info(const Arguments& args)
 {

@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_key.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/as_key.h>
-	#include <aerospike/as_record.h>
-	#include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -42,8 +42,8 @@ using namespace v8;
 #define GET_ARG_POS_KEY     0
 #define GET_ARG_POS_RPOLICY 1 // Write policy position and callback position is not same 
 #define GET_ARG_POS_CB      2 // for every invoke of put. If writepolicy is not passed from node
-							  // application, argument position for callback changes.
-							  
+// application, argument position for callback changes.
+
 /*******************************************************************************
  *	TYPES
  ******************************************************************************/
@@ -81,7 +81,7 @@ static void * prepare(const Arguments& args)
 	// Build the async data
 	AsyncData *	data = new AsyncData;
 	data->as = &client->as;
-	
+
 	data->param_err = 0;
 	// Local variables
 	as_key *	key			= &data->key;
@@ -123,7 +123,7 @@ static void * prepare(const Arguments& args)
 
 	as_record_init(rec, 0);
 
-		
+
 	return data;
 
 Err_Return:
@@ -152,9 +152,9 @@ static void execute(uv_work_t * req)
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
-         data->param_err = 1;
-         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-    }
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
 
 	if ( data->param_err == 0 ) {
 		aerospike_key_get(as, err, policy, key, &rec);	
@@ -177,7 +177,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Fetch the AsyncData structure
 	AsyncData *	data		= reinterpret_cast<AsyncData *>(req->data);
-	
+
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
 	as_record *	rec			= &data->rec;
@@ -186,10 +186,10 @@ static void respond(uv_work_t * req, int status)
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
 		argv[0] = error_to_jsobject(err),
-		argv[1] = recordbins_to_jsobject(rec),
-		argv[2] = recordmeta_to_jsobject(rec),
-		argv[3] = key_to_jsobject(key);
-	
+			argv[1] = recordbins_to_jsobject(rec),
+			argv[2] = recordmeta_to_jsobject(rec),
+			argv[3] = key_to_jsobject(key);
+
 	}
 	else {
 		err->func = NULL;
@@ -209,7 +209,7 @@ static void respond(uv_work_t * req, int status)
 	if ( try_catch.HasCaught() ) {
 		node::FatalException(try_catch);
 	}
-	
+
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();

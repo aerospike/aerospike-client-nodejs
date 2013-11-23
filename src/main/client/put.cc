@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_key.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/as_key.h>
-	#include <aerospike/as_record.h>
-	#include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -42,7 +42,7 @@ extern "C" {
 #define PUT_ARG_POS_REC 1
 #define PUT_ARG_POS_WPOLICY 2 // Write policy position and callback position is not same 
 #define PUT_ARG_POS_CB 3  // for every invoke of put. If writepolicy is not passed from node
-						  // application, argument position for callback changes.
+// application, argument position for callback changes.
 
 using namespace v8;
 
@@ -127,9 +127,9 @@ static void * prepare(const Arguments& args)
 
 	if ( arglength > 3 ) {
 		if ( args[PUT_ARG_POS_WPOLICY]->IsObject() &&
-			writepolicy_from_jsobject(policy, args[PUT_ARG_POS_WPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-				goto Err_Return;
+				writepolicy_from_jsobject(policy, args[PUT_ARG_POS_WPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		} 
 	} else {
 		// When node application does not pass any write policy should be 
@@ -167,7 +167,7 @@ static void execute(uv_work_t * req)
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
-	
+
 	if ( data->param_err == 0) {
 		aerospike_key_put(as, err, policy, key, rec);
 	}

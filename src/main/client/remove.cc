@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_key.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/as_key.h>
-	#include <aerospike/as_record.h>
-	#include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -43,8 +43,8 @@ using namespace v8;
 #define REMOVE_ARG_POS_KEY     0
 #define REMOVE_ARG_POS_WPOLICY 1 // remove policy position and callback position is not same 
 #define REMOVE_ARG_POS_CB      2 // for every invoke of remove. If removepolicy is not passed from node
-							     // application, argument position for callback changes.
-						  
+// application, argument position for callback changes.
+
 
 /*******************************************************************************
  *	TYPES
@@ -119,7 +119,7 @@ static void * prepare(const Arguments& args)
 	} else {
 		as_policy_remove_init(policy);
 	}
-		
+
 	return data;
 
 Err_Return:
@@ -149,7 +149,7 @@ static void execute(uv_work_t * req)
 	if (as->cluster == NULL) {
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-    }
+	}
 
 	if ( data->param_err == 0) {
 		aerospike_key_remove(as, err, policy, key);	
@@ -172,7 +172,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Fetch the AsyncData structure
 	AsyncData *	data	= reinterpret_cast<AsyncData *>(req->data);
-	
+
 	as_error *	err		= &data->err;
 	as_key *	key		= &data->key;
 
@@ -181,8 +181,8 @@ static void respond(uv_work_t * req, int status)
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
 		argv[0] = error_to_jsobject(err),
-		argv[1] = key_to_jsobject(key);
-	
+			argv[1] = key_to_jsobject(key);
+
 	}
 	else {
 		err->func = NULL;
@@ -202,7 +202,7 @@ static void respond(uv_work_t * req, int status)
 	if ( try_catch.HasCaught() ) {
 		node::FatalException(try_catch);
 	}
-	
+
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();

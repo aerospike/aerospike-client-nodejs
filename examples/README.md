@@ -20,6 +20,16 @@ remove.js
 operate.js
 info.js
 
+The config parameters to run the examples are given through
+config.json file. The following config informations are necessary for the
+examples to run.
+
+	host : Server hostname (default : localhost)
+	port : Server port (default : 3000)
+	namespace : Namespace (default : test)
+	set : Set name (default : demo)
+	NoOfOps : Number of operations to be performed(default : 1000)
+
 To load some sample data in the server run
 	
 	$node put.js

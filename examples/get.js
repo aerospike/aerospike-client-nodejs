@@ -1,31 +1,30 @@
-var aerospike = require('aerospike')
-var msgpack = require('msgpack')
-var status = aerospike.Status;
-var policy = aerospike.Policy;
-var config = {
-	hosts:[{ addr:"127.0.0.1", port: 3000 }
-	      ]}
+// Reading n records from the database
 
-var client = aerospike.connect(config)
+var fs = require('fs');
+eval(fs.readFileSync('example.js')+'');
 
-var n = process.argv.length >= 3 ? parseInt(process.argv[2]) : 14000
+var n = con.config.NoOfOps;
 var m = 0
 
 console.time(n + " get");
 for (var i = 0; i < n; i++ ) {
 
-  var k1 = {'ns':"test",'set':"demo",'key':"value"+i}; 
+	// Key of the record to be read
+	var k1 = {'ns':con.config.namespace,'set':con.config.set,'key':"value"+i}; 
 
-  var readpolicy = { timeout : 10, Key : policy.Key.KEY };
-  //This function gets the complete record with all the bins.	
-  client.get(k1,function (err, rec, meta){
-	 if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("error %s",err.message);
-    } 
+	// Policy to be followed during read operation.
+	var readpolicy = { timeout : 10, Key : policy.Key.KEY };
+
+	//This function gets the complete record with all the bins.	
+	client.get(k1,function (err, rec, meta){
+		if ( err.code != status.AEROSPIKE_OK ) { //Error code AEROSPIKE_OK signifies successful retrieval
+			// of the record
+			console.log("error %s",err.message);
+		} 
 		if ( (++m) == n ) {
 			console.timeEnd(n + " get");
 		}
-  });
+	});
 }
 
 

@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -42,8 +42,8 @@ extern "C" {
 #define SELECT_ARG_POS_BINS    1
 #define SELECT_ARG_POS_RPOLICY 2 // Read policy position and callback position is not same 
 #define SELECT_ARG_POS_CB      3 // for every invoke of select. If readpolicy is not passed from node
-                                 // application, argument position for callback changes.
-						  
+// application, argument position for callback changes.
+
 using namespace v8;
 
 /*******************************************************************************
@@ -55,15 +55,15 @@ using namespace v8;
  */
 
 typedef struct AsyncData {
-    aerospike * as;
+	aerospike * as;
 	int param_err;
-    as_error err;
-    as_key key;
-    as_record rec;
+	as_error err;
+	as_key key;
+	as_record rec;
 	as_policy_read policy;
-    Persistent<Function> callback;
-    int num_bins;
-    char** bins;
+	Persistent<Function> callback;
+	int num_bins;
+	char** bins;
 } AsyncData;
 
 /*******************************************************************************
@@ -78,18 +78,18 @@ typedef struct AsyncData {
  */
 static void * prepare(const Arguments& args)
 {
-    // The current scope of the function
-    HandleScope scope;
+	// The current scope of the function
+	HandleScope scope;
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-    // Build the async data
-    AsyncData * data = new AsyncData;
-    data->as = &client->as;
+	// Build the async data
+	AsyncData * data = new AsyncData;
+	data->as = &client->as;
 
 	// Local variables
 	as_key *    key = &data->key;
-    as_record * rec = &data->rec;
+	as_record * rec = &data->rec;
 	as_policy_read * policy = &data->policy;
 	data->param_err = 0;
 
@@ -101,32 +101,32 @@ static void * prepare(const Arguments& args)
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
-    if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
-        if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK) {
+	if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
+		if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK) {
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
-    } else {
+	} else {
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
-    as_record_init(rec, 0);
+	as_record_init(rec, 0);
 	// To select the values of given bin, not complete record.
-	 if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
+	if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
 
-        Local<Array> barray = Local<Array>::Cast(args[1]);
-        int num_bins = barray->Length();
-        data->num_bins = num_bins;
-        data->bins = (char **)calloc(sizeof(char *), num_bins+1);
-        for (int i=0; i < num_bins; i++) {
-            Local<Value> bname = barray->Get(i);
-            data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
-            strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
-        }
+		Local<Array> barray = Local<Array>::Cast(args[1]);
+		int num_bins = barray->Length();
+		data->num_bins = num_bins;
+		data->bins = (char **)calloc(sizeof(char *), num_bins+1);
+		for (int i=0; i < num_bins; i++) {
+			Local<Value> bname = barray->Get(i);
+			data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
+			strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+		}
 		// The last entry should be NULL because we are passing to aerospike_key_select
 		data->bins[num_bins] = NULL;
-    } else {
+	} else {
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
@@ -145,7 +145,7 @@ static void * prepare(const Arguments& args)
 		as_policy_read_init(policy);
 	}
 
-    return data;
+	return data;
 
 Err_Return:
 	data->param_err = 1;
@@ -161,17 +161,17 @@ Err_Return:
 static void execute(uv_work_t * req)
 {
 	// Fetch the AsyncData structure
-	 AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
-    // Data to be used.
-     aerospike * as  = data->as;
-    as_error *  err = &data->err;
-    as_key *    key = &data->key;
-    as_record * rec = &data->rec;
+	// Data to be used.
+	aerospike * as  = data->as;
+	as_error *  err = &data->err;
+	as_key *    key = &data->key;
+	as_record * rec = &data->rec;
 	as_policy_read * policy = &data->policy;
 
-    // Invoke the blocking call.
-    // The error is handled in the calling JS code.
+	// Invoke the blocking call.
+	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -194,24 +194,24 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    HandleScope scope;
+	// Scope for the callback operation.
+	HandleScope scope;
 
-    // Fetch the AsyncData structure
-     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
-    as_error *  err     = &data->err;
-    as_key *    key     = &data->key;
-    as_record * rec     = &data->rec;
+	// Fetch the AsyncData structure
+	AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
+	as_error *  err     = &data->err;
+	as_key *    key     = &data->key;
+	as_record * rec     = &data->rec;
 
-    // Build the arguments array for the callback
-    Handle<Value> argv[4];
+	// Build the arguments array for the callback
+	Handle<Value> argv[4];
 	if ( data->param_err == 0 )
 	{
-        argv[0] = error_to_jsobject(err);
-        argv[1] = recordbins_to_jsobject(rec);
-        argv[2] = recordmeta_to_jsobject(rec);
-        argv[3] = key_to_jsobject(key);
-    } else {
+		argv[0] = error_to_jsobject(err);
+		argv[1] = recordbins_to_jsobject(rec);
+		argv[2] = recordmeta_to_jsobject(rec);
+		argv[3] = key_to_jsobject(key);
+	} else {
 		err->func = NULL;
 		argv[0] = error_to_jsobject(err);
 		argv[1] = Null();
@@ -219,28 +219,28 @@ static void respond(uv_work_t * req, int status)
 		argv[3] = Null();
 	}
 	// Surround the callback in a try/catch for safety
-	 TryCatch try_catch;
+	TryCatch try_catch;
 
-	 // Execute the callback.
-	 data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
-	
-	 // Process the exception, if any
-	 if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
-    }
-	
+	// Execute the callback.
+	data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
+
+	// Process the exception, if any
+	if ( try_catch.HasCaught() ) {
+		node::FatalException(try_catch);
+	}
+
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();
-	
-	 // clean up any memory we allocated
-	 if ( data->param_err == 0) {
+
+	// clean up any memory we allocated
+	if ( data->param_err == 0) {
 		as_key_destroy(key);
 		as_record_destroy(rec);
 	}
 
-    delete data;
-    delete req;
+	delete data;
+	delete req;
 }
 
 /*******************************************************************************
@@ -253,8 +253,8 @@ static void respond(uv_work_t * req, int status)
 
 Handle<Value> AerospikeClient::Select(const Arguments& args)
 {
-    return async_invoke(args, prepare, execute, respond);
+	return async_invoke(args, prepare, execute, respond);
 }
 
 
-	
+

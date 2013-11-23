@@ -41,8 +41,8 @@ extern "C" {
 #define BGET_ARG_POS_KEY	 0
 #define BGET_ARG_POS_BPOLICY 1 // Batch policy position and callback position is not same 
 #define BGET_ARG_POS_CB		 2 // in the argument list for every invoke of batch_get. If 
-							   // writepolicy is not passed from node application, argument 
-						       // position for callback changes.
+// writepolicy is not passed from node application, argument 
+// position for callback changes.
 using namespace v8;
 
 /*******************************************************************************
@@ -179,7 +179,7 @@ static void execute(uv_work_t * req)
 	as_error  *     err     = &data->err;
 	as_batch  * 	batch   = &data->batch;
 	as_policy_batch * policy= &data->policy;
-	
+
 	if( as->cluster == NULL) {
 		data->node_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
