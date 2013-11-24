@@ -7,13 +7,14 @@ ParseConfig(params);
 
 describe( 'BATCH-GET FUNCTION', function() {
 	it ( 'SIMPLE BATCH-GET TEST' , function() {
+		var m = 0;
 		for ( var i = 0; i < 4*n; i++ ) {
 			var key = { ns: params.ns, set: params.set, key:"BATCHGET"+i };
 			var rec= GetRecord(i);
 			client.put(key, rec, function( err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-				if ( ++m == n) {
+				if ( ++m == 4*n) {
 					m = 0;
 				} 
 			});
@@ -38,6 +39,10 @@ describe( 'BATCH-GET FUNCTION', function() {
 					expect(obj.integer).to.equal(parseInt(ind));
 					expect(obj.string).to.equal('Some String');
 					expect(obj.array).to.eql([1,2,3]);
+					if ( ++m == n ) {
+						n = 4*n;
+						CleanRecords('BATCHGET');
+					}
 				}
 			});
 		}

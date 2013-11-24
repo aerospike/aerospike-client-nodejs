@@ -18,6 +18,7 @@ function GetWritePolicyDefault()
 
 describe ( 'PUT FUNCTIONALITY', function() {
 	it( 'SIMPLE PUT TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'PUT' + i }
 			var rec = new GetRecord(i);
@@ -38,6 +39,7 @@ describe ( 'PUT FUNCTIONALITY', function() {
 describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- SHOULD SUCCEED', function() {
 		var recGen = 0;
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'GEN_SUCCESS' + i };
 			var rec = new GetRecord(i);
@@ -69,6 +71,7 @@ describe('WRITE POLICY TEST', function() {
 describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- NEGATIVE', function() {
 		var recGen = 0;
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'GEN_FAILURE' + i };
 			var rec = new GetRecord(i);
@@ -100,8 +103,7 @@ describe('WRITE POLICY TEST', function() {
 // better way to test timeout error
 describe('WRITE POLICY TEST', function() {
 	it ('WRITE POLICY TEST -- TEST FOR TIMEOUT ERROR ', function() {
-		m = 0;
-		n = 10000;
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns: params.ns, set : params.set, key : 'TIMEOUT' + i };
 			var writepolicy = { timeout : 1 }
@@ -129,6 +131,7 @@ describe('WRITE POLICY TEST', function() {
 //Expected to pass
 describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE-- SHOULD SUCCEED', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'EXIST_SUCCESS' + i };
 			var rec = new GetRecord(i);
@@ -151,6 +154,7 @@ describe('WRITE POLICY TEST', function() {
 
 describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE -- NEGATIVE TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'EXIST_FAIL' + i };
 			var rec = new GetRecord(i);
@@ -173,4 +177,29 @@ describe('WRITE POLICY TEST', function() {
 	});
 });
 
+
+//Expected to fail
+
+// Array and float type bin is passed as bins for put operation.
+// Expected to fail with AEROSPIKE_ERR_PARAM error code.
+describe('PARAMETER CHECKING TEST', function() {
+	it(' PARAMETER CHECKING-- NEGATIVE TEST', function() {
+		var m = 0;
+		for ( var i = 1; i <= n; i++) {
+			var K = { ns:params.ns, set: params.set, key:'PARAM_CHECK' + i };
+			var rec = new GetRecord(i);
+			rec.bins.f = 123.45;
+			rec.bins.arr = [123, 45, 67 ];
+			client.put(K, rec, function(err, meta, key) {
+				expect(err).to.exist;
+				expect(err.code).to.equal(return_code.AEROSPIKE_ERR_PARAM);
+					if( ++m == n) {
+						m = 0;
+						console.log("PARAMETER CHECKING NEGATIVE  -- SUCCESS");
+						CleanRecords('PARAM_CHECK');
+					}
+				});
+		}
+	});
+});
 

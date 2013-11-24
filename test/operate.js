@@ -16,6 +16,7 @@ function GetOperatePolicy()
 
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'INCR OPERATION  TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'INCR' + i }
 			var rec = new GetRecord(i);
@@ -47,6 +48,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'PREPEND STRING OPERATION  TEST', function() {
+		var  m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'PREPENDSTRING' + i }
 			var rec = new GetRecord(i);
@@ -78,6 +80,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 
 describe( 'OPERATE FUNCTIONALITY', function() {
 	it( 'APPEND STRING OPERATION  TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'APPENDSTRING' + i }
 			var rec = new GetRecord(i);
@@ -109,6 +112,7 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'TOUCH OPERATION  TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'TOUCHSTRING' + i }
 			var rec = new GetRecord(i);
@@ -143,6 +147,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'READ OPERATION  TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'READ' + i }
 			var rec = new GetRecord(i);
@@ -173,6 +178,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 
 describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'WRITE OPERATION  TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'WRITE' + i }
 			var rec = new GetRecord(i);

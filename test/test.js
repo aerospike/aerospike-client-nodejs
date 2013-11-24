@@ -16,7 +16,6 @@ var config = {
 	]}
 var client = aerospike.connect(config);
 var n = con.config.NoOfObjects;
-var m = 0
 
 function CleanRecords( str )
 {

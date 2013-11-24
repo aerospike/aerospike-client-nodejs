@@ -16,6 +16,7 @@ function GetRemovePolicy()
 
 describe( 'REMOVE FUNCTIONALITY', function() {
 	it( 'SIMPLE REMOVE TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'REMOVE' + i }
@@ -41,6 +42,7 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 
 describe( 'REMOVE FUNCTIONALITY', function() {
 	it( 'REMOVE TEST WITH REMOVE POLICY', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'REMOVEPOLICY' + i }

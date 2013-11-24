@@ -14,6 +14,7 @@ function GetReadPolicy()
 
 describe( 'GET FUNCTIONALITY', function() {
 	it( 'SIMPLE GET TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set,key: 'GET' + i }
@@ -32,7 +33,7 @@ describe( 'GET FUNCTIONALITY', function() {
 				if ( ++m == n) {
 					m = 0;
 					console.log("GET TEST SUCCESS");
-					CleanRecords('READPOLICY');
+					CleanRecords('GET');
 				}
 			});
 			}
@@ -43,6 +44,7 @@ describe( 'GET FUNCTIONALITY', function() {
 
 describe( 'GET FUNCTIONALITY', function() {
 	it( 'GET TEST WITH READ POLICY', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'READPOLICY' + i }
@@ -61,7 +63,7 @@ describe( 'GET FUNCTIONALITY', function() {
 				expect(obj.array).to.eql([1,2,3]);
 				if ( ++m == n) {
 					console.log("GET TEST WITH READ POLICY SUCCESS");
-					CleanRecords('GET');
+					CleanRecords('READPOLICY');
 				}
 			});
 			}

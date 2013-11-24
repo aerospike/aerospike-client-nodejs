@@ -13,6 +13,7 @@ function GetSelectPolicy()
 
 describe( 'SELECT FUNCTIONALITY', function() {
 	it( 'SIMPLE SELECT TEST', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'SELECT' + i }
@@ -39,6 +40,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 
 describe( 'SELECT FUNCTIONALITY', function() {
 	it( 'SELECT TEST WITH READ POLICY', function() {
+		var m = 0;
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'READPOLICY' + i }
