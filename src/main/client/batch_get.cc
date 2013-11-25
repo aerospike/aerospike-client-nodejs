@@ -271,6 +271,7 @@ static void respond(uv_work_t * req, int status)
 	}
 	delete data;
 	delete req;
+	scope.Close(Undefined());
 }
 
 /*******************************************************************************

@@ -138,10 +138,12 @@ static void * prepare(const Arguments& args)
 	}
 
 
+	scope.Close(Undefined());
 	return data;
 
 Err_Return:
 	data->param_err = 1;
+	scope.Close(Undefined());
 	return data;
 }
 
@@ -231,6 +233,7 @@ static void respond(uv_work_t * req, int status)
 
 	delete data;
 	delete req;
+	scope.Close(Undefined());
 }
 
 /*******************************************************************************

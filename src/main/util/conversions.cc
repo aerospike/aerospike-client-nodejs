@@ -168,20 +168,21 @@ Handle<Object> error_to_jsobject(as_error * error)
 
 Handle<Value> val_to_jsvalue(as_val * val)
 {
+	HandleScope scope;
 	if( val == NULL) {
-		return Undefined();
+		return scope.Close(Undefined());
 	}
 	switch ( as_val_type(val) ) {
 		case AS_INTEGER : {
 			as_integer * ival = as_integer_fromval(val);
 			if ( ival ) {
-				return Integer::New(as_integer_get(ival));
+				return scope.Close(Integer::New(as_integer_get(ival)));
 			}
 		}
 		case AS_STRING : {
 			as_string * sval = as_string_fromval(val);
 			if ( sval ) {	
-				return String::NewSymbol(as_string_get(sval));
+				return scope.Close(String::NewSymbol(as_string_get(sval)));
 			}
 		}
 		case AS_BYTES : {
@@ -194,13 +195,14 @@ Handle<Value> val_to_jsvalue(as_val * val)
 				v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
 				v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
 				v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-				return actualBuffer;
+				buf->handle_.Dispose();
+				return scope.Close(actualBuffer);
 			} 
 		}
 		default:
 			break;
 	}
-	return Undefined();
+	return scope.Close(Undefined());
 }
 
 
@@ -301,6 +303,7 @@ int record_from_jsobject(as_record * rec, Local<Object> obj)
 					return AS_NODE_PARAM_ERR;
 				}
 				as_record_set_raw(rec, *n, data, len);
+				//as_record_get_bytes(rec, *n)->free = true;
 
 			}
 			else {
@@ -529,98 +532,116 @@ Handle<Object> key_to_jsobject(const as_key * key)
 
 int key_from_jsobject(as_key * key, Local<Object> obj)
 {
+	// Every v8 object has be declared/accessed inside a scope, and the 
+	// scope has to be closed to avoid memory leak.
+	// Open a scope
+	HandleScope scope;
 	as_namespace ns = { '\0' };
 	as_set set = { '\0' };
 
+	// All the v8 local variables have to declared before any of the goto
+	// statements. V8 demands that.
 	Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
-
-	if ( ns_obj->IsString() ) {
-		strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
-	}
-	else {
-		return AS_NODE_PARAM_ERR;
-	}
-	
-	if ( strlen(ns) == 0 ) {
-		return AS_NODE_PARAM_ERR;
-	}
-
+	Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 	if (obj->Has(String::NewSymbol("set"))) {
 		Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
 		if ( set_obj->IsString() ) {
 			strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
 		}
 		else {
-			return AS_NODE_PARAM_ERR;
+			goto ReturnError;
 		}	
 		if ( strlen(set) == 0 ) {
-			return AS_NODE_PARAM_ERR;
+			goto ReturnError;
 		}
 	}
 
+	if ( ns_obj->IsString() ) {
+		strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+	}
+	else {
+		goto ReturnError;
+	}
+	
+	if ( strlen(ns) == 0 ) {
+		goto ReturnError;
+	}
 
-	Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 	if ( val_obj->IsString() ) {
 		char * value = strdup(*String::Utf8Value(val_obj));
 		as_key_init(key, ns, set, value);
 		((as_string *) key->valuep)->free = true;
-		return AS_NODE_PARAM_OK;
+		goto ReturnOk;
 	}
 	else if ( val_obj->IsNumber() ) {
 		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
-		return AS_NODE_PARAM_OK;
+		goto ReturnOk;
 	}
 
+// close the scope, so that garbage collector can collect the v8 variables.
+ReturnOk:
+	scope.Close(Undefined());
+	return AS_NODE_PARAM_OK;
+
+ReturnError:
+	scope.Close(Undefined());
 	return AS_NODE_PARAM_ERR;
 }
 
 int key_from_jsarray(as_key * key, Local<Array> arr)
 {
+	HandleScope scope;
 	as_namespace ns = { '\0' };
 	as_set set = { '\0' };
 
-	if ( arr->Length() != 3 ) {
-		return AS_NODE_PARAM_ERR;
-	}
 
 	Local<Value> ns_obj = arr->Get(0);
+	Local<Value> set_obj = arr->Get(1);
+	Local<Value> val_obj = arr->Get(2);
+	if ( arr->Length() != 3 ) {
+		goto Ret_Err;
+	}
 	if ( ns_obj->IsString() ) {
 		strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
 	}
 	else {
-		return AS_NODE_PARAM_ERR;
+		goto Ret_Err;
 	}
 	
 	if ( strlen(ns) == 0 ) {
-		return AS_NODE_PARAM_ERR;
+		goto Ret_Err;
 	}
 	
-	Local<Value> set_obj = arr->Get(1);
 	if ( set_obj->IsString() ) {
 		strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
 	}
 	else {
-		return AS_NODE_PARAM_ERR;
+		goto Ret_Err;
 	}
 
 	if ( strlen(set) == 0 ) {
-		return AS_NODE_PARAM_ERR;
+		goto Ret_Err;
 	}
 
-	Local<Value> val_obj = arr->Get(2);
 	if ( val_obj->IsString() ) {
 		char * value = strdup(*String::Utf8Value(val_obj));
 		as_key_init(key, ns, set, value);
 		((as_string *) key->valuep)->free = true;
-		return AS_NODE_PARAM_OK;
+		goto Ret_Ok;
 	}
 	else if ( val_obj->IsNumber() ) {
 		int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
 		as_key_init_int64(key, ns, set, value);
-		return AS_NODE_PARAM_OK;
+		goto Ret_Ok;
 	}
 
+Ret_Ok:
+	scope.Close(Undefined());
+	return AS_NODE_PARAM_OK;
+
+Ret_Err:
+	scope.Close(Undefined());	
 	return AS_NODE_PARAM_ERR;
 }
 

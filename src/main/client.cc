@@ -105,7 +105,7 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 	}
     client->Wrap(args.This());
 
-    return args.This();
+    return scope.Close(args.This());
 }
 
 /**
