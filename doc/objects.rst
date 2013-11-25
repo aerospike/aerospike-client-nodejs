@@ -1,7 +1,7 @@
 .. _objects:
 
 *****************************
-Aerospike Datastructures
+Aerospike Data Structures
 *****************************
 .. js:data:: Config
 
@@ -265,9 +265,9 @@ Aerospike Datastructures
                 This is the recommended mode of operation. 
                 This calculates the digest and send the digest to the server. The digest is only calculated on the client, and not on the server. 
     
-            .. attribute:: KEY
+            .. attribute:: SEND 
 
-                Send the key, but do not store it.
+                Send the key.
                 This policy is ideal if you want to reduce the number of bytes sent over the network. 
                 This will only work if the combination the set and key value are less than 20 bytes, which is the size of the digest.
                 This will also cause the digest to be computer once on the client and once on the server.

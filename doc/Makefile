@@ -85,17 +85,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/AerospikeNodejsDocumentation.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/AerospikeNode.jsDocumentation.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/AerospikeNodejsDocumentation.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/AerospikeNode.jsDocumentation.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/AerospikeNodejsDocumentation"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/AerospikeNodejsDocumentation"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/AerospikeNode.jsDocumentation"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/AerospikeNode.jsDocumentation"
 	@echo "# devhelp"
 
 epub:
