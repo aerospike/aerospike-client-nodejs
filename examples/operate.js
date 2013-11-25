@@ -2,7 +2,7 @@ var fs = require('fs');
 eval(fs.readFileSync('example.js')+'');
 
 // No of operations to be performed
-var n = con.config.NoOfObjects;
+var n = con.config.NoOfOps;
 var m = 0
 
 console.time(n + " operate");
