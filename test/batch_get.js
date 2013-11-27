@@ -5,9 +5,10 @@ var params = new Object;
 
 ParseConfig(params);
 
+var m = 0;
+var startBatch = 0;
 describe( 'BATCH-GET FUNCTION', function() {
 	it ( 'SIMPLE BATCH-GET TEST' , function() {
-		var m = 0;
 		for ( var i = 0; i < 4*n; i++ ) {
 			var key = { ns: params.ns, set: params.set, key:"BATCHGET"+i };
 			var rec= GetRecord(i);
@@ -16,16 +17,17 @@ describe( 'BATCH-GET FUNCTION', function() {
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 				if ( ++m == 4*n) {
 					m = 0;
+					startBatch = 1;
 				} 
 			});
 		}
-	if ( m == 0) 
+	if ( startBatch == 1) 
 	{	
 		for ( var i = 0; i < n; i++) {
-			var K_array = [ {ns:params.ns, set:params.set, key:"BATCHGET" +  1 },
-							{ns:params.ns, set:params.set, key:"BATCHGET" +  2 },
-							{ns:params.ns, set:params.set, key:"BATCHGET" +  3 },
-							{ns:params.ns, set:params.set, key:"BATCHGET" +  4 } ];
+			var K_array = [ {ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4) },
+							{ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+1 },
+							{ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+2 },
+							{ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+3 } ];
 			client.batch_get(K_array, function(err, rec_list){
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);

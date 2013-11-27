@@ -17,5 +17,11 @@
 	"repository" : {
 		"type" : "git",
 		"url" : "https://github.com/aerospike/client-nodejs"
+	},
+	"dependencies": {
+		"mocha": ">0",
+		"expect.js": "0.2.x",
+		"superagent": "0.15.x",
+		"msgpack": "0.x"
 	}
 }

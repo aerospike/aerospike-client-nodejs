@@ -32,6 +32,8 @@ extern "C" {
 #include <node.h>
 #include <cstdlib>
 #include <unistd.h>
+#include <iostream>
+#include <vector>
 
 #include "../client.h"
 #include "../util/async.h"
@@ -192,6 +194,7 @@ static void execute(uv_work_t * req)
 			data->results = NULL;
 			data->n = 0;
 		}
+		as_batch_destroy(batch);
 	}
 
 }
@@ -216,6 +219,10 @@ static void respond(uv_work_t * req, int status)
 	uint32_t num_rec = data->n;
 	as_batch_read* batch_results = data->results;
 
+	// maintain a linked list of pointers to be freed after the nodejs callback is called
+	// Buffer object is not garbage collected by v8 gc. Have to delete explicitly 
+	// to avoid memory leak.
+	llist * freeptrlist = NULL;
 
 	// Build the arguments array for the callback
 	int num_args = 2;
@@ -237,13 +244,17 @@ static void respond(uv_work_t * req, int status)
 	else {
 		arr=Array::New(num_rec);	
 		for ( uint32_t i = 0; i< num_rec; i++) {
+			void *freeptr = NULL;
 			Handle<Object> obj = Object::New();
 			obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
 			if(batch_results[i].result == AEROSPIKE_OK) {	
-				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key));
+				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key, &freeptr));
 				as_key_destroy((as_key*) batch_results[i].key);
 				as_record_destroy(&batch_results[i].record);
 			}
+
+			// Add the Buffer pointer to linked list.
+			AddElement(&freeptrlist, freeptr);
 			arr->Set(i,obj);
 		}
 		argv[0] = error_to_jsobject(err);
@@ -269,6 +280,13 @@ static void respond(uv_work_t * req, int status)
 	if ( data->node_err == 1) {
 		free(data->results);	
 	}
+	if (batch_results != NULL) {
+		free(batch_results);
+	}
+
+	// Delete all the elements in the linked list.
+	RemoveList(&freeptrlist);
+	
 	delete data;
 	delete req;
 	scope.Close(Undefined());

@@ -180,6 +180,10 @@ static void execute(uv_work_t * req)
 	if ( data->param_err == 0 ) {
 		aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
 
+		for ( int i = 0; i < data->num_bins; i++) {
+			free(data->bins[i]);
+		}
+		free(data->bins);
 	}
 
 }
@@ -203,12 +207,15 @@ static void respond(uv_work_t * req, int status)
 	as_key *    key     = &data->key;
 	as_record * rec     = &data->rec;
 
+	//to keep track of the node::Buffer object to be garbage collected 
+	//after the node.js callback is called.
+	void * freeptr = NULL;
 	// Build the arguments array for the callback
 	Handle<Value> argv[4];
 	if ( data->param_err == 0 )
 	{
 		argv[0] = error_to_jsobject(err);
-		argv[1] = recordbins_to_jsobject(rec);
+		argv[1] = recordbins_to_jsobject(rec, &freeptr);
 		argv[2] = recordmeta_to_jsobject(rec);
 		argv[3] = key_to_jsobject(key);
 	} else {
@@ -239,6 +246,9 @@ static void respond(uv_work_t * req, int status)
 		as_record_destroy(rec);
 	}
 
+	if (freeptr != NULL ) {
+		delete freeptr;
+	}
 	delete data;
 	delete req;
 }

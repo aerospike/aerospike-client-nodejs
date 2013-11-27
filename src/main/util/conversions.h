@@ -54,16 +54,21 @@ using namespace v8;
 #define AS_NODE_PARAM_ERR -1
 #define AS_NODE_PARAM_OK   0
 
+typedef struct llist{
+	void * ptr;
+	llist *next;
+}llist;
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
 
 // Functions to convert C client structure to v8 object(map)
 Handle<Object> error_to_jsobject(as_error * error);
-Handle<Value> val_to_jsvalue(as_val * val);
-Handle<Object> recordbins_to_jsobject(const as_record * record);
+Handle<Value> val_to_jsvalue(as_val * val, void ** freeptr);
+Handle<Object> recordbins_to_jsobject(const as_record * record, void** freeptr);
 Handle<Object> recordmeta_to_jsobject(const as_record * record);
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key);
+Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, void ** freeptr);
 Handle<Object> key_to_jsobject(const as_key * key);
 
 
@@ -88,3 +93,6 @@ int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj);
 int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj);
 
+//linked list utility function
+void AddElement( llist ** list, void * element);
+void RemoveList(llist ** list);

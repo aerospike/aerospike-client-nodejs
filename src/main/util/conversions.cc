@@ -82,6 +82,41 @@ int config_from_jsobject(as_config * config, Local<Object> obj)
 	return AS_NODE_PARAM_OK;
 }
 
+// Add the element to the list.
+void AddElement(llist **list, void * element)
+{
+	llist *newnode;
+	if ((newnode = (llist*)malloc(sizeof(llist))) == NULL) {
+		exit(1);
+	}
+	newnode->ptr = element;
+	newnode->next = NULL;
+	if ((*list) == NULL){
+		(*list) = newnode;
+		return;
+	}
+	llist* trav = (*list);
+	while ( trav->next != NULL) {
+		trav = trav->next;
+	}
+	trav->next = newnode;
+	return;
+}
+
+
+// Delete all the elements in the linked list
+// and the list itself.
+void RemoveList( llist **list) {
+	llist * head = (*list);
+	llist * currnode = NULL;
+	while ( head != NULL ) {
+		currnode = head;
+		head = head->next;
+		delete currnode->ptr;
+		free(currnode);
+	}
+	return;
+}
 bool key_copy_constructor(const as_key* src, as_key** dest)
 {
 	if(src == NULL || dest == NULL) {
@@ -165,8 +200,19 @@ Handle<Object> error_to_jsobject(as_error * error)
 	return scope.Close(err);
 }
 
+// This callback is called by v8 garbage collector, when Buffer object 
+// is garbage collected. 
+void callback(char* data, void * ptr) 
+{
+	if (data != NULL ) {
+		free(data);
+	}
+	if ( ptr != NULL) {
+		free(ptr);
+	}
+}
 
-Handle<Value> val_to_jsvalue(as_val * val)
+Handle<Value> val_to_jsvalue(as_val * val, void** freeptr)
 {
 	HandleScope scope;
 	if( val == NULL) {
@@ -189,13 +235,16 @@ Handle<Value> val_to_jsvalue(as_val * val)
 			as_bytes * bval = as_bytes_fromval(val);
 			if ( bval ) {
 				int size = as_bytes_size(bval);
-				Buffer * buf = Buffer::New(size);
-				memcpy(node::Buffer::Data(buf), bval->value, size);
+				Buffer  *buf = Buffer::New((char*)bval->value, size, callback, NULL);
+				memcpy(Buffer::Data(buf), bval->value, size);
 				v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
 				v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
 				v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
 				v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
 				buf->handle_.Dispose();
+				// Store the address of node::Buffer, to be freed later. 
+				// Otherwise it leads to memory leak, (not garbage collected by v8)
+				*freeptr = (void*) buf;
 				return scope.Close(actualBuffer);
 			} 
 		}
@@ -206,7 +255,7 @@ Handle<Value> val_to_jsvalue(as_val * val)
 }
 
 
-Handle<Object> recordbins_to_jsobject(const as_record * record)
+Handle<Object> recordbins_to_jsobject(const as_record * record, void ** freeptr)
 {
 	HandleScope scope;
 
@@ -223,7 +272,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record)
 		as_bin * bin = as_record_iterator_next(&it);
 		char * name = as_bin_get_name(bin);
 		as_val * val = (as_val *) as_bin_get_value(bin);
-		Handle<Value> obj = val_to_jsvalue(val);
+		Handle<Value> obj = val_to_jsvalue(val, freeptr);
 		bins->Set(String::NewSymbol(name), obj);
 	}
 	return scope.Close(bins);
@@ -242,7 +291,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record)
 	return scope.Close(meta);
 }
 
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
+Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, void ** freeptr)
 {
 	HandleScope scope;
 	
@@ -252,7 +301,7 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key)
 		return scope.Close(okey);
 	}
 	okey	= key_to_jsobject(key ? key : &record->key);
-	Handle<Object> bins	= recordbins_to_jsobject(record);
+	Handle<Object> bins	= recordbins_to_jsobject(record, freeptr);
 	Handle<Object> meta	= recordmeta_to_jsobject(record);
 	Local<Object> rec = Object::New();
 	rec->Set(String::NewSymbol("key"), okey);
@@ -688,11 +737,13 @@ int populate_write_op ( as_operations * op, Local<Object> obj)
 	if ( v8val->IsNumber() ) {
 		int64_t val = v8val->IntegerValue();
 		as_operations_add_write_int64(op, binName, val);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}
 	else if ( v8val->IsString() ) {
 		char* binVal = strdup(*String::Utf8Value(v8val)); 	
 		as_operations_add_write_str(op, binName, binVal);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}			
 	else if ( v8val->IsObject() ) {
@@ -703,6 +754,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj)
 			return AS_NODE_PARAM_ERR;
 		}
 		as_operations_add_write_raw(op, binName, data, len);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}
 	else {
@@ -718,6 +770,7 @@ int populate_read_op( as_operations * ops, Local<Object> obj)
 		return AS_NODE_PARAM_ERR;
 	}
 	as_operations_add_read(ops, binName);
+	if ( binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -734,6 +787,7 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj)
 	if ( v8val->IsNumber()) {
 		int64_t binValue = v8val->IntegerValue();
 		as_operations_add_incr( ops, binName, binValue);
+		if (binName != NULL) free (binName);
 		return AS_NODE_PARAM_OK;
 	}else {
 		return AS_NODE_PARAM_ERR;
@@ -752,7 +806,8 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj)
 	Local<Value> v8val = GetBinValue(obj);
 	if ( v8val->IsString() ) {
 		char* binVal = strdup(*String::Utf8Value(v8val)); 	
-		as_operations_add_prepend_str(ops, binName, binVal);
+		as_operations_add_prepend_strp(ops, binName, binVal, true);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}			
 	else if ( v8val->IsObject() ) {
@@ -763,6 +818,7 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj)
 			return AS_NODE_PARAM_ERR;
 		}
 		as_operations_add_prepend_raw(ops, binName, data, len);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}
 	else {
@@ -781,8 +837,9 @@ int populate_append_op( as_operations * ops, Local<Object> obj)
 
 	Local<Value> v8val = GetBinValue(obj);
 	if ( v8val->IsString() ) {
-		char* binVal = strdup(*String::Utf8Value(v8val)); 	
-		as_operations_add_append_str(ops, binName, binVal);
+		char* binVal = strdup(*String::Utf8Value(v8val));
+		as_operations_add_append_strp(ops, binName, binVal,true);
+		if ( binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}			
 	else if ( v8val->IsObject() ) {
@@ -793,6 +850,7 @@ int populate_append_op( as_operations * ops, Local<Object> obj)
 			return AS_NODE_PARAM_ERR;
 		}
 		as_operations_add_append_raw(ops, binName, data, len);
+		if (binName != NULL) free(binName);
 		return AS_NODE_PARAM_OK;
 	}
 	else {
