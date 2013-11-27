@@ -1,8 +1,38 @@
 .. _objects:
 
-*****************************
-Aerospike Data Structures
-*****************************
+Data Structures
+---------------
+
+Objects
++++++++
+* :js:data:`Config`
+* :js:data:`Error`
+* :js:data:`Host`
+* :js:data:`Key`
+* :js:data:`Metadata`
+* :js:data:`OpList`
+* :js:data:`Operation Policies`
+    * :data:`BatchPolicy`
+    * :data:`InfoPolicy`
+    * :data:`OperatePolicy`
+    * :data:`ReadPolicy`
+    * :data:`RemovePolicy`
+    * :data:`WritePolicy`
+* :js:data:`Record`
+* :js:data:`RecList`
+
+Constants
++++++++++
+* :js:data:`Status`
+* :js:data:`Operators`
+* :js:data:`Policy Values`
+    * :data:`ExistsPolicy`
+    * :data:`GenerationPolicy`
+    * :data:`KeyPolicy`
+    * :data:`RetryPolicy`
+
+Objects Reference
++++++++++++++++++
 .. js:data:: Config
 
    Config is an object with attribute hosts
@@ -127,120 +157,6 @@ Aerospike Data Structures
 
        instance of an [string|integer|Buffer]. Value to be updated on the bin, by performing 
        the above operation.
-
-.. js:data:: Status
-
-    Error codes returned by the aerospike server for all the database operations
-
-    .. attribute:: AEROSPIKE_OK = 0
-
-        Generic Success.
-
-    .. attribute:: AEROSPIKE_ERR = 100
-
-        Generic Error.
-
-    .. attribute:: AEROSPIKE_ERR_CLIENT = 200
-
-        Generic client API usage error.
-
-    .. attribute:: AEROSPIKE_ERR_PARAM = 201 
-
-        Invalid client API parameter.
-
-    .. attribute:: AEROSPIKE_ERR_CLUSTER = 300 
-
-        Generic cluster discovery & connection error.
-
-    .. attribute:: AEROSPIKE_ERR_TIMEOUT = 400 
-
-       Request timed out.
-
-    .. attribute:: AEROSPIKE_ERR_THROTTLED = 401 
-
-       Request randomly dropped by client for throttling.
-       Warning -- Not yet supported.
-
-    .. attribute:: AEROSPIKE_ERR_SERVER = 500 
-
-       Generic error returned by server.
-
-    .. attribute:: AEROSPIKE_ERR_REQUEST_INVALID = 501 
-
-       Request protocol invalid, or invalid protocol field.
-
-    .. attribute:: AEROSPIKE_ERR_NAMESPACE_NOT_FOUND = 502 
-
-        Namespace in request not found on server.
-        Warning -- Not yet supported, shows as :attr:`AEROSPIKE_ERR_REQUEST_INVALID`.
-
-    .. attribute:: AEROSPIKE_ERR_SERVER_FULL = 503 
-        
-        The server node is running out of memory and/or storage device space
-        reserved for the specified namespace.
-
-    .. attribute:: AEROSPIKE_ERR_CLUSTER_CHANGE = 504 
-
-         A cluster state change occurred during the request.
-
-    .. attribute:: AEROSPIKE_ERR_RECORD = 600 
-
-        Generic record error.
-
-    .. attribute:: AEROSPIKE_ERR_RECORD_BUSY = 601 
-
-         Too may concurrent requests for one record - a "hot-key" situation.
-
-    .. attribute:: AEROSPIKE_ERR_RECORD_NOT_FOUND = 602 
-
-        Record does not exist in database. May be returned by read, or write with policy Exists.UPDATE
-        Warning Exists.UPDATE not yet supported.
-
-    .. attribute:: AEROSPIKE_ERR_RECORD_EXISTS = 603 
-
-        Record already exists. May be returned by write with policy Exists.CREATE. 
-
-    .. attribute:: AEROSPIKE_ERR_RECORD_GENERATION = 604 
-
-        Generation of record in database does not satisfy write policy
-
-    .. attribute:: AEROSPIKE_ERR_RECORD_TOO_BIG = 605 
-
-        Record being (re-)written can't fit in a storage write block
-
-    .. attribute:: AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE = 606 
-
-       Bin modification operation can't be done on an existing bin due to its value type
-
-.. js:data:: Operators
-
-    list of operations that can be performed by invoking :js:func:`operate` call to 
-    to aerospike server.
-
-    .. attribute:: WRITE
-
-       To write a bin in the record.
-
-    .. attribute:: READ
-
-       To read a bin in the record 
-
-    .. attribute:: INCR
-
-       To increment the given value to a bin, whose type is integer.
-
-    .. attribute:: PREPEND
-
-       To prepend the given string to a bin, whose type is string.
-
-    .. attribute:: APPEND
-
-       To append the given string to a bin, whose type is string.
-
-    .. attribute:: TOUCH
-
-       To increase the ttl(time to live)  of the record.
-
 .. js:data:: Policy
 
     Policies define the behavior of database operations.
@@ -248,88 +164,10 @@ Aerospike Data Structures
     A policy value is a single value which defines how the client behaves. 
     An operation policy is a group of policy values which affect an operation.
 
-    :program:`Policy Values`
-    
+    :program:`Policy values`
+        :js:data:`Policy Values`
 
-        The following are the policy values
-    
-        .. data:: KeyPolicy
-    
-            .. attribute:: UNDEF
-    
-                The policy is undefined
-    
-            .. attribute:: DIGEST
-
-                Send the digest value of the key.
-                This is the recommended mode of operation. 
-                This calculates the digest and send the digest to the server. The digest is only calculated on the client, and not on the server. 
-    
-            .. attribute:: SEND 
-
-                Send the key.
-                This policy is ideal if you want to reduce the number of bytes sent over the network. 
-                This will only work if the combination the set and key value are less than 20 bytes, which is the size of the digest.
-                This will also cause the digest to be computer once on the client and once on the server.
-                If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
-
-        .. data:: RetryPolicy
-
-            .. attribute:: UNDEF
-        
-                The policy is undefined
-
-            .. attribute:: NONE
-
-                Only attempt an operation once
-
-            .. attribute:: ONCE
-
-                If an operation fails, attempt the operation one more time
-
-        .. data:: GenerationPolicy
-
-            .. attribute:: UNDEF
-
-                The policy is undefined
-
-            .. attribute:: IGNORE
-
-                Write a record, regardless of generation
-
-            .. attribute:: EQ
-
-                Write a record, ONLY if generations are equal 
-
-            .. attribute:: GT
-
-                Write a record, ONLY if local generation is greater-than remote generation
-
-            .. attribute:: DUP
-
-                Write a record creating a duplicate, ONLY if the generation collides
-
-        .. data:: ExistsPolicy
-
-            .. attribute:: UNDEF
-
-                The policy is undefined
-
-            .. attribute:: IGNORE
-
-                Write the record, regardless of existence
-
-            .. attribute:: CREATE
-
-                Create a record, ONLY if it doesn't exist
-
-            .. attribute:: UPDATE
-
-                Update a record, ONLY if it exists
-
-                Warning : Not yet implemented
-
-        :program:`Operation Policies`
+    .. js:data:: Operation Policies
 
             Operation policies are groups of policy values for a type of operation.
             The following are the operation policies.
@@ -439,4 +277,203 @@ Aerospike Data Structures
                     Integer datatype.
                     Maximum time in milliseconds to wait for the operation to complete.
                     If 0 (zero), then the value will default to global default values.
+
+Constants Reference
++++++++++++++++++++
+
+.. js:data:: Operators
+
+    list of operations that can be performed by invoking :js:func:`operate` call to 
+    to aerospike server.
+
+    .. attribute:: WRITE
+
+       To write a bin in the record.
+
+    .. attribute:: READ
+
+       To read a bin in the record 
+
+    .. attribute:: INCR
+
+       To increment the given value to a bin, whose type is integer.
+
+    .. attribute:: PREPEND
+
+       To prepend the given string to a bin, whose type is string.
+
+    .. attribute:: APPEND
+
+       To append the given string to a bin, whose type is string.
+
+    .. attribute:: TOUCH
+
+       To increase the ttl(time to live)  of the record.
+
+.. js:data:: Policy Values
+
+    The following are the policy values
+    
+    .. data:: KeyPolicy
+    
+        .. attribute:: UNDEF
+    
+            The policy is undefined
+    
+        .. attribute:: DIGEST
+
+            Send the digest value of the key.
+            This is the recommended mode of operation. 
+            This calculates the digest and send the digest to the server. The digest is only calculated on the client, and not on the server. 
+    
+        .. attribute:: SEND 
+
+            Send the key.
+            This policy is ideal if you want to reduce the number of bytes sent over the network. 
+            This will only work if the combination the set and key value are less than 20 bytes, which is the size of the digest.
+            This will also cause the digest to be computer once on the client and once on the server.
+            If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
+
+    .. data:: RetryPolicy
+
+        .. attribute:: UNDEF
+        
+            The policy is undefined
+
+        .. attribute:: NONE
+
+            Only attempt an operation once
+
+        .. attribute:: ONCE
+
+            If an operation fails, attempt the operation one more time
+
+    .. data:: GenerationPolicy
+
+        .. attribute:: UNDEF
+
+            The policy is undefined
+
+        .. attribute:: IGNORE
+
+            Write a record, regardless of generation
+
+        .. attribute:: EQ
+
+            Write a record, ONLY if generations are equal 
+
+        .. attribute:: GT
+
+            Write a record, ONLY if local generation is greater-than remote generation
+
+        .. attribute:: DUP
+
+            Write a record creating a duplicate, ONLY if the generation collides
+
+    .. data:: ExistsPolicy
+
+        .. attribute:: UNDEF
+
+            The policy is undefined
+
+        .. attribute:: IGNORE
+
+            Write the record, regardless of existence
+
+        .. attribute:: CREATE
+
+            Create a record, ONLY if it doesn't exist
+
+        .. attribute:: UPDATE
+
+            Update a record, ONLY if it exists
+
+            Warning : Not yet implemented
+
+.. js:data:: Status
+
+    Error codes returned by the aerospike server for all the database operations
+
+    .. attribute:: AEROSPIKE_OK = 0
+
+        Generic Success.
+
+    .. attribute:: AEROSPIKE_ERR = 100
+
+        Generic Error.
+
+    .. attribute:: AEROSPIKE_ERR_CLIENT = 200
+
+        Generic client API usage error.
+
+    .. attribute:: AEROSPIKE_ERR_PARAM = 201 
+
+        Invalid client API parameter.
+
+    .. attribute:: AEROSPIKE_ERR_CLUSTER = 300 
+
+        Generic cluster discovery & connection error.
+
+    .. attribute:: AEROSPIKE_ERR_TIMEOUT = 400 
+
+       Request timed out.
+
+    .. attribute:: AEROSPIKE_ERR_THROTTLED = 401 
+
+       Request randomly dropped by client for throttling.
+       Warning -- Not yet supported.
+
+    .. attribute:: AEROSPIKE_ERR_SERVER = 500 
+
+       Generic error returned by server.
+
+    .. attribute:: AEROSPIKE_ERR_REQUEST_INVALID = 501 
+
+       Request protocol invalid, or invalid protocol field.
+
+    .. attribute:: AEROSPIKE_ERR_NAMESPACE_NOT_FOUND = 502 
+
+        Namespace in request not found on server.
+        Warning -- Not yet supported, shows as :attr:`AEROSPIKE_ERR_REQUEST_INVALID`.
+
+    .. attribute:: AEROSPIKE_ERR_SERVER_FULL = 503 
+        
+        The server node is running out of memory and/or storage device space
+        reserved for the specified namespace.
+
+    .. attribute:: AEROSPIKE_ERR_CLUSTER_CHANGE = 504 
+
+         A cluster state change occurred during the request.
+
+    .. attribute:: AEROSPIKE_ERR_RECORD = 600 
+
+        Generic record error.
+
+    .. attribute:: AEROSPIKE_ERR_RECORD_BUSY = 601 
+
+         Too may concurrent requests for one record - a "hot-key" situation.
+
+    .. attribute:: AEROSPIKE_ERR_RECORD_NOT_FOUND = 602 
+
+        Record does not exist in database. May be returned by read, or write with policy Exists.UPDATE
+        Warning Exists.UPDATE not yet supported.
+
+    .. attribute:: AEROSPIKE_ERR_RECORD_EXISTS = 603 
+
+        Record already exists. May be returned by write with policy Exists.CREATE. 
+
+    .. attribute:: AEROSPIKE_ERR_RECORD_GENERATION = 604 
+
+        Generation of record in database does not satisfy write policy
+
+    .. attribute:: AEROSPIKE_ERR_RECORD_TOO_BIG = 605 
+
+        Record being (re-)written can't fit in a storage write block
+
+    .. attribute:: AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE = 606 
+
+       Bin modification operation can't be done on an existing bin due to its value type
+
+
+
 

@@ -1,8 +1,61 @@
 .. _operations:
 
-*****************************
-Aerospike Database Operations
-*****************************
+Client Operations
++++++++++++++++++
+* :js:func:`batch_get`
+* :js:func:`connect`
+* :js:func:`get`
+* :js:func:`info`
+* :js:func:`operate`
+* :js:func:`put`
+* :js:func:`remove`
+* :js:func:`select`
+
+
+Client Operations Reference
++++++++++++++++++++++++++++
+
+.. js:function:: connect(Config)
+
+   Connecting to Aerospike database Cluster
+
+   :param Config: :js:data:`Config` object, containing an array of :js:data:`Host`
+
+   :program:`Example`::
+
+        //config object -- argument to the aerospike.connect() func call
+        var config = {
+              hosts:[{ addr:con.config.host,port : con.config.port }
+         ]}
+     
+        // connecting to aerospike database. 
+        var client = aerospike.connect(config);
+
+
+.. js:function:: info( host, port, info_str, callback)
+
+   Access server's info monitoring protocol.
+   The info protocol is a name/value pair based system, where an individual database server node is 
+   queried to determine its configuration and status.
+
+   The list of supported names can be found at:
+
+   https://docs.aerospike.com/display/AS2/Config+Parameters+Reference 
+   
+   :param string host: server address 
+   :param port port: server port
+   :param str info_str: The query string.
+   :param callback: Gets called on completion of Info Call.
+            Arguments to the callback is :js:data:`Error` and response string.
+
+            * Error: Specifies the success or failure of the operation.
+            * response: response string corresponding to the query string.
+
+    :program:`Example`::
+
+        client.info ( "127.0.0.1", 3000, "statistics", function( err, response) {
+               console.log(response);
+            });
 
 .. js:function:: put(Key, Record, [WritePolicy], callback)
 
@@ -13,11 +66,11 @@ Aerospike Database Operations
    :param WritePolicy: :data:`WritePolicy` Object, The policy to use for this operation. 
                         If not passed as an argument, default write policy values are used
    :param callback:  Get's called on completion of Put operation.
-                Arguments to the callback are :js:data:`Error`, :js:data:`Metadata` and :js:data:`Key`.
+            Arguments to the callback are :js:data:`Error`, :js:data:`Metadata` and :js:data:`Key`.
 
-                * Error: Specifies the success or failure of the operation. 
-                * Metadata: Metadata of the record written.
-                * Key: Key of the record written to the database.
+            * Error: Specifies the success or failure of the operation. 
+            * Metadata: Metadata of the record written.
+            * Key: Key of the record written to the database.
 
     :program:`Example`::
 
