@@ -32,7 +32,7 @@ Client Operations Reference
         var client = aerospike.connect(config);
 
 
-.. js:function:: info( host, port, info_str, callback)
+.. js:function:: info( host, port, info_str,[infopolicy], callback)
 
    Access server's info monitoring protocol.
    The info protocol is a name/value pair based system, where an individual database server node is 
@@ -45,6 +45,7 @@ Client Operations Reference
    :param string host: server address 
    :param port port: server port
    :param str info_str: The query string.
+   :param infopolicy: :data:`InfoPolicy`, policy to specify the behaviour of info call.
    :param callback: Gets called on completion of Info Call.
             Arguments to the callback is :js:data:`Error` and response string.
 

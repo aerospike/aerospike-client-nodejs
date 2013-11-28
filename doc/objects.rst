@@ -182,7 +182,7 @@ Objects Reference
 
             .. data:: InfoPolicy
 
-                .. attribute:: checkbounds
+                .. attribute:: check_bounds
 
                     Boolean datatype
                     Ensure the request is within allowable size limits

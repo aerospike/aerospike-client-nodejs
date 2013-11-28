@@ -459,7 +459,7 @@ int setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy)
 {
 	return setPolicyGeneric(obj, "Retry", (int *) retrypolicy);
 }
-
+	
 int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
 {
 	return setPolicyGeneric(obj, "Exists", (int *) existspolicy);
@@ -467,6 +467,26 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
 
 int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj)
 {
+	as_policy_info_init(policy);
+	if ( setTimeOut( obj, &policy->timeout) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+	if ( obj->Has(String::NewSymbol("send_as_is")) ) {	
+		Local<Value> v8send_as_is = obj->Get(String::NewSymbol("send_as_is"));
+		if ( v8send_as_is->IsBoolean() ) {
+			policy->send_as_is = v8send_as_is->ToBoolean()->Value();
+		} else {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	if ( obj->Has(String::NewSymbol("check_bounds")) ) {	
+		Local<Value> v8check_bounds = obj->Get(String::NewSymbol("check_bounds"));
+		if ( v8check_bounds->IsBoolean() ) {
+			policy->check_bounds = v8check_bounds->ToBoolean()->Value();
+		} else {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+
 	return 	AS_NODE_PARAM_OK;
 }
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj)
