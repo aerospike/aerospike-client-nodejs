@@ -1,21 +1,23 @@
 # Client Class
 
 - [Methods](#methods)
-	- [batch_get()](#methods/batch_get)
-	- [close()](#methods/close)
-	- [connect()](#methods/connect)
-	- [get()](#methods/get)
-	- [info()](#methods/info)
-	- [operate()](#methods/operate)
-	- [put()](#methods/put)
-	- [remove()](#methods/remove)
-	- [select()](#methods/select)
+	- [batch_get()](#batch_get)
+	- [close()](#close)
+	- [connect()](#connect)
+	- [get()](#get)
+	- [info()](#info)
+	- [operate()](#operate)
+	- [put()](#put)
+	- [remove()](#remove)
+	- [select()](#select)
 
 
 <a name="methods"></a>
 ## Methods
 
-<a name="methods/batch_get"></a>
+
+
+<a name="batch_get"></a>
 ### batch_get(keys, [policy,] callback)
 
 Read a batch of records from the cluster.
@@ -26,23 +28,23 @@ Parameters:
 - `policy` – (optional) The BatchPolicy to use for this operation.
 - `callback` – The function to call when the operation completes.
 
----
 
-<a name="methods/close"></a>
+
+<a name="close"></a>
 ### close()
 
 Close the client connection to the cluster.
 
----
 
-<a name="methods/connect"></a>
+
+<a name="connect"></a>
 ### connect()
 
 Establish the client connection to the cluster.
 
----
 
-<a name="methods/get"></a>
+
+<a name="get"></a>
 ### get(key, [policy,] callback)
 
 Read a record from the cluster using the key provided.
@@ -54,9 +56,9 @@ Parameters:
 - `policy` – (optional) A OperationPolicy to use for this operation.
 - `callback` – The function to call when the operation completes.
 
----
 
-<a name="methods/info"></a>
+
+<a name="info"></a>
 ### info(request, [host,] [port,] callback)
 
 Perform an info request against the cluster or specific host.
@@ -68,9 +70,9 @@ Parameters:
 - `port` – (optional) The port of a specific host to send the request to.
 - `callback` – the function to call when the operation completes.
 
----
 
-<a name="methods/operate"></a>
+
+<a name="operate"></a>
 ### operate(key, operations, [policy,] callback)
 
 Parameters:
@@ -80,9 +82,9 @@ Parameters:
 - `policy` – (optional) a OperationPolicy to use for this operation.
 - `callback` – the function to call when the operation completes.
 
----
 
-<a name="methods/put"></a>
+
+<a name="put"></a>
 ### put(key, record, [metadata,] [policy,] callback)
 
 Parameters:
@@ -92,9 +94,9 @@ Parameters:
 - `policy` – (optional) a OperationPolicy to use for this operation.
 - `callback` – the function to call when the operation completes.
 
----
 
-<a name="methods/remove"></a>
+
+<a name="remove"></a>
 ### remove(key, [policy,] callback)
 
 Parameters:
@@ -104,9 +106,9 @@ Parameters:
 - `policy` – (optional) a OperationPolicy to use for this operation.
 - `callback` – the function to call when the operation completes.
 
----
 
-<a name="methods/select"></a>
+
+<a name="select"></a>
 ### select(key, bins, [policy,] callback)
 
 Parameters:
