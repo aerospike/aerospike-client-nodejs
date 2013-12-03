@@ -1,13 +1,13 @@
 # Aerospike Module
 
-- Usage
-- [Functions](#functions)
-	- [client()](#client)
-	- [connect()](#connect)
+- [Usage](#usage)
 - [Fields](#fields)
 	- [Operators](#Operators)
 	- [Policies](#Policies)
 	- [Status](#Status)
+- [Functions](#functions)
+	- [client()](#client)
+	- [connect()](#connect)
 
 <a name="usage"></a>
 ## Usage
