@@ -30,7 +30,7 @@ var aerospike = require("aerospike")
 
 The [Operators](operators.md) object contains an enumeration of values for defining operations.
 
-#### Fields
+*Fields:*
 
 - `APPEND` – Append the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
 - `INCR` – Add the value to the bin. The bin must contain an Integer.
