@@ -1,4 +1,4 @@
-# Policies Object
+# Policies
 
 The Policies object contains an enumeration of values for policies. modify the behavior of database operations. The policies object provides values that are available for each policy.
 
