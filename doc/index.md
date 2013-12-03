@@ -7,13 +7,13 @@ This package describes the Aerospike Node.js Client API in detail.
 
 The module can be built and installed using the following command:
 
-```shell
+```sh
 $ npm install
 ```
 
 If not using npm, then you can build using node-gyp:
 
-```shell
+```sh
 $ node-gyp rebuild
 ```
 
@@ -27,7 +27,7 @@ Before connecting to a cluster, you must first define the client configuration t
 
 Example:
 
-```node    
+```js    
 var config = {
   hosts: [
     { addr: "localhost", port: 3000 }
@@ -37,7 +37,7 @@ var config = {
 
 With the client configuration, you can call `connect()` on the aerospike object, to establish a connection with the cluster.
 
-```node
+```js
 var client = aerospike.connect(config);
 ```
 
@@ -52,7 +52,7 @@ A record is represented as an object. The keys of the object are the names of th
 
 Example of a record with 3 fields:
 
-```node
+```js
 var record = {
   a: 123,
   b: "xyz",
@@ -69,7 +69,7 @@ Some operations allow you to provide metadata with a record, including:
 
 Example:
 
-```node
+```js
 var metadata = {
   gen: 1,
   ttl: 6000
@@ -86,7 +86,7 @@ Records are addressable via their key. A key is an object containing:
 
 Example:
 
-```node
+```js
 var key = {
   ns: "test",
   set: "demo",
@@ -101,7 +101,7 @@ var key = {
 
 Connect to the aerospike cluster. Returns a new [`Client`](#client_class) object.
 
-```node
+```js
 var client = aerospike.connect(config)
 ```
 
