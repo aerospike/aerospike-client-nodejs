@@ -25,7 +25,7 @@ Read a batch of records from the database cluster.
 Parameters:
 
 - `keys` – An array of key objects.
-- `policy` – (optional) The BatchPolicy to use for this operation.
+- `policy` – (optional) The policy to use for this operation.
 - `callback` – The function to call when the operation completes.
 
 The `callback` should be a function like:
@@ -79,7 +79,7 @@ Read a record from the database cluster using the key provided.
 Parameters:
 
 - `key` – A key object.
-- `policy` – (optional) A OperationPolicy to use for this operation.
+- `policy` – (optional) The policy to use for this operation.
 - `callback` – The function to call when the operation completes.
 
 The `callback` should be a function like:
@@ -108,7 +108,7 @@ Parameters:
 - `request` – The info request to send.
 - `host` – (optional) The address of a specific host to send the request to.
 - `port` – (optional) The port of a specific host to send the request to.
-- `callback` – the function to call when the operation completes.
+- `callback` – The function to call when the operation completes.
 
 The `request` argument is a string representing an info request. The `host` and `port` arguments are optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` and `port` defined, then client is not required to be connected to a cluster.
 
@@ -137,8 +137,8 @@ Parameters:
 
 - `key` – a key object
 - `operations` – an array of operation objects.
-- `policy` – (optional) a OperationPolicy to use for this operation.
-- `callback` – the function to call when the operation completes.
+- `policy` – (optional) The policy to use for this operation.
+- `callback` – The function to call when the operation completes.
 
 The `operations` argument is an array of operations, which are populated via the [Operators object](operators.md). 
 
@@ -173,8 +173,8 @@ Writing a record to the database cluster.
 Parameters:
 
 - `key` – a key object
-- `policy` – (optional) a OperationPolicy to use for this operation.
-- `callback` – the function to call when the operation completes.
+- `policy` – (optional) The policy to use for this operation.
+- `callback` – The function to call when the operation completes.
 
 The `callback` should be a function like:
 
@@ -203,8 +203,8 @@ Parameters:
 
 - `key` – a key object
 - `operations` – an array of operation objects.
-- `policy` – (optional) a OperationPolicy to use for this operation.
-- `callback` – the function to call when the operation completes.
+- `policy` – (optional) The policy to use for this operation.
+- `callback` – The function to call when the operation completes.
 
 Example:
 ```js
@@ -219,10 +219,11 @@ client.remove(key('test','demo','key1'), function(err) {
 <a name="select"></a>
 ### select(key, bins, [policy,] callback)
 
+Retrieve a specified bins for a record of given key.
+
 Parameters:
 
-- `key` – a key object
-- `operations` – an array of operation objects.
-- `policy` – (optional) a OperationPolicy to use for this operation.
-- `callback` – the function to call when the operation completes.
+- `key` – The key of the record to select bins from.
+- `policy` – (optional) The policy to use for this operation.
+- `callback` – The function to call when the operation completes.
 
