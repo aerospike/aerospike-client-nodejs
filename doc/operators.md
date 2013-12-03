@@ -1,56 +1,73 @@
 # Operators
 
-The Operators object contains an enumeration of values for defining operations.
+The Operators object provides functions to easily define operations to be performed on a record via the [`operate()`](client.md#operate) function.
 
 Example:
 
 ```js
-var operators = aerospike.Operators
+var op = aerospike.Operators
 
 var ops = [
-  { operator: operators.APPEND, bin: 'a', value: 'xyz'}
+  op.append('a', 'hello'),
+  op.append('a', 'world'),
+  op.incr('b',10),
+  op.read('a'),
+  op.read('b'),
 ]
 
 client.operate(key, ops, callback)
 ```
 
+## Functions
 
-#### APPEND
+### append(bin, value)
 
 Append the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
 
 ```js
-operators.APPEND
+operators.append('a', 'hello')
+operators.append('a', 'world')
 ```
 
-#### INCR
+### incr(bin, value)
 
 Add the value to the bin. The bin must contain an Integer.
 
 ```js
-operators.APPEND
+operators.incr('b', 10)
 ```
 
-#### PREPEND
+### prepend(bin, value)
 
 Prepend the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
 
 ```js
-operators.APPEND
+operators.prepend('c', 'world')
+operators.prepend('c', 'hello')
 ```
 
-#### READ
+### read(bin, value)
 
 Read the value of the bin, after all other operations have completed.
 
 ```js
-operators.APPEND
+operators.read('d')
 ```
 
-#### TOUCH
+### touch([ttl])
 
 Update the TTL for a record.
 
-#### WRITE
+```js
+operators.touch()
+```
+
+### write(bin, value)
 
 Update the value of the bin.
+
+
+```js
+operators.write('e','hello world')
+```
+

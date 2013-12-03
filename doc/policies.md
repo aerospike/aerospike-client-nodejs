@@ -14,9 +14,7 @@ client.get(key, {key=policies.Key.SEND}, callback)
 
 ## Key Policy Values
 
-Values:
-
-#### Key.DIGEST
+#### DIGEST
 
 Send the digest value of the key. This is the recommended mode of operation. This calculates the digest and send the digest to the server. The digest is only calculated on the client, and not on the server. 
 
@@ -24,7 +22,7 @@ Send the digest value of the key. This is the recommended mode of operation. Thi
 policies.Key.DIGEST
 ```
 
-#### Key.SEND
+#### SEND
 
 Send the key. This policy is ideal if you want to reduce the number of bytes sent over the network. This will only work if the combination the set and key value are less than 20 bytes, which is the size of the digest. This will also cause the digest to be computer once on the client and once on the server. If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
 
@@ -33,9 +31,9 @@ policies.Key.SEND
 ```
 
 
-## Retry Policy
+## Retry Policy Values
 
-#### Retry.NONE
+#### NONE
 
 Only attempt an operation once
 
@@ -43,7 +41,7 @@ Only attempt an operation once
 policies.Retry.NONE
 ```
 
-#### Retry.ONCE
+#### ONCE
 
 If an operation fails, attempt the operation one more time
 
@@ -52,9 +50,9 @@ policies.Retry.ONCE
 ```
 
 
-## Generation Policy
+## Generation Policy Values
 
-#### Generation.IGNORE
+#### IGNORE
 
 Write a record, regardless of generation.
 
@@ -62,7 +60,7 @@ Write a record, regardless of generation.
 policies.Generation.IGNORE
 ```
 
-#### Generation.EQ
+#### EQ
 
 Write a record, ONLY if generations are equal.
 
@@ -70,7 +68,7 @@ Write a record, ONLY if generations are equal.
 policies.Generation.EQ
 ```
 
-#### Generation.GT
+#### GT
 
 Write a record, ONLY if local generation is greater-than remote generation.
 
@@ -78,7 +76,7 @@ Write a record, ONLY if local generation is greater-than remote generation.
 policies.Generation.GT
 ```
 
-#### Generation.DUP
+#### DUP
 
 Write a record creating a duplicate, ONLY if the generation collides.
 
@@ -87,9 +85,9 @@ policies.Generation.DUP
 ```
 
 
-## Exists Policy
+## Exists Policy Values
 
-#### Exists.IGNORE
+#### IGNORE
 
 Write the record, regardless of existence
 
@@ -97,7 +95,7 @@ Write the record, regardless of existence
 policies.Exists.IGNORE
 ```
 
-#### Exists.CREATE
+#### CREATE
 
 Create a record, ONLY if it doesn't exist
 
