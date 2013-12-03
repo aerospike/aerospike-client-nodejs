@@ -63,6 +63,13 @@ Parameters:
 
 Perform an info request against the cluster or specific host.
 
+Parameters:
+
+- `request` – The info request to send.
+- `host` – (optional) The address of a specific host to send the request to.
+- `port` – (optional) The port of a specific host to send the request to.
+- `callback` – the function to call when the operation completes.
+
 The `request` argument is a string representing an info request. The `host` and `port` arguments are optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` and `port` defined, then client is not required to be connected to a cluster.
 
 The `callback` argument should be function:
@@ -72,14 +79,6 @@ function(error, response)
 ```
 
 The `error` argument represents any error that may have occurred. 
-
-
-Parameters:
-
-- `request` – The info request to send.
-- `host` – (optional) The address of a specific host to send the request to.
-- `port` – (optional) The port of a specific host to send the request to.
-- `callback` – the function to call when the operation completes.
 
 Example:
 
@@ -95,7 +94,17 @@ client.operate(key, "statistics", function(err, response) {
 
 Perform multiple operations on a single record. 
 
+Parameters:
+
+- `key` – a key object
+- `operations` – an array of operation objects.
+- `policy` – (optional) a OperationPolicy to use for this operation.
+- `callback` – the function to call when the operation completes.
+
+
 The `operations` argument is an array of operations, which are populated via the [Operators object](operators.md). 
+
+Example:
 
 ```js
 var op = aerospike.Operators
@@ -110,14 +119,6 @@ client.operate(key, ops, function(err, rec, meta) {
   // do something
 });
 ```
-
-Parameters:
-
-- `key` – a key object
-- `operations` – an array of operation objects.
-- `policy` – (optional) a OperationPolicy to use for this operation.
-- `callback` – the function to call when the operation completes.
-
 
 
 <a name="put"></a>
