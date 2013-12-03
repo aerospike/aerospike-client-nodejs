@@ -48,4 +48,6 @@ The application uses this object to perform database operations such as writing 
 
 - [Aerospike Module](aerospike.md)
 - [Client Class](client.md)
+- [Policies Object](policies.md)
+- [Operators Object](operators.md)
 
