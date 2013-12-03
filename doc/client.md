@@ -63,6 +63,23 @@ Parameters:
 
 Perform an info request against the cluster or specific host.
 
+The `request` argument is a string representing an info request. The `host` and `port` arguments are optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` and `port` defined, then client is not required to be connected to a cluster.
+
+The callback should be in the form of:
+
+```js
+function(error, response)
+```
+
+The `error` argument represents any error that may have occurred. 
+
+
+```js
+client.operate(key, "statistics", function(err, response) {
+  // do something
+});
+```
+
 Parameters:
 
 - `request` – The info request to send.
@@ -74,6 +91,24 @@ Parameters:
 
 <a name="operate"></a>
 ### operate(key, operations, [policy,] callback)
+
+Perform multiple operations on a single record. 
+
+The `operations` argument is an array of operations, which are populated via the [Operators object](operators.md). 
+
+```js
+var op = aerospike.Operators
+
+var ops = [
+  op.append('a', 'xyz'),
+  op.incr('b', 10),
+  op.read('b')
+]
+
+client.operate(key, ops, function(err, rec, meta) {
+  // do something
+});
+```
 
 Parameters:
 
