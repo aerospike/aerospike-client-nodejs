@@ -234,18 +234,26 @@ Handle<Value> val_to_jsvalue(as_val * val, void** freeptr)
 		case AS_BYTES : {
 			as_bytes * bval = as_bytes_fromval(val);
 			if ( bval ) {
-				int size = as_bytes_size(bval);
-				Buffer  *buf = Buffer::New((char*)bval->value, size, callback, NULL);
-				memcpy(Buffer::Data(buf), bval->value, size);
-				v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-				v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-				v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
-				v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-				buf->handle_.Dispose();
-				// Store the address of node::Buffer, to be freed later. 
-				// Otherwise it leads to memory leak, (not garbage collected by v8)
-				*freeptr = (void*) buf;
-				return scope.Close(actualBuffer);
+				// int size = as_bytes_size(bval);
+				// Buffer  *buf = Buffer::New((char*)bval->value, size, callback, NULL);
+				// memcpy(Buffer::Data(buf), bval->value, size);
+				// v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+				// v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+				// v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
+				// v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+				// buf->handle_.Dispose();
+				// // Store the address of node::Buffer, to be freed later. 
+				// // Otherwise it leads to memory leak, (not garbage collected by v8)
+				// *freeptr = (void*) buf;
+				// return scope.Close(actualBuffer);
+
+				uint8_t * data = as_bytes_getorelse(bval, NULL);
+				uint32_t size  = as_bytes_size(bval);
+
+				// this constructor actually copies data into the new Buffer
+				node:Buffer * buff  = node::Buffer::New((char *) data, size);
+
+				return scope.Close(buff->handle_);
 			} 
 		}
 		default:

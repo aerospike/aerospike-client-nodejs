@@ -30,7 +30,7 @@ url="http://www.aerospike.com/latest.php?package=client-c&os=$OS"
 echo $url
 
 wget -O aerospike.tgz $url
-tar -xvf aerospike.tgz
+tar -xf aerospike.tgz
 
 dir="aerospike-client-c-*"
 cd $dir
