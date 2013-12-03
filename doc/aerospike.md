@@ -30,13 +30,26 @@ var aerospike = require("aerospike")
 
 The [Operators](operators.md) object contains an enumeration of values for defining operations.
 
+#### Fields
+
+- `APPEND` – Append the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
+- `INCR` – Add the value to the bin. The bin must contain an Integer.
+- `PREPEND` – Prepend the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
+- `READ` – Read the value of the bin, after all other operations have completed.
+- `TOUCH` – Update the TTL for a record.
+- `WRITE` – Update the value of the bin.
+
 Example:
 
 ```js
 var operators = aerospike.Operators
-```
 
-For details, see: [Operators Object](operators.md).
+var ops = [
+  { operator: operators.APPEND, bin: 'a', value: 'xyz'}
+]
+
+client.operate(key, ops, callback)
+```
 
 
 
