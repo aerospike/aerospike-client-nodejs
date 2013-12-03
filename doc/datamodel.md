@@ -1,9 +1,9 @@
 
 # Data Model
 
-## Records
+## Record
 
-A record is represented as an object. The keys of the object are the names of the fields (bins) or a record. The values for each field can either be Integer, String or Buffer. 
+A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Integer, String or Buffer. 
 
 Example of a record with 3 fields:
 
@@ -31,9 +31,9 @@ var metadata = {
 }
 ```
 
-## Keys
+## Key
 
-Records are addressable via their key. A key is an object containing:
+A record is addressable via its key. A key is an object containing:
 
 - `ns` — The namespace of the key. Must be a String.
 - `set` – (optional) The set of the key. Must be a String.
