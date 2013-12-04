@@ -14,7 +14,8 @@ var con = require('./config');
 var config = { 
 	hosts: [{addr:con.config.host, port : con.config.port}
 	]}
-var client = aerospike.connect(config);
+var client = aerospike.client(config);
+client.connect()
 var n = con.config.NoOfObjects;
 
 function CleanRecords( str )

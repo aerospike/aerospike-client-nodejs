@@ -66,6 +66,7 @@ void AerospikeClient::Init()
     cons->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
+    cons->PrototypeTemplate()->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("close"), FunctionTemplate::New(Close)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
@@ -96,13 +97,6 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     aerospike_init(&client->as, &config);
 
-    as_error err;
-    
-    aerospike_connect(&client->as, &err);
-
-	if (err.code != AEROSPIKE_OK) {
-		client->as.cluster = NULL;
-	}
     client->Wrap(args.This());
 
     return scope.Close(args.This());
@@ -124,3 +118,22 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
   return scope.Close(instance);
 }
 
+/**
+ * Connect to an Aerospike Cluster
+ */
+Handle<Value> AerospikeClient::Connect(const Arguments& args)
+{
+	HandleScope scope;
+
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+
+	as_error err;
+    
+    aerospike_connect(&client->as, &err);
+
+	if (err.code != AEROSPIKE_OK) {
+		client->as.cluster = NULL;
+	}
+
+    return scope.Close(args.This());
+}

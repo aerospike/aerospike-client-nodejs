@@ -35,12 +35,17 @@ using namespace v8;
  *		aerospike.connect(config);
  *
  */
-Handle<Value> Connect(const Arguments& args)
+/*Handle<Value> Connect(const Arguments& args)
+{
+	HandleScope scope;
+	return scope.Close(AerospikeClient::NewInstance(args));
+}*/
+
+Handle<Value> Client(const Arguments& args)
 {
 	HandleScope scope;
 	return scope.Close(AerospikeClient::NewInstance(args));
 }
-
 /**
  *	Aerospike key.
  *
@@ -81,7 +86,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
 	AerospikeClient::Init();
 
-	exports->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
+	exports->Set(String::NewSymbol("client"), FunctionTemplate::New(Client)->GetFunction());
 	exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
 	exports->Set(String::NewSymbol("Status"), Error_Codes());
 	exports->Set(String::NewSymbol("Policy"),GetAllPolicy());

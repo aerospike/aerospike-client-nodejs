@@ -58,6 +58,11 @@ class AerospikeClient : public ObjectWrap {
 		 *	CLIENT OPERATIONS
 		 **********************************************************************/
 
+		 /**
+		  * undefined client.connect()
+		  */
+		 static Handle<Value> Connect(const Arguments& args);
+
 		/**
 		 *	undefined client.close()
 		 */

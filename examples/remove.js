@@ -5,7 +5,8 @@ var aerospike = require('aerospike')
 
 var status = aerospike.Status
 var policy = aerospike.Policy
-var client = aerospike.connect(env.config)
+var client = aerospike.client(env.config)
+client.connect()
 
 var n = env.nops
 var m = 0
