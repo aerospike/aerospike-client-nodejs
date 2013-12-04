@@ -41,8 +41,9 @@ extern "C" {
 using namespace v8;
 #define OP_ARG_POS_KEY     0
 #define OP_ARG_POS_OP	   1
-#define OP_ARG_POS_OPOLICY 2 // operate policy position and callback position is not same 
-#define OP_ARG_POS_CB	   3 // for every invoke of operate. If operatepolicy is not passed from node
+#define OP_ARG_POS_META	   2
+#define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same 
+#define OP_ARG_POS_CB	   4 // for every invoke of operate. If operatepolicy is not passed from node
 							  // application, argument position for callback changes.
 							  
 /*******************************************************************************
@@ -109,8 +110,9 @@ static void * prepare(const Arguments& args)
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
-	if ( args[OP_ARG_POS_OP]->IsObject() ) {
-		if ( operations_from_jsobject( op, args[OP_ARG_POS_OP]->ToObject() ) != AS_NODE_PARAM_OK ) {
+	if ( args[OP_ARG_POS_OP]->IsArray() ) {
+		 Local<Array> operations = Local<Array>::Cast(args[OP_ARG_POS_OP]);
+		if ( operations_from_jsarray( op, operations ) != AS_NODE_PARAM_OK ) {
 				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 				goto Err_Return;
 		}
@@ -118,6 +120,11 @@ static void * prepare(const Arguments& args)
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
+	if ( args[OP_ARG_POS_META]->IsObject() ) {
+			setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl);
+			setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen);
+	}
+
 	if ( arglength > 3 ) {
 		if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
 			if (operatepolicy_from_jsobject( policy, args[OP_ARG_POS_OPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {

@@ -98,6 +98,7 @@ static void * prepare(const Arguments& args)
 	as_policy_write * policy	= &data->policy;
 	data->param_err				= 0;
 	int arglength = args.Length();
+	int meta_present = 0;
 
 	if ( args[arglength-1]->IsFunction()) {
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
@@ -131,14 +132,19 @@ static void * prepare(const Arguments& args)
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
+		meta_present = 1;
 	} else {
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if ( arglength > 3 ) {
-		if ( args[PUT_ARG_POS_WPOLICY]->IsObject() &&
-				writepolicy_from_jsobject(policy, args[PUT_ARG_POS_WPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+		int wpolicy_pos = PUT_ARG_POS_WPOLICY;
+		if ( 0 == meta_present) {
+			wpolicy_pos = PUT_ARG_POS_WPOLICY - 1;
+		}
+		if ( args[wpolicy_pos]->IsObject() &&
+				writepolicy_from_jsobject(policy, args[wpolicy_pos]->ToObject()) != AS_NODE_PARAM_OK) {
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		} 

@@ -22,8 +22,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins,rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var op_list = [{ operation: Operator.INCR, binName:'integer_bin', binValue:10 }]
-					var ops = { binOps : op_list };
+					var ops = [{ operation: Operator.INCR, binName:'integer_bin', binValue:10 }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -54,8 +53,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var op_list = [{ operation: Operator.PREPEND, binName:'string_bin', binValue:'prepend' }]
-					var ops = {binOps : op_list };
+					var ops = [{ operation: Operator.PREPEND, binName:'string_bin', binValue:'prepend' }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -86,8 +84,7 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var op_list = [{ operation: Operator.APPEND, binName:'string_bin', binValue:'append' }]
-					var ops = { binOps : op_list}
+					var ops = [{ operation: Operator.APPEND, binName:'string_bin', binValue:'append' }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -118,9 +115,9 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					op_list = [{ operation: Operator.TOUCH }];
-					var ops = { ttl : 10000, binOps : op_list }
-					client.operate(key1, ops, function( err, rec, meta, key2) {
+					ops = [{ operation: Operator.TOUCH }];
+					var meta = {ttl : 10000, gen:2}
+					client.operate(key1, ops, meta, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 						client.get(key2, function(err, bins, meta, key3) {
@@ -153,8 +150,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var op_list = [{ operation: Operator.READ, binName:'integer_bin'}]
-					var ops = { binOps : op_list };
+					var ops = [{ operation: Operator.READ, binName:'integer_bin'}]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -184,8 +180,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var op_list = [{ operation: Operator.WRITE, binName:'string_bin', binValue : 'WRITEOPBIN'}]
-					var ops = { binOps : op_list };
+					var ops = [{ operation: Operator.WRITE, binName:'string_bin', binValue : 'WRITEOPBIN'}]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);

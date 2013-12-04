@@ -79,7 +79,7 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj);
 int key_from_jsobject(as_key * key, Local<Object> obj);
 int key_from_jsarray(as_key * key, Local<Array> arr);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr);
-int operations_from_jsobject(as_operations * ops, Local<Object> obj); 
+int operations_from_jsarray(as_operations * ops, Local<Array> arr); 
 
 //clone function for record and key
 bool record_copy_constructor(const as_record * src, as_record ** dest);
@@ -93,6 +93,9 @@ int removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj);
 int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj);
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj);
 int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj);
+
+int setTTL ( Local<Object> obj, uint32_t *ttl);
+int setGeneration( Local<Object> obj, uint16_t * generation);
 
 //linked list utility function
 void AddElement( llist ** list, void * element);

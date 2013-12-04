@@ -319,8 +319,6 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
 	return scope.Close(rec);
 }
 //Forward references;
-int setTTL ( Local<Object> obj, uint32_t *ttl);
-int setGeneration( Local<Object> obj, uint16_t * generation);
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len);
 
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj)
@@ -887,65 +885,56 @@ int populate_touch_op( as_operations* ops)
 	as_operations_add_touch(ops);
 	return AS_NODE_PARAM_OK;
 }
-int operations_from_jsobject( as_operations * ops, Local<Object> obj) 
+int operations_from_jsarray( as_operations * ops, Local<Array> arr) 
 {
 
-	
-	Local<Value> val = obj->Get(String::NewSymbol("binOps"));
-	if ( val->IsArray()) {
-		Local<Array> arr = Local<Array>::Cast(val);
-
-		uint32_t capacity = arr->Length();
-
-		if ( capacity > 0 ) {
-			as_operations_init( ops, capacity );
-		} else {
-			return AS_NODE_PARAM_ERR;
-		}
-		for ( uint32_t i = 0; i < capacity; i++ ) {
-			Local<Object> obj = arr->Get(i)->ToObject();
-			Local<Value> v8op = obj->Get(String::NewSymbol("operation"));
-			if ( v8op->IsNumber() ) {
-				as_operator op = (as_operator) v8op->ToInteger()->Value();
-				switch ( op ) {
-					case AS_OPERATOR_WRITE: 
-						{
-							populate_write_op(ops, obj);
-							break;
-						}
-					case AS_OPERATOR_READ:
-						{
-							populate_read_op(ops, obj);
-							break;
-						}
-					case AS_OPERATOR_INCR: 
-						{
-							populate_incr_op(ops, obj);
-							break;
-						}
-					case AS_OPERATOR_PREPEND:
-						{
-							populate_prepend_op(ops, obj);
-							break;
-						}
-					case AS_OPERATOR_APPEND:
-						{
-							populate_append_op(ops, obj);
-							break;
-						}
-					case AS_OPERATOR_TOUCH:
-						{
-							populate_touch_op(ops);
-							break;
-						}
-					default :
-						return AS_NODE_PARAM_ERR;
-				}
+	uint32_t capacity = arr->Length();
+	if ( capacity > 0 ) {
+		as_operations_init( ops, capacity );
+	} else {
+		return AS_NODE_PARAM_ERR;
+	}
+	for ( uint32_t i = 0; i < capacity; i++ ) {
+		Local<Object> obj = arr->Get(i)->ToObject();
+		Local<Value> v8op = obj->Get(String::NewSymbol("operation"));
+		if ( v8op->IsNumber() ) {
+			as_operator op = (as_operator) v8op->ToInteger()->Value();
+			switch ( op ) {
+				case AS_OPERATOR_WRITE: 
+					{
+						populate_write_op(ops, obj);
+						break;
+					}
+				case AS_OPERATOR_READ:
+					{
+						populate_read_op(ops, obj);
+						break;
+					}
+				case AS_OPERATOR_INCR: 
+					{
+						populate_incr_op(ops, obj);
+						break;
+					}
+				case AS_OPERATOR_PREPEND:
+					{
+						populate_prepend_op(ops, obj);
+						break;
+					}
+				case AS_OPERATOR_APPEND:
+					{
+						populate_append_op(ops, obj);
+						break;
+					}
+				case AS_OPERATOR_TOUCH:
+					{
+						populate_touch_op(ops);
+						break;
+					}
+				default :
+					return AS_NODE_PARAM_ERR;
 			}
 		}
 	}
-	setTTL(obj, &ops->ttl);
-	setGeneration(obj, &ops->gen);
 	return AS_NODE_PARAM_OK;
 
 }
