@@ -23,9 +23,9 @@ for (var i = 0; i < n; i++ ) {
 
   // Form an array of all the operation that has to be performed, in this operate function call.
   var ops = [
-    { operation: operations.INCR, binName: 'i', binValue: i },
-    { operation: operations.APPEND, binName: 's', binValue: "append_str" },
-    { operation: operations.READ, binName: 'i' }
+    { operation: operations.INCR, bin_name: 'i', bin_value: i },
+    { operation: operations.APPEND, bin_name: 's', bin_value: "append_str" },
+    { operation: operations.READ, bin_name: 'i' }
   ]
 
 

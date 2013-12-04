@@ -82,8 +82,8 @@ int batch_from_jsarray(as_batch * batch, Local<Array> arr);
 int operations_from_jsarray(as_operations * ops, Local<Array> arr); 
 
 //clone function for record and key
-bool record_copy_constructor(const as_record * src, as_record ** dest);
-bool key_copy_constructor(const as_key* src, as_key** dest);
+bool record_clone(const as_record * src, as_record ** dest);
+bool key_clone(const as_key* src, as_key** dest);
 
 
 // Function to convert v8 policies to C structures

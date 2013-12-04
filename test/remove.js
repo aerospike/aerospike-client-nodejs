@@ -9,8 +9,8 @@ function GetRemovePolicy()
 {
 	var removepolicy = { timeout : 10, 
 						 gen : 1,
-						 Key :Policy.Key.SEND,
-						 Retru: Policy.Retry.ONCE };
+						 key :Policy.Key.SEND,
+						 retry: Policy.Retry.ONCE };
 	return removepolicy;
 }
 

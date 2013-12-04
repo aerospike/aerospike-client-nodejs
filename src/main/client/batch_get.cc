@@ -87,8 +87,8 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
 				as_record * rec = NULL;
 				rec = &data->results[i].record;
 				as_record_init(rec, results[i].record.bins.size);
-				key_copy_constructor(results[i].key, (as_key**) &data->results[i].key); 
-				record_copy_constructor(&results[i].record, &rec);
+				key_clone(results[i].key, (as_key**) &data->results[i].key); 
+				record_clone(&results[i].record, &rec);
 			} 
 		}
 		return true;

@@ -26,7 +26,7 @@ for (var i = 0; i < n; i++ ) {
   // policy to be used for the select operation
   var readpolicy = {
     timeout: 10,
-    Key: policy.Key.SEND
+    key: policy.Key.SEND
   };
 
   // This function gets the bins specified in the bins variable.

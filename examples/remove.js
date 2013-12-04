@@ -23,8 +23,8 @@ for (var i = 0; i < n; i++ ) {
   var removepolicy = {
     timeout : 10,
     gen: 1,                     // generation of the record
-    Retry: policy.Retry.ONCE,   // if the delete operation fails, retry once again(only once).
-    Key: policy.Key.SEND        // send the key over the network not digest
+    retry: policy.Retry.ONCE,   // if the delete operation fails, retry once again(only once).
+    key: policy.Key.SEND        // send the key over the network not digest
   }
 
   // This function deletes the complete record with all the bins.  

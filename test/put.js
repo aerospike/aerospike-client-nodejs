@@ -8,10 +8,10 @@ ParseConfig(params);
 function GetWritePolicyDefault()
 {
 	var writepolicy = { timeout : 10,
-						Gen : Policy.Generation.IGNORE,
-						Retry: Policy.Retry.ONCE, 
-						Key: Policy.Key.SEND, 
-						Exists: Policy.Exists.IGNORE};
+						gen : Policy.Generation.IGNORE,
+						retry: Policy.Retry.ONCE, 
+						key: Policy.Key.SEND, 
+						exists: Policy.Exists.IGNORE};
 	return writepolicy;
 	
 }
@@ -81,7 +81,7 @@ describe('WRITE POLICY TEST', function() {
 					recGen = meta.gen ;
 				}
 				var writepolicy = new GetWritePolicyDefault();
-				writepolicy.Gen = Policy.Generation.EQ;
+				writepolicy.gen = Policy.Generation.EQ;
 				var rec = new GetRecord(i);
 				rec.metadata.gen = recGen+10;
 				client.put( key, rec.bins, rec.metadata, writepolicy, function (err, meta, key) {
@@ -136,7 +136,7 @@ describe('WRITE POLICY TEST', function() {
 			var K = { ns:params.ns, set: params.set, key:'EXIST_SUCCESS' + i };
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
-			writepolicy.Exists = Policy.Exists.CREATE;
+			writepolicy.exists = Policy.Exists.CREATE;
 			client.put(K, rec.bins, rec.metadata, writepolicy, function(err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -159,7 +159,7 @@ describe('WRITE POLICY TEST', function() {
 			var K = { ns:params.ns, set: params.set, key:'EXIST_FAIL' + i };
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
-			writepolicy.Exists = Policy.Exists.CREATE;
+			writepolicy.exists = Policy.Exists.CREATE;
 			client.put(K, rec.bins, rec.metadata, writepolicy, function(err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);

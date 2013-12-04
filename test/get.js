@@ -8,7 +8,7 @@ ParseConfig(params);
 
 function GetReadPolicy()
 {
-	var readpolicy = { timeout : 10, Key :Policy.Key.SEND }
+	var readpolicy = { timeout : 10, key :Policy.Key.SEND }
 	return readpolicy;
 }
 

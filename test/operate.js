@@ -7,9 +7,9 @@ ParseConfig(params);
 function GetOperatePolicy()
 {
 	var operatepolicy = { timeout : 10,
-						Gen : Policy.Generation.EQ,
-						Retry: Policy.Retry.ONCE, 
-						Key: Policy.Key.SEND }
+						gen : Policy.Generation.EQ,
+						retry: Policy.Retry.ONCE, 
+						key: Policy.Key.SEND }
 	return operatepolicy;
 	
 }
@@ -22,7 +22,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins,rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var ops = [{ operation: Operator.INCR, binName:'integer_bin', binValue:10 }]
+					var ops = [{ operation: Operator.INCR, bin_name:'integer_bin', bin_value:10 }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -53,7 +53,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var ops = [{ operation: Operator.PREPEND, binName:'string_bin', binValue:'prepend' }]
+					var ops = [{ operation: Operator.PREPEND, bin_name:'string_bin', bin_value:'prepend' }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -84,7 +84,7 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var ops = [{ operation: Operator.APPEND, binName:'string_bin', binValue:'append' }]
+					var ops = [{ operation: Operator.APPEND, bin_name:'string_bin', bin_value:'append' }]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -150,7 +150,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var ops = [{ operation: Operator.READ, binName:'integer_bin'}]
+					var ops = [{ operation: Operator.READ, bin_name:'integer_bin'}]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);
@@ -180,7 +180,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			var rec = new GetRecord(i);
 			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
-					var ops = [{ operation: Operator.WRITE, binName:'string_bin', binValue : 'WRITEOPBIN'}]
+					var ops = [{ operation: Operator.WRITE, bin_name:'string_bin', bin_value : 'WRITEOPBIN'}]
 					client.operate(key1, ops, function( err, rec, meta, key2) {
 						expect(err).to.exist;
 						expect(err.code).to.equal(return_code.AEROSPIKE_OK);

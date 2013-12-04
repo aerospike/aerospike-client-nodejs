@@ -25,7 +25,7 @@ for (var i = 0; i < n; i++ ) {
   // Policy to be followed during read operation.
   var readpolicy = {
     timeout: 10,
-    Key: policy.Key.KEY
+    key: policy.Key.KEY
   }
 
   // This function gets the complete record with all the bins. 

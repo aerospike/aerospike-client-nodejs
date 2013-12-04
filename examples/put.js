@@ -51,10 +51,10 @@ for (var i = 0; i < n; i++ ) {
   // Policy to be followed while writing.
   var write_policy = {
     timeout: 10,
-    Retry: policy.Retry.ONCE,       // If a write fails, retry the operation once
-    Key: policy.Key.SEND,           // Send the key 
-    Gen: policy.Generation.IGNORE,  // Ignore the generation of the record while writing
-    Exists: policy.Exists.IGNORE    // Write the record regardless of the existence
+    retry: policy.Retry.ONCE,       // If a write fails, retry the operation once
+    key: policy.Key.SEND,           // Send the key 
+    gen: policy.Generation.IGNORE,  // Ignore the generation of the record while writing
+    exists: policy.Exists.IGNORE    // Write the record regardless of the existence
   }
 
   // write the record to database

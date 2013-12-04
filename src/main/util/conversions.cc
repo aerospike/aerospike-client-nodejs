@@ -117,7 +117,9 @@ void RemoveList( llist **list) {
 	}
 	return;
 }
-bool key_copy_constructor(const as_key* src, as_key** dest)
+
+
+bool key_clone(const as_key* src, as_key** dest)
 {
 	if(src == NULL || dest == NULL) {
 		return false;
@@ -145,7 +147,7 @@ bool key_copy_constructor(const as_key* src, as_key** dest)
 	
 }
 
-bool record_copy_constructor(const as_record* src, as_record** dest) 
+bool record_clone(const as_record* src, as_record** dest) 
 {
 	if(src == NULL || dest == NULL) {
 		return false;
@@ -204,9 +206,6 @@ Handle<Object> error_to_jsobject(as_error * error)
 // is garbage collected. 
 void callback(char* data, void * ptr) 
 {
-	if (data != NULL ) {
-		free(data);
-	}
 	if ( ptr != NULL) {
 		free(ptr);
 	}
@@ -447,22 +446,22 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
 
 int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy)
 {
-	return setPolicyGeneric(obj, "Key", (int *) keypolicy);
+	return setPolicyGeneric(obj, "key", (int *) keypolicy);
 }
 
 int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy)
 {
-	return setPolicyGeneric(obj, "Gen", (int *) genpolicy);
+	return setPolicyGeneric(obj, "gen", (int *) genpolicy);
 }
 
 int setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy) 
 {
-	return setPolicyGeneric(obj, "Retry", (int *) retrypolicy);
+	return setPolicyGeneric(obj, "retry", (int *) retrypolicy);
 }
 	
 int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy)
 {
-	return setPolicyGeneric(obj, "Exists", (int *) existspolicy);
+	return setPolicyGeneric(obj, "exists", (int *) existspolicy);
 }
 
 int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj)
@@ -647,6 +646,17 @@ int key_from_jsobject(as_key * key, Local<Object> obj)
 		as_key_init_int64(key, ns, set, value);
 		goto ReturnOk;
 	}
+	else if ( val_obj->IsObject() ) {
+		Local<Object> obj = val_obj->ToObject();
+		int len ;
+		uint8_t* data ;
+		if (extract_blob_from_jsobject(obj, &data, &len) != AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+		as_key_init_raw(key, ns, set, data, len);
+
+	}
+
 
 // close the scope, so that garbage collector can collect the v8 variables.
 ReturnOk:
@@ -732,7 +742,7 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr)
 }
 
 int GetBinName( char** binName, Local<Object> obj) {
-	Local<Value> val = obj->Get(String::NewSymbol("binName"));
+	Local<Value> val = obj->Get(String::NewSymbol("bin_name"));
 	if ( !val->IsString()) {
 		return AS_NODE_PARAM_ERR;
 	}
@@ -742,7 +752,7 @@ int GetBinName( char** binName, Local<Object> obj) {
 
 Local<Value> GetBinValue( Local<Object> obj) {
 	HandleScope scope;
-	Local<Value> val = obj->Get(String::NewSymbol("binValue"));
+	Local<Value> val = obj->Get(String::NewSymbol("bin_value"));
 	return scope.Close(val);
 }
 int populate_write_op ( as_operations * op, Local<Object> obj) 

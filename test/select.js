@@ -7,7 +7,7 @@ ParseConfig(params);
 
 function GetSelectPolicy()
 {
-	var selectpolicy = { timeout : 10, Key :Policy.Key.SEND }
+	var selectpolicy = { timeout : 10, key :Policy.Key.SEND }
 	return selectpolicy;
 }
 
