@@ -206,12 +206,11 @@ static void respond(uv_work_t * req, int status)
 
 	//to keep track of the pointers for garbage collection.
 	//node::Buffer is not garbage collected by V8 GC.
-	void * freeptr = NULL;
 
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
 		argv[0] = error_to_jsobject(err),
-		argv[1] = recordbins_to_jsobject(rec, &freeptr),
+		argv[1] = recordbins_to_jsobject(rec ),
 		argv[2] = recordmeta_to_jsobject(rec),
 		argv[3] = key_to_jsobject(key);
 	
@@ -246,9 +245,6 @@ static void respond(uv_work_t * req, int status)
 	if( data->param_err == 0) {	
 		as_key_destroy(key);
 		as_record_destroy(rec);
-	}
-	if (freeptr != NULL) {
-		delete freeptr;
 	}
 	delete data;
 	delete req;

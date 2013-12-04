@@ -65,10 +65,10 @@ typedef struct llist{
 
 // Functions to convert C client structure to v8 object(map)
 Handle<Object> error_to_jsobject(as_error * error);
-Handle<Value> val_to_jsvalue(as_val * val, void ** freeptr);
-Handle<Object> recordbins_to_jsobject(const as_record * record, void** freeptr);
+Handle<Value> val_to_jsvalue(as_val * val );
+Handle<Object> recordbins_to_jsobject(const as_record * record);  
 Handle<Object> recordmeta_to_jsobject(const as_record * record);
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, void ** freeptr);
+Handle<Object> record_to_jsobject(const as_record * record, const as_key * key );
 Handle<Object> key_to_jsobject(const as_key * key);
 
 

@@ -222,7 +222,6 @@ static void respond(uv_work_t * req, int status)
 	// maintain a linked list of pointers to be freed after the nodejs callback is called
 	// Buffer object is not garbage collected by v8 gc. Have to delete explicitly 
 	// to avoid memory leak.
-	llist * freeptrlist = NULL;
 
 	// Build the arguments array for the callback
 	int num_args = 2;
@@ -244,17 +243,14 @@ static void respond(uv_work_t * req, int status)
 	else {
 		arr=Array::New(num_rec);	
 		for ( uint32_t i = 0; i< num_rec; i++) {
-			void *freeptr = NULL;
 			Handle<Object> obj = Object::New();
 			obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
 			if(batch_results[i].result == AEROSPIKE_OK) {	
-				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key, &freeptr));
+				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key ));
 				as_key_destroy((as_key*) batch_results[i].key);
 				as_record_destroy(&batch_results[i].record);
 			}
 
-			// Add the Buffer pointer to linked list.
-			AddElement(&freeptrlist, freeptr);
 			arr->Set(i,obj);
 		}
 		argv[0] = error_to_jsobject(err);
@@ -284,8 +280,6 @@ static void respond(uv_work_t * req, int status)
 		free(batch_results);
 	}
 
-	// Delete all the elements in the linked list.
-	RemoveList(&freeptrlist);
 	
 	delete data;
 	delete req;

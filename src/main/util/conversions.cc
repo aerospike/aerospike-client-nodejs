@@ -82,6 +82,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj)
 	return AS_NODE_PARAM_OK;
 }
 
+#if 0
 // Add the element to the list.
 void AddElement(llist **list, void * element)
 {
@@ -117,7 +118,7 @@ void RemoveList( llist **list) {
 	}
 	return;
 }
-
+#endif
 
 bool key_clone(const as_key* src, as_key** dest)
 {
@@ -211,7 +212,7 @@ void callback(char* data, void * ptr)
 	}
 }
 
-Handle<Value> val_to_jsvalue(as_val * val, void** freeptr)
+Handle<Value> val_to_jsvalue(as_val * val )
 {
 	HandleScope scope;
 	if( val == NULL) {
@@ -262,7 +263,7 @@ Handle<Value> val_to_jsvalue(as_val * val, void** freeptr)
 }
 
 
-Handle<Object> recordbins_to_jsobject(const as_record * record, void ** freeptr)
+Handle<Object> recordbins_to_jsobject(const as_record * record )
 {
 	HandleScope scope;
 
@@ -279,7 +280,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, void ** freeptr)
 		as_bin * bin = as_record_iterator_next(&it);
 		char * name = as_bin_get_name(bin);
 		as_val * val = (as_val *) as_bin_get_value(bin);
-		Handle<Value> obj = val_to_jsvalue(val, freeptr);
+		Handle<Value> obj = val_to_jsvalue(val );
 		bins->Set(String::NewSymbol(name), obj);
 	}
 	return scope.Close(bins);
@@ -298,7 +299,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record)
 	return scope.Close(meta);
 }
 
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, void ** freeptr)
+Handle<Object> record_to_jsobject(const as_record * record, const as_key * key )
 {
 	HandleScope scope;
 	
@@ -308,7 +309,7 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
 		return scope.Close(okey);
 	}
 	okey	= key_to_jsobject(key ? key : &record->key);
-	Handle<Object> bins	= recordbins_to_jsobject(record, freeptr);
+	Handle<Object> bins	= recordbins_to_jsobject(record );
 	Handle<Object> meta	= recordmeta_to_jsobject(record);
 	Local<Object> rec = Object::New();
 	rec->Set(String::NewSymbol("key"), okey);
