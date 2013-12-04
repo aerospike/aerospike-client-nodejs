@@ -1,15 +1,19 @@
 // getting a set of records from a single namespace,
 // in a single operation(batch_get).
 
-var fs = require('fs');
-eval(fs.readFileSync('example.js')+'');
+var env = require('./env')
+var aerospike = require('aerospike')
 
-// Number of batch_get operations to be performed
-var n = con.config.NoOfOps/4; 
+var status = aerospike.Status
+var policy = aerospike.Policy
+var client = aerospike.connect(env.config)
+
+var n = env.nops/4
 var m = 0
 
-var namespace = con.config.namespace;
-var set = con.config.set;
+var namespace = env.namespace
+var set = env.set
+
 console.time(n + " batch_get")
 
 // Currently the batch operation is supported only for a batch of 

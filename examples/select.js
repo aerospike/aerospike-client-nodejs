@@ -15,7 +15,7 @@ for (var i = 0; i < n; i++ ) {
 
   var k2 = {
     ns: env.namespace,
-    set: con.config.set,
+    set: env.set,
     key: 'value' + i
   }
 

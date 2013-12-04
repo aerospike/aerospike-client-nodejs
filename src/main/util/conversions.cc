@@ -251,7 +251,7 @@ Handle<Value> val_to_jsvalue(as_val * val, void** freeptr)
 				uint32_t size  = as_bytes_size(bval);
 
 				// this constructor actually copies data into the new Buffer
-				node:Buffer * buff  = node::Buffer::New((char *) data, size);
+				node::Buffer * buff  = node::Buffer::New((char *) data, size);
 
 				return scope.Close(buff->handle_);
 			} 
