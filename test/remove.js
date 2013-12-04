@@ -20,7 +20,7 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'REMOVE' + i }
-		client.put (Key, rec, function (err, meta, key) {
+		client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) { 
 			client.remove(key, function ( err, key) {
 				expect(err).to.exist;
@@ -46,7 +46,7 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'REMOVEPOLICY' + i }
-		client.put (Key, rec, function (err, meta, key) {
+		client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) { 
 				var removepolicy = new GetRemovePolicy();
 			client.remove(key, removepolicy, function ( err, key) {

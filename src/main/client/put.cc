@@ -40,8 +40,9 @@ extern "C" {
 
 #define PUT_ARG_POS_KEY 0
 #define PUT_ARG_POS_REC 1
-#define PUT_ARG_POS_WPOLICY 2 // Write policy position and callback position is not same 
-#define PUT_ARG_POS_CB 3  // for every invoke of put. If writepolicy is not passed from node
+#define PUT_ARG_POS_META 2
+#define PUT_ARG_POS_WPOLICY 3 // Write policy position and callback position is not same 
+#define PUT_ARG_POS_CB 4  // for every invoke of put. If writepolicy is not passed from node
 // application, argument position for callback changes.
 
 using namespace v8;
@@ -116,7 +117,17 @@ static void * prepare(const Arguments& args)
 
 
 	if ( args[PUT_ARG_POS_REC]->IsObject() ) {
-		if (record_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject()) != AS_NODE_PARAM_OK) { 
+		if (recordbins_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject()) != AS_NODE_PARAM_OK) { 
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
+		}
+	} else {
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+		goto Err_Return;
+	}
+
+	if ( args[PUT_ARG_POS_META]->IsObject() ) {
+		if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject()) != AS_NODE_PARAM_OK) { 
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}

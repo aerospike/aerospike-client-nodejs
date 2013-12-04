@@ -323,63 +323,57 @@ int setTTL ( Local<Object> obj, uint32_t *ttl);
 int setGeneration( Local<Object> obj, uint16_t * generation);
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len);
 
-int record_from_jsobject(as_record * rec, Local<Object> obj)
+int recordbins_from_jsobject(as_record * rec, Local<Object> obj)
 {
-	Local<Value> binlist = obj->Get(String::NewSymbol("bins"));
-
-
-	if ( binlist->IsObject() ) {
-		Local<Object> bins = binlist->ToObject();
-		const Local<Array> props = bins->GetOwnPropertyNames();
-		const uint32_t count = props->Length();
-
-		as_record_init(rec, count);
-		for ( uint32_t i = 0; i < count; i++ ) {
-
-			const Local<Value> name = props->Get(i);
-			const Local<Value> value = bins->Get(name);
-
-			String::Utf8Value n(name);
-
 		
-			String::Utf8Value p(value);
-			if ( value->IsString() ) {
-				String::Utf8Value v(value);
-				as_record_set_str(rec, *n, strdup(*v));
-				as_record_get_string(rec, *n)->free = true;
-			}
-			else if ( value->IsNumber() ) {
-				int64_t v = value->IntegerValue();
-				as_record_set_int64(rec, *n, v);
-			}
-			else if ( value->IsObject() ) {
-				Local<Object> obj = value->ToObject();
-				int len ;
-				uint8_t* data ;
-				if (extract_blob_from_jsobject(obj, &data, &len) != AS_NODE_PARAM_OK) {
-					return AS_NODE_PARAM_ERR;
-				}
-				as_record_set_raw(rec, *n, data, len);
-				//as_record_get_bytes(rec, *n)->free = true;
+	const Local<Array> props = obj->GetOwnPropertyNames();
+	const uint32_t count = props->Length();
 
-			}
-			else {
+	as_record_init(rec, count);
+	for ( uint32_t i = 0; i < count; i++ ) {
+
+		const Local<Value> name = props->Get(i);
+		const Local<Value> value = obj->Get(name);
+
+		String::Utf8Value n(name);
+
+
+		String::Utf8Value p(value);
+		if ( value->IsString() ) {
+			String::Utf8Value v(value);
+			as_record_set_str(rec, *n, strdup(*v));
+			as_record_get_string(rec, *n)->free = true;
+		}
+		else if ( value->IsNumber() ) {
+			int64_t v = value->IntegerValue();
+			as_record_set_int64(rec, *n, v);
+		}
+		else if ( value->IsObject() ) {
+			Local<Object> obj = value->ToObject();
+			int len ;
+			uint8_t* data ;
+			if (extract_blob_from_jsobject(obj, &data, &len) != AS_NODE_PARAM_OK) {
 				return AS_NODE_PARAM_ERR;
 			}
-		}
-	}
+			as_record_set_raw(rec, *n, data, len);
+			//as_record_get_bytes(rec, *n)->free = true;
 
-	Local<Value> meta = obj->Get(String::NewSymbol("metadata"));
-	if ( meta->IsObject()) {
-		
-		setTTL( meta->ToObject(), &rec->ttl);
-		setGeneration( meta->ToObject(), &rec->gen);
+		}
+		else {
+			return AS_NODE_PARAM_ERR;
+		}
 	}
 
 	return AS_NODE_PARAM_OK;
 }
 
+int recordmeta_from_jsobject(as_record * rec, Local<Object> obj)
+{
+	setTTL( obj, &rec->ttl);
+	setGeneration( obj, &rec->gen);
 
+	return AS_NODE_PARAM_OK;
+}
 
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len)
 {

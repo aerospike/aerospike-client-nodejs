@@ -17,7 +17,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'SELECT' + i }
-		client.put (Key, rec, function (err, meta, key) {
+		client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) {
 				var bins = ['string_bin', 'integer_bin'];
 			client.get(key, bins, function ( err, bins, meta, key) {
@@ -44,7 +44,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 		var rec = GetRecord(i);
 		var Key = { ns: params.ns, set: params.set, key: 'READPOLICY' + i }
-		client.put (Key, rec, function (err, meta, key) {
+		client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
 			if ( err.code == return_code.AEROSPIKE_OK) { 
 				var readpolicy = new GetSelectPolicy();
 				var bins = [ 'string_bin', 'integer_bin'];

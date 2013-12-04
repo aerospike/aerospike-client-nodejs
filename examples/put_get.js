@@ -25,11 +25,8 @@ for (var i = 0; i < n; i++ ) {
     b: new Buffer("hello world")
   }
 
-  var rec = {
-    bins: bins0
-  }
   
-  client.put(key0, rec, function(err, meta1, key1) {
+  client.put(key0, bins0, function(err, meta1, key1) {
     if ( err.code !== 0 ) {
       console.log("put error: %s", err.message)
     }

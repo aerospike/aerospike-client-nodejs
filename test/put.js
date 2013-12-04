@@ -22,7 +22,7 @@ describe ( 'PUT FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'PUT' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err) {
+			client.put(Key, rec.bins, rec.metadata, function(err) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 				if ( ++m == n) {
@@ -43,15 +43,15 @@ describe('WRITE POLICY TEST', function() {
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'GEN_SUCCESS' + i };
 			var rec = new GetRecord(i);
-			client.put(K, rec,function(err, meta, key) {
+			client.put(K, rec.bins, rec.metadata, function(err, meta, key) {
 			client.get(key, function (err, bins, meta, key) {
 				if ( err.code == return_code.AEROSPIKE_OK) {
 					recGen = meta.gen ;
 				}
 				var writepolicy = new GetWritePolicyDefault();
 				var rec = new GetRecord(i);
-				rec.gen = recGen;
-				client.put( key, rec, writepolicy, function (err, meta, key) {
+				rec.metadata.gen = recGen;
+				client.put( key, rec.bins, rec.metadata, writepolicy, function (err, meta, key) {
 					expect(err).to.exist;
 					expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 					if( ++m == n) {
@@ -75,7 +75,7 @@ describe('WRITE POLICY TEST', function() {
 		for ( var i = 1; i <= n; i++) {
 			var K = { ns:params.ns, set: params.set, key:'GEN_FAILURE' + i };
 			var rec = new GetRecord(i);
-			client.put(K, rec,function(err, meta, key) {
+			client.put(K, rec.bins, rec.metadata, function(err, meta, key) {
 			client.get(key, function (err, bins, meta, key) {
 				if ( err.code == return_code.AEROSPIKE_OK) {
 					recGen = meta.gen ;
@@ -83,8 +83,8 @@ describe('WRITE POLICY TEST', function() {
 				var writepolicy = new GetWritePolicyDefault();
 				writepolicy.Gen = Policy.Generation.EQ;
 				var rec = new GetRecord(i);
-				rec.gen = recGen+10;
-				client.put( key, rec, writepolicy, function (err, meta, key) {
+				rec.metadata.gen = recGen+10;
+				client.put( key, rec.bins, rec.metadata, writepolicy, function (err, meta, key) {
 					expect(err).to.exist;
 					expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_GENERATION);
 					if( ++m == n) {
@@ -109,9 +109,9 @@ describe('WRITE POLICY TEST', function() {
 			var writepolicy = { timeout : 1 }
 			var obj = { a : 1, b: "Some String", c: [1,2,3] };
 			var packed_obj = msgpack.pack(obj);
-			var binlist = {s : i.toString(), i : i, b : packed_obj };
-			var rec = { ttl : 100, gen : 1, bins : binlist };
-			client.put( K, rec, writepolicy, function (err) {
+			var bins = {s : i.toString(), i : i, b : packed_obj };
+			var metadata = { ttl : 100, gen : 1 };
+			client.put( K, bins, metadata, writepolicy, function (err) {
 				expect(err).to.exist;
 				if ( err.code > 0 ) {
 					expect(err.code).to.equal(return_code.AEROSPIKE_ERR_TIMEOUT);
@@ -137,7 +137,7 @@ describe('WRITE POLICY TEST', function() {
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
 			writepolicy.Exists = Policy.Exists.CREATE;
-			client.put(K, rec, writepolicy, function(err, meta, key) {
+			client.put(K, rec.bins, rec.metadata, writepolicy, function(err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 				if( ++m == n) {
@@ -160,10 +160,10 @@ describe('WRITE POLICY TEST', function() {
 			var rec = new GetRecord(i);
 			var writepolicy = new GetWritePolicyDefault();
 			writepolicy.Exists = Policy.Exists.CREATE;
-			client.put(K, rec, writepolicy, function(err, meta, key) {
+			client.put(K, rec.bins, rec.metadata, writepolicy, function(err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-				client.put(K, rec, writepolicy, function(err, meta, key) {
+				client.put(K, rec.bins, rec.metadata, writepolicy, function(err, meta, key) {
 					expect(err).to.exist;
 					expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_EXISTS);
 					if( ++m == n) {
@@ -190,7 +190,7 @@ describe('PARAMETER CHECKING TEST', function() {
 			var rec = new GetRecord(i);
 			rec.bins.f = 123.45;
 			rec.bins.arr = [123, 45, 67 ];
-			client.put(K, rec, function(err, meta, key) {
+			client.put(K, rec.bins, rec.metadata, function(err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_ERR_PARAM);
 					if( ++m == n) {

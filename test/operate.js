@@ -20,7 +20,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'INCR' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins,rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					var op_list = [{ operation: Operator.INCR, binName:'integer_bin', binValue:10 }]
 					var ops = { binOps : op_list };
@@ -52,7 +52,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'PREPENDSTRING' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					var op_list = [{ operation: Operator.PREPEND, binName:'string_bin', binValue:'prepend' }]
 					var ops = {binOps : op_list };
@@ -84,7 +84,7 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'APPENDSTRING' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					var op_list = [{ operation: Operator.APPEND, binName:'string_bin', binValue:'append' }]
 					var ops = { binOps : op_list}
@@ -116,7 +116,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'TOUCHSTRING' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					op_list = [{ operation: Operator.TOUCH }];
 					var ops = { ttl : 10000, binOps : op_list }
@@ -151,7 +151,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'READ' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					var op_list = [{ operation: Operator.READ, binName:'integer_bin'}]
 					var ops = { binOps : op_list };
@@ -182,7 +182,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 		for ( var i = 1; i <= n; i++) {
 			var Key = { ns : params.ns, set : params.set, key : 'WRITE' + i }
 			var rec = new GetRecord(i);
-			client.put(Key, rec,function(err, meta, key1) {
+			client.put(Key, rec.bins, rec.metadata, function(err, meta, key1) {
 				if (err.code == return_code.AEROSPIKE_OK){
 					var op_list = [{ operation: Operator.WRITE, binName:'string_bin', binValue : 'WRITEOPBIN'}]
 					var ops = { binOps : op_list };

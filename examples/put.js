@@ -36,7 +36,7 @@ for (var i = 0; i < n; i++ ) {
   }
 
   // bins to be written 
-  var binlist = {
+  var bins = {
     s: i.toString(),
     i: i
   }
@@ -47,11 +47,6 @@ for (var i = 0; i < n; i++ ) {
     gen: 0
   }
 
-  // Record to be written
-  var rec = {
-    metadata: meta,
-    bins: binlist
-  }
 
   // Policy to be followed while writing.
   var write_policy = {
@@ -63,7 +58,7 @@ for (var i = 0; i < n; i++ ) {
   }
 
   // write the record to database
-  client.put(k1, rec, write_policy, function(err) {
+  client.put(k1, bins, meta, write_policy, function(err) {
     if ( err.code != status.AEROSPIKE_OK ) {
         // Error code AEROSPIKE_OK specifies the success of write operation.
         console.log("error: %s", err.message)

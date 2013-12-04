@@ -12,7 +12,7 @@ describe( 'BATCH-GET FUNCTION', function() {
 		for ( var i = 0; i < 4*n; i++ ) {
 			var key = { ns: params.ns, set: params.set, key:"BATCHGET"+i };
 			var rec= GetRecord(i);
-			client.put(key, rec, function( err, meta, key) {
+			client.put(key, rec.bins, rec.metadata, function( err, meta, key) {
 				expect(err).to.exist;
 				expect(err.code).to.equal(return_code.AEROSPIKE_OK);
 				if ( ++m == 4*n) {

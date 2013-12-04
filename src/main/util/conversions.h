@@ -74,7 +74,8 @@ Handle<Object> key_to_jsobject(const as_key * key);
 
 // Functions to convert v8 objects(maps) to C client structures
 int config_from_jsobject(as_config * config, Local<Object> obj);
-int record_from_jsobject(as_record * rec, Local<Object> obj);
+int recordbins_from_jsobject(as_record * rec, Local<Object> obj);
+int recordmeta_from_jsobject(as_record * rec, Local<Object> obj);
 int key_from_jsobject(as_key * key, Local<Object> obj);
 int key_from_jsarray(as_key * key, Local<Array> arr);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr);
