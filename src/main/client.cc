@@ -69,13 +69,15 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("close"), FunctionTemplate::New(Close)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("exists"), FunctionTemplate::New(Exists)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("batch_get"), FunctionTemplate::New(Batch_Get)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("batch_exists"), FunctionTemplate::New(Batch_Exists)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
+	//cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
 
@@ -89,10 +91,10 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     as_config config;
     as_config_init(&config);
 
+
 	if (args[0]->IsObject() ) {
 		config_from_jsobject(&config, args[0]->ToObject());	
 	}
-
 
     AerospikeClient * client = new AerospikeClient();
 

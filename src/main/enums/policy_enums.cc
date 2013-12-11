@@ -2,7 +2,7 @@
 #include <node.h>
 using namespace v8;
 
-Handle<Object> Key_Policy()
+Handle<Object> keyPolicy()
 {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();
@@ -15,7 +15,7 @@ Handle<Object> Key_Policy()
 	return scope.Close(obj);
 }
 
-Handle<Object> Retry_Policy()
+Handle<Object> retryPolicy()
 {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();
@@ -26,7 +26,7 @@ Handle<Object> Retry_Policy()
 	return scope.Close(obj);
 }
 
-Handle<Object> Generation_Policy()
+Handle<Object> generationPolicy()
 {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();
@@ -39,7 +39,7 @@ Handle<Object> Generation_Policy()
 	return scope.Close(obj);
 }
 
-Handle<Object> Exists_Policy()
+Handle<Object> existsPolicy()
 {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();

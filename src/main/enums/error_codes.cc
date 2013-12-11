@@ -7,7 +7,7 @@ using namespace v8;
  */
 
 
-Handle<Object> Error_Codes() 
+Handle<Object> errorCodes() 
 {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();

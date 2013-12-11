@@ -8,26 +8,30 @@ using namespace v8;
  **********************************************************/
 
 
-//Exposes all C error codes as a map of <String,Int> to nodejs 
+//Exposes all C error codes as a map of <String,Int> to node.js 
 //application. Eg <AEROSPIKE,0>
- Handle<Object> Error_Codes();
+ Handle<Object> errorCodes();
 
-//Exposes key Policy in C to nodejs application as a map <String,Int>
+//Exposes key Policy in C to node.js application as a map <String,Int>
 //Eg < AS_POLICY_KEY_DIGEST, 1 >
- Handle<Object> Key_Policy();
+ Handle<Object> keyPolicy();
 
-//Exposes Retry  Policy in C to nodejs application as a map <String,Int>
+//Exposes Retry  Policy in C to node.js application as a map <String,Int>
 //Eg < AS_POLICY_RETRY_ONCE, 1 >
- Handle<Object> Retry_Policy();
+ Handle<Object> retryPolicy();
 
-//Exposes Generation  Policy in C to nodejs application as a map <String,Int>
+//Exposes Generation  Policy in C to node.js application as a map <String,Int>
 //Eg < AS_POLICY_GENERATION_EQ, 1 >
- Handle<Object> Generation_Policy();
+ Handle<Object> generationPolicy();
 
-//Exposes Exists  Policy in C to nodejs application as a map <String,Int>
+//Exposes Exists  Policy in C to node.js application as a map <String,Int>
 //Eg < AS_POLICY_EXISTS_IGNORE, 1 >
- Handle<Object> Exists_Policy();
+ Handle<Object> existsPolicy();
 
-// Exposes as_operator in C to nodejs application as a map <String, Int>
+// Exposes as_operator in C to node.js application as a map <String, Int>
 // Eg < AS_OPERATOR_WRITE, 0 >
- Handle<Object> Operators_Enum();
+ Handle<Object> operatorsEnum();
+
+//Exposes as_log_level in C to node.js application as a map <String, Int>
+// Eg < AS_LOG_LEVEL_INFO, 0 >
+Handle<Object> logLevel();

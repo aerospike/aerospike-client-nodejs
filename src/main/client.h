@@ -53,6 +53,7 @@ class AerospikeClient : public ObjectWrap {
 
 		static Persistent<Function> constructor;
 		static Handle<Value> New(const Arguments& args);
+		static Persistent<Function> log_callback;
 
 		/***********************************************************************
 		 *	CLIENT OPERATIONS
@@ -74,6 +75,11 @@ class AerospikeClient : public ObjectWrap {
 		static Handle<Value> Get(const Arguments& args);	
 
 		/**
+		 *	undefined client.exists(Key, function(Error, exists))
+		 */
+		static Handle<Value> Exists(const Arguments& args);	
+
+		/**
 		 *	undefined client.put(Key, Record, function(Error))
 		 */
 		static Handle<Value> Put(const Arguments& args);
@@ -92,6 +98,11 @@ class AerospikeClient : public ObjectWrap {
  		 * 	undefined client.batch_get(Key[],function(Error,Record))
 		 */
 		static Handle<Value> Batch_Get(const Arguments& args);
+
+		/**
+ 		 * 	undefined client.batch_get(Key[],function(Error,Record))
+		 */
+		static Handle<Value> Batch_Exists(const Arguments& args);
 		
 		/**
  		 *	undefined client.batch_select(Key[],bins,function(Error,Record))

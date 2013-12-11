@@ -128,9 +128,48 @@ int config_from_jsobject(as_config * config, Local<Object> obj)
 
 		}
 	}
-	return AS_NODE_PARAM_OK;
+		return AS_NODE_PARAM_OK;
+}
+bool v8_log_callback(as_log_level level, const char* func, const char* file, uint32_t line, const char* fmt, ...)
+{
+	return true;
 }
 
+int log_from_jsobject( as_log* log, Local<Object> obj)
+{
+	if (obj->Has(String::NewSymbol("log"))){
+		Local<Value> log_val = obj->Get(String::NewSymbol("log"));
+		if ( log_val->IsObject() ){
+			Local<Object> v8_log         = log_val->ToObject();
+			if (v8_log->Has(String::New("level"))) {
+				Local<Value> v8_log_level    = v8_log->Get(String::NewSymbol("level"));
+				if ( v8_log_level->IsNumber()){
+					as_log_level log_level = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
+					if(as_log_set_level(log,  log_level) != true) {
+						return AS_NODE_PARAM_ERR;
+					}
+				} else {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if (v8_log->Has(String::New("callback"))) {
+				Local<Value> callback_val = v8_log->Get(String::NewSymbol("callback"));	
+				if ( callback_val->IsFunction()){
+					if( as_log_set_callback(log, v8_log_callback) != true) {
+						return AS_NODE_PARAM_ERR;
+					}
+				} else {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+		}else {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+
+	return AS_NODE_PARAM_OK;
+
+}
 #if 0
 // Add the element to the list.
 void AddElement(llist **list, void * element)
@@ -996,5 +1035,4 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr)
 		}
 	}
 	return AS_NODE_PARAM_OK;
-
 }

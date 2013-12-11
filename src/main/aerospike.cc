@@ -71,10 +71,10 @@ Handle<Object> GetAllPolicy() {
 	HandleScope scope;
 	Handle<Object> obj = Object::New();
 
-	obj->Set(String::NewSymbol("Key"), Key_Policy());
-	obj->Set(String::NewSymbol("Retry"), Retry_Policy());
-	obj->Set(String::NewSymbol("Generation"), Generation_Policy());
-	obj->Set(String::NewSymbol("Exists"), Exists_Policy());
+	obj->Set(String::NewSymbol("Key"), keyPolicy());
+	obj->Set(String::NewSymbol("Retry"), retryPolicy());
+	obj->Set(String::NewSymbol("Generation"), generationPolicy());
+	obj->Set(String::NewSymbol("Exists"), existsPolicy());
 
 	return scope.Close(obj);
 }
@@ -88,9 +88,10 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 
 	exports->Set(String::NewSymbol("client"), FunctionTemplate::New(Client)->GetFunction());
 	exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
-	exports->Set(String::NewSymbol("Status"), Error_Codes());
+	exports->Set(String::NewSymbol("Status"), errorCodes());
 	exports->Set(String::NewSymbol("Policy"),GetAllPolicy());
-	exports->Set(String::NewSymbol("Operators"), Operators_Enum());
+	exports->Set(String::NewSymbol("Operators"), operatorsEnum());
+	exports->Set(String::NewSymbol("Log"), logLevel());
 }
 
 NODE_MODULE(aerospike, Aerospike)

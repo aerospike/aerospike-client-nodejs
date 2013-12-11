@@ -7,7 +7,7 @@ using namespace v8;
  */
 
 
-Handle<Object> Operators_Enum() 
+Handle<Object> operatorsEnum() 
 {
 	HandleScope scope;
 
