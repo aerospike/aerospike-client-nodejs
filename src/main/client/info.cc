@@ -109,7 +109,6 @@ static void * prepare(const Arguments& args)
 	if ( args[INFO_ARG_POS_HOST]->IsString()) {
 		(*addr) =  (char*) malloc(HOST_ADDRESS_SIZE);
 		strcpy( *addr, *String::Utf8Value(args[INFO_ARG_POS_HOST]->ToString()));
-		printf("addr %s \n", *addr);
 	} else {
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
@@ -117,7 +116,6 @@ static void * prepare(const Arguments& args)
 
 	if ( args[INFO_ARG_POS_PORT]->IsNumber() ) {
 		(*port) = V8INTEGER_TO_CINTEGER(args[INFO_ARG_POS_PORT]);	
-		printf("port %d \n", *port);
 	} else {
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
@@ -126,7 +124,6 @@ static void * prepare(const Arguments& args)
 	if ( args[INFO_ARG_POS_REQ]->IsString()) {
 		data->req = (char*) malloc( INFO_REQUEST_LEN);
 		strcpy( data->req, *String::Utf8Value(args[INFO_ARG_POS_REQ]->ToString()));
-		printf("Request %s \n", data->req);
 	}
 	if ( arglength > 4 ) {
 		if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
@@ -193,15 +190,14 @@ static void respond(uv_work_t * req, int status)
 	// Fetch the AsyncData structure
 	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
 	as_error *	err		= &data->err;
-	printf("response %s \n", data->res);
-	char * response     = NULL;
+	char * response     = data->res;
 	Handle<Value> argv[2];
 	// Build the arguments array for the callback
 	if (data->param_err == 0) {
 		argv[0]			   = error_to_jsobject(err);
 		Handle<Object> obj = Object::New();
 		if ( response != NULL && strlen(response) > 0 )	{
-			obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)response));
+			obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)data->res));
 			argv[1]			   = obj;
 		} else {
 			argv[1] = Null();
@@ -218,7 +214,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Execute the callback.
 	if ( data->callback != Null() ) {
-		data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+		data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
 	}
 
 	// Process the exception, if any

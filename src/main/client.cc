@@ -75,6 +75,7 @@ void AerospikeClient::Init()
 	cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
 
@@ -135,5 +136,5 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
 		client->as.cluster = NULL;
 	}
 
-    return scope.Close(args.This());
+    return scope.Close(client->handle_);
 }

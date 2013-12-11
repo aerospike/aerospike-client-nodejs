@@ -79,6 +79,55 @@ int config_from_jsobject(as_config * config, Local<Object> obj)
 	else{
 		return AS_NODE_PARAM_ERR;
 	}
+
+	if ( obj->Has(String::NewSymbol("policies"))){
+
+		Local<Value> policy_val = obj->Get(String::NewSymbol("policies"));
+
+		if ( policy_val->IsObject() ){
+			Local<Object> policies = policy_val->ToObject();
+			if ( policies->Has(String::NewSymbol("read") )){
+				Local<Value> readpolicy = policies->Get(String::NewSymbol("read"));
+				if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject())  != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if ( policies->Has(String::NewSymbol("write"))){
+				Local<Value> writepolicy = policies->Get(String::NewSymbol("write"));
+				if( writepolicy_from_jsobject(&config->policies.write, writepolicy->ToObject()) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if ( policies->Has(String::NewSymbol("remove"))){
+				Local<Value> removepolicy = policies->Get(String::NewSymbol("remove"));
+				if( removepolicy_from_jsobject(&config->policies.remove, removepolicy->ToObject()) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if ( policies->Has(String::NewSymbol("batch"))){
+				Local<Value> batchpolicy = policies->Get(String::NewSymbol("batch"));
+				if( batchpolicy_from_jsobject(&config->policies.batch, batchpolicy->ToObject()) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if ( policies->Has(String::NewSymbol("operate"))){
+				Local<Value> operatepolicy = policies->Get(String::NewSymbol("operate"));
+				if( operatepolicy_from_jsobject(&config->policies.operate, operatepolicy->ToObject()) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if ( policies->Has(String::NewSymbol("info"))){
+				Local<Value> infopolicy = policies->Get(String::NewSymbol("info"));
+				if( infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject()) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+
+
+
+
+		}
+	}
 	return AS_NODE_PARAM_OK;
 }
 
