@@ -40,10 +40,9 @@ for (var i = 0 ;i < n; i++) {
 	  for(i=0; i<num; i++) {
 		if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
 			console.log(rec_list[i].recstatus)
-			}
-		console.log(rec_list[i].record.meta);
 		}
-	}else {
+	  }
+	} else {
 		console.log("Error")
 		console.log(err.message)
 	}

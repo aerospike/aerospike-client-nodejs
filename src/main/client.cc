@@ -88,17 +88,22 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 {
     HandleScope scope;
 
-    as_config config;
-    as_config_init(&config);
-
-
-	if (args[0]->IsObject() ) {
-		config_from_jsobject(&config, args[0]->ToObject());	
-	}
-
     AerospikeClient * client = new AerospikeClient();
 
+    as_config config;
+    as_config_init(&config);
+	
+	if(args[0]->IsObject()) {
+		log_from_jsobject( &client->log, args[0]->ToObject());
+	}
+	
+	if (args[0]->IsObject() ) {
+		config_from_jsobject(&config, args[0]->ToObject(), &client->log);	
+	}
+
     aerospike_init(&client->as, &config);
+
+	as_v8_debug(&client->log, "Aerospike object initialization : success");
 
     client->Wrap(args.This());
 
@@ -110,7 +115,7 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
  */
 Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
 {
-    HandleScope scope;
+  HandleScope scope;
 
   const unsigned argc = 1;
 
@@ -136,7 +141,10 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
 
 	if (err.code != AEROSPIKE_OK) {
 		client->as.cluster = NULL;
+		as_v8_error(&client->log, "Connecting to Cluster Failed");
 	}
+
+	as_v8_debug(&client->log, "Connecting to Cluster: Success");
 
     return scope.Close(client->handle_);
 }

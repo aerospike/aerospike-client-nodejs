@@ -58,6 +58,7 @@ typedef struct AsyncData {
 	as_key key;
 	as_record rec;
 	as_policy_read policy;
+	AerospikeClient * client;
 	Persistent<Function> callback;
 } AsyncData;
 
@@ -81,6 +82,9 @@ static void * prepare(const Arguments& args)
 	// Build the async data
 	AsyncData *	data = new AsyncData;
 	data->as = &client->as;
+	data->client = client;
+
+	LogInfo * log = &client->log;
 
 	data->param_err = 0;
 	// Local variables
@@ -92,32 +96,39 @@ static void * prepare(const Arguments& args)
 
 	if ( args[arglength-1]->IsFunction()) {
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+		as_v8_detail(log, "Node.js callback registered");
 	} else {
+		as_v8_error(log, "No callback to register");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
 
 	if ( args[GET_ARG_POS_KEY]->IsObject() ) {
-		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+			as_v8_error(log, "Parsing of key (C structure) from key object failed");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 			goto Err_Return;
 		}
 	}
 	else {
+		as_v8_error(log, "Key should be an object");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
 	if ( arglength > 2 ) {
 		if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
-			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Parsing of readpolicy from object failed");
 				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 				goto Err_Return;
 			}
 		}else {
+			as_v8_error(log, "Readpolicy should be an object");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 			goto Err_Return;
 		}
 	} else {
+		as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
 		as_policy_read_init(policy);
 	}
 
@@ -147,16 +158,22 @@ static void execute(uv_work_t * req)
 	as_key *	key			= &data->key;
 	as_record *	rec			= &data->rec;
 	as_policy_read* policy	= &data->policy;
+	AerospikeClient* client = data->client;
+
+	LogInfo * log			= &client->log;
 
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
+		as_v8_error(log, "Not connected to Cluster to perform the operation");
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
 	if ( data->param_err == 0 ) {
+		as_v8_debug(log, "Invoking get with ");
+		DEBUG(log, _KEY,  key);
 		aerospike_key_get(as, err, policy, key, &rec);	
 	}
 
@@ -181,19 +198,28 @@ static void respond(uv_work_t * req, int status)
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
 	as_record *	rec			= &data->rec;
+	AerospikeClient* client = data->client;
+	LogInfo * log = &client->log;
+	as_v8_debug(log, "Get operations' the response is");
+	DEBUG(log, ERROR, err);
+	
 	int nargs=4;
 	Handle<Value> argv[nargs];
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
-		argv[0] = error_to_jsobject(err),
-			argv[1] = recordbins_to_jsobject(rec ),
-			argv[2] = recordmeta_to_jsobject(rec),
-			argv[3] = key_to_jsobject(key);
+		DETAIL(log,  BINS, rec); 
+		DETAIL(log,  META, rec);
+		DETAIL(log, _KEY,  key); 
 
+		argv[0] = error_to_jsobject(err, log),
+		argv[1] = recordbins_to_jsobject(rec, log ),
+		argv[2] = recordmeta_to_jsobject(rec, log),
+		argv[3] = key_to_jsobject(key, log);
 	}
 	else {
 		err->func = NULL;
-		argv[0] = error_to_jsobject(err);
+		as_v8_debug(log, "Parameter error while parsing the arguments");
+		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Null();
 		argv[2] = Null();
 		argv[3] = Null();
@@ -203,7 +229,10 @@ static void respond(uv_work_t * req, int status)
 	TryCatch try_catch;
 
 	// Execute the callback.
-	data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
+	if ( data->callback != Null()) {
+		data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
+		as_v8_debug(log, "Invoked Get callback");
+	}
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
@@ -219,6 +248,7 @@ static void respond(uv_work_t * req, int status)
 	if( data->param_err == 0) {	
 		as_key_destroy(key);
 		as_record_destroy(rec);
+		as_v8_debug(log, "Cleaned up the structures");
 	}
 
 	delete data;

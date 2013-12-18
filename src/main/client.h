@@ -27,9 +27,10 @@ extern "C" {
 }
 
 #include <node.h>
-
+#include "util/log.h"
 using namespace node;
 using namespace v8;
+
 
 /*******************************************************************************
  *  CLASS
@@ -46,14 +47,14 @@ class AerospikeClient : public ObjectWrap {
 		static Handle<Value> NewInstance(const Arguments& args);
 
 		aerospike as;
+		LogInfo log;
 	private:
-		
+
 		AerospikeClient();
 		~AerospikeClient();
 
 		static Persistent<Function> constructor;
 		static Handle<Value> New(const Arguments& args);
-		static Persistent<Function> log_callback;
 
 		/***********************************************************************
 		 *	CLIENT OPERATIONS

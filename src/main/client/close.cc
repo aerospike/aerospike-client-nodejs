@@ -51,8 +51,11 @@ Handle<Value> AerospikeClient::Close(const Arguments& args)
 
 	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 	as_error err;
+	as_v8_debug(&client->log, "Closing the connection to aerospike cluster");
 	aerospike_close( &client->as, &err);
+	as_v8_debug(&client->log, "Destroying aeropsike object");
 	aerospike_destroy( &client->as);
+	as_v8_debug(&client->log,"Tata bbye from Node.js API");
 
     return scope.Close(Undefined());
 }

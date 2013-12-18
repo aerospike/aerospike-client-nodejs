@@ -56,8 +56,9 @@ typedef struct AsyncData {
 	aerospike * as;
 	as_error err;
 	as_key key;
-	bool exists;
+	as_record *rec;
 	as_policy_read policy;
+	AerospikeClient *client;
 	Persistent<Function> callback;
 } AsyncData;
 
@@ -80,43 +81,53 @@ static void * prepare(const Arguments& args)
 
 	// Build the async data
 	AsyncData *	data = new AsyncData;
-	data->as = &client->as;
+	data->as		 = &client->as;
+	data->client	 = client;
+	data->param_err  = 0;
+	data->rec		 = NULL;
 
-	data->param_err = 0;
 	// Local variables
 	as_key *	key			= &data->key;
 	as_policy_read* policy	= &data->policy;
 
+	LogInfo * log = &client->log;
 	int arglength = args.Length();
 
 	if ( args[arglength-1]->IsFunction()) {
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+		as_v8_detail(log, "Node.js callback registered");
 	} else {
+		as_v8_error(log, "No callback to register");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
 
 	if ( args[GET_ARG_POS_KEY]->IsObject() ) {
-		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+			as_v8_error(log, "Parsing of key (C structure) from key object failed");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 			goto Err_Return;
 		}
 	}
 	else {
+		as_v8_error(log, "Key should be an object");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 		goto Err_Return;
 	}
 	if ( arglength > 2 ) {
 		if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
-			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+			if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+				 as_v8_error(log, "Parsing of readpolicy from object failed");
 				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 				goto Err_Return;
 			}
 		}else {
+			as_v8_error(log, "Readpolicy should be an object");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 			goto Err_Return;
 		}
 	} else {
+		as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
 		as_policy_read_init(policy);
 	}
 
@@ -141,19 +152,22 @@ static void execute(uv_work_t * req)
 	aerospike *	as			= data->as;
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
-	bool * exists           = &data->exists;
+	as_record * rec			= data->rec;
 	as_policy_read* policy	= &data->policy;
-
+	LogInfo * log			= &data->client->log;
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
+		as_v8_error(log, "Not connected to Cluster to perform the operation");
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
 	if ( data->param_err == 0 ) {
-		aerospike_key_exists(as, err, policy, key, exists);	
+		as_v8_debug(log, "Invoking aerospike exists");
+		DEBUG(log, _KEY,  key);
+		aerospike_key_exists(as, err, policy, key, &rec);	
 	}
 
 }
@@ -176,18 +190,35 @@ static void respond(uv_work_t * req, int status)
 
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
+	as_record *	rec			= data->rec;
 	int nargs				= 3;
+	LogInfo * log			= &data->client->log;
+
 	Handle<Value> argv[nargs];
+
+	as_v8_debug(log, "Exists operation : the response is");
+	DEBUG(log, ERROR, err);
+
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
-		argv[0] = error_to_jsobject(err),
-		argv[1] = Boolean::New(data->exists);
-		argv[2] = key_to_jsobject(key);
+
+		DEBUG(log, _KEY,  key);
+
+		argv[0] = error_to_jsobject(err, log);
+		if ( rec != NULL) {
+			argv[1] = recordmeta_to_jsobject(rec, log);
+			DETAIL(log, META, rec);
+		} else {
+			argv[1] = Null();
+			as_v8_debug(log, "Record not found in the DB");
+		}
+		argv[2] = key_to_jsobject(key, log);
 
 	}
 	else {
 		err->func = NULL;
-		argv[0] = error_to_jsobject(err);
+		as_v8_debug(log, "Parameter error while parsing the arguments");
+		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Null();
 		argv[2] = Null();
 	}
@@ -203,6 +234,7 @@ static void respond(uv_work_t * req, int status)
 		node::FatalException(try_catch);
 	}
 
+	as_v8_debug(log, "Invoked exists callback");
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
 	data->callback.Dispose();
@@ -211,6 +243,7 @@ static void respond(uv_work_t * req, int status)
 
 	if( data->param_err == 0) {	
 		as_key_destroy(key);
+		as_v8_debug(log, "Cleaned up the structures");
 	}
 
 	delete data;

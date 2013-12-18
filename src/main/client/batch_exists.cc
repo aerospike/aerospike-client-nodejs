@@ -60,7 +60,8 @@ typedef struct AsyncData {
 	as_error err;
 	as_policy_batch policy;
 	as_batch batch; 	     // Passed as input to aerospike_batch_get
-	as_batch_read  *results; // Results from a aerospike_batch_get operation
+	as_batch_read  *results;// Results from a aerospike_batch_get operation
+	AerospikeClient * client;
 	uint32_t n;
 	Persistent<Function> callback;
 } AsyncData;
@@ -75,25 +76,32 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
 {
 	// Fetch the AsyncData structure
 	AsyncData *     data    = reinterpret_cast<AsyncData *>(udata);
+	LogInfo * log			= &data->client->log;
 	//copy the batch result to the shared data structure AsyncData,
 	//so that response can send it back to nodejs layer
 	//as_batch_read  *batch_result = &data->results;
 	if( results != NULL ) {
+		as_v8_debug(log, "Bridge callback invoked in V8 for a batch request of %d records", n); 
 		data->n = n;
 		data->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
 		for ( uint32_t i = 0; i < n; i++ ) {
 			data->results[i].result = results[i].result; 
 			if (results[i].result == AEROSPIKE_OK) {			
 				as_record * rec = NULL;
-				rec = &data->results[i].record;
-				//as_record_init(rec, results[i].record.bins.size);
-				key_clone(results[i].key, (as_key**) &data->results[i].key); 
-				record_clone(&results[i].record, &rec);
+				rec = &data->results[i].record;	
+				as_key *key = (as_key*) results[i].key;
+				as_record *record = (as_record*) &results[i].record;
+				as_v8_debug(log, "record[%d]", i);
+				DETAIL(log, META, record);
+				DETAIL(log, _KEY, key);
+				key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
+				record_clone(&results[i].record, &rec, log);
 			} 
 		}
 		return true;
 	}
 	else {
+		as_v8_info(log, "Brigde callback in v8 for batch called with no batch results");
 		data->n = 0;
 		data->results = NULL;
 	}
@@ -118,6 +126,8 @@ static void * prepare(const Arguments& args)
 	data->node_err = 0;
 	data->n = 0;
 	data->results = NULL;
+	data->client = client;
+	LogInfo * log = &client->log;
 
 	// Local variables
 	as_batch * batch = &data->batch;
@@ -127,19 +137,23 @@ static void * prepare(const Arguments& args)
 
 	if ( args[arglength-1]->IsFunction()) { 
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));	
+		as_v8_detail(log, "batch_exists callback registered");
 	} else {
+		as_v8_error(log, "Arglist must contain a callback function");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
 		Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
-		if( batch_from_jsarray(batch, keys) != AS_NODE_PARAM_OK) {
+		if( batch_from_jsarray(batch, keys, log) != AS_NODE_PARAM_OK) {
+			as_v8_debug(log, "parsing batch keys failed");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	}
 	else {
+		as_v8_debug(log, "Batch key must be an array of key objects");
 		//Parameter passed is not an array of Key Objects "ERROR..!"
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
@@ -147,15 +161,18 @@ static void * prepare(const Arguments& args)
 
 	if (arglength > 2 ) {
 		if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
-			if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject()) != AS_NODE_PARAM_OK) {
+			if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Parsing batch policy failed");
 				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
 			}
 		}else {
+			as_v8_error(log, "Batch policy must be an object");
 			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	} else {
+		as_v8_detail(log, "Arglist does not contain batch policy, using default values");
 		as_policy_batch_init(policy);
 	}
 
@@ -181,16 +198,20 @@ static void execute(uv_work_t * req)
 	as_error  *     err     = &data->err;
 	as_batch  * 	batch   = &data->batch;
 	as_policy_batch * policy= &data->policy;
+	LogInfo *		log		= &data->client->log;
 
 	if( as->cluster == NULL) {
+		as_v8_debug(log, "Cluster Object is NULL, can't perform the operation");
 		data->node_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 	// Invoke the blocking call.
 	// Check for no parameter errors from Nodejs 
 	if( data->node_err == 0) {
+		as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
 		aerospike_batch_exists(as, err, policy, batch, batch_exists_callback, (void*) req->data);
 		if( err->code != AEROSPIKE_OK) {
+			DEBUG(log, ERROR, err);
 			data->results = NULL;
 			data->n = 0;
 		}
@@ -219,6 +240,8 @@ static void respond(uv_work_t * req, int status)
 	uint32_t num_rec = data->n;
 	as_batch_read* batch_results = data->results;
 
+	LogInfo * log = &data->client->log;
+
 	// maintain a linked list of pointers to be freed after the nodejs callback is called
 	// Buffer object is not garbage collected by v8 gc. Have to delete explicitly 
 	// to avoid memory leak.
@@ -227,16 +250,19 @@ static void respond(uv_work_t * req, int status)
 	int num_args = 2;
 	Handle<Value> argv[num_args] ;
 	Handle<Array> arr;
+	as_v8_debug(log, "The response for Batch Exists ");
+	DEBUG(log, ERROR, err);
+	int rec_found = 0;
 	if(data->node_err == 1) {
 		// Sets the err->code and err->message in the 'err' variable
 		err->func = NULL;
 		err->line = NULL;
 		err->file = NULL;
-		argv[0] = error_to_jsobject(err);
+		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Null();
 		argv[2] = Null();
 	}else if (num_rec == 0 || batch_results == NULL) {
-		argv[0] = error_to_jsobject(err);
+		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Null();
 		argv[2] = Null();
 	}
@@ -246,14 +272,19 @@ static void respond(uv_work_t * req, int status)
 			Handle<Object> obj = Object::New();
 			obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
 			if(batch_results[i].result == AEROSPIKE_OK) {	
-				obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key ));
+				obj->Set(String::NewSymbol("meta"),recordmeta_to_jsobject( &batch_results[i].record, log ));
+				obj->Set(String::NewSymbol("key"),key_to_jsobject( batch_results[i].key, log ));
 				as_key_destroy((as_key*) batch_results[i].key);
 				as_record_destroy(&batch_results[i].record);
+				rec_found++;
 			}
-
+			else {
+				as_v8_debug(log, "Record[%d] not returned by server ", i);
+			}
 			arr->Set(i,obj);
 		}
-		argv[0] = error_to_jsobject(err);
+		as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
+		argv[0] = error_to_jsobject(err, log);
 		argv[1] = arr;	
 	}
 
@@ -262,6 +293,8 @@ static void respond(uv_work_t * req, int status)
 
 	// Execute the callback.
 	data->callback->Call(Context::GetCurrent()->Global(), num_args, argv);
+
+	as_v8_debug(log,"Invoked the callback");
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
@@ -280,7 +313,8 @@ static void respond(uv_work_t * req, int status)
 		free(batch_results);
 	}
 
-	
+
+	as_v8_debug(log, "Cleaned up the resources");
 	delete data;
 	delete req;
 	scope.Close(Undefined());

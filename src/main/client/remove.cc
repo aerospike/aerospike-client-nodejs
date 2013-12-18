@@ -60,6 +60,7 @@ typedef struct AsyncData {
 	as_key key;
 	as_policy_remove policy;
 	Persistent<Function> callback;
+	AerospikeClient * client;
 } AsyncData;
 
 /*******************************************************************************
@@ -82,41 +83,49 @@ static void * prepare(const Arguments& args)
 	// Build the async data
 	AsyncData *	data = new AsyncData;
 	data->as = &client->as;
-
+	data->client = client;
 	data->param_err = 0;
 	// Local variables
 	as_key *	key = &data->key;
-
+	LogInfo * log  = &client->log;
+	
 	as_policy_remove * policy = &data->policy;
 	int arglength = args.Length();
 	if ( args[arglength-1]->IsFunction() ){
 		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+		as_v8_detail(log, "Node.js callback registered");
 	} else {
+		as_v8_error(log, "No callback to register");
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 	if ( args[ REMOVE_ARG_POS_KEY ]->IsObject() ) {
-		if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject()) != AS_NODE_PARAM_OK ) {
+		if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+			 as_v8_error(log, "Parsing of key (C structure) from key object failed");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	}
 	else {
+		as_v8_error(log, "Key should be an object");
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 		goto Err_Return;
 	}
 
 	if ( arglength > 2 ) {
 		if ( args[REMOVE_ARG_POS_WPOLICY]->IsObject() ) {
-			if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject() ) != AS_NODE_PARAM_OK) {
+			if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject(), log ) != AS_NODE_PARAM_OK) {
+				 as_v8_error(log, "Parsing of removepolicy from object failed");
 				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
 			}
 		} else {
+			as_v8_error(log, "Removepolicy should be an object");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
 	} else {
+		   as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
 		as_policy_remove_init(policy);
 	}
 
@@ -142,16 +151,18 @@ static void execute(uv_work_t * req)
 	as_error *	err	= &data->err;
 	as_key *	key	= &data->key;
 	as_policy_remove * policy = &data->policy;	
-
+	LogInfo  * log	= &data->client->log;
 
 	// Invoke the blocking call.
 	// The error is handled in the calling JS code.
 	if (as->cluster == NULL) {
+		as_v8_error(log, "Not connected to Cluster to perform the operation");
 		data->param_err = 1;
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 	}
 
 	if ( data->param_err == 0) {
+		DEBUG(log, _KEY,  key);
 		aerospike_key_remove(as, err, policy, key);	
 	}
 
@@ -175,20 +186,26 @@ static void respond(uv_work_t * req, int status)
 
 	as_error *	err		= &data->err;
 	as_key *	key		= &data->key;
+	LogInfo * log		= &data->client->log;
+
+	DEBUG(log, ERROR, err);
 
 	int nargs=2;
 	Handle<Value> argv[nargs];
 	// Build the arguments array for the callback
 	if( data->param_err == 0) {	
-		argv[0] = error_to_jsobject(err),
-			argv[1] = key_to_jsobject(key);
+		as_v8_debug(log, "Delete operation succeeded for the key");
+		DEBUG(log, _KEY,  key);
+		argv[0] = error_to_jsobject(err, log),
+		argv[1] = key_to_jsobject(key, log);
 
 	}
 	else {
 		err->func = NULL;
 		err->line = NULL;
 		err->file = NULL;
-		argv[0] = error_to_jsobject(err);
+		argv[0] = error_to_jsobject(err, log);
+		as_v8_debug(log, "Parameter error while parsing the arguments");
 		argv[1] = Null();
 	}
 
@@ -198,6 +215,7 @@ static void respond(uv_work_t * req, int status)
 	// Execute the callback.
 	data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
 
+	as_v8_debug(log, "Invoked remove callback");
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
 		node::FatalException(try_catch);
@@ -211,6 +229,7 @@ static void respond(uv_work_t * req, int status)
 
 	if( data->param_err == 0) {	
 		as_key_destroy(key);
+		as_v8_debug(log, "Cleaned up the structures");
 	}
 	delete data;
 	delete req;

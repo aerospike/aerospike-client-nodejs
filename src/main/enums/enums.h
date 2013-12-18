@@ -3,6 +3,16 @@
 #include <node.h>
 using namespace v8;
 
+static const char * log_severity_strings[]= { "ERROR", "WARN", "INFO", "DEBUG", "DETAIL"};
+
+static const char * KEY[] = {"UNDEF", "DIGEST", "SEND"};
+
+static const char * RETRY[] = {"UNDEF", "NONE", "ONCE"};
+
+static const char * GENERATION[] = {"UNDEF", "IGNORE", "EQ", "GT", "DUP" };
+
+static const char * EXISTS[] = { "UNDEF", "IGNORE", "CREATE", "UPDATE" };
+
 /**********************************************************
  * FUNCTIONS
  **********************************************************/
