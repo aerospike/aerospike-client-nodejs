@@ -94,7 +94,11 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     as_config_init(&config);
 	
 	if(args[0]->IsObject()) {
-		log_from_jsobject( &client->log, args[0]->ToObject());
+		if (log_from_jsobject( &client->log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
+			LogInfo* log = &client->log;
+			log->fd = 2;
+			log->severity = AS_LOG_LEVEL_INFO;
+		}
 	}
 	
 	if (args[0]->IsObject() ) {

@@ -1,7 +1,19 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
 
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
+
 ParseConfig(params);
 
 function GetOperatePolicy()
@@ -42,10 +54,8 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
 
-describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'PREPEND STRING OPERATION  TEST', function() {
 		var  m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -73,10 +83,8 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
 
-describe( 'OPERATE FUNCTIONALITY', function() {
 	it( 'APPEND STRING OPERATION  TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -104,10 +112,8 @@ describe( 'OPERATE FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
 
-describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'TOUCH OPERATION  TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -139,10 +145,8 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
 
-describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'READ OPERATION  TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -170,9 +174,7 @@ describe ( 'OPERATE FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
-describe ( 'OPERATE FUNCTIONALITY', function() {
 	it( 'WRITE OPERATION  TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {

@@ -56,7 +56,7 @@ typedef struct AsyncData {
 	aerospike * as;
 	as_error err;
 	as_key key;
-	as_record *rec;
+	as_record rec;
 	as_policy_read policy;
 	AerospikeClient *client;
 	Persistent<Function> callback;
@@ -84,7 +84,8 @@ static void * prepare(const Arguments& args)
 	data->as		 = &client->as;
 	data->client	 = client;
 	data->param_err  = 0;
-	data->rec		 = NULL;
+	as_record * rec  = &data->rec;
+	rec              = NULL;
 
 	// Local variables
 	as_key *	key			= &data->key;
@@ -152,7 +153,7 @@ static void execute(uv_work_t * req)
 	aerospike *	as			= data->as;
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
-	as_record * rec			= data->rec;
+	as_record * rec			= &data->rec;
 	as_policy_read* policy	= &data->policy;
 	LogInfo * log			= &data->client->log;
 
@@ -190,7 +191,7 @@ static void respond(uv_work_t * req, int status)
 
 	as_error *	err			= &data->err;
 	as_key *	key			= &data->key;
-	as_record *	rec			= data->rec;
+	as_record *	rec			= &data->rec;
 	int nargs				= 3;
 	LogInfo * log			= &data->client->log;
 
@@ -205,7 +206,8 @@ static void respond(uv_work_t * req, int status)
 		DEBUG(log, _KEY,  key);
 
 		argv[0] = error_to_jsobject(err, log);
-		if ( rec != NULL) {
+		if ( rec != NULL && rec->gen != 0 ) {
+			as_v8_debug(log, "Record found");
 			argv[1] = recordmeta_to_jsobject(rec, log);
 			DETAIL(log, META, rec);
 		} else {

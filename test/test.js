@@ -1,22 +1,16 @@
-var assert = require('assert');
-var request = require('superagent');
-var expect = require('expect.js');
-var aerospike = require('aerospike');
-var msgpack = require('msgpack');
-var return_code = aerospike.Status;
-var Policy = aerospike.Policy;
-var Operator = aerospike.Operators;
-var con = require('./config');
+var aerospike = require('aerospike')
+var con = require('./config')
+var msgpack = require('msgpack')
 
-/*var config = { 
-		hosts:[{ addr:"127.0.0.1",port : 3000 }
-		]}  */
+var n = con.config.nops
+
 var config = { 
 	hosts: [{addr:con.config.host, port : con.config.port}
 	]}
-var client = aerospike.client(config);
-client.connect()
-var n = con.config.nops;
+var client = aerospike.client(config).connect();
+
+exports.n = n
+exports.client = client
 
 function CleanRecords( str )
 {
@@ -40,10 +34,10 @@ function GetRecord(i)
 
 function ParseConfig( param )
 {
-	console.log(con);
 	param.ns = con.config.namespace;
 	param.set = con.config.set;
 }
+
 exports.CleanRecords = CleanRecords;
 exports.GetRecord = GetRecord;
 exports.ParseConfig = ParseConfig;

@@ -1,7 +1,18 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
 
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
 
 ParseConfig(params);
 
@@ -38,9 +49,7 @@ describe( 'REMOVE FUNCTIONALITY', function() {
 		});
 	}
 	});
-});
 
-describe( 'REMOVE FUNCTIONALITY', function() {
 	it( 'REMOVE TEST WITH REMOVE POLICY', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {

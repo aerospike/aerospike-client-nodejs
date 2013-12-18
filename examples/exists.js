@@ -7,7 +7,6 @@ var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config).connect()
 
-console.log(client);
 
 
 var n = env.nops
@@ -30,13 +29,13 @@ for (var i = 0; i < n; i++ ) {
   }
 
   // This function gets the complete record with all the bins. 
-  client.exists(k1, function(err, exists) {
+  client.exists(k1, function(err, meta) {
     if ( err.code != status.AEROSPIKE_OK ) {
       // Error code AEROSPIKE_OK signifies successful retrieval
       // of the record
       console.log("error %s",err.message)
     }
-	console.log(exists);
+	console.log(meta)
     if ( (++m) == n ) {
       console.timeEnd(n + " get")
     }

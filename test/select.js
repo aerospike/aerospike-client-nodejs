@@ -1,7 +1,18 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
 
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
 
 ParseConfig(params);
 
@@ -36,9 +47,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 		});
 	}
 	});
-});
 
-describe( 'SELECT FUNCTIONALITY', function() {
 	it( 'SELECT TEST WITH READ POLICY', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -55,7 +64,7 @@ describe( 'SELECT FUNCTIONALITY', function() {
 				expect(bins.string_bin).to.equal(ind);
 				expect(bins.integer_bin).to.equal(parseInt(ind));
 				if ( ++m == n) {
-					console.log("GET TEST WITH READ POLICY SUCCESS");
+					console.log("SELECT TEST WITH READ POLICY SUCCESS");
 					CleanRecords('READPOLICY');
 				}
 			});

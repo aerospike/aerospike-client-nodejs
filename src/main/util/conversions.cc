@@ -170,7 +170,7 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj )
 		}
 	}
 
-	return AS_NODE_PARAM_OK;
+	return AS_NODE_PARAM_ERR;
 
 }
 #if 0

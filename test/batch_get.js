@@ -1,7 +1,19 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var assert = require('assert');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
 
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
 
 ParseConfig(params);
 
@@ -43,6 +55,7 @@ describe( 'BATCH-GET FUNCTION', function() {
 					expect(obj.array).to.eql([1,2,3]);
 					if ( ++m == n ) {
 						n = 4*n;
+						console.log("BATCH GET SUCCESS")
 						CleanRecords('BATCHGET');
 					}
 				}

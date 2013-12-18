@@ -1,6 +1,18 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
+
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
 
 ParseConfig(params);
 
@@ -33,10 +45,8 @@ describe ( 'PUT FUNCTIONALITY', function() {
 			});
 		}
 	});
-});
 
 //Expected to pass
-describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- SHOULD SUCCEED', function() {
 		var recGen = 0;
 		var m = 0;
@@ -65,10 +75,9 @@ describe('WRITE POLICY TEST', function() {
 			});
 		}
 	});
-});
+//});
 
 //Expected to fail
-describe('WRITE POLICY TEST', function() {
 	it(' GENERATION EQUALITY -- NEGATIVE', function() {
 		var recGen = 0;
 		var m = 0;
@@ -98,10 +107,9 @@ describe('WRITE POLICY TEST', function() {
 			});
 		}
 	});
-});
+//});
 
 // better way to test timeout error
-describe('WRITE POLICY TEST', function() {
 	it ('WRITE POLICY TEST -- TEST FOR TIMEOUT ERROR ', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -125,11 +133,9 @@ describe('WRITE POLICY TEST', function() {
 			});
 		}
 	});
-});
 
 
 //Expected to pass
-describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE-- SHOULD SUCCEED', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -148,11 +154,10 @@ describe('WRITE POLICY TEST', function() {
 			});
 		}
 	});
-});
+//});
 
 //Expected to fail
 
-describe('WRITE POLICY TEST', function() {
 	it(' EXISTS POLICY  CREATE -- NEGATIVE TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -175,14 +180,12 @@ describe('WRITE POLICY TEST', function() {
 			});
 		}
 	});
-});
 
 
 //Expected to fail
 
 // Array and float type bin is passed as bins for put operation.
 // Expected to fail with AEROSPIKE_ERR_PARAM error code.
-describe('PARAMETER CHECKING TEST', function() {
 	it(' PARAMETER CHECKING-- NEGATIVE TEST', function() {
 		var m = 0;
 		for ( var i = 1; i <= n; i++) {
@@ -202,4 +205,3 @@ describe('PARAMETER CHECKING TEST', function() {
 		}
 	});
 });
-

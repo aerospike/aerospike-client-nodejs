@@ -1,14 +1,25 @@
-var fs = require('fs');
-eval(fs.readFileSync('test.js')+'');
+var assert = require('assert');
+var request = require('superagent');
+var expect = require('expect.js');
+var aerospike = require('aerospike');
+var msgpack = require('msgpack');
+var return_code = aerospike.Status;
+var Policy = aerospike.Policy;
+var Operator = aerospike.Operators;
 
+var test = require('./test')
+var client = test.client;
 var params = new Object;
+var ParseConfig = test.ParseConfig
+var GetRecord = test.GetRecord
+var CleanRecords = test.CleanRecords
+var n = test.n
 
 ParseConfig(params);
-
 var m = 0;
 var startBatch = 0;
 describe( 'BATCH-EXISTS FUNCTION', function() {
-	it ( 'SIMPLE BATCH-GET TEST' , function() {
+	it ( 'SIMPLE BATCH-EXIST TEST' , function() {
 		for ( var i = 0; i < 4*n; i++ ) {
 			var key = { ns: params.ns, set: params.set, key:"BATCHEXISTS"+i };
 			var rec= GetRecord(i);
@@ -36,9 +47,15 @@ describe( 'BATCH-EXISTS FUNCTION', function() {
 					expect(rec_list[j].recstatus).to.equal(return_code.AEROSPIKE_OK);
 					expect(rec_list[i].meta).to.exist;
 					expect(rec_list[i].meta.gen).to.equal(1);
-					expect(rec_list[i].meta.ttl).to.be.equal(100);
+					if ( rec_list[i].meta.ttl != 100) {
+						expect(rec_list[i].meta.ttl).to.be.above(90)
+						expect(rec_list[i].meta.ttl).to.be.below(100)
+					} else {
+						expect(rec_list[i].meta.ttl).to.be.equal(100);
+					}
 					if ( ++m == n ) {
 						n = 4*n;
+						console.log("BATCH EXISTS TEST SUCCESS")
 						CleanRecords('BATCHEXISTS');
 					}
 				}

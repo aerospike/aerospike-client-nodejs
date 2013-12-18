@@ -1,5 +1,6 @@
 var aerospike = require('aerospike')
 var policy    = aerospike.Policy;
+var log		  = aerospike.Log;
 // environment settings
 var env = {
   host:       "127.0.0.1",
@@ -46,6 +47,9 @@ env.config = {
 		check_bounds: false
 	  }
 
+	},
+	log : {
+		level : log.INFO
 	}
 }
 
