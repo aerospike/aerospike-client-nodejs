@@ -29,7 +29,7 @@
  ******************************************************************************/
 
 /**
- *	Setup an asynchronous invocation of a function.
+ *  Setup an asynchronous invocation of a function.
  */
 Handle<Value> async_invoke(
     const Arguments& args, 

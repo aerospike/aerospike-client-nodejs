@@ -29,29 +29,29 @@ using namespace v8;
  ******************************************************************************/
 
 /**
- *	Setup an asynchronous invocation of a function.
+ *  Setup an asynchronous invocation of a function.
  */
 Handle<Value> async_invoke(
-	const Arguments& args, 
-	void *	(* prepare)(const Arguments& args), 
-	void	(* execute)(uv_work_t * req),
-	void	(* respond)(uv_work_t * req, int status)
-	)
+    const Arguments& args, 
+    void *  (* prepare)(const Arguments& args), 
+    void    (* execute)(uv_work_t * req),
+    void    (* respond)(uv_work_t * req, int status)
+    )
 {
-	// Create an async work token, and add AsyncData to it.
-	uv_work_t * req = new uv_work_t;
-	req->data = prepare(args);
+    // Create an async work token, and add AsyncData to it.
+    uv_work_t * req = new uv_work_t;
+    req->data = prepare(args);
 
-	// Pass the work token to libuv to be run when a 
-	// worker-thread is available to process it.
-	uv_queue_work(
-		uv_default_loop(),  // event loop
-		req,                // work token
-		execute,            // execute work
-		respond             // respond to callback
-	);
+    // Pass the work token to libuv to be run when a 
+    // worker-thread is available to process it.
+    uv_queue_work(
+        uv_default_loop(),  // event loop
+        req,                // work token
+        execute,            // execute work
+        respond             // respond to callback
+    );
 
-	// Return value for the function. Because we are async, we will
-	// return an `undefined`.
-	return Undefined();
+    // Return value for the function. Because we are async, we will
+    // return an `undefined`.
+    return Undefined();
 }

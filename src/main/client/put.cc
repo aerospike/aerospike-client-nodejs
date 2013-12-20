@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/aerospike_key.h>
-#include <aerospike/as_config.h>
-#include <aerospike/as_key.h>
-#include <aerospike/as_record.h>
-#include <aerospike/as_record_iterator.h>
+    #include <aerospike/aerospike.h>
+    #include <aerospike/aerospike_key.h>
+    #include <aerospike/as_config.h>
+    #include <aerospike/as_key.h>
+    #include <aerospike/as_record.h>
+    #include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -60,14 +60,14 @@ using namespace v8;
  */
 
 typedef struct AsyncData {
-	aerospike * as;
-	int param_err;
-	as_error err;
-	as_policy_write policy;
-	as_key key;
-	as_record rec;
-	AerospikeClient *client;
-	Persistent<Function> callback;
+    aerospike * as;
+    int param_err;
+    as_error err;
+    as_policy_write policy;
+    as_key key;
+    as_record rec;
+    AerospikeClient *client;
+    Persistent<Function> callback;
 } AsyncData;
 
 
@@ -83,98 +83,98 @@ typedef struct AsyncData {
  */
 static void * prepare(const Arguments& args)
 {
-	// The current scope of the function
-	HandleScope scope;
+    // The current scope of the function
+    HandleScope scope;
 
-	// Unwrap 'this'
-	AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    // Unwrap 'this'
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-	// Build the async data
-	AsyncData * data			= new AsyncData;
-	data->client				= client;
-	data->as					= &client->as;
-	// Local variables
-	as_key *    key				= &data->key;
-	as_record * rec				= &data->rec;
-	as_policy_write * policy	= &data->policy;
-	LogInfo * log				= &client->log;
-	data->param_err				= 0;
-	int arglength = args.Length();
-	int meta_present = 0;
+    // Build the async data
+    AsyncData * data            = new AsyncData;
+    data->client                = client;
+    data->as                    = &client->as;
+    // Local variables
+    as_key *    key             = &data->key;
+    as_record * rec             = &data->rec;
+    as_policy_write * policy    = &data->policy;
+    LogInfo * log               = &client->log;
+    data->param_err             = 0;
+    int arglength = args.Length();
+    int meta_present = 0;
 
-	if ( args[arglength-1]->IsFunction()) {
-		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-		as_v8_detail(log, "Node.js Callback Registered");
-	} else {
-		as_v8_error(log, "No callback to register");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
-	if ( args[PUT_ARG_POS_KEY]->IsObject()) {
-		if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-			as_v8_error(log,"Parsing as_key(C structure) from key object failed");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	} else {
-		as_v8_error(log, "Key should be an object");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[arglength-1]->IsFunction()) {
+        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+        as_v8_detail(log, "Node.js Callback Registered");
+    } else {
+        as_v8_error(log, "No callback to register");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
+    if ( args[PUT_ARG_POS_KEY]->IsObject()) {
+        if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+            as_v8_error(log,"Parsing as_key(C structure) from key object failed");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    } else {
+        as_v8_error(log, "Key should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
 
-	if ( args[PUT_ARG_POS_REC]->IsObject() ) {
-		if (recordbins_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-			as_v8_error(log, "Parsing as_record(C structure) from record object failed");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	} else {
-		as_v8_error(log, "Record should be an object");	
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[PUT_ARG_POS_REC]->IsObject() ) {
+        if (recordbins_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+            as_v8_error(log, "Parsing as_record(C structure) from record object failed");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    } else {
+        as_v8_error(log, "Record should be an object"); 
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( args[PUT_ARG_POS_META]->IsObject() ) {
-		if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-			as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-		meta_present = 1;
-	} else {
-		as_v8_error(&client->log, "Metadata should be an object");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[PUT_ARG_POS_META]->IsObject() ) {
+        if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+            as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+        meta_present = 1;
+    } else {
+        as_v8_error(&client->log, "Metadata should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( arglength > 3 ) {
-		int wpolicy_pos = PUT_ARG_POS_WPOLICY;
-		if ( 0 == meta_present) {
-			as_v8_debug(log, "Argument list does not contain metadata, default values will be used");
-			wpolicy_pos = PUT_ARG_POS_WPOLICY - 1;
-		}
-		if ( args[wpolicy_pos]->IsObject() &&
-				writepolicy_from_jsobject(policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(&client->log, "writepolicy shoule be an object");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		} 
-	} else {
-		// When node application does not pass any write policy should be 
-		// initialized to defaults,
-		as_v8_debug(log, "Argument list does not contain writepolicy, default writepolicy will be used");
-		as_policy_write_init(policy);
-	}
+    if ( arglength > 3 ) {
+        int wpolicy_pos = PUT_ARG_POS_WPOLICY;
+        if ( 0 == meta_present) {
+            as_v8_debug(log, "Argument list does not contain metadata, default values will be used");
+            wpolicy_pos = PUT_ARG_POS_WPOLICY - 1;
+        }
+        if ( args[wpolicy_pos]->IsObject() &&
+                writepolicy_from_jsobject(policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(&client->log, "writepolicy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        } 
+    } else {
+        // When node application does not pass any write policy should be 
+        // initialized to defaults,
+        as_v8_debug(log, "Argument list does not contain writepolicy, default writepolicy will be used");
+        as_policy_write_init(policy);
+    }
 
-	as_v8_debug(&client->log, "Parsing node.js Data Structures : Success");
-	scope.Close(Undefined());
-	return data;
+    as_v8_debug(&client->log, "Parsing node.js Data Structures : Success");
+    scope.Close(Undefined());
+    return data;
 
 Err_Return:
-	data->param_err = 1;
-	scope.Close(Undefined());
-	return data;
+    data->param_err = 1;
+    scope.Close(Undefined());
+    return data;
 }
 
 /**
@@ -185,32 +185,32 @@ Err_Return:
  */
 static void execute(uv_work_t * req)
 {
-	// Fetch the AsyncData structure
-	AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
-	AerospikeClient *client  = data->client;
-	aerospike * as			 = data->as;
-	as_error *  err			 = &data->err;
-	as_key *    key			 = &data->key;
-	as_record * rec			 = &data->rec;
-	as_policy_write * policy = &data->policy;
-	LogInfo * log			 = &client->log;
+    // Fetch the AsyncData structure
+    AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
+    AerospikeClient *client  = data->client;
+    aerospike * as           = data->as;
+    as_error *  err          = &data->err;
+    as_key *    key          = &data->key;
+    as_record * rec          = &data->rec;
+    as_policy_write * policy = &data->policy;
+    LogInfo * log            = &client->log;
 
-	// Invoke the blocking call.
-	// The error is handled in the calling JS code.
-	if (as->cluster == NULL) {
-		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		as_v8_error(&client->log, "Not connected to cluster to put record");
-	}
+    // Invoke the blocking call.
+    // The error is handled in the calling JS code.
+    if (as->cluster == NULL) {
+        data->param_err = 1;
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        as_v8_error(&client->log, "Not connected to cluster to put record");
+    }
 
-	if ( data->param_err == 0) {
-		as_v8_debug(log, "Invoking aerospike put with");
-		DETAIL(log, BINS, rec);
-		DETAIL(log, META, rec);
-		DEBUG(log, _KEY,  key);
-		aerospike_key_put(as, err, policy, key, rec);
-	}
-		
+    if ( data->param_err == 0) {
+        as_v8_debug(log, "Invoking aerospike put with");
+        DETAIL(log, BINS, rec);
+        DETAIL(log, META, rec);
+        DEBUG(log, _KEY,  key);
+        aerospike_key_put(as, err, policy, key, rec);
+    }
+        
 }
 
 /**
@@ -222,65 +222,65 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	// Scope for the callback operation.
-	HandleScope scope;
+    // Scope for the callback operation.
+    HandleScope scope;
 
-	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
-	AerospikeClient * client = data->client;
-	as_error *	err		= &data->err;
-	as_key *    key		= &data->key;
-	as_record *	rec		= &data->rec;
-	LogInfo * log		= &client->log;
-	as_v8_debug(log, "Put operation : response is");
-	DEBUG(log, ERROR, err);
+    // Fetch the AsyncData structure
+    AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
+    AerospikeClient * client = data->client;
+    as_error *  err     = &data->err;
+    as_key *    key     = &data->key;
+    as_record * rec     = &data->rec;
+    LogInfo * log       = &client->log;
+    as_v8_debug(log, "Put operation : response is");
+    DEBUG(log, ERROR, err);
 
-	Handle<Value> argv[3];
-	// Build the arguments array for the callback
-	if (data->param_err == 0) {
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = recordmeta_to_jsobject(rec, log);
-		argv[2] = key_to_jsobject(key, log);
-		DETAIL(log, META, rec);
-		DEBUG(log, _KEY,  key);
-	}
-	else {
-		as_v8_error(&client->log, "Parameter error while parsing the arguments");
-		err->func = NULL;
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Null();
-		argv[2] = Null();
-	}	
+    Handle<Value> argv[3];
+    // Build the arguments array for the callback
+    if (data->param_err == 0) {
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = recordmeta_to_jsobject(rec, log);
+        argv[2] = key_to_jsobject(key, log);
+        DETAIL(log, META, rec);
+        DEBUG(log, _KEY,  key);
+    }
+    else {
+        as_v8_error(&client->log, "Parameter error while parsing the arguments");
+        err->func = NULL;
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = Null();
+        argv[2] = Null();
+    }   
 
-	// Surround the callback in a try/catch for safety
-	TryCatch try_catch;
+    // Surround the callback in a try/catch for safety
+    TryCatch try_catch;
 
-	// Execute the callback.
-	if ( data->callback != Null() ) {
-		data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
-		as_v8_debug(log, "Invoked Put callback");
-	}
+    // Execute the callback.
+    if ( data->callback != Null() ) {
+        data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        as_v8_debug(log, "Invoked Put callback");
+    }
 
-	// Process the exception, if any
-	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
-	}
+    // Process the exception, if any
+    if ( try_catch.HasCaught() ) {
+        node::FatalException(try_catch);
+    }
 
-	// Dispose the Persistent handle so the callback
-	// function can be garbage-collected
-	data->callback.Dispose();
+    // Dispose the Persistent handle so the callback
+    // function can be garbage-collected
+    data->callback.Dispose();
 
-	// clean up any memory we allocated
+    // clean up any memory we allocated
 
-	if ( data->param_err == 0) {
-		as_key_destroy(key);
-		as_record_destroy(rec);
-		as_v8_debug(&client->log, "Cleaned up record and key structures");
-	}
+    if ( data->param_err == 0) {
+        as_key_destroy(key);
+        as_record_destroy(rec);
+        as_v8_debug(&client->log, "Cleaned up record and key structures");
+    }
 
-	delete data;
-	delete req;
-	scope.Close(Undefined());
+    delete data;
+    delete req;
+    scope.Close(Undefined());
 }
 
 /*******************************************************************************
@@ -292,5 +292,5 @@ static void respond(uv_work_t * req, int status)
  */
 Handle<Value> AerospikeClient::Put(const Arguments& args)
 {
-	return async_invoke(args, prepare, execute, respond);
+    return async_invoke(args, prepare, execute, respond);
 }

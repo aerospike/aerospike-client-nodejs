@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/aerospike_key.h>
-#include <aerospike/as_config.h>
-#include <aerospike/as_key.h>
-#include <aerospike/as_record.h>
-#include <aerospike/as_record_iterator.h>
+    #include <aerospike/aerospike.h>
+    #include <aerospike/aerospike_key.h>
+    #include <aerospike/as_config.h>
+    #include <aerospike/as_key.h>
+    #include <aerospike/as_record.h>
+    #include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -55,16 +55,16 @@ using namespace v8;
  */
 
 typedef struct AsyncData {
-	aerospike * as;
-	int param_err;
-	as_error err;
-	as_key key;
-	as_record rec;
-	as_policy_read policy;
-	Persistent<Function> callback;
-	AerospikeClient * client;
-	int num_bins;
-	char** bins;
+    aerospike * as;
+    int param_err;
+    as_error err;
+    as_key key;
+    as_record rec;
+    as_policy_read policy;
+    Persistent<Function> callback;
+    AerospikeClient * client;
+    int num_bins;
+    char** bins;
 } AsyncData;
 
 /*******************************************************************************
@@ -79,89 +79,89 @@ typedef struct AsyncData {
  */
 static void * prepare(const Arguments& args)
 {
-	// The current scope of the function
-	HandleScope scope;
+    // The current scope of the function
+    HandleScope scope;
 
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-	// Build the async data
-	AsyncData * data = new AsyncData;
-	data->as = &client->as;
-	data->client = client;
-	LogInfo* log = &client->log; 
-	// Local variables
-	as_key *    key = &data->key;
-	as_record * rec = &data->rec;
-	as_policy_read * policy = &data->policy;
-	data->param_err = 0;
+    // Build the async data
+    AsyncData * data = new AsyncData;
+    data->as = &client->as;
+    data->client = client;
+    LogInfo* log = &client->log; 
+    // Local variables
+    as_key *    key = &data->key;
+    as_record * rec = &data->rec;
+    as_policy_read * policy = &data->policy;
+    data->param_err = 0;
 
-	int arglength = args.Length();
+    int arglength = args.Length();
 
-	if ( args[arglength-1]->IsFunction()) {
-		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-		 as_v8_detail(log, "Node.js callback registered");
-	}else {
-		as_v8_error(log, "No callback to register");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
-	if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
-		if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing of key (C structure) from key object failed");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	} else {
-		as_v8_error(log, "Key should be an object");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[arglength-1]->IsFunction()) {
+        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+         as_v8_detail(log, "Node.js callback registered");
+    }else {
+        as_v8_error(log, "No callback to register");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
+    if ( args[SELECT_ARG_POS_KEY]->IsObject() ) {
+        if (key_from_jsobject(key, args[SELECT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing of key (C structure) from key object failed");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    } else {
+        as_v8_error(log, "Key should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	as_record_init(rec, 0);
-	// To select the values of given bin, not complete record.
-	if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
+    as_record_init(rec, 0);
+    // To select the values of given bin, not complete record.
+    if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
 
-		Local<Array> barray = Local<Array>::Cast(args[1]);
-		int num_bins = barray->Length();
-		data->num_bins = num_bins;
-		data->bins = (char **)calloc(sizeof(char *), num_bins+1);
-		as_v8_debug(log, "Number of bins requested %d", num_bins);
-		for (int i=0; i < num_bins; i++) {
-			Local<Value> bname = barray->Get(i);
-			data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
-			strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
-			as_v8_detail(log, "bin[%d] : %s", i, data->bins[i]);
-		}
-		// The last entry should be NULL because we are passing to aerospike_key_select
-		data->bins[num_bins] = NULL;
-	} else {
-		as_v8_error(log, "Bin names should be an array of string");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+        Local<Array> barray = Local<Array>::Cast(args[1]);
+        int num_bins = barray->Length();
+        data->num_bins = num_bins;
+        data->bins = (char **)calloc(sizeof(char *), num_bins+1);
+        as_v8_debug(log, "Number of bins requested %d", num_bins);
+        for (int i=0; i < num_bins; i++) {
+            Local<Value> bname = barray->Get(i);
+            data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
+            strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+            as_v8_detail(log, "bin[%d] : %s", i, data->bins[i]);
+        }
+        // The last entry should be NULL because we are passing to aerospike_key_select
+        data->bins[num_bins] = NULL;
+    } else {
+        as_v8_error(log, "Bin names should be an array of string");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( arglength > 3) {
-		if ( args[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
-			if (readpolicy_from_jsobject( policy, args[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-				as_v8_error(log, "Parsing of readpolicy from object failed");
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-				goto Err_Return;
-			}
-		} else {
-			as_v8_error(log, "Readpolicy should be an object");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	} else {
-		as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
-		as_policy_read_init(policy);
-	}
+    if ( arglength > 3) {
+        if ( args[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
+            if (readpolicy_from_jsobject( policy, args[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+                as_v8_error(log, "Parsing of readpolicy from object failed");
+                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+                goto Err_Return;
+            }
+        } else {
+            as_v8_error(log, "Readpolicy should be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    } else {
+        as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
+        as_policy_read_init(policy);
+    }
 
-	return data;
+    return data;
 
 Err_Return:
-	data->param_err = 1;
-	return data;
+    data->param_err = 1;
+    return data;
 }
 /**
  *  execute() — Function to execute inside the worker-thread.
@@ -172,33 +172,33 @@ Err_Return:
 
 static void execute(uv_work_t * req)
 {
-	// Fetch the AsyncData structure
-	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+    // Fetch the AsyncData structure
+    AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
-	// Data to be used.
-	aerospike * as  = data->as;
-	as_error *  err = &data->err;
-	as_key *    key = &data->key;
-	as_record * rec = &data->rec;
-	as_policy_read * policy = &data->policy;
-	LogInfo * log	= &data->client->log;
-	// Invoke the blocking call.
-	// The error is handled in the calling JS code.
-	if (as->cluster == NULL) {
-		as_v8_error(log, "Not connected to Cluster to perform the operation");
-		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-	}
+    // Data to be used.
+    aerospike * as  = data->as;
+    as_error *  err = &data->err;
+    as_key *    key = &data->key;
+    as_record * rec = &data->rec;
+    as_policy_read * policy = &data->policy;
+    LogInfo * log   = &data->client->log;
+    // Invoke the blocking call.
+    // The error is handled in the calling JS code.
+    if (as->cluster == NULL) {
+        as_v8_error(log, "Not connected to Cluster to perform the operation");
+        data->param_err = 1;
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+    }
 
-	if ( data->param_err == 0 ) {
-		DEBUG(log, _KEY,  key);
-		aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
+    if ( data->param_err == 0 ) {
+        DEBUG(log, _KEY,  key);
+        aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
 
-		for ( int i = 0; i < data->num_bins; i++) {
-			free(data->bins[i]);
-		}
-		free(data->bins);
-	}
+        for ( int i = 0; i < data->num_bins; i++) {
+            free(data->bins[i]);
+        }
+        free(data->bins);
+    }
 
 }
 
@@ -212,64 +212,64 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	// Scope for the callback operation.
-	HandleScope scope;
+    // Scope for the callback operation.
+    HandleScope scope;
 
-	// Fetch the AsyncData structure
-	AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
-	as_error *  err     = &data->err;
-	as_key *    key     = &data->key;
-	as_record * rec     = &data->rec;
-	LogInfo * log		= &data->client->log;
+    // Fetch the AsyncData structure
+    AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
+    as_error *  err     = &data->err;
+    as_key *    key     = &data->key;
+    as_record * rec     = &data->rec;
+    LogInfo * log       = &data->client->log;
 
-	as_v8_debug(log, "Select operation : the response is");
-	DEBUG(log, ERROR, err);
+    as_v8_debug(log, "Select operation : the response is");
+    DEBUG(log, ERROR, err);
 
-	// Build the arguments array for the callback
-	Handle<Value> argv[4];
-	if ( data->param_err == 0 )
-	{
-		DEBUG(log,  BINS, rec);
-		DEBUG(log,  META, rec);
-		DEBUG(log,  _KEY,  key);
+    // Build the arguments array for the callback
+    Handle<Value> argv[4];
+    if ( data->param_err == 0 )
+    {
+        DEBUG(log,  BINS, rec);
+        DEBUG(log,  META, rec);
+        DEBUG(log,  _KEY,  key);
 
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = recordbins_to_jsobject(rec, log);
-		argv[2] = recordmeta_to_jsobject(rec, log);
-		argv[3] = key_to_jsobject(key, log);
-	} else {
-		err->func = NULL;
-		as_v8_debug(log, "Parameter error while parsing the arguments");
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Null();
-		argv[2] = Null();
-		argv[3] = Null();
-	}
-	// Surround the callback in a try/catch for safety
-	TryCatch try_catch;
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = recordbins_to_jsobject(rec, log);
+        argv[2] = recordmeta_to_jsobject(rec, log);
+        argv[3] = key_to_jsobject(key, log);
+    } else {
+        err->func = NULL;
+        as_v8_debug(log, "Parameter error while parsing the arguments");
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = Null();
+        argv[2] = Null();
+        argv[3] = Null();
+    }
+    // Surround the callback in a try/catch for safety
+    TryCatch try_catch;
 
-	// Execute the callback.
-	data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
+    // Execute the callback.
+    data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
 
-	as_v8_debug(log, "Invoked Exists callback");
-	// Process the exception, if any
-	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
-	}
+    as_v8_debug(log, "Invoked Exists callback");
+    // Process the exception, if any
+    if ( try_catch.HasCaught() ) {
+        node::FatalException(try_catch);
+    }
 
-	// Dispose the Persistent handle so the callback
-	// function can be garbage-collected
-	data->callback.Dispose();
+    // Dispose the Persistent handle so the callback
+    // function can be garbage-collected
+    data->callback.Dispose();
 
-	// clean up any memory we allocated
-	if ( data->param_err == 0) {
-		as_key_destroy(key);
-		as_record_destroy(rec);
-		as_v8_debug(log, "Cleaned up the structures");
-	}
+    // clean up any memory we allocated
+    if ( data->param_err == 0) {
+        as_key_destroy(key);
+        as_record_destroy(rec);
+        as_v8_debug(log, "Cleaned up the structures");
+    }
 
-	delete data;
-	delete req;
+    delete data;
+    delete req;
 }
 
 /*******************************************************************************
@@ -282,7 +282,7 @@ static void respond(uv_work_t * req, int status)
 
 Handle<Value> AerospikeClient::Select(const Arguments& args)
 {
-	return async_invoke(args, prepare, execute, respond);
+    return async_invoke(args, prepare, execute, respond);
 }
 
 

@@ -30,68 +30,68 @@ using namespace v8;
  ******************************************************************************/
 
 /**
- *	Connect to an aerospike cluster specified by the config.
+ *  Connect to an aerospike cluster specified by the config.
  *
- *		aerospike.connect(config);
+ *      aerospike.connect(config);
  *
  */
 /*Handle<Value> Connect(const Arguments& args)
 {
-	HandleScope scope;
-	return scope.Close(AerospikeClient::NewInstance(args));
+    HandleScope scope;
+    return scope.Close(AerospikeClient::NewInstance(args));
 }*/
 
 Handle<Value> Client(const Arguments& args)
 {
-	HandleScope scope;
-	return scope.Close(AerospikeClient::NewInstance(args));
+    HandleScope scope;
+    return scope.Close(AerospikeClient::NewInstance(args));
 }
 /**
- *	Aerospike key.
+ *  Aerospike key.
  *
- *		aerospike.key(namespace, set, value);
+ *      aerospike.key(namespace, set, value);
  *
  */
 Handle<Value> Key(const Arguments& args)
 {
-	HandleScope scope;
+    HandleScope scope;
 
-	if ( args.Length() == 3 ) {
-		Local<Object> key = Object::New();
-		key->Set(String::NewSymbol("ns"), args[0]);
-		key->Set(String::NewSymbol("set"), args[1]);
-		key->Set(String::NewSymbol("value"), args[2]);
-		return scope.Close(key);
-	}
+    if ( args.Length() == 3 ) {
+        Local<Object> key = Object::New();
+        key->Set(String::NewSymbol("ns"), args[0]);
+        key->Set(String::NewSymbol("set"), args[1]);
+        key->Set(String::NewSymbol("value"), args[2]);
+        return scope.Close(key);
+    }
 
-	return scope.Close(Undefined());
+    return scope.Close(Undefined());
 }
 
 Handle<Object> GetAllPolicy() {
-	HandleScope scope;
-	Handle<Object> obj = Object::New();
+    HandleScope scope;
+    Handle<Object> obj = Object::New();
 
-	obj->Set(String::NewSymbol("Key"), keyPolicy());
-	obj->Set(String::NewSymbol("Retry"), retryPolicy());
-	obj->Set(String::NewSymbol("Generation"), generationPolicy());
-	obj->Set(String::NewSymbol("Exists"), existsPolicy());
+    obj->Set(String::NewSymbol("Key"), keyPolicy());
+    obj->Set(String::NewSymbol("Retry"), retryPolicy());
+    obj->Set(String::NewSymbol("Generation"), generationPolicy());
+    obj->Set(String::NewSymbol("Exists"), existsPolicy());
 
-	return scope.Close(obj);
+    return scope.Close(obj);
 }
 
 /**
- *	aerospike object.
+ *  aerospike object.
  */
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
-	AerospikeClient::Init();
+    AerospikeClient::Init();
 
-	exports->Set(String::NewSymbol("client"), FunctionTemplate::New(Client)->GetFunction());
-	exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
-	exports->Set(String::NewSymbol("Status"), errorCodes());
-	exports->Set(String::NewSymbol("Policy"),GetAllPolicy());
-	exports->Set(String::NewSymbol("Operators"), operatorsEnum());
-	exports->Set(String::NewSymbol("Log"), logLevel());
+    exports->Set(String::NewSymbol("client"), FunctionTemplate::New(Client)->GetFunction());
+    exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
+    exports->Set(String::NewSymbol("Status"), errorCodes());
+    exports->Set(String::NewSymbol("Policy"),GetAllPolicy());
+    exports->Set(String::NewSymbol("Operators"), operatorsEnum());
+    exports->Set(String::NewSymbol("Log"), logLevel());
 }
 
 NODE_MODULE(aerospike, Aerospike)

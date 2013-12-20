@@ -21,9 +21,9 @@
  ******************************************************************************/
 
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/as_config.h>
-#include <aerospike/aerospike_info.h>
+    #include <aerospike/aerospike.h>
+    #include <aerospike/as_config.h>
+    #include <aerospike/aerospike_info.h>
 }
 
 #include <node.h>
@@ -58,16 +58,16 @@ using namespace v8;
  */
 
 typedef struct AsyncData {
-	aerospike * as;
-	int param_err;
-	as_error err;
-	as_policy_info policy;
-	char *addr;
-	uint16_t port;
-	char * req;
-	char * res;
-	Persistent<Function> callback;
-	AerospikeClient * client;
+    aerospike * as;
+    int param_err;
+    as_error err;
+    as_policy_info policy;
+    char *addr;
+    uint16_t port;
+    char * req;
+    char * res;
+    Persistent<Function> callback;
+    AerospikeClient * client;
 } AsyncData;
 
 
@@ -83,77 +83,77 @@ typedef struct AsyncData {
  */
 static void * prepare(const Arguments& args)
 {
-	// The current scope of the function
-	HandleScope scope;
+    // The current scope of the function
+    HandleScope scope;
 
-	// Unwrap 'this'
-	AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    // Unwrap 'this'
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-	// Build the async data
-	AsyncData * data			= new AsyncData;
-	data->as					= &client->as;
-	data->client				= client;
-	LogInfo * log				= &client->log;
-	// Local variables
-	char **addr			= &data->addr;
-	uint16_t * port				= &data->port;
-	as_policy_info * policy		= &data->policy;
-	data->param_err				= 0;
-	int arglength = args.Length();
+    // Build the async data
+    AsyncData * data            = new AsyncData;
+    data->as                    = &client->as;
+    data->client                = client;
+    LogInfo * log               = &client->log;
+    // Local variables
+    char **addr         = &data->addr;
+    uint16_t * port             = &data->port;
+    as_policy_info * policy     = &data->policy;
+    data->param_err             = 0;
+    int arglength = args.Length();
 
-	if ( args[arglength-1]->IsFunction()) {
-		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-		as_v8_detail(log, "Node.js callback registered");
-	} else {
-		as_v8_error(log, "No callback to register");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[arglength-1]->IsFunction()) {
+        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+        as_v8_detail(log, "Node.js callback registered");
+    } else {
+        as_v8_error(log, "No callback to register");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( args[INFO_ARG_POS_HOST]->IsString()) {
-		(*addr) =  (char*) malloc(HOST_ADDRESS_SIZE);
-		strcpy( *addr, *String::Utf8Value(args[INFO_ARG_POS_HOST]->ToString()));
-		as_v8_detail(log, "Info on host %s", (*addr));
-	} else {
-		as_v8_error(log, "address should be a string");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[INFO_ARG_POS_HOST]->IsString()) {
+        (*addr) =  (char*) malloc(HOST_ADDRESS_SIZE);
+        strcpy( *addr, *String::Utf8Value(args[INFO_ARG_POS_HOST]->ToString()));
+        as_v8_detail(log, "Info on host %s", (*addr));
+    } else {
+        as_v8_error(log, "address should be a string");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( args[INFO_ARG_POS_PORT]->IsNumber() ) {
-		(*port) = V8INTEGER_TO_CINTEGER(args[INFO_ARG_POS_PORT]);	
-		as_v8_detail(log, "Info on port %d", (*port));
-	} else {
-		as_v8_error(log, "Port should be an integer");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[INFO_ARG_POS_PORT]->IsNumber() ) {
+        (*port) = V8INTEGER_TO_CINTEGER(args[INFO_ARG_POS_PORT]);   
+        as_v8_detail(log, "Info on port %d", (*port));
+    } else {
+        as_v8_error(log, "Port should be an integer");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
-	if ( args[INFO_ARG_POS_REQ]->IsString()) {
-		data->req = (char*) malloc( INFO_REQUEST_LEN);
-		strcpy( data->req, *String::Utf8Value(args[INFO_ARG_POS_REQ]->ToString()));
-		as_v8_detail(log, "info request : %s", data->req);
-	}
-	if ( arglength > 4 ) {
-		if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
-				infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Info policy parsing error");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		} 
-	} else {
-		// When node application does not pass any write policy should be 
-		// initialized to defaults,
-		as_v8_detail(log, "Argument list does not contain info policy, using default values for info policy");
-		as_policy_info_init(policy);
-	}
+    if ( args[INFO_ARG_POS_REQ]->IsString()) {
+        data->req = (char*) malloc( INFO_REQUEST_LEN);
+        strcpy( data->req, *String::Utf8Value(args[INFO_ARG_POS_REQ]->ToString()));
+        as_v8_detail(log, "info request : %s", data->req);
+    }
+    if ( arglength > 4 ) {
+        if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
+                infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Info policy parsing error");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        } 
+    } else {
+        // When node application does not pass any write policy should be 
+        // initialized to defaults,
+        as_v8_detail(log, "Argument list does not contain info policy, using default values for info policy");
+        as_policy_info_init(policy);
+    }
 
 
-	return data;
+    return data;
 
 Err_Return:
-	data->param_err = 1;
-	return data;
+    data->param_err = 1;
+    return data;
 }
 
 /**
@@ -164,29 +164,29 @@ Err_Return:
  */
 static void execute(uv_work_t * req)
 {
-	// Fetch the AsyncData structure
-	AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
-	aerospike * as			 = data->as;
-	as_error *  err			 = &data->err;
-	char *addr				 = data->addr;
-	uint16_t port			 = data->port;
-	char * request			 = data->req;
-	as_policy_info * policy  = &data->policy;
-	char **response			 = &data->res;
-	LogInfo * log			 = &data->client->log;
+    // Fetch the AsyncData structure
+    AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
+    aerospike * as           = data->as;
+    as_error *  err          = &data->err;
+    char *addr               = data->addr;
+    uint16_t port            = data->port;
+    char * request           = data->req;
+    as_policy_info * policy  = &data->policy;
+    char **response          = &data->res;
+    LogInfo * log            = &data->client->log;
 
-	// Invoke the blocking call.
-	// The error is handled in the calling JS code.
-	if (as->cluster == NULL) {
-		as_v8_error(log, "Not connected to Cluster to perform the operation");
-		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-	}
+    // Invoke the blocking call.
+    // The error is handled in the calling JS code.
+    if (as->cluster == NULL) {
+        as_v8_error(log, "Not connected to Cluster to perform the operation");
+        data->param_err = 1;
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+    }
 
-	if ( data->param_err == 0) {
-		as_v8_debug(log, "info command request:%s on host:%s, port:%d", request, addr, port);
-		aerospike_info_host(as, err, policy, addr, port, request, response);
-	}
+    if ( data->param_err == 0) {
+        as_v8_debug(log, "info command request:%s on host:%s, port:%d", request, addr, port);
+        aerospike_info_host(as, err, policy, addr, port, request, response);
+    }
 }
 
 /**
@@ -198,62 +198,62 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	// Scope for the callback operation.
-	HandleScope scope;
+    // Scope for the callback operation.
+    HandleScope scope;
 
-	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
-	as_error *	err		= &data->err;
-	char * response     = data->res;
-	LogInfo * log		= &data->client->log;
+    // Fetch the AsyncData structure
+    AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
+    as_error *  err     = &data->err;
+    char * response     = data->res;
+    LogInfo * log       = &data->client->log;
 
-	as_v8_debug(log, "constructing node.js structures in v8 for info");
-	DEBUG(log, ERROR, err);
+    as_v8_debug(log, "constructing node.js structures in v8 for info");
+    DEBUG(log, ERROR, err);
 
-	Handle<Value> argv[2];
-	// Build the arguments array for the callback
-	if (data->param_err == 0) {
-		argv[0]			   = error_to_jsobject(err, log);
-		Handle<Object> obj = Object::New();
-		if ( response != NULL && strlen(response) > 0 )	{
-			as_v8_detail(log, "Response is : %s for the request : %s", response, data->req);
-			obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)data->res));
-			argv[1]			   = obj;
-		} else {
-			as_v8_info(log, "Noresponse received for the info request :%s", data->req);
-			argv[1] = Null();
-		}
-	}
-	else {
-		err->func = NULL;
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Null();
-	}	
+    Handle<Value> argv[2];
+    // Build the arguments array for the callback
+    if (data->param_err == 0) {
+        argv[0]            = error_to_jsobject(err, log);
+        Handle<Object> obj = Object::New();
+        if ( response != NULL && strlen(response) > 0 ) {
+            as_v8_detail(log, "Response is : %s for the request : %s", response, data->req);
+            obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)data->res));
+            argv[1]            = obj;
+        } else {
+            as_v8_info(log, "Noresponse received for the info request :%s", data->req);
+            argv[1] = Null();
+        }
+    }
+    else {
+        err->func = NULL;
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = Null();
+    }   
 
-	// Surround the callback in a try/catch for safety
-	TryCatch try_catch;
+    // Surround the callback in a try/catch for safety
+    TryCatch try_catch;
 
-	// Execute the callback.
-	if ( data->callback != Null() ) {
-		data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
-		as_v8_debug(log, "Invoked info callback");
-	}
+    // Execute the callback.
+    if ( data->callback != Null() ) {
+        data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        as_v8_debug(log, "Invoked info callback");
+    }
 
-	// Process the exception, if any
-	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
-	}
+    // Process the exception, if any
+    if ( try_catch.HasCaught() ) {
+        node::FatalException(try_catch);
+    }
 
-	// Dispose the Persistent handle so the callback
-	// function can be garbage-collected
-	data->callback.Dispose();
+    // Dispose the Persistent handle so the callback
+    // function can be garbage-collected
+    data->callback.Dispose();
 
-	// clean up any memory we allocated
+    // clean up any memory we allocated
 
 
-	delete data;
-	delete req;
-	as_v8_debug(log, "Cleaned up the structures");
+    delete data;
+    delete req;
+    as_v8_debug(log, "Cleaned up the structures");
 }
 
 /*******************************************************************************
@@ -265,5 +265,5 @@ static void respond(uv_work_t * req, int status)
  */
 Handle<Value> AerospikeClient::Info(const Arguments& args)
 {
-	return async_invoke(args, prepare, execute, respond);
+    return async_invoke(args, prepare, execute, respond);
 }

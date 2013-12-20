@@ -23,7 +23,7 @@
 #pragma once
 
 extern "C" {
-	#include <aerospike/aerospike.h>
+    #include <aerospike/aerospike.h>
 }
 
 #include <node.h>
@@ -38,90 +38,95 @@ using namespace v8;
 
 class AerospikeClient : public ObjectWrap {
 
-	/***************************************************************************
-	 *  PUBLIC
-	 **************************************************************************/
-	
-	public:
-		static void Init();
-		static Handle<Value> NewInstance(const Arguments& args);
+    /***************************************************************************
+     *  PUBLIC
+     **************************************************************************/
+    
+    public:
+        static void Init();
+        static Handle<Value> NewInstance(const Arguments& args);
 
-		aerospike as;
-		LogInfo log;
-	private:
+        aerospike as;
+        LogInfo log;
 
-		AerospikeClient();
-		~AerospikeClient();
+    /***************************************************************************
+     *  PRIVATE
+     **************************************************************************/
+    
+    private:
 
-		static Persistent<Function> constructor;
-		static Handle<Value> New(const Arguments& args);
+        AerospikeClient();
+        ~AerospikeClient();
 
-		/***********************************************************************
-		 *	CLIENT OPERATIONS
-		 **********************************************************************/
+        static Persistent<Function> constructor;
+        static Handle<Value> New(const Arguments& args);
 
-		 /**
-		  * undefined client.connect()
-		  */
-		 static Handle<Value> Connect(const Arguments& args);
+        /***********************************************************************
+         *  CLIENT OPERATIONS
+         **********************************************************************/
 
-		/**
-		 *	undefined client.close()
-		 */
-		static Handle<Value> Close(const Arguments& args);
+         /**
+          * undefined client.connect()
+          */
+         static Handle<Value> Connect(const Arguments& args);
 
-		/**
-		 *	undefined client.get(Key, function(Error, Record))
-		 */
-		static Handle<Value> Get(const Arguments& args);	
+        /**
+         *  undefined client.close()
+         */
+        static Handle<Value> Close(const Arguments& args);
 
-		/**
-		 *	undefined client.exists(Key, function(Error, exists))
-		 */
-		static Handle<Value> Exists(const Arguments& args);	
+        /**
+         *  undefined client.get(Key, function(Error, Record))
+         */
+        static Handle<Value> Get(const Arguments& args);    
 
-		/**
-		 *	undefined client.put(Key, Record, function(Error))
-		 */
-		static Handle<Value> Put(const Arguments& args);
-		
-		/**
- 		 *  	undefined client.select(Key,bins,function(Error,Record))
- 		 */ 
-		static Handle<Value> Select(const Arguments& args);
-		
-		/**
- 		 *		undefined client.delete(Key, function(Error,Key))
- 		 */
-		static Handle<Value> Remove(const Arguments& args);		
-	
-		/**
- 		 * 	undefined client.batch_get(Key[],function(Error,Record))
-		 */
-		static Handle<Value> Batch_Get(const Arguments& args);
+        /**
+         *  undefined client.exists(Key, function(Error, exists))
+         */
+        static Handle<Value> Exists(const Arguments& args); 
 
-		/**
- 		 * 	undefined client.batch_get(Key[],function(Error,Record))
-		 */
-		static Handle<Value> Batch_Exists(const Arguments& args);
-		
-		/**
- 		 *	undefined client.batch_select(Key[],bins,function(Error,Record))
- 		 */
-		//static Handle<Value> Batch_Select(const Arguments& args);
+        /**
+         *  undefined client.put(Key, Record, function(Error))
+         */
+        static Handle<Value> Put(const Arguments& args);
+        
+        /**
+         *      undefined client.select(Key,bins,function(Error,Record))
+         */ 
+        static Handle<Value> Select(const Arguments& args);
+        
+        /**
+         *      undefined client.delete(Key, function(Error,Key))
+         */
+        static Handle<Value> Remove(const Arguments& args);     
+    
+        /**
+         *  undefined client.batch_get(Key[],function(Error,Record))
+         */
+        static Handle<Value> Batch_Get(const Arguments& args);
 
-		/*
-		 *undefined client.operate( Key, Operation, function(Error, Record))
-		 */ 
-		static Handle<Value> Operate(const Arguments& args);
+        /**
+         *  undefined client.batch_get(Key[],function(Error,Record))
+         */
+        static Handle<Value> Batch_Exists(const Arguments& args);
+        
+        /**
+         *  undefined client.batch_select(Key[],bins,function(Error,Record))
+         */
+        //static Handle<Value> Batch_Select(const Arguments& args);
 
-		/*
-		 *undefined client.info( host, port, function(Error, Response))
-		 */ 
-		static Handle<Value> Info(const Arguments& args);
+        /*
+         *undefined client.operate( Key, Operation, function(Error, Record))
+         */ 
+        static Handle<Value> Operate(const Arguments& args);
 
-		/*
-		 *undefined client.info( host, port, function(Error, Response))
-		 */ 
-		static Handle<Value> Info_Cluster(const Arguments& args);
+        /*
+         *undefined client.info( host, port, function(Error, Response))
+         */ 
+        static Handle<Value> Info(const Arguments& args);
+
+        /*
+         *undefined client.info( host, port, function(Error, Response))
+         */ 
+        static Handle<Value> Info_Cluster(const Arguments& args);
 };

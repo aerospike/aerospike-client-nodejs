@@ -12,16 +12,16 @@ using namespace v8;
 
 Handle<Object> logLevel() 
 {
-	HandleScope scope;
+    HandleScope scope;
 
-	Handle<Object> obj = Object::New();
-	obj->Set(String::NewSymbol("OFF"), Integer::New(-1), ReadOnly);
-	int num_elements = sizeof(log_severity_strings)/sizeof(log_severity_strings[0]);
-	for ( int i = 0; i < num_elements; i++) {
-		obj->Set(String::NewSymbol(log_severity_strings[i]),Integer::New(i), ReadOnly);
-	}
+    Handle<Object> obj = Object::New();
+    obj->Set(String::NewSymbol("OFF"), Integer::New(-1), ReadOnly);
+    int num_elements = sizeof(log_severity_strings)/sizeof(log_severity_strings[0]);
+    for ( int i = 0; i < num_elements; i++) {
+        obj->Set(String::NewSymbol(log_severity_strings[i]),Integer::New(i), ReadOnly);
+    }
 
-	return scope.Close(obj);
+    return scope.Close(obj);
 }
 
 

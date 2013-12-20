@@ -15,12 +15,12 @@ To install the latest stable version of Node.js, visit http://nodejs.org/downloa
 Aerospike node.js client `aerospike-node.js` requires Aerspike C client to be installed.
 This is done automatically as part of the addon module installation:
 
-	$sudo npm install -g 
+		$sudo npm install -g 
 
 If the Aerospike C client is already installed on the system, set the following SKIP_C_CLIENT 
 environment variable before installing the module:
 
-	$sudo SKIP_C_CLIENT=1 npm install -g 
+		$sudo SKIP_C_CLIENT=1 npm install -g 
 
 After installation, set the environment variable `NODE_PATH` to where node modules path is:
 Some installation of nodejs puts the node_modules directory in /usr/lib/node_modules, then set 
@@ -39,22 +39,4 @@ Refer to examples folder which demonstrates the all the operations available in 
 
 The test cases are written using mocha. Refer to README under the test directory to run
 all the test cases.
-
-## Documentation.
-
-Documentation is generated using sphinx-doc. 
-Sphinx needs atleast python2.6 or python 3.1.
-Sphinx is installed using python's pip installer.
-To install pip: 
-	
-	$ sudo yum install python-pip.
-
-To install sphinx:
-	
-	$sudo pip install sphinx
-
-To generate documentation using sphinx:
-	cd doc/
-	make html
-
 

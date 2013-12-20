@@ -71,13 +71,13 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("exists"), FunctionTemplate::New(Exists)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("batch_get"), FunctionTemplate::New(Batch_Get)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("batch_exists"), FunctionTemplate::New(Batch_Exists)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
-	//cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("batch_get"), FunctionTemplate::New(Batch_Get)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("batch_exists"), FunctionTemplate::New(Batch_Exists)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
+    //cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
 
@@ -92,22 +92,22 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     as_config config;
     as_config_init(&config);
-	
-	if(args[0]->IsObject()) {
-		if (log_from_jsobject( &client->log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
-			LogInfo* log = &client->log;
-			log->fd = 2;
-			log->severity = AS_LOG_LEVEL_INFO;
-		}
-	}
-	
-	if (args[0]->IsObject() ) {
-		config_from_jsobject(&config, args[0]->ToObject(), &client->log);	
-	}
+    
+    if(args[0]->IsObject()) {
+        if (log_from_jsobject( &client->log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
+            LogInfo* log = &client->log;
+            log->fd = 2;
+            log->severity = AS_LOG_LEVEL_INFO;
+        }
+    }
+    
+    if (args[0]->IsObject() ) {
+        config_from_jsobject(&config, args[0]->ToObject(), &client->log);   
+    }
 
     aerospike_init(&client->as, &config);
 
-	as_v8_debug(&client->log, "Aerospike object initialization : success");
+    as_v8_debug(&client->log, "Aerospike object initialization : success");
 
     client->Wrap(args.This());
 
@@ -135,20 +135,20 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
  */
 Handle<Value> AerospikeClient::Connect(const Arguments& args)
 {
-	HandleScope scope;
+    HandleScope scope;
 
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-	as_error err;
+    as_error err;
     
     aerospike_connect(&client->as, &err);
 
-	if (err.code != AEROSPIKE_OK) {
-		client->as.cluster = NULL;
-		as_v8_error(&client->log, "Connecting to Cluster Failed");
-	}
+    if (err.code != AEROSPIKE_OK) {
+        client->as.cluster = NULL;
+        as_v8_error(&client->log, "Connecting to Cluster Failed");
+    }
 
-	as_v8_debug(&client->log, "Connecting to Cluster: Success");
+    as_v8_debug(&client->log, "Connecting to Cluster: Success");
 
     return scope.Close(client->handle_);
 }
