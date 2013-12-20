@@ -20,7 +20,7 @@
         'src/main/enums/error_codes.cc',
         'src/main/enums/policy_enums.cc',
         'src/main/enums/operators.cc',
-		'src/main/enums/log_level.cc',
+        'src/main/enums/log_level.cc',
         'src/main/client/info.cc'
       ],
      'link_settings': {
