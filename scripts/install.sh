@@ -5,26 +5,26 @@ OS=' '
 # This script is yet to be tested on debian and ubuntu platforms
 
 if [ -f /etc/redhat-release ]; then
-	dist=`cat /etc/redhat-release | grep "CentOS"`
+	dist=`cat /etc/redhat-release | grep "CentOS"` > /dev/null 2>&1
 	echo $dist
 	if [ ! -z "$dist" ]; then
 		OS=el6
 		echo $OS
 	fi
+elif [ -f /etc/lsb-release ]; then
+	dist=`lsb_release -a | grep Ubuntu` > /dev/null 2>&1
+	if [ ! -z "$dist" ]; then
+		OS=ubuntu12.04
+	fi
 elif [ -f /etc/debian_version ]; then
-	dist=`lsb_release -a | grep Debian`
+	dist=`lsb_release -a | grep Debian`	> /dev/null 2>&1
 	if [ -z "$dist" ]; then
-		dist=`cat /etc/*release* | grep Debian`
+		dist=`cat /etc/*release* | grep Debian` > /dev/null 2>&1
 	fi
 	if [ ! -z "$dist" ]; then
 		OS=debian6  
 	fi
 
-elif [ -f /etc/lsb-release ]; then
-	dist=`lsb_release -a | grep Ubuntu`
-	if [ ! -z "$dist" ]; then
-		OS=ubuntu12.04
-	fi
 else
 	echo "OS not supported"
 	exit 1
@@ -33,19 +33,19 @@ fi
 c_clienturl="http://www.aerospike.com/latest.php?package=client-c&os=$OS"
 installed=0
 
-latestversion=`curl -I -L -s "${c_clienturl}" |grep Location|cut -f 6 -d '/'`
+latestversion=`curl -I -L -s "${c_clienturl}" |grep Location|cut -f 6 -d '/'` > /dev/null 2>&1
 currentversion=' '
 
 if [ "$OS" = "ubuntu12.04" -o "OS" = "debian6" ]; then
-	currentversion=`dpkg -l|grep  aerospike-client-c-devel | awk '{print $3}'`
+	currentversion=`dpkg -l|grep  aerospike-client-c-devel | awk '{print $3}'` > /dev/null 2>&1
 elif [ "$OS" = "el6" ]; then
-	currentversion=`rpm -qa aerospike-client-c-devel | cut -f 5 -d '-'`
+	currentversion=`rpm -qa aerospike-client-c-devel | cut -f 5 -d '-'` > /dev/null 2>&1
 fi
 
 if [ "${latestversion}" = "${currentversion}" ]; then
 	echo "Latest version of C client is already installed"
 else
-	wget -O aerospike.tgz "$url"
+	wget -O aerospike.tgz "$c_clienturl"
 	tar -xf aerospike.tgz
 	installed=1
 
@@ -57,7 +57,7 @@ else
 	elif [ "$OS" = "debian6" ]; then
 		dpkg -i aerospike-client-c-devel-*.debian6.x86_64.deb
 	elif [ "$OS" = "el6" ]; then
-		inst=`rpm -qa aerospike-client-c-devel`
+		inst=`rpm -qa aerospike-client-c-devel` > /dev/null 2>&1
 		if [ -z ${inst} ]; then
 			rpm -i aerospike-client-c-devel-*.el6.x86_64.rpm
 		else 
