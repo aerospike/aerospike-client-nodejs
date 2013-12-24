@@ -84,8 +84,6 @@ static void * prepare(const Arguments& args)
     data->as         = &client->as;
     data->client     = client;
     data->param_err  = 0;
-    as_record * rec  = &data->rec;
-    rec              = NULL;
 
     // Local variables
     as_key *    key         = &data->key;

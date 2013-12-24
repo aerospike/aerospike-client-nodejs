@@ -256,7 +256,7 @@ static void respond(uv_work_t * req, int status)
     if(data->node_err == 1) {
         // Sets the err->code and err->message in the 'err' variable
         err->func = NULL;
-        err->line = NULL;
+        err->line = 0;
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();

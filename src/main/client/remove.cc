@@ -202,7 +202,7 @@ static void respond(uv_work_t * req, int status)
     }
     else {
         err->func = NULL;
-        err->line = NULL;
+        err->line = 0;
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
         as_v8_debug(log, "Parameter error while parsing the arguments");

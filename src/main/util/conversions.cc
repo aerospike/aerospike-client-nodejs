@@ -934,7 +934,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
         Local<Object> binObj = v8val->ToObject();
         int len ;
         uint8_t* data ;
-        if ( extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {   
+        if ( extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {   
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "Blob value to be written %u ", data);
@@ -1016,7 +1016,7 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         Local<Object> binObj = v8val->ToObject();
         int len ;
         uint8_t* data ;
-        if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
+        if (extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "prepending raw bytes %u", data);
@@ -1055,7 +1055,7 @@ int populate_append_op( as_operations * ops, Local<Object> obj, LogInfo * log)
         Local<Object> binObj = v8val->ToObject();
         int len ;
         uint8_t* data ;
-        if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
+        if (extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "appending raw bytes %u", data);
