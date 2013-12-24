@@ -8,7 +8,7 @@ using namespace v8;
  *  * Error Codes in Aerospike C Client exposed to Nodejs Client
  */
 
-//static const char * log_severity_strings[]= { "ERROR", "WARN", "INFO", "DEBUG", "DETAIL", NULL};
+const char * log_severity_strings[]= { "ERROR", "WARN", "INFO", "DEBUG", "DETAIL", NULL};
 
 Handle<Object> logLevel() 
 {

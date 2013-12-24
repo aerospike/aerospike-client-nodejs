@@ -2,6 +2,13 @@
 #include <node.h>
 using namespace v8;
 
+const char * KEY[] = {"UNDEF", "DIGEST", "SEND"};
+
+const char * RETRY[] = {"UNDEF", "NONE", "ONCE"};
+
+const char *  GENERATION[] = {"UNDEF", "IGNORE", "EQ", "GT", "DUP" };
+
+const char * EXISTS[] = { "UNDEF", "IGNORE", "CREATE", "UPDATE" };
 Handle<Object> keyPolicy()
 {
     HandleScope scope;

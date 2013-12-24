@@ -185,7 +185,6 @@ static void respond(uv_work_t * req, int status)
 	// Fetch the AsyncData structure
 	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
 	as_error *	err		= &data->err;
-	char * response     = NULL;
 	LogInfo * log		= &data->client->log;
 	Handle<Value> argv[2];
 	int num					 = data->num_nodes;

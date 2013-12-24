@@ -2,7 +2,6 @@
 [ $SKIP_C_CLIENT ] && exit 0
 
 OS=' '
-# This script is yet to be tested on debian and ubuntu platforms
 
 if [ -f /etc/redhat-release ]; then
 	dist=`cat /etc/redhat-release | grep "CentOS"` > /dev/null 2>&1

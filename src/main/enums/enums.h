@@ -3,15 +3,15 @@
 #include <node.h>
 using namespace v8;
 
-static const char * log_severity_strings[]= { "ERROR", "WARN", "INFO", "DEBUG", "DETAIL"};
+extern const char * log_severity_strings[]; 
 
-static const char * KEY[] = {"UNDEF", "DIGEST", "SEND"};
+extern const char * KEY[]; 
 
-static const char * RETRY[] = {"UNDEF", "NONE", "ONCE"};
+extern const char * RETRY[]; 
 
-static const char * GENERATION[] = {"UNDEF", "IGNORE", "EQ", "GT", "DUP" };
+extern const char * GENERATION[]; 
 
-static const char * EXISTS[] = { "UNDEF", "IGNORE", "CREATE", "UPDATE" };
+extern const char * EXISTS[]; 
 
 /**********************************************************
  * FUNCTIONS
