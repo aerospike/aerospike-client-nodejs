@@ -30,34 +30,52 @@ else
 	exit 1
 fi
 
-url="http://www.aerospike.com/latest.php?package=client-c&os=$OS"
-echo $url
+c_clienturl="http://www.aerospike.com/latest.php?package=client-c&os=$OS"
+installed=0
 
-#wget -O aerospike.tgz $url
-#tar -xf aerospike.tgz
+latestversion=`curl -I -L -s "${c_clienturl}" |grep Location|cut -f 6 -d '/'`
+currentversion=' '
 
-dir="aerospike-client-c*"
-cd $dir
-
-if [ "$OS" = "ubuntu12.04" ]; then
-	dpkg -i aerospike-client-c-devel-*.ubuntu12.04x86_64.deb
-elif [ "$OS" = "debian6" ]; then
-	dpkg -i aerospike-client-c-devel-*.debian6x86_b4.deb
+if [ "$OS" = "ubuntu12.04" -o "OS" = "debian6" ]; then
+	currentversion=`dpkg -l|grep  aerospike-client-c-devel | awk '{print $3}'`
 elif [ "$OS" = "el6" ]; then
-	installed=`rpm -qa aerospike-client-c-devel`
-	echo $installed
-	if [ -z ${installed} ]; then
-		rpm -i aerospike-client-c-devel-*.el6.x86_64.rpm
-	else 
-		rpm -Uvh aerospike-client-c-devel-*.el6.x86_64.rpm
-	fi
-
-else
-	echo "OS not supported"
-	exit 1;
+	currentversion=`rpm -qa aerospike-client-c-devel | cut -f 5 -d '-'`
 fi
 
+if [ "${latestversion}" = "${currentversion}" ]; then
+	echo "Latest version of C client is already installed"
+else
+	wget -O aerospike.tgz "$url"
+	tar -xf aerospike.tgz
+	installed=1
+
+	dir="aerospike-client-c*"
+	cd $dir
+
+	if [ "$OS" = "ubuntu12.04" ]; then
+		dpkg -i aerospike-client-c-devel-*.ubuntu12.04x86_64.deb
+	elif [ "$OS" = "debian6" ]; then
+		dpkg -i aerospike-client-c-devel-*.debian6.x86_64.deb
+	elif [ "$OS" = "el6" ]; then
+		inst=`rpm -qa aerospike-client-c-devel`
+		if [ -z ${inst} ]; then
+			rpm -i aerospike-client-c-devel-*.el6.x86_64.rpm
+		else 
+			rpm -Uvh aerospike-client-c-devel-*.el6.x86_64.rpm
+		fi
+
+	else
+		echo "OS not supported"
+		exit 1;
+	fi
+fi
+
+
 cd ..
+if [ $installed = 1 ]; then
+	rm aerospike.tgz
+	rm -r $dir
+fi
 
 NODE_PATH=/usr/lib/node_modules
 export NODE_PATH

@@ -156,7 +156,7 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj )
             if ( v8_log->Has(String::NewSymbol("log_file"))) {
                 Local<Value> v8_path = obj->Get(String::NewSymbol("log_file"));
                 if ( v8_path->IsString()) {
-                    log->fd = open(*String::Utf8Value(v8_path),O_CREAT);    
+                    log->fd = open(*String::Utf8Value(v8_path),O_CREAT, O_RDWR);    
                 }
                 as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
                 return AS_NODE_PARAM_OK;

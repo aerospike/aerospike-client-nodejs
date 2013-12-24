@@ -12,6 +12,10 @@ To install the latest stable version of Node.js, visit http://nodejs.org/downloa
 
 ## Building and Installing
 
+For Debian and Ubuntu distribution, grant permissions for npm to become root 
+user. This is done using
+	sudo npm config set unsafe-perm true
+
 Aerospike node.js client `aerospike-node.js` requires Aerspike C client to be installed.
 This is done automatically as part of the addon module installation:
 
@@ -26,9 +30,9 @@ After installation, set the environment variable `NODE_PATH` to where node modul
 Some installation of nodejs puts the node_modules directory in /usr/lib/node_modules, then set 
 the NODE_PATH as
 	$export NODE_PATH=/usr/lib/node_modules
-Some other installation off nodejs puts the node_modules directory in /usr/local/lib/node_modules,
+Some other installation of nodejs puts the node_modules directory in /usr/local/lib/node_modules,
 in this case set NODE_PATH as
-	$export NODE_PATH=/usr/lib/node_modules
+	$export NODE_PATH=/usr/local/lib/node_modules
 
 ## Examples
 
