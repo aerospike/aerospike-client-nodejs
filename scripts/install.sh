@@ -36,7 +36,7 @@ installed=0
 latestversion=`curl -I -L -s "${c_clienturl}" |grep Location|cut -f 6 -d '/'` > /dev/null 2>&1
 currentversion=' '
 
-if [ "$OS" = "ubuntu12.04" -o "OS" = "debian6" ]; then
+if [ "$OS" = "ubuntu12.04" -o "$OS" = "debian6" ]; then
 	currentversion=`dpkg -l|grep  aerospike-client-c-devel | awk '{print $3}'` > /dev/null 2>&1
 elif [ "$OS" = "el6" ]; then
 	currentversion=`rpm -qa aerospike-client-c-devel | cut -f 5 -d '-'` > /dev/null 2>&1
