@@ -95,6 +95,10 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 
         if ( policy_val->IsObject() ){
             Local<Object> policies = policy_val->ToObject();
+			if (policies->Has(String::NewSymbol("timeout"))) {
+				Local<Value> v8timeout = policies->Get(String::NewSymbol("timeout"));
+				config->policies.timeout = V8INTEGER_TO_CINTEGER(v8timeout);
+			}
             if ( policies->Has(String::NewSymbol("read") )){
                 Local<Value> readpolicy = policies->Get(String::NewSymbol("read"));
                 if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)  != AS_NODE_PARAM_OK) {
@@ -138,41 +142,38 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_OK;
 }
 
-int log_from_jsobject( LogInfo * log, Local<Object> obj )
+int log_from_jsobject( LogInfo * log, Local<Object> obj)
 {
-    if (obj->Has(String::NewSymbol("log"))){
-        Local<Value> log_val = obj->Get(String::NewSymbol("log"));
-        if ( log_val->IsObject() ){
-            Local<Object> v8_log         = log_val->ToObject();
-            if (v8_log->Has(String::New("level"))) {
-                Local<Value> v8_log_level    = v8_log->Get(String::NewSymbol("level"));
-                if ( v8_log_level->IsNumber()){
-                    log->severity = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
-                } else {
-                    fprintf(stderr, "Log level should be an integer less than 4\n");
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if ( v8_log->Has(String::NewSymbol("log_file"))) {
-                Local<Value> v8_path = obj->Get(String::NewSymbol("log_file"));
-                if ( v8_path->IsString()) {
-                    log->fd = open(*String::Utf8Value(v8_path),O_CREAT, O_RDWR);    
-                }
-                as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
-                return AS_NODE_PARAM_OK;
-            }
-            else {
-                log->fd = 2;
-                as_v8_debug(log, "redirecting log to stderr");
-                return AS_NODE_PARAM_OK;
-            }
-        }else {
-            fprintf(stderr, "Log value should be an object \n");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
+	if ( obj->IsObject() ){
+		Local<Object> v8_log         = obj->ToObject();
+		if (v8_log->Has(String::New("level"))) {
+			Local<Value> v8_log_level    = v8_log->Get(String::NewSymbol("level"));
+			if ( v8_log_level->IsNumber()){
+				log->severity = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
+			} else {
+				fprintf(stderr, "Log level should be an integer less than 4\n");
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		if ( v8_log->Has(String::NewSymbol("log_file"))) {
+			Local<Value> v8_path = obj->Get(String::NewSymbol("log_file"));
+			if ( v8_path->IsString()) {
+				log->fd = open(*String::Utf8Value(v8_path),O_CREAT, O_RDWR);    
+			}
+			as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
+			return AS_NODE_PARAM_OK;
+		}
+		else {
+			log->fd = 2;
+			as_v8_debug(log, "redirecting log to stderr");
+			return AS_NODE_PARAM_OK;
+		}
+	}else {
+		fprintf(stderr, "Log value should be an object \n");
+		return AS_NODE_PARAM_ERR;
+	}
 
-    return AS_NODE_PARAM_ERR;
+	return AS_NODE_PARAM_ERR;
 
 }
 #if 0

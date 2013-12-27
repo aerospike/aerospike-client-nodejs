@@ -129,4 +129,9 @@ class AerospikeClient : public ObjectWrap {
          *undefined client.info( host, port, function(Error, Response))
          */ 
         static Handle<Value> Info_Cluster(const Arguments& args);
+
+		/*
+		 *undefined client.set_log_level(Log log)
+		 */
+		static Handle<Value> SetLogLevel(const Arguments& args);
 };

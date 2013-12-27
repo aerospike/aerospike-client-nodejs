@@ -16,6 +16,7 @@ env.config = {
       { addr: env.host, port: env.port }
     ],
 	policies: {
+	  timeout : 1,
 	  read:{
 		timeout: 10,
 		key    : policy.Key.SEND

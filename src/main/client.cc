@@ -78,6 +78,7 @@ void AerospikeClient::Init()
 	cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("info_cluster"), FunctionTemplate::New(Info_Cluster)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("set_log_level"), FunctionTemplate::New(SetLogLevel)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
 
@@ -94,7 +95,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     as_config_init(&config);
     
     if(args[0]->IsObject()) {
-        if (log_from_jsobject( &client->log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
+		Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log"));
+        if (log_from_jsobject( &client->log, log_val->ToObject()) != AS_NODE_PARAM_OK) {
             LogInfo* log = &client->log;
             log->fd = 2;
             log->severity = AS_LOG_LEVEL_INFO;
@@ -151,4 +153,21 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
     as_v8_debug(&client->log, "Connecting to Cluster: Success");
 
     return scope.Close(client->handle_);
+}
+
+Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
+{
+    HandleScope scope;
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+
+    if (args[0]->IsObject()){
+		printf("set_log_level invoked\n ");
+		LogInfo * log = &client->log;
+        if ( log_from_jsobject(log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
+			printf("log from js object failed\n");
+		    log->severity = AS_LOG_LEVEL_INFO;
+			log->fd       = 2;
+		}
+	}
+	return scope.Close(client->handle_);
 }

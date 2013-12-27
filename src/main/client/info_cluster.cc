@@ -41,6 +41,7 @@ extern "C" {
 // application, argument position for callback changes.
 #define HOST_ADDRESS_SIZE 50
 #define INFO_REQUEST_LEN  50
+#define MAX_CLUSTER_SIZE  128
 using namespace v8;
 
 /*******************************************************************************
@@ -66,7 +67,7 @@ typedef struct AsyncData {
 	as_policy_info policy;
 	char * req;
 	int num_nodes;
-	node_info_result info_result_list[24];
+	node_info_result info_result_list[MAX_CLUSTER_SIZE];
 	AerospikeClient * client;
 	Persistent<Function> callback;
 } AsyncData;
@@ -84,6 +85,10 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
 	AsyncData * data	= reinterpret_cast<AsyncData *>(udata);
 	node_info_result *result = data->info_result_list;
 	int *num_nodes = &data->num_nodes;
+	if ((*num_nodes) >= 128 ) {
+		as_v8_info(&data->client->log, "Node's response could not be stored --cluster size exceeded");
+		return false;
+	}
 	result[(*num_nodes)].response = (char*) malloc(strlen(response) + 1);
 	strcpy(result[(*num_nodes)].response, response);
 	strcpy(result[(*num_nodes)].node, node->name);
@@ -235,6 +240,12 @@ static void respond(uv_work_t * req, int status)
 	// function can be garbage-collected
 	data->callback.Dispose();
 
+	for ( int i = 0; i < num; i++ ) 
+	{
+		if( result[i].response != NULL) {
+			free(result[i].response);
+		}
+	}
 	// clean up any memory we allocated
 
 
