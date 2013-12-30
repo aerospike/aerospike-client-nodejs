@@ -143,7 +143,7 @@ static void * prepare(const Arguments& args)
         }
         meta_present = 1;
     } else {
-        as_v8_error(&client->log, "Metadata should be an object");
+        as_v8_error(log, "Metadata should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
@@ -156,7 +156,7 @@ static void * prepare(const Arguments& args)
         }
         if ( args[wpolicy_pos]->IsObject() &&
                 writepolicy_from_jsobject(policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-            as_v8_error(&client->log, "writepolicy shoule be an object");
+            as_v8_error(log, "writepolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         } 
@@ -167,7 +167,7 @@ static void * prepare(const Arguments& args)
         as_policy_write_init(policy);
     }
 
-    as_v8_debug(&client->log, "Parsing node.js Data Structures : Success");
+    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     scope.Close(Undefined());
     return data;
 
@@ -200,7 +200,7 @@ static void execute(uv_work_t * req)
     if (as->cluster == NULL) {
         data->param_err = 1;
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-        as_v8_error(&client->log, "Not connected to cluster to put record");
+        as_v8_error(log, "Not connected to cluster to put record");
     }
 
     if ( data->param_err == 0) {
@@ -245,8 +245,8 @@ static void respond(uv_work_t * req, int status)
         DEBUG(log, _KEY,  key);
     }
     else {
-        as_v8_error(&client->log, "Parameter error while parsing the arguments");
         err->func = NULL;
+		as_v8_debug(log, "Parameter error for put operation");
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();
@@ -275,7 +275,7 @@ static void respond(uv_work_t * req, int status)
     if ( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
-        as_v8_debug(&client->log, "Cleaned up record and key structures");
+        as_v8_debug(log, "Cleaned up record and key structures");
     }
 
     delete data;
