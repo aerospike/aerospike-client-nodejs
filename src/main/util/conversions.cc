@@ -462,7 +462,7 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
             if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
                 return AS_NODE_PARAM_ERR;
             }
-            as_record_set_raw(rec, *n, data, len);
+            as_record_set_rawp(rec, *n, data, len, true);
             //as_record_get_bytes(rec, *n)->free = true;
 
         }
@@ -490,7 +490,8 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
         return AS_NODE_PARAM_ERR;
     }
     (*len) = obj->GetIndexedPropertiesExternalArrayDataLength();
-    (*data) = static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData());  
+	(*data) = (uint8_t*) malloc(sizeof(uint8_t) * (*len));
+    memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len)); 
     return AS_NODE_PARAM_OK;
 }
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)

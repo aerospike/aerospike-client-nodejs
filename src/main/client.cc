@@ -93,16 +93,24 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     as_config config;
     as_config_init(&config);
-    
+   
+    // Assume by default log is not set
+	int  default_log_set = 0;
     if(args[0]->IsObject()) {
-		Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log"));
-        if (log_from_jsobject( &client->log, log_val->ToObject()) != AS_NODE_PARAM_OK) {
-            LogInfo* log = &client->log;
-            log->fd = 2;
-            log->severity = AS_LOG_LEVEL_INFO;
-        }
+		if (args[0]->ToObject()->Has(String::NewSymbol("log")))  
+		{
+			Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log")) ;
+			if (log_from_jsobject( &client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
+				default_log_set = 1; // Log is passed as an argument. set the default value	
+			}
+		} 
+		if ( default_log_set == 0 ) {
+			LogInfo * log = &client->log;
+			log->fd = 2;
+			log->severity = AS_LOG_LEVEL_INFO;
+		}
+		
     }
-    
     if (args[0]->IsObject() ) {
         config_from_jsobject(&config, args[0]->ToObject(), &client->log);   
     }
