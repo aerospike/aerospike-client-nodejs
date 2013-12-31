@@ -27,12 +27,12 @@
 #include <unistd.h>
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/aerospike_batch.h>
 }
 
 #include "../client.h"
@@ -43,10 +43,10 @@ using namespace v8;
 
 #define COPY_ERR_MESSAGE(__err,__message) \
     strcpy(__err.message, #__message); \
-        __err.code = __message;\
-        __err.line = __LINE__; \
-        __err.file = __FILE__; \
-        __err.func = __func__;
+__err.code = __message;\
+__err.line = __LINE__; \
+__err.file = __FILE__; \
+__err.func = __func__;
 
 #define V8INTEGER_TO_CINTEGER(__num) \
     __num->ToInteger()->Value();

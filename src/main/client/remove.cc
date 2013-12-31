@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -88,7 +88,7 @@ static void * prepare(const Arguments& args)
     // Local variables
     as_key *    key = &data->key;
     LogInfo * log  = &client->log;
-    
+
     as_policy_remove * policy = &data->policy;
     int arglength = args.Length();
     if ( args[arglength-1]->IsFunction() ){
@@ -101,7 +101,7 @@ static void * prepare(const Arguments& args)
     }
     if ( args[ REMOVE_ARG_POS_KEY ]->IsObject() ) {
         if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-             as_v8_error(log, "Parsing of key (C structure) from key object failed");
+            as_v8_error(log, "Parsing of key (C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
@@ -115,7 +115,7 @@ static void * prepare(const Arguments& args)
     if ( arglength > 2 ) {
         if ( args[REMOVE_ARG_POS_WPOLICY]->IsObject() ) {
             if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject(), log ) != AS_NODE_PARAM_OK) {
-                 as_v8_error(log, "Parsing of removepolicy from object failed");
+                as_v8_error(log, "Parsing of removepolicy from object failed");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
             }
@@ -125,7 +125,7 @@ static void * prepare(const Arguments& args)
             goto Err_Return;
         }
     } else {
-           as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
+        as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
         as_policy_remove_init(policy);
     }
 
@@ -197,7 +197,7 @@ static void respond(uv_work_t * req, int status)
         as_v8_debug(log, "Delete operation succeeded for the key");
         DEBUG(log, _KEY,  key);
         argv[0] = error_to_jsobject(err, log),
-        argv[1] = key_to_jsobject(key, log);
+            argv[1] = key_to_jsobject(key, log);
 
     }
     else {

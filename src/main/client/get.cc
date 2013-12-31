@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -202,7 +202,7 @@ static void respond(uv_work_t * req, int status)
     LogInfo * log = &client->log;
     as_v8_debug(log, "Get operations' the response is");
     DEBUG(log, ERROR, err);
-    
+
     int nargs=4;
     Handle<Value> argv[nargs];
     // Build the arguments array for the callback
@@ -212,9 +212,9 @@ static void respond(uv_work_t * req, int status)
         DETAIL(log, _KEY,  key); 
 
         argv[0] = error_to_jsobject(err, log),
-        argv[1] = recordbins_to_jsobject(rec, log ),
-        argv[2] = recordmeta_to_jsobject(rec, log),
-        argv[3] = key_to_jsobject(key, log);
+            argv[1] = recordbins_to_jsobject(rec, log ),
+            argv[2] = recordmeta_to_jsobject(rec, log),
+            argv[3] = key_to_jsobject(key, log);
     }
     else {
         err->func = NULL;

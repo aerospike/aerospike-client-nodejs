@@ -20,7 +20,7 @@ Handle<Object> keyPolicy()
     }
     // This is not implemented in the server yet
     //obj->Set(String::NewSymbol("AS_POLICY_KEY_STORE", Integer::New(3), ReadOnly));
-    
+
     return scope.Close(obj);
 }
 

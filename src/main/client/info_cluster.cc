@@ -21,9 +21,9 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/aerospike_info.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/as_config.h>
+#include <aerospike/aerospike_info.h>
 }
 
 #include <node.h>
@@ -49,8 +49,8 @@ using namespace v8;
  ******************************************************************************/
 
 typedef struct node_info_result_s {
-	char * response;
-	char node[AS_NODE_NAME_MAX_SIZE];
+    char * response;
+    char node[AS_NODE_NAME_MAX_SIZE];
 } node_info_result;
 /**
  *  AsyncData — Data to be used in async calls.
@@ -61,15 +61,15 @@ typedef struct node_info_result_s {
  */
 
 typedef struct AsyncData {
-	aerospike * as;
-	int param_err;
-	as_error err;
-	as_policy_info policy;
-	char * req;
-	int num_nodes;
-	node_info_result info_result_list[MAX_CLUSTER_SIZE];
-	AerospikeClient * client;
-	Persistent<Function> callback;
+    aerospike * as;
+    int param_err;
+    as_error err;
+    as_policy_info policy;
+    char * req;
+    int num_nodes;
+    node_info_result info_result_list[MAX_CLUSTER_SIZE];
+    AerospikeClient * client;
+    Persistent<Function> callback;
 } AsyncData;
 
 
@@ -79,21 +79,21 @@ typedef struct AsyncData {
 
 bool aerospike_info_cluster_callback(const as_error * error, const as_node * node, const char * info_req, const char* response, void *udata)
 {
-// Scope for the callback operation.
+    // Scope for the callback operation.
 
-	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(udata);
-	node_info_result *result = data->info_result_list;
-	int *num_nodes = &data->num_nodes;
-	if ((*num_nodes) >= 128 ) {
-		as_v8_info(&data->client->log, "Node's response could not be stored --cluster size exceeded");
-		return false;
-	}
-	result[(*num_nodes)].response = (char*) malloc(strlen(response) + 1);
-	strcpy(result[(*num_nodes)].response, response);
-	strcpy(result[(*num_nodes)].node, node->name);
-	(*num_nodes)++;
-	return true;
+    // Fetch the AsyncData structure
+    AsyncData * data	= reinterpret_cast<AsyncData *>(udata);
+    node_info_result *result = data->info_result_list;
+    int *num_nodes = &data->num_nodes;
+    if ((*num_nodes) >= 128 ) {
+        as_v8_info(&data->client->log, "Node's response could not be stored --cluster size exceeded");
+        return false;
+    }
+    result[(*num_nodes)].response = (char*) malloc(strlen(response) + 1);
+    strcpy(result[(*num_nodes)].response, response);
+    strcpy(result[(*num_nodes)].node, node->name);
+    (*num_nodes)++;
+    return true;
 }
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
@@ -103,50 +103,50 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
  */
 static void * prepare(const Arguments& args)
 {
-	// The current scope of the function
-	HandleScope scope;
+    // The current scope of the function
+    HandleScope scope;
 
-	// Unwrap 'this'
-	AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    // Unwrap 'this'
+    AerospikeClient * client	= ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-	// Build the async data
-	AsyncData * data			= new AsyncData;
-	data->as					= &client->as;
-	LogInfo * log				= &client->log;
-	// Local variables
-	as_policy_info * policy		= &data->policy;
-	data->param_err				= 0;
-	data->num_nodes				= 0;
-	int arglength = args.Length();
+    // Build the async data
+    AsyncData * data			= new AsyncData;
+    data->as					= &client->as;
+    LogInfo * log				= &client->log;
+    // Local variables
+    as_policy_info * policy		= &data->policy;
+    data->param_err				= 0;
+    data->num_nodes				= 0;
+    int arglength = args.Length();
 
-	if ( args[arglength-1]->IsFunction()) {
-		data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-	} else {
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
-	}
+    if ( args[arglength-1]->IsFunction()) {
+        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+    } else {
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
 
 
-	if ( args[INFO_ARG_POS_REQ]->IsString()) {
-		data->req = (char*) malloc( INFO_REQUEST_LEN);
-		strcpy( data->req, *String::Utf8Value(args[INFO_ARG_POS_REQ]->ToString()));
-	}
-	if ( arglength > 4 ) {
-		if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
-				infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		} 
-	} else {
-		// When node application does not pass any write policy should be 
-		// initialized to defaults,
-		as_policy_info_init(policy);
-	}
-	return data;
+    if ( args[INFO_ARG_POS_REQ]->IsString()) {
+        data->req = (char*) malloc( INFO_REQUEST_LEN);
+        strcpy( data->req, *String::Utf8Value(args[INFO_ARG_POS_REQ]->ToString()));
+    }
+    if ( arglength > 4 ) {
+        if ( args[INFO_ARG_POS_IPOLICY]->IsObject() &&
+                infopolicy_from_jsobject(policy, args[INFO_ARG_POS_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        } 
+    } else {
+        // When node application does not pass any write policy should be 
+        // initialized to defaults,
+        as_policy_info_init(policy);
+    }
+    return data;
 
 Err_Return:
-	data->param_err = 1;
-	return data;
+    data->param_err = 1;
+    return data;
 }
 
 /**
@@ -157,21 +157,21 @@ Err_Return:
  */
 static void execute(uv_work_t * req)
 {
-	// Fetch the AsyncData structure
-	AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
-	aerospike * as			 = data->as;
-	as_error *  err			 = &data->err;
-	char * request			 = data->req;
-	as_policy_info * policy  = &data->policy;
-	// Invoke the blocking call.
-	// The error is handled in the calling JS code.
-	if (as->cluster == NULL) {
-		data->param_err = 1;
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-	}
+    // Fetch the AsyncData structure
+    AsyncData * data		 = reinterpret_cast<AsyncData *>(req->data);
+    aerospike * as			 = data->as;
+    as_error *  err			 = &data->err;
+    char * request			 = data->req;
+    as_policy_info * policy  = &data->policy;
+    // Invoke the blocking call.
+    // The error is handled in the calling JS code.
+    if (as->cluster == NULL) {
+        data->param_err = 1;
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+    }
 
     if ( data->param_err == 0) {
-       aerospike_info_foreach(as, err, policy, request, aerospike_info_cluster_callback, (void*)data);
+        aerospike_info_foreach(as, err, policy, request, aerospike_info_cluster_callback, (void*)data);
     }
 }
 
@@ -187,70 +187,70 @@ static void respond(uv_work_t * req, int status)
     // Scope for the callback operation.
     HandleScope scope;
 
-	// Fetch the AsyncData structure
-	AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
-	as_error *	err		= &data->err;
-	LogInfo * log		= &data->client->log;
-	Handle<Value> argv[2];
-	int num					 = data->num_nodes;
-	node_info_result* result = data->info_result_list;
-	
+    // Fetch the AsyncData structure
+    AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
+    as_error *	err		= &data->err;
+    LogInfo * log		= &data->client->log;
+    Handle<Value> argv[2];
+    int num					 = data->num_nodes;
+    node_info_result* result = data->info_result_list;
 
 
-	for ( int i = 0 ; i < num; i++) {
-		// Build the arguments array for the callback
-		if (data->param_err == 0) {
-			argv[0]			   = error_to_jsobject(err, log);
-			Handle<Object> obj = Object::New();
-			char* response	   = result[i].response;
-			const char* node_name	   = result[i].node;
-			if ( response != NULL && strlen(response) > 0 )	{
-				obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)response));
-				argv[1] = obj;
-			} else {
-				argv[1] = Null();
-			}
-			if( node_name != NULL && strlen(node_name) > 0 ) {
-				obj->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
-				argv[1] = obj;
-			} else {
-				argv[1] = Null();
-			}
-		}
-		else {
-			err->func = NULL;
-			argv[0] = error_to_jsobject(err, log);
-			argv[1] = Null();
-		}	
 
-		// Surround the callback in a try/catch for safety
-		TryCatch try_catch;
+    for ( int i = 0 ; i < num; i++) {
+        // Build the arguments array for the callback
+        if (data->param_err == 0) {
+            argv[0]			   = error_to_jsobject(err, log);
+            Handle<Object> obj = Object::New();
+            char* response	   = result[i].response;
+            const char* node_name	   = result[i].node;
+            if ( response != NULL && strlen(response) > 0 )	{
+                obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)response));
+                argv[1] = obj;
+            } else {
+                argv[1] = Null();
+            }
+            if( node_name != NULL && strlen(node_name) > 0 ) {
+                obj->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
+                argv[1] = obj;
+            } else {
+                argv[1] = Null();
+            }
+        }
+        else {
+            err->func = NULL;
+            argv[0] = error_to_jsobject(err, log);
+            argv[1] = Null();
+        }	
 
-		// Execute the callback.
-		if ( data->callback != Null() ) {
-			data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
-		}
+        // Surround the callback in a try/catch for safety
+        TryCatch try_catch;
 
-		// Process the exception, if any
-		if ( try_catch.HasCaught() ) {
-			node::FatalException(try_catch);
-		}
-	}
-	// Dispose the Persistent handle so the callback
-	// function can be garbage-collected
-	data->callback.Dispose();
+        // Execute the callback.
+        if ( data->callback != Null() ) {
+            data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+        }
 
-	for ( int i = 0; i < num; i++ ) 
-	{
-		if( result[i].response != NULL) {
-			free(result[i].response);
-		}
-	}
-	// clean up any memory we allocated
+        // Process the exception, if any
+        if ( try_catch.HasCaught() ) {
+            node::FatalException(try_catch);
+        }
+    }
+    // Dispose the Persistent handle so the callback
+    // function can be garbage-collected
+    data->callback.Dispose();
+
+    for ( int i = 0; i < num; i++ ) 
+    {
+        if( result[i].response != NULL) {
+            free(result[i].response);
+        }
+    }
+    // clean up any memory we allocated
 
 
-	delete data;
-	delete req;
+    delete data;
+    delete req;
 }
 
 /*******************************************************************************

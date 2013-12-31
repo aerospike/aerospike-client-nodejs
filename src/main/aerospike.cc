@@ -36,10 +36,10 @@ using namespace v8;
  *
  */
 /*Handle<Value> Connect(const Arguments& args)
-{
-    HandleScope scope;
-    return scope.Close(AerospikeClient::NewInstance(args));
-}*/
+  {
+  HandleScope scope;
+  return scope.Close(AerospikeClient::NewInstance(args));
+  }*/
 
 Handle<Value> Client(const Arguments& args)
 {

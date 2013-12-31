@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/aerospike_batch.h>
 }
 
 #include <node.h>
@@ -150,14 +150,14 @@ static void * prepare(const Arguments& args)
     if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
         Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
         if( batch_from_jsarray(batch, keys, log) != AS_NODE_PARAM_OK) {
-             as_v8_error(log, "parsing batch keys failed");
+            as_v8_error(log, "parsing batch keys failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
     }
     else {
         //Parameter passed is not an array of Key Objects "ERROR..!"
-         as_v8_error(log, "Batch key must be an array of key objects");
+        as_v8_error(log, "Batch key must be an array of key objects");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
@@ -211,7 +211,7 @@ static void execute(uv_work_t * req)
     // Invoke the blocking call.
     // Check for no parameter errors from Nodejs 
     if( data->node_err == 0) {
-         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
+        as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_get(as, err, policy, batch, batch_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
             DEBUG(log, ERROR, err);
@@ -281,7 +281,7 @@ static void respond(uv_work_t * req, int status)
                 as_record_destroy(&batch_results[i].record);
                 rec_found++;
             } else {
-                 as_v8_debug(log, "Record[%d] not returned by server ", i);
+                as_v8_debug(log, "Record[%d] not returned by server ", i);
             }
 
             arr->Set(i,obj);
@@ -317,7 +317,7 @@ static void respond(uv_work_t * req, int status)
 
     as_v8_debug(log, "Cleaned up the resources");
 
-    
+
     delete data;
     delete req;
     scope.Close(Undefined());

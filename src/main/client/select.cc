@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -99,7 +99,7 @@ static void * prepare(const Arguments& args)
 
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-         as_v8_detail(log, "Node.js callback registered");
+        as_v8_detail(log, "Node.js callback registered");
     }else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);

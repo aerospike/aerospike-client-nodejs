@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -210,7 +210,7 @@ static void execute(uv_work_t * req)
         DEBUG(log, _KEY,  key);
         aerospike_key_put(as, err, policy, key, rec);
     }
-        
+
 }
 
 /**
@@ -246,7 +246,7 @@ static void respond(uv_work_t * req, int status)
     }
     else {
         err->func = NULL;
-		as_v8_debug(log, "Parameter error for put operation");
+        as_v8_debug(log, "Parameter error for put operation");
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();

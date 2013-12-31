@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -84,7 +84,7 @@ static void * prepare(const Arguments& args)
     data->as         = &client->as;
     data->client     = client;
     data->param_err  = 0;
-	as_record * rec  = &data->rec;
+    as_record * rec  = &data->rec;
 
     // Local variables
     as_key *    key         = &data->key;
@@ -117,7 +117,7 @@ static void * prepare(const Arguments& args)
     if ( arglength > 2 ) {
         if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
             if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                 as_v8_error(log, "Parsing of readpolicy from object failed");
+                as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
@@ -131,7 +131,7 @@ static void * prepare(const Arguments& args)
         as_policy_read_init(policy);
     }
 
-	as_record_init(rec, 0);
+    as_record_init(rec, 0);
     return data;
 
 Err_Return:

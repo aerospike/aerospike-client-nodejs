@@ -21,12 +21,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -44,8 +44,8 @@ using namespace v8;
 #define OP_ARG_POS_META    2
 #define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same 
 #define OP_ARG_POS_CB      4 // for every invoke of operate. If operatepolicy is not passed from node
-                              // application, argument position for callback changes.
-                              
+// application, argument position for callback changes.
+
 /*******************************************************************************
  *  TYPES
  ******************************************************************************/
@@ -107,7 +107,7 @@ static void * prepare(const Arguments& args)
     }
     if ( args[OP_ARG_POS_KEY]->IsObject() ) {
         if (key_from_jsobject(key, args[OP_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-             as_v8_error(log, "Parsing of key (C structure) from key object failed");
+            as_v8_error(log, "Parsing of key (C structure) from key object failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
@@ -118,11 +118,11 @@ static void * prepare(const Arguments& args)
         goto Err_Return;
     }
     if ( args[OP_ARG_POS_OP]->IsArray() ) {
-         Local<Array> operations = Local<Array>::Cast(args[OP_ARG_POS_OP]);
+        Local<Array> operations = Local<Array>::Cast(args[OP_ARG_POS_OP]);
         if ( operations_from_jsarray( op, operations, log ) != AS_NODE_PARAM_OK ) {
-                 as_v8_error(log, "Parsing of as_operation (C structure) from operation object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-                goto Err_Return;
+            as_v8_error(log, "Parsing of as_operation (C structure) from operation object failed");
+            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+            goto Err_Return;
         }
     } else {
         as_v8_error(log, "operations should be an array");
@@ -130,8 +130,8 @@ static void * prepare(const Arguments& args)
         goto Err_Return;
     }
     if ( args[OP_ARG_POS_META]->IsObject() ) {
-            setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
-            setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
+        setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
+        setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
     } else {
         as_v8_debug(log, "Metadata should be an object");
     }
@@ -139,7 +139,7 @@ static void * prepare(const Arguments& args)
     if ( arglength > 3 ) {
         if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
             if (operatepolicy_from_jsobject( policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                 as_v8_error(log, "Parsing of operatepolicy from object failed");
+                as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
@@ -155,7 +155,7 @@ static void * prepare(const Arguments& args)
 
     as_record_init(rec, 0);
 
-        
+
     return data;
 
 Err_Return:
@@ -215,7 +215,7 @@ static void respond(uv_work_t * req, int status)
 
     // Fetch the AsyncData structure
     AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
-    
+
     as_error *  err         = &data->err;
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
@@ -234,10 +234,10 @@ static void respond(uv_work_t * req, int status)
         DEBUG(log,  _KEY, key);
 
         argv[0] = error_to_jsobject(err, log),
-        argv[1] = recordbins_to_jsobject(rec, log ),
-        argv[2] = recordmeta_to_jsobject(rec, log),
-        argv[3] = key_to_jsobject(key, log);
-    
+            argv[1] = recordbins_to_jsobject(rec, log ),
+            argv[2] = recordmeta_to_jsobject(rec, log),
+            argv[3] = key_to_jsobject(key, log);
+
     }
     else {
         err->func = NULL;
@@ -255,13 +255,13 @@ static void respond(uv_work_t * req, int status)
 
     // Execute the callback.
     data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
-    
+
     as_v8_debug(log, "Invoked operate callback");
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
         node::FatalException(try_catch);
     }
-    
+
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
     data->callback.Dispose();

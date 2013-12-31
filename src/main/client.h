@@ -23,7 +23,7 @@
 #pragma once
 
 extern "C" {
-    #include <aerospike/aerospike.h>
+#include <aerospike/aerospike.h>
 }
 
 #include <node.h>
@@ -41,7 +41,7 @@ class AerospikeClient : public ObjectWrap {
     /***************************************************************************
      *  PUBLIC
      **************************************************************************/
-    
+
     public:
         static void Init();
         static Handle<Value> NewInstance(const Arguments& args);
@@ -49,10 +49,10 @@ class AerospikeClient : public ObjectWrap {
         aerospike as;
         LogInfo log;
 
-    /***************************************************************************
-     *  PRIVATE
-     **************************************************************************/
-    
+        /***************************************************************************
+         *  PRIVATE
+         **************************************************************************/
+
     private:
 
         AerospikeClient();
@@ -65,10 +65,10 @@ class AerospikeClient : public ObjectWrap {
          *  CLIENT OPERATIONS
          **********************************************************************/
 
-         /**
-          * undefined client.connect()
-          */
-         static Handle<Value> Connect(const Arguments& args);
+        /**
+         * undefined client.connect()
+         */
+        static Handle<Value> Connect(const Arguments& args);
 
         /**
          *  undefined client.close()
@@ -89,17 +89,17 @@ class AerospikeClient : public ObjectWrap {
          *  undefined client.put(Key, Record, function(Error))
          */
         static Handle<Value> Put(const Arguments& args);
-        
+
         /**
          *      undefined client.select(Key,bins,function(Error,Record))
          */ 
         static Handle<Value> Select(const Arguments& args);
-        
+
         /**
          *      undefined client.delete(Key, function(Error,Key))
          */
         static Handle<Value> Remove(const Arguments& args);     
-    
+
         /**
          *  undefined client.batch_get(Key[],function(Error,Record))
          */
@@ -109,7 +109,7 @@ class AerospikeClient : public ObjectWrap {
          *  undefined client.batch_get(Key[],function(Error,Record))
          */
         static Handle<Value> Batch_Exists(const Arguments& args);
-        
+
         /**
          *  undefined client.batch_select(Key[],bins,function(Error,Record))
          */
@@ -130,8 +130,8 @@ class AerospikeClient : public ObjectWrap {
          */ 
         static Handle<Value> Info_Cluster(const Arguments& args);
 
-		/*
-		 *undefined client.set_log_level(Log log)
-		 */
-		static Handle<Value> SetLogLevel(const Arguments& args);
+        /*
+         *undefined client.set_log_level(Log log)
+         */
+        static Handle<Value> SetLogLevel(const Arguments& args);
 };
