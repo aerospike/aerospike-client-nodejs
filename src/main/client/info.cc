@@ -175,13 +175,6 @@ static void execute(uv_work_t * req)
     char **response          = &data->res;
     LogInfo * log            = &data->client->log;
 
-    // Invoke the blocking call.
-    // The error is handled in the calling JS code.
-    if (as->cluster == NULL) {
-        as_v8_error(log, "Not connected to Cluster to perform the operation");
-        data->param_err = 1;
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-    }
 
     if ( data->param_err == 0) {
         as_v8_debug(log, "info command request:%s on host:%s, port:%d", request, addr, port);
@@ -220,7 +213,7 @@ static void respond(uv_work_t * req, int status)
             obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)data->res));
             argv[1]            = obj;
         } else {
-            as_v8_info(log, "Noresponse received for the info request :%s", data->req);
+            as_v8_info(log, "No response received for the info request :%s", data->req);
             argv[1] = Null();
         }
     }

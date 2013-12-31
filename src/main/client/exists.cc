@@ -84,6 +84,7 @@ static void * prepare(const Arguments& args)
     data->as         = &client->as;
     data->client     = client;
     data->param_err  = 0;
+	as_record * rec  = &data->rec;
 
     // Local variables
     as_key *    key         = &data->key;
@@ -130,6 +131,7 @@ static void * prepare(const Arguments& args)
         as_policy_read_init(policy);
     }
 
+	as_record_init(rec, 0);
     return data;
 
 Err_Return:

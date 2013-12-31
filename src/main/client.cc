@@ -156,6 +156,7 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
     if (err.code != AEROSPIKE_OK) {
         client->as.cluster = NULL;
         as_v8_error(&client->log, "Connecting to Cluster Failed");
+		return Null();
     }
 
     as_v8_debug(&client->log, "Connecting to Cluster: Success");
@@ -169,10 +170,8 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
     if (args[0]->IsObject()){
-		printf("set_log_level invoked\n ");
 		LogInfo * log = &client->log;
         if ( log_from_jsobject(log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
-			printf("log from js object failed\n");
 		    log->severity = AS_LOG_LEVEL_INFO;
 			log->fd       = 2;
 		}

@@ -5,7 +5,13 @@ var aerospike = require('aerospike')
 var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config)
-client.connect()
+client = client.connect()
+if (client === null)
+{
+    console.log("Client object is null \n ---Application Exiting --- ")
+	process.exit(1)
+}
+
 var operations = aerospike.Operators
 
 // No of operations to be performed
@@ -25,7 +31,8 @@ for (var i = 0; i < n; i++ ) {
   var ops = [
     { operation: operations.INCR, bin_name: 'i', bin_value: i },
     { operation: operations.APPEND, bin_name: 's', bin_value: "append_str" },
-    { operation: operations.READ, bin_name: 'i' }
+    { operation: operations.READ, bin_name: 'i' },
+	{ operation: operations.READ, bin_name: 's' }
   ]
 
 
@@ -36,7 +43,9 @@ for (var i = 0; i < n; i++ ) {
       // err.code AEROSPIKE_OK signifies the successful 
       // completion of the operation.
       console.log("error %s",err.message)
-    }
+    } else {
+		console.log(rec)
+	}
     if ( (++m) == n ) {
       console.timeEnd(n + " operate")
     }

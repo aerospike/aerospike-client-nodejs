@@ -7,7 +7,13 @@ var aerospike = require('aerospike')
 var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config)
-client.connect()
+client = client.connect()
+
+if (client === null)
+{
+    console.log("Client object is null \n ---Application Exiting --- ")
+	process.exit(1)
+}
 
 var n = env.nops/4
 var m = 0
@@ -39,7 +45,7 @@ for (var i = 0 ;i < n; i++) {
 	  var num = rec_list.length
 	  for(i=0; i<num; i++) {
 		if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
-			console.log(rec_list[i].recstatus)
+				console.log("Record[%d] not present in the batch of size %d", i, num)
 			} 
 		}
 	}else {

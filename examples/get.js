@@ -7,8 +7,11 @@ var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config).connect()
 
-console.log(client);
-
+if (client === null)
+{
+    console.log("Client object is null \n ---Application Exiting --- ")
+	process.exit(1)
+}
 
 var n = env.nops
 var m = 0

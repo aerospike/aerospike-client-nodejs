@@ -5,7 +5,14 @@ var aerospike = require('aerospike')
 var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config)
-client.connect()
+//Connect call is necessary for info_cluster call.
+client = client.connect()
+
+if (client === null)
+{
+    console.log("Client object is null \n ---Application Exiting --- ")
+	process.exit(1)
+}
 
 var infopolicy = {
   timeout: 1,
@@ -14,8 +21,6 @@ var infopolicy = {
 }
 
 client.info_cluster ( "objects", infopolicy, function(err, response) {
-	console.log("callback called");
 	console.log(response);
-  //console.log(response);
 });
 

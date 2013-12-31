@@ -7,7 +7,12 @@ var aerospike = require('aerospike')
 var status = aerospike.Status
 var policy = aerospike.Policy
 var client = aerospike.client(env.config)
-client.connect()
+client = client.connect()
+if (client === null)
+{
+    console.log("Client object is null \n ---Application Exiting --- ")
+	process.exit(1)
+}
 
 var n = env.nops/4
 var m = 0
@@ -15,7 +20,7 @@ var m = 0
 var namespace = env.namespace
 var set = env.set
 
-console.time(n + " batch_get")
+console.time(n + " batch_exists")
 
 // Currently the batch operation is supported only for a batch of 
 // keys from the same namespace.
@@ -39,7 +44,7 @@ for (var i = 0 ;i < n; i++) {
 	  var num = rec_list.length
 	  for(i=0; i<num; i++) {
 		if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
-			console.log(rec_list[i].recstatus)
+			console.log("Record[%d] is not found in the batch_exists of size %d", i, num)
 		}
 	  }
 	} else {
@@ -47,7 +52,7 @@ for (var i = 0 ;i < n; i++) {
 		console.log(err.message)
 	}
 	if ( (++m) == n ) {
-		console.timeEnd(n + " batch_get")
+		console.timeEnd(n + " batch_exists")
 		client.close()
 	}
   })
