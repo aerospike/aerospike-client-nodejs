@@ -65,9 +65,9 @@ OperatePolicy
 Attributes:
 
 - `key`             – Specifies the behavior for the key. 
-                       For values, see [Key Policy Values](policy_values.md#key).
+                       For values, see [Key Policy Values](policies.md#key).
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `retry`           – An instance of :data:`RetryPolicy`. Specifies the behavior
                       for failed operations.
 
@@ -83,7 +83,7 @@ ReadPolicy
 Attributes:
 
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `timeout`         – Integer datatype. Maximum time in milliseconds to wait for
                       the operation to complete. If 0 (zero), then the value 
                       will default to global default timeout value.
@@ -101,12 +101,12 @@ RemovePolicy
 Attributes:
 
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `generation`      – The generation of the record to be removed.
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
-                      For values, see [Retry Policy Values](policy_values.md#retry).
+                      For values, see [Retry Policy Values](policies.md#retry).
 
 <!--
 ################################################################################
@@ -120,13 +120,13 @@ WritePolicy
 Attributes:
 
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `exists`          – Specifies the behavior for the existence of the record.
-                      For values, see [Exists Policy Values](policy_values.md#exists).
+                      For values, see [Exists Policy Values](policies.md#exists).
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
-                      For values, see [Retry Policy Values](policy_values.md#retry).
+                      For values, see [Retry Policy Values](policies.md#retry).
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
                       complete. If 0 (zero), then the value will default to 
                       global default values.
