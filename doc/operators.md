@@ -69,21 +69,6 @@ prepend()
 -->
 <a name="prepend"></a>
 
-=======
-```js
-operators.append('a', 'hello')
-operators.append('a', 'world')
-```
-
-### incr(bin, value)
-
-Add the value to the bin. The bin must contain an Integer.
-
-```js
-operators.incr('b', 10)
-```
-
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 ### prepend(bin, value)
 
 Prepend the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
