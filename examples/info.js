@@ -19,7 +19,7 @@ var infopolicy = {
   check_bounds: false
 }
 
-client.info ( "127.0.0.1", 3000, "objects", infopolicy, function(err, response) {
+client.info ( env.host, env.port, "objects", infopolicy, function(err, response) {
   console.log(response);
 });
 
