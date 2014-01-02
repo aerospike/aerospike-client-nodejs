@@ -73,7 +73,6 @@ prepend()
 
 Prepend the value to the bin. The bin must contain either String or a Byte Array, and the value must be of the same type.
 
-<<<<<<< HEAD
 Parameters:
 
 - `bin`         – The name of the bin to prepend a value to.
