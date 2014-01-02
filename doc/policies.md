@@ -1,6 +1,5 @@
 # Policies
 
-<<<<<<< HEAD
 Policies provide the ability to modify the behavior of operations.
 
 This document provides information on structure of policy objects for certain 
@@ -146,21 +145,6 @@ key
 <a name="key"></a>
 
 ### Key Policy Values
-=======
-The Policies object contains an enumeration of values for policies. modify the behavior of database operations. The policies object provides values that are available for each policy.
-
-Example:
-
-```js
-var policies = aerospike.Policies
-
-client.get(key, {key=policies.Key.SEND}, callback)
-```
-
-
-
-## Key Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### DIGEST
 
@@ -178,7 +162,6 @@ Send the key. This policy is ideal if you want to reduce the number of bytes sen
 policies.Key.SEND
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 retry
@@ -187,10 +170,6 @@ retry
 <a name="retry"></a>
 
 ### Retry Policy Values
-=======
-
-## Retry Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### NONE
 
@@ -208,7 +187,6 @@ If an operation fails, attempt the operation one more time
 policies.Retry.ONCE
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 gen
@@ -217,10 +195,6 @@ gen
 <a name="gen"></a>
 
 ### Generation Policy Values
-=======
-
-## Generation Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### IGNORE
 
@@ -254,7 +228,6 @@ Write a record creating a duplicate, ONLY if the generation collides.
 policies.Generation.DUP
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 exists
@@ -263,10 +236,6 @@ exists
 <a name="exists"></a>
 
 ### Exists Policy Values
-=======
-
-## Exists Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### IGNORE
 
