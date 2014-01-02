@@ -118,7 +118,11 @@ void stringify( char* err_str, const as_error *err, const char* data_type)
         pos += sprintf(err_str, " [ message : %s, func : %s, file %s, line : %d] ", err->message, err->func, err->file, err->line);
     }
     else {
-        pos += sprintf(err_str, "[ message : %s ]", err->message);
+        if ( err->message != '\0') {
+            pos += sprintf(err_str, "[ message : %s ]", err->message);
+        } else {
+            pos += sprintf(err_str, "[ message : AEROSPIKE_OK ]");
+        }
     }
 }
 

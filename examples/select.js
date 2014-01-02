@@ -29,6 +29,10 @@ for (var i = 0; i < n; i++ ) {
   // Name of the bins to be selected through this operation
   var bins = ['s', 'i'];
 
+ /** readpolicy is an optional argument to select function call.
+  *  if readpolicy is not passed, default values are used as readpolicy.
+  * */
+
   // policy to be used for the select operation
   var readpolicy = {
     timeout: 10,
@@ -36,7 +40,7 @@ for (var i = 0; i < n; i++ ) {
   };
 
   // This function gets the bins specified in the bins variable.
-  client.select(k2, bins, function(err, rec, meta, key) {
+  client.select(k2, bins, readpolicy, function(err, rec, meta, key) {
     if ( err.code != status.AEROSPIKE_OK ) {
       // AEROSPIKE_OK signifies the successful retrieval of above 
       // mentioned bin names.

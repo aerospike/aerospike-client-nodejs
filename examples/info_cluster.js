@@ -14,6 +14,10 @@ if (client === null)
 	process.exit(1)
 }
 
+/* infopolicy is an optional argument 
+ * If infopolicy is not passed, default value is used 
+ * */
+
 var infopolicy = {
   timeout: 1,
   send_as_is: true,

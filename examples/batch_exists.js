@@ -1,5 +1,5 @@
 // getting a set of records from a single namespace,
-// in a single operation(batch_get).
+// in a single operation(batch_exists).
 
 var env = require('./env')
 var aerospike = require('aerospike')
@@ -10,7 +10,7 @@ var client = aerospike.client(env.config)
 client = client.connect()
 if (client === null)
 {
-    console.log("Client object is null \n ---Application Exiting --- ")
+    console.log("Client object is null \n ---Application Exiting--- ")
 	process.exit(1)
 }
 
@@ -35,11 +35,19 @@ for (var i = 0 ;i < n; i++) {
 	/** arguments to callback
 	 *  err -- error returned by the callee.
 	 *  rec_list -- array of objects containing,  Error object and Record object
-	 *  Error.code == 0 && Error.message == 'AREOSPIKE_OK'  implies, record is successfully retrieved.
-	 *  recstatus != AEROSPIKE_OK  implies Record could not be retrieved
-	 *  record object contains key,meta,bins 
+	 *  Error.code == 0 && Error.message == 'AREOSPIKE_OK'  implies, record is present in the server.
+	 *  recstatus != AEROSPIKE_OK  implies Record is not present in the server.
+	 *  record object contains key,meta.
 	 **/  
-  client.batch_exists(k1,function (err, rec_list){
+
+    /** 
+     * batchpolicy is an optional argument to batch_exists function call.
+     * if batchpolicy is not passed, default value is used for batchpolicy.
+     * */
+
+  var batchpolicy = { timeout : 10}
+
+  client.batch_exists(k1, batchpolicy, function (err, rec_list){
     if ( err.code == status.AEROSPIKE_OK ) {
 	  var num = rec_list.length
 	  for(i=0; i<num; i++) {
@@ -57,5 +65,3 @@ for (var i = 0 ;i < n; i++) {
 	}
   })
 }
-
-

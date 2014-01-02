@@ -39,7 +39,15 @@ for (var i = 0 ;i < n; i++) {
 	 *  Error.code == 0 && Error.message == 'AREOSPIKE_OK'  implies, record is successfully retrieved.
 	 *  recstatus != AEROSPIKE_OK  implies Record could not be retrieved
 	 *  record object contains key,meta,bins 
-	 **/  
+     **/
+
+   /** 
+    * batchpolicy is an optional argument to batch_exists function call.
+    * if batchpolicy is not passed, default value is used for batchpolicy.
+    * */
+
+  var batchpolicy = { timeout : 10} 
+
   client.batch_get(k1,function (err, rec_list){
     if ( err.code == status.AEROSPIKE_OK ) {
 	  var num = rec_list.length

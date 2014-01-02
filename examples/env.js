@@ -12,9 +12,11 @@ var env = {
 
 // client settings
 env.config = {
+    // server address - host and port
     hosts: [
       { addr: env.host, port: env.port }
     ],
+    // Default policies to be used for all the database operations.
 	policies: {
 	  timeout : 1,
 	  read:{
@@ -49,6 +51,7 @@ env.config = {
 	  }
 
 	},
+    // log level granularity. Logging is provided only for V8, not node.js application.
 	log : {
 		level : log.INFO
 	}

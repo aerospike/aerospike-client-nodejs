@@ -35,9 +35,13 @@ for (var i = 0; i < n; i++ ) {
 	{ operation: operations.READ, bin_name: 's' }
   ]
 
+  /* The behaviour of operate function call can be modified using operatepolicy.
+   * Refer documentation to use operate policy.
+   * */ 
 
-  // This function increments the bin 'i' by the value i and
-  // append the value 'append_str' to the bin 's'.
+  /** This function increments the bin 'i' by the value i and
+   *  append the value 'append_str' to the bin 's'.
+   *  */
   client.operate(k1,ops, function(err, rec, meta) {
    if ( err.code != status.AEROSPIKE_OK ) {
       // err.code AEROSPIKE_OK signifies the successful 

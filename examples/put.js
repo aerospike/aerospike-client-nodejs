@@ -20,18 +20,6 @@ console.time(n + " put")
 
 for (var i = 0; i < n; i++ ) {
 
-  var str = "This is abnormally lengthy string. This is to test batch_get functioning for more than 8 bytes";
-
-  var o = {
-    a: 1,
-    b: 2,
-    c: [1, 2, 3],
-    d: str
-  }
-
-  // pack the object o using msgpack
-  // var pbuf = msgpack.pack(o)
-
   // Key of the record.
   var k1 = {
     ns: env.namespace,
@@ -52,7 +40,11 @@ for (var i = 0; i < n; i++ ) {
   }
 
 
-  // Policy to be followed while writing.
+  /* writepolicy can be used to modify the behaviour of put operation.
+   * writepolicy is an optional argument. If the writepolicy is not passed
+   * default values passed during client object creation is used.
+   * */ 
+  /** Policy to be followed while writing. **/
   var write_policy = {
     timeout: 10,
     retry: policy.Retry.ONCE,       // If a write fails, retry the operation once

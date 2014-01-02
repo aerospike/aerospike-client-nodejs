@@ -8,7 +8,7 @@ var policy = aerospike.Policy
 var client = aerospike.client(env.config).connect()
 if (client === null)
 {
-    console.log("Client object is null \n ---Application Exiting --- ")
+    console.log("Client object is null \n ---Application Exiting--- ")
 	process.exit(1)
 }
 
@@ -20,27 +20,34 @@ var m = 0
 console.time(n + " get");
 for (var i = 0; i < n; i++ ) {
 
-  // Key of the record to be read
+  /** Key of the record to be read **/
   var k1 = {
     ns: env.namespace,
     set: env.set,
     key: "value"+i
   }
 
-  // Policy to be followed during read operation.
-  var readpolicy = {
-    timeout: 10,
-    key: policy.Key.KEY
-  }
+  /** readpolicy is an optional argument to get function call.
+   *  if readpolicy is not passed, default values are used as readpolicy.
+   * */
 
-  // This function gets the complete record with all the bins. 
-  client.exists(k1, function(err, meta) {
+  /* *policy to be used for the exits operation* */
+  var readpolicy = { 
+    timeout: 1, 
+    key: policy.Key.SEND
+  };  
+
+
+  /**This function checks for existence of record in the database. 
+   * meta null signifies the record is not present in the database.
+   * */ 
+  client.exists(k1, readpolicy, function(err, meta, key) {
     if ( err.code != status.AEROSPIKE_OK ) {
-      // Error code AEROSPIKE_OK signifies successful retrieval
-      // of the record
       console.log("error %s",err.message)
     }
-	console.log(meta)
+    else {
+    	console.log(meta)
+    }
     if ( (++m) == n ) {
       console.timeEnd(n + " get")
     }

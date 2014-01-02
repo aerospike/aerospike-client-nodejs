@@ -25,6 +25,12 @@ for (var i = 0; i < n; i++ ) {
     set: env.set,
     key: "value"+i
   }
+ 
+  /** Behaviour of remove operation can be modified using removepolicy.
+   * removepolicy is an optional argument.
+   * if it's not passed as an argument, default values for remove policy is 
+   * used. 
+   */ 
 
   var removepolicy = {
     timeout : 10,
