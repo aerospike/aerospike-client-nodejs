@@ -203,7 +203,7 @@ Check for the existence of a record in the database cluster using the key provid
 
 Parameters:
 
-- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -238,7 +238,7 @@ Read a record from the database cluster using the key provided.
 
 Parameters:
 
-- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -437,7 +437,7 @@ Retrieve a specified bins for a record of given key from the database cluster.
 
 Parameters:
 
-- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `bins`        – An array of bin names for the bins to be returned for the given key.
 - `policy`      – (optional) The [Read Policy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
