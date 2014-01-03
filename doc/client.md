@@ -51,11 +51,10 @@ The parameters for the `callback` argument:
 
 - `error`   – The [Error object](datamodel.md#error) representing the status of 
               the operation.
-- `results` – An array of objects, where each object contains a `status`, 
-              `record` and `metadata` field. The `status` is a 
-              [Status code](status.md). The `record` is a 
-              [Record object](metadata.md#record). The `metadata` field is a 
-              [Metadata object](metadata.md#metadata).
+- `results` – An array of objects, where each object contains the following attributes:
+  - `status`     - status of the record. [Status code](status.md). 
+  - `key`        - key of the record. [Metadata object](datamodel.md#key).
+  - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
 
 Example:
 ```js
@@ -106,11 +105,11 @@ The parameters for the `callback` argument:
 
 - `error`   – The [Error object](datamodel.md#error) representing the status of 
               the operation.
-- `results` – An array of objects, where each object contains a `status`, 
-              `record` and `metadata` field. The `status` is a 
-              [Status code](status.md). The `record` is a 
-              [Record object](metadata.md#record). The `metadata` field is a 
-              [Metadata object](metadata.md#metadata).
+- `results` – An array of objects, where each object contains the following attributes:
+  - `status`     - status of the record. [Status code](status.md). 
+  - `key`        - key of the record. [Metadata object](datamodel.md#key).
+  - `record`     - the record read from the cluster. [Metadata object](datamodel.md#record).
+  - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
 
 Example:
 ```js
