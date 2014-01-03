@@ -51,8 +51,9 @@ The parameters for the `callback` argument:
 
 - `error`   – The [Error object](datamodel.md#error) representing the status of 
               the operation.
-- `records` – An array of objects, where each object contains a `status`, 
-              `record` and `metadata` field. The `records` is a 
+- `results` – An array of objects, where each object contains a `status`, 
+              `record` and `metadata` field. The `status` is a 
+              [Status code](status.md). The `record` is a 
               [Record object](metadata.md#record). The `metadata` field is a 
               [Metadata object](metadata.md#metadata).
 
@@ -69,7 +70,16 @@ var keys = [
 client.batch_get(keys, function(err, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
-    if ( result.status == status.AEROSPIKE_OK ) {
+    switch ( result.status ) {
+      case status.AEROSPIKE_OK:
+      	// record found
+      	break;
+      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      	// record not found
+      	break;
+      default:
+      	// error while reading record
+        break;
     }
   }
 });
@@ -96,9 +106,11 @@ The parameters for the `callback` argument:
 
 - `error`   – The [Error object](datamodel.md#error) representing the status of 
               the operation.
-- `records` – An array of objects containing a `record` field  and a `metadata` 
-              field. The `records` is a [Record object](metadata.md#record). The 
-              `metadata` field is a [Metadata object](metadata.md#metadata).
+- `results` – An array of objects, where each object contains a `status`, 
+              `record` and `metadata` field. The `status` is a 
+              [Status code](status.md). The `record` is a 
+              [Record object](metadata.md#record). The `metadata` field is a 
+              [Metadata object](metadata.md#metadata).
 
 Example:
 ```js
@@ -110,8 +122,21 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(err, records) {
-  // do something
+client.batch_get(keys, function(err, results) {
+  for ( var i = 0; i<results.length; i++) {
+    var result = results[i];
+    switch ( result.status ) {
+      case status.AEROSPIKE_OK:
+      	// record found
+      	break;
+      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      	// record not found
+      	break;
+      default:
+      	// error while reading record
+        break;
+    }
+  }
 });
 ```
 
