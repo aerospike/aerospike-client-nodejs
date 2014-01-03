@@ -27,40 +27,40 @@ When running `npm install`, `npm link` or `node-gyp rebuild`, the `.gyp`
 script will run `scripts/aerospike-client-c.sh` to resolve the C client 
 dependency.
 
-The resolution steps are check the following directories:
-
-1. `./aerospike-client-c`
-2. `/usr`
-
-In each directory it will check for:
+The script will check for the following files in the search paths:
 
 - `lib/libaerospike.a`
 - `include/aerospike/aerospike.h`
 
+By default, the search paths are:
+
+- `./aerospike-client-c`
+- `/usr`
+
 If neither are found, then it will download the C client and create the 
 `./aerospike-client-c` directory.
 
-You may also force downloading or the C client or specify a path to 
-a custom built C client. (see below)
+You may also force downloading or the C client or specify a specify search
+path.
 
-### Force Downloading of the C Client
+### Force Downloading
 
 You can force downloading of the C client, by specifying the `DOWNLOAD=1` 
 environment variable. Example:
 
     $ DOWNLOAD=1 npm install
 
-### Using Custom C Client Builds
+### Custom Search Path
 
-If you have built the C client from source, and want the Node.js
-client to use that build, then you can specify the `PREFIX=<PATH>` environment
+You may specify a custom search path for the C client for the Node.js client
+to use when building. This is useful if you have built the C client from source.
+To specify the custom search path, then specify the `PREFIX=<PATH>` environment
 variable:
 
     $ PREFIX=~/aerospike-client-c/target/Linux-x86_64 npm install
 
-The `<PATH>` must be the directory path containing `lib` and `include` 
-subdirectories. It may also point to `/usr`, if you wish to use an installed
-C client, and not use a previously downloaded C client.
+The `<PATH>` must be the path to a directory containing `lib` and `include` 
+subdirectories. 
 
 ## Examples
 
