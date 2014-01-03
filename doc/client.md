@@ -32,6 +32,51 @@ With a new client, you can then use any of the methods specified below.
 
 <!--
 ################################################################################
+batch_exists()
+################################################################################
+-->
+<a name="batch_exists"></a>
+
+### batch_exists(keys, policy=null, callback)
+
+Check the existence of a batch of records from the database cluster.
+
+Parameters:
+
+- `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
+- `policy`    – (optional) The [ReadKey object](policy.md#read) to use for this operation.
+- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+
+The parameters for the `callback` argument:
+
+- `error`   – The [Error object](datamodel.md#error) representing the status of 
+              the operation.
+- `records` – An array of objects, where each object contains a `status`, 
+              `record` and `metadata` field. The `records` is a 
+              [Record object](metadata.md#record). The `metadata` field is a 
+              [Metadata object](metadata.md#metadata).
+
+Example:
+```js
+var key = aerospike.key
+
+var keys = [
+  key('test', 'demo', 'key1'),
+  key('test', 'demo', 'key2'),
+  key('test', 'demo', 'key3')
+]
+
+client.batch_get(keys, function(err, results) {
+  for ( var i = 0; i<results.length; i++) {
+    var result = results[i];
+    if ( result.status == status.AEROSPIKE_OK ) {
+    }
+  }
+});
+```
+
+<!--
+################################################################################
 batch_get()
 ################################################################################
 -->
