@@ -1,45 +1,84 @@
-## Aerospike Client for node.js
+# Aerospike Client for node.js
 
-The Aerospike client for node.js is an add-on module, written in C++.
- 
-The Aerospike node.js client supports Integer, String, Binary datatypes. 
+An Aerospike add-on module for Node.js.
 
 ## Prerequisites
 
 [Node.js](http://nodejs.org) version v0.10.16 or greater is required. 
-To install the latest stable version of Node.js, visit http://nodejs.org/download/
 
+To install the latest stable version of Node.js, visit [http://nodejs.org/download/](http://nodejs.org/download/)
 
 ## Building and Installing
 
-For Debian and Ubuntu distribution, grant permissions for npm to become root 
-user. This is done using
-	sudo npm config set unsafe-perm true
+The Aerospike Node.js client is built on the Aerspike C client. When 
+`npm install` or `npm link` commands are run, `npm` will use `node-gyp`
+to build the module.
 
-Aerospike node.js client `aerospike-node.js` requires Aerspike C client to be installed.
-This is done automatically as part of the addon module installation:
+The `node-gyp` script will resolve the C client to either an installed client, 
+or will download and extract the C client locally. 
 
-		$sudo npm install -g 
+To install the module:
 
-If the Aerospike C client is already installed on the system, set the following SKIP_C_CLIENT 
-environment variable before installing the module:
+    $ npm install
 
-		$sudo SKIP_C_CLIENT=1 npm install -g 
+You may also link the module:
 
-After installation, set the environment variable `NODE_PATH` to where node modules path is:
-Some installation of nodejs puts the node_modules directory in /usr/lib/node_modules, then set 
-the NODE_PATH as
-	$export NODE_PATH=/usr/lib/node_modules
-Some other installation of nodejs puts the node_modules directory in /usr/local/lib/node_modules,
-in this case set NODE_PATH as
-	$export NODE_PATH=/usr/local/lib/node_modules
+    $ npm link
+
+### C Client Resolution
+
+When running `npm install`, `npm link` or `node-gyp rebuild`, the `.gyp` 
+script will run `scripts/aerospike-client-c.sh` to resolve the C client 
+dependency.
+
+The resolution steps are check the following directories:
+
+1. `./aerospike-client-c`
+2. `/usr`
+
+In each directory it will check for:
+
+- `lib/libaerospike.a`
+- `include/aerospike/aerospike.h`
+
+If neither are found, then it will download the C client and create the 
+`./aerospike-client-c` directory.
+
+You may also force downloading or the C client or specify a path to 
+a custom built C client. (see below)
+
+### Force Downloading of the C Client
+
+You can force downloading of the C client, by specifying the `DOWNLOAD=1` 
+environment variable. Example:
+
+    $ DOWNLOAD=1 npm install
+
+### Using Custom C Client Builds
+
+If you have built the C client from source, and want the Node.js
+client to use that build, then you can specify the `PREFIX=<PATH>` environment
+variable:
+
+    $ PREFIX=~/aerospike-client-c/target/Linux-x86_64 npm install
+
+The `<PATH>` must be the directory path containing `lib` and `include` 
+subdirectories. It may also point to `/usr`, if you wish to use an installed
+C client, and not use a previously downloaded C client.
 
 ## Examples
 
-Refer to examples folder which demonstrates the all the operations available in Aerospike Database.
-     
+In order to use the examples, you will need to "link" to the aerospike module:
 
-##Testing
+    $ cd examples
+    $ npm link aerospike
+
+Then you can run any of the examples:
+
+    $ node exists.js
+
+
+## Testing
 
 The test cases are written using mocha. Refer to README under the test directory to run
 all the test cases.

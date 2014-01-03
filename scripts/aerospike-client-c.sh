@@ -157,7 +157,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
         ;;
       "deb" )
         printf "info: extracting files from '${INST_PATH}'\n"
-        dpkg -x aerospike-client-c-devel-*.deb 
+        dpkg -x aerospike-client-c-devel-*.deb .
         ;;
     esac
 

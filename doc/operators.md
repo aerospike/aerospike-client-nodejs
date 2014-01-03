@@ -12,7 +12,7 @@ var ops = [
   op.append('a', 'world'),
   op.increment('b',10),
   op.read('a'),
-  op.read('b'),
+  op.read('b')
 ]
 
 client.operate(key, ops, callback)
