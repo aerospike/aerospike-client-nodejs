@@ -44,7 +44,7 @@ The attributes of the `policies` Object:
 
 - `timeout` – The global timeout value, if one is not explicitly defined for an operation.
 - `batch` – The global policy for batch operations, defined using a [Batch Policy Object](policies.md#BatchPolicy)
-- `info` – The global policy for info operations, defined using a [Info Policy Object](policies.md#BInfoPolicy)
+- `info` – The global policy for info operations, defined using a [Info Policy Object](policies.md#InfoPolicy)
 - `operate` – The global policy for info operations, defined using a [Operate Policy Object](policies.md#OperatePolicy)
 - `query` – The global policy for query operations, defined using a [Query Policy Object](policies.md#QueryPolicy)
 - `read` – The global policy for read operations, defined using a [Read Policy Object](policies.md#ReadPolicy)
