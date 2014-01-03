@@ -20,6 +20,7 @@ With a new client, you can then use any of the methods specified below.
   - [batch_get()](#batch_get)
   - [close()](#close)
   - [connect()](#connect)
+  - [exists()](#exists)
   - [get()](#get)
   - [info()](#info)
   - [operate()](#operate)
@@ -67,7 +68,7 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(err, results) {
+client.batch_get(keys, function(error, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
     switch ( result.status ) {
@@ -122,7 +123,7 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(err, results) {
+client.batch_get(keys, function(error, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
     switch ( result.status ) {
@@ -191,6 +192,41 @@ client.connect(function (error) {
 
 <!--
 ################################################################################
+exists()
+################################################################################
+-->
+<a name="exists"></a>
+
+### exists(key, policy=null, callback)
+
+Check for the existence of a record in the database cluster using the key provided.
+
+Parameters:
+
+- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
+- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
+
+
+Example:
+
+```js
+var key = aerospike.key
+
+client.exists(key('test','demo','key1'), function(error, metadata, key) {
+  // do something
+});
+```
+
+<!--
+################################################################################
 get()
 ################################################################################
 -->
@@ -220,7 +256,7 @@ Example:
 ```js
 var key = aerospike.key
 
-client.gey(key('test','demo','key1'), function(err, record, metadata) {
+client.gey(key('test','demo','key1'), function(error, record, metadata) {
   // do something
 });
 ```
@@ -268,7 +304,7 @@ client.operate("statistics", function(err, response, host) {
 Example of sending the request to a single host:
 
 ```js
-client.operate("statistics", {addr: "127.0.0.1", port: 3000}, function(err, response, host) {
+client.operate("statistics", {addr: "127.0.0.1", port: 3000}, function(error, response, host) {
   // do something
 });
 ```
@@ -310,7 +346,7 @@ var ops = [
   op.read('b')
 ]
 
-client.operate(key, ops, function(err, rec, meta, key) {
+client.operate(key, ops, function(error, record, metadata, key) {
   // do something
 });
 ```
@@ -350,7 +386,7 @@ var rec = {
   b: 123
 }
 
-client.put(key('test','demo','key1'), rec, function(err, key) {
+client.put(key('test','demo','key1'), rec, function(error, key) {
   // do something
 });
 ```
@@ -382,7 +418,7 @@ Example:
 ```js
 var key = aerospike.key
 
-client.remove(key('test','demo','key1'), function(err, key) {
+client.remove(key('test','demo','key1'), function(error, key) {
   // do something
 });
 ```
@@ -417,7 +453,7 @@ Example:
 ```js
 var key = aerospike.key
 
-client.select(key('test','demo','key1'), ["name","age"] function(err, rec, meta) {
+client.select(key('test','demo','key1'), ["name","age"] function(error, record, metadata, key) {
   // do something
 });
 ```
