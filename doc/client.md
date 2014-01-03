@@ -46,7 +46,7 @@ Check the existence of a batch of records from the database cluster.
 Parameters:
 
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
-- `policy`    – (optional) The [ReadKey object](policy.md#read) to use for this operation.
+- `policy`    – (optional) The [Batch Policy object](policies.md#BatchPolicy) to use for this operation.
 - `callback`  – The function to call when the operation completes, with the results of the batch operation. 
 
 The parameters for the `callback` argument:
@@ -100,7 +100,7 @@ Read a batch of records from the database cluster.
 Parameters:
 
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
-- `policy`    – (optional) The [ReadKey object](policy.md#read) to use for this operation.
+- `policy`    – (optional) The [Batch Policy object](policies.md#WritePolicy) to use for this operation.
 - `callback`  – The function to call when the operation completes, with the results of the batch operation. 
 
 The parameters for the `callback` argument:
@@ -204,7 +204,7 @@ Check for the existence of a record in the database cluster using the key provid
 Parameters:
 
 - `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
-- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
@@ -239,7 +239,7 @@ Read a record from the database cluster using the key provided.
 Parameters:
 
 - `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
-- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
@@ -278,6 +278,7 @@ Parameters:
 - `host`        – (optional) The specific host to send the request to. An object containing attributes:
   - `addr`      - The IP address of the host.
   - `port`      – The port of the host.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The `request` argument is a string representing an info request. The `host` argument is optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` argument defined, the client is not required to be connected to a cluster.
@@ -324,7 +325,7 @@ Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `operations`  – An array of operations.
-- `policy`      – (optional) A [WritePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
@@ -368,7 +369,7 @@ Parameters:
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `record`      – A [Record object](datamodel.md#record) used for specifying the fields to store.
 - `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
-- `policy`      – (optional) A [WritePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) A [Write Policy object](policies.md#WritePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
@@ -405,7 +406,7 @@ Remove a record with the specified key from the database cluster.
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key) used for locating the record to be removed.
-- `policy`      – (optional) The [RemovePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) The [Remove Policy object](policies.md#RemovePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes wit the results of the operation.
 
 The parameters for the `callback` argument:
@@ -438,7 +439,7 @@ Parameters:
 
 - `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
 - `bins`        – An array of bin names for the bins to be returned for the given key.
-- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `policy`      – (optional) The [Read Policy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
