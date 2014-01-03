@@ -10,9 +10,9 @@ var aerospike = require('aerospike');
 var config = {
   hosts: [
     // add thre nodes in the cluster.
-    { addr: 192.168.0.1, port: 3000 },
-    { addr: 192.168.0.2, port: 3000 },
-    { addr: 192.168.0.3, port: 3000 }
+    { addr: "192.168.0.1", port: 3000 },
+    { addr: "192.168.0.2", port: 3000 },
+    { addr: "192.168.0.3", port: 3000 }
   ],
   policies = {
     // default timeout for all operations is 100ms
@@ -38,12 +38,18 @@ Each entry in the list is a Object containing the following attributes:
 
 ### `policies` attribute
 
-The `policies` attribute should contain an Object containing global policies for the client. A policy is a set of values which modify the behavior of an operation, such as timeouts and how an operation handles data.
+The `policies` attribute should contain an Object containing global policies for the client. A policy is a set of values which modify the behavior of an operation, such as timeouts and how an operation handles data. The policies defined in the configuration are used as global defaults, which can be overridden by individual operations as needed.
 
 The attributes of the `policies` Object:
 
 - `timeout` – The global timeout value, if one is not explicitly defined for an operation.
-- `read` – The read policy, defined using a `read` policy object.
+- `batch` – The global policy for batch operations.
+- `info` – The global policy for info operations.
+- `operate` – The global policy for info operations.
+- `query` – The global policy for query operations.
+- `read` – The global policy for read operations.
+- `scan` – The global policy for scan operations.
+- `write` – The global policy for write operations.
 
 
 
