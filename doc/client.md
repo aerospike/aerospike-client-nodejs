@@ -198,10 +198,6 @@ operate()
 
 ### operate(key, operations, policy=null, callback)
 
-<a name="operate"></a>
-
-### operate(key, operations, [policy,] callback)
-
 Perform multiple operations on a single record. 
 
 Parameters:
