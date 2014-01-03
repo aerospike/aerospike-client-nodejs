@@ -310,7 +310,7 @@ var ops = [
   op.read('b')
 ]
 
-client.operate(key, ops, function(err, rec, meta) {
+client.operate(key, ops, function(err, rec, meta, key) {
   // do something
 });
 ```
@@ -339,6 +339,7 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
+- `key`         – A [Key object](datamodel.md#key) for the record that was written.
 
 Example:
 ```js
@@ -349,7 +350,7 @@ var rec = {
   b: 123
 }
 
-client.put(key('test','demo','key1'), rec, function(err) {
+client.put(key('test','demo','key1'), rec, function(err, key) {
   // do something
 });
 ```
@@ -375,12 +376,13 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
+- `key`         – A [Key object](datamodel.md#key) for the record that was removed.
 
 Example:
 ```js
 var key = aerospike.key
 
-client.remove(key('test','demo','key1'), function(err) {
+client.remove(key('test','demo','key1'), function(err, key) {
   // do something
 });
 ```
