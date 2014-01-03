@@ -62,6 +62,7 @@ A record is addressable via its key. A key is an object containing:
 - `digest` – (optional) The digest value of the current key. Must be a Buffer.
 
 A key can be defined as an object or using [`aerospike.key()`](aerospike.md#key):
+For each operation, either a key value or a digest value must be present.
 
 Example:
 
@@ -96,7 +97,7 @@ attributes will be populated.
 
 Attributes:
 
-- `code`    – Is a constant of type [`Status`](status.md), it is the return status of any database operation
+- `code`    – Is a constant of type [`Status`](status.md), it is the return status of any database operation.
 - `file`    – The file in which the error occured.
 - `func`    – The function in which the error occured.
 - `line`    – The line number in which the error occured.
