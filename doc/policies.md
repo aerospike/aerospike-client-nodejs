@@ -29,6 +29,8 @@ BatchPolicy
 
 ### Batch Policy Object
 
+A policy effecting the behavior of batch operations.
+
 Attributes:
 
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
@@ -43,6 +45,8 @@ InfoPolicy
 <a name="InfoPolicy"></a>
 
 ### Info Policy Object
+
+A policy effecting the behavior of info operations.
 
 Attributes:
 
@@ -61,6 +65,8 @@ OperatePolicy
 <a name="OperatePolicy"></a>
 
 ### Operate Policy Object
+
+A policy effecting the behavior of operate operations.
 
 Attributes:
 
@@ -83,6 +89,8 @@ ReadPolicy
 
 ### Read Policy Object
 
+A policy effecting the behaviour of read operations.
+
 Attributes:
 
 - `key`             – Specifies the behavior for the key. 
@@ -100,6 +108,8 @@ RemovePolicy
 <a name="RemovePolicy"></a>
 
 ### Remove Policy Object
+
+A policy effecting the behaviour of remove operations.
 
 Attributes:
 
@@ -119,6 +129,8 @@ WritePolicy
 <a name="WritePolicy"></a>
 
 ### Write Policy Object
+
+A policy effecting the behaviour of write operations.
 
 Attributes:
 
