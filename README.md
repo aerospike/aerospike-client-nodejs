@@ -10,12 +10,7 @@ To install the latest stable version of Node.js, visit [http://nodejs.org/downlo
 
 ## Building and Installing
 
-The Aerospike Node.js client is built on the Aerspike C client. When 
-`npm install` or `npm link` commands are run, `npm` will use `node-gyp`
-to build the module.
-
-The `node-gyp` script will resolve the C client to either an installed client, 
-or will download and extract the C client locally. 
+The Aerospike Node.js client is built on the Aerspike C client. The following commands will run `node-gyp` to resolve the C client and build the module.
 
 To install the module:
 
@@ -24,6 +19,7 @@ To install the module:
 You may also link the module:
 
     $ npm link
+
 
 ### C Client Resolution
 
