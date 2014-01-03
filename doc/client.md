@@ -259,24 +259,6 @@ The parameters for the `callback` argument:
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
 
-<a name="put"></a>
-### put(key, record, [metadata,] [policy,] callback)
-
-Writing a record to the database cluster.
-
-Parameters:
-
-- `key` – a key object
-- `policy` – (optional) The policy to use for this operation.
-- `callback` – The function to call when the operation completes.
-
-The `callback` should be a function like:
-
-```js
-function (error)
-```
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
-
 Example:
 ```js
 var key = aerospike.key
@@ -291,7 +273,6 @@ client.put(key('test','demo','key1'), rec, function(err) {
 });
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 remove()
