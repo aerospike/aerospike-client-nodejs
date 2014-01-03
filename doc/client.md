@@ -16,15 +16,16 @@ which needs to be populated and passed to `aerospike.client()`.
 With a new client, you can then use any of the methods specified below.
 
 - [Methods](#methods)
-	- [batch_get()](#batch_get)
-	- [close()](#close)
-	- [connect()](#connect)
-	- [get()](#get)
-	- [info()](#info)
-	- [operate()](#operate)
-	- [put()](#put)
-	- [remove()](#remove)
-	- [select()](#select)
+  - [batch_exists()](#batch_exists)
+  - [batch_get()](#batch_get)
+  - [close()](#close)
+  - [connect()](#connect)
+  - [get()](#get)
+  - [info()](#info)
+  - [operate()](#operate)
+  - [put()](#put)
+  - [remove()](#remove)
+  - [select()](#select)
 
 
 <a name="methods"></a>
@@ -195,7 +196,7 @@ get()
 -->
 <a name="get"></a>
 
-### get(key, [policy,] callback)
+### get(key, policy=null, callback)
 
 Read a record from the database cluster using the key provided.
 
@@ -209,9 +210,9 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
-### info(request, [host,] [port,] callback)
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 
 Example:
@@ -231,29 +232,43 @@ info()
 -->
 <a name="info"></a>
 
-### info(request, host=null, port=null, policy=null, callback)
+### info(request, host=null, policy=null, callback)
 
 Perform an info request against the database cluster or specific host.
 
 Parameters:
 
 - `request`     – The info request to send.
-- `host`        – (optional) The address of a specific host to send the request to.
-- `port`        – (optional) The port of a specific host to send the request to.
+- `host`        – (optional) The specific host to send the request to. An object containing attributes:
+  - `addr`      - The IP address of the host.
+  - `port`      – The port of the host.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
-The `request` argument is a string representing an info request. The `host` and `port` arguments are optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` and `port` defined, then client is not required to be connected to a cluster.
+The `request` argument is a string representing an info request. The `host` argument is optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` argument defined, the client is not required to be connected to a cluster.
+
+The callback will be called for each host queried, with their response to the request.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `response`    – ???
+- `response`    – The response string.
+- `host`        - The host that sent the response represented as an object containing:
+  - `addr`      - The address of the host.
+  - `port`      - The port of the host.
 
 Example:
 
 ```js
-client.operate(key, "statistics", function(err, response) {
+client.operate("statistics", function(err, response, host) {
+  // do something
+});
+```
+
+Example of sending the request to a single host:
+
+```js
+client.operate("statistics", {addr: "127.0.0.1", port: 3000}, function(err, response, host) {
   // do something
 });
 ```
@@ -280,8 +295,9 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 Example:
 
@@ -391,8 +407,9 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 Example:
 ```js
