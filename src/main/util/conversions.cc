@@ -45,9 +45,6 @@ using namespace node;
 using namespace v8;
 
 
-#define ENUM_TO_STR( __POLICYNAME, __POLICYVALUE) \
-    __POLICYNAME[__POLICYVALUE]
-
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
@@ -567,7 +564,7 @@ int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_v8_detail(log," Key policy is set to %s", ENUM_TO_STR(KEY, (*keypolicy) ));
+    as_v8_detail(log, "Key policy is set to %d", *keypolicy);
     return AS_NODE_PARAM_OK;
 }
 
@@ -577,7 +574,7 @@ int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_v8_detail(log," Generation policy is set to %s", ENUM_TO_STR(GENERATION,(*genpolicy)));
+    as_v8_detail(log, "Generation policy is set to %d", *genpolicy);
     return AS_NODE_PARAM_OK;
 }
 
@@ -587,7 +584,7 @@ int setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy, LogInfo * 
         return AS_NODE_PARAM_OK;
     }
 
-    as_v8_detail(log, "Retry Policy is set to %s", ENUM_TO_STR(RETRY,(*retrypolicy)));
+    as_v8_detail(log, "Retry Policy is set to %d", *retrypolicy);
     return AS_NODE_PARAM_OK;
 }
 
@@ -598,7 +595,7 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo
         return AS_NODE_PARAM_ERR;
     }
 
-    as_v8_detail(log, "Exists policy is set to %s", ENUM_TO_STR(EXISTS, (*existspolicy)));
+    as_v8_detail(log, "Exists policy is set to %d", *existspolicy);
     return AS_NODE_PARAM_OK;
 }
 

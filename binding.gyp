@@ -37,10 +37,10 @@
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc',
-        'src/main/enums/error_codes.cc',
-        'src/main/enums/policy_enums.cc',
+        'src/main/enums/log_levels.cc',
+        'src/main/enums/status_codes.cc',
         'src/main/enums/operators.cc',
-        'src/main/enums/log_level.cc',
+        'src/main/enums/policy_values.cc',
         'src/main/client/info.cc',
         'src/main/client/info_cluster.cc'
       ],

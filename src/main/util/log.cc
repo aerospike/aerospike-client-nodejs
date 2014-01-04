@@ -31,6 +31,10 @@ extern "C" {
 #include "log.h"
 #include "../enums/enums.h"
 
+const char log_severity_strings[7][10] = {
+    "OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", {0}
+};
+
 bool v8_logging_callback(as_log_level level, const char* func, const char * file, uint32_t line, const char* fmt, ...)
 {
 
