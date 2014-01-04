@@ -27,7 +27,9 @@ BatchPolicy
 -->
 <a name="BatchPolicy"></a>
 
-### BatchPolicy 
+### Batch Policy Object
+
+A policy effecting the behavior of batch operations.
 
 Attributes:
 
@@ -42,7 +44,9 @@ InfoPolicy
 -->
 <a name="InfoPolicy"></a>
 
-### InfoPolicy 
+### Info Policy Object
+
+A policy effecting the behavior of info operations.
 
 Attributes:
 
@@ -60,7 +64,9 @@ OperatePolicy
 -->
 <a name="OperatePolicy"></a>
 
-### OperatePolicy 
+### Operate Policy Object
+
+A policy effecting the behavior of operate operations.
 
 Attributes:
 
@@ -81,7 +87,9 @@ ReadPolicy
 -->
 <a name="ReadPolicy"></a>
 
-### ReadPolicy 
+### Read Policy Object
+
+A policy effecting the behaviour of read operations.
 
 Attributes:
 
@@ -99,7 +107,9 @@ RemovePolicy
 -->
 <a name="RemovePolicy"></a>
 
-### RemovePolicy 
+### Remove Policy Object
+
+A policy effecting the behaviour of remove operations.
 
 Attributes:
 
@@ -118,7 +128,9 @@ WritePolicy
 -->
 <a name="WritePolicy"></a>
 
-### WritePolicy 
+### Write Policy Object
+
+A policy effecting the behaviour of write operations.
 
 Attributes:
 

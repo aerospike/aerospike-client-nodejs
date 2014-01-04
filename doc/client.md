@@ -16,19 +16,75 @@ which needs to be populated and passed to `aerospike.client()`.
 With a new client, you can then use any of the methods specified below.
 
 - [Methods](#methods)
-	- [batch_get()](#batch_get)
-	- [close()](#close)
-	- [connect()](#connect)
-	- [get()](#get)
-	- [info()](#info)
-	- [operate()](#operate)
-	- [put()](#put)
-	- [remove()](#remove)
-	- [select()](#select)
+  - [batch_exists()](#batch_exists)
+  - [batch_get()](#batch_get)
+  - [close()](#close)
+  - [connect()](#connect)
+  - [exists()](#exists)
+  - [get()](#get)
+  - [info()](#info)
+  - [operate()](#operate)
+  - [put()](#put)
+  - [remove()](#remove)
+  - [select()](#select)
 
 
 <a name="methods"></a>
 ## Methods
+
+<!--
+################################################################################
+batch_exists()
+################################################################################
+-->
+<a name="batch_exists"></a>
+
+### batch_exists(keys, policy=null, callback)
+
+Check the existence of a batch of records from the database cluster.
+
+Parameters:
+
+- `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
+- `policy`    – (optional) The [Batch Policy object](policies.md#BatchPolicy) to use for this operation.
+- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+
+The parameters for the `callback` argument:
+
+- `error`   – The [Error object](datamodel.md#error) representing the status of 
+              the operation.
+- `results` – An array of objects, where each object contains the following attributes:
+  - `status`     - status of the record. [Status code](status.md). 
+  - `key`        - key of the record. [Metadata object](datamodel.md#key).
+  - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
+
+Example:
+```js
+var key = aerospike.key
+
+var keys = [
+  key('test', 'demo', 'key1'),
+  key('test', 'demo', 'key2'),
+  key('test', 'demo', 'key3')
+]
+
+client.batch_get(keys, function(error, results) {
+  for ( var i = 0; i<results.length; i++) {
+    var result = results[i];
+    switch ( result.status ) {
+      case status.AEROSPIKE_OK:
+      	// record found
+      	break;
+      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      	// record not found
+      	break;
+      default:
+      	// error while reading record
+        break;
+    }
+  }
+});
+```
 
 <!--
 ################################################################################
@@ -44,16 +100,18 @@ Read a batch of records from the database cluster.
 Parameters:
 
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
-- `policy`    – (optional) The [ReadKey object](policy.md#read) to use for this operation.
+- `policy`    – (optional) The [Batch Policy object](policies.md#WritePolicy) to use for this operation.
 - `callback`  – The function to call when the operation completes, with the results of the batch operation. 
 
 The parameters for the `callback` argument:
 
 - `error`   – The [Error object](datamodel.md#error) representing the status of 
               the operation.
-- `records` – An array of objects containing a `record` field  and a `metadata` 
-              field. The `records` is a [Record object](metadata.md#record). The 
-              `metadata` field is a [Metadata object](metadata.md#metadata).
+- `results` – An array of objects, where each object contains the following attributes:
+  - `status`     - status of the record. [Status code](status.md). 
+  - `key`        - key of the record. [Metadata object](datamodel.md#key).
+  - `record`     - the record read from the cluster. [Metadata object](datamodel.md#record).
+  - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
 
 Example:
 ```js
@@ -65,8 +123,21 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(err, records) {
-  // do something
+client.batch_get(keys, function(error, results) {
+  for ( var i = 0; i<results.length; i++) {
+    var result = results[i];
+    switch ( result.status ) {
+      case status.AEROSPIKE_OK:
+      	// record found
+      	break;
+      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      	// record not found
+      	break;
+      default:
+      	// error while reading record
+        break;
+    }
+  }
 });
 ```
 
@@ -121,28 +192,27 @@ client.connect(function (error) {
 
 <!--
 ################################################################################
-get()
+exists()
 ################################################################################
 -->
-<a name="get"></a>
+<a name="exists"></a>
 
-### get(key, [policy,] callback)
+### exists(key, policy=null, callback)
 
-Read a record from the database cluster using the key provided.
+Check for the existence of a record in the database cluster using the key provided.
 
 Parameters:
 
-- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
-- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
-### info(request, [host,] [port,] callback)
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 
 Example:
@@ -150,7 +220,43 @@ Example:
 ```js
 var key = aerospike.key
 
-client.gey(key('test','demo','key1'), function(err, record, metadata) {
+client.exists(key('test','demo','key1'), function(error, metadata, key) {
+  // do something
+});
+```
+
+<!--
+################################################################################
+get()
+################################################################################
+-->
+<a name="get"></a>
+
+### get(key, policy=null, callback)
+
+Read a record from the database cluster using the key provided.
+
+Parameters:
+
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `policy`      – (optional) The [ReadPolicy object](policies.md#ReadPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
+
+
+Example:
+
+```js
+var key = aerospike.key
+
+client.gey(key('test','demo','key1'), function(error, record, metadata) {
   // do something
 });
 ```
@@ -162,29 +268,44 @@ info()
 -->
 <a name="info"></a>
 
-### info(request, host=null, port=null, policy=null, callback)
+### info(request, host=null, policy=null, callback)
 
 Perform an info request against the database cluster or specific host.
 
 Parameters:
 
 - `request`     – The info request to send.
-- `host`        – (optional) The address of a specific host to send the request to.
-- `port`        – (optional) The port of a specific host to send the request to.
+- `host`        – (optional) The specific host to send the request to. An object containing attributes:
+  - `addr`      - The IP address of the host.
+  - `port`      – The port of the host.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
-The `request` argument is a string representing an info request. The `host` and `port` arguments are optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` and `port` defined, then client is not required to be connected to a cluster.
+The `request` argument is a string representing an info request. The `host` argument is optional, and allow the request to be sent to a specific host, rather than the entire cluster. With the `host` argument defined, the client is not required to be connected to a cluster.
+
+The callback will be called for each host queried, with their response to the request.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `response`    – ???
+- `response`    – The response string.
+- `host`        - The host that sent the response represented as an object containing:
+  - `addr`      - The address of the host.
+  - `port`      - The port of the host.
 
 Example:
 
 ```js
-client.operate(key, "statistics", function(err, response) {
+client.operate("statistics", function(err, response, host) {
+  // do something
+});
+```
+
+Example of sending the request to a single host:
+
+```js
+client.operate("statistics", {addr: "127.0.0.1", port: 3000}, function(error, response, host) {
   // do something
 });
 ```
@@ -198,25 +319,22 @@ operate()
 
 ### operate(key, operations, policy=null, callback)
 
-<a name="operate"></a>
-
-### operate(key, operations, [policy,] callback)
-
 Perform multiple operations on a single record. 
 
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `operations`  – An array of operations.
-- `policy`      – (optional) A [WritePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 Example:
 
@@ -229,7 +347,7 @@ var ops = [
   op.read('b')
 ]
 
-client.operate(key, ops, function(err, rec, meta) {
+client.operate(key, ops, function(error, record, metadata, key) {
   // do something
 });
 ```
@@ -251,13 +369,14 @@ Parameters:
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `record`      – A [Record object](datamodel.md#record) used for specifying the fields to store.
 - `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
-- `policy`      – (optional) A [WritePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) A [Write Policy object](policies.md#WritePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
+- `key`         – A [Key object](datamodel.md#key) for the record that was written.
 
 Example:
 ```js
@@ -268,7 +387,7 @@ var rec = {
   b: 123
 }
 
-client.put(key('test','demo','key1'), rec, function(err) {
+client.put(key('test','demo','key1'), rec, function(error, key) {
   // do something
 });
 ```
@@ -287,19 +406,20 @@ Remove a record with the specified key from the database cluster.
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key) used for locating the record to be removed.
-- `policy`      – (optional) The [RemovePolicy object](policy.md#writepolicy) to use for this operation.
+- `policy`      – (optional) The [Remove Policy object](policies.md#RemovePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes wit the results of the operation.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
+- `key`         – A [Key object](datamodel.md#key) for the record that was removed.
 
 Example:
 ```js
 var key = aerospike.key
 
-client.remove(key('test','demo','key1'), function(err) {
+client.remove(key('test','demo','key1'), function(error, key) {
   // do something
 });
 ```
@@ -317,23 +437,24 @@ Retrieve a specified bins for a record of given key from the database cluster.
 
 Parameters:
 
-- `key`         – A [Key objects](datamodel.md#key), used to locate the record in the cluster.
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `bins`        – An array of bin names for the bins to be returned for the given key.
-- `policy`      – (optional) The [ReadPolicy object](policy.md#read) to use for this operation.
+- `policy`      – (optional) The [Read Policy object](policies.md#ReadPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
 The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](metadata.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](metadata.md#record) for the `record`.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 Example:
 ```js
 var key = aerospike.key
 
-client.select(key('test','demo','key1'), ["name","age"] function(err, rec, meta) {
+client.select(key('test','demo','key1'), ["name","age"] function(error, record, metadata, key) {
   // do something
 });
 ```

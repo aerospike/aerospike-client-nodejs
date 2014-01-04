@@ -46,7 +46,8 @@ For more details on client operations, see [Client Class](client.md).
 - [Aerospike Module](aerospike.md)
 - [Client Class](client.md)
 - [Data Models](datamodel.md)
-- [Policies Object](policies.md)
-- [Operators Object](operators.md)
-- [Status Object](status.md)
+- [Configuration Object](configuration.md)
+- [Policy Objects](policies.md)
+- [Operator Objects](operators.md)
+- [Status Codes](status.md)
 
