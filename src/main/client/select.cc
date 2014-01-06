@@ -62,7 +62,7 @@ typedef struct AsyncData {
     as_record rec;
     as_policy_read policy;
     Persistent<Function> callback;
-    AerospikeClient * client;
+    LogInfo * log;
     int num_bins;
     char** bins;
 } AsyncData;
@@ -87,8 +87,7 @@ static void * prepare(const Arguments& args)
     // Build the async data
     AsyncData * data = new AsyncData;
     data->as = &client->as;
-    data->client = client;
-    LogInfo* log = &client->log; 
+    LogInfo* log = data->log = &client->log; 
     // Local variables
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
@@ -181,7 +180,7 @@ static void execute(uv_work_t * req)
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
     as_policy_read * policy = &data->policy;
-    LogInfo * log   = &data->client->log;
+    LogInfo * log   = data->log;
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -220,7 +219,7 @@ static void respond(uv_work_t * req, int status)
     as_error *  err     = &data->err;
     as_key *    key     = &data->key;
     as_record * rec     = &data->rec;
-    LogInfo * log       = &data->client->log;
+    LogInfo * log       = data->log;
 
     as_v8_debug(log, "Select operation : the response is");
     DEBUG(log, ERROR, err);

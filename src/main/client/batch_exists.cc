@@ -61,7 +61,7 @@ typedef struct AsyncData {
     as_policy_batch policy;
     as_batch batch;          // Passed as input to aerospike_batch_get
     as_batch_read  *results;// Results from a aerospike_batch_get operation
-    AerospikeClient * client;
+    LogInfo * log;
     uint32_t n;
     Persistent<Function> callback;
 } AsyncData;
@@ -76,7 +76,7 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
 {
     // Fetch the AsyncData structure
     AsyncData *     data    = reinterpret_cast<AsyncData *>(udata);
-    LogInfo * log           = &data->client->log;
+    LogInfo * log           = data->log;
     //copy the batch result to the shared data structure AsyncData,
     //so that response can send it back to nodejs layer
     //as_batch_read  *batch_result = &data->results;
@@ -126,8 +126,7 @@ static void * prepare(const Arguments& args)
     data->node_err = 0;
     data->n = 0;
     data->results = NULL;
-    data->client = client;
-    LogInfo * log = &client->log;
+    LogInfo * log = data->log = &client->log;
 
     // Local variables
     as_batch * batch = &data->batch;
@@ -198,7 +197,7 @@ static void execute(uv_work_t * req)
     as_error  *     err     = &data->err;
     as_batch  *     batch   = &data->batch;
     as_policy_batch * policy= &data->policy;
-    LogInfo *       log     = &data->client->log;
+    LogInfo *       log     = data->log;
 
     if( as->cluster == NULL) {
         as_v8_debug(log, "Cluster Object is NULL, can't perform the operation");
@@ -240,7 +239,7 @@ static void respond(uv_work_t * req, int status)
     uint32_t num_rec = data->n;
     as_batch_read* batch_results = data->results;
 
-    LogInfo * log = &data->client->log;
+    LogInfo * log = data->log;
 
     // maintain a linked list of pointers to be freed after the nodejs callback is called
     // Buffer object is not garbage collected by v8 gc. Have to delete explicitly 

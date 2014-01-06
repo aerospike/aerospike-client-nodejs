@@ -67,7 +67,7 @@ typedef struct AsyncData {
     char * req;
     char * res;
     Persistent<Function> callback;
-    AerospikeClient * client;
+    LogInfo * log;
 } AsyncData;
 
 
@@ -92,8 +92,7 @@ static void * prepare(const Arguments& args)
     // Build the async data
     AsyncData * data            = new AsyncData;
     data->as                    = &client->as;
-    data->client                = client;
-    LogInfo * log               = &client->log;
+    LogInfo * log               = data->log = &client->log;
     // Local variables
     char **addr         = &data->addr;
     uint16_t * port             = &data->port;
@@ -173,7 +172,7 @@ static void execute(uv_work_t * req)
     char * request           = data->req;
     as_policy_info * policy  = &data->policy;
     char **response          = &data->res;
-    LogInfo * log            = &data->client->log;
+    LogInfo * log            = data->log;
 
 
     if ( data->param_err == 0) {
@@ -198,7 +197,7 @@ static void respond(uv_work_t * req, int status)
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
     char * response     = data->res;
-    LogInfo * log       = &data->client->log;
+    LogInfo * log       = data->log;
 
     as_v8_debug(log, "constructing node.js structures in v8 for info");
     DEBUG(log, ERROR, err);

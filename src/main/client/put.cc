@@ -66,7 +66,7 @@ typedef struct AsyncData {
     as_policy_write policy;
     as_key key;
     as_record rec;
-    AerospikeClient *client;
+    LogInfo * log;
     Persistent<Function> callback;
 } AsyncData;
 
@@ -91,13 +91,12 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data            = new AsyncData;
-    data->client                = client;
     data->as                    = &client->as;
     // Local variables
     as_key *    key             = &data->key;
     as_record * rec             = &data->rec;
     as_policy_write * policy    = &data->policy;
-    LogInfo * log               = &client->log;
+    LogInfo * log               = data->log = &client->log;
     data->param_err             = 0;
     int arglength = args.Length();
     int meta_present = 0;
@@ -187,13 +186,12 @@ static void execute(uv_work_t * req)
 {
     // Fetch the AsyncData structure
     AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
-    AerospikeClient *client  = data->client;
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
     as_key *    key          = &data->key;
     as_record * rec          = &data->rec;
     as_policy_write * policy = &data->policy;
-    LogInfo * log            = &client->log;
+    LogInfo * log            = data->log;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -227,11 +225,10 @@ static void respond(uv_work_t * req, int status)
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
-    AerospikeClient * client = data->client;
     as_error *  err     = &data->err;
     as_key *    key     = &data->key;
     as_record * rec     = &data->rec;
-    LogInfo * log       = &client->log;
+    LogInfo * log       = data->log;
     as_v8_debug(log, "Put operation : response is");
     DEBUG(log, ERROR, err);
 

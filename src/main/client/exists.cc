@@ -58,7 +58,7 @@ typedef struct AsyncData {
     as_key key;
     as_record rec;
     as_policy_read policy;
-    AerospikeClient *client;
+    LogInfo * log;
     Persistent<Function> callback;
 } AsyncData;
 
@@ -82,7 +82,6 @@ static void * prepare(const Arguments& args)
     // Build the async data
     AsyncData * data = new AsyncData;
     data->as         = &client->as;
-    data->client     = client;
     data->param_err  = 0;
     as_record * rec  = &data->rec;
 
@@ -90,7 +89,7 @@ static void * prepare(const Arguments& args)
     as_key *    key         = &data->key;
     as_policy_read* policy  = &data->policy;
 
-    LogInfo * log = &client->log;
+    LogInfo * log = data->log = &client->log;
     int arglength = args.Length();
 
     if ( args[arglength-1]->IsFunction()) {
@@ -155,7 +154,7 @@ static void execute(uv_work_t * req)
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
     as_policy_read* policy  = &data->policy;
-    LogInfo * log           = &data->client->log;
+    LogInfo * log           = data->log;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -194,7 +193,7 @@ static void respond(uv_work_t * req, int status)
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
     int nargs               = 3;
-    LogInfo * log           = &data->client->log;
+    LogInfo * log           = data->log;
 
     Handle<Value> argv[nargs];
 

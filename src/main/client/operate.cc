@@ -62,7 +62,7 @@ typedef struct AsyncData {
     as_record rec;
     as_policy_operate policy;
     Persistent<Function> callback;
-    AerospikeClient * client;
+    LogInfo * log;
 } AsyncData;
 
 /*******************************************************************************
@@ -85,10 +85,9 @@ static void * prepare(const Arguments& args)
     // Build the async data
     AsyncData * data = new AsyncData;
     data->as = &client->as;
-    data->client = client;  
     data->param_err = 0;
 
-    LogInfo * log = &client->log;
+    LogInfo * log = data->log = &client->log;
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
@@ -180,7 +179,7 @@ static void execute(uv_work_t * req)
     as_record * rec             = &data->rec;
     as_policy_operate* policy   = &data->policy;
     as_operations * op          = &data->op;
-    LogInfo * log               = &data->client->log;
+    LogInfo * log               = data->log;
 
 
     // Invoke the blocking call.
@@ -219,7 +218,7 @@ static void respond(uv_work_t * req, int status)
     as_error *  err         = &data->err;
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-    LogInfo * log           = &data->client->log;
+    LogInfo * log           = data->log;
     int nargs=4;
     Handle<Value> argv[nargs];
 
