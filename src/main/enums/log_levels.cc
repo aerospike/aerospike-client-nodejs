@@ -5,15 +5,15 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
 
-Handle<Object> operators() 
+Handle<Object> log_levels() 
 {
     HandleScope scope;
     Handle<Object> obj = Object::New();
-    set(obj, "WRITE",   0);
-    set(obj, "READ",    1);
-    set(obj, "INCR",    2);
-    set(obj, "PREPEND", 4);
-    set(obj, "APPEND",  5);
-    set(obj, "TOUCH",   8);
+    set(obj, "OFF",    -1);
+    set(obj, "ERROR",  0);
+    set(obj, "WARN",   1);
+    set(obj, "INFO",   2);
+    set(obj, "DEBUG",  3);
+    set(obj, "DETAIL", 4);
     return scope.Close(obj);
 }

@@ -29,19 +29,7 @@ using namespace v8;
  *  FUNCTIONS
  ******************************************************************************/
 
-/**
- *  Connect to an aerospike cluster specified by the config.
- *
- *      aerospike.connect(config);
- *
- */
-/*Handle<Value> Connect(const Arguments& args)
-  {
-  HandleScope scope;
-  return scope.Close(AerospikeClient::NewInstance(args));
-  }*/
-
-Handle<Value> Client(const Arguments& args)
+Handle<Value> client(const Arguments& args)
 {
     HandleScope scope;
     return scope.Close(AerospikeClient::NewInstance(args));
@@ -52,7 +40,7 @@ Handle<Value> Client(const Arguments& args)
  *      aerospike.key(namespace, set, value);
  *
  */
-Handle<Value> Key(const Arguments& args)
+Handle<Value> key(const Arguments& args)
 {
     HandleScope scope;
 
@@ -67,18 +55,6 @@ Handle<Value> Key(const Arguments& args)
     return scope.Close(Undefined());
 }
 
-Handle<Object> GetAllPolicy() {
-    HandleScope scope;
-    Handle<Object> obj = Object::New();
-
-    obj->Set(String::NewSymbol("Key"), keyPolicy());
-    obj->Set(String::NewSymbol("Retry"), retryPolicy());
-    obj->Set(String::NewSymbol("Generation"), generationPolicy());
-    obj->Set(String::NewSymbol("Exists"), existsPolicy());
-
-    return scope.Close(obj);
-}
-
 /**
  *  aerospike object.
  */
@@ -86,12 +62,12 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
 
-    exports->Set(String::NewSymbol("client"), FunctionTemplate::New(Client)->GetFunction());
-    exports->Set(String::NewSymbol("key"), FunctionTemplate::New(Key)->GetFunction());
-    exports->Set(String::NewSymbol("Status"), errorCodes());
-    exports->Set(String::NewSymbol("Policy"),GetAllPolicy());
-    exports->Set(String::NewSymbol("Operators"), operatorsEnum());
-    exports->Set(String::NewSymbol("Log"), logLevel());
+    exports->Set(String::NewSymbol("client"),   FunctionTemplate::New(client)->GetFunction());
+    exports->Set(String::NewSymbol("key"),      FunctionTemplate::New(key)->GetFunction());
+    exports->Set(String::NewSymbol("Status"),   status_codes());
+    exports->Set(String::NewSymbol("Policy"),   policy_values());
+    exports->Set(String::NewSymbol("Operators"),operators());
+    exports->Set(String::NewSymbol("Log"),      log_levels());
 }
 
 NODE_MODULE(aerospike, Aerospike)

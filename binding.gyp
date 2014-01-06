@@ -1,7 +1,27 @@
 {
   'targets': [
     {
+      'target_name': 'aerospike-client-c',
+      'type': 'none',
+      'hard_dependency': 1,
+      'actions': [
+        {
+          'action_name': 'run scripts/aerospike-client-c.sh',
+          'inputs': [
+          ],
+          'outputs': [
+            'aerospike-client-c/lib/libaerospike.a',
+            'aerospike-client-c/include'
+          ],
+          'action': ['scripts/aerospike-client-c.sh']
+        }
+      ]
+    },
+    {
       'target_name': 'aerospike',
+      'dependencies': [
+        'aerospike-client-c'
+      ],
       'sources': [
         'src/main/aerospike.cc',
         'src/main/client.cc',
@@ -17,16 +37,20 @@
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc',
-        'src/main/enums/error_codes.cc',
-        'src/main/enums/policy_enums.cc',
+        'src/main/enums/log_levels.cc',
+        'src/main/enums/status_codes.cc',
         'src/main/enums/operators.cc',
-		'src/main/enums/log_level.cc',
+        'src/main/enums/policy_values.cc',
+        'src/main/client/info.cc',
         'src/main/client/info_cluster.cc'
       ],
-     'link_settings': {
-          'libraries': [
-              '-laerospike'
-       ]
+      'include_dirs': [
+        'aerospike-client-c/include'
+      ],
+      'link_settings': {
+        'libraries': [
+          '../aerospike-client-c/lib/libaerospike.a'
+        ]
       }
     }
   ]

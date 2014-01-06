@@ -1,6 +1,5 @@
 # Policies
 
-<<<<<<< HEAD
 Policies provide the ability to modify the behavior of operations.
 
 This document provides information on structure of policy objects for certain 
@@ -28,7 +27,9 @@ BatchPolicy
 -->
 <a name="BatchPolicy"></a>
 
-### BatchPolicy 
+### Batch Policy Object
+
+A policy effecting the behavior of batch operations.
 
 Attributes:
 
@@ -43,7 +44,9 @@ InfoPolicy
 -->
 <a name="InfoPolicy"></a>
 
-### InfoPolicy 
+### Info Policy Object
+
+A policy effecting the behavior of info operations.
 
 Attributes:
 
@@ -61,16 +64,21 @@ OperatePolicy
 -->
 <a name="OperatePolicy"></a>
 
-### OperatePolicy 
+### Operate Policy Object
+
+A policy effecting the behavior of operate operations.
 
 Attributes:
 
 - `key`             – Specifies the behavior for the key. 
-                       For values, see [Key Policy Values](policy_values.md#key).
+                       For values, see [Key Policy Values](policies.md#key).
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `retry`           – An instance of :data:`RetryPolicy`. Specifies the behavior
                       for failed operations.
+- `timeout`         – Maximum time in milliseconds to wait for the operation to 
+                      complete. If 0 (zero), then the value will default to 
+                      global default timeout value
 
 <!--
 ################################################################################
@@ -79,12 +87,14 @@ ReadPolicy
 -->
 <a name="ReadPolicy"></a>
 
-### ReadPolicy 
+### Read Policy Object
+
+A policy effecting the behaviour of read operations.
 
 Attributes:
 
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `timeout`         – Integer datatype. Maximum time in milliseconds to wait for
                       the operation to complete. If 0 (zero), then the value 
                       will default to global default timeout value.
@@ -97,17 +107,19 @@ RemovePolicy
 -->
 <a name="RemovePolicy"></a>
 
-### RemovePolicy 
+### Remove Policy Object
+
+A policy effecting the behaviour of remove operations.
 
 Attributes:
 
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `generation`      – The generation of the record to be removed.
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
-                      For values, see [Retry Policy Values](policy_values.md#retry).
+                      For values, see [Retry Policy Values](policies.md#retry).
 
 <!--
 ################################################################################
@@ -116,18 +128,20 @@ WritePolicy
 -->
 <a name="WritePolicy"></a>
 
-### WritePolicy 
+### Write Policy Object
+
+A policy effecting the behaviour of write operations.
 
 Attributes:
 
 - `gen`             – Specifies the behavior for the generation value.
-                      For values, see [Generation Policy Values](policy_values.md#gen).
+                      For values, see [Generation Policy Values](policies.md#gen).
 - `exists`          – Specifies the behavior for the existence of the record.
-                      For values, see [Exists Policy Values](policy_values.md#exists).
+                      For values, see [Exists Policy Values](policies.md#exists).
 - `key`             – Specifies the behavior for the key. 
-                      For values, see [Key Policy Values](policy_values.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
-                      For values, see [Retry Policy Values](policy_values.md#retry).
+                      For values, see [Retry Policy Values](policies.md#retry).
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
                       complete. If 0 (zero), then the value will default to 
                       global default values.
@@ -146,21 +160,6 @@ key
 <a name="key"></a>
 
 ### Key Policy Values
-=======
-The Policies object contains an enumeration of values for policies. modify the behavior of database operations. The policies object provides values that are available for each policy.
-
-Example:
-
-```js
-var policies = aerospike.Policies
-
-client.get(key, {key=policies.Key.SEND}, callback)
-```
-
-
-
-## Key Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### DIGEST
 
@@ -178,7 +177,6 @@ Send the key. This policy is ideal if you want to reduce the number of bytes sen
 policies.Key.SEND
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 retry
@@ -187,10 +185,6 @@ retry
 <a name="retry"></a>
 
 ### Retry Policy Values
-=======
-
-## Retry Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### NONE
 
@@ -208,7 +202,6 @@ If an operation fails, attempt the operation one more time
 policies.Retry.ONCE
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 gen
@@ -217,10 +210,6 @@ gen
 <a name="gen"></a>
 
 ### Generation Policy Values
-=======
-
-## Generation Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### IGNORE
 
@@ -254,7 +243,6 @@ Write a record creating a duplicate, ONLY if the generation collides.
 policies.Generation.DUP
 ```
 
-<<<<<<< HEAD
 <!--
 ################################################################################
 exists
@@ -263,10 +251,6 @@ exists
 <a name="exists"></a>
 
 ### Exists Policy Values
-=======
-
-## Exists Policy Values
->>>>>>> d39fa88f028e87f1b5585798cd9f3a01d71ee656
 
 #### IGNORE
 
