@@ -18,7 +18,7 @@ env.config = {
     ],
     // Default policies to be used for all the database operations.
 	policies: {
-	  timeout : 1,
+	  timeout : 10,
 	  read:{
 		timeout: 10,
 		key    : policy.Key.SEND
@@ -45,7 +45,7 @@ env.config = {
 		gen    : policy.Generation.IGNORE
 		},
 	  info:{
-		timeout     : 1,
+		timeout     : 10,
 		send_as_is  : true,
 		check_bounds: false
 	  }

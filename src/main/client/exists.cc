@@ -166,6 +166,7 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0 ) {
+        
         as_v8_debug(log, "Invoking aerospike exists");
         DEBUG(log, _KEY,  key);
         aerospike_key_exists(as, err, policy, key, &rec);   

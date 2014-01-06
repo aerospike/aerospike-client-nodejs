@@ -35,11 +35,13 @@ for (var i = 0; i < n; i++ ) {
         key: policy.Key.SEND
     };  
   // This function gets the complete record with all the bins. 
-  client.get(k1, readpolicy, function(err, rec, meta) {
+  client.get(k1, readpolicy, function(err, rec, meta,key) {
     if ( err.code != status.AEROSPIKE_OK ) {
       // Error code AEROSPIKE_OK signifies successful retrieval
       // of the record
       console.log("error %s",err.message)
+    } else {
+        console.log(rec)
     }
     if ( (++m) == n ) {
       console.timeEnd(n + " get")

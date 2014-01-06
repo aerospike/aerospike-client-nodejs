@@ -142,6 +142,29 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
+int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)
+{
+    if (obj->Has(String::New("addr")) ) {
+        Local<Value> addrVal = obj->Get(String::NewSymbol("addr"));
+        if ( addrVal->IsString()) {
+            (*addr) = (char*) malloc (HOST_ADDRESS_SIZE);
+            strcpy( *addr, *String::Utf8Value(addrVal->ToString()));
+            as_v8_detail(log, "host addr : %s", (*addr));
+        }else {
+            return AS_NODE_PARAM_ERR;
+        }
+    } 
+    if ( obj->Has(String::New("port")) ){
+        Local<Value> portVal = obj->Get(String::NewSymbol("port"));
+        if ( portVal->IsNumber() ) {
+                (*port) = V8INTEGER_TO_CINTEGER(portVal);
+        } else {
+            return AS_NODE_PARAM_ERR;
+        }
+    }
+    return AS_NODE_PARAM_OK;
+
+}
 int log_from_jsobject( LogInfo * log, Local<Object> obj)
 {
     if ( obj->IsObject() ){

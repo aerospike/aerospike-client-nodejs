@@ -37,9 +37,10 @@ for (var i = 0; i < n; i++ ) {
       console.log("put error: %s", err.message)
     }
     client.get(key1, function(err, bins2, meta2, key2) {
-      console.log("b = " + bins2['b'].toString())
       if ( err.code !== 0 ) {
         console.log("get error: %s", err.message)
+      } else {
+        console.log("b = " + bins2['b'].toString())
       }
       if ( (++m) == n ) {
         var ms = console.timeEnd(n + " put+get")

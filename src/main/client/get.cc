@@ -212,9 +212,9 @@ static void respond(uv_work_t * req, int status)
         DETAIL(log, _KEY,  key); 
 
         argv[0] = error_to_jsobject(err, log),
-            argv[1] = recordbins_to_jsobject(rec, log ),
-            argv[2] = recordmeta_to_jsobject(rec, log),
-            argv[3] = key_to_jsobject(key, log);
+        argv[1] = recordbins_to_jsobject(rec, log ),
+        argv[2] = recordmeta_to_jsobject(rec, log),
+        argv[3] = key_to_jsobject(key, log);
     }
     else {
         err->func = NULL;
@@ -222,7 +222,7 @@ static void respond(uv_work_t * req, int status)
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();
-        argv[3] = Null();
+        argv[3] = key_to_jsobject(key, log); 
     }
 
     // Surround the callback in a try/catch for safety

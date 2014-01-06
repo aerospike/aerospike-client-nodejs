@@ -53,6 +53,7 @@ __err.func = __func__;
 
 #define AS_NODE_PARAM_ERR -1
 #define AS_NODE_PARAM_OK   0
+#define HOST_ADDRESS_SIZE 50
 
 
 typedef struct llist{
@@ -75,6 +76,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log );
 
 // Functions to convert v8 objects(maps) to C client structures
 int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log );
+int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log);
 int log_from_jsobject( LogInfo * log, Local<Object> obj);
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log );
 int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log );

@@ -1,7 +1,7 @@
 // Writing n records to database.
 
 var env = require('./env')
-var aerospike = require('aerospike')
+var aerospike = require('../build/Debug/aerospike')
 
 var status = aerospike.Status
 var policy = aerospike.Policy
@@ -54,10 +54,12 @@ for (var i = 0; i < n; i++ ) {
   }
 
   // write the record to database
-  client.put(k1, bins, meta, write_policy, function(err) {
+  client.put(k1, bins, meta, write_policy, function(err, meta1, key1) {
     if ( err.code != status.AEROSPIKE_OK ) {
         // Error code AEROSPIKE_OK specifies the success of write operation.
         console.log("error: %s", err.message)
+    } else {
+        console.log(meta1)
     }
     if ( (++m) == n ) {
         console.timeEnd(n + " put")

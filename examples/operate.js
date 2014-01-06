@@ -42,7 +42,7 @@ for (var i = 0; i < n; i++ ) {
   /** This function increments the bin 'i' by the value i and
    *  append the value 'append_str' to the bin 's'.
    *  */
-  client.operate(k1,ops, function(err, rec, meta) {
+  client.operate(k1,ops, function(err, rec, meta, key) {
    if ( err.code != status.AEROSPIKE_OK ) {
       // err.code AEROSPIKE_OK signifies the successful 
       // completion of the operation.

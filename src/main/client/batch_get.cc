@@ -86,6 +86,9 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
         data->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
         for ( uint32_t i = 0; i < n; i++ ) {
             data->results[i].result = results[i].result; 
+            as_v8_debug(log, "batch result for the key");
+            DEBUG(log, _KEY, results[i].key);
+            key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
             if (results[i].result == AEROSPIKE_OK) {            
                 as_record * rec = NULL ;
                 rec = &data->results[i].record;
@@ -93,11 +96,8 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
                 as_v8_detail(log, "Record[%d]", i);
                 DETAIL(log, BINS, &results[i].record);
                 DETAIL(log, META, &results[i].record);
-                as_v8_debug(log, "record returned for the key");
-                DEBUG(log, _KEY, results[i].key);
 
                 as_record_init(rec, results[i].record.bins.size);
-                key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
                 record_clone(&results[i].record, &rec, log);
             } 
         }
@@ -281,6 +281,8 @@ static void respond(uv_work_t * req, int status)
                 as_record_destroy(&batch_results[i].record);
                 rec_found++;
             } else {
+                obj->Set(String::NewSymbol("key"), key_to_jsobject(batch_results[i].key, log));
+                as_key_destroy((as_key*) batch_results[i].key);
                 as_v8_debug(log, "Record[%d] not returned by server ", i);
             }
 

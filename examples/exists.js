@@ -17,7 +17,7 @@ if (client === null)
 var n = env.nops
 var m = 0
 
-console.time(n + " get");
+console.time(n + " exists");
 for (var i = 0; i < n; i++ ) {
 
   /** Key of the record to be read **/
@@ -49,7 +49,7 @@ for (var i = 0; i < n; i++ ) {
     	console.log(meta)
     }
     if ( (++m) == n ) {
-      console.timeEnd(n + " get")
+      console.timeEnd(n + " exists")
     }
   })
 }

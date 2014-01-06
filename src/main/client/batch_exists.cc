@@ -86,15 +86,15 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
         data->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
         for ( uint32_t i = 0; i < n; i++ ) {
             data->results[i].result = results[i].result; 
+            as_key *key = (as_key*) results[i].key;
+            DETAIL(log, _KEY, key);
+            key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
             if (results[i].result == AEROSPIKE_OK) {            
                 as_record * rec = NULL;
                 rec = &data->results[i].record; 
-                as_key *key = (as_key*) results[i].key;
                 as_record *record = (as_record*) &results[i].record;
                 as_v8_debug(log, "record[%d]", i);
                 DETAIL(log, META, record);
-                DETAIL(log, _KEY, key);
-                key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
                 record_clone(&results[i].record, &rec, log);
             } 
         }
@@ -271,11 +271,10 @@ static void respond(uv_work_t * req, int status)
         for ( uint32_t i = 0; i< num_rec; i++) {
             Handle<Object> obj = Object::New();
             obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
+            obj->Set(String::NewSymbol("key"),key_to_jsobject( batch_results[i].key, log));
+            as_key_destroy((as_key*) batch_results[i].key);
             if(batch_results[i].result == AEROSPIKE_OK) {   
                 obj->Set(String::NewSymbol("meta"),recordmeta_to_jsobject( &batch_results[i].record, log ));
-                obj->Set(String::NewSymbol("key"),key_to_jsobject( batch_results[i].key, log ));
-                as_key_destroy((as_key*) batch_results[i].key);
-                as_record_destroy(&batch_results[i].record);
                 rec_found++;
             }
             else {

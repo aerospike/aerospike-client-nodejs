@@ -20,12 +20,24 @@ client.connect()
  * creation is used
  * */ 
 var infopolicy = {
-  timeout: 1,
+  timeout: 10,
   send_as_is: true,
   check_bounds: false
 }
 
-client.info ( env.host, env.port, "objects", infopolicy, function(err, response) {
+var host = { addr : env.host,  port : env.port }
+
+/** info call to a particular host in the cluster. **/
+client.info( "objects", host, infopolicy, function(err, response, host) {
+  console.log("individual node")
   console.log(response);
+  console.log(host)
+});
+
+/** info call to the entire cluster **/
+client.info( "objects", infopolicy, function( err, response, host) {
+   console.log("full cluster")
+    console.log(response);
+    console.log(host)
 });
 
