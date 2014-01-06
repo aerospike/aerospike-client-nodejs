@@ -41,7 +41,6 @@
         'src/main/enums/status_codes.cc',
         'src/main/enums/operators.cc',
         'src/main/enums/policy_values.cc',
-        'src/main/client/info.cc',
         'src/main/client/info_cluster.cc'
       ],
       'include_dirs': [
