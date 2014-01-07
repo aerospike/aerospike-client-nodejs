@@ -125,7 +125,7 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData *     data = new AsyncData;
-    data->as = &client->as;
+    data->as = client->as;
     data->node_err = 0;
     data->n = 0;
     data->results = NULL;
@@ -135,7 +135,7 @@ static void * prepare(const Arguments& args)
 
     int arglength = args.Length();
 
-    LogInfo * log = data->log = &client->log;
+    LogInfo * log = data->log = client->log;
 
     if ( args[arglength-1]->IsFunction()) { 
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));   

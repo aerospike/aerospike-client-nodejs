@@ -46,8 +46,8 @@ class AerospikeClient : public ObjectWrap {
         static void Init();
         static Handle<Value> NewInstance(const Arguments& args);
 
-        aerospike as;
-        LogInfo log;
+        aerospike *as;
+        LogInfo *log;
 
         /***************************************************************************
          *  PRIVATE

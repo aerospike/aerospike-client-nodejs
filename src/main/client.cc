@@ -89,6 +89,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     HandleScope scope;
 
     AerospikeClient * client = new AerospikeClient();
+    client->as = (aerospike*) malloc(sizeof(aerospike));
+    client->log = (LogInfo*) malloc(sizeof(LogInfo));
 
     as_config config;
     as_config_init(&config);
@@ -99,24 +101,24 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
         if (args[0]->ToObject()->Has(String::NewSymbol("log")))  
         {
             Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log")) ;
-            if (log_from_jsobject( &client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
+            if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
                 default_log_set = 1; // Log is passed as an argument. set the default value	
             }
         } 
         if ( default_log_set == 0 ) {
-            LogInfo * log = &client->log;
+            LogInfo * log = client->log;
             log->fd = 2;
             log->severity = AS_LOG_LEVEL_INFO;
         }
 
     }
     if (args[0]->IsObject() ) {
-        config_from_jsobject(&config, args[0]->ToObject(), &client->log);   
+        config_from_jsobject(&config, args[0]->ToObject(), client->log);   
     }
 
-    aerospike_init(&client->as, &config);
+    aerospike_init(client->as, &config);
 
-    as_v8_debug(&client->log, "Aerospike object initialization : success");
+    as_v8_debug(client->log, "Aerospike object initialization : success");
 
     client->Wrap(args.This());
 
@@ -150,15 +152,15 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
 
     as_error err;
 
-    aerospike_connect(&client->as, &err);
+    aerospike_connect(client->as, &err);
 
     if (err.code != AEROSPIKE_OK) {
-        client->as.cluster = NULL;
-        as_v8_error(&client->log, "Connecting to Cluster Failed");
+        client->as->cluster = NULL;
+        as_v8_error(client->log, "Connecting to Cluster Failed");
         return Null();
     }
 
-    as_v8_debug(&client->log, "Connecting to Cluster: Success");
+    as_v8_debug(client->log, "Connecting to Cluster: Success");
 
     return scope.Close(client->handle_);
 }
@@ -169,7 +171,7 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
     if (args[0]->IsObject()){
-        LogInfo * log = &client->log;
+        LogInfo * log = client->log;
         if ( log_from_jsobject(log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
             log->severity = AS_LOG_LEVEL_INFO;
             log->fd       = 2;

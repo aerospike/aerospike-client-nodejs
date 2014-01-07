@@ -127,8 +127,8 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data			= new AsyncData;
-    data->as					= &client->as;
-    LogInfo * log				= &client->log;
+    data->as					= client->as;
+    LogInfo * log				= client->log;
     data->log                   = log;
     data->param_err				= 0;
     data->num_nodes				= 0;

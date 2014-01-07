@@ -91,8 +91,8 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data            = new AsyncData;
-    data->as                    = &client->as;
-    LogInfo * log               = data->log = &client->log;
+    data->as                    = client->as;
+    LogInfo * log               = data->log = client->log;
     // Local variables
     char **addr         = &data->addr;
     uint16_t * port             = &data->port;

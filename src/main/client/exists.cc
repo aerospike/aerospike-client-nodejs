@@ -81,7 +81,7 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data = new AsyncData;
-    data->as         = &client->as;
+    data->as         = client->as;
     data->param_err  = 0;
     as_record * rec  = &data->rec;
 
@@ -89,7 +89,7 @@ static void * prepare(const Arguments& args)
     as_key *    key         = &data->key;
     as_policy_read* policy  = &data->policy;
 
-    LogInfo * log = data->log = &client->log;
+    LogInfo * log = data->log = client->log;
     int arglength = args.Length();
 
     if ( args[arglength-1]->IsFunction()) {

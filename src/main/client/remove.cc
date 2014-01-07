@@ -82,11 +82,11 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data = new AsyncData;
-    data->as = &client->as;
+    data->as = client->as;
     data->param_err = 0;
     // Local variables
     as_key *    key = &data->key;
-    LogInfo * log  = data->log = &client->log;
+    LogInfo * log  = data->log = client->log;
 
     as_policy_remove * policy = &data->policy;
     int arglength = args.Length();

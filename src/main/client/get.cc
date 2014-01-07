@@ -81,9 +81,9 @@ static void * prepare(const Arguments& args)
 
     // Build the async data
     AsyncData * data = new AsyncData;
-    data->as = &client->as;
+    data->as = client->as;
 
-    LogInfo * log = data->log = &client->log;
+    LogInfo * log = data->log = client->log;
 
     data->param_err = 0;
     // Local variables

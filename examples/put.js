@@ -1,7 +1,7 @@
 // Writing n records to database.
 
 var env = require('./env')
-var aerospike = require('../build/Debug/aerospike')
+var aerospike = require('aerospike')
 
 var status = aerospike.Status
 var policy = aerospike.Policy

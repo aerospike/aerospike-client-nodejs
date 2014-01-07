@@ -721,10 +721,12 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 
     obj = Object::New();
     if ( key->ns && strlen(key->ns) > 0 ) {
+        as_v8_debug(log, "the namespace is %s", key->ns);
         obj->Set(String::NewSymbol("ns"), String::NewSymbol(key->ns));
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
+        as_v8_debug(log, "the set is %s", key->set);
         obj->Set(String::NewSymbol("set"), String::NewSymbol(key->set));
     }
 
@@ -734,16 +736,21 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
         switch(type) {
             case AS_INTEGER: {
                                  as_integer * ival = as_integer_fromval(val);
+                                 as_v8_debug(log, "The integer key %d", as_integer_get(ival));
                                  obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
+                                 break;
                              }
             case AS_STRING: {
                                 as_string * sval = as_string_fromval(val);
+                                as_v8_debug(log, "The string key %s ", as_string_get(sval));
                                 obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
+                                break;
                             }
             case AS_BYTES: {
                                as_bytes * bval = as_bytes_fromval(val);
                                if ( bval ) {
                                    int size = as_bytes_size(bval);
+                                   as_v8_debug(log,"the bytes value %u", bval->value);
                                    Buffer * buf = Buffer::New(size);
                                    memcpy(node::Buffer::Data(buf), bval->value, size);
                                    v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
@@ -751,6 +758,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                                    v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
                                    v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
                                    obj->Set(String::NewSymbol("key"), actualBuffer);
+                                   break;
                                }
 
                            }
