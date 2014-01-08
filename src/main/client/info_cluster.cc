@@ -161,7 +161,6 @@ static void * prepare(const Arguments& args)
             // other wise callback from the aerospike_info_foreach call populates the info_result_list fields.
             if ((*addr) != NULL ) {
                 data->num_nodes  = 1;
-                sprintf(data->info_result_list[0].node, "%s: %u", (*addr), (*port));
             }
         }
     }
@@ -242,6 +241,7 @@ static void respond(uv_work_t * req, int status)
     int num					 = data->num_nodes;
     node_info_result* result = data->info_result_list;
 
+   
 
     as_v8_debug(log, "num of responses %d", num);
 
@@ -249,24 +249,31 @@ static void respond(uv_work_t * req, int status)
         // Build the arguments array for the callback
         if (data->param_err == 0) {
             argv[0]			   = error_to_jsobject(err, log);
-            Handle<Object> obj = Object::New();
-            char* response	   = result[i].response;
             const char* node_name	   = result[i].node;
-            if ( response != NULL && strlen(response) > 0 )	{
-                as_v8_debug(log, "Response is %s", response);
-                obj->Set(String::NewSymbol("Response"), String::NewSymbol((const char*)response));
-                argv[1] = obj;
-            } else {
+            Handle<Object> host = Object::New();
+            if ( data->addr != NULL && data->port != 0) {
+                host->Set(String::NewSymbol("addr"), String::NewSymbol(data->addr));
+                host->Set(String::NewSymbol("port"), Integer::New(data->port));
+                argv[1] = host;
+            } 
+            else if( node_name != NULL && strlen(node_name) > 0 ) {
+                as_v8_debug(log, "The host is %s", node_name);
+                host->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
+                argv[1] = host;
+            } 
+
+            else {
                 argv[1] = Null();
             }
-            Handle<Object> host = Object::New();
-            if( node_name != NULL && strlen(node_name) > 0 ) {
-                as_v8_debug(log, "The host is %s", node_name);
-                host->Set(String::NewSymbol("address"), String::NewSymbol(node_name));
-                argv[2] = host;
+            Handle<Object> obj = Object::New();
+            char* response	   = result[i].response;
+            if ( response != NULL && strlen(response) > 0 )	{
+                as_v8_debug(log, "Response is %s", response);
+                argv[2] = String::NewSymbol((const char*)response);
             } else {
                 argv[2] = Null();
             }
+
         }
         else {
             err->func = NULL;
