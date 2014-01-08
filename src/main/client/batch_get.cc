@@ -239,8 +239,8 @@ static void respond(uv_work_t * req, int status)
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
-    uint32_t num_rec = data->n;
-    as_batch_read* batch_results = data->results;
+    uint32_t num_rec    = data->n;
+    as_batch_read * batch_results = data->results;
 
     LogInfo * log = data->log;
 
@@ -250,45 +250,70 @@ static void respond(uv_work_t * req, int status)
 
     // Build the arguments array for the callback
     Handle<Value> argv[2];
-    Handle<Array> arr;
-    as_v8_debug(log, "Batch Get: the response is");
-    DEBUG(log, ERROR, err);
-    int rec_found = 0;
 
-    if(data->node_err == 1) {
+    if ( data->node_err == 1 ) {
         // Sets the err->code and err->message in the 'err' variable
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-        argv[2] = Null();
-    }else if (num_rec == 0 || batch_results == NULL) {
+    }
+    else if ( num_rec == 0 || batch_results == NULL ) {
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-        argv[2] = Null();
     }
     else {
-        arr=Array::New(num_rec);    
+
+        int rec_found = 0;
+
+        // the result is an array of batch results
+        Handle<Array> results = Array::New(num_rec);
+
         for ( uint32_t i = 0; i< num_rec; i++) {
-            Handle<Object> obj = Object::New();
-            obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
-            if(batch_results[i].result == AEROSPIKE_OK) {   
-                obj->Set(String::NewSymbol("record"),record_to_jsobject( &batch_results[i].record, batch_results[i].key, log ));
-                as_key_destroy((as_key*) batch_results[i].key);
-                as_record_destroy(&batch_results[i].record);
+            
+            as_status status = batch_results[i].result;
+            as_record * record = &batch_results[i].record;
+            const as_key * key = batch_results[i].key;
+
+            // a batch result object attributes:
+            //   - status 
+            //   - key
+            //   - metadata
+            //   - record
+            Handle<Object> result = Object::New();
+
+            // status attribute
+            result->Set(String::NewSymbol("status"), Integer::New(status));
+
+            // key attribute - should always be sent
+            result->Set(String::NewSymbol("key"), key_to_jsobject(key ? key : &record->key, log));
+
+            if( batch_results[i].result == AEROSPIKE_OK ) {
+
+                // metadata attribute
+                result->Set(String::NewSymbol("metadata"), recordmeta_to_jsobject(record, log));
+
+                // record attribute
+                result->Set(String::NewSymbol("record"), recordbins_to_jsobject(record, log));
+                
                 rec_found++;
-            } else {
-                obj->Set(String::NewSymbol("key"), key_to_jsobject(batch_results[i].key, log));
-                as_key_destroy((as_key*) batch_results[i].key);
+            } 
+            else {
                 as_v8_debug(log, "Record[%d] not returned by server ", i);
             }
 
-            arr->Set(i,obj);
+            // clean up
+            as_key_destroy((as_key *) key);
+            as_record_destroy(record);
+
+            // append to the result array
+            results->Set(i, result);
         }
+
         as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = arr;  
+        argv[1] = results;
     }
 
     // Surround the callback in a try/catch for safety`

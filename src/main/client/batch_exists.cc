@@ -77,6 +77,7 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
     // Fetch the AsyncData structure
     AsyncData *     data    = reinterpret_cast<AsyncData *>(udata);
     LogInfo * log           = data->log;
+
     //copy the batch result to the shared data structure AsyncData,
     //so that response can send it back to nodejs layer
     //as_batch_read  *batch_result = &data->results;
@@ -137,7 +138,8 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) { 
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));   
         as_v8_detail(log, "batch_exists callback registered");
-    } else {
+    } 
+    else {
         as_v8_error(log, "Arglist must contain a callback function");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -165,7 +167,8 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
             }
-        }else {
+        }
+        else {
             as_v8_error(log, "Batch policy must be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
@@ -236,8 +239,8 @@ static void respond(uv_work_t * req, int status)
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
-    uint32_t num_rec = data->n;
-    as_batch_read* batch_results = data->results;
+    uint32_t num_rec    = data->n;
+    as_batch_read * batch_results = data->results;
 
     LogInfo * log = data->log;
 
@@ -247,11 +250,8 @@ static void respond(uv_work_t * req, int status)
 
     // Build the arguments array for the callback
     Handle<Value> argv[2];
-    Handle<Array> arr;
-    as_v8_debug(log, "The response for Batch Exists ");
-    DEBUG(log, ERROR, err);
-    int rec_found = 0;
-    if(data->node_err == 1) {
+
+    if ( data->node_err == 1 ) {
         // Sets the err->code and err->message in the 'err' variable
         err->func = NULL;
         err->line = 0;
@@ -259,30 +259,59 @@ static void respond(uv_work_t * req, int status)
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();
-    }else if (num_rec == 0 || batch_results == NULL) {
+    }
+    else if ( num_rec == 0 || batch_results == NULL ) {
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();
     }
     else {
-        arr=Array::New(num_rec);    
+
+        int rec_found = 0;
+
+        // the result is an array of batch results
+        Handle<Array> results = Array::New(num_rec);
+
         for ( uint32_t i = 0; i< num_rec; i++) {
-            Handle<Object> obj = Object::New();
-            obj->Set(String::NewSymbol("recstatus"), Integer::New(batch_results[i].result));
-            obj->Set(String::NewSymbol("key"),key_to_jsobject( batch_results[i].key, log));
-            as_key_destroy((as_key*) batch_results[i].key);
-            if(batch_results[i].result == AEROSPIKE_OK) {   
-                obj->Set(String::NewSymbol("meta"),recordmeta_to_jsobject( &batch_results[i].record, log ));
+
+            as_status status = batch_results[i].result;
+            as_record * record = &batch_results[i].record;
+            const as_key * key = batch_results[i].key;
+
+            // a batch result object attributes:
+            //   - status 
+            //   - key
+            //   - metadata
+            Handle<Object> result = Object::New();
+
+            // status attribute
+            result->Set(String::NewSymbol("status"), Integer::New(status));
+
+            // key attribute - should always be sent
+            result->Set(String::NewSymbol("key"), key_to_jsobject(key, log));
+
+            if(batch_results[i].result == AEROSPIKE_OK) {
+                
+                // metadata attribute
+                result->Set(String::NewSymbol("metadata"), recordmeta_to_jsobject(record, log));
+
                 rec_found++;
             }
             else {
                 as_v8_debug(log, "Record[%d] not returned by server ", i);
             }
-            arr->Set(i,obj);
+
+            // clean up
+            as_key_destroy((as_key *) key);
+            as_record_destroy(record);
+
+            // append to the result array
+            results->Set(i, result);
         }
+
         as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = arr;  
+        argv[1] = results;  
     }
 
     // Surround the callback in a try/catch for safety`
