@@ -14,7 +14,7 @@ if ( client === null ) {
 
 console.time("info:host");
 
-client.info("objects", env.host, function(err, host, response) {
+client.info("objects", env.host, function(err, response, host) {
 
     if ( err.code == status.AEROSPIKE_OK ) {
         console.log("OK - %j %j", host, response);
@@ -28,7 +28,7 @@ client.info("objects", env.host, function(err, host, response) {
 
     console.time("info:cluster");
 
-    client.info("objects", function(err, host, response) {
+    client.info("objects", function(err, response, host) {
         if ( err.code == status.AEROSPIKE_OK ) {
             console.log("OK - %j %j", host, response);
         }

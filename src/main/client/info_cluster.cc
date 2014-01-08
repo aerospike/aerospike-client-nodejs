@@ -52,6 +52,7 @@ typedef struct node_info_result_s {
     char * response;
     char node[AS_NODE_NAME_MAX_SIZE];
 } node_info_result;
+
 /**
  *  AsyncData — Data to be used in async calls.
  *
@@ -59,7 +60,6 @@ typedef struct node_info_result_s {
  *  running asynchronous functions. We create a data structure to hold the 
  *  data we need during and after async work.
  */
-
 typedef struct AsyncData {
     aerospike * as;
     int param_err;
@@ -89,25 +89,31 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
     node_info_result *result = data->info_result_list;
     int *num_nodes = &data->num_nodes;
     LogInfo * log  = data->log;
+    
     if ((*num_nodes) >= 128 ) {
         as_v8_info(log, "Node's response could not be stored --cluster size exceeded");
         return false;
     }
+
     if ( node->name != NULL) {
         as_v8_debug(log, "Response from node %s", node->name);
         strcpy(result[(*num_nodes)].node, node->name);
-    } else {
+    }
+    else {
         result[(*num_nodes)].node[0] = '\0';
         as_v8_debug(log, "No host name from cluster");
     }
+
     if ( response != NULL) {
         as_v8_debug(log, "Response is %s", response);
         result[(*num_nodes)].response = (char*) malloc(strlen(response) + 1);
         strcpy(result[(*num_nodes)].response, response);
-    } else {
+    }
+    else {
         result[(*num_nodes)].response = NULL;
         as_v8_debug(log,"No response from cluster");
     }
+
     (*num_nodes)++;
     return true;
 }
@@ -142,11 +148,11 @@ static void * prepare(const Arguments& args)
 
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
-    } else {
+    }
+    else {
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-
 
     if ( args[INFO_ARG_POS_REQ]->IsString()) {
         data->req = (char*) malloc( INFO_REQUEST_LEN);
@@ -156,7 +162,8 @@ static void * prepare(const Arguments& args)
         if (host_from_jsobject(args[INFO_ARG_POS_HOST]->ToObject(), addr, port, log) != AS_NODE_PARAM_OK) {
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
-        } else {
+        }
+        else {
             // if info call is on a single host populate the relevent fields of info_result_list here in the prepare phase
             // other wise callback from the aerospike_info_foreach call populates the info_result_list fields.
             if ((*addr) != NULL ) {
@@ -164,6 +171,7 @@ static void * prepare(const Arguments& args)
             }
         }
     }
+
     //info policy is passed as an argument along with the host addr and port or
     //info policy is passed as an argument with no host addr and port.
     if ( ((*addr) != NULL && arglength > 3) ||  ( (*addr) == NULL && arglength > 2) ) {
@@ -172,7 +180,8 @@ static void * prepare(const Arguments& args)
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         } 
-    } else {
+    }
+    else {
         // When node application does not pass any write policy should be 
         // initialized to defaults,
         as_policy_info_init(policy);
@@ -201,6 +210,7 @@ static void execute(uv_work_t * req)
     char * addr              = data->addr;
     uint16_t port            = data->port;
     LogInfo * log            = data->log;
+
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -212,7 +222,8 @@ static void execute(uv_work_t * req)
         if (addr  == NULL && port == 0) {
             as_v8_debug(log, "info request on entire cluster");
             aerospike_info_foreach(as, err, policy, request, aerospike_info_cluster_callback, (void*)data);
-        } else {
+        }
+        else {
             node_info_result * result = data->info_result_list;
             char **response = &(result[0].response);
             as_v8_debug(log, "info command request:%s on host:%s, port:%d", request, addr, port);
@@ -233,46 +244,53 @@ static void respond(uv_work_t * req, int status)
     // Scope for the callback operation.
     HandleScope scope;
 
+    // callback arguments
+    Handle<Value> argv[3];
+
     // Fetch the AsyncData structure
     AsyncData * data	= reinterpret_cast<AsyncData *>(req->data);
     as_error *	err		= &data->err;
     LogInfo * log		= data->log;
-    Handle<Value> argv[3];
-    int num					 = data->num_nodes;
-    node_info_result* result = data->info_result_list;
-
-   
+    int num             = data->num_nodes;
+    node_info_result * result = data->info_result_list;
 
     as_v8_debug(log, "num of responses %d", num);
 
     for ( int i = 0 ; i < num; i++) {
+
         // Build the arguments array for the callback
         if (data->param_err == 0) {
-            argv[0]			   = error_to_jsobject(err, log);
-            const char* node_name	   = result[i].node;
-            Handle<Object> host = Object::New();
-            if ( data->addr != NULL && data->port != 0) {
-                host->Set(String::NewSymbol("addr"), String::NewSymbol(data->addr));
-                host->Set(String::NewSymbol("port"), Integer::New(data->port));
-                argv[1] = host;
-            } 
-            else if( node_name != NULL && strlen(node_name) > 0 ) {
-                as_v8_debug(log, "The host is %s", node_name);
-                host->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
-                argv[1] = host;
-            } 
+            const char* node_name = result[i].node;
+            char* response = result[i].response;
 
+            // error object parameter
+            argv[0] = error_to_jsobject(err, log);
+
+            // response string parameter
+            if ( response != NULL && strlen(response) > 0 ) {
+                as_v8_debug(log, "Response is %s", response);
+                argv[1] = String::NewSymbol((const char*)response);
+            }
             else {
                 argv[1] = Null();
             }
-            char* response	   = result[i].response;
-            if ( response != NULL && strlen(response) > 0 )	{
-                as_v8_debug(log, "Response is %s", response);
-                argv[2] = String::NewSymbol((const char*)response);
-            } else {
+            
+            // host object parameter
+            if ( data->addr != NULL && data->port != 0) {
+                Handle<Object> host = Object::New();
+                host->Set(String::NewSymbol("addr"), String::NewSymbol(data->addr));
+                host->Set(String::NewSymbol("port"), Integer::New(data->port));
+                argv[2] = host;
+            } 
+            else if( node_name != NULL && strlen(node_name) > 0 ) {
+                Handle<Object> host = Object::New();
+                as_v8_debug(log, "The host is %s", node_name);
+                host->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
+                argv[2] = host;
+            } 
+            else {
                 argv[2] = Null();
             }
-
         }
         else {
             err->func = NULL;
@@ -294,19 +312,18 @@ static void respond(uv_work_t * req, int status)
             node::FatalException(try_catch);
         }
     }
+
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
     data->callback.Dispose();
 
-    for ( int i = 0; i < num; i++ ) 
-    {
+    for ( int i = 0; i < num; i++ ) {
         if( result[i].response != NULL) {
             free(result[i].response);
         }
     }
+
     // clean up any memory we allocated
-
-
     delete data;
     delete req;
 }
