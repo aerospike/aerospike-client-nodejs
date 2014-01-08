@@ -107,14 +107,15 @@ var key = {
 console.time("get");
 
 client.get(key, function(err, record, metadata, key) {
-    if ( err.code == status.AEROSPIKE_OK ) {
-        console.log("OK - ", key, metadata, record);
-    }
-    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-        console.log("NOT_FOUND -", key);
-    }
-    else {
-        console.log("ERR - ", err, key);
+    switch ( err.code ) {
+        case status.AEROSPIKE_OK:
+            console.log("OK - ", key, metadata, record);
+            break;
+        case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+            console.log("NOT_FOUND -", key);
+            break;
+        default:
+            console.log("ERR - ", err, key);
     }
     
     console.timeEnd("get");

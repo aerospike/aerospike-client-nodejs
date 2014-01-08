@@ -95,23 +95,25 @@ console.log("host...");
 
 client.info(request, {addr: argv.host, port: argv.port}, function(err, response, host) {
 
-    if ( err.code == status.AEROSPIKE_OK ) {
-        console.log("OK - ", host, response);
-        console.log();
-    }
-    else {
-        console.log("ERR - ", err, key);
-        console.log();
+    switch ( err.code ) {
+        case status.AEROSPIKE_OK:
+            console.log("OK - ", host, response);
+            console.log();
+            break;
+        default:
+            console.log("ERR - ", err, key);
+            console.log();
     }
     
     console.log("cluster...");
 
     client.info(request, function(err, response, host) {
-        if ( err.code == status.AEROSPIKE_OK ) {
-            console.log("OK - ", host, response);
-        }
-        else {
-            console.log("ERR - ", err, key);
+        switch ( err.code ) {
+            case status.AEROSPIKE_OK:
+                console.log("OK - ", host, response);
+                break;
+            default:
+                console.log("ERR - ", err, key);
         }
 
         console.log();

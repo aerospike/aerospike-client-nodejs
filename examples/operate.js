@@ -114,14 +114,15 @@ var ops = [
 console.time("operate");
 
 client.operate(key, ops, function(err, bins, metadata, key) {
-    if ( err.code == status.AEROSPIKE_OK ) {
-        console.log("OK - ", key, metadata, bins);
-    }
-    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-        console.log("NOT_FOUND - ", key);
-    }
-    else {
-        console.log("ERR - ", err, key);
+    switch ( err.code ) {
+        case status.AEROSPIKE_OK:
+            console.log("OK - ", key, metadata, bins);
+            break;
+        case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+            console.log("NOT_FOUND - ", key);
+            break;
+        default:
+            console.log("ERR - ", err, key);
     }
 
     console.timeEnd("operate");

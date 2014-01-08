@@ -136,19 +136,20 @@ function get_done(start, end, skip) {
             skipped++;
         }
         else {
-            if ( err.code == status.AEROSPIKE_OK ) {
-                console.log("OK - ", key, metadata, record);
-                success++;
-            }
-            else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-                console.log("NOT_FOUND - ", key);
-                notfound++;
-            }
-            else {
-                console.log("ERR - ", err, key);
-                failure++;
-            }
+            switch ( err.code ) {
+                case status.AEROSPIKE_OK:
+                    console.log("OK - ", key, metadata, record);
+                    success++;
+                    break;
             
+                case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                    console.log("NOT_FOUND - ", key);
+                    notfound++;
+                    break;
+                default:
+                    console.log("ERR - ", err, key);
+                    failure++;
+            }
         }
 
         done++;

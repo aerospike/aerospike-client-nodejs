@@ -122,11 +122,12 @@ function put_done(start, end) {
     console.time(timeLabel);
 
     return function(err, metadata, key) {
-        if ( err.code == status.AEROSPIKE_OK ) {
-            console.log("OK - ", key, metadata);
-        }
-        else {
-            console.log("ERR - ", err, key);
+        switch ( err.code ) {
+            case status.AEROSPIKE_OK:
+                console.log("OK - ", key, metadata);
+                break;
+            default:
+                console.log("ERR - ", err, key);
         }
         
         done++;
@@ -173,25 +174,26 @@ function get_done(start, end) {
     console.time(timeLabel);
 
     return function(err, record, metadata, key) {
-        if ( err.code == status.AEROSPIKE_OK ) {
-            if ( record.k != key.key ) {
-                console.log("INVALID - ", key, metadata, record);
-                console.log("        - record.k != key.key", key, metadata, record);
-            }
-            else if ( record.i != record.k * 1000 + 123 ) {
-                console.log("INVALID - ", key, metadata, record);
-                console.log("        - record.i != record.k * 1000 + 123");
-            }
-            else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
-                console.log("INVALID - ", key, metadata, record);
-                console.log("        - record.b != [0xa,0xb,0xc]");
-            }
-            else {
-                console.log("VALID - ", key, metadata, record);
-            }
-        }
-        else {
-            console.log("ERR - ", err, key);
+        switch ( err.code ) {
+            case status.AEROSPIKE_OK:
+                if ( record.k != key.key ) {
+                    console.log("INVALID - ", key, metadata, record);
+                    console.log("        - record.k != key.key");
+                }
+                else if ( record.i != record.k * 1000 + 123 ) {
+                    console.log("INVALID - ", key, metadata, record);
+                    console.log("        - record.i != record.k * 1000 + 123");
+                }
+                else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
+                    console.log("INVALID - ", key, metadata, record);
+                    console.log("        - record.b != [0xa,0xb,0xc]");
+                }
+                else {
+                    console.log("VALID - ", key, metadata, record);
+                }
+                break;
+            default:
+                console.log("ERR - ", err, key);
         }
         
         done++;

@@ -135,13 +135,14 @@ function put_done(start, end, skip) {
             skipped++;
         }
         else {
-            if ( err.code == status.AEROSPIKE_OK ) {
-                console.log("OK - ", key, metadata);
-                success++;
-            }
-            else {
-                console.log("ERR - ", err, key);
-                failure++;
+            switch ( err.code ) {
+                case status.AEROSPIKE_OK:
+                    console.log("OK - ", key, metadata);
+                    success++;
+                    break;
+                default:
+                    console.log("ERR - ", err, key);
+                    failure++;
             }
         }
 
