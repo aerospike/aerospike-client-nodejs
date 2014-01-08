@@ -1,52 +1,38 @@
-// Reading n records from the database
 
-var env = require('./env')
-var aerospike = require('aerospike')
+var env = require('./env');
+var aerospike = require('aerospike');
 
-var status = aerospike.Status
-var policy = aerospike.Policy
-var client = aerospike.client(env.config).connect()
+var status = aerospike.Status;
+var policy = aerospike.Policy;
 
-if (client === null)
-{
-    console.log("Client object is null \n ---Application Exiting --- ")
-	process.exit(1)
+var client = aerospike.client(env.config).connect();
+
+if ( client === null ) {
+    console.log("Client not initialized.");
+    return;
 }
 
-var n = env.nops
-var m = 0
-
-console.time(n + " get");
-for (var i = 0; i < n; i++ ) {
-
-  /* Key of the record to be read */
-  var k1 = {
-    ns: env.namespace,
+var key = {
+    ns:  env.namespace,
     set: env.set,
-    key: "value"+i
-  }
-  /** readpolicy is an optional argument to get function call.
-   *  if readpolicy is not passed, default values are used as readpolicy.
-   * */
+    key: 1
+};
 
-  /* *policy to be used for the get operation* */
-    var readpolicy = {
-        timeout: 10,
-        key: policy.Key.SEND
-    };  
-  // This function gets the complete record with all the bins. 
-  client.get(k1, readpolicy, function(err, rec, meta,key) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-      // Error code AEROSPIKE_OK signifies successful retrieval
-      // of the record
-      console.log("error %s",err.message)
-    } else {
-        console.log(rec)
+console.time("get");
+
+client.get(key, function(err, record, metadata, key) {
+    if ( err.code == status.AEROSPIKE_OK ) {
+        console.log("OK - %j %j %j", key, metadata, record);
     }
-    if ( (++m) == n ) {
-      console.timeEnd(n + " get")
+    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+        console.log("NOT_FOUND - %j", key);
     }
-  })
-}
-
-
+    else {
+        console.log("ERR - %j - %j", err, key);
+    }
+    
+    console.timeEnd("get");
+    console.log("");
+    
+    client.close();
+});

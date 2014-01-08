@@ -1,57 +1,45 @@
 
-var env = require('./env')
-var aerospike = require('aerospike')
+var env = require('./env');
+var aerospike = require('aerospike');
 
-var status = aerospike.Status
-var policy = aerospike.Policy
-var client = aerospike.client(env.config)
-client = client.connect()
-if (client === null)
-{
-    console.log("Client object is null \n ---Application Exiting --- ")
-	process.exit(1)
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+var operations = aerospike.Operators;
+
+var client = aerospike.client(env.config).connect();
+
+if ( client === null ) {
+    console.log("Client not initialized.");
+    return;
 }
 
-var operations = aerospike.Operators
-
-// No of operations to be performed
-var n = env.nops
-var m = 0
-
-console.time(n + " operate");
-for (var i = 0; i < n; i++ ) {
-
-  var k1 = {
-    ns: env.namespace,
+var key = {
+    ns:  env.namespace,
     set: env.set,
-    key: "value"+i
-  }
+    key: 1
+};
 
-  // Form an array of all the operation that has to be performed, in this operate function call.
-  var ops = [
-    { operation: operations.INCR, bin_name: 'i', bin_value: i },
-    { operation: operations.APPEND, bin_name: 's', bin_value: "append_str" },
-    { operation: operations.READ, bin_name: 'i' },
-	{ operation: operations.READ, bin_name: 's' }
-  ]
+var ops = [
+  { operation: operations.INCR,   bin_name: 'i', bin_value: 1 },
+  { operation: operations.APPEND, bin_name: 's', bin_value: "def" },
+  { operation: operations.READ,   bin_name: 'i' }
+];
 
-  /* The behaviour of operate function call can be modified using operatepolicy.
-   * Refer documentation to use operate policy.
-   * */ 
+console.time("operate");
 
-  /** This function increments the bin 'i' by the value i and
-   *  append the value 'append_str' to the bin 's'.
-   *  */
-  client.operate(k1,ops, function(err, rec, meta, key) {
-   if ( err.code != status.AEROSPIKE_OK ) {
-      // err.code AEROSPIKE_OK signifies the successful 
-      // completion of the operation.
-      console.log("error %s",err.message)
-    } else {
-		console.log(rec)
-	}
-    if ( (++m) == n ) {
-      console.timeEnd(n + " operate")
+client.operate(key, ops, function(err, metadata, key) {
+    if ( err.code == status.AEROSPIKE_OK ) {
+        console.log("OK - %j %j", key, metadata);
     }
-  })
-}
+    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+        console.log("NOT_FOUND - %j", key);
+    }
+    else {
+        console.log("ERR - %j - %j", err, key);
+    }
+
+    console.timeEnd("operate");
+    console.log("");
+    
+    client.close();
+});

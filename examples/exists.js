@@ -1,57 +1,40 @@
-// Reading n records from the database
 
-var env = require('./env')
-var aerospike = require('aerospike')
+var env = require('./env');
+var aerospike = require('aerospike');
 
-var status = aerospike.Status
-var policy = aerospike.Policy
-var client = aerospike.client(env.config).connect()
-if (client === null)
-{
-    console.log("Client object is null \n ---Application Exiting--- ")
-	process.exit(1)
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+
+var client = aerospike.client(env.config).connect();
+
+if ( client === null ) {
+    console.log("Client not initialized.");
+    return;
 }
 
-
-
-var n = env.nops
-var m = 0
-
-console.time(n + " exists");
-for (var i = 0; i < n; i++ ) {
-
-  /** Key of the record to be read **/
-  var k1 = {
-    ns: env.namespace,
+var key = {
+    ns:  env.namespace,
     set: env.set,
-    key: "value"+i
-  }
+    key: 1
+};
 
-  /** readpolicy is an optional argument to get function call.
-   *  if readpolicy is not passed, default values are used as readpolicy.
-   * */
+console.time("exists");
 
-  /* *policy to be used for the exits operation* */
-  var readpolicy = { 
-    timeout: 1, 
-    key: policy.Key.SEND
-  };  
-
-
-  /**This function checks for existence of record in the database. 
-   * meta null signifies the record is not present in the database.
-   * */ 
-  client.exists(k1, readpolicy, function(err, meta, key) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-      console.log("error %s",err.message)
+client.exists(key, function(err, metadata, key) {
+    if ( err.code == status.AEROSPIKE_OK ) {
+        console.log("OK - %j %j", key, metadata);
+    }
+    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+        console.log("NOT_FOUND - %j", key);
     }
     else {
-    	console.log(meta)
+        console.log("ERR - %j - %j", err, key);
     }
-    if ( (++m) == n ) {
-      console.timeEnd(n + " exists")
-    }
-  })
-}
+
+    console.timeEnd("exists");
+    console.log("");
+    
+    client.close();
+});
 
 

@@ -1,67 +1,43 @@
-// getting a set of records from a single namespace,
-// in a single operation(batch_exists).
 
 var env = require('./env')
 var aerospike = require('aerospike')
 
-var status = aerospike.Status
-var policy = aerospike.Policy
-var client = aerospike.client(env.config)
-client = client.connect()
-if (client === null)
-{
-    console.log("Client object is null \n ---Application Exiting--- ")
-	process.exit(1)
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+
+var client = aerospike.client(env.config).connect();
+
+if ( client === null ) {
+    console.log("Client not initialized.");
+    return;
 }
 
-var n = env.nops/4
-var m = 0
+var keys = [
+    { ns: env.namespace, set: env.set, key: 1 },
+    { ns: env.namespace, set: env.set, key: 2 },
+    { ns: env.namespace, set: env.set, key: 3 },
+    { ns: env.namespace, set: env.set, key: 4 },
+];
 
-var namespace = env.namespace
-var set = env.set
+console.time("batch_exists");
 
-console.time(n + " batch_exists")
-
-// Currently the batch operation is supported only for a batch of 
-// keys from the same namespace.
-for (var i = 0 ;i < n; i++) {
-  var k1 = [
-	{ns:namespace,set:set,key:"value" + (i*4) },
-	{ns:namespace,set:set,key:"value" + (i*4 + 1) },
-	{ns:namespace,set:set,key:"value" + (i*4 + 2) },
-	{ns:namespace,set:set,key:"value" + (i* 4 + 3) }
-  ]
-
-	/** arguments to callback
-	 *  err -- error returned by the callee.
-	 *  rec_list -- array of objects containing,  Error object and Record object
-	 *  Error.code == 0 && Error.message == 'AREOSPIKE_OK'  implies, record is present in the server.
-	 *  recstatus != AEROSPIKE_OK  implies Record is not present in the server.
-	 *  record object contains key,meta.
-	 **/  
-
-    /** 
-     * batchpolicy is an optional argument to batch_exists function call.
-     * if batchpolicy is not passed, default value is used for batchpolicy.
-     * */
-
-  var batchpolicy = { timeout : 10}
-
-  client.batch_exists(k1, batchpolicy, function (err, rec_list){
+client.batch_exists(keys, function (err, results) {
     if ( err.code == status.AEROSPIKE_OK ) {
-	  var num = rec_list.length
-	  for(i=0; i<num; i++) {
-		if ( rec_list[i].recstatus != status.AEROSPIKE_OK) {
-			console.log("Record[%d] is not found in the batch_exists of size %d", i, num)
-		}
-	  }
-	} else {
-		console.log("Error")
-		console.log(err.message)
-	}
-	if ( (++m) == n ) {
-		console.timeEnd(n + " batch_exists")
-		client.close()
-	}
-  })
-}
+        for ( i = 0; i < results.length; i++ ) {
+            if ( results[i].status != status.AEROSPIKE_OK && results[i].metadata != null ) {
+                console.log("OK - %j %j", results[i].key, results[i].metadata);
+            }
+            else {
+                console.log("ERR - %d - %j", results[i].status, results[i].key);
+            }
+        }
+    }
+    else {
+        console.log("ERR - %j", err);
+    }
+
+    console.timeEnd("batch_exists");
+    console.log("");
+    
+    client.close();
+})

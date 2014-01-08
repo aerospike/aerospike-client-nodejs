@@ -1,0 +1,456 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/home/vagrant/opt/node-v0.10.24-linux-x64/bin/node',
+1 verbose cli   '/home/vagrant/opt/node-v0.10.24-linux-x64/bin/npm',
+1 verbose cli   'link' ]
+2 info using npm@1.3.21
+3 info using node@v0.10.24
+4 verbose linkPkg /home/chris/projects/citrusleaf/aerospike-client-nodejs/examples
+5 verbose link build target /home/vagrant/projects/citrusleaf/aerospike-client-c/aerospike/target/Linux-x86_64/lib/node_modules/aerospike
+6 verbose install where,what [ '/home/chris/projects/citrusleaf/aerospike-client-nodejs/examples',
+6 verbose install   [] ]
+7 verbose readDependencies using package.json deps
+8 verbose install where, deps [ '/home/chris/projects/citrusleaf/aerospike-client-nodejs/examples',
+8 verbose install   [ 'aerospike', 'mocha', 'expect.js', 'superagent', 'msgpack' ] ]
+9 info preinstall aerospike@0.1.0
+10 verbose readDependencies using package.json deps
+11 verbose cache add [ 'expect.js@0.2.x', null ]
+12 verbose cache add name=undefined spec="expect.js@0.2.x" args=["expect.js@0.2.x",null]
+13 verbose parsed url { protocol: null,
+13 verbose parsed url   slashes: null,
+13 verbose parsed url   auth: null,
+13 verbose parsed url   host: null,
+13 verbose parsed url   port: null,
+13 verbose parsed url   hostname: null,
+13 verbose parsed url   hash: null,
+13 verbose parsed url   search: null,
+13 verbose parsed url   query: null,
+13 verbose parsed url   pathname: 'expect.js@0.2.x',
+13 verbose parsed url   path: 'expect.js@0.2.x',
+13 verbose parsed url   href: 'expect.js@0.2.x' }
+14 verbose cache add name="expect.js" spec="0.2.x" args=["expect.js","0.2.x"]
+15 verbose parsed url { protocol: null,
+15 verbose parsed url   slashes: null,
+15 verbose parsed url   auth: null,
+15 verbose parsed url   host: null,
+15 verbose parsed url   port: null,
+15 verbose parsed url   hostname: null,
+15 verbose parsed url   hash: null,
+15 verbose parsed url   search: null,
+15 verbose parsed url   query: null,
+15 verbose parsed url   pathname: '0.2.x',
+15 verbose parsed url   path: '0.2.x',
+15 verbose parsed url   href: '0.2.x' }
+16 verbose addNamed [ 'expect.js', '0.2.x' ]
+17 verbose addNamed [ null, '>=0.2.0-0 <0.3.0-0' ]
+18 verbose cache add [ 'aerospike@>0', null ]
+19 verbose cache add name=undefined spec="aerospike@>0" args=["aerospike@>0",null]
+20 verbose parsed url { protocol: null,
+20 verbose parsed url   slashes: null,
+20 verbose parsed url   auth: null,
+20 verbose parsed url   host: null,
+20 verbose parsed url   port: null,
+20 verbose parsed url   hostname: null,
+20 verbose parsed url   hash: null,
+20 verbose parsed url   search: null,
+20 verbose parsed url   query: null,
+20 verbose parsed url   pathname: 'aerospike@%3E0',
+20 verbose parsed url   path: 'aerospike@%3E0',
+20 verbose parsed url   href: 'aerospike@%3E0' }
+21 verbose cache add name="aerospike" spec=">0" args=["aerospike",">0"]
+22 verbose parsed url { protocol: null,
+22 verbose parsed url   slashes: null,
+22 verbose parsed url   auth: null,
+22 verbose parsed url   host: null,
+22 verbose parsed url   port: null,
+22 verbose parsed url   hostname: null,
+22 verbose parsed url   hash: null,
+22 verbose parsed url   search: null,
+22 verbose parsed url   query: null,
+22 verbose parsed url   pathname: '%3E0',
+22 verbose parsed url   path: '%3E0',
+22 verbose parsed url   href: '%3E0' }
+23 verbose addNamed [ 'aerospike', '>0' ]
+24 verbose addNamed [ null, '>=1.0.0-0' ]
+25 silly lockFile 961c83d6-expect-js-0-2-x expect.js@0.2.x
+26 verbose lock expect.js@0.2.x /home/vagrant/.npm/961c83d6-expect-js-0-2-x.lock
+27 silly lockFile 08659eb2-aerospike-0 aerospike@>0
+28 verbose lock aerospike@>0 /home/vagrant/.npm/08659eb2-aerospike-0.lock
+29 verbose cache add [ 'mocha@>0', null ]
+30 verbose cache add name=undefined spec="mocha@>0" args=["mocha@>0",null]
+31 verbose parsed url { protocol: null,
+31 verbose parsed url   slashes: null,
+31 verbose parsed url   auth: null,
+31 verbose parsed url   host: null,
+31 verbose parsed url   port: null,
+31 verbose parsed url   hostname: null,
+31 verbose parsed url   hash: null,
+31 verbose parsed url   search: null,
+31 verbose parsed url   query: null,
+31 verbose parsed url   pathname: 'mocha@%3E0',
+31 verbose parsed url   path: 'mocha@%3E0',
+31 verbose parsed url   href: 'mocha@%3E0' }
+32 verbose cache add name="mocha" spec=">0" args=["mocha",">0"]
+33 verbose parsed url { protocol: null,
+33 verbose parsed url   slashes: null,
+33 verbose parsed url   auth: null,
+33 verbose parsed url   host: null,
+33 verbose parsed url   port: null,
+33 verbose parsed url   hostname: null,
+33 verbose parsed url   hash: null,
+33 verbose parsed url   search: null,
+33 verbose parsed url   query: null,
+33 verbose parsed url   pathname: '%3E0',
+33 verbose parsed url   path: '%3E0',
+33 verbose parsed url   href: '%3E0' }
+34 verbose addNamed [ 'mocha', '>0' ]
+35 verbose addNamed [ null, '>=1.0.0-0' ]
+36 silly lockFile dfc5574d-mocha-0 mocha@>0
+37 verbose lock mocha@>0 /home/vagrant/.npm/dfc5574d-mocha-0.lock
+38 verbose cache add [ 'superagent@0.15.x', null ]
+39 verbose cache add name=undefined spec="superagent@0.15.x" args=["superagent@0.15.x",null]
+40 verbose parsed url { protocol: null,
+40 verbose parsed url   slashes: null,
+40 verbose parsed url   auth: null,
+40 verbose parsed url   host: null,
+40 verbose parsed url   port: null,
+40 verbose parsed url   hostname: null,
+40 verbose parsed url   hash: null,
+40 verbose parsed url   search: null,
+40 verbose parsed url   query: null,
+40 verbose parsed url   pathname: 'superagent@0.15.x',
+40 verbose parsed url   path: 'superagent@0.15.x',
+40 verbose parsed url   href: 'superagent@0.15.x' }
+41 verbose cache add name="superagent" spec="0.15.x" args=["superagent","0.15.x"]
+42 verbose parsed url { protocol: null,
+42 verbose parsed url   slashes: null,
+42 verbose parsed url   auth: null,
+42 verbose parsed url   host: null,
+42 verbose parsed url   port: null,
+42 verbose parsed url   hostname: null,
+42 verbose parsed url   hash: null,
+42 verbose parsed url   search: null,
+42 verbose parsed url   query: null,
+42 verbose parsed url   pathname: '0.15.x',
+42 verbose parsed url   path: '0.15.x',
+42 verbose parsed url   href: '0.15.x' }
+43 verbose addNamed [ 'superagent', '0.15.x' ]
+44 verbose addNamed [ null, '>=0.15.0-0 <0.16.0-0' ]
+45 silly lockFile 9cf4f890-superagent-0-15-x superagent@0.15.x
+46 verbose lock superagent@0.15.x /home/vagrant/.npm/9cf4f890-superagent-0-15-x.lock
+47 verbose cache add [ 'msgpack@0.x', null ]
+48 verbose cache add name=undefined spec="msgpack@0.x" args=["msgpack@0.x",null]
+49 verbose parsed url { protocol: null,
+49 verbose parsed url   slashes: null,
+49 verbose parsed url   auth: null,
+49 verbose parsed url   host: null,
+49 verbose parsed url   port: null,
+49 verbose parsed url   hostname: null,
+49 verbose parsed url   hash: null,
+49 verbose parsed url   search: null,
+49 verbose parsed url   query: null,
+49 verbose parsed url   pathname: 'msgpack@0.x',
+49 verbose parsed url   path: 'msgpack@0.x',
+49 verbose parsed url   href: 'msgpack@0.x' }
+50 verbose cache add name="msgpack" spec="0.x" args=["msgpack","0.x"]
+51 verbose parsed url { protocol: null,
+51 verbose parsed url   slashes: null,
+51 verbose parsed url   auth: null,
+51 verbose parsed url   host: null,
+51 verbose parsed url   port: null,
+51 verbose parsed url   hostname: null,
+51 verbose parsed url   hash: null,
+51 verbose parsed url   search: null,
+51 verbose parsed url   query: null,
+51 verbose parsed url   pathname: '0.x',
+51 verbose parsed url   path: '0.x',
+51 verbose parsed url   href: '0.x' }
+52 verbose addNamed [ 'msgpack', '0.x' ]
+53 verbose addNamed [ null, '>=0.0.0-0 <1.0.0-0' ]
+54 silly lockFile b75c2439-msgpack-0-x msgpack@0.x
+55 verbose lock msgpack@0.x /home/vagrant/.npm/b75c2439-msgpack-0-x.lock
+56 silly addNameRange { name: 'aerospike', range: '>=1.0.0-0', hasData: false }
+57 silly addNameRange { name: 'expect.js',
+57 silly addNameRange   range: '>=0.2.0-0 <0.3.0-0',
+57 silly addNameRange   hasData: false }
+58 silly addNameRange { name: 'mocha', range: '>=1.0.0-0', hasData: false }
+59 silly addNameRange { name: 'superagent',
+59 silly addNameRange   range: '>=0.15.0-0 <0.16.0-0',
+59 silly addNameRange   hasData: false }
+60 silly addNameRange { name: 'msgpack', range: '>=0.0.0-0 <1.0.0-0', hasData: false }
+61 verbose url raw aerospike
+62 verbose url resolving [ 'https://registry.npmjs.org/', './aerospike' ]
+63 verbose url resolved https://registry.npmjs.org/aerospike
+64 info trying registry request attempt 1 at 22:12:49
+65 http GET https://registry.npmjs.org/aerospike
+66 verbose url raw expect.js
+67 verbose url resolving [ 'https://registry.npmjs.org/', './expect.js' ]
+68 verbose url resolved https://registry.npmjs.org/expect.js
+69 info trying registry request attempt 1 at 22:12:49
+70 verbose etag "1C3HWYWZ7QVRK14D340CXP66Q"
+71 http GET https://registry.npmjs.org/expect.js
+72 verbose url raw superagent
+73 verbose url resolving [ 'https://registry.npmjs.org/', './superagent' ]
+74 verbose url resolved https://registry.npmjs.org/superagent
+75 info trying registry request attempt 1 at 22:12:49
+76 verbose etag "916DME6KIP4432WK03P7B3FHD"
+77 http GET https://registry.npmjs.org/superagent
+78 verbose url raw msgpack
+79 verbose url resolving [ 'https://registry.npmjs.org/', './msgpack' ]
+80 verbose url resolved https://registry.npmjs.org/msgpack
+81 info trying registry request attempt 1 at 22:12:49
+82 verbose etag "7R5FVXZ2R8L58MLAHLEJDB1DF"
+83 http GET https://registry.npmjs.org/msgpack
+84 verbose url raw mocha
+85 verbose url resolving [ 'https://registry.npmjs.org/', './mocha' ]
+86 verbose url resolved https://registry.npmjs.org/mocha
+87 info trying registry request attempt 1 at 22:12:49
+88 verbose etag "3N9TZZIXCT42M0I6GFKSJ24SC"
+89 http GET https://registry.npmjs.org/mocha
+90 http 304 https://registry.npmjs.org/msgpack
+91 silly registry.get cb [ 304,
+91 silly registry.get   { date: 'Wed, 08 Jan 2014 00:12:50 GMT',
+91 silly registry.get     server: 'Apache',
+91 silly registry.get     connection: 'Keep-Alive',
+91 silly registry.get     'keep-alive': 'timeout=10, max=50',
+91 silly registry.get     etag: '"7R5FVXZ2R8L58MLAHLEJDB1DF"',
+91 silly registry.get     vary: 'Accept' } ]
+92 verbose etag msgpack from cache
+93 http 304 https://registry.npmjs.org/superagent
+94 silly registry.get cb [ 304,
+94 silly registry.get   { date: 'Wed, 08 Jan 2014 00:12:50 GMT',
+94 silly registry.get     server: 'Apache',
+94 silly registry.get     connection: 'Keep-Alive',
+94 silly registry.get     'keep-alive': 'timeout=10, max=50',
+94 silly registry.get     etag: '"916DME6KIP4432WK03P7B3FHD"',
+94 silly registry.get     vary: 'Accept' } ]
+95 verbose etag superagent from cache
+96 http 304 https://registry.npmjs.org/mocha
+97 silly registry.get cb [ 304,
+97 silly registry.get   { date: 'Wed, 08 Jan 2014 00:12:50 GMT',
+97 silly registry.get     server: 'Apache',
+97 silly registry.get     connection: 'Keep-Alive',
+97 silly registry.get     'keep-alive': 'timeout=10, max=50',
+97 silly registry.get     etag: '"3N9TZZIXCT42M0I6GFKSJ24SC"',
+97 silly registry.get     vary: 'Accept' } ]
+98 verbose etag mocha from cache
+99 http 304 https://registry.npmjs.org/expect.js
+100 silly registry.get cb [ 304,
+100 silly registry.get   { date: 'Wed, 08 Jan 2014 00:12:50 GMT',
+100 silly registry.get     server: 'Apache',
+100 silly registry.get     connection: 'Keep-Alive',
+100 silly registry.get     'keep-alive': 'timeout=10, max=50',
+100 silly registry.get     etag: '"1C3HWYWZ7QVRK14D340CXP66Q"',
+100 silly registry.get     vary: 'Accept' } ]
+101 verbose etag expect.js from cache
+102 silly addNameRange number 2 { name: 'msgpack', range: '>=0.0.0-0 <1.0.0-0', hasData: true }
+103 silly addNameRange versions [ 'msgpack',
+103 silly addNameRange   [ '0.1.2',
+103 silly addNameRange     '0.1.3',
+103 silly addNameRange     '0.1.5',
+103 silly addNameRange     '0.1.6',
+103 silly addNameRange     '0.1.7',
+103 silly addNameRange     '0.1.8',
+103 silly addNameRange     '0.1.9',
+103 silly addNameRange     '0.1.10',
+103 silly addNameRange     '0.1.11',
+103 silly addNameRange     '0.2.0',
+103 silly addNameRange     '0.2.1' ] ]
+104 verbose addNamed [ 'msgpack', '0.2.1' ]
+105 verbose addNamed [ '0.2.1', '0.2.1' ]
+106 silly lockFile 399b64fb-msgpack-0-2-1 msgpack@0.2.1
+107 verbose lock msgpack@0.2.1 /home/vagrant/.npm/399b64fb-msgpack-0-2-1.lock
+108 silly addNameRange number 2 { name: 'superagent',
+108 silly addNameRange   range: '>=0.15.0-0 <0.16.0-0',
+108 silly addNameRange   hasData: true }
+109 silly addNameRange versions [ 'superagent',
+109 silly addNameRange   [ '0.1.1',
+109 silly addNameRange     '0.1.2',
+109 silly addNameRange     '0.1.3',
+109 silly addNameRange     '0.2.0',
+109 silly addNameRange     '0.3.0',
+109 silly addNameRange     '0.4.0',
+109 silly addNameRange     '0.4.1',
+109 silly addNameRange     '0.4.2',
+109 silly addNameRange     '0.4.3',
+109 silly addNameRange     '0.5.0',
+109 silly addNameRange     '0.5.1',
+109 silly addNameRange     '0.6.0',
+109 silly addNameRange     '0.7.0',
+109 silly addNameRange     '0.8.0',
+109 silly addNameRange     '0.8.1',
+109 silly addNameRange     '0.8.2',
+109 silly addNameRange     '0.9.0',
+109 silly addNameRange     '0.9.1',
+109 silly addNameRange     '0.9.2',
+109 silly addNameRange     '0.9.3',
+109 silly addNameRange     '0.9.4',
+109 silly addNameRange     '0.9.5',
+109 silly addNameRange     '0.9.6',
+109 silly addNameRange     '0.9.7',
+109 silly addNameRange     '0.9.8',
+109 silly addNameRange     '0.9.9',
+109 silly addNameRange     '0.9.10',
+109 silly addNameRange     '0.10.0',
+109 silly addNameRange     '0.11.0',
+109 silly addNameRange     '0.12.0',
+109 silly addNameRange     '0.12.1',
+109 silly addNameRange     '0.12.2',
+109 silly addNameRange     '0.12.3',
+109 silly addNameRange     '0.12.4',
+109 silly addNameRange     '0.13.0',
+109 silly addNameRange     '0.14.0',
+109 silly addNameRange     '0.14.1',
+109 silly addNameRange     '0.14.2',
+109 silly addNameRange     '0.14.3',
+109 silly addNameRange     '0.14.4',
+109 silly addNameRange     '0.14.5',
+109 silly addNameRange     '0.14.6',
+109 silly addNameRange     '0.14.7',
+109 silly addNameRange     '0.14.8',
+109 silly addNameRange     '0.14.9',
+109 silly addNameRange     '0.15.0',
+109 silly addNameRange     '0.15.1',
+109 silly addNameRange     '0.15.2',
+109 silly addNameRange     '0.15.3',
+109 silly addNameRange     '0.15.4',
+109 silly addNameRange     '0.15.5',
+109 silly addNameRange     '0.15.6',
+109 silly addNameRange     '0.15.7' ] ]
+110 verbose addNamed [ 'superagent', '0.15.7' ]
+111 verbose addNamed [ '0.15.7', '0.15.7' ]
+112 silly lockFile 45a10515-superagent-0-15-7 superagent@0.15.7
+113 verbose lock superagent@0.15.7 /home/vagrant/.npm/45a10515-superagent-0-15-7.lock
+114 silly addNameRange number 2 { name: 'mocha', range: '>=1.0.0-0', hasData: true }
+115 silly addNameRange versions [ 'mocha',
+115 silly addNameRange   [ '0.0.1-alpha1',
+115 silly addNameRange     '0.0.1-alpha2',
+115 silly addNameRange     '0.0.1-alpha3',
+115 silly addNameRange     '0.0.1-alpha4',
+115 silly addNameRange     '0.0.1-alpha5',
+115 silly addNameRange     '0.0.1-alpha6',
+115 silly addNameRange     '0.0.1',
+115 silly addNameRange     '0.0.2',
+115 silly addNameRange     '0.0.3',
+115 silly addNameRange     '0.0.4',
+115 silly addNameRange     '0.0.5',
+115 silly addNameRange     '0.0.6',
+115 silly addNameRange     '0.0.7',
+115 silly addNameRange     '0.0.8',
+115 silly addNameRange     '0.1.0',
+115 silly addNameRange     '0.2.0',
+115 silly addNameRange     '0.3.0',
+115 silly addNameRange     '0.3.1',
+115 silly addNameRange     '0.3.2',
+115 silly addNameRange     '0.3.3',
+115 silly addNameRange     '0.3.4',
+115 silly addNameRange     '0.3.6',
+115 silly addNameRange     '0.4.0',
+115 silly addNameRange     '0.5.0',
+115 silly addNameRange     '0.6.0',
+115 silly addNameRange     '0.7.0',
+115 silly addNameRange     '0.7.1',
+115 silly addNameRange     '0.8.0',
+115 silly addNameRange     '0.8.1',
+115 silly addNameRange     '0.9.0',
+115 silly addNameRange     '0.10.0',
+115 silly addNameRange     '0.10.1',
+115 silly addNameRange     '0.10.2',
+115 silly addNameRange     '0.11.0',
+115 silly addNameRange     '0.12.0',
+115 silly addNameRange     '0.12.1',
+115 silly addNameRange     '0.13.0',
+115 silly addNameRange     '0.14.0',
+115 silly addNameRange     '0.14.1',
+115 silly addNameRange     '1.0.0',
+115 silly addNameRange     '1.0.1',
+115 silly addNameRange     '1.0.2',
+115 silly addNameRange     '1.0.3',
+115 silly addNameRange     '1.1.0',
+115 silly addNameRange     '1.2.0',
+115 silly addNameRange     '1.2.1',
+115 silly addNameRange     '1.2.2',
+115 silly addNameRange     '1.3.0',
+115 silly addNameRange     '1.3.1',
+115 silly addNameRange     '1.3.2',
+115 silly addNameRange     '1.4.0',
+115 silly addNameRange     '1.4.1',
+115 silly addNameRange     '1.4.2',
+115 silly addNameRange     '1.4.3',
+115 silly addNameRange     '1.5.0',
+115 silly addNameRange     '1.6.0',
+115 silly addNameRange     '1.7.0',
+115 silly addNameRange     '1.7.1',
+115 silly addNameRange     '1.7.2',
+115 silly addNameRange     '1.7.3',
+115 silly addNameRange     '1.7.4',
+115 silly addNameRange     '1.8.0',
+115 silly addNameRange     '1.8.1',
+115 silly addNameRange     '1.8.2',
+115 silly addNameRange     '1.9.0',
+115 silly addNameRange     '1.10.0',
+115 silly addNameRange     '1.11.0',
+115 silly addNameRange     '1.12.0',
+115 silly addNameRange     '1.12.1',
+115 silly addNameRange     '1.13.0',
+115 silly addNameRange     '1.14.0',
+115 silly addNameRange     '1.15.0',
+115 silly addNameRange     '1.15.1',
+115 silly addNameRange     '1.16.0',
+115 silly addNameRange     '1.16.1',
+115 silly addNameRange     '1.16.2' ] ]
+116 verbose addNamed [ 'mocha', '1.16.2' ]
+117 verbose addNamed [ '1.16.2', '1.16.2' ]
+118 silly lockFile e30b9907-mocha-1-16-2 mocha@1.16.2
+119 verbose lock mocha@1.16.2 /home/vagrant/.npm/e30b9907-mocha-1-16-2.lock
+120 silly addNameRange number 2 { name: 'expect.js', range: '>=0.2.0-0 <0.3.0-0', hasData: true }
+121 silly addNameRange versions [ 'expect.js', [ '0.1.0', '0.1.1', '0.1.2', '0.2.0' ] ]
+122 verbose addNamed [ 'expect.js', '0.2.0' ]
+123 verbose addNamed [ '0.2.0', '0.2.0' ]
+124 silly lockFile 8bd15c82-expect-js-0-2-0 expect.js@0.2.0
+125 verbose lock expect.js@0.2.0 /home/vagrant/.npm/8bd15c82-expect-js-0-2-0.lock
+126 silly lockFile 45a10515-superagent-0-15-7 superagent@0.15.7
+127 silly lockFile 45a10515-superagent-0-15-7 superagent@0.15.7
+128 silly lockFile 399b64fb-msgpack-0-2-1 msgpack@0.2.1
+129 silly lockFile 399b64fb-msgpack-0-2-1 msgpack@0.2.1
+130 silly lockFile e30b9907-mocha-1-16-2 mocha@1.16.2
+131 silly lockFile e30b9907-mocha-1-16-2 mocha@1.16.2
+132 silly lockFile 9cf4f890-superagent-0-15-x superagent@0.15.x
+133 silly lockFile 9cf4f890-superagent-0-15-x superagent@0.15.x
+134 silly lockFile b75c2439-msgpack-0-x msgpack@0.x
+135 silly lockFile b75c2439-msgpack-0-x msgpack@0.x
+136 silly lockFile 8bd15c82-expect-js-0-2-0 expect.js@0.2.0
+137 silly lockFile 8bd15c82-expect-js-0-2-0 expect.js@0.2.0
+138 silly lockFile dfc5574d-mocha-0 mocha@>0
+139 silly lockFile dfc5574d-mocha-0 mocha@>0
+140 silly lockFile 961c83d6-expect-js-0-2-x expect.js@0.2.x
+141 silly lockFile 961c83d6-expect-js-0-2-x expect.js@0.2.x
+142 http 404 https://registry.npmjs.org/aerospike
+143 silly registry.get cb [ 404,
+143 silly registry.get   { date: 'Wed, 08 Jan 2014 00:12:54 GMT',
+143 silly registry.get     server: 'CouchDB/1.5.0 (Erlang OTP/R15B03)',
+143 silly registry.get     'content-type': 'application/json',
+143 silly registry.get     'cache-control': 'max-age=0',
+143 silly registry.get     'content-length': '52',
+143 silly registry.get     'accept-ranges': 'bytes',
+143 silly registry.get     via: '1.1 varnish',
+143 silly registry.get     age: '0',
+143 silly registry.get     'x-served-by': 'cache-lax1422-LAX',
+143 silly registry.get     'x-cache': 'MISS',
+143 silly registry.get     'x-cache-hits': '0',
+143 silly registry.get     'x-timer': 'S1389139974.881112337,VS0,VE48',
+143 silly registry.get     'keep-alive': 'timeout=10, max=50',
+143 silly registry.get     connection: 'Keep-Alive' } ]
+144 silly lockFile 08659eb2-aerospike-0 aerospike@>0
+145 silly lockFile 08659eb2-aerospike-0 aerospike@>0
+146 error 404 'aerospike' is not in the npm registry.
+146 error 404 You should bug the author to publish it
+146 error 404
+146 error 404 Note that you can also install from a
+146 error 404 tarball, folder, or http url, or git url.
+147 error System Linux 2.6.32-358.2.1.el6.x86_64
+148 error command "/home/vagrant/opt/node-v0.10.24-linux-x64/bin/node" "/home/vagrant/opt/node-v0.10.24-linux-x64/bin/npm" "link"
+149 error cwd /home/chris/projects/citrusleaf/aerospike-client-nodejs/examples
+150 error node -v v0.10.24
+151 error npm -v 1.3.21
+152 error code E404
+153 verbose exit [ 1, true ]

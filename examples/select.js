@@ -1,54 +1,40 @@
-//Selecting given set of bins (columns) from the record
 
-var env = require('./env')
-var aerospike = require('aerospike')
+var env = require('./env');
+var aerospike = require('aerospike');
 
-var status = aerospike.Status
-var policy = aerospike.Policy
-var client = aerospike.client(env.config)
-client = client.connect()
-if (client === null)
-{
-    console.log("Client object is null \n ---Application Exiting --- ")
-	process.exit(1)
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+
+var client = aerospike.client(env.config).connect();
+
+if ( client === null ) {
+    console.log("Client not initialized.");
+    return;
 }
 
-
-var n = env.nops
-var m = 0
-console.time(n + " select")
-
-for (var i = 0; i < n; i++ ) {
-
-  var k2 = {
-    ns: env.namespace,
+var key = {
+    ns:  env.namespace,
     set: env.set,
-    key: 'value' + i
-  }
+    key: 1
+};
 
-  // Name of the bins to be selected through this operation
-  var bins = ['s', 'i'];
+var bins = [ "s" ]
 
- /** readpolicy is an optional argument to select function call.
-  *  if readpolicy is not passed, default values are used as readpolicy.
-  * */
+console.time("get");
 
-  // policy to be used for the select operation
-  var readpolicy = {
-    timeout: 10,
-    key: policy.Key.SEND
-  };
-
-  // This function gets the bins specified in the bins variable.
-  client.select(k2, bins, readpolicy, function(err, rec, meta, key) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-      // AEROSPIKE_OK signifies the successful retrieval of above 
-      // mentioned bin names.
-      console.log("error %s",err.message)
+client.select(key, bins, function(err, record, metadata, key) {
+    if ( err.code == status.AEROSPIKE_OK ) {
+        console.log("OK - %j %j %j", key, metadata, record);
     }
-    if ( (++m) == n ) {
-      console.timeEnd(n + " select")
+    else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
+        console.log("NOT_FOUND - %j", key);
     }
-  })
-
-}
+    else {
+        console.log("ERR - %j - %j", err, key);
+    }
+    
+    console.timeEnd("get");
+    console.log("");
+    
+    client.close();
+});
