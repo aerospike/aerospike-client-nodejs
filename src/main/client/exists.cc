@@ -192,10 +192,9 @@ static void respond(uv_work_t * req, int status)
     as_error *  err         = &data->err;
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-    int nargs               = 3;
     LogInfo * log           = data->log;
 
-    Handle<Value> argv[nargs];
+    Handle<Value> argv[3];
 
     as_v8_debug(log, "Exists operation : the response is");
     DEBUG(log, ERROR, err);

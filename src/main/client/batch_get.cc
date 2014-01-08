@@ -249,8 +249,7 @@ static void respond(uv_work_t * req, int status)
     // to avoid memory leak.
 
     // Build the arguments array for the callback
-    int num_args = 2;
-    Handle<Value> argv[num_args] ;
+    Handle<Value> argv[2];
     Handle<Array> arr;
     as_v8_debug(log, "Batch Get: the response is");
     DEBUG(log, ERROR, err);
@@ -296,7 +295,7 @@ static void respond(uv_work_t * req, int status)
     TryCatch try_catch;
 
     // Execute the callback.
-    data->callback->Call(Context::GetCurrent()->Global(), num_args, argv);
+    data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {

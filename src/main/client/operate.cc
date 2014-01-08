@@ -219,8 +219,8 @@ static void respond(uv_work_t * req, int status)
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
     LogInfo * log           = data->log;
-    int nargs=4;
-    Handle<Value> argv[nargs];
+    
+    Handle<Value> argv[4];
 
     as_v8_debug(log, "operate operation : the response is");
     DEBUG(log, ERROR, err);

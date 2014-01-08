@@ -199,9 +199,8 @@ static void respond(uv_work_t * req, int status)
     LogInfo * log           = data->log;
     as_v8_debug(log, "Get operations' the response is");
     DEBUG(log, ERROR, err);
-
-    int nargs=4;
-    Handle<Value> argv[nargs];
+    
+    Handle<Value> argv[4];
     // Build the arguments array for the callback
     if( data->param_err == 0) { 
         DETAIL(log,  BINS, rec); 

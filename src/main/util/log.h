@@ -122,7 +122,6 @@ static inline void _log(const char * func, const char * file, uint32_t line, con
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(msg, 1024-1, fmt, ap);
-    msg[1024] = '\0';
     va_end(ap);
 
     fprintf(stderr, "[%s:%d][%s] %s\n", file, line, func, msg);

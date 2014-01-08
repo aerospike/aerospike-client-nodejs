@@ -43,7 +43,6 @@ bool v8_logging_callback(as_log_level level, const char* func, const char * file
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(msg, 1024-1, fmt, ap);
-    msg[1024] = '\0';
     va_end(ap);
 
     fprintf(stderr, "[%s:%d][%s] %s\n", basename((char*) file), line, func, msg);

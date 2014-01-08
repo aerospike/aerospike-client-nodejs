@@ -189,8 +189,7 @@ static void respond(uv_work_t * req, int status)
 
     DEBUG(log, ERROR, err);
 
-    int nargs=2;
-    Handle<Value> argv[nargs];
+    Handle<Value> argv[2];
     // Build the arguments array for the callback
     if( data->param_err == 0) { 
         as_v8_debug(log, "Delete operation succeeded for the key");

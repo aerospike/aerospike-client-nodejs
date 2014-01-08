@@ -50,7 +50,12 @@
         'libraries': [
           '../aerospike-client-c/lib/libaerospike.a'
         ]
-      }
+      },
+      'conditions': [
+        ['OS=="linux"',{
+          'cflags': [ '-Wall', '-Warray-bounds' ]
+        }]
+      ] 
     }
   ]
 }
