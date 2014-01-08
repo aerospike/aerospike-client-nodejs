@@ -1,46 +1,118 @@
-/**
+/*******************************************************************************
  *
- *  node range_validate [start [end]]
+ *  node range_validate --start <start> --end <end>
  *
  *  Write and validate records with keys in given numeric range.
- *
- *  The default values are:
- *  - `start=1`
- *  - `end=1000`
- *
+ *  
  *  Examples:
  *
  *    Write and Validate records with keys in range 1-99:
  *
- *      node range_validate 1 99
+ *      node range_validate --start 1 --end 99
  *
  *    Write and Validate records with keys in range 900-1000
  *
- *      node range_put 900
+ *      node range_put --start 900
  *
  *    Write and Validate a single record with key 99
  *
- *      node range_validate 99 99
+ *      node range_validate --start 99 --end 99
  *
- */
+ ******************************************************************************/
 
-var env = require('./env');
+var optimist = require('optimist');
 var aerospike = require('aerospike');
-
 var status = aerospike.Status;
 var policy = aerospike.Policy;
 
-var client = aerospike.client(env.config).connect();
+/*******************************************************************************
+ *
+ * Options parsing
+ * 
+ ******************************************************************************/
 
-if ( client === null ) {
-    console.log("Client not initialized.");
+var argp = optimist
+    .usage("$0 [options]")
+    .options({
+        help: {
+            boolean: true,
+            describe: "Display this message."
+        },
+        host: {
+            alias: "h",
+            default: "127.0.0.1",
+            describe: "Aerospike database address."
+        },
+        port: {
+            alias: "p",
+            default: 3000,
+            describe: "Aerospike database port."
+        },
+        timeout: {
+            alias: "t",
+            default: 10,
+            describe: "Timeout in milliseconds."
+        },
+        log: {
+            alias: "l",
+            default: aerospike.Log.INFO,
+            describe: "Log level [0-5]"
+        },
+        namespace: {
+            alias: "n",
+            default: "test",
+            describe: "Namespace for the keys."
+        },
+        set: {
+            alias: "s",
+            default: "demo",
+            describe: "Set for the keys."
+        },
+        start: {
+            default: 1,
+            describe: "Start value for the key range."
+        },
+        end: {
+            default: 1000,
+            describe: "End value for the key range."
+        }
+    });
+
+var argv = argp.argv;
+
+if ( argv.help === true ) {
+    argp.showHelp();
     return;
 }
 
-var range_start = process.argv.length-2 < 1 ? 1 : process.argv[2];
-var range_end = process.argv.length-2 < 2 ? 1000 : process.argv[3];
-var range_total = range_end - range_start;
-var range_done = 0;
+/*******************************************************************************
+ *
+ * Establish a connection to the cluster.
+ * 
+ ******************************************************************************/
+
+var client = aerospike.client({
+    hosts: [
+        { addr: argv.host, port: argv.port }
+    ],
+    log: {
+        level: argv.log
+    },
+    policies: {
+        timeout: argv.timeout
+    }
+}).connect();
+
+if ( client === null ) {
+    console.error("Error: Client not initialized.");
+    return;
+}
+
+/*******************************************************************************
+ *
+ * Perform the operation
+ * 
+ ******************************************************************************/
 
 function put_done(start, end) {
     var total = end - start + 1;
@@ -51,16 +123,16 @@ function put_done(start, end) {
 
     return function(err, metadata, key) {
         if ( err.code == status.AEROSPIKE_OK ) {
-            console.log("OK - %j %j", key, metadata);
+            console.log("OK - ", key, metadata);
         }
         else {
-            console.log("ERR - %j - %j", err, key);
+            console.log("ERR - ", err, key);
         }
         
         done++;
         if ( done >= total ) {
             console.timeEnd(timeLabel);
-            console.log("");
+            console.log();
             get_start(start, end);
         }
     }
@@ -72,8 +144,8 @@ function put_start(start, end) {
 
     for ( i = start; i <= end; i++ ) {
         var key = {
-            ns:  env.namespace,
-            set: env.set,
+            ns:  argv.namespace,
+            set: argv.set,
             key: i
         };
 
@@ -103,29 +175,29 @@ function get_done(start, end) {
     return function(err, record, metadata, key) {
         if ( err.code == status.AEROSPIKE_OK ) {
             if ( record.k != key.key ) {
-                console.log("INVALID - %j %j %j", key, metadata, record);
+                console.log("INVALID - ", key, metadata, record);
                 console.log("        - record.k != key.key", key, metadata, record);
             }
             else if ( record.i != record.k * 1000 + 123 ) {
-                console.log("INVALID - %j %j %j", key, metadata, record);
+                console.log("INVALID - ", key, metadata, record);
                 console.log("        - record.i != record.k * 1000 + 123");
             }
             else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
-                console.log("INVALID - %j %j %j", key, metadata, record);
+                console.log("INVALID - ", key, metadata, record);
                 console.log("        - record.b != [0xa,0xb,0xc]");
             }
             else {
-                console.log("VALID - %j %j %j", key, metadata, record);
+                console.log("VALID - ", key, metadata, record);
             }
         }
         else {
-            console.log("ERR - %j - %j", err, key);
+            console.log("ERR - ", err, key);
         }
         
         done++;
         if ( done >= total ) {
             console.timeEnd(timeLabel);
-            console.log("");
+            console.log();
             client.close();
         }
     };
@@ -137,8 +209,8 @@ function get_start(start, end) {
 
     for ( i = start; i <= end; i++ ) {
         var key = {
-            ns:  env.namespace,
-            set: env.set,
+            ns:  argv.namespace,
+            set: argv.set,
             key: i
         };
 
@@ -146,5 +218,4 @@ function get_start(start, end) {
     }
 }
 
-
-put_start(range_start, range_end);
+put_start(argv.start, argv.end);

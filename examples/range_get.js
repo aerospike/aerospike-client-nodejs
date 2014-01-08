@@ -1,42 +1,122 @@
-/**
+/*******************************************************************************
  *
- *  node range_get [start [end [skip]]]
+ *  node range_get --start <start> --end <end> --skip <skip>
  *
- *  Read records with given key range
+ *  Read records with given key range.
  *
- *  The default values are:
- *  - `start=1`
- *  - `end=1000`
- *  - `skip=0`
- *
- *  Example:
+ *  Examples:
  *
  *    Read records with keys in range 1-100
  *
- *      node range_get 1 100
+ *      node range_get -start 1 --end 100
  *
  *    Read records with keys in range 1-100, skipping every fifth
  *
- *      node range_get 1 100 5
+ *      node range_get --start 1 --end 100 --skip 5
  *
  *    Write records with keys in range 900-1000
  *
- *      node range_put 900
+ *      node range_put --start 900
  *
- */
+ ******************************************************************************/
 
-var env = require('./env');
+var optimist = require('optimist');
 var aerospike = require('aerospike');
-
 var status = aerospike.Status;
 var policy = aerospike.Policy;
 
-var client = aerospike.client(env.config).connect();
+/*******************************************************************************
+ *
+ * Options parsing
+ * 
+ ******************************************************************************/
 
-if ( client === null ) {
-    console.log("Client not initialized.");
+var argp = optimist
+    .usage("$0 [options]")
+    .options({
+        help: {
+            boolean: true,
+            describe: "Display this message."
+        },
+        host: {
+            alias: "h",
+            default: "127.0.0.1",
+            describe: "Aerospike database address."
+        },
+        port: {
+            alias: "p",
+            default: 3000,
+            describe: "Aerospike database port."
+        },
+        timeout: {
+            alias: "t",
+            default: 10,
+            describe: "Timeout in milliseconds."
+        },
+        log: {
+            alias: "l",
+            default: aerospike.Log.INFO,
+            describe: "Log level [0-5]"
+        },
+        namespace: {
+            alias: "n",
+            default: "test",
+            describe: "Namespace for the keys."
+        },
+        set: {
+            alias: "s",
+            default: "demo",
+            describe: "Set for the keys."
+        },
+        start: {
+            default: 1,
+            describe: "Start value for the key range."
+        },
+        end: {
+            default: 1000,
+            describe: "End value for the key range."
+        },
+        skip: {
+            default: 0,
+            describe: "Skip every n keys."
+        }
+    });
+
+var argv = argp.argv;
+
+if ( argv.help === true ) {
+    argp.showHelp();
     return;
 }
+
+/*******************************************************************************
+ *
+ * Establish a connection to the cluster.
+ * 
+ ******************************************************************************/
+
+var client = aerospike.client({
+    hosts: [
+        { addr: argv.host, port: argv.port }
+    ],
+    log: {
+        level: argv.log
+    },
+    policies: {
+        timeout: argv.timeout
+    }
+}).connect();
+
+if ( client === null ) {
+    console.error("Error: Client not initialized.");
+    return;
+}
+
+/*******************************************************************************
+ *
+ * Perform the operation
+ * 
+ ******************************************************************************/
 
 function get_done(start, end, skip) {
     var total = end - start + 1;
@@ -51,21 +131,21 @@ function get_done(start, end, skip) {
 
     return function(err, record, metadata, key, skippy) {
 
-        if ( skippy == true ) {
-            console.log("SKIP - %j", key);
+        if ( skippy === true ) {
+            console.log("SKIP - ", key);
             skipped++;
         }
         else {
             if ( err.code == status.AEROSPIKE_OK ) {
-                console.log("OK - %j %j %j", key, metadata, record);
+                console.log("OK - ", key, metadata, record);
                 success++;
             }
             else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
-                console.log("NOT_FOUND - %j", key);
+                console.log("NOT_FOUND - ", key);
                 notfound++;
             }
             else {
-                console.log("ERR - %j - %j", err, key);
+                console.log("ERR - ", err, key);
                 failure++;
             }
             
@@ -74,10 +154,10 @@ function get_done(start, end, skip) {
         done++;
         if ( done >= total ) {
             console.timeEnd(timeLabel);
-            console.log("");
+            console.log();
             console.log("RANGE: start=%d end=%d skip=%d", start, end, skip);
             console.log("RESULTS: (%d completed, %d success, %d failed, %d notfound, %d skipped)", done, success, failure, notfound, skipped);
-            console.log("");
+            console.log();
             client.close();
         }
     }
@@ -94,7 +174,7 @@ function get_start(start, end, skip) {
             key: i
         };
 
-        if ( skip != 0 && ++s >= skip ) {
+        if ( skip !== 0 && ++s >= skip ) {
             s = 0;
             done(null,null,null,key,true);
             continue;
@@ -104,8 +184,4 @@ function get_start(start, end, skip) {
     }
 }
 
-var range_start = process.argv.length-2 < 1 ? 1 : process.argv[2];
-var range_end = process.argv.length-2 < 2 ? 1000 : process.argv[3];
-var range_skip = process.argv.length-2 < 3 ? 0 : process.argv[4];
-
-get_start(range_start, range_end, range_skip);
+get_start(argv.start, argv.end, argv.skip);

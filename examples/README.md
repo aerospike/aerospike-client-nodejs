@@ -1,47 +1,39 @@
-## Examples 
-Example shows the simple usage of Aerospike Node.js API.
+# Examples 
 
-To demonstrate Buffer datatype usage, examples use node.js msgpack 
-package. To install msgpack,
-	
-	$sudo npm install -g msgpack.
+## Setup
 
-To run the examples, 
-	
-	$node <file_name>
+In order to run the examples you should first run:
 
-The following are the examples available:
-	
-put.js
-get.js
-batch_get.js
-select.js
-remove.js
-operate.js
-info.js
+		$ npm link
 
-The config parameters to run the examples are given through
-config.json file. The following config informations are necessary for the
-examples to run.
+This will resolve the dependecies needed for the examples.
 
-	host : Server hostname (default : localhost)
-	port : Server port (default : 3000)
-	namespace : Namespace (default : test)
-	set : Set name (default : demo)
-	NoOfOps : Number of operations to be performed(default : 1000)
+## Usage
 
-To load some sample data in the server run
-	
-	$node put.js
+You can simply run each example independently:
 
-Having loaded the sample data, execute any of the examples to check 
-the functionality.
+		$ node <example>
 
-All the example outputs the time it takes to complete 14000 operation.
+Each example provides usage information via a `--help` flag:
 
-Example Usage
-	
-	$node put.js	// Running put.js outputs the following
-	14000 put: 3289ms
+		$ node <example> --help
 
+The following are the included examples:
+
+- Basic Operations
+	- exists.js - check the existence of a record.
+	- get.js - read a record.
+	- select.js - read specific bins of a record.
+	- put.js - write a record.
+	- remove.js - remove a record.
+	- operate.js - perform multiple operations on a record.
+	- info.js - get cluster state information.
+- Batch Operations
+	- batch_exists.js – check the existence of a batch of records.
+	- batch_get.js - read a batch of records.
+- Range Operations
+	- range_get – read a range of records.
+	- range_put – write a range of records.
+	- range_remove – remove a range of records.
+	- range_validate – write and validate a range of records.
 
