@@ -170,8 +170,8 @@ function get_start(start, end, skip) {
 
     for (; i <= end; i++ ) {
         var key = {
-            ns:  env.namespace,
-            set: env.set,
+            ns:  argv.namespace,
+            set: argv.set,
             key: i
         };
 

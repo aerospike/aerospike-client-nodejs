@@ -2,13 +2,13 @@
  *
  *  node range_get --start <start> --end <end> --skip <skip>
  *
- *  Read records with given key range
+ *  Read records with given key range.
  *
  *  Examples:
  *
  *    Read records with keys in range 1-100
  *
- *      node range_get --start 1 --end 100
+ *      node range_get -start 1 --end 100
  *
  *    Read records with keys in range 1-100, skipping every fifth
  *
@@ -118,18 +118,18 @@ if ( client === null ) {
  * 
  ******************************************************************************/
 
-function remove_done(start, end, skip) {
+function exists_done(start, end, skip) {
     var total = end - start + 1;
     var done = 0;
     var success = 0;
     var notfound = 0;
     var failure = 0;
     var skipped = 0;
-    var timeLabel = "range_remove @ " + total;
+    var timeLabel = "range_get @ " + total;
 
     console.time(timeLabel);
 
-    return function(err, key, skippy) {
+    return function(err, metadata, key, skippy) {
 
         if ( skippy === true ) {
             console.log("SKIP - ", key);
@@ -138,9 +138,10 @@ function remove_done(start, end, skip) {
         else {
             switch ( err.code ) {
                 case status.AEROSPIKE_OK:
-                    console.log("OK - ", key);
+                    console.log("OK - ", key, metadata);
                     success++;
                     break;
+            
                 case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
                     console.log("NOT_FOUND - ", key);
                     notfound++;
@@ -163,8 +164,8 @@ function remove_done(start, end, skip) {
     }
 }
 
-function remove_start(start, end, skip) {
-    var done = remove_done(start, end, skip);
+function exists_start(start, end, skip) {
+    var done = exists_done(start, end, skip);
     var i = start, s = 0;
 
     for (; i <= end; i++ ) {
@@ -176,12 +177,12 @@ function remove_start(start, end, skip) {
 
         if ( skip !== 0 && ++s >= skip ) {
             s = 0;
-            done(null,key,true);
+            done(null,null,null,key,true);
             continue;
         }
 
-        client.remove(key, done);
+        client.exists(key, done);
     }
 }
 
-remove_start(argv.start, argv.end, argv.skip);
+exists_start(argv.start, argv.end, argv.skip);
