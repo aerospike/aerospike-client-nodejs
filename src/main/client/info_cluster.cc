@@ -265,7 +265,6 @@ static void respond(uv_work_t * req, int status)
             else {
                 argv[1] = Null();
             }
-            Handle<Object> obj = Object::New();
             char* response	   = result[i].response;
             if ( response != NULL && strlen(response) > 0 )	{
                 as_v8_debug(log, "Response is %s", response);
