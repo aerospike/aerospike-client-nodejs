@@ -125,7 +125,7 @@ function exists_done(start, end, skip) {
     var notfound = 0;
     var failure = 0;
     var skipped = 0;
-    var timeLabel = "range_get @ " + total;
+    var timeLabel = "range_exists @ " + total;
 
     console.time(timeLabel);
 
