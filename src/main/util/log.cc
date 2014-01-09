@@ -61,7 +61,7 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
     size_t limit = sizeof(msg)-2;
     size_t pos = 0;
 
-    pos += snprintf(msg+pos, limit-pos, "[%s:%d:%s] ", basename((char*) file), line, log_severity_strings[level+1]);
+    pos += snprintf(msg+pos, limit-pos, "%-5s [%s:%d] - ", log_severity_strings[level+1], basename((char*) file), line);
     va_list ap;
     va_start(ap, fmt);
     pos += vsnprintf(msg+pos, limit-pos, fmt, ap);
