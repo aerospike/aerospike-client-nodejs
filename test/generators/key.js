@@ -1,6 +1,16 @@
 var valgen = require('./value');
 
 /**
+ * Returns a generator for bytes keys.
+ */
+function bytes(namespace, set, options) {
+    var bgen = valgen.bytes(options);
+    return function() {
+        return { ns: namespace, set: set, key: bgen()};
+    };
+}
+
+/**
  * Returns a generator for string keys.
  */
 function string(namespace, set, options) {
@@ -33,7 +43,8 @@ function range(keygen, end, start) {
 }
 
 module.exports = {
-    string: string,
+    bytes: bytes,
     integer: integer,
+    string: string,
     range: range
 };
