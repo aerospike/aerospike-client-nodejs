@@ -40,7 +40,7 @@ describe('client.exists()', function() {
         // values
         var key     = kgen();
         var meta    = mgen(key);
-        var record  = rgen(key,metadata);
+        var record  = rgen(key,meta);
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {

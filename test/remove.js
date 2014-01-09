@@ -14,7 +14,7 @@ var status = aerospike.Status;
 var policy = aerospike.Policy;
 
 
-describe('client.put()', function() {
+describe('client.remove()', function() {
 
     var client;
 
