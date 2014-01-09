@@ -1,5 +1,6 @@
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var aerospike = require('../build/Release/aerospike');
+var config = require('./config/client');
 var assert = require('assert');
 var request = require('superagent');
 var expect = require('expect.js');
@@ -19,9 +20,7 @@ describe('client.get()', function() {
     var client;
 
     before(function() {
-        client = aerospike.client({
-            hosts: [ {addr: '127.0.0.1', port: 3010 } ]
-        }).connect();
+        client = aerospike.client(config).connect();
     });
 
     after(function() {
