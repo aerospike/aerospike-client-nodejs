@@ -13,7 +13,7 @@ var status = aerospike.Status;
 var policy = aerospike.Policy;
 
 
-describe('client.get()', function() {
+describe('client.select()', function() {
 
     var client = aerospike.client({
         hosts: [
@@ -41,7 +41,7 @@ describe('client.get()', function() {
     it('should read the record', function(done) {
         
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var kgen = keygen.string_prefix("test", "demo", "test/select/");
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.constant({i: 123, s: "abc"});
 
@@ -49,12 +49,14 @@ describe('client.get()', function() {
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
+        var bins    = Object.keys(record).slice(0,1);
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.get(key, function(err, record, metadata, key) {
+            client.select(key, bins, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record).to.only.have.keys(bins);
 
                 done();
             });
@@ -69,10 +71,13 @@ describe('client.get()', function() {
         var rgen = recgen.constant({i: 123, s: "abc"});
 
         // values
-        var key = kgen();
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+        var bins    = Object.keys(record).slice(0,1);
 
         // write the record then check
-        client.get(key, function(err, record, metadata, key) {
+        client.select(key, bins, function(err, record, metadata, key) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
 
@@ -91,13 +96,15 @@ describe('client.get()', function() {
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
+        var bins    = Object.keys(record).slice(0,1);
         var pol     = { key: policy.Key.SEND };
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.get(key, policy, function(err, record, metadata, key) {
+            client.select(key, bins, policy, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record).to.only.have.keys(bins);
 
                 done();
             });
