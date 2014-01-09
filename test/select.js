@@ -8,6 +8,7 @@ var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
+var valgen = require('./generators/value');
 
 var status = aerospike.Status;
 var policy = aerospike.Policy;
@@ -41,9 +42,9 @@ describe('client.select()', function() {
     it('should read the record', function(done) {
         
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/select/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/select/"});
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -53,10 +54,14 @@ describe('client.select()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.select(key, bins, function(err, record, metadata, key) {
+            client.select(key, bins, function(err, _record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(record).to.only.have.keys(bins);
+                expect(_record).to.only.have.keys(bins);
+
+                for ( var bin in _record ) {
+                    expect(_record[bin]).to.be(record[bin]);
+                }
 
                 done();
             });
@@ -66,9 +71,9 @@ describe('client.select()', function() {
     it('should not find the record', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -88,9 +93,9 @@ describe('client.select()', function() {
     it('should read the record w/ a key send policy', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -101,10 +106,14 @@ describe('client.select()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.select(key, bins, policy, function(err, record, metadata, key) {
+            client.select(key, bins, policy, function(err, _record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(record).to.only.have.keys(bins);
+                expect(_record).to.only.have.keys(bins);
+
+                for ( var bin in _record ) {
+                    expect(_record[bin]).to.be(record[bin]);
+                }
 
                 done();
             });

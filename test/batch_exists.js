@@ -8,6 +8,7 @@ var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
+var valgen = require('./generators/value');
 
 var status = aerospike.Status;
 var policy = aerospike.Policy;
@@ -44,16 +45,9 @@ describe('client.batch_exists()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen, mgen, rgen;
-
-        // key generator
-        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/" + nrecords + "/");
-
-        // metadata generator
-        mgen = metagen.constant({ttl: 1000});
-
-        // record generator
-        rgen = recgen.constant({i: 123, s: "abc"});
+        var kgen = keygen.string("test", "demo", {prefix: "test/batch_exists/" + nrecords + "/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // writer using generators
         // callback provides an array of written keys
@@ -88,16 +82,14 @@ describe('client.batch_exists()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen, keys;
+        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
 
-        // key generator
-        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/10fail/");
-
-        // keys
-        keys = keygen.range(kgen, 10);
+        // values
+        var keys = keygen.range(kgen, 10);
         
         // writer using generators
-        // callback provides an array of written keys
+        // callback provides an object of written records, where the
+        // keys of the object are the record's keys.
         client.batch_exists(keys, function(err, results) {
 
             var result;
@@ -122,19 +114,13 @@ describe('client.batch_exists()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen, mgen, rgen;
-
-        // key generator
-        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/" + nrecords + "/");
-
-        // metadata generator
-        mgen = metagen.constant({ttl: 1000});
-
-        // record generator
-        rgen = recgen.constant({i: 123, s: "abc"});
+        var kgen = keygen.string("test", "demo", {prefix: "test/batch_exists/" + nrecords + "/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // writer using generators
-        // callback provides an array of written keys
+        // callback provides an object of written records, where the
+        // keys of the object are the record's keys.
         putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
 
             var keys = Object.keys(written).map(function(key){

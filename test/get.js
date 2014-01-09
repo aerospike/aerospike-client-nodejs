@@ -41,7 +41,7 @@ describe('client.get()', function() {
     it('should read the record', function(done) {
         
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.constant({i: 123, s: "abc"});
 
@@ -64,9 +64,7 @@ describe('client.get()', function() {
     it('should not find the record', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
-        var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
 
         // values
         var key = kgen();
@@ -83,7 +81,7 @@ describe('client.get()', function() {
     it('should read the record w/ a key send policy', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.constant({i: 123, s: "abc"});
 

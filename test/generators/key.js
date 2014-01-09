@@ -1,22 +1,22 @@
+var valgen = require('./value');
 
 /**
  * Returns a generator for string keys.
  */
-function string_prefix(namespace, set, prefix) {
-    var i = 0;
+function string(namespace, set, options) {
+    var sgen = valgen.string(options);
     return function() {
-        return { ns: namespace, set: set, key: prefix + "" + (i++)};
+        return { ns: namespace, set: set, key: sgen()};
     };
 }
 
 /**
  * Returns a generator for integer keys.
  */
-function integer_random(namespace, set, divisor) {
+function integer(namespace, set, options) {
+    var igen = valgen.integer(options);
     return function() {
-        var a = Math.random();
-        var n = divisor ? divisor : 1000;
-        return { ns: namespace, set: set, key: a % n};
+        return { ns: namespace, set: set, key: igen()};
     };
 }
 
@@ -33,7 +33,7 @@ function range(keygen, end, start) {
 }
 
 module.exports = {
-    string_prefix: string_prefix,
-    integer_random: integer_random,
+    string: string,
+    integer: integer,
     range: range
 };
