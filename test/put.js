@@ -29,8 +29,9 @@ describe('client.put()', function() {
     });
 
     before(function(done) {
-        client.connect();
-        done();
+        client.connect(function(err){
+            done();
+        });
     });
 
     after(function(done) {
