@@ -64,19 +64,19 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 
             if ( addr->IsString() ) {
                 config->hosts[i].addr = strdup(*String::Utf8Value(addr));
-                as_v8_detail(log,"(Address \"(%d\") is \"%s\" ", i+1, config->hosts[i].addr);
+                as_v8_detail(log,"host[%d].addr = \"%s\"", i, config->hosts[i].addr);
             }
             else {
-                as_v8_error(log, "host address should be string");
+                as_v8_error(log, "host[%d].addr should be an string", i);
                 return AS_NODE_PARAM_ERR;
             }
 
             if ( port->IsNumber() ) {   
                 config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);        
-                as_v8_detail(log,"(Port \"(%d\") is \"%d\" ", i+1, config->hosts[i].port);
+                as_v8_detail(log,"host[%d].port = %d", i, config->hosts[i].port);
             }
             else {
-                as_v8_error(log, "Host port should be an integer");
+                as_v8_error(log, "host[%d].port should be an integer", i);
                 return AS_NODE_PARAM_ERR;
             }
         }
@@ -143,25 +143,27 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
 {
     if (obj->Has(String::New("addr")) ) {
         Local<Value> addrVal = obj->Get(String::NewSymbol("addr"));
-        if ( addrVal->IsString()) {
-            (*addr) = (char*) malloc (HOST_ADDRESS_SIZE);
-            strcpy( *addr, *String::Utf8Value(addrVal->ToString()));
+        if ( addrVal->IsString() ) {
+            *addr = (char*) malloc (HOST_ADDRESS_SIZE);
+            strcpy(*addr, *String::Utf8Value(addrVal->ToString()));
             as_v8_detail(log, "host addr : %s", (*addr));
-        }else {
+        }
+        else {
             return AS_NODE_PARAM_ERR;
         }
     } 
     if ( obj->Has(String::New("port")) ){
         Local<Value> portVal = obj->Get(String::NewSymbol("port"));
         if ( portVal->IsNumber() ) {
-                (*port) = V8INTEGER_TO_CINTEGER(portVal);
-        } else {
+            *port = V8INTEGER_TO_CINTEGER(portVal);
+        }
+        else {
             return AS_NODE_PARAM_ERR;
         }
     }
     return AS_NODE_PARAM_OK;
-
 }
+
 int log_from_jsobject( LogInfo * log, Local<Object> obj)
 {
     if ( obj->IsObject() ){
