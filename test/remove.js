@@ -8,6 +8,7 @@ var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
+var valgen = require('./generators/value');
 
 var status = aerospike.Status;
 var policy = aerospike.Policy;
@@ -41,9 +42,9 @@ describe('client.remove()', function() {
     it('should remove a record w/ string key', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -59,6 +60,7 @@ describe('client.remove()', function() {
                     client.get(key, function(err, record, metadata, key) {
                         expect(err).to.be.ok();
                         expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+
                         done();
                     });
                 });
@@ -69,9 +71,9 @@ describe('client.remove()', function() {
     it('should remove a record w/ integer key', function(done) {
 
         // generators
-        var kgen = keygen.integer_random("test", "demo", 1000);
+        var kgen = keygen.integer("test", "demo");
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -87,6 +89,7 @@ describe('client.remove()', function() {
                     client.get(key, function(err, record, metadata, key) {
                         expect(err).to.be.ok();
                         expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+
                         done();
                     });
                 });
@@ -97,7 +100,7 @@ describe('client.remove()', function() {
     it('should not remove a non-existent key', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
 
         // values
         var key = kgen();
@@ -106,6 +109,7 @@ describe('client.remove()', function() {
         client.remove(key, function(err, key) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            
             done();
         });
     });

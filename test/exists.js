@@ -8,6 +8,7 @@ var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
+var valgen = require('./generators/value');
 
 var status = aerospike.Status;
 var policy = aerospike.Policy;
@@ -42,9 +43,9 @@ describe('client.exists()', function() {
     it('should find the record', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/exists/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/exists/"});
         var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.constant({i: 123, s: "abc"});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
         // values
         var key     = kgen();
@@ -65,7 +66,7 @@ describe('client.exists()', function() {
     it.skip('should not find the record', function(done) {
 
         // generators
-        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
+        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
 
         // values
         var key = kgen();

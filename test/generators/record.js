@@ -8,6 +8,20 @@ function constant(bins) {
     };
 }
 
+/**
+ * Returns a record from bins spec'd using generators record.
+ */
+function record(bins) {
+    return function(key, metadata) {
+        var out = {};
+        for ( var bin in bins ) {
+            out[bin] = bins[bin]()
+        }
+        return out;
+    };
+}
+
 module.exports = {
-    constant: constant
+    constant: constant,
+    record: record
 };
