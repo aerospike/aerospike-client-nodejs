@@ -192,7 +192,7 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0) {
         as_v8_debug(log, "Invoking aerospike operate with");
-        DEBUG(log, _KEY,  key);
+        // DEBUG(log, _KEY,  key);
         aerospike_key_operate(as, err, policy, key, op, &rec);  
         as_operations_destroy( op );
     }
@@ -223,14 +223,14 @@ static void respond(uv_work_t * req, int status)
     Handle<Value> argv[4];
 
     as_v8_debug(log, "operate operation : the response is");
-    DEBUG(log, ERROR, err);
+    // DEBUG(log, ERROR, err);
 
 
     // Build the arguments array for the callback
     if( data->param_err == 0) { 
-        DETAIL(log,  BINS, rec);
-        DETAIL(log,  META, rec);
-        DEBUG(log,  _KEY, key);
+        // DETAIL(log,  BINS, rec);
+        // DETAIL(log,  META, rec);
+        // DEBUG(log,  _KEY, key);
 
         argv[0] = error_to_jsobject(err, log),
             argv[1] = recordbins_to_jsobject(rec, log ),

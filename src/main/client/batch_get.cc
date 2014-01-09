@@ -87,15 +87,15 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
         for ( uint32_t i = 0; i < n; i++ ) {
             data->results[i].result = results[i].result; 
             as_v8_debug(log, "batch result for the key");
-            DEBUG(log, _KEY, results[i].key);
+            // DEBUG(log, _KEY, results[i].key);
             key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
             if (results[i].result == AEROSPIKE_OK) {            
                 as_record * rec = NULL ;
                 rec = &data->results[i].record;
 
                 as_v8_detail(log, "Record[%d]", i);
-                DETAIL(log, BINS, &results[i].record);
-                DETAIL(log, META, &results[i].record);
+                // DETAIL(log, BINS, &results[i].record);
+                // DETAIL(log, META, &results[i].record);
 
                 as_record_init(rec, results[i].record.bins.size);
                 record_clone(&results[i].record, &rec, log);
@@ -213,7 +213,7 @@ static void execute(uv_work_t * req)
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_get(as, err, policy, batch, batch_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            DEBUG(log, ERROR, err);
+            // DEBUG(log, ERROR, err);
             data->results = NULL;
             data->n = 0;
         }

@@ -203,9 +203,9 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0) {
         as_v8_debug(log, "Invoking aerospike put with");
-        DETAIL(log, BINS, rec);
-        DETAIL(log, META, rec);
-        DEBUG(log, _KEY,  key);
+        // DETAIL(log, BINS, rec);
+        // DETAIL(log, META, rec);
+        // DEBUG(log, _KEY,  key);
         aerospike_key_put(as, err, policy, key, rec);
     }
 
@@ -230,14 +230,14 @@ static void respond(uv_work_t * req, int status)
     as_record * rec     = &data->rec;
     LogInfo * log       = data->log;
     as_v8_debug(log, "Put operation : response is");
-    DEBUG(log, ERROR, err);
+    // DEBUG(log, ERROR, err);
 
     Handle<Value> argv[2];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log);
         argv[1] = key_to_jsobject(key, log);
-        DEBUG(log, _KEY,  key);
+        // DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;

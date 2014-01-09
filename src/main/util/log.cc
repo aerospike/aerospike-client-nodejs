@@ -43,6 +43,7 @@ bool v8_logging_callback(as_log_level level, const char* func, const char * file
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(msg, 1024-1, fmt, ap);
+    msg[1024-1] = '\0';
     va_end(ap);
 
     fprintf(stderr, "[%s:%d][%s] %s\n", basename((char*) file), line, func, msg);
@@ -56,12 +57,14 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
     if ( NULL == log) {
         return;
     }
+
     char msg[1024] = {0};
 
     size_t limit = sizeof(msg)-2;
     size_t pos = 0;
 
-    pos += snprintf(msg+pos, limit-pos, "%-5s [%s:%d] - ", log_severity_strings[level+1], basename((char*) file), line);
+    pos += snprintf(msg+pos, limit-pos, "%-5s [%s:%d] [%s] - ", log_severity_strings[level+1], basename((char*) file), line, func);
+    
     va_list ap;
     va_start(ap, fmt);
     pos += vsnprintf(msg+pos, limit-pos, fmt, ap);
@@ -71,8 +74,10 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
         pos = limit;
     }
 
+    msg[pos] = '\n';
+    pos++;
 
-    pos += snprintf(msg+pos, 2, "\n");
+    msg[pos] = '\0';
 
     if( 0 >= write(log->fd, msg, limit )) {
         fprintf(stderr, "Internal failure in log message write :%d \n", errno);

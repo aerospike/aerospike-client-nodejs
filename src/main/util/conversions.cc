@@ -778,64 +778,72 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // scope has to be closed to avoid memory leak.
     // Open a scope
     HandleScope scope;
-    as_namespace ns = { '\0' };
-    as_set set = { '\0' };
+    as_namespace ns = {'\0'};
+    as_set set = {'\0'};
 
     // All the v8 local variables have to declared before any of the goto
     // statements. V8 demands that.
-    Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
-    Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
-    if (obj->Has(String::NewSymbol("set"))) {
-        Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
-        if ( set_obj->IsString() ) {
-            strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
-            as_v8_detail(log," Key has set %s", set);
+
+    // get the namespace
+    if ( obj->Has(String::NewSymbol("ns")) ) {
+        Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
+        if ( ns_obj->IsString() ) {
+            strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+            as_v8_detail(log, "key.ns = \"%s\"", ns);
+            if ( strlen(ns) == 0 ) {
+                goto ReturnError;
+            }
         }
         else {
             goto ReturnError;
-        }   
-        if ( strlen(set) == 0 ) {
-            goto ReturnError;
         }
-    }
-
-    if ( ns_obj->IsString() ) {
-        strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
-        as_v8_detail(log, " Key has namespace %s", ns);
     }
     else {
         goto ReturnError;
     }
 
-    if ( strlen(ns) == 0 ) {
-        goto ReturnError;
-    }
-
-    if ( val_obj->IsString() ) {
-        char * value = strdup(*String::Utf8Value(val_obj));
-        as_key_init(key, ns, set, value);
-        as_v8_detail(log, " Key is %s ", value);
-        ((as_string *) key->valuep)->free = true;
-        goto ReturnOk;
-    }
-    else if ( val_obj->IsNumber() ) {
-        int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
-        as_key_init_int64(key, ns, set, value);
-        as_v8_detail(log, "Key is %d ", value);
-        goto ReturnOk;
-    }
-    else if ( val_obj->IsObject() ) {
-        Local<Object> obj = val_obj->ToObject();
-        int len ;
-        uint8_t* data ;
-        if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
-            return AS_NODE_PARAM_ERR;
+    // get the set
+    if ( obj->Has(String::NewSymbol("set")) ) {
+        Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+        if ( set_obj->IsString() ) {
+            strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+            as_v8_detail(log,"key.set = \"%s\"", set);
+            if ( strlen(set) == 0 ) {
+                goto ReturnError;
+            }
         }
-        as_key_init_raw(key, ns, set, data, len);
-        as_v8_detail(log, "Key is %u" , data);
-
+        else {
+            goto ReturnError;
+        }
     }
 
+    // get the value
+    if ( obj->Has(String::NewSymbol("key")) ) {
+        Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
+        if ( val_obj->IsString() ) {
+            char * value = strdup(*String::Utf8Value(val_obj));
+            as_key_init(key, ns, set, value);
+            as_v8_detail(log, " Key is %s ", value);
+            ((as_string *) key->valuep)->free = true;
+            goto ReturnOk;
+        }
+        else if ( val_obj->IsNumber() ) {
+            int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
+            as_key_init_int64(key, ns, set, value);
+            as_v8_detail(log, "Key is %d ", value);
+            goto ReturnOk;
+        }
+        else if ( val_obj->IsObject() ) {
+            Local<Object> obj = val_obj->ToObject();
+            int len ;
+            uint8_t* data ;
+            if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
+                return AS_NODE_PARAM_ERR;
+            }
+            as_key_init_raw(key, ns, set, data, len);
+            as_v8_detail(log, "Key is %u" , data);
+        }
+    }
 
     // close the scope, so that garbage collector can collect the v8 variables.
 ReturnOk:

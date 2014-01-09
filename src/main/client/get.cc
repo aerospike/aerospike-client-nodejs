@@ -171,7 +171,7 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0 ) {
         as_v8_debug(log, "Invoking get with ");
-        DEBUG(log, _KEY,  key);
+        // DEBUG(log, _KEY,  key);
         aerospike_key_get(as, err, policy, key, &rec);  
     }
 
@@ -198,14 +198,14 @@ static void respond(uv_work_t * req, int status)
     as_record * rec         = &data->rec;
     LogInfo * log           = data->log;
     as_v8_debug(log, "Get operations' the response is");
-    DEBUG(log, ERROR, err);
+    // DEBUG(log, ERROR, err);
     
     Handle<Value> argv[4];
     // Build the arguments array for the callback
     if( data->param_err == 0) { 
-        DETAIL(log,  BINS, rec); 
-        DETAIL(log,  META, rec);
-        DETAIL(log, _KEY,  key); 
+        // DETAIL(log,  BINS, rec); 
+        // DETAIL(log,  META, rec);
+        // DETAIL(log, _KEY,  key); 
 
         argv[0] = error_to_jsobject(err, log),
         argv[1] = recordbins_to_jsobject(rec, log ),
