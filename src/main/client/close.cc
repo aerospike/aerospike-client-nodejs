@@ -21,11 +21,11 @@
  ******************************************************************************/
 
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/aerospike_key.h>
-#include <aerospike/as_config.h>
-#include <aerospike/as_key.h>
-#include <aerospike/as_record.h>
+    #include <aerospike/aerospike.h>
+    #include <aerospike/aerospike_key.h>
+    #include <aerospike/as_config.h>
+    #include <aerospike/as_key.h>
+    #include <aerospike/as_record.h>
 }
 
 #include <node.h>
