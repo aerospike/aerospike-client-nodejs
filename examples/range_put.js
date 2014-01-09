@@ -128,7 +128,7 @@ function put_done(start, end, skip) {
 
     console.time(timeLabel);
 
-    return function(err, metadata, key, skippy) {
+    return function(err, key, skippy) {
 
         if ( skippy === true ) {
             console.log("SKIP - ", key);
@@ -137,7 +137,7 @@ function put_done(start, end, skip) {
         else {
             switch ( err.code ) {
                 case status.AEROSPIKE_OK:
-                    console.log("OK - ", key, metadata);
+                    console.log("OK - ", key);
                     success++;
                     break;
                 default:
@@ -172,7 +172,7 @@ function put_start(start, end, skip) {
 
         if ( skip !== 0 && ++s >= skip ) {
             s = 0;
-            done(null,null,key,true);
+            done(null, key, true);
             continue;
         }
 

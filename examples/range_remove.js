@@ -176,7 +176,7 @@ function remove_start(start, end, skip) {
 
         if ( skip !== 0 && ++s >= skip ) {
             s = 0;
-            done(null,key,true);
+            done(null, key, true);
             continue;
         }
 

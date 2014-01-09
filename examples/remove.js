@@ -106,9 +106,9 @@ var key = {
 
 console.time("remove");
 
-client.remove(key, function(err, metadata, key) {
+client.remove(key, function(err, key) {
     if ( err.code == status.AEROSPIKE_OK ) {
-        console.log("OK - ", key, metadata);
+        console.log("OK - ", key);
     }
     else if ( err.code == status.AEROSPIKE_ERR_RECORD_NOT_FOUND ) {
         console.log("NOT_FOUND - ", key);

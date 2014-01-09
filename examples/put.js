@@ -117,10 +117,10 @@ var metadata = {
 
 console.time("put");
 
-client.put(key, record, metadata, function(err, metadata, key) {
+client.put(key, record, metadata, function(err, key) {
     switch ( err.code ) {
         case status.AEROSPIKE_OK:
-            console.log("OK - ", key, metadata);
+            console.log("OK - ", key);
             break;
         default:
             console.log("ERR - ", err, key);

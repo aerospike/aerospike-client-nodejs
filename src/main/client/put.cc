@@ -232,13 +232,11 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "Put operation : response is");
     DEBUG(log, ERROR, err);
 
-    Handle<Value> argv[3];
+    Handle<Value> argv[2];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = recordmeta_to_jsobject(rec, log);
-        argv[2] = key_to_jsobject(key, log);
-        DETAIL(log, META, rec);
+        argv[1] = key_to_jsobject(key, log);
         DEBUG(log, _KEY,  key);
     }
     else {
@@ -246,7 +244,6 @@ static void respond(uv_work_t * req, int status)
         as_v8_debug(log, "Parameter error for put operation");
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-        argv[2] = Null();
     }   
 
     // Surround the callback in a try/catch for safety
@@ -254,7 +251,7 @@ static void respond(uv_work_t * req, int status)
 
     // Execute the callback.
     if ( data->callback != Null() ) {
-        data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
         as_v8_debug(log, "Invoked Put callback");
     }
 
