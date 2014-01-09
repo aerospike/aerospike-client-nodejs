@@ -1,45 +1,44 @@
-Aerospike Nodejs Testing
+# Testing Aerospile Node.js Client
 
-The test cases are written using mocha. To install mocha
-    
-    $ sudo npm install -g mocha
+## Installation
 
-The following node packages are required to run the test.
-    
-- superagent.
-- expect.js
+We also recommend installing Aerospike dependencies by running the following 
+from the module's root directory:
 
-To install the above packages
-    
-    $ sudo npm install -g superagent
-    $ sudo npm install -g expect.js
+    $ npm install
 
-The config parameters to run the test cases are given through
-config.json file. The following config informations are necessary for the
-test to run.
+This will install all required dependencies.
 
-    host : Server hostname (default : localhost)
-    port : Server port (default : 3000)
-    namespace : Namespace (default : test)
-    set : Set name (default : demo)
-    NoOfObjects : Number of objects (default : 1000)
+## Usage
 
-To run the test cases,
+To run the test cases:
 
-    $ mocha <file_name>
+    $ npm test
 
-Test Cases:
+The tests are written and run using [`mocha`](http://visionmedia.github.io/mocha). 
+You can choose to use `mocha` directly, but you must first install `mocha`:
 
-- put.js
-- get.js
-- batch_get.js
-- select.js
-- operate.js
-- remove.js
+    $ npm install -g mocha
 
-Each test case has to be run individually.
+Note: some users may need to run this as sudo.
 
-Example:
+Then to run the tests via mocha, you will want to run it from the modules' root 
+directory:
 
-    mocha put.js
+    $ mocha -R spec 
 
+## Options
+
+You can modify the test with various options:
+
+    --help           Display this message.
+    --host, -h       Aerospike database address.  [default: "127.0.0.1"]
+    --port, -p       Aerospike database port.     [default: 3000]
+    --timeout, -t    Timeout in milliseconds.     [default: 10]
+    --log, -l        Log level [0-5]              [default: 2]
+    --namespace, -n  Namespace for the keys.      [default: "test"]
+    --set, -s        Set for the keys.            [default: "demo"]
+
+Options can be set via an environment variable `OPTIONS`:
+
+    $ OPTIONS="--port 3010" npm test
