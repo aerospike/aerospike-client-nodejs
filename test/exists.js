@@ -1,60 +1,75 @@
+// we want to test the built aerospike module
+var aerospike = require('../build/Release/aerospike')
 var assert = require('assert');
 var request = require('superagent');
 var expect = require('expect.js');
-var aerospike = require('aerospike');
 var msgpack = require('msgpack');
-var return_code = aerospike.Status;
-var Policy = aerospike.Policy;
-var Operator = aerospike.Operators;
 
-var test = require('./test')
-var client = test.client;
-var params = new Object;
-var ParseConfig = test.ParseConfig
-var GetRecord = test.GetRecord
-var CleanRecords = test.CleanRecords
-var n = test.n
+var keygen = require('./generators/key');
+var metagen = require('./generators/metadata');
+var recgen = require('./generators/record');
+var putgen = require('./generators/put');
+
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+var ops = aerospike.Operators;
 
 
-ParseConfig(params);
+describe('client.exists()', function() {
 
+    var client;
 
-function GetReadPolicy()
-{
-    var readpolicy = { timeout : 10, key :Policy.Key.SEND }
-    return readpolicy;
-}
-
-describe( 'EXISTS FUNCTIONALITY', function() {
-    it( 'SIMPLE EXISTS TEST', function() {
-        var m = 0;
-        for ( var i = 1; i <= n; i++) {
-        var rec = GetRecord(i);
-        var Key = { ns: params.ns, set: params.set,key: 'EXISTS' + i }
-        client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
-            if ( err.code == return_code.AEROSPIKE_OK) { 
-            client.exists(key, function ( err1, meta1, key1) {
-                expect(err1).to.exist;
-                expect(err1.code).to.equal(return_code.AEROSPIKE_OK);
-                expect(meta1).to.exist;
-                expect(meta1.gen).to.equal(1);
-                if ( meta1.ttl != 100) {
-                    expect(meta1.ttl).to.be.above(90)
-                    expect(meta1.ttl).to.be.below(100)
-                } else {
-                    expect(meta1.ttl).to.be.equal(100);
-                }   
-
-                if ( ++m == n) {
-                    m = 0;
-                    console.log("EXISTS TEST SUCCESS");
-                    CleanRecords('EXISTS');
-                }
-            });
-            }
-        });
-    }
+    before(function() {
+        client = aerospike.client({
+            hosts: [ {addr: '127.0.0.1', port: 3010 } ]
+        }).connect();
     });
+
+    after(function() {
+        client.close();
+        client = null;
+    });
+
+    it('should find the record', function(done) {
+
+        // generators
+        var kgen = keygen.string_prefix("test", "demo", "test/exists/");
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key,metadata);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+            client.exists(key, function(err, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                done();
+            });
+        });
+    });
+
+    it.skip('should not find the record', function(done) {
+
+        // generators
+        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
+
+        // values
+        var key = kgen();
+
+        // write the record then check
+        client.exists(key, function(err, metadata, key) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+
+            done();
+        });
+    });
+
 });
 
 

@@ -1,76 +1,104 @@
+// we want to test the built aerospike module
+var aerospike = require('../build/Release/aerospike')
+var assert = require('assert');
 var request = require('superagent');
 var expect = require('expect.js');
-var aerospike = require('aerospike');
 var msgpack = require('msgpack');
-var return_code = aerospike.Status;
-var Policy = aerospike.Policy;
-var Operator = aerospike.Operators;
 
-var test = require('./test')
-var client = test.client;
-var params = new Object;
-var ParseConfig = test.ParseConfig
-var GetRecord = test.GetRecord
-var CleanRecords = test.CleanRecords
-var n = test.n
+var keygen = require('./generators/key');
+var metagen = require('./generators/metadata');
+var recgen = require('./generators/record');
+var putgen = require('./generators/put');
 
-ParseConfig(params);
+var status = aerospike.Status;
+var policy = aerospike.Policy;
 
-function GetRemovePolicy()
-{
-    var removepolicy = { timeout : 10, 
-                         gen : 1,
-                         key :Policy.Key.SEND,
-                         retry: Policy.Retry.ONCE };
-    return removepolicy;
-}
 
-describe( 'REMOVE FUNCTIONALITY', function() {
-    it( 'SIMPLE REMOVE TEST', function() {
-        var m = 0;
-        for ( var i = 1; i <= n; i++) {
-        var rec = GetRecord(i);
-        var Key = { ns: params.ns, set: params.set, key: 'REMOVE' + i }
-        client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
-            if ( err.code == return_code.AEROSPIKE_OK) { 
-            client.remove(key, function ( err, key) {
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                client.get( key, function ( err, rec, meta) {
-                    expect(err).to.exist;
-                    expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-                });
-                if ( ++m == n) {
-                    m = 0;
-                    console.log("REMOVE TEST SUCCESS");
-                }
-            });
-            }
-        });
-    }
+describe('client.put()', function() {
+
+    var client;
+
+    before(function() {
+        client = aerospike.client({
+            hosts: [ {addr: '127.0.0.1', port: 3010 } ]
+        }).connect();
     });
 
-    it( 'REMOVE TEST WITH REMOVE POLICY', function() {
-        var m = 0;
-        for ( var i = 1; i <= n; i++) {
-        var rec = GetRecord(i);
-        var Key = { ns: params.ns, set: params.set, key: 'REMOVEPOLICY' + i }
-        client.put (Key, rec.bins, rec.metadata, function (err, meta, key) {
-            if ( err.code == return_code.AEROSPIKE_OK) { 
-                var removepolicy = new GetRemovePolicy();
-            client.remove(key, removepolicy, function ( err, key) {
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                client.get( key, function (err) {
-                    expect(err).to.exist;
-                    expect(err.code).to.equal(return_code.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-                });
-                if ( ++m == n) {
-                    console.log("REMOVE TEST WITH REMOVE POLICY SUCCESS");
-                }
-            });
-            }
-        });
-    }
+    after(function() {
+        client.close();
+        client = null;
     });
+
+    it('should remove a record w/ string key', function(done) {
+
+        // generators
+        var kgen = keygen.string_prefix("test", "demo", "test/get/");
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                client.remove(key, function(err, key) {
+                    client.get(key, function(err, record, metadata, key) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    it('should remove a record w/ integer key', function(done) {
+
+        // generators
+        var kgen = keygen.integer_random("test", "demo", 1000);
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                client.remove(key, function(err, key) {
+                    client.get(key, function(err, record, metadata, key) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+    
+    it('should not remove a non-existent key', function(done) {
+
+        // generators
+        var kgen = keygen.string_prefix("test", "demo", "test/not_found/");
+
+        // values
+        var key = kgen();
+
+        // write the record then check
+        client.remove(key, function(err, key) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            done();
+        });
+    });
+
 });

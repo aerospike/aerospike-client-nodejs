@@ -1,67 +1,124 @@
+// we want to test the built aerospike module
+var aerospike = require('../build/Release/aerospike')
 var assert = require('assert');
 var request = require('superagent');
 var expect = require('expect.js');
-var aerospike = require('aerospike');
 var msgpack = require('msgpack');
-var return_code = aerospike.Status;
-var Policy = aerospike.Policy;
-var Operator = aerospike.Operators;
 
-var test = require('./test')
-var client = test.client;
-var params = new Object;
-var ParseConfig = test.ParseConfig
-var GetRecord = test.GetRecord
-var CleanRecords = test.CleanRecords
-var n = test.n
+var keygen = require('./generators/key');
+var metagen = require('./generators/metadata');
+var recgen = require('./generators/record');
+var putgen = require('./generators/put');
 
-ParseConfig(params);
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+var ops = aerospike.Operators;
 
-var m = 0;
-var startBatch = 0;
-describe( 'BATCH-GET FUNCTION', function() {
-    it ( 'SIMPLE BATCH-GET TEST' , function() {
-        for ( var i = 0; i < 4*n; i++ ) {
-            var key = { ns: params.ns, set: params.set, key:"BATCHGET"+i };
-            var rec= GetRecord(i);
-            client.put(key, rec.bins, rec.metadata, function( err, meta, key) {
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                if ( ++m == 4*n) {
-                    m = 0;
-                    startBatch = 1;
-                } 
-            });
-        }
-    if ( startBatch == 1) 
-    {   
-        for ( var i = 0; i < n; i++) {
-            var K_array = [ {ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4) },
-                            {ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+1 },
-                            {ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+2 },
-                            {ns:params.ns, set:params.set, key:"BATCHGET" +  (i*4)+3 } ];
-            client.batch_get(K_array, function(err, rec_list){
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                expect(rec_list.length).to.equal(4);
-                for ( var j = 0; j < rec_list.length; j++) {
-                    expect(rec_list[j].recstatus).to.equal(return_code.AEROSPIKE_OK);
-                    var ind = rec_list[j].record.key.key.substr(8);
-                    expect(rec_list[j].record.bins.string_bin).to.equal(ind);
-                    expect(rec_list[j].record.bins.integer_bin).to.equal(parseInt(ind));
-                    var obj = msgpack.unpack(rec_list[j].record.bins.blob_bin);
-                    expect(obj.integer).to.equal(parseInt(ind));
-                    expect(obj.string).to.equal('Some String');
-                    expect(obj.array).to.eql([1,2,3]);
-                    if ( ++m == n ) {
-                        n = 4*n;
-                        console.log("BATCH GET SUCCESS")
-                        CleanRecords('BATCHGET');
-                    }
+describe('client.batch_get()', function() {
+
+    var client;
+
+    before(function() {
+        client = aerospike.client({
+            hosts: [ {addr: '127.0.0.1', port: 3010 } ]
+        }).connect();
+    });
+
+    after(function() {
+        client.close();
+        client = null;
+    });
+
+    it('should successfully read 10 records', function(done) {
+
+        // number of records
+        var nrecords = 10;
+
+        // generators
+        var kgen, mgen, rgen;
+
+        // key generator
+        kgen = keygen.string_prefix("test", "demo", 1, "test/batch_get/" + nrecords + "/");
+
+        // metadata generator
+        mgen = metagen.constant({ttl: 1000});
+
+        // record generator
+        rgen = recgen.constant({i: 123, s: "abc"});
+
+        // writer using generators
+        // callback provides an array of written keys
+        putgen.put(client, 10, kgen, rgen, mgen, function(written) {
+
+            var keys = Object.keys(written).map(function(key){
+                return written[key].key;
+            })
+
+            client.batch_get(keys, function(err, results) {
+
+                var result;
+                var j;
+
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(results.length).to.equal(10);
+
+                for ( j = 0; j < results.length; j++) {
+                    result = results[j];
+                    expect(result.status).to.equal(status.AEROSPIKE_OK);
+                    expect(result.record['i']).to.equal(123);
+                    expect(result.record['s']).to.equal('abc');
                 }
+
+                done();
             });
-        }
-    }
+        });
+    });
+
+    it('should successfully read 1000 records', function(done) {
+
+        // number of records
+        var nrecords = 1000;
+
+        // generators
+        var kgen, mgen, rgen;
+
+        // key generator
+        kgen = keygen.string_prefix("test", "demo", "test/batch_get/" + nrecords + "/");
+
+        // metadata generator
+        mgen = metagen.constant({ttl: 1000});
+
+        // record generator
+        rgen = recgen.constant({i: 123, s: "abc"});
+
+        // writer using generators
+        // callback provides an array of written keys
+        putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
+
+            var keys = Object.keys(written).map(function(key){
+                return written[key].key;
+            })
+
+            client.batch_get(keys, function(err, results) {
+
+                var result;
+                var j;
+
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(results.length).to.equal(nrecords);
+
+                for ( j = 0; j < results.length; j++) {
+                    result = results[j];
+                    expect(result.status).to.equal(status.AEROSPIKE_OK);
+                    expect(result.record['i']).to.equal(123);
+                    expect(result.record['s']).to.equal('abc');
+                }
+
+                done();
+            });
+        });
     });
 
 });

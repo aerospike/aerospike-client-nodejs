@@ -1,67 +1,154 @@
+// we want to test the built aerospike module
+var aerospike = require('../build/Release/aerospike')
 var assert = require('assert');
 var request = require('superagent');
 var expect = require('expect.js');
-var aerospike = require('aerospike');
 var msgpack = require('msgpack');
-var return_code = aerospike.Status;
-var Policy = aerospike.Policy;
-var Operator = aerospike.Operators;
 
-var test = require('./test')
-var client = test.client;
-var params = new Object;
-var ParseConfig = test.ParseConfig
-var GetRecord = test.GetRecord
-var CleanRecords = test.CleanRecords
-var n = test.n
+var keygen = require('./generators/key');
+var metagen = require('./generators/metadata');
+var recgen = require('./generators/record');
+var putgen = require('./generators/put');
 
-ParseConfig(params);
-var m = 0;
-var startBatch = 0;
-describe( 'BATCH-EXISTS FUNCTION', function() {
-    it ( 'SIMPLE BATCH-EXIST TEST' , function() {
-        for ( var i = 0; i < 4*n; i++ ) {
-            var key = { ns: params.ns, set: params.set, key:"BATCHEXISTS"+i };
-            var rec= GetRecord(i);
-            client.put(key, rec.bins, rec.metadata, function( err, meta, key) {
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                if ( ++m == 4*n) {
-                    m = 0;
-                    startBatch = 1;
-                } 
-            });
-        }
-    if ( startBatch == 1) 
-    {   
-        for ( var i = 0; i < n; i++) {
-            var K_array = [ {ns:params.ns, set:params.set, key:"BATCHEXISTS" +  (i*4) },
-                            {ns:params.ns, set:params.set, key:"BATCHEXISTS" +  (i*4)+1 },
-                            {ns:params.ns, set:params.set, key:"BATCHEXISTS" +  (i*4)+2 },
-                            {ns:params.ns, set:params.set, key:"BATCHEXISTS" +  (i*4)+3 } ];
-            client.batch_get(K_array, function(err, rec_list){
-                expect(err).to.exist;
-                expect(err.code).to.equal(return_code.AEROSPIKE_OK);
-                expect(rec_list.length).to.equal(4);
-                for ( var j = 0; j < rec_list.length; j++) {
-                    expect(rec_list[j].recstatus).to.equal(return_code.AEROSPIKE_OK);
-                    expect(rec_list[i].meta).to.exist;
-                    expect(rec_list[i].meta.gen).to.equal(1);
-                    if ( rec_list[i].meta.ttl != 100) {
-                        expect(rec_list[i].meta.ttl).to.be.above(90)
-                        expect(rec_list[i].meta.ttl).to.be.below(100)
-                    } else {
-                        expect(rec_list[i].meta.ttl).to.be.equal(100);
-                    }
-                    if ( ++m == n ) {
-                        n = 4*n;
-                        console.log("BATCH EXISTS TEST SUCCESS")
-                        CleanRecords('BATCHEXISTS');
-                    }
+var status = aerospike.Status;
+var policy = aerospike.Policy;
+var ops = aerospike.Operators;
+
+describe('client.batch_exists()', function() {
+
+    var client;
+
+    before(function() {
+        client = aerospike.client({
+            hosts: [ {addr: '127.0.0.1', port: 3010 } ]
+        }).connect();
+    });
+
+    after(function() {
+        client.close();
+        client = null;
+    });
+
+    it('should successfully find 10 records', function(done) {
+
+        // number of records
+        var nrecords = 10;
+
+        // generators
+        var kgen, mgen, rgen;
+
+        // key generator
+        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/" + nrecords + "/");
+
+        // metadata generator
+        mgen = metagen.constant({ttl: 1000});
+
+        // record generator
+        rgen = recgen.constant({i: 123, s: "abc"});
+
+        // writer using generators
+        // callback provides an array of written keys
+        putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
+
+            var keys = Object.keys(written).map(function(key){
+                return written[key].key;
+            })
+
+            client.batch_exists(keys, function(err, results) {
+
+                var result;
+                var j;
+
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(results.length).to.equal(nrecords);
+
+                for ( j = 0; j < results.length; j++) {
+                    result = results[j];
+                    expect(result.status).to.equal(status.AEROSPIKE_OK);
                 }
+
+                done();
             });
-        }
-    }
+        });
+    });
+
+    it('should fail finding 10 records', function(done) {
+
+        // number of records
+        var nrecords = 10;
+
+        // generators
+        var kgen, keys;
+
+        // key generator
+        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/10fail/");
+
+        // keys
+        keys = keygen.range(kgen, 10);
+        
+        // writer using generators
+        // callback provides an array of written keys
+        client.batch_exists(keys, function(err, results) {
+
+            var result;
+            var j;
+            
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(results.length).to.equal(10);
+
+            for ( j = 0; j < results.length; j++) {
+                result = results[j];
+                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            }
+
+            done();
+        });
+    });
+
+    it('should successfully find 1000 records', function(done) {
+
+        // number of records
+        var nrecords = 10;
+
+        // generators
+        var kgen, mgen, rgen;
+
+        // key generator
+        kgen = keygen.string_prefix("test", "demo", "test/batch_exists/" + nrecords + "/");
+
+        // metadata generator
+        mgen = metagen.constant({ttl: 1000});
+
+        // record generator
+        rgen = recgen.constant({i: 123, s: "abc"});
+
+        // writer using generators
+        // callback provides an array of written keys
+        putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
+
+            var keys = Object.keys(written).map(function(key){
+                return written[key].key;
+            })
+
+            client.batch_exists(keys, function(err, results) {
+
+                var result;
+                var j;
+
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(results.length).to.equal(nrecords);
+
+                for ( j = 0; j < results.length; j++) {
+                    result = results[j];
+                    expect(result.status).to.equal(status.AEROSPIKE_OK);
+                }
+
+                done();
+            });
+        });
     });
 
 });
