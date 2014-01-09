@@ -76,7 +76,6 @@ if ( keys.length === 0 ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
-
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
@@ -87,7 +86,12 @@ var client = aerospike.client({
     policies: {
         timeout: argv.timeout
     }
-}).connect();
+}).connect(function(err) {
+    if (err.code != status.AEROSPIKE_OK) {
+        console.log("Aerospike server connection Error: %j", err)
+        return;
+    }
+});
 
 if ( client === null ) {
     console.error("Error: Client not initialized.");

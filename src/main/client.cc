@@ -149,20 +149,34 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
     HandleScope scope;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    
+    Local<Function> callback;
+    
+    if (args.Length() > 0 && args[0]->IsFunction()) {
+        callback = Local<Function>::Cast(args[0]);
+    } else {
+        as_v8_error(client->log, " Callback not provided, Parameter error");
+        return Null();
+    }
 
     as_error err;
 
     aerospike_connect(client->as, &err);
 
+    Handle<Value> argv[1];
+
+    argv[0] = error_to_jsobject(&err, client->log);
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
         as_v8_error(client->log, "Connecting to Cluster Failed");
+        callback->Call(Context::GetCurrent()->Global(), 1, argv);
         return Null();
+    } 
+    else {
+        as_v8_debug(client->log, "Connecting to Cluster: Success");
+        callback->Call(Context::GetCurrent()->Global(), 1, argv);
+        return scope.Close(client->handle_);
     }
-
-    as_v8_debug(client->log, "Connecting to Cluster: Success");
-
-    return scope.Close(client->handle_);
 }
 
 Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)

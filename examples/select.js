@@ -93,7 +93,13 @@ var client = aerospike.client({
     policies: {
         timeout: argv.timeout
     }
-}).connect();
+}).connect(function(err) {
+    if (err.code != status.AEROSPIKE_OK) {
+        console.log("Aerospike server connection Error: %j", err)
+        return;
+    }   
+});
+
 
 if ( client === null ) {
     console.error("Error: Client not initialized.");

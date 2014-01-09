@@ -205,17 +205,14 @@ static void respond(uv_work_t * req, int status)
         DEBUG(log, _KEY,  key);
 
         argv[0] = error_to_jsobject(err, log);
+        as_v8_debug(log, "Return status %s %d", err->message, err->code);
         if ( rec != NULL && rec->gen != 0 ) {
             as_v8_debug(log, "Record found");
             argv[1] = recordmeta_to_jsobject(rec, log);
             DETAIL(log, META, rec);
         } else {
             argv[1] = Null();
-            if (err->code != AEROSPIKE_OK){
-                as_v8_debug(log, "Exists Request error %s", err->message);
-            } else {
-                as_v8_debug(log, "Record not found in the DB");
-            }
+            DEBUG(log, ERROR, err);
         }
         argv[2] = key_to_jsobject(key, log);
 

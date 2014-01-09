@@ -244,10 +244,6 @@ static void respond(uv_work_t * req, int status)
 
     LogInfo * log = data->log;
 
-    // maintain a linked list of pointers to be freed after the nodejs callback is called
-    // Buffer object is not garbage collected by v8 gc. Have to delete explicitly 
-    // to avoid memory leak.
-
     // Build the arguments array for the callback
     Handle<Value> argv[2];
 
