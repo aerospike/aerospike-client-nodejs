@@ -1,10 +1,8 @@
 // we want to test the built aerospike module
 var aerospike = require('../build/Release/aerospike');
-var config = require('./config/client');
+var options = require('./util/options');
 var assert = require('assert');
-var request = require('superagent');
 var expect = require('expect.js');
-var msgpack = require('msgpack');
 
 var keygen = require('./generators/key');
 var metagen = require('./generators/metadata');
@@ -17,15 +15,27 @@ var policy = aerospike.Policy;
 
 describe('client.put()', function() {
 
-    var client;
-
-    before(function() {
-        client = aerospike.client(config).connect();
+    var client = aerospike.client({
+        hosts: [
+            { addr: options.host, port: options.port }
+        ],
+        log: {
+            level: options.log
+        },
+        policies: {
+            timeout: options.timeout
+        }
     });
 
-    after(function() {
+    before(function(done) {
+        client.connect();
+        done();
+    });
+
+    after(function(done) {
         client.close();
         client = null;
+        done();
     });
 
     it('should write the record w/ string key', function(done) {
