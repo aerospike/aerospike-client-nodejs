@@ -59,7 +59,7 @@ AerospikeClient::~AerospikeClient() {}
  *  This creates a constructor function, and sets up the prototype.
  */
 void AerospikeClient::Init()
-{  
+{
     // Prepare constructor template
     Local<FunctionTemplate> cons = FunctionTemplate::New(New);
     cons->SetClassName(String::NewSymbol("AerospikeClient"));
@@ -76,7 +76,7 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("batch_exists"), FunctionTemplate::New(Batch_Exists)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info_Cluster)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("set_log_level"), FunctionTemplate::New(SetLogLevel)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
@@ -141,43 +141,6 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
     return scope.Close(instance);
 }
 
-/**
- * Connect to an Aerospike Cluster
- */
-Handle<Value> AerospikeClient::Connect(const Arguments& args)
-{
-    HandleScope scope;
-
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
-    
-    Local<Function> callback;
-    
-    if (args.Length() > 0 && args[0]->IsFunction()) {
-        callback = Local<Function>::Cast(args[0]);
-    } else {
-        as_v8_error(client->log, " Callback not provided, Parameter error");
-        return Null();
-    }
-
-    as_error err;
-
-    aerospike_connect(client->as, &err);
-
-    Handle<Value> argv[1];
-
-    argv[0] = error_to_jsobject(&err, client->log);
-    if (err.code != AEROSPIKE_OK) {
-        client->as->cluster = NULL;
-        as_v8_error(client->log, "Connecting to Cluster Failed");
-        callback->Call(Context::GetCurrent()->Global(), 1, argv);
-        return Null();
-    } 
-    else {
-        as_v8_debug(client->log, "Connecting to Cluster: Success");
-        callback->Call(Context::GetCurrent()->Global(), 1, argv);
-        return scope.Close(client->handle_);
-    }
-}
 
 Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
 {

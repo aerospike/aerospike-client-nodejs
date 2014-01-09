@@ -13,9 +13,9 @@ var status = aerospike.Status;
 var policy = aerospike.Policy;
 
 
-describe.skip('client.info()', function() {
+describe('client.info()', function() {
 
-    var client = aerospike.client({
+    var config = {
         hosts: [
             { addr: options.host, port: options.port }
         ],
@@ -25,24 +25,39 @@ describe.skip('client.info()', function() {
         policies: {
             timeout: options.timeout
         }
-    });
+    };
 
     before(function(done) {
-        client.connect();
         done();
     });
 
     after(function(done) {
-        client.close();
-        client = null;
         done();
     });
 
-    it.skip('should get "statistics" from a single node', function(done) {
-        done();
+    it('should get "objects" from a single node', function(done) {
+        var host = {addr: options.host, port: options.port};
+        var count = 0;
+        aerospike.client(config)
+            .info("objects", host, function(err, response, host) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                count++;
+            }, function() {
+                expect(count).to.equal(1);
+                done();
+            });
     });
 
-    it.skip('should get "statistics" from entire cluster', function(done) {
-        done();
+    it('should get "objects" from entire cluster', function(done) {
+        aerospike.client(config).connect(function(err, client){
+            client.info("objects", function(err, response, host) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+            }, function() {
+                client.close();
+                done();
+            });
+        });
     });
 });
