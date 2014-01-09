@@ -8,7 +8,7 @@ var optimist = require('optimist');
 var aerospike = require('aerospike');
 var status = aerospike.Status;
 var policy = aerospike.Policy;
-var operations = aerospike.Operators;
+var op = aerospike.Operators;
 
 /*******************************************************************************
  *
@@ -110,11 +110,14 @@ var key = {
     set: argv.set,
     key: keyv
 };
-
 var ops = [
-  { operation: operations.INCR,   bin_name: 'i', bin_value: 1 },
-  { operation: operations.APPEND, bin_name: 's', bin_value: "def" },
-  { operation: operations.READ,   bin_name: 'i' }
+  //{ operation: operations.INCR,   bin_name: 'i', bin_value: 1 },
+  //{ operation: operations.APPEND, bin_name: 's', bin_value: "def" },
+
+  op.incr('i', 1),
+  op.write('s', 'some_val'),
+  op.append('s', 'Append_val'),
+  op.read('s')
 ];
 
 console.time("operate");
