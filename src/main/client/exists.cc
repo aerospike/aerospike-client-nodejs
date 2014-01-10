@@ -95,7 +95,8 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
-    } else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
@@ -120,16 +121,18 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
-        }else {
+        }
+        else {
             as_v8_error(log, "Readpolicy should be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
         as_policy_read_init(policy);
     }
-
+    
     as_record_init(rec, 0);
     return data;
 
@@ -154,7 +157,7 @@ static void execute(uv_work_t * req)
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
     as_policy_read* policy  = &data->policy;
-    LogInfo * log           = data->log;
+    LogInfo *   log         = data->log;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -165,10 +168,8 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0 ) {
-        
         as_v8_debug(log, "Invoking aerospike exists");
-        // DEBUG(log, _KEY,  key);
-        aerospike_key_exists(as, err, policy, key, &rec);   
+        aerospike_key_exists(as, err, policy, key, &rec);
     }
 
 }
@@ -197,22 +198,18 @@ static void respond(uv_work_t * req, int status)
     Handle<Value> argv[3];
 
     as_v8_debug(log, "Exists operation : the response is");
-    DEBUG(log, ERROR, err);
 
     // Build the arguments array for the callback
-    if( data->param_err == 0) { 
-
-        // DEBUG(log, _KEY,  key);
+    if ( data->param_err == 0) { 
 
         argv[0] = error_to_jsobject(err, log);
         as_v8_debug(log, "Return status %s %d", err->message, err->code);
+
         if ( rec != NULL && rec->gen != 0 ) {
             as_v8_debug(log, "Record found");
             argv[1] = recordmeta_to_jsobject(rec, log);
-            // DETAIL(log, META, rec);
         } else {
             argv[1] = Null();
-            // DEBUG(log, ERROR, err);
         }
         argv[2] = key_to_jsobject(key, log);
 

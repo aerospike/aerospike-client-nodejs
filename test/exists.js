@@ -44,7 +44,7 @@ describe('client.exists()', function() {
     it('should find the record', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/exists/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/exists/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -64,10 +64,10 @@ describe('client.exists()', function() {
         });
     });
 
-    it.skip('should not find the record', function(done) {
+    it('should not find the record', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/exists/fail/"});
 
         // values
         var key = kgen();

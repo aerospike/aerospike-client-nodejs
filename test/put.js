@@ -47,7 +47,7 @@ describe('client.put()', function() {
         var count = 0;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -82,7 +82,7 @@ describe('client.put()', function() {
     it('should write the record w/ string key', function(done) {
         
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -105,7 +105,7 @@ describe('client.put()', function() {
     it('should write the record w/ int key', function(done) {
 
         // generators
-        var kgen = keygen.integer("test", "demo");
+        var kgen = keygen.integer(options.namespace, options.set);
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -128,7 +128,7 @@ describe('client.put()', function() {
     it('should write the record w/ bytes key', function(done) {
 
         // generators
-        var kgen = keygen.bytes("test", "demo");
+        var kgen = keygen.bytes(options.namespace, options.set);
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -151,7 +151,7 @@ describe('client.put()', function() {
     it('should write, read, write, and check gen', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -199,7 +199,7 @@ describe('client.put()', function() {
 
     it('should write, read, remove, read, write, and check gen', function(done) {
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 

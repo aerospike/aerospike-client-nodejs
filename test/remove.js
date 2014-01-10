@@ -43,7 +43,7 @@ describe('client.remove()', function() {
     it('should remove a record w/ string key', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -72,7 +72,7 @@ describe('client.remove()', function() {
     it('should remove a record w/ integer key', function(done) {
 
         // generators
-        var kgen = keygen.integer("test", "demo");
+        var kgen = keygen.integer(options.namespace, options.set);
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -101,7 +101,7 @@ describe('client.remove()', function() {
     it('should not remove a non-existent key', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/not_found/"});
 
         // values
         var key = kgen();

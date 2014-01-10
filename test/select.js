@@ -43,7 +43,7 @@ describe('client.select()', function() {
     it('should read the record', function(done) {
         
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/select/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/select/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -72,7 +72,7 @@ describe('client.select()', function() {
     it('should not find the record', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/not_found/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -94,7 +94,7 @@ describe('client.select()', function() {
     it('should read the record w/ a key send policy', function(done) {
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 

@@ -827,25 +827,32 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
         if ( val_obj->IsString() ) {
             char * value = strdup(*String::Utf8Value(val_obj));
             as_key_init(key, ns, set, value);
-            as_v8_detail(log, " Key is %s ", value);
+            as_v8_detail(log, "key.key = \"%s\"", value);
             ((as_string *) key->valuep)->free = true;
             goto ReturnOk;
         }
         else if ( val_obj->IsNumber() ) {
             int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
             as_key_init_int64(key, ns, set, value);
-            as_v8_detail(log, "Key is %d ", value);
+            as_v8_detail(log, "key.key = %d", value);
             goto ReturnOk;
         }
         else if ( val_obj->IsObject() ) {
             Local<Object> obj = val_obj->ToObject();
-            int len ;
+            int size ;
             uint8_t* data ;
-            if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
+            if (extract_blob_from_jsobject(obj, &data, &size, log) != AS_NODE_PARAM_OK) {
                 return AS_NODE_PARAM_ERR;
             }
-            as_key_init_raw(key, ns, set, data, len);
-            as_v8_detail(log, "Key is %u" , data);
+            as_key_init_raw(key, ns, set, data, size);
+
+            as_v8_detail(log, 
+                "key.key = <%x %x %x%s>", 
+                size > 0 ? data[0] : 0,
+                size > 1 ? data[1] : 0,
+                size > 2 ? data[2] : 0,
+                size > 3 ? " ..." : ""
+                );
         }
     }
 
