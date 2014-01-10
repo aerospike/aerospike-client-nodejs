@@ -339,53 +339,57 @@ void callback(char* data, void * ptr)
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
     HandleScope scope;
-    if( val == NULL) {
-        as_v8_debug( log, "as_val ( C structure) is NULL, cannot form node.js object"); 
+    if ( val == NULL) {
+        as_v8_debug(log, "value = NULL"); 
         return scope.Close(Undefined());
     }
+
     switch ( as_val_type(val) ) {
         case AS_INTEGER : {
-                              as_integer * ival = as_integer_fromval(val);
-                              as_v8_detail(log, "Integer value : %d ", ival->value);
-                              if ( ival ) {
-                                  return scope.Close(Integer::New(as_integer_get(ival)));
-                              }
-                          }
+            as_integer * ival = as_integer_fromval(val);
+            if ( ival ) {
+
+                int64_t data = as_integer_getorelse(ival, -1);
+
+                as_v8_detail(log, "value = %d ", data);
+                
+                return scope.Close(Integer::New(data));
+            }
+        }
         case AS_STRING : {
-                             as_string * sval = as_string_fromval(val);
-                             as_v8_detail(log, "String value %s", sval->value);
-                             if ( sval ) {   
-                                 return scope.Close(String::NewSymbol(as_string_get(sval)));
-                             }
-                         }
+            as_string * sval = as_string_fromval(val);
+            if ( sval ) {
+
+                char * data = as_string_getorelse(sval, NULL);
+
+                as_v8_detail(log, "value = \"%s\"", data);
+                
+                return scope.Close(String::NewSymbol(data));
+            }
+        }
         case AS_BYTES : {
-                            as_bytes * bval = as_bytes_fromval(val);
-                            as_v8_detail(log, "Blob value %s", bval->value);
-                            if ( bval ) {
-                                // int size = as_bytes_size(bval);
-                                // Buffer  *buf = Buffer::New((char*)bval->value, size, callback, NULL);
-                                // memcpy(Buffer::Data(buf), bval->value, size);
-                                // v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-                                // v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-                                // v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
-                                // v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-                                // buf->handle_.Dispose();
-                                // // Store the address of node::Buffer, to be freed later. 
-                                // // Otherwise it leads to memory leak, (not garbage collected by v8)
-                                // *freeptr = (void*) buf;
-                                // return scope.Close(actualBuffer);
+            as_bytes * bval = as_bytes_fromval(val);
+            if ( bval ) {
 
-                                uint8_t * data = as_bytes_getorelse(bval, NULL);
-                                uint32_t size  = as_bytes_size(bval);
+                uint8_t * data = as_bytes_getorelse(bval, NULL);
+                uint32_t size  = as_bytes_size(bval);
 
-                                // this constructor actually copies data into the new Buffer
-                                node::Buffer * buff  = node::Buffer::New((char *) data, size);
+                as_v8_detail(log, 
+                    "value = <%x %x %x%s>", 
+                    size > 0 ? data[0] : 0,
+                    size > 1 ? data[1] : 0,
+                    size > 2 ? data[2] : 0,
+                    size > 3 ? " ..." : ""
+                    );
 
-                                return scope.Close(buff->handle_);
-                            } 
-                        }
+                // this constructor actually copies data into the new Buffer
+                node::Buffer * buff  = node::Buffer::New((char *) data, size);
+
+                return scope.Close(buff->handle_);
+            } 
+        }
         default:
-                        break;
+            break;
     }
     return scope.Close(Undefined());
 }
@@ -723,12 +727,12 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 
     obj = Object::New();
     if ( key->ns && strlen(key->ns) > 0 ) {
-        as_v8_debug(log, "the namespace is %s", key->ns);
+        as_v8_debug(log, "key.ns = \"%s\"", key->ns);
         obj->Set(String::NewSymbol("ns"), String::NewSymbol(key->ns));
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
-        as_v8_debug(log, "the set is %s", key->set);
+        as_v8_debug(log, "key.set = \"%s\"", key->set);
         obj->Set(String::NewSymbol("set"), String::NewSymbol(key->set));
     }
 
@@ -738,13 +742,13 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
         switch(type) {
             case AS_INTEGER: {
                                  as_integer * ival = as_integer_fromval(val);
-                                 as_v8_debug(log, "The integer key %d", as_integer_get(ival));
+                                 as_v8_debug(log, "key.key = %d", as_integer_get(ival));
                                  obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
                                  break;
                              }
             case AS_STRING: {
                                 as_string * sval = as_string_fromval(val);
-                                as_v8_debug(log, "The string key %s ", as_string_get(sval));
+                                as_v8_debug(log, "key.key = \"%s\"", as_string_get(sval));
                                 obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
                                 break;
                             }
@@ -752,7 +756,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                                as_bytes * bval = as_bytes_fromval(val);
                                if ( bval ) {
                                    int size = as_bytes_size(bval);
-                                   as_v8_debug(log,"the bytes value %u", bval->value);
+                                   as_v8_debug(log,"key.key = \"%u\"", bval->value);
                                    Buffer * buf = Buffer::New(size);
                                    memcpy(node::Buffer::Data(buf), bval->value, size);
                                    v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
