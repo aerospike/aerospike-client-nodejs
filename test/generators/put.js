@@ -12,12 +12,6 @@ function put_done(total, done) {
         return function(err, key, skippy) {
             switch ( err.code ) {
                 case status.AEROSPIKE_OK:
-                    if ( entries[key.key] ) {
-                        console.log("key exists!");
-                    }
-
-                    expect(entries[key.key]).to.not.be.ok();
-
                     entries[key.key] = {
                         status: err.code,
                         key: key,
