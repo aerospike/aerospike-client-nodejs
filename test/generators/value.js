@@ -36,17 +36,24 @@ function constant(value) {
 
 function string(options) {
     var opt = merge(string.defaults, options);
+    var seq = 0;
     return function() {
-        var len = random(opt.length.min, opt.length.max);
-        var seq = new Array(len);
-        for (var i = 0; i < len; i++) {
-            seq[i] = opt.charset[random(0, opt.charset.length)];
+        if ( opt.random === true ) {
+            var len = random(opt.length.min, opt.length.max);
+            var arr = new Array(len);
+            for (var i = 0; i < len; i++) {
+                arr[i] = opt.charset[random(0, opt.charset.length)];
+            }
+            return opt.prefix + arr.join('') + opt.suffix;
         }
-        return opt.prefix + seq.join('') + opt.suffix;
+        else {
+            return opt.prefix + (seq++) + opt.suffix;
+        }
     }
 }
 
 string.defaults = {
+    random: true,
     length: {
         min: 1,
         max: 128
@@ -82,12 +89,14 @@ bytes.defaults = {
 
 function integer(options) {
     var opt = merge(integer.defaults, options);
+    var seq = opt.min;
     return function() {
-        return random(opt.min, opt.max);
+        return opt.random === true ? random(opt.min, opt.max) : seq++;
     }
 }
 
 integer.defaults = {
+    random: true,
     min: 0,
     max: 0xffffff
 };
