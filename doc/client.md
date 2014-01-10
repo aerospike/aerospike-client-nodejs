@@ -150,7 +150,7 @@ close()
 
 ### close()
 
-Close the client connection to the cluster.
+Closes the client connection to the cluster.
 
 Example:
 ```js
@@ -166,7 +166,7 @@ connect()
 
 ### connect()
 
-Establish the client connection to the cluster.
+Establishes the client connection to the cluster.
 
 Parameters:
 
@@ -199,7 +199,7 @@ exists()
 
 ### exists(key, policy=null, callback)
 
-Check for the existence of a record in the database cluster using the key provided.
+Checks for the existence of a record in the database cluster using the key provided.
 
 Parameters:
 
@@ -270,7 +270,7 @@ info()
 
 ### info(request, host=null, policy=null, callback)
 
-Perform an info request against the database cluster or specific host.
+Performs an info request against the database cluster or specific host.
 
 Parameters:
 
@@ -319,7 +319,7 @@ operate()
 
 ### operate(key, operations, policy=null, callback)
 
-Perform multiple operations on a single record. 
+Performs multiple operations on a single record. 
 
 Parameters:
 
@@ -361,7 +361,7 @@ put()
 
 ### put(key, record, metadata=null, policy=null, callback)
 
-Write a record to the database cluster. If the record exists, it will modify the record with bins provided. 
+Writes a record to the database cluster. If the record exists, it modifies the record with bins provided. 
 To remove a bin, set its value to `null`.
 
 Parameters:
@@ -401,7 +401,7 @@ remove()
 
 ### remove(key, policy=null, callback)
 
-Remove a record with the specified key from the database cluster.
+Removes a record with the specified key from the database cluster.
 
 Parameters:
 
@@ -433,7 +433,7 @@ select()
 
 ### select(key, bins, policy=null, callback)
 
-Retrieve a specified bins for a record of given key from the database cluster.
+Retrieves specified bins for a record of given key from the database cluster.
 
 Parameters:
 
