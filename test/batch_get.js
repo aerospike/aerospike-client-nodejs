@@ -46,7 +46,7 @@ describe('client.batch_get()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/batch_get/" + nrecords + "/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/10/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -57,7 +57,10 @@ describe('client.batch_get()', function() {
 
             var keys = Object.keys(written).map(function(key){
                 return written[key].key;
-            })
+            });
+
+            var len = keys.length;
+            expect(len).to.equal(nrecords);
 
             client.batch_get(keys, function(err, results) {
 
@@ -66,7 +69,7 @@ describe('client.batch_get()', function() {
 
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(10);
+                expect(results.length).to.equal(len);
 
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
@@ -90,7 +93,7 @@ describe('client.batch_get()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/fail/", random: false});
 
         // values
         var keys = keygen.range(kgen, 10);
@@ -122,7 +125,7 @@ describe('client.batch_get()', function() {
         var nrecords = 1000;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/batch_get/" + nrecords + "/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/1000/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
         
@@ -133,7 +136,10 @@ describe('client.batch_get()', function() {
             
             var keys = Object.keys(written).map(function(key){
                 return written[key].key;
-            })
+            });
+
+            var len = keys.length;
+            expect(len).to.equal(nrecords);
 
             client.batch_get(keys, function(err, results) {
 
@@ -142,7 +148,7 @@ describe('client.batch_get()', function() {
                 
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(nrecords);
+                expect(results.length).to.equal(len);
 
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];

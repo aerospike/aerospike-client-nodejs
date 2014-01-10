@@ -46,7 +46,7 @@ describe('client.batch_exists()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/batch_exists/" + nrecords + "/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_exists/10/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -56,7 +56,10 @@ describe('client.batch_exists()', function() {
 
             var keys = Object.keys(written).map(function(key){
                 return written[key].key;
-            })
+            });
+
+            var len = keys.length;
+            expect(len).to.equal(nrecords);
 
             client.batch_exists(keys, function(err, results) {
 
@@ -65,7 +68,7 @@ describe('client.batch_exists()', function() {
 
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(nrecords);
+                expect(results.length).to.equal(len);
 
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
@@ -83,7 +86,7 @@ describe('client.batch_exists()', function() {
         var nrecords = 10;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/not_found/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_exists/fail/", random: false});
 
         // values
         var keys = keygen.range(kgen, 10);
@@ -112,10 +115,10 @@ describe('client.batch_exists()', function() {
     it('should successfully find 1000 records', function(done) {
 
         // number of records
-        var nrecords = 10;
+        var nrecords = 1000;
 
         // generators
-        var kgen = keygen.string("test", "demo", {prefix: "test/batch_exists/" + nrecords + "/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_exists/1000/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -126,7 +129,10 @@ describe('client.batch_exists()', function() {
 
             var keys = Object.keys(written).map(function(key){
                 return written[key].key;
-            })
+            });
+
+            var len = keys.length;
+            expect(len).to.equal(nrecords);
 
             client.batch_exists(keys, function(err, results) {
 
@@ -135,7 +141,7 @@ describe('client.batch_exists()', function() {
 
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(nrecords);
+                expect(results.length).to.equal(len);
 
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
