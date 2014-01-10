@@ -13,7 +13,7 @@ var client = aerospike.client(config)
 The `config` variable is an instance of the client [Configuration](configuration.md),
 which needs to be populated and passed to `aerospike.client()`.
 
-With a new client, you can then use any of the methods specified below.
+With a new client, you can use any of the methods specified below:
 
 - [Methods](#methods)
   - [batch_exists()](#batch_exists)
@@ -41,7 +41,7 @@ batch_exists()
 
 ### batch_exists(keys, policy=null, callback)
 
-Check the existence of a batch of records from the database cluster.
+Checks the existence of a batch of records from the database cluster.
 
 Parameters:
 
@@ -95,7 +95,7 @@ batch_get()
 
 ### batch_get(keys, policy=null, callback)
 
-Read a batch of records from the database cluster.
+Reads a batch of records from the database cluster.
 
 Parameters:
 
@@ -199,7 +199,7 @@ exists()
 
 ### exists(key, policy=null, callback)
 
-Checks for the existence of a record in the database cluster using the key provided.
+Using the key provided, checks for the existence of a record in the database cluster .
 
 Parameters:
 
@@ -234,7 +234,7 @@ get()
 
 ### get(key, policy=null, callback)
 
-Read a record from the database cluster using the key provided.
+Using the key provided, reads a record from the database cluster .
 
 Parameters:
 
