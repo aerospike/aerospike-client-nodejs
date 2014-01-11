@@ -163,7 +163,7 @@ key
 
 #### DIGEST
 
-Send the digest value of the key. This is the recommended mode of operation. This calculates the digest and send the digest to the server. The digest is only calculated on the client, and not on the server. 
+Sends the digest value of the key. This is the recommended mode of operation. This calculates the digest and sends the digest to the server. The digest is only calculated on the client, and not on the server. 
 
 ```js
 policies.Key.DIGEST
@@ -171,7 +171,7 @@ policies.Key.DIGEST
 
 #### SEND
 
-Send the key. This policy is ideal if you want to reduce the number of bytes sent over the network. This will only work if the combination the set and key value are less than 20 bytes, which is the size of the digest. This will also cause the digest to be computer once on the client and once on the server. If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
+Sends the key. This policy is ideal if you want to reduce the number of bytes sent over the network. This will only work if the combination of the set and key value are less than 20 bytes, which is the size of the digest. This will also cause the digest to be computed once on the client and once on the server. If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
 
 ```js
 policies.Key.SEND
@@ -213,7 +213,7 @@ gen
 
 #### IGNORE
 
-Write a record, regardless of generation.
+Writes a record, regardless of generation.
 
 ```js
 policies.Generation.IGNORE
@@ -221,7 +221,7 @@ policies.Generation.IGNORE
 
 #### EQ
 
-Write a record, ONLY if generations are equal.
+Writes a record, ONLY if generations are equal.
 
 ```js
 policies.Generation.EQ
@@ -229,7 +229,7 @@ policies.Generation.EQ
 
 #### GT
 
-Write a record, ONLY if local generation is greater-than remote generation.
+Writes a record, ONLY if local generation is greater-than remote generation.
 
 ```js
 policies.Generation.GT
@@ -237,7 +237,7 @@ policies.Generation.GT
 
 #### DUP
 
-Write a record creating a duplicate, ONLY if the generation collides.
+Writes a record creating a duplicate, ONLY if the generation collides.
 
 ```js
 policies.Generation.DUP
@@ -254,7 +254,7 @@ exists
 
 #### IGNORE
 
-Write the record, regardless of existence
+Writee the record, regardless of existence
 
 ```js
 policies.Exists.IGNORE
@@ -262,7 +262,7 @@ policies.Exists.IGNORE
 
 #### CREATE
 
-Create a record, ONLY if it doesn't exist
+Creates a record, ONLY if it doesn't exist
 
 ```js
 policies.Exists.CREATE
