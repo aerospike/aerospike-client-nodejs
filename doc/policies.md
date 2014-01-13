@@ -2,8 +2,8 @@
 
 Policies provide the ability to modify the behavior of operations.
 
-This document provides information on structure of policy objects for certain 
-operation and allowed values for some of the policies.
+This document provides information on the structure of policy objects for specific 
+operations and the allowed values for some of the policies.
 
 - [`Policy Objects`](#Objects)
 - [`Policy Values`](#Values)
@@ -188,7 +188,7 @@ retry
 
 #### NONE
 
-Only attempt an operation once
+Only attempts an operation once
 
 ```js
 policies.Retry.NONE
@@ -196,7 +196,7 @@ policies.Retry.NONE
 
 #### ONCE
 
-If an operation fails, attempt the operation one more time
+If an operation fails, attempts the operation one more time
 
 ```js
 policies.Retry.ONCE
@@ -254,7 +254,7 @@ exists
 
 #### IGNORE
 
-Writee the record, regardless of existence
+Writes the record, regardless of existence.
 
 ```js
 policies.Exists.IGNORE
@@ -262,7 +262,7 @@ policies.Exists.IGNORE
 
 #### CREATE
 
-Creates a record, ONLY if it doesn't exist
+Creates a record, ONLY if it doesn't exist.
 
 ```js
 policies.Exists.CREATE
