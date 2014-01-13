@@ -95,7 +95,7 @@ var numReqs = 0;
 //Count the total number of requests completed. 
 //Done by the master in the cluster.
 function messageHandler(msg) {
-    if (msg.cmd && msg.cmd == 'put') {
+    if (msg.cmd && msg.cmd == 'get') {
         numReqs += 1;
     }
 }
@@ -157,22 +157,17 @@ if (cluster.isMaster) {
         key: "key" + worker_id +"_"+i
     }
 
-    // record to be written 
-    var rec = {
-        s: i.toString(),
-        i: i
-    }
-
+    
     // write the record to database
-    client.put(k1, rec, function(err) {
+    client.get(k1, function(err, rec, meta, key) {
         if ( err.code != status.AEROSPIKE_OK ) {
-            console.log( "%j", err)
+            //console.log( "%j", err)
         }
         
         ops_by_worker++;
               
         //Send a message to parent process, to signal the completion of one request.
-        process.send({cmd:'put'});
+        process.send({cmd:'get'});
 
         // Logging the time taken for first request, as it takes longer time for 1st request.
         if ( ops_by_worker == 1) {
@@ -187,8 +182,8 @@ if (cluster.isMaster) {
             var totalTime = endTime - startTime;
             var w_latency = totalTime/ops_by_worker
             var w_TPS = ops_by_worker * 1000 / totalTime
-            console.log("average latency of worker %d  = %d", worker_id, w_latency.toFixed(3));
-            console.log("average TPS of worker %d = %d", worker_id, w_TPS.toFixed(3));
+            console.log("average read latency of worker %d  = %d", worker_id, w_latency.toFixed(3));
+            console.log("average TPS(read) of worker %d = %d", worker_id, w_TPS.toFixed(3));
             process.exit(0)
         }
     })  
