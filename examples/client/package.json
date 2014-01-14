@@ -1,5 +1,5 @@
 {
-  "name" : "aerospike",
+  "name" : "aerospike-client-examples",
   "version" : "v0.1.0",
   "description" : "Aerospike Client Library Examples",
   "tags" : [ "aerospike", "database", "nosql" ],
@@ -10,7 +10,7 @@
   "cpu" : [ "x64" ],
   "repository" : {
     "type" : "git",
-    "url" : "https://github.com/aerospike/client-nodejs"
+    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "dependencies": {
     "aerospike": ">0",

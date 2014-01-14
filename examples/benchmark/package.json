@@ -1,0 +1,21 @@
+{
+  "name" : "aerospike-benchmark",
+  "version" : "v0.1.0",
+  "description" : "Aerospike Client Benchmark",
+  "tags" : [ "aerospike", "database", "nosql" ],
+  "engines" : {
+    "node" : ">=0.10"
+  },
+  "os" : [ "linux" ],
+  "cpu" : [ "x64" ],
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
+  },
+  "dependencies": {
+    "aerospike": ">0",
+    "optimist": ">=0.6.0",
+    "winston": "0.7.2"
+  },
+  "main": "main.js"
+}

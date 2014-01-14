@@ -12,7 +12,7 @@
   "cpu" : [ "x64" ],
   "repository" : {
     "type" : "git",
-    "url" : "https://github.com/aerospike/client-nodejs"
+    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha -R spec"
