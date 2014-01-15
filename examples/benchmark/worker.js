@@ -11,7 +11,24 @@ var path = require('path');
 var util = require('util');
 var winston = require('winston');
 
+/***********************************************************************
+ *
+ * Globals
+ *
+ ***********************************************************************/
+
 var status = aerospike.Status;
+
+var WORKER_ITERATION_OPERATIONS     = 1;
+var WORKER_ITERATION_TIME_START     = 2;
+var WORKER_ITERATION_TIME_END       = 3;
+var WORKER_ITERATION_MEMORY_START   = 4;
+var WORKER_ITERATION_MEMORY_END     = 5;
+
+var WORKER_OPERATION_COMMAND        = 1;
+var WORKER_OPERATION_STATUS         = 2;
+var WORKER_OPERATION_TIME_START     = 3;
+var WORKER_OPERATION_TIME_END       = 4;
 
 /***********************************************************************
  *
@@ -121,24 +138,31 @@ client.connect(function(err) {
  *
  ***********************************************************************/
 
-function duration(start, end) {
-    var s = (end[0] - start[0]) * 1000000000;
-    var ns = s + end[1] - start[1];
-    var ms = ns / 1000000;
-    return ms;
-}
-
 function get(command, done) {
+    var time_start = process.hrtime();
+
     client.get({ns: argv.namespace, set: argv.set, key: command[1]}, function(_error, _record, _metadata, _key) {
-        command.status = _error.code;
-        done(command);
+        var time_end = process.hrtime();
+        done([
+            command,
+            _error.code,
+            time_start,
+            time_end
+        ]);
     });
 }
 
 function put(command, done) {
+    var time_start = process.hrtime();
+    
     client.put({ns: argv.namespace, set: argv.set, key: command[1]}, command[2], function(_error, _record, _metadata, _key) {
-        command.status = _error.code;
-        done(command);
+        var time_end = process.hrtime();
+        done([
+            command,
+            _error.code,
+            time_start,
+            time_end
+        ]);
     });
 }
 
@@ -146,15 +170,26 @@ function run(commands) {
 
     var expected = commands.length;
     var completed = 0;
-    var start = process.hrtime();
+    var operations = Array(expected);
+    var mem_start = process.memoryUsage();
+    var time_start = process.hrtime();
 
-    function done(command) {
+    function done(stats) {
 
+        operations[completed] = stats;
         completed++;
 
         if ( completed >= expected ) {
-            var end = process.hrtime();
-            process.send([commands.length, start, end, duration(start, end)]);
+            var time_end = process.hrtime();
+            var mem_end = process.memoryUsage();
+
+            process.send([
+                operations,
+                time_start,
+                time_end,
+                mem_start,
+                mem_end
+            ]);
         }
     }
 

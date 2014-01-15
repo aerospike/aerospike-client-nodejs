@@ -22,7 +22,18 @@ var cpus = os.cpus();
 var online = 0;
 var exited = 0;
 
-var results = [];
+var iterations_results = [];
+
+var WORKER_ITERATION_OPERATIONS     = 0;
+var WORKER_ITERATION_TIME_START     = 1;
+var WORKER_ITERATION_TIME_END       = 2;
+var WORKER_ITERATION_MEMORY_START   = 3;
+var WORKER_ITERATION_MEMORY_END     = 4;
+
+var WORKER_OPERATION_COMMAND        = 0;
+var WORKER_OPERATION_STATUS         = 1;
+var WORKER_OPERATION_TIME_START     = 2;
+var WORKER_OPERATION_TIME_END       = 3;
 
 /***********************************************************************
  *
@@ -152,45 +163,116 @@ var logger = new (winston.Logger)({
  *
  ***********************************************************************/
 
+function duration(start, end) {
+    var s = (end[0] - start[0]) * 1000000000;
+    var ns = s + end[1] - start[1];
+    var ms = ns / 1000000;
+    return ms;
+}
+
 function finalize() {
 
-    var t_count = 0;
-    var t_sum = 0;
-    var t_min = 0;
-    var t_max = 0;
+    var hist = {
+        '<= 0': 0,
+        '> 1':  0,
+        '> 2':  0,
+        '> 4':  0,
+        '> 8':  0,
+        '> 16': 0,
+        '> 32': 0
+    };
 
-    /**
-     * result := [workerId, pid, iteration, [nops, start, end, duration]]
-     */
-    function timestats(result) {
-        var t = result[3][3];
-        t_count ++;
-        t_sum += t;
-        if ( t_min === 0 || t_min > t ) {
-            t_min = t;
-        }
-        if ( t_max === 0 || t_max < t ) {
-            t_max = t;
-        }
+    var it_durations = iterations_results.filter(function(it) {
+        return it.stats.operations.length === argv.operations;
+    }).map(function(it) {
+        return it.stats.time.duration;
+    });
+
+    iterations_results.map(function(it) {
+        return it.stats.operations.map(function(op) {
+            return duration(op[WORKER_OPERATION_TIME_START],op[WORKER_OPERATION_TIME_END]);
+        }).forEach(function(dur){
+            var d = Math.floor(dur);
+            if ( d > 32 ) {
+                hist['> 32']++;
+            }
+            if ( d > 16 ) {
+                hist['> 16']++;
+            }
+            else if ( d > 8 ) {
+                hist['> 8']++
+            }
+            else if ( d > 4 ) {
+                hist['> 4']++
+            }
+            else if ( d > 2 ) {
+                hist['> 2']++;
+            }
+            else if ( d > 1 ) {
+                hist['> 1']++;
+            }
+            else {
+                hist['<= 0']++;
+            }
+        });
+    });
+
+
+    var op_count = iterations_results.reduce(function(n,it) {
+        return n + it.stats.operations.length;
+    }, 0);
+
+    var hist_head = '';
+    var hist_body = '';
+    var hist_space = 5;
+    for( var k in hist ) {
+        var diff = hist_body.length - hist_head.length;
+        var spacing = hist_space - diff;
+        hist_head += Array(hist_space).join(' ') + k;
+        hist_body += Array(spacing).join(' ') + (hist[k] / op_count * 100).toFixed(1) + '%';
     }
 
-    results.forEach(timestats);
 
-    var t_mean = (t_sum / t_count);
+    function sum(l,r) {
+        return l+r;
+    }
+
+    function min(l,r) {
+        return l < r ? l : r;
+    }
+
+    function max(l,r) {
+        return l > r ? l : r;
+    }
+
+    var t_count = it_durations.length;
+    var t_sum = it_durations.reduce(sum);
+    var t_min = it_durations.reduce(min);
+    var t_max = it_durations.reduce(max);
+    var t_mean = t_sum / t_count;
 
     console.log();
     console.log("SUMMARY");
     console.log();
-    console.log("  Operations Per Iteration:   %d", argv.operations);
-    console.log("  Iterations Per Process:     %d", argv.iterations);
-    console.log("  Number of Processes:        %d", argv.processes);
-    console.log("  Total Number of Operations: %d", argv.processes * argv.iterations * argv.operations);
+    console.log("  Configuration:");
+    console.log("    operations: %d", argv.operations);
+    console.log("    iterations: %d", argv.iterations);
+    console.log("    processes:  %d", argv.processes);
     console.log();
-    console.log("  Times for %d %s:", argv.operations, argv.operations == 1 ? "operation" : "operations");
+    console.log("  Iteration times:", argv.operations, argv.operations == 1 ? "operation" : "operations");
     console.log("    mean: %d ms", t_mean.toFixed(4) );
     console.log("    min:  %d ms", t_min.toFixed(4) );
     console.log("    max:  %d ms", t_max.toFixed(4) );
     console.log();
+    console.log("  Transactions / Second / Process:");
+    console.log("    mean: %d tps", Math.round(argv.operations / t_mean * 1000) );
+    console.log("    min:  %d tps", Math.round(argv.operations / t_max * 1000) );
+    console.log("    max:  %d tps", Math.round(argv.operations / t_min * 1000) );
+    console.log();
+    console.log("  Durations:");
+    console.log(hist_head)
+    console.log(hist_body)
+    console.log()
 }
 
 function worker_spawn() {
@@ -249,23 +331,98 @@ function worker_run(worker) {
     worker.send(['run', commands]);
 }
 
-function worker_results(worker) {
+function worker_results_iteration(worker, stats) {
 
-    /**
-     * msg := [nops, start, end, duration]
-     */
-    return function(msg) {
+    var result = {
+        worker: worker.id,
+        pid: worker.process.pid,
+        iteration: worker.iteration,
+        stats: {
+            operations: stats[WORKER_ITERATION_OPERATIONS],
+            time: {
+                start: stats[WORKER_ITERATION_TIME_START],
+                end: stats[WORKER_ITERATION_TIME_END],
+                duration: duration(stats[WORKER_ITERATION_TIME_START], stats[WORKER_ITERATION_TIME_END])
+            },
+            memory: {
+                start: stats[WORKER_ITERATION_MEMORY_START],
+                end: stats[WORKER_ITERATION_MEMORY_END],
+            }
+        }
+    };
 
-        results.push([worker.workerID, worker.process.pid, worker.iteration, msg]);
+    iterations_results.push(result);
 
-        logger.info('[worker: %d] - iteration %d: %d operations in %d ms', worker.workerID, worker.iteration, msg[0], msg[3]);
+    var hist = {
+        '<= 0': 0,
+        '> 1':  0,
+        '> 2':  0,
+        '> 4':  0,
+        '> 8':  0,
+        '> 16': 0,
+        '> 32': 0
+    };
 
-        if ( worker.iteration >= argv.iterations ) {
-            worker_exit(worker);
+    result.stats.operations.map(function(op) {
+        return duration(op[WORKER_OPERATION_TIME_START],op[WORKER_OPERATION_TIME_END]);
+    }).forEach(function(dur){
+        var d = Math.floor(dur);
+        if ( d > 32 ) {
+            hist['> 32']++;
+        }
+        if ( d > 16 ) {
+            hist['> 16']++;
+        }
+        else if ( d > 8 ) {
+            hist['> 8']++
+        }
+        else if ( d > 4 ) {
+            hist['> 4']++
+        }
+        else if ( d > 2 ) {
+            hist['> 2']++;
+        }
+        else if ( d > 1 ) {
+            hist['> 1']++;
         }
         else {
-            worker_run(worker);
+            hist['<= 0']++;
         }
+    });
+
+
+    var op_count = result.stats.operations.length;
+
+    var hist_head = '';
+    var hist_body = '';
+    var hist_space = 5;
+    for( var k in hist ) {
+        var diff = hist_body.length - hist_head.length;
+        var spacing = hist_space - diff;
+        hist_head += Array(hist_space).join(' ') + k;
+        hist_body += Array(spacing).join(' ') + (hist[k] / op_count * 100).toFixed(1) + '%' ;
+    }
+
+    // result.stats.operations.forEach(function(op, i){
+    //     logger.info('[worker: %d] - OPERATION [iteration: %d] [operation: %d] [time: %d ms] [status: %d]', result.worker, result.iteration, i, duration(op[WORKER_OPERATION_TIME_START],op[WORKER_OPERATION_TIME_END]), op[WORKER_OPERATION_STATUS]);
+    // })
+
+    logger.info('[worker: %d] [iteration: %d] [operations: %d] [time: %d ms] [memory: %s]', result.worker, result.iteration, result.stats.operations.length, result.stats.time.duration, util.inspect(result.stats.memory.end));
+    logger.info('[worker: %d] [iteration: %d] DURATIONS', result.worker, result.iteration);
+    logger.info('[worker: %d] [iteration: %d] %s', result.worker, result.iteration, hist_head);
+    logger.info('[worker: %d] [iteration: %d] %s', result.worker, result.iteration, hist_body);
+
+    if ( worker.iteration >= argv.iterations ) {
+        worker_exit(worker);
+    }
+    else {
+        worker_run(worker);
+    }
+}
+
+function worker_results(worker) {
+    return function(message) {
+        worker_results_iteration(worker, message);
     }
 }
 
