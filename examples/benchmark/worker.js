@@ -10,25 +10,7 @@ var optimist = require('optimist');
 var path = require('path');
 var util = require('util');
 var winston = require('winston');
-
-/***********************************************************************
- *
- * Globals
- *
- ***********************************************************************/
-
-var status = aerospike.Status;
-
-var WORKER_ITERATION_OPERATIONS     = 1;
-var WORKER_ITERATION_TIME_START     = 2;
-var WORKER_ITERATION_TIME_END       = 3;
-var WORKER_ITERATION_MEMORY_START   = 4;
-var WORKER_ITERATION_MEMORY_END     = 5;
-
-var WORKER_OPERATION_COMMAND        = 1;
-var WORKER_OPERATION_STATUS         = 2;
-var WORKER_OPERATION_TIME_START     = 3;
-var WORKER_OPERATION_TIME_END       = 4;
+var stats = require('./stats');
 
 /***********************************************************************
  *
@@ -93,8 +75,6 @@ if ( !cluster.isWorker ) {
  *
  ***********************************************************************/
 
-// var _logger_prefix = util.format('[%s] %d', path.basename(module.filename), process.pid);
-
 function logger_timestamp() {
     return util.format('[worker: %d] [%s]', process.pid, process.hrtime());
 }
@@ -126,7 +106,7 @@ var client = aerospike.client({
 });
 
 client.connect(function(err) {
-    if (err.code != status.AEROSPIKE_OK) {
+    if ( err.code !== 0 ) {
         logger.error("Aerospike server connection error: ", err);
         process.exit(1);
     }
@@ -143,12 +123,7 @@ function get(command, done) {
 
     client.get({ns: argv.namespace, set: argv.set, key: command[1]}, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done([
-            command,
-            _error.code,
-            time_start,
-            time_end
-        ]);
+        done(_error.code, time_start, time_end);
     });
 }
 
@@ -157,39 +132,36 @@ function put(command, done) {
     
     client.put({ns: argv.namespace, set: argv.set, key: command[1]}, command[2], function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done([
-            command,
-            _error.code,
-            time_start,
-            time_end
-        ]);
+        done(_error.code, time_start, time_end);
     });
 }
+
 
 function run(commands) {
 
     var expected = commands.length;
     var completed = 0;
+
     var operations = Array(expected);
     var mem_start = process.memoryUsage();
     var time_start = process.hrtime();
 
-    function done(stats) {
+    function done(op_status, op_time_start, op_time_end) {
 
-        operations[completed] = stats;
+        operations[completed] = [op_status, op_time_start, op_time_end];
         completed++;
 
         if ( completed >= expected ) {
             var time_end = process.hrtime();
             var mem_end = process.memoryUsage();
 
-            process.send([
+            process.send(stats.iteration(
                 operations,
                 time_start,
                 time_end,
                 mem_start,
                 mem_end
-            ]);
+            ));
         }
     }
 
