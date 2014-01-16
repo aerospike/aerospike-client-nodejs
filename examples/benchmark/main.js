@@ -24,7 +24,7 @@ var online = 0;
 var exited = 0;
 
 var iterations_results = [];
-
+var worker_memory_usage = [];
 /***********************************************************************
  *
  * Options Parsing
@@ -94,7 +94,7 @@ var argp = optimist
         },
         time: {
             alias: "T",
-            default: 6000, // Default 10 min
+            default: 60, // Default 1 min
             describe: "Total amount of time to run the benchmark."
         },
         reads: {
@@ -166,7 +166,7 @@ var logger = new (winston.Logger)({
  ***********************************************************************/
 
 function finalize() {
-    stats.report_final(iterations_results, argv, console.log);
+    stats.report_final(iterations_results, worker_memory_usage, argv, console.log);
 }
 
 function worker_spawn() {
@@ -176,6 +176,7 @@ function worker_spawn() {
 }
 
 function worker_exit(worker) {
+    worker_memory_usage.push(process.memoryUsage());
     worker.send(['end']);
 }
 
@@ -213,6 +214,7 @@ function opgen(ops, commands) {
 }
 
 function worker_run(worker) {
+
 
     var commands = [];
 

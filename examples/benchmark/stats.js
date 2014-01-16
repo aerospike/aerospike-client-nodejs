@@ -13,6 +13,9 @@ ITERATION_MEMORY_START    = 8;
 ITERATION_MEMORY_END      = 9;
 ITERATION_STATUS_HIST     = 10;
 ITERATION_NFIELDS         = 11;
+ITERATION_MEM_RSS         = 12;
+ITERATION_MEM_HEAPUSED    = 13;
+ITERATION_MEM_HEAPTOTAL   = 14;
 
 OPERATION_STATUS          = 0;
 OPERATION_TIME_START      = 1;
@@ -49,6 +52,20 @@ function duration(start, end) {
     var ns = s + end[1] - start[1];
     var ms = ns / 1000000;
     return ms;
+}
+
+function calculate_memory_stats(memory_usage) {
+    var mem_stats = Object;
+    var length = memory_usage.length;
+    mem_stats.rss = 0;
+    mem_stats.heapTotal = 0;
+    memory_usage.map( function (item) {
+        mem_stats.rss += item.rss;
+        mem_stats.heapTotal += item.heapTotal;
+    })
+    mem_stats.rss = (mem_stats.rss) / length;
+    mem_stats.heapTotal = (mem_stats.heapTotal) / length;
+    return mem_stats;
 }
 
 function time_histogram(operations) {
@@ -151,6 +168,9 @@ function iteration(operations, time_start, time_end, mem_start, mem_end) {
     var time_max = durations.reduce(max);
     var time_mean = time_sum / time_count;
     var time_duration = duration(time_start, time_end);
+    var rss_used = mem_end.rss - mem_start.rss;
+    var heapUsed = mem_end.heapUsed - mem_start.heapUsed;
+    var heapTotal = mem_end.heapTotal - mem_start.heapTotal;
 
     var result = Array(ITERATION_NFIELDS);
     
@@ -165,6 +185,9 @@ function iteration(operations, time_start, time_end, mem_start, mem_end) {
     result[ITERATION_TIME_MEAN] = time_mean;
     result[ITERATION_TIME_HIST] = time_histogram(operations);
     result[ITERATION_STATUS_HIST] = status_histogram(operations);
+    result[ITERATION_MEM_RSS]       = rss_used;
+    result[ITERATION_MEM_HEAPUSED]  = heapUsed;
+    result[ITERATION_MEM_HEAPTOTAL] = heapTotal;
 
     return result;
 }
@@ -179,6 +202,15 @@ function report_iteration(result, argv, print) {
         util.inspect(result.stats[ITERATION_MEMORY_END])
     );
 
+
+    print('[worker: %d] [iteration: %d] MEMORY USAGE ', result.worker, result.iteration);
+    print('[worker: %d] [iteration: %d] rss_used: %d, heap_used: %d, heap_total: %d',
+        result.worker,
+        result.iteration,
+        result.stats[ITERATION_MEM_RSS],
+        result.stats[ITERATION_MEM_HEAPUSED],
+        result.stats[ITERATION_MEM_HEAPTOTAL]
+    );
     print('[worker: %d] [iteration: %d] DURATIONS', result.worker, result.iteration);
     print_histogram(result.stats[ITERATION_TIME_HIST], function(line) {
         print('[worker: %d] [iteration: %d] %s', result.worker, result.iteration, line);
@@ -190,7 +222,7 @@ function report_iteration(result, argv, print) {
     })
 }
 
- function report_final(iterations, argv, print) {
+ function report_final(iterations, memory_usage, argv, print) {
 
     var opcountfilter = equals(ITERATION_OPERATIONS, argv.operations);
 
@@ -233,6 +265,8 @@ function report_iteration(result, argv, print) {
 
     var op_count = iterations.map(select(ITERATION_OPERATIONS)).reduce(sum);
 
+    var mem_stats = calculate_memory_stats( memory_usage);
+
     if ( !argv.json ) {
         print();
         print("SUMMARY");
@@ -258,6 +292,9 @@ function report_iteration(result, argv, print) {
         print("  Status Codes:");
         print_histogram(s_hist, print);
         print()
+        print("  Memory Statistics: Average memory usage of all the workers");
+        print("     Rss: %d ", mem_stats.rss);
+        print("     HeapTotal: %d", mem_stats.heapTotal);
     }
     else {
         var output = {
@@ -278,7 +315,8 @@ function report_iteration(result, argv, print) {
                 max: Math.round(argv.operations / t_min * 1000)
             },
             durations: t_hist,
-            status_codes: s_hist
+            status_codes: s_hist,
+            memory_statistics: mem_stats
         };
         console.log("%j",output);
     }
