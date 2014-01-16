@@ -92,6 +92,11 @@ var argp = optimist
             default: cpus.length,
             describe: "Total number of child processes."
         },
+        time: {
+            alias: "T",
+            default: 6000, // Default 10 min
+            describe: "Total amount of time to run the benchmark."
+        },
         reads: {
             alias: "R",
             default: 1,
@@ -174,6 +179,11 @@ function worker_exit(worker) {
     worker.send(['end']);
 }
 
+function exit_all_process(){
+    Object.keys(cluster.workers).forEach(function(id) {
+        worker_exit( cluster.workers[id]);
+    });
+}
 /**
  * key are in range [1 ... argv.keyrange]
  */
@@ -235,7 +245,10 @@ function worker_results_iteration(worker, iteration_stats) {
         stats.report_iteration(result, argv, logger.info);
     }
 
-    if ( worker.iteration >= argv.iterations ) {
+    if (process.uptime() < argv.time ) {
+        worker_run(worker);
+    }
+    else if ( worker.iteration >= argv.iterations ) {
         worker_exit(worker);
     }
     else {
@@ -254,6 +267,7 @@ function worker_results(worker) {
  * Event Listeners
  *
  ***********************************************************************/
+
 
 process.on('exit', function() {
     logger.debug('Exiting.');
@@ -290,7 +304,6 @@ cluster.on('exit', function(worker, code, signal) {
         finalize();
     }
 });
-
 /***********************************************************************
  *
  * Setup Workers
@@ -301,6 +314,14 @@ cluster.setupMaster({
     exec : "worker.js",
     silent : false
 });
+
+// Register a timeout process -- so that process exits after the 
+// given amount of time (in seconds).
+
+var timerId = setTimeout(function(){
+    exit_all_process(cluster);
+ }, argv.time*1000);
+
 
 for ( p = 0; p < argv.processes; p++ ) {
     worker_spawn();
