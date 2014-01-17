@@ -22,9 +22,10 @@ var stats = require('./stats');
 var cpus = os.cpus();
 var online = 0;
 var exited = 0;
+var timerId;
 
 var iterations_results = [];
-var worker_memory_usage = [];
+
 /***********************************************************************
  *
  * Options Parsing
@@ -94,8 +95,8 @@ var argp = optimist
         },
         time: {
             alias: "T",
-            default: 60, // Default 1 min
-            describe: "Total amount of time to run the benchmark."
+            default: undefined,
+            describe: "Total amount of time to run the benchmark (seconds). Units may be used: 1h, 30m, 30s"
         },
         reads: {
             alias: "R",
@@ -111,13 +112,22 @@ var argp = optimist
             alias: "K",
             default: 1000,
             describe: "The number of keys to use."
+        },
+        'chart-memory': {
+            boolean: false,
+            default: false,
+            describe: "Chart the memory used before printing the summary."
+        },
+        'summary': {
+            boolean: true,
+            default: true,
+            describe: "Produces a summary report (tables, charts, etc) at the end."
         }
     });
 
 var argv = argp.argv;
 
 if ( argv.help === true) {
-
     argp.showHelp()
     return;
 }
@@ -134,6 +144,25 @@ var WOPS = FOPS * argv.writes;
 if ( (ROPS + WOPS) < argv.operations ) {
     DOPS = argv.operations - (ROPS + WOPS);
     ROPS += DOPS;
+}
+
+if ( argv.time !== undefined ) {
+    var time_match = argv.time.toString().match(/(\d+)([smh])?/)
+    if ( time_match !== null ) {
+        if ( time_match[2] !== null ) {
+            argv.time = parseInt(time_match[1],10);
+            var time_unit = time_match[2];
+            switch( time_unit ) {
+                case 'm':
+                    argv.time = argv.time * 60;
+                    break;
+                case 'h':
+                    argv.time = argv.time * 60 * 60;
+                    break;
+            }
+            argv.iterations = undefined;
+        }
+    }
 }
 
 /***********************************************************************
@@ -166,7 +195,10 @@ var logger = new (winston.Logger)({
  ***********************************************************************/
 
 function finalize() {
-    stats.report_final(iterations_results, worker_memory_usage, argv, console.log);
+    if ( argv['summary'] === true ) {
+        console.log(argv['summary']);
+        return stats.report_final(iterations_results, argv, console.log);
+    }
 }
 
 function worker_spawn() {
@@ -176,15 +208,15 @@ function worker_spawn() {
 }
 
 function worker_exit(worker) {
-    worker_memory_usage.push(process.memoryUsage());
     worker.send(['end']);
 }
 
-function exit_all_process(){
+function worker_shutdown() {
     Object.keys(cluster.workers).forEach(function(id) {
-        worker_exit( cluster.workers[id]);
+        worker_exit(cluster.workers[id]);
     });
 }
+
 /**
  * key are in range [1 ... argv.keyrange]
  */
@@ -215,7 +247,6 @@ function opgen(ops, commands) {
 
 function worker_run(worker) {
 
-
     var commands = [];
 
     var ops = [
@@ -241,20 +272,19 @@ function worker_results_iteration(worker, iteration_stats) {
         stats: iteration_stats
     };
 
-    iterations_results.push(result);
+    if ( argv['summary'] === true ) {
+        iterations_results.push(result);
+    }
 
     if ( !argv.silent ) {
         stats.report_iteration(result, argv, logger.info);
     }
 
-    if (process.uptime() < argv.time ) {
+    if ( worker.iteration < argv.iterations || argv.time !== undefined ) {
         worker_run(worker);
-    }
-    else if ( worker.iteration >= argv.iterations ) {
-        worker_exit(worker);
     }
     else {
-        worker_run(worker);
+        worker_exit(worker);
     }
 }
 
@@ -270,9 +300,11 @@ function worker_results(worker) {
  *
  ***********************************************************************/
 
-
 process.on('exit', function() {
     logger.debug('Exiting.');
+    if ( exited == online ) {
+        return finalize();
+    }
 });
 
 process.on('SIGINT', function() {
@@ -303,7 +335,7 @@ cluster.on('exit', function(worker, code, signal) {
         exited++;
     }
     if ( exited == online ) {
-        finalize();
+        process.exit(0);
     }
 });
 /***********************************************************************
@@ -317,13 +349,11 @@ cluster.setupMaster({
     silent : false
 });
 
-// Register a timeout process -- so that process exits after the 
-// given amount of time (in seconds).
-
-var timerId = setTimeout(function(){
-    exit_all_process(cluster);
- }, argv.time*1000);
-
+if ( argv.time !== undefined ) {
+    timerId = setTimeout(function(){
+        worker_shutdown(cluster);
+     }, argv.time*1000);
+}
 
 for ( p = 0; p < argv.processes; p++ ) {
     worker_spawn();
