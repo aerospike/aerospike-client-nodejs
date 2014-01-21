@@ -19,6 +19,14 @@ var stats = require('./stats');
  *
  ***********************************************************************/
 
+var kB = 1024;
+var MB = kB * 1024;
+var GB = MB * 1024;
+
+var MEMCHART_MAX_MB = 400;
+var MEMCHART_BUCKETS = 100;
+var MEMCHART_BAR = new Buffer(MEMCHART_BUCKETS+1);
+
 var cpus = os.cpus();
 var online = 0;
 var exited = 0;
@@ -196,7 +204,6 @@ var logger = new (winston.Logger)({
 
 function finalize() {
     if ( argv['summary'] === true ) {
-        console.log(argv['summary']);
         return stats.report_final(iterations_results, argv, console.log);
     }
 }
@@ -274,6 +281,10 @@ function worker_results_iteration(worker, iteration_stats) {
 
     if ( argv['summary'] === true ) {
         iterations_results.push(result);
+    }
+
+    if ( argv['summary'] === false && argv['chart-memory'] === true && worker.id == 1 ) {
+        stats.chart_iteration_memory(worker.iteration, 1, result, MEMCHART_BAR, MEMCHART_MAX_MB, MEMCHART_BUCKETS, logger.info)
     }
 
     if ( !argv.silent ) {

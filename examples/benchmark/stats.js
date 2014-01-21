@@ -200,6 +200,7 @@ function status_histogram(operations) {
 }
 
 function chart_iteration_memory(i, worker, iteration, bar, max_memory_mb, buckets, print, prefix) {
+
     if ( ! iteration ) {
         return;
     }
@@ -215,14 +216,14 @@ function chart_iteration_memory(i, worker, iteration, bar, max_memory_mb, bucket
     var mem_used_bar = Math.floor(mem_used_pct);
     var mem_used_units = byte_units(mem_used);
 
-    // console.log(mem_used, mem_used_mb, mem_used_pct, mem_used_bar, mem_used_units, max_memory_mb, buckets);
-
     bar.fill(' ');
-    bar.fill(']', 0, mem_used_bar-1);
+    if ( mem_used_bar > 0 ) {
+        bar.fill(']', 0, mem_used_bar);
+    }
 
     print('%s%d%s | %s%s |%s',
         prefix || '',
-        i, Array(5 - i.toString().length).join(' '),
+        i, Array(10 - i.toString().length).join(' '),
         mem_used_units, Array(10 - mem_used_units.length).join(' '),
         bar.toString().blue);
 }
@@ -532,6 +533,7 @@ function report_iteration(result, argv, print) {
 
 module.exports = {
     iteration: iteration,
+    chart_iteration_memory: chart_iteration_memory,
     print_histogram: print_histogram,
     report_iteration: report_iteration,
     report_final: report_final,
