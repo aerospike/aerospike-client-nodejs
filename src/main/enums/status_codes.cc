@@ -7,7 +7,7 @@ using namespace v8;
 
 Handle<Object> status_codes() 
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "AEROSPIKE_OK",                        0);
     set(obj, "AEROSPIKE_ERR",                       100);

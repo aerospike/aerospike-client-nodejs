@@ -7,7 +7,7 @@ using namespace v8;
 
 Handle<Object> log_levels() 
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "OFF",    -1);
     set(obj, "ERROR",  0);

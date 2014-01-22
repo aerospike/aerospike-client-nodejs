@@ -7,7 +7,7 @@ using namespace v8;
 
 Handle<Object> key_policy_values()
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "UNDEF",   0);
     set(obj, "DIGEST",  1);
@@ -17,7 +17,7 @@ Handle<Object> key_policy_values()
 
 Handle<Object> retry_policy_values()
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "UNDEF",   0);
     set(obj, "NONE",    1);
@@ -27,7 +27,7 @@ Handle<Object> retry_policy_values()
 
 Handle<Object> generation_policy_values()
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "UNDEF",   0);
     set(obj, "IGNORE",  1);
@@ -39,7 +39,7 @@ Handle<Object> generation_policy_values()
 
 Handle<Object> exists_policy_values()
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "UNDEF",   0);
     set(obj, "IGNORE",  1);
@@ -50,7 +50,7 @@ Handle<Object> exists_policy_values()
 
 Handle<Object> policy_values()
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
 
     obj->Set(String::NewSymbol("Key"), key_policy_values());

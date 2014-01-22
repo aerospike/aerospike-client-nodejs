@@ -78,7 +78,7 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("set_log_level"), FunctionTemplate::New(SetLogLevel)->GetFunction());
-    constructor = Persistent<Function>::New(cons->GetFunction());
+    constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
 
 /**
@@ -86,7 +86,8 @@ void AerospikeClient::Init()
  */
 Handle<Value> AerospikeClient::New(const Arguments& args)
 {
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     AerospikeClient * client = new AerospikeClient();
     client->as = (aerospike*) malloc(sizeof(aerospike));
@@ -130,7 +131,7 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
  */
 Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     const unsigned argc = 1;
 
@@ -144,7 +145,8 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
 
 Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
+
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
     if (args[0]->IsObject()){

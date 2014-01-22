@@ -47,7 +47,8 @@ using namespace v8;
 Handle<Value> AerospikeClient::Close(const Arguments& args)
 {
     //should call aerospike_close and aerospike_destroy
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
     as_error err;

@@ -313,7 +313,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
 
 Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 {
-    HandleScope scope;  
+    HANDLESCOPE;  
     Local<Object> err = Object::New();
     if (error == NULL) {
         as_v8_info(log, "error(C structure) object is NULL, node.js error object cannot be constructed");
@@ -338,7 +338,7 @@ void callback(char* data, void * ptr)
 
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
-    HandleScope scope;
+    HANDLESCOPE;
     if ( val == NULL) {
         as_v8_debug(log, "value = NULL"); 
         return scope.Close(Undefined());
@@ -397,7 +397,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 
 Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     Local<Object> bins ;
     if (record == NULL) {
@@ -421,7 +421,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 
 Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Local<Object> meta ;
     if(record == NULL) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
@@ -435,7 +435,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     Handle<Object> okey;
 
@@ -719,7 +719,7 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
 
 Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Local<Object> obj;
     if (key == NULL) {
         return scope.Close(obj);
@@ -781,7 +781,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // Every v8 object has be declared/accessed inside a scope, and the 
     // scope has to be closed to avoid memory leak.
     // Open a scope
-    HandleScope scope;
+    HANDLESCOPE;
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
@@ -868,7 +868,7 @@ ReturnError:
 
 int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log)
 {
-    HandleScope scope;
+    HANDLESCOPE;
     as_namespace ns = { '\0' };
     as_set set = { '\0' };
 
@@ -950,7 +950,7 @@ int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 }
 
 Local<Value> GetBinValue( Local<Object> obj, LogInfo * log) {
-    HandleScope scope;
+    HANDLESCOPE;
     Local<Value> val = obj->Get(String::NewSymbol("bin_value"));
     return scope.Close(val);
 }

@@ -48,7 +48,8 @@ using namespace v8;
  */
 Handle<Value> AerospikeClient::Connect(const Arguments& args)
 {
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
     
