@@ -42,6 +42,7 @@ extern "C" {
 // application, argument position for callback changes.
 #define INFO_REQUEST_LEN  50
 #define MAX_CLUSTER_SIZE  128
+
 using namespace v8;
 
 /*******************************************************************************
@@ -329,13 +330,13 @@ static void respond(uv_work_t * req, int status)
                 host->Set(String::NewSymbol("addr"), String::NewSymbol(data->addr));
                 host->Set(String::NewSymbol("port"), Integer::New(data->port));
                 argv[2] = host;
-            } 
+            }
             else if( node_name != NULL && strlen(node_name) > 0 ) {
                 Handle<Object> host = Object::New();
                 as_v8_debug(log, "The host is %s", node_name);
                 host->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
                 argv[2] = host;
-            } 
+            }
             else {
                 argv[2] = Null();
             }

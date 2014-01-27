@@ -28,19 +28,20 @@
 #include <inttypes.h>
 
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/aerospike_key.h>
-#include <aerospike/as_config.h>
-#include <aerospike/as_key.h>
-#include <aerospike/as_record.h>
-#include <aerospike/as_record_iterator.h>
-#include <aerospike/aerospike_batch.h>  
+    #include <aerospike/aerospike.h>
+    #include <aerospike/aerospike_key.h>
+    #include <aerospike/as_config.h>
+    #include <aerospike/as_key.h>
+    #include <aerospike/as_record.h>
+    #include <aerospike/as_record_iterator.h>
+    #include <aerospike/aerospike_batch.h>  
 }
 
 #include "../client.h"
 #include "conversions.h"
 #include "log.h"
 #include "../enums/enums.h"
+
 using namespace node;
 using namespace v8;
 
@@ -151,7 +152,8 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
         else {
             return AS_NODE_PARAM_ERR;
         }
-    } 
+    }
+
     if ( obj->Has(String::New("port")) ){
         Local<Value> portVal = obj->Get(String::NewSymbol("port"));
         if ( portVal->IsNumber() ) {
@@ -161,28 +163,32 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
             return AS_NODE_PARAM_ERR;
         }
     }
+
     return AS_NODE_PARAM_OK;
 }
 
 int log_from_jsobject( LogInfo * log, Local<Object> obj)
 {
-    if ( obj->IsObject() ){
-        Local<Object> v8_log         = obj->ToObject();
+    if ( obj->IsObject() ) {
+        Local<Object> v8_log = obj->ToObject();
+
         if (v8_log->Has(String::New("level"))) {
-            Local<Value> v8_log_level    = v8_log->Get(String::NewSymbol("level"));
+            Local<Value> v8_log_level = v8_log->Get(String::NewSymbol("level"));
             if ( v8_log_level->IsNumber()){
                 log->severity = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
-            } else {
-                fprintf(stderr, "Log level should be an integer less than 4\n");
+            }
+            else {
+                fprintf(stderr, "Log level should be an integer between 0 and 5.\n");
                 return AS_NODE_PARAM_ERR;
             }
         }
-        if ( v8_log->Has(String::NewSymbol("log_file"))) {
-            Local<Value> v8_path = obj->Get(String::NewSymbol("log_file"));
-            if ( v8_path->IsString()) {
-                log->fd = open(*String::Utf8Value(v8_path),O_CREAT, O_RDWR);    
+        
+        if ( v8_log->Has(String::NewSymbol("file"))) {
+            Local<Value> v8_path = obj->Get(String::NewSymbol("file"));
+            if ( v8_path->IsString() ) {
+                log->fd = open(*String::Utf8Value(v8_path), O_CREAT, O_RDWR);    
+                as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
             }
-            as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
             return AS_NODE_PARAM_OK;
         }
         else {
@@ -190,81 +196,44 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
             as_v8_debug(log, "redirecting log to stderr");
             return AS_NODE_PARAM_OK;
         }
-    }else {
+    }
+    else {
         fprintf(stderr, "Log value should be an object \n");
         return AS_NODE_PARAM_ERR;
     }
 
     return AS_NODE_PARAM_ERR;
-
 }
-#if 0
-// Add the element to the list.
-void AddElement(llist **list, void * element)
-{
-
-    if ((newnode = (llist*)malloc(sizeof(llist))) == NULL) {
-        exit(1);
-    }
-    newnode->ptr = element;
-    newnode->next = NULL;
-    if ((*list) == NULL){
-        (*list) = newnode;
-        return;
-    }
-    llist* trav = (*list);
-    while ( trav->next != NULL) {
-        trav = trav->next;
-    }
-    trav->next = newnode;
-    return;
-}
-
-
-// Delete all the elements in the linked list
-// and the list itself.
-void RemoveList( llist **list) {
-    llist * head = (*list);
-    llist * currnode = NULL;
-    while ( head != NULL ) {
-        currnode = head;
-        head = head->next;
-        delete currnode->ptr;
-        free(currnode);
-    }
-    return;
-}
-#endif
 
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
 {
-    if(src == NULL || dest == NULL) {
+    if ( src == NULL || dest == NULL ) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
         return false;
     }
 
     as_key_value* val = src->valuep;
     as_val_t t = as_val_type((as_val*)val);
+
     switch(t){
         case AS_INTEGER: {
-                             as_v8_detail(log, "Integer key value %d", val->integer.value);
-                             *dest = as_key_new_int64(src->ns, src->set, val->integer.value);
-                             break;
-                         }
+            as_v8_detail(log, "Integer key value %d", val->integer.value);
+            *dest = as_key_new_int64(src->ns, src->set, val->integer.value);
+            break;
+        }
         case AS_STRING: {
-                            char* strval = strdup(val->string.value);
-                            as_v8_detail(log, "String key value %s", strval);
-                            *dest = as_key_new_strp( src->ns, src->set, strval,true);
-                            strcpy((*dest)->ns,src->ns);
-                            strcpy((*dest)->set,src->set);
-                            break;
-                        }
+            char* strval = strdup(val->string.value);
+            as_v8_detail(log, "String key value %s", strval);
+            *dest = as_key_new_strp( src->ns, src->set, strval,true);
+            strcpy((*dest)->ns,src->ns);
+            strcpy((*dest)->set,src->set);
+            break;
+        }
         default: 
-                        break;
+            break;
     }
 
     return true;
-
 }
 
 bool record_clone(const as_record* src, as_record** dest, LogInfo * log) 
@@ -272,39 +241,40 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     if(src == NULL || dest == NULL) {
         return false;
     }
+
     (*dest)->ttl = src->ttl;
     (*dest)->gen = src->gen;
     as_record_iterator it;
     as_record_iterator_init(&it, src);
+
     while (as_record_iterator_has_next(&it)) {
         as_bin * bin = as_record_iterator_next(&it);
         as_bin_value * val = as_bin_get_value(bin);
         as_val_t t = as_bin_get_type(bin);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
+
         switch(t) {
             case AS_INTEGER: {
-                                 as_v8_detail(log, "Integer bin value %d", val->integer.value);
-                                 as_record_set_int64(*dest, as_bin_get_name(bin), val->integer.value); 
-                                 break;
-
-                             }
+                as_v8_detail(log, "Integer bin value %d", val->integer.value);
+                as_record_set_int64(*dest, as_bin_get_name(bin), val->integer.value); 
+                break;
+            }
             case AS_STRING: {
-                                char* strval = strdup(val->string.value);
-                                as_v8_detail(log, "String bin value %s", strval);
-                                as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
-                                break;
-                            }
+                char* strval = strdup(val->string.value);
+                as_v8_detail(log, "String bin value %s", strval);
+                as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
+                break;
+            }
             case AS_BYTES: {
-                               size_t size = val->bytes.size;
-                               uint8_t *bytes = (uint8_t*) malloc(size);
-                               memcpy(bytes, val->bytes.value, size);
-                               as_v8_detail(log, "Blob bin value %u ", bytes);
-                               as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, size, true);
-                               break;
-                           }
-
+                size_t size = val->bytes.size;
+                uint8_t *bytes = (uint8_t*) malloc(size);
+                memcpy(bytes, val->bytes.value, size);
+                as_v8_detail(log, "Blob bin value %u ", bytes);
+                as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, size, true);
+                break;
+            }
             default:
-                           break;
+               break;
         }
     }           
 
@@ -315,15 +285,18 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 {
     HandleScope scope;  
     Local<Object> err = Object::New();
+    
     if (error == NULL) {
         as_v8_info(log, "error(C structure) object is NULL, node.js error object cannot be constructed");
         return scope.Close(err);
     }
+
     err->Set(String::NewSymbol("code"), Integer::New(error->code));
     err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
     err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
     err->Set(String::NewSymbol("file"), error->file ? String::NewSymbol(error->file) : Null() );
     err->Set(String::NewSymbol("line"), error->line ? Integer::New(error->line) : Null() );
+    
     return scope.Close(err);
 }
 
@@ -339,7 +312,7 @@ void callback(char* data, void * ptr)
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
     HandleScope scope;
-    if ( val == NULL) {
+    if ( val == NULL ) {
         as_v8_debug(log, "value = NULL"); 
         return scope.Close(Undefined());
     }
@@ -348,22 +321,16 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
         case AS_INTEGER : {
             as_integer * ival = as_integer_fromval(val);
             if ( ival ) {
-
                 int64_t data = as_integer_getorelse(ival, -1);
-
                 as_v8_detail(log, "value = %d ", data);
-                
                 return scope.Close(Integer::New(data));
             }
         }
         case AS_STRING : {
             as_string * sval = as_string_fromval(val);
             if ( sval ) {
-
                 char * data = as_string_getorelse(sval, NULL);
-
                 as_v8_detail(log, "value = \"%s\"", data);
-                
                 return scope.Close(String::NewSymbol(data));
             }
         }
@@ -416,34 +383,38 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
         Handle<Value> obj = val_to_jsvalue(val, log );
         bins->Set(String::NewSymbol(name), obj);
     }
+
     return scope.Close(bins);
 }
 
 Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 {
     HandleScope scope;
-    Local<Object> meta ;
-    if(record == NULL) {
+    Local<Object> meta;
+    
+    if ( record == NULL ) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
         return scope.Close(meta);
     }
+    
     meta = Object::New();
     meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
     meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
+
     return scope.Close(meta);
 }
 
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
     HandleScope scope;
-
     Handle<Object> okey;
 
-    if(record == NULL) {
+    if ( record == NULL ) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
         return scope.Close(okey);
     }
-    okey    = key_to_jsobject(key ? key : &record->key, log);
+
+    okey = key_to_jsobject(key ? key : &record->key, log);
     Handle<Object> bins = recordbins_to_jsobject(record, log );
     Handle<Object> meta = recordmeta_to_jsobject(record, log);
     Local<Object> rec = Object::New();
@@ -453,12 +424,12 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
 
     return scope.Close(rec);
 }
+
 //Forward references;
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log );
 
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
-
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
 
@@ -510,14 +481,15 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log)
 {
-
     if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
         as_v8_error(log, "The binary data is not of the type UnsignedBytes");
         return AS_NODE_PARAM_ERR;
     }
+
     (*len) = obj->GetIndexedPropertiesExternalArrayDataLength();
     (*data) = (uint8_t*) malloc(sizeof(uint8_t) * (*len));
-    memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len)); 
+    memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len));
+
     return AS_NODE_PARAM_OK;
 }
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
@@ -526,13 +498,13 @@ int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
         Local<Value> v8ttl = obj->Get(String::NewSymbol("ttl")) ;
         if ( v8ttl->IsNumber() ) {
             (*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
-        } else {
+        }
+        else {
             return AS_NODE_PARAM_ERR;
         }
     }
+
     return AS_NODE_PARAM_OK;
-
-
 }
 
 int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
@@ -542,13 +514,14 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
         if ( v8timeout->IsNumber() ) {
             (*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
             as_v8_detail(log, "timeout value %d", *timeout);
-        }else {
+        }
+        else {
             as_v8_error(log, "timeout should be an integer");
             return AS_NODE_PARAM_ERR;
         }
-    } 
-    return AS_NODE_PARAM_OK;
+    }
 
+    return AS_NODE_PARAM_OK;
 }
 
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
@@ -558,13 +531,14 @@ int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
         if ( v8gen->IsNumber() ) {
             (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
             as_v8_detail(log, "Generation value %d ", (*generation));
-        }else {
+        }
+        else {
             as_v8_error(log, "Generation should be an integer");
             return AS_NODE_PARAM_ERR;
         }
-    } 
-    return AS_NODE_PARAM_OK;
+    }
 
+    return AS_NODE_PARAM_OK;
 }
 
 int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log ) 
@@ -575,16 +549,17 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
         // Check if node layer is passing a legal integer value
         if (policy->IsNumber()) {
             *policyEnumValue = V8INTEGER_TO_CINTEGER(policy);
-        } else {    
+        }
+        else {    
             as_v8_error(log, "value for %s policy must be an integer", policyname);
             //Something other than expected type which is Number
             return AS_NODE_PARAM_ERR;
         }
     }
+
     // The policyEnumValue will/should be inited to the default value by the caller
     // So, do not change anything if we get an non-integer from node layer
     return AS_NODE_PARAM_OK;
-
 }
 
 int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
@@ -638,7 +613,8 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
         if ( v8send_as_is->IsBoolean() ) {
             policy->send_as_is = v8send_as_is->ToBoolean()->Value();
             as_v8_detail(log,"info policy send_as_is is set to %s", policy->send_as_is ? "true":"false");
-        } else {
+        }
+        else {
             as_v8_error(log, "send_as_is should be a boolean object");
             return AS_NODE_PARAM_ERR;
         }
@@ -648,7 +624,8 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
         if ( v8check_bounds->IsBoolean() ) {
             policy->check_bounds = v8check_bounds->ToBoolean()->Value();
             as_v8_detail(log, "info policy check bounds is set to %s", policy->check_bounds ? "true" : "false");
-        } else {
+        }
+        else {
             as_v8_error(log, "check_bounds should be a boolean object");
             return AS_NODE_PARAM_ERR;
         }
@@ -741,35 +718,34 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
         as_val_t type = as_val_type(val);
         switch(type) {
             case AS_INTEGER: {
-                                 as_integer * ival = as_integer_fromval(val);
-                                 as_v8_debug(log, "key.key = %d", as_integer_get(ival));
-                                 obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
-                                 break;
-                             }
+                as_integer * ival = as_integer_fromval(val);
+                as_v8_debug(log, "key.key = %d", as_integer_get(ival));
+                obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
+                break;
+            }
             case AS_STRING: {
-                                as_string * sval = as_string_fromval(val);
-                                as_v8_debug(log, "key.key = \"%s\"", as_string_get(sval));
-                                obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
-                                break;
-                            }
+                as_string * sval = as_string_fromval(val);
+                as_v8_debug(log, "key.key = \"%s\"", as_string_get(sval));
+                obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
+                break;
+            }
             case AS_BYTES: {
-                               as_bytes * bval = as_bytes_fromval(val);
-                               if ( bval ) {
-                                   int size = as_bytes_size(bval);
-                                   as_v8_debug(log,"key.key = \"%u\"", bval->value);
-                                   Buffer * buf = Buffer::New(size);
-                                   memcpy(node::Buffer::Data(buf), bval->value, size);
-                                   v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-                                   v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-                                   v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
-                                   v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-                                   obj->Set(String::NewSymbol("key"), actualBuffer);
-                                   break;
-                               }
-
-                           }
+               as_bytes * bval = as_bytes_fromval(val);
+               if ( bval ) {
+                   int size = as_bytes_size(bval);
+                   as_v8_debug(log,"key.key = \"%u\"", bval->value);
+                   Buffer * buf = Buffer::New(size);
+                   memcpy(node::Buffer::Data(buf), bval->value, size);
+                   v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+                   v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+                   v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
+                   v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+                   obj->Set(String::NewSymbol("key"), actualBuffer);
+                   break;
+               }
+            }
             default:
-                           break;
+                break;
         }
     }
 
@@ -928,7 +904,8 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
 
     if(capacity > 0) {
         as_batch_init(batch, capacity);
-    } else {
+    }
+    else {
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i=0; i < capacity; i++) {
@@ -980,7 +957,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
         as_operations_add_write_str(op, binName, binVal);
         if ( binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
-    }           
+    }
     else if ( v8val->IsObject() ) {
         Local<Object> binObj = v8val->ToObject();
         int len ;
@@ -1035,7 +1012,8 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
         as_operations_add_incr( ops, binName, binValue);
         if (binName != NULL) free (binName);
         return AS_NODE_PARAM_OK;
-    }else {
+    }
+    else {
         as_v8_debug(log, "Type error in incr operation");
         return AS_NODE_PARAM_ERR;
     }
@@ -1062,7 +1040,7 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         as_operations_add_prepend_strp(ops, binName, binVal, true);
         if ( binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
-    }           
+    }
     else if ( v8val->IsObject() ) {
         Local<Object> binObj = v8val->ToObject();
         int len ;
@@ -1101,7 +1079,7 @@ int populate_append_op( as_operations * ops, Local<Object> obj, LogInfo * log)
         as_operations_add_append_strp(ops, binName, binVal,true);
         if ( binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
-    }           
+    }
     else if ( v8val->IsObject() ) {
         Local<Object> binObj = v8val->ToObject();
         int len ;
@@ -1130,6 +1108,7 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
     as_operations_add_touch(ops);
     return AS_NODE_PARAM_OK;
 }
+
 int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log) 
 {
 
@@ -1137,7 +1116,8 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
     as_v8_detail(log, "no op operations in the array %d", capacity);
     if ( capacity > 0 ) {
         as_operations_init( ops, capacity );
-    } else {
+    }
+    else {
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i = 0; i < capacity; i++ ) {
@@ -1146,36 +1126,30 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
         if ( v8op->IsNumber() ) {
             as_operator op = (as_operator) v8op->ToInteger()->Value();
             switch ( op ) {
-                case AS_OPERATOR_WRITE: 
-                    {
-                        populate_write_op(ops, obj, log);
-                        break;
-                    }
-                case AS_OPERATOR_READ:
-                    {
-                        populate_read_op(ops, obj, log);
-                        break;
-                    }
-                case AS_OPERATOR_INCR: 
-                    {
-                        populate_incr_op(ops, obj, log);
-                        break;
-                    }
-                case AS_OPERATOR_PREPEND:
-                    {
-                        populate_prepend_op(ops, obj, log);
-                        break;
-                    }
-                case AS_OPERATOR_APPEND:
-                    {
-                        populate_append_op(ops, obj, log);
-                        break;
-                    }
-                case AS_OPERATOR_TOUCH:
-                    {
-                        populate_touch_op(ops, log);
-                        break;
-                    }
+                case AS_OPERATOR_WRITE: {
+                    populate_write_op(ops, obj, log);
+                    break;
+                }
+                case AS_OPERATOR_READ: {
+                    populate_read_op(ops, obj, log);
+                    break;
+                }
+                case AS_OPERATOR_INCR:  {
+                    populate_incr_op(ops, obj, log);
+                    break;
+                }
+                case AS_OPERATOR_PREPEND: {
+                    populate_prepend_op(ops, obj, log);
+                    break;
+                }
+                case AS_OPERATOR_APPEND: {
+                    populate_append_op(ops, obj, log);
+                    break;
+                }
+                case AS_OPERATOR_TOUCH: {
+                    populate_touch_op(ops, log);
+                    break;
+                }
                 default :
                     as_v8_info(log, "Operation Type not supported by the API");
                     return AS_NODE_PARAM_ERR;

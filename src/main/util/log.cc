@@ -19,9 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  ******************************************************************************/
+
 extern "C" {
-#include <aerospike/aerospike.h>
-#include <aerospike/as_log.h>
+    #include <aerospike/aerospike.h>
+    #include <aerospike/as_log.h>
 }
 
 #include <errno.h>
@@ -37,7 +38,6 @@ const char log_severity_strings[7][10] = {
 
 bool v8_logging_callback(as_log_level level, const char* func, const char * file, uint32_t line, const char* fmt, ...)
 {
-
     char msg[1024] = {0};
 
     va_list ap;
@@ -49,7 +49,6 @@ bool v8_logging_callback(as_log_level level, const char* func, const char * file
     fprintf(stderr, "[%s:%d][%s] %s\n", basename((char*) file), line, func, msg);
 
     return true;
-
 }
 
 void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, const char * file, uint32_t line, const char* fmt, ...)
@@ -82,22 +81,18 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
     if( 0 >= write(log->fd, msg, limit )) {
         fprintf(stderr, "Internal failure in log message write :%d \n", errno);
     }
-
-    return ;
-
 }
 
 
 void stringify(char * key_str, const as_key * key, const char* data_type)
 {
     sprintf(key_str,"[ ns:%s , set:%s, key:%s ]", key->ns, key->set, as_val_tostring((as_val*)&key->value));
-
 }
 
-void  stringify( char * res_str, const as_record * rec, const char * data_type)
+void stringify(char * res_str, const as_record * rec, const char * data_type)
 {
-    int pos = 0;
     if (strcmp(data_type, BINS) == 0) {
+        int pos = 0;
         pos += sprintf(res_str+pos, "[");
         as_record_iterator it; 
         as_record_iterator_init(&it, rec);
@@ -112,24 +107,24 @@ void  stringify( char * res_str, const as_record * rec, const char * data_type)
         }   
         pos += sprintf( res_str+pos, "]");
         return;
-    }else if (strcmp(data_type, META) == 0) {
+    }
+    else if (strcmp(data_type, META) == 0) {
         sprintf(res_str, "[ttl: %u, gen: %u ]", rec->ttl, rec->gen);
     }
-
 }
 
 
-void stringify( char* err_str, const as_error *err, const char* data_type)
+void stringify(char* err_str, const as_error *err, const char* data_type)
 {
-    int pos = 0;
     if ( err->code != AEROSPIKE_OK) {
-        pos += sprintf(err_str, " [ message : %s, func : %s, file %s, line : %d] ", err->message, err->func, err->file, err->line);
+        sprintf(err_str, " [ message : %s, func : %s, file %s, line : %d] ", err->message, err->func, err->file, err->line);
     }
     else {
         if ( err->message != '\0') {
-            pos += sprintf(err_str, "[ message : %s ]", err->message);
-        } else {
-            pos += sprintf(err_str, "[ message : AEROSPIKE_OK ]");
+            sprintf(err_str, "[ message : %s ]", err->message);
+        }
+        else {
+            sprintf(err_str, "[ message : AEROSPIKE_OK ]");
         }
     }
 }

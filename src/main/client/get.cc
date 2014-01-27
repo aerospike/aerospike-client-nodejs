@@ -96,7 +96,8 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
-    } else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
@@ -114,6 +115,7 @@ static void * prepare(const Arguments& args)
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
     }
+
     if ( arglength > 2 ) {
         if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
             if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
@@ -121,12 +123,14 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
-        }else {
+        }
+        else {
             as_v8_error(log, "Readpolicy should be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
         as_policy_read_init(policy);
     }
@@ -202,11 +206,7 @@ static void respond(uv_work_t * req, int status)
     
     Handle<Value> argv[4];
     // Build the arguments array for the callback
-    if( data->param_err == 0) { 
-        // DETAIL(log,  BINS, rec); 
-        // DETAIL(log,  META, rec);
-        // DETAIL(log, _KEY,  key); 
-
+    if( data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log),
         argv[1] = recordbins_to_jsobject(rec, log ),
         argv[2] = recordmeta_to_jsobject(rec, log),

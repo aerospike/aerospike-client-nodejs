@@ -99,7 +99,8 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
-    }else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -110,7 +111,8 @@ static void * prepare(const Arguments& args)
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_error(log, "Key should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -133,7 +135,8 @@ static void * prepare(const Arguments& args)
         }
         // The last entry should be NULL because we are passing to aerospike_key_select
         data->bins[num_bins] = NULL;
-    } else {
+    }
+    else {
         as_v8_error(log, "Bin names should be an array of string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -146,12 +149,14 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
             }
-        } else {
+        }
+        else {
             as_v8_error(log, "Readpolicy should be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
         as_policy_read_init(policy);
     }
@@ -181,6 +186,7 @@ static void execute(uv_work_t * req)
     as_record * rec = &data->rec;
     as_policy_read * policy = &data->policy;
     LogInfo * log   = data->log;
+    
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -228,15 +234,12 @@ static void respond(uv_work_t * req, int status)
     Handle<Value> argv[4];
     if ( data->param_err == 0 )
     {
-        // DEBUG(log,  BINS, rec);
-        // DEBUG(log,  META, rec);
-        // DEBUG(log,  _KEY,  key);
-
         argv[0] = error_to_jsobject(err, log);
         argv[1] = recordbins_to_jsobject(rec, log);
         argv[2] = recordmeta_to_jsobject(rec, log);
         argv[3] = key_to_jsobject(key, log);
-    } else {
+    }
+    else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error while parsing the arguments");
         argv[0] = error_to_jsobject(err, log);
@@ -244,6 +247,7 @@ static void respond(uv_work_t * req, int status)
         argv[2] = Null();
         argv[3] = Null();
     }
+
     // Surround the callback in a try/catch for safety
     TryCatch try_catch;
 

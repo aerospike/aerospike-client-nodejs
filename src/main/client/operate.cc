@@ -38,13 +38,14 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
-using namespace v8;
 #define OP_ARG_POS_KEY     0
 #define OP_ARG_POS_OP      1
 #define OP_ARG_POS_META    2
 #define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same 
 #define OP_ARG_POS_CB      4 // for every invoke of operate. If operatepolicy is not passed from node
 // application, argument position for callback changes.
+
+using namespace v8;
 
 /*******************************************************************************
  *  TYPES
@@ -99,11 +100,13 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction() ){
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
-    }else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
     }
+
     if ( args[OP_ARG_POS_KEY]->IsObject() ) {
         if (key_from_jsobject(key, args[OP_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
@@ -116,6 +119,7 @@ static void * prepare(const Arguments& args)
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
     }
+
     if ( args[OP_ARG_POS_OP]->IsArray() ) {
         Local<Array> operations = Local<Array>::Cast(args[OP_ARG_POS_OP]);
         if ( operations_from_jsarray( op, operations, log ) != AS_NODE_PARAM_OK ) {
@@ -123,15 +127,18 @@ static void * prepare(const Arguments& args)
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_error(log, "operations should be an array");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
     }
+
     if ( args[OP_ARG_POS_META]->IsObject() ) {
         setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
         setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
-    } else {
+    }
+    else {
         as_v8_debug(log, "Metadata should be an object");
     }
 
@@ -142,12 +149,14 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
-        }else {
+        }
+        else {
             as_v8_error(log, "Operate policy should be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Argument list does not contain operate policy, using default values for operate policy");
         as_policy_operate_init(policy);
     }
@@ -227,17 +236,13 @@ static void respond(uv_work_t * req, int status)
 
 
     // Build the arguments array for the callback
-    if( data->param_err == 0) { 
-        // DETAIL(log,  BINS, rec);
-        // DETAIL(log,  META, rec);
-        // DEBUG(log,  _KEY, key);
-
+    if( data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log),
             argv[1] = recordbins_to_jsobject(rec, log ),
             argv[2] = recordmeta_to_jsobject(rec, log),
             argv[3] = key_to_jsobject(key, log);
-
     }
+
     else {
         err->func = NULL;
         err->line = 0;

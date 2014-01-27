@@ -38,12 +38,12 @@ extern "C" {
 #include "../util/conversions.h"
 #include "../util/log.h"
 
-using namespace v8;
-
 #define REMOVE_ARG_POS_KEY     0
 #define REMOVE_ARG_POS_WPOLICY 1 // remove policy position and callback position is not same 
 #define REMOVE_ARG_POS_CB      2 // for every invoke of remove. If removepolicy is not passed from node
 // application, argument position for callback changes.
+
+using namespace v8;
 
 
 /*******************************************************************************
@@ -90,14 +90,17 @@ static void * prepare(const Arguments& args)
 
     as_policy_remove * policy = &data->policy;
     int arglength = args.Length();
+
     if ( args[arglength-1]->IsFunction() ){
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
-    } else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
+
     if ( args[ REMOVE_ARG_POS_KEY ]->IsObject() ) {
         if (key_from_jsobject(key, args[ REMOVE_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
@@ -118,12 +121,14 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
             }
-        } else {
+        }
+        else {
             as_v8_error(log, "Removepolicy should be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
         as_policy_remove_init(policy);
     }

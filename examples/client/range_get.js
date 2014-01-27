@@ -22,8 +22,8 @@
 
 var optimist = require('optimist');
 var aerospike = require('aerospike');
-var status = aerospike.Status;
-var policy = aerospike.Policy;
+var status = aerospike.status;
+var policy = aerospike.policy;
 
 /*******************************************************************************
  *
@@ -53,10 +53,14 @@ var argp = optimist
             default: 10,
             describe: "Timeout in milliseconds."
         },
-        log: {
+        'log-level': {
             alias: "l",
-            default: aerospike.Log.INFO,
+            default: aerospike.log.INFO,
             describe: "Log level [0-5]"
+        },
+        'log-file': {
+            default: undefined,
+            describe: "Path to a file send log messages to."
         },
         namespace: {
             alias: "n",
@@ -100,7 +104,8 @@ var client = aerospike.client({
         { addr: argv.host, port: argv.port }
     ],
     log: {
-        level: argv.log
+        level: argv['log-level'],
+        file: argv['log-file']
     },
     policies: {
         timeout: argv.timeout
@@ -109,7 +114,7 @@ var client = aerospike.client({
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
-    }   
+    }
 });
 
 

@@ -104,31 +104,34 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js Callback Registered");
-    } else {
+    }
+    else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
+
     if ( args[PUT_ARG_POS_KEY]->IsObject()) {
         if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log,"Parsing as_key(C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_error(log, "Key should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-
-
+    
     if ( args[PUT_ARG_POS_REC]->IsObject() ) {
         if (recordbins_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
             as_v8_error(log, "Parsing as_record(C structure) from record object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_error(log, "Record should be an object"); 
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -141,7 +144,8 @@ static void * prepare(const Arguments& args)
             goto Err_Return;
         }
         meta_present = 1;
-    } else {
+    }
+    else {
         as_v8_error(log, "Metadata should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -159,7 +163,8 @@ static void * prepare(const Arguments& args)
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         } 
-    } else {
+    }
+    else {
         // When node application does not pass any write policy should be 
         // initialized to defaults,
         as_v8_debug(log, "Argument list does not contain writepolicy, default writepolicy will be used");

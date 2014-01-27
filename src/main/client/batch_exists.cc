@@ -45,6 +45,7 @@ extern "C" {
 #define BGET_ARG_POS_CB      2 // in the argument list for every invoke of batch_get. If 
 // writepolicy is not passed from node application, argument 
 // position for callback changes.
+
 using namespace v8;
 
 /*******************************************************************************
@@ -138,7 +139,7 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) { 
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));   
         as_v8_detail(log, "batch_exists callback registered");
-    } 
+    }
     else {
         as_v8_error(log, "Arglist must contain a callback function");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
@@ -173,7 +174,8 @@ static void * prepare(const Arguments& args)
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Arglist does not contain batch policy, using default values");
         as_policy_batch_init(policy);
     }
@@ -258,12 +260,10 @@ static void respond(uv_work_t * req, int status)
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-        argv[2] = Null();
     }
     else if ( num_rec == 0 || batch_results == NULL ) {
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-        argv[2] = Null();
     }
     else {
 
@@ -351,9 +351,9 @@ static void respond(uv_work_t * req, int status)
  ******************************************************************************/
 
 /**
- *      The 'batch_get()' Operation
+ *      The 'batchExists()' Operation
  */
-Handle<Value> AerospikeClient::Batch_Exists(const Arguments& args)
+Handle<Value> AerospikeClient::BatchExists(const Arguments& args)
 {
     return async_invoke(args, prepare, execute, respond);
 }

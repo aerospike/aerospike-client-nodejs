@@ -6,8 +6,8 @@
 
 var optimist = require('optimist');
 var aerospike = require('aerospike');
-var status = aerospike.Status;
-var policy = aerospike.Policy;
+var status = aerospike.status;
+var policy = aerospike.policy;
 
 /*******************************************************************************
  *
@@ -37,10 +37,14 @@ var argp = optimist
             default: 10,
             describe: "Timeout in milliseconds."
         },
-        log: {
+        'log-level': {
             alias: "l",
-            default: aerospike.Log.INFO,
+            default: aerospike.log.INFO,
             describe: "Log level [0-5]"
+        },
+        'log-file': {
+            default: undefined,
+            describe: "Path to a file send log messages to."
         },
         namespace: {
             alias: "n",
@@ -81,7 +85,8 @@ var client = aerospike.client({
         { addr: argv.host, port: argv.port }
     ],
     log: {
-        level: argv.log
+        level: argv['log-level'],
+        file: argv['log-file']
     },
     policies: {
         timeout: argv.timeout
@@ -104,9 +109,9 @@ if ( client === null ) {
  * 
  ******************************************************************************/
 
-console.time("batch_exists");
+console.time("batchExists");
 
-client.batch_exists(keys, function (err, results) {
+client.batchExists(keys, function (err, results) {
     var i = 0;
     if ( err.code == status.AEROSPIKE_OK ) {
         for ( i = 0; i < results.length; i++ ) {
@@ -126,7 +131,7 @@ client.batch_exists(keys, function (err, results) {
         console.log("ERR - ", err);
     }
 
-    console.timeEnd("batch_exists");
+    console.timeEnd("batchExists");
     console.log();
     
     client.close();

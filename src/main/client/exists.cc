@@ -114,6 +114,7 @@ static void * prepare(const Arguments& args)
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
         goto Err_Return;
     }
+
     if ( arglength > 2 ) {
         if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
             if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
@@ -208,11 +209,11 @@ static void respond(uv_work_t * req, int status)
         if ( rec != NULL && rec->gen != 0 ) {
             as_v8_debug(log, "Record found");
             argv[1] = recordmeta_to_jsobject(rec, log);
-        } else {
+        }
+        else {
             argv[1] = Null();
         }
         argv[2] = key_to_jsobject(key, log);
-
     }
     else {
         err->func = NULL;

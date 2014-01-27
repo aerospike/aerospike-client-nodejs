@@ -45,6 +45,7 @@ extern "C" {
 #define BGET_ARG_POS_CB      2 // in the argument list for every invoke of batch_get. If 
 // writepolicy is not passed from node application, argument 
 // position for callback changes.
+
 using namespace v8;
 
 /*******************************************************************************
@@ -140,7 +141,8 @@ static void * prepare(const Arguments& args)
     if ( args[arglength-1]->IsFunction()) { 
         data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));   
         as_v8_detail(log, "batch_get callback registered");
-    } else {
+    }
+    else {
         as_v8_error(log, "Arglist must contain a callback function");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
@@ -168,12 +170,14 @@ static void * prepare(const Arguments& args)
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
             }
-        }else {
+        }
+        else {
             as_v8_error(log, "Batch policy must be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    } else {
+    }
+    else {
         as_v8_detail(log, "Arglist does not contain batch policy, using default values");
         as_policy_batch_init(policy);
     }
@@ -207,6 +211,7 @@ static void execute(uv_work_t * req)
         data->node_err = 1;
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
     }
+    
     // Invoke the blocking call.
     // Check for no parameter errors from Nodejs 
     if( data->node_err == 0) {
@@ -294,7 +299,7 @@ static void respond(uv_work_t * req, int status)
                 result->Set(String::NewSymbol("record"), recordbins_to_jsobject(record, log));
                 
                 rec_found++;
-            } 
+            }
             else {
                 as_v8_debug(log, "Record[%d] not returned by server ", i);
             }
@@ -349,9 +354,9 @@ static void respond(uv_work_t * req, int status)
  ******************************************************************************/
 
 /**
- *      The 'batch_get()' Operation
+ *      The 'batchGet()' Operation
  */
-Handle<Value> AerospikeClient::Batch_Get(const Arguments& args)
+Handle<Value> AerospikeClient::BatchGet(const Arguments& args)
 {
     return async_invoke(args, prepare, execute, respond);
 }

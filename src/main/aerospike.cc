@@ -34,6 +34,7 @@ Handle<Value> client(const Arguments& args)
     HandleScope scope;
     return scope.Close(AerospikeClient::NewInstance(args));
 }
+
 /**
  *  Aerospike key.
  *
@@ -61,13 +62,13 @@ Handle<Value> key(const Arguments& args)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-
+    
     exports->Set(String::NewSymbol("client"),   FunctionTemplate::New(client)->GetFunction());
     exports->Set(String::NewSymbol("key"),      FunctionTemplate::New(key)->GetFunction());
-    exports->Set(String::NewSymbol("Status"),   status_codes());
-    exports->Set(String::NewSymbol("Policy"),   policy_values());
-    exports->Set(String::NewSymbol("Operators"),operators());
-    exports->Set(String::NewSymbol("Log"),      log_levels());
+    exports->Set(String::NewSymbol("status"),   status_codes());
+    exports->Set(String::NewSymbol("policy"),   policy_values());
+    exports->Set(String::NewSymbol("operators"),operators());
+    exports->Set(String::NewSymbol("log"),      log_levels());
 }
 
 NODE_MODULE(aerospike, Aerospike)

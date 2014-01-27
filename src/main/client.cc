@@ -66,18 +66,18 @@ void AerospikeClient::Init()
     cons->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
-    cons->PrototypeTemplate()->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("batchGet"), FunctionTemplate::New(BatchGet)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("batchExists"), FunctionTemplate::New(BatchExists)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("close"), FunctionTemplate::New(Close)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("exists"), FunctionTemplate::New(Exists)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("batch_get"), FunctionTemplate::New(Batch_Get)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("batch_exists"), FunctionTemplate::New(Batch_Exists)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("set_log_level"), FunctionTemplate::New(SetLogLevel)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("updateLogging"), FunctionTemplate::New(SetLogLevel)->GetFunction());
     constructor = Persistent<Function>::New(cons->GetFunction());
 }
 
@@ -96,8 +96,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     as_config_init(&config);
 
     // Assume by default log is not set
-    int  default_log_set = 0;
     if(args[0]->IsObject()) {
+        int default_log_set = 0;
         if (args[0]->ToObject()->Has(String::NewSymbol("log")))  
         {
             Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log")) ;

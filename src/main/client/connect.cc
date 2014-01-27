@@ -56,7 +56,8 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
     
     if (args.Length() > 0 && args[0]->IsFunction()) {
         callback = Local<Function>::Cast(args[0]);
-    } else {
+    }
+    else {
         as_v8_error(client->log, " Callback not provided, Parameter error");
         return Null();
     }
@@ -75,7 +76,7 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
         as_v8_error(client->log, "Connecting to Cluster Failed");
         callback->Call(Context::GetCurrent()->Global(), 2, argv);
         return scope.Close(Null());
-    } 
+    }
     else {
         argv[1] = client->handle_;
         as_v8_debug(client->log, "Connecting to Cluster: Success");

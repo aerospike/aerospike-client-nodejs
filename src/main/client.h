@@ -91,7 +91,7 @@ class AerospikeClient : public ObjectWrap {
         static Handle<Value> Put(const Arguments& args);
 
         /**
-         *      undefined client.select(Key,bins,function(Error,Record))
+         *      undefined client.select(Key, String[], function(Error,Record))
          */ 
         static Handle<Value> Select(const Arguments& args);
 
@@ -101,14 +101,14 @@ class AerospikeClient : public ObjectWrap {
         static Handle<Value> Remove(const Arguments& args);     
 
         /**
-         *  undefined client.batch_get(Key[],function(Error,Record))
+         *  undefined client.batchGet(Key[], function(Error,Record))
          */
-        static Handle<Value> Batch_Get(const Arguments& args);
+        static Handle<Value> BatchGet(const Arguments& args);
 
         /**
-         *  undefined client.batch_get(Key[],function(Error,Record))
+         *  undefined client.batchGet(Key[], function(Error,Record))
          */
-        static Handle<Value> Batch_Exists(const Arguments& args);
+        static Handle<Value> BatchExists(const Arguments& args);
 
         /**
          *  undefined client.batch_select(Key[],bins,function(Error,Record))
