@@ -1,6 +1,7 @@
 #pragma once
 
 #include <node.h>
+#include "../client.h"
 
 using namespace v8;
 

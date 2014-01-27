@@ -31,7 +31,8 @@ using namespace v8;
 
 Handle<Value> client(const Arguments& args)
 {
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
     return scope.Close(AerospikeClient::NewInstance(args));
 }
 
@@ -43,7 +44,8 @@ Handle<Value> client(const Arguments& args)
  */
 Handle<Value> key(const Arguments& args)
 {
-    HandleScope scope;
+    NODE_ISOLATE; 
+    HANDLESCOPE;
 
     if ( args.Length() == 3 ) {
         Local<Object> key = Object::New();

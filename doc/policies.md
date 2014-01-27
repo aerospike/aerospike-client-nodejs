@@ -74,8 +74,8 @@ Attributes:
                        For values, see [Key Policy Values](policies.md#key).
 - `gen`             – Specifies the behavior for the generation value.
                       For values, see [Generation Policy Values](policies.md#gen).
-- `retry`           – An instance of :data:`RetryPolicy`. Specifies the behavior
-                      for failed operations.
+- `retry`           – Specifies the behavior for failed operations.
+                      For values, see [Retry Policy Values](policies.md#retry).
 - `timeout`         – Maximum time in milliseconds to wait for the operation to 
                       complete. If 0 (zero), then the value will default to 
                       global default timeout value

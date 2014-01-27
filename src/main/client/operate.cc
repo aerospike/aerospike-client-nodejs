@@ -79,7 +79,8 @@ typedef struct AsyncData {
 static void * prepare(const Arguments& args)
 {
     // The current scope of the function
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
@@ -98,7 +99,7 @@ static void * prepare(const Arguments& args)
     int arglength = args.Length();
 
     if ( args[arglength-1]->IsFunction() ){
-        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));
+        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
         as_v8_detail(log, "Node.js callback registered");
     }
     else {
@@ -219,7 +220,8 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
     // Scope for the callback operation.
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);

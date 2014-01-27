@@ -31,6 +31,23 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
+/**********************************************************************
+ *  MACRO DECLARATIONS FOR NODE.JS BACKWARD COMPATABILITY.
+ *********************************************************************/ 
+
+#if NODE_MODULE_VERSION > 0x000B
+#  define NODE_ISOLATE_DECL Isolate* isolate = Isolate::GetCurrent();
+#  define NODE_ISOLATE      isolate
+#  define NODE_ISOLATE_PRE  isolate, 
+#  define NODE_ISOLATE_POST , isolate 
+#  define HANDLESCOPE v8::HandleScope scope(NODE_ISOLATE);
+#else
+#  define NODE_ISOLATE_DECL
+#  define NODE_ISOLATE
+#  define NODE_ISOLATE_PRE
+#  define NODE_ISOLATE_POST
+#  define HANDLESCOPE v8::HandleScope scope;
+#endif
 
 /*******************************************************************************
  *  CLASS

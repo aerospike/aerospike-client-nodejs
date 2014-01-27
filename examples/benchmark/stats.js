@@ -84,21 +84,6 @@ function duration(start, end) {
     return ms;
 }
 
-function calculate_memory_stats(memory_usage) {
-    var mem_stats = Object;
-    var length = memory_usage.length;
-    mem_stats.rss = 0;
-    mem_stats.heapTotal = 0;
-    memory_usage.map( function (item) {
-        mem_stats.rss += item.rss;
-        mem_stats.heapTotal += item.heapTotal;
-    })
-    mem_stats.rss = (mem_stats.rss) / length;
-    mem_stats.heapTotal = (mem_stats.heapTotal) / length;
-    return mem_stats;
-}
-
-
 
 function time_histogram(operations) {
 
@@ -325,7 +310,7 @@ function iteration(operations, time_start, time_end, mem_start, mem_end) {
 
 function report_iteration(result, argv, print) {
 
-    print('[worker: %d] [iteration: %d] [operations: %d] [time: %d ms]',
+    print('[worker: %d] [iteration: %d] [operations: %d] [time: %s ms]',
         result.worker,
         result.iteration,
         result.stats[ITERATION_OPERATIONS],
@@ -414,7 +399,7 @@ function report_iteration(result, argv, print) {
 
         t_max = iterations
             .filter(opcountfilter)
-            .map(select(ITERATION_TIME_MIN))
+            .map(select(ITERATION_TIME_MAX))
             .reduce(max,0);
 
         t_count = iterations
@@ -517,8 +502,7 @@ function report_iteration(result, argv, print) {
                     max: Math.round(argv.operations / t_min * 1000)
                 },
                 durations: t_hist,
-                status_codes: s_hist,
-                memory_statistics: mem_stats
+                status_codes: s_hist
             };
             console.log("%j",output);
         }

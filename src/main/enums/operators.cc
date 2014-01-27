@@ -11,7 +11,7 @@ using namespace v8;
 
 Handle<Value> operator_write(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     // For write operation there should be two arguments.
     // bin_name and bin_value
@@ -29,7 +29,7 @@ Handle<Value> operator_write(const Arguments& args)
 
 Handle<Value> operator_read(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     //For write operation there should be only one argument
     //Just bin_name
@@ -47,7 +47,7 @@ Handle<Value> operator_read(const Arguments& args)
 
 Handle<Value> operator_incr(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     if (args.Length() != 2 ) {
         return Null();
@@ -64,7 +64,7 @@ Handle<Value> operator_incr(const Arguments& args)
 
 Handle<Value> operator_append(const Arguments &args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
     
     if (args.Length() != 2) {
         return Null();
@@ -80,7 +80,7 @@ Handle<Value> operator_append(const Arguments &args)
 
 Handle<Value> operator_prepend(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     if(args.Length() != 2) {
         return Null();
@@ -96,7 +96,7 @@ Handle<Value> operator_prepend(const Arguments& args)
 
 Handle<Value> operator_touch(const Arguments& args)
 {
-    HandleScope scope;
+    HANDLESCOPE;
 
     Handle<Object> touch_op = Object::New();
 
@@ -107,7 +107,7 @@ Handle<Value> operator_touch(const Arguments& args)
 }
 Handle<Object> operators() 
 {
-    HandleScope scope;
+    HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "read",    operator_read);
     set(obj, "write",   operator_write);

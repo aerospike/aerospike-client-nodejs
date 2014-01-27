@@ -130,5 +130,5 @@ Example:
 var key = aerospike.key("test", "demo", 123)
 ```
 
-For detals, see [Key Object](datamodel.md#key).
+For details, see [Key Object](datamodel.md#key).
 

@@ -130,7 +130,8 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
 static void * prepare(const Arguments& args)
 {
     // The current scope of the function
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
@@ -216,17 +217,17 @@ static void * prepare(const Arguments& args)
 
     if ( args[argc-1]->IsFunction() ) {
         if ( args[argc-2]->IsFunction() ) {
-            data->callback = Persistent<Function>::New(Local<Function>::Cast(args[argc-2]));
-            data->done = Persistent<Function>::New(Local<Function>::Cast(args[argc-1]));
+            data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-2]));
+            data->done = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-1]));
         }
         else {
-            data->callback = Persistent<Function>::New(Local<Function>::Cast(args[argc-1]));
+            data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-1]));
             data->done = Persistent<Function>::New(emptyFunction->GetFunction());
         }
     }
     else {
-        data->callback = Persistent<Function>::New(emptyFunction->GetFunction());
-        data->done = Persistent<Function>::New(emptyFunction->GetFunction());
+        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE emptyFunction->GetFunction());
+        data->done = Persistent<Function>::New(NODE_ISOLATE_PRE emptyFunction->GetFunction());
     }
 
     return data;
@@ -287,7 +288,8 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
     // Scope for the callback operation.
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     // callback arguments
     Handle<Value> argv[3];

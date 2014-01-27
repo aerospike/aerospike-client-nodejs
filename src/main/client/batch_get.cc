@@ -120,7 +120,8 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
 static void * prepare(const Arguments& args)
 {
     // The current scope of the function
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
@@ -139,7 +140,7 @@ static void * prepare(const Arguments& args)
     LogInfo * log = data->log = client->log;
 
     if ( args[arglength-1]->IsFunction()) { 
-        data->callback = Persistent<Function>::New(Local<Function>::Cast(args[arglength-1]));   
+        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));   
         as_v8_detail(log, "batch_get callback registered");
     }
     else {
@@ -239,7 +240,8 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
     // Scope for the callback operation.
-    HandleScope scope;
+    NODE_ISOLATE_DECL;
+    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);

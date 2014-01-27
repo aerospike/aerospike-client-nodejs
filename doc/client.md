@@ -109,8 +109,8 @@ The parameters for the `callback` argument:
               the operation.
 - `results` – An array of objects, where each object contains the following attributes:
   - `status`     - status of the record. [Status code](status.md). 
-  - `key`        - key of the record. [Metadata object](datamodel.md#key).
-  - `record`     - the record read from the cluster. [Metadata object](datamodel.md#record).
+  - `key`        - key of the record. [Key object](datamodel.md#key).
+  - `record`     - the record read from the cluster. [Record object](datamodel.md#record).
   - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
 
 Example:
