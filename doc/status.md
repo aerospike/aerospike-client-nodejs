@@ -1,6 +1,15 @@
 # Status
 
-Error codes returned by the aerospike server for all the database operations
+Error codes returned by the aerospike server for all the database operations. 
+
+An enumeration of the status codes are available in `aerospike.status` object, which can be accessed similarly to:
+
+```js
+var aerospike = require('aerospike');
+
+aerospike.status.AEROSPIKE_OK
+```
+
 
 #### 0 - AEROSPIKE_OK
 

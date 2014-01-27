@@ -39,7 +39,7 @@ batch_exists()
 -->
 <a name="batch_exists"></a>
 
-### batch_exists(keys, policy=null, callback)
+### batchExists(keys, policy=null, callback)
 
 Checks the existence of a batch of records from the database cluster.
 
@@ -68,7 +68,7 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(error, results) {
+client.batchExists(keys, function(error, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
     switch ( result.status ) {
@@ -93,7 +93,7 @@ batch_get()
 -->
 <a name="batch_get"></a>
 
-### batch_get(keys, policy=null, callback)
+### batchGet(keys, policy=null, callback)
 
 Reads a batch of records from the database cluster.
 
@@ -123,7 +123,7 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batch_get(keys, function(error, results) {
+client.batchGet(keys, function(error, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
     switch ( result.status ) {

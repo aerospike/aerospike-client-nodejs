@@ -152,6 +152,15 @@ Attributes:
 
 The following are values allowed for various policies.
 
+
+An enumeration of the values are available in `aerospike.policy` object, which can be accessed similarly to:
+
+```js
+var aerospike = require('aerospike');
+
+aerospike.policy.generation.GT
+```
+
 <!--
 ################################################################################
 key
@@ -166,7 +175,7 @@ key
 Sends the digest value of the key. This is the recommended mode of operation. This calculates the digest and sends the digest to the server. The digest is only calculated on the client, and not on the server. 
 
 ```js
-policies.Key.DIGEST
+aerospike.policy.key.DIGEST
 ```
 
 #### SEND
@@ -174,7 +183,7 @@ policies.Key.DIGEST
 Sends the key. This policy is ideal if you want to reduce the number of bytes sent over the network. This will only work if the combination of the set and key value are less than 20 bytes, which is the size of the digest. This will also cause the digest to be computed once on the client and once on the server. If your values are not less than 20 bytes, then you should just use Policy.Key.DIGEST
 
 ```js
-policies.Key.SEND
+aerospike.policy.key.SEND
 ```
 
 <!--
@@ -191,7 +200,7 @@ retry
 Only attempts an operation once
 
 ```js
-policies.Retry.NONE
+aerospike.policy.retry.NONE
 ```
 
 #### ONCE
@@ -199,7 +208,7 @@ policies.Retry.NONE
 If an operation fails, attempts the operation one more time
 
 ```js
-policies.Retry.ONCE
+aerospike.policy.retry.ONCE
 ```
 
 <!--
@@ -216,7 +225,7 @@ gen
 Writes a record, regardless of generation.
 
 ```js
-policies.Generation.IGNORE
+aerospike.policy.gen.IGNORE
 ```
 
 #### EQ
@@ -224,7 +233,7 @@ policies.Generation.IGNORE
 Writes a record, ONLY if generations are equal.
 
 ```js
-policies.Generation.EQ
+aerospike.policy.gen.EQ
 ```
 
 #### GT
@@ -232,7 +241,7 @@ policies.Generation.EQ
 Writes a record, ONLY if local generation is greater-than remote generation.
 
 ```js
-policies.Generation.GT
+aerospike.policy.gen.GT
 ```
 
 #### DUP
@@ -240,7 +249,7 @@ policies.Generation.GT
 Writes a record creating a duplicate, ONLY if the generation collides.
 
 ```js
-policies.Generation.DUP
+aerospike.policy.gen.DUP
 ```
 
 <!--
@@ -257,7 +266,7 @@ exists
 Writes the record, regardless of existence.
 
 ```js
-policies.Exists.IGNORE
+aerospike.policy.exists.IGNORE
 ```
 
 #### CREATE
@@ -265,5 +274,5 @@ policies.Exists.IGNORE
 Creates a record, ONLY if it doesn't exist.
 
 ```js
-policies.Exists.CREATE
+aerospike.policy.exists.CREATE
 ```

@@ -52,11 +52,11 @@ Handle<Object> policy_values()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-
-    obj->Set(String::NewSymbol("Key"), key_policy_values());
-    obj->Set(String::NewSymbol("Retry"), retry_policy_values());
-    obj->Set(String::NewSymbol("Generation"), generation_policy_values());
-    obj->Set(String::NewSymbol("Exists"), exists_policy_values());
+    
+    obj->Set(String::NewSymbol("key"), key_policy_values());
+    obj->Set(String::NewSymbol("retry"), retry_policy_values());
+    obj->Set(String::NewSymbol("gen"), generation_policy_values());
+    obj->Set(String::NewSymbol("exists"), exists_policy_values());
 
     return scope.Close(obj);
 }
