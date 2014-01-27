@@ -10,11 +10,10 @@ var recgen = require('./generators/record');
 var putgen = require('./generators/put');
 var valgen = require('./generators/value');
 
-var status = aerospike.Status;
-var policy = aerospike.Policy;
-var ops = aerospike.Operators;
+var status = aerospike.status;
+var policy = aerospike.policy;
 
-describe('client.batch_get()', function() {
+describe('client.batchGet()', function() {
 
     var client = aerospike.client({
         hosts: [
@@ -62,7 +61,7 @@ describe('client.batch_get()', function() {
             var len = keys.length;
             expect(len).to.equal(nrecords);
 
-            client.batch_get(keys, function(err, results) {
+            client.batchGet(keys, function(err, results) {
 
                 var result;
                 var j;
@@ -101,7 +100,7 @@ describe('client.batch_get()', function() {
         // writer using generators
         // callback provides an object of written records, where the
         // keys of the object are the record's keys.
-        client.batch_get(keys, function(err, results) {
+        client.batchGet(keys, function(err, results) {
 
             var result;
             var j;
@@ -141,7 +140,7 @@ describe('client.batch_get()', function() {
             var len = keys.length;
             expect(len).to.equal(nrecords);
 
-            client.batch_get(keys, function(err, results) {
+            client.batchGet(keys, function(err, results) {
 
                 var result;
                 var j;

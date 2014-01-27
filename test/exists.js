@@ -10,10 +10,8 @@ var recgen = require('./generators/record');
 var putgen = require('./generators/put');
 var valgen = require('./generators/value');
 
-var status = aerospike.Status;
-var policy = aerospike.Policy;
-var ops = aerospike.Operators;
-
+var status = aerospike.status;
+var policy = aerospike.policy;
 
 describe('client.exists()', function() {
 

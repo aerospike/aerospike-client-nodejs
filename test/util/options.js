@@ -32,7 +32,7 @@ var parser = optimist
         },
         log: {
             alias: "l",
-            default: aerospike.Log.INFO,
+            default: aerospike.log.INFO,
             describe: "Log level [0-5]"
         },
         namespace: {

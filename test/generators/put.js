@@ -1,7 +1,7 @@
 
 var aerospike = require('../../build/Release/aerospike');
 var expect = require('expect.js');
-var status = aerospike.Status;
+var status = aerospike.status;
 
 function put_done(total, done) {
 

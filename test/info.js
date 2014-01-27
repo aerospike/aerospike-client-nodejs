@@ -9,9 +9,8 @@ var metagen = require('./generators/metadata');
 var recgen = require('./generators/record');
 var putgen = require('./generators/put');
 
-var status = aerospike.Status;
-var policy = aerospike.Policy;
-
+var status = aerospike.status;
+var policy = aerospike.policy;
 
 describe('client.info()', function() {
 
