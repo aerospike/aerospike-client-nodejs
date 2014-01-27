@@ -917,9 +917,9 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
 }
 
 int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
-    Local<Value> val = obj->Get(String::NewSymbol("bin_name"));
+    Local<Value> val = obj->Get(String::NewSymbol("bin"));
     if ( !val->IsString()) {
-        as_v8_debug(log, "Type error in bin_name(bin_name should be string"); 
+        as_v8_debug(log, "Type error in bin_name(bin should be string"); 
         return AS_NODE_PARAM_ERR;
     }
     (*binName) = strdup(*String::Utf8Value(val));
@@ -928,9 +928,10 @@ int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 
 Local<Value> GetBinValue( Local<Object> obj, LogInfo * log) {
     HANDLESCOPE;
-    Local<Value> val = obj->Get(String::NewSymbol("bin_value"));
+    Local<Value> val = obj->Get(String::NewSymbol("value"));
     return scope.Close(val);
 }
+
 int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log) 
 {
     if ( op == NULL ) { 
@@ -1111,7 +1112,6 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
 
 int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log) 
 {
-
     uint32_t capacity = arr->Length();
     as_v8_detail(log, "no op operations in the array %d", capacity);
     if ( capacity > 0 ) {

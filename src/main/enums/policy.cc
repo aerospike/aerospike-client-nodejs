@@ -48,7 +48,7 @@ Handle<Object> exists_policy_values()
     return scope.Close(obj);
 }
 
-Handle<Object> policy_values()
+Handle<Object> policy()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();

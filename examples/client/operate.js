@@ -8,7 +8,7 @@ var optimist = require('optimist');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
-var op = aerospike.operators;
+var op = aerospike.operator;
 
 /*******************************************************************************
  *
@@ -116,9 +116,6 @@ var key = {
     key: keyv
 };
 var ops = [
-  //{ operation: operations.INCR,   bin_name: 'i', bin_value: 1 },
-  //{ operation: operations.APPEND, bin_name: 's', bin_value: "def" },
-
   op.incr('i', 1),
   op.write('s', 'some_val'),
   op.append('s', 'Append_val'),

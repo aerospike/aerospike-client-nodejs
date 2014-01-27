@@ -5,7 +5,7 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
 
-Handle<Object> status_codes() 
+Handle<Object> status() 
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();

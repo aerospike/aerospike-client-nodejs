@@ -67,10 +67,10 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     
     exports->Set(String::NewSymbol("client"),   FunctionTemplate::New(client)->GetFunction());
     exports->Set(String::NewSymbol("key"),      FunctionTemplate::New(key)->GetFunction());
-    exports->Set(String::NewSymbol("status"),   status_codes());
-    exports->Set(String::NewSymbol("policy"),   policy_values());
-    exports->Set(String::NewSymbol("operators"),operators());
-    exports->Set(String::NewSymbol("log"),      log_levels());
+    exports->Set(String::NewSymbol("status"),   status());
+    exports->Set(String::NewSymbol("policy"),   policy());
+    exports->Set(String::NewSymbol("operator"), operators());
+    exports->Set(String::NewSymbol("log"),      log());
 }
 
 NODE_MODULE(aerospike, Aerospike)

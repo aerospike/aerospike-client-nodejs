@@ -13,7 +13,6 @@ var valgen = require('./generators/value');
 var status = aerospike.status;
 var policy = aerospike.policy;
 
-
 describe('client.put()', function() {
 
     var client = aerospike.client({

@@ -158,7 +158,7 @@ An enumeration of the values are available in `aerospike.policy` object, which c
 ```js
 var aerospike = require('aerospike');
 
-aerospike.policy.generation.GT
+aerospike.policy.gen.GT
 ```
 
 <!--

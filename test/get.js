@@ -12,7 +12,6 @@ var putgen = require('./generators/put');
 var status = aerospike.status;
 var policy = aerospike.policy;
 
-
 describe('client.get()', function() {
 
     var client = aerospike.client({

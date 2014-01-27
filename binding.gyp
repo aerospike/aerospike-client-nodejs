@@ -36,10 +36,10 @@
         'src/main/client/put.cc',
         'src/main/client/remove.cc',
         'src/main/client/select.cc',
-        'src/main/enums/log_levels.cc',
+        'src/main/enums/log.cc',
         'src/main/enums/operators.cc',
-        'src/main/enums/policy_values.cc',
-        'src/main/enums/status_codes.cc',
+        'src/main/enums/policy.cc',
+        'src/main/enums/status.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
