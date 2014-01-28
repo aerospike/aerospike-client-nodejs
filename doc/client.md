@@ -464,6 +464,7 @@ client.select(key('test','demo','key1'), ["name","age"] function(error, record, 
 updateLogging()
 ################################################################################
 -->
+<a name="updateLogging"></a>
 
 
 ### updateLogging(logConfig)
