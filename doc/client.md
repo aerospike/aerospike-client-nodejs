@@ -27,6 +27,7 @@ With a new client, you can use any of the methods specified below:
   - [put()](#put)
   - [remove()](#remove)
   - [select()](#select)
+  - [updateLogging()](#updateLogging)
 
 
 <a name="methods"></a>
@@ -458,3 +459,14 @@ client.select(key('test','demo','key1'), ["name","age"] function(error, record, 
   // do something
 });
 ```
+### updateLogging(logConfig)
+
+Update the logging configuration of the API.
+
+Parameters:
+
+- `logConfig`     - A object with attributes `level` and `file`.
+- `level`         - Specifies the granularity for logging, defined using [Log Object](#log.md)
+                  - Default log level is aerospike.log.INFO
+- `file`          - File descriptor opened using fs.open(), the log contents are written using this descriptor.
+                  - Default value for this file descriptor is 2.

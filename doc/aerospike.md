@@ -2,9 +2,10 @@
 
 - [Usage](#usage)
 - [Fields](#fields)
-	- [Operators](#Operators)
-	- [Policies](#Policies)
-	- [Status](#Status)
+	- [operators](#operators)
+	- [policies](#Policies)
+	- [status](#status)
+    - [log](#log)
 - [Functions](#functions)
 	- [client()](#client)
 	- [key()](#key)
@@ -36,7 +37,7 @@ Policies
 Policies contains the allowed values for policies for each of the [client](client.md) operations.
 
 ```js
-aerospike.Policies
+aerospike.policies
 ```
 
 For details, see [Policies Object](policies.md)
@@ -44,37 +45,54 @@ For details, see [Policies Object](policies.md)
 
 <!--
 ################################################################################
-Operators
+operators
 ################################################################################
 -->
-<a name="Operators"></a>
+<a name="operators"></a>
 
-### Operators
+### operators
 
-Operators is a collection of functions that simplify the construction of operations for the [client](client.md) [`operate()`](client.md#operate) function.
+operators is a collection of functions that simplify the construction of operations for the [client](client.md) [`operate()`](client.md#operate) function.
 
 ```js
-aerospike.Operators
+aerospike.operators
 ```
 
-For details, see [Operators Object](operators.md)
+For details, see [operators Object](operators.md)
 
 <!--
 ################################################################################
-Status
+status
 ################################################################################
 -->
-<a name="Status"></a>
+<a name="status"></a>
 
-### Status
+### status
 
-Status is a collection of the Aerospike status codes. These can be used to compare against the status codes returned from operations.
+status is a collection of the Aerospike status codes. These can be used to compare against the status codes returned from operations.
 
 ```js
-aerospike.Status
+aerospike.status
 ```
 
-For details, see [Status Object](status.md)
+For details, see [status Object](status.md)
+<!--
+################################################################################
+Log
+################################################################################
+-->
+<a name="Log"></a>
+
+### Log
+
+Log is a collection of the various logging levels available in Aerospike. This logging levels can be used to modify the granularity of logging from the API.
+Default level is INFO.
+
+```js
+aerospike.log
+```
+
+For details, see [log Object](log.md)
 
 <a name="functions"></a>
 ## Functions

@@ -18,6 +18,10 @@ var config = {
     // default timeout for all operations is 100ms
     timeout: 100 
   }
+  log : {
+     log : aerospike.log.INFO,
+     file : fd  // fd  opened by the application using fs.open()
+  }
 };
 
 var client = aerospike.client(config);
@@ -51,5 +55,13 @@ The attributes of the `policies` Object:
 - `scan` – The global policy for scan operations, defined using a [Scan Policy Object](policies.md#ScanPolicy)
 - `write` – The global policy for write operations, defined using a [Write Policy Object](policies.md#WritePolicy)
 
+### `log` attribute
+
+The `log` attribute is an object that contatins configuration for logging from the API. Logging is provided only for the API, not application.
+
+The attributes of `log` object.
+
+- `level` - logging severity, defined using [aerospike.log object](log.md). 
+- `file`  - file descriptor which is obtained using fs.open().
 
 

@@ -95,7 +95,6 @@ var client = aerospike.client({
  *****************************************************************************/
 if(argv['log-file'] != undefined) {
     fs.open(argv['log-file'], 'a', function(err, fd) {
-        console.log(fd);
         client.updateLogging({level:argv['log-level'], file: fd});
     });
 }
