@@ -459,6 +459,13 @@ client.select(key('test','demo','key1'), ["name","age"] function(error, record, 
   // do something
 });
 ```
+<!--
+################################################################################
+select()
+################################################################################
+-->
+
+
 ### updateLogging(logConfig)
 
 Update the logging configuration of the API.
