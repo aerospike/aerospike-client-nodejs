@@ -8,14 +8,14 @@ var aerospike = require('aerospike');
 aerospike.log.INFO
 ```
 
-#### -1 - OFF
+##### -1 - OFF
 
-####  0 - ERROR
+#####  0 - ERROR
 
-####  1 - WARN
+#####  1 - WARN
 
-####  2 - INFO
+#####  2 - INFO
 
-####  3 - DEBUG
+#####  3 - DEBUG
 
-####  4 - DETAIL
+#####  4 - DETAIL
