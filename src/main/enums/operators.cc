@@ -36,7 +36,11 @@ Handle<Value> operator_read(const Arguments& args)
     Handle<Object> read_op = Object::New();
     
     read_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_READ));
-    read_op->Set(String::NewSymbol("bin"), args[0]);
+    if ( !args[0]->IsUndefined()) {
+        read_op->Set(String::NewSymbol("bin"), args[0]);
+    } else {
+        return Null();
+    }
 
     return scope.Close(read_op);
 }
@@ -97,6 +101,9 @@ Handle<Value> operator_touch(const Arguments& args)
     Handle<Object> touch_op = Object::New();
 
     touch_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_TOUCH));
+    if ( !args[0]->IsUndefined()) {
+        touch_op->Set(String::NewSymbol("ttl"), args[0]);
+    }
 
     return scope.Close(touch_op);
 
@@ -110,6 +117,7 @@ Handle<Object> operators()
     set(obj, "incr",    operator_incr); 
     set(obj, "prepend", operator_prepend);
     set(obj, "append",  operator_append);
+    set(obj, "touch", operator_touch);
     //set(obj, "touch",   Integer::New(8));
     return scope.Close(obj);
 }

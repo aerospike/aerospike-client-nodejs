@@ -102,11 +102,11 @@ describe('client.select()', function() {
         var meta    = mgen(key);
         var record  = rgen(key, meta);
         var bins    = Object.keys(record).slice(0,1);
-        var pol     = { key: policy.Key.SEND };
+        var pol     = { key: policy.key.SEND };
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.select(key, bins, policy, function(err, _record, metadata, key) {
+            client.select(key, bins, pol, function(err, _record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(_record).to.only.have.keys(bins);

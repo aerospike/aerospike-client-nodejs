@@ -2,9 +2,11 @@
 
 An Aerospike add-on module for Node.js.
 
+The current implementation supports only node-v0.10.x versions.
+
 ## Prerequisites
 
-[Node.js](http://nodejs.org) version v0.10.16 or greater is required. 
+[Node.js](http://nodejs.org) version v0.10.x is required. 
 
 To install the latest stable version of Node.js, visit [http://nodejs.org/download/](http://nodejs.org/download/)
 

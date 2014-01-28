@@ -57,12 +57,21 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
         return;
     }
 
+    /* Make sure there's always enough space for the \n\0. */
     char msg[1024] = {0};
 
     size_t limit = sizeof(msg)-2;
     size_t pos = 0;
 
-    pos += snprintf(msg+pos, limit-pos, "%-5s [%s:%d] [%s] - ", log_severity_strings[level+1], basename((char*) file), line, func);
+    //to log the timestamp
+    time_t now;
+    struct tm nowtm;
+
+    /* Set the timestamp */
+    now = time(NULL);
+    gmtime_r(&now, &nowtm);
+    pos += strftime(msg, limit, "%b %d %Y %T %Z: ", &nowtm);
+    pos += snprintf(msg+pos, limit-pos, "%-5s(%d) [%s:%d] [%s] - ", log_severity_strings[level+1], getpid(), basename((char*) file), line, func);
     
     va_list ap;
     va_start(ap, fmt);
@@ -78,7 +87,7 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
 
     msg[pos] = '\0';
 
-    if( 0 >= write(log->fd, msg, limit )) {
+    if( 0 >= write(log->fd, msg, pos)) {
         fprintf(stderr, "Internal failure in log message write :%d \n", errno);
     }
 }

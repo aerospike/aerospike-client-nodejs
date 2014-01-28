@@ -184,17 +184,30 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
         }
         
         if ( v8_log->Has(String::NewSymbol("file"))) {
-            Local<Value> v8_path = obj->Get(String::NewSymbol("file"));
-            if ( v8_path->IsString() ) {
-                log->fd = open(*String::Utf8Value(v8_path), O_CREAT, O_RDWR);    
-                as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_path));
+            Local<Value> v8_file = obj->Get(String::NewSymbol("file"));
+            /*if ( v8_file->IsString() ) {
+                log->fd = open(*String::Utf8Value(v8_file), O_WRONLY|O_CREAT|O_APPEND|O_NONBLOCK, S_IRUSR|S_IWUSR);    
+                as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_file));
+                return AS_NODE_PARAM_OK;
+            } */
+            if ( v8_file->IsNumber() ) {
+                log->fd = V8INTEGER_TO_CINTEGER(v8_file);
+                as_v8_debug(log, "log file %d", log->fd);
+                return AS_NODE_PARAM_OK;
             }
-            return AS_NODE_PARAM_OK;
+            else if (v8_file->IsNull() || v8_file->IsUndefined()){
+                //Set the log fd to stderr,
+                goto set_stderr;
+            }
+            else {
+                fprintf(stderr, "invalid log file argument");
+                //should we return error or go ahead setting the fd to stderr.
+                //For now return error
+                return AS_NODE_PARAM_ERR;
+            }
         }
-        else {
-            log->fd = 2;
-            as_v8_debug(log, "redirecting log to stderr");
-            return AS_NODE_PARAM_OK;
+        else { 
+            goto set_stderr;
         }
     }
     else {
@@ -202,7 +215,11 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
         return AS_NODE_PARAM_ERR;
     }
 
-    return AS_NODE_PARAM_ERR;
+
+set_stderr:
+    log->fd = 2;
+    as_v8_debug(log, "redirecting log to stderr");
+    return AS_NODE_PARAM_OK;
 }
 
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
@@ -399,7 +416,9 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     
     meta = Object::New();
     meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
+    as_v8_detail(log, "TTL of the record %d", record->ttl);
     meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
+    as_v8_detail(log, "Gen of the record %d", record->gen);
 
     return scope.Close(meta);
 }
@@ -917,13 +936,18 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
 }
 
 int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
-    Local<Value> val = obj->Get(String::NewSymbol("bin"));
-    if ( !val->IsString()) {
-        as_v8_debug(log, "Type error in bin_name(bin should be string"); 
+
+    if ( obj->Has(String::NewSymbol("bin"))) {
+        Local<Value> val = obj->Get(String::NewSymbol("bin"));
+        if ( !val->IsString()) {
+            as_v8_debug(log, "Type error in bin_name(bin should be string"); 
+            return AS_NODE_PARAM_ERR;
+        }
+        (*binName) = strdup(*String::Utf8Value(val));
+        return AS_NODE_PARAM_OK;
+    } else {
         return AS_NODE_PARAM_ERR;
     }
-    (*binName) = strdup(*String::Utf8Value(val));
-    return AS_NODE_PARAM_OK;
 }
 
 Local<Value> GetBinValue( Local<Object> obj, LogInfo * log) {
@@ -1105,8 +1129,9 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
         return AS_NODE_PARAM_ERR;
     }
-
+    
     as_operations_add_touch(ops);
+    as_v8_debug(log, "Touch operation is set");
     return AS_NODE_PARAM_OK;
 }
 
@@ -1122,6 +1147,7 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
     }
     for ( uint32_t i = 0; i < capacity; i++ ) {
         Local<Object> obj = arr->Get(i)->ToObject();
+        setTTL(obj, &ops->ttl, log);
         Local<Value> v8op = obj->Get(String::NewSymbol("operation"));
         if ( v8op->IsNumber() ) {
             as_operator op = (as_operator) v8op->ToInteger()->Value();

@@ -11,7 +11,6 @@ var putgen = require('./generators/put');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
-
 describe('client.get()', function() {
 
     var client = aerospike.client({
@@ -89,11 +88,11 @@ describe('client.get()', function() {
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
-        var pol     = { key: policy.Key.SEND };
+        var pol     = { key: policy.key.SEND };
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-            client.get(key, policy, function(err, record, metadata, key) {
+            client.get(key, pol, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
 

@@ -104,6 +104,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
             Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log")) ;
             if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
                 default_log_set = 1; // Log is passed as an argument. set the default value	
+            } else {
+                //log info is set to default level
             }
         } 
         if ( default_log_set == 0 ) {

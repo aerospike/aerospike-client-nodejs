@@ -116,6 +116,7 @@ var key = {
     key: keyv
 };
 var ops = [
+  op.touch(1000),
   op.incr('i', 1),
   op.write('s', 'some_val'),
   op.append('s', 'Append_val'),

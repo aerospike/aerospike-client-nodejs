@@ -5,6 +5,7 @@
  ******************************************************************************/
 
 var optimist = require('optimist');
+var fs = require('fs');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -72,6 +73,33 @@ if ( keyv === null ) {
     argp.showHelp();
     return;
 }
+/*******************************************************************************
+ *
+ * Create a client object
+ *
+ ******************************************************************************/
+
+var client = aerospike.client({
+    hosts: [
+        { addr: argv.host, port: argv.port }
+    ],
+    policies: {
+        timeout: argv.timeout
+    }
+});
+
+/*****************************************************************************
+ *
+ * set the logger if --log-file option is set
+ *
+ *****************************************************************************/
+if(argv['log-file'] != undefined) {
+    fs.open(argv['log-file'], 'a', function(err, fd) {
+        console.log(fd);
+        client.updateLogging({level:argv['log-level'], file: fd});
+    });
+}
+
 
 /*******************************************************************************
  *
@@ -79,18 +107,7 @@ if ( keyv === null ) {
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    log: {
-        level: argv['log-level'],
-        file: argv['log-file']
-    },
-    policies: {
-        timeout: argv.timeout
-    }
-}).connect(function(err) {
+var client = client.connect(function(err) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
