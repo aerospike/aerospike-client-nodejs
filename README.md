@@ -11,29 +11,26 @@ The following is very simple example of how to write and read a record from Aero
 ```js
 var aerospike = require('aerospike');
 
+// Connect to the cluster.
 var client = aerospike.client({
     hosts: [ { addr: '127.0.0.1', port: 3000 } ]
-});
+}).connect();
 
+// The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
 
-var rec = {
-  name: 'John Doe',
-  age: 32
-};
-
-client.put(key, rec, function(err) {
-  // check the error object
-  if ( err.code == aerospike.status.AEROSPIKE_OK ) {
-    client.get(key, function(err, rec2, meta2) {
-      // The record read should be equal to the record written
-      assert.equal(rec.name, rec2.name);
-      assert.equal(rec.age, rec2.age);
-    });
-  }
-  else {
-      console.error('An error occurred: ', err);
-  }
+// Read the record from the database
+client.get(key, function(err, rec, meta) {
+    
+    // Check for errors
+    if ( err.code == aerospike.status.AEROSPIKE_OK ) {
+    	// The record was successfully read.
+    	console.log(rec, meta);
+    }
+    else {
+        // An error occurred
+        console.error('error:', err);
+    }
 });
 ```
 
