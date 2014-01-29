@@ -14,13 +14,46 @@ To install the latest stable version of Node.js, visit [http://nodejs.org/downlo
 
 The Aerospike Node.js client is built on the Aerspike C client. 
 
-To install the module:
+The Aerospike Node.js client can be installed using any one of the following three methods.
 
-    $ npm install
+1 To install the module as a root user, in the global space.
 
-You may also link the module:
+1.1 To install the module as a root user.
 
-    $ npm link
+    $ sudo npm install -g
+
+1.2 Set the environment variable NODE_PATH, for node processes to look up aerospike modules.
+   
+   $export NODE_PATH=$NODE_INSTALL/lib/node_modules.
+
+`$NODE_INSTALL` is either `/usr/local/` or `/usr/`, that is the default location where node.js is installed.
+
+2 Installing the module as a non-root user, in the current folder.
+
+2.1 To install the module as a non-root user.
+
+    $npm install
+
+2.2 Set the environment variable NODE_PATH, for the processes to look up aerospike module.
+
+    $export NODE_PATH=`pwd`/..
+
+
+3 Install the package as a non-root user locally and create a globally-installed symbolic link.
+
+3.1 Install as a non-root user locally.   
+
+    $npm install
+
+3.2 Create a globally-installed symbolic link.
+
+    $ sudo npm link
+
+3.2 Export NODE_PATH, for the node processes to look up aerospike module.
+
+    $export NODE_PATH=$NODE_INSTALL/lib/node_modules.
+
+`$NODE_INSTALL` is either `/usr/local/` or `/usr/`, that is the default location where node.js is installed.
 
 
 ### C Client Resolution
@@ -78,6 +111,7 @@ Then you can run any of the examples:
 
 ## Testing
 
-The test cases are written using mocha. Refer to README under the test directory to run
-all the test cases.
+The test cases are written using mocha. Refer to README under test directory for detailed description.
+
+
 
