@@ -4,7 +4,7 @@
 
 In order to run the examples you should first run:
 
-		$ npm link
+		$ sudo npm link aerospike
 
 This will resolve the dependecies needed for the examples.
 
@@ -13,6 +13,11 @@ This will resolve the dependecies needed for the examples.
 You can simply run each example independently:
 
 		$ node <example>
+
+Most of these examples require a key to act upon, and 
+can optionally take a hostname, port, and namespace of the
+cluster. The default server is on 127.0.0.1 at port 3000 
+(a local server installation).
 
 Each example provides usage information via a `--help` flag:
 

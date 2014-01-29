@@ -2,7 +2,15 @@
 
 Benchmark is a collection of example programs which can be used to benchmark the Aerospike Node.js Client.
 
-Benchmark Programs:
+## Setup
+
+In order to run the examples you should first run:
+
+    $ sudo npm link aerospike
+
+This will resolve the dependecies needed for the examples.
+
+## programs
 
 - `main.js` – The main benchmark program, which runs multiple batches of operations 
 against an Aerospike cluster. The program can run for a specified number of iterations
@@ -11,6 +19,10 @@ or time frame.
 of parameters which appear to perform best.
 - `memory.js` – Is a program which is used to process the memory usage output from `main.js`, 
 to give more insight into memory utilization.
+
+These programs optionally take a hostname, port, and namespace of the
+cluster. The default server is on 127.0.0.1 at port 3000
+(a local server installation).
 
 Each of the programs will provide usage information when `--help` option is provided.
 
