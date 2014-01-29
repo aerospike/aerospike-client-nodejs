@@ -4,13 +4,14 @@ Benchmark is a collection of example programs which can be used to benchmark the
 
 ## Setup
 
-In order to run the examples you should first run:
+From the current directory, you should be able to run the following
+to install the client:
 
-    $ sudo npm link aerospike
+	$ npm install ../../
 
-This will resolve the dependecies needed for the examples.
+## Programs
 
-## programs
+The following are the programs in this directory:
 
 - `main.js` – The main benchmark program, which runs multiple batches of operations 
 against an Aerospike cluster. The program can run for a specified number of iterations
@@ -64,7 +65,6 @@ The program can display memory use per iteration, which helps give an understand
 You can obtain a chart display of memory use with the summary report by specifying `--chart-memory`. 
 
 If you do not want a summary report, but would like memory use, then you can use `--no-summary` and `--chart-memory`, which will display memory use for each iteration.
-
 
 
 ## memory.js

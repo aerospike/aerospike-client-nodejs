@@ -2,32 +2,19 @@
 
 This package describes the Aerospike Node.js Client API in detail. 
 
-
-## Build and Install
-
-The module can be built and installed using the following command:
-
-```sh
-$ npm install
-```
-
-If not using npm, then you can build using node-gyp:
-
-```sh
-$ node-gyp rebuild
-```
-
 ## Usage
 
 The aerospike module is the main entry point to the client API. 
 
+```js
     var aerospike = require('aerospike');
+```
 
 Before connecting to a cluster, you must require `'aerospike'`, to get the aerospike object. 
 
 You can then define a client configuration, which is used to setup a client object for connecting to and operating against as cluster.
 
-```js    
+```js
 var config = {
   hosts: [
     { addr: "localhost", port: 3000 }
