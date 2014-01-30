@@ -4,9 +4,10 @@
 
 To use the examples, you will need to install the `aerospike` module into the `examples` directory. 
 
-From the `examples` directory, run the following to install the module:
+From the `examples` directory, run the following to install the dependencies:
 
 	$ npm install ../
+	$ npm update
 
 ## Usage
 
