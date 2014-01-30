@@ -4,6 +4,21 @@ An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js 0.10.x. 
 
+- [Usage](#Usage)
+- [Prerequisites](#Prerequisites)
+- [Installation](#Installation)
+  - [Primer on Node.js Modules](#Primer-on-Node.js-Modules)
+  - [Installing via NPM Registry](#Installing-via-NPM-Registry)
+  - [Installing via Git Repository](#Installing-via-Git-Repository)
+  - [C Client Resolution](#C-Client-Resolution)
+    - [Force Download](#Force-Download)
+    - [Custom Search Path](#Custom-Search-Path)
+- [Tests](#Tests)
+- [Examples](#Examples)
+- [Benchmarks](#Benchmarks)
+- [API Documentaion](#API-Documentation)
+
+<a name="Usage"></a>
 ## Usage
 
 The following is very simple example of how to write and read a record from Aerospike. 
@@ -39,7 +54,7 @@ More examples illustrating the use of the API are located in the
 
 Details about the API are available in the [`docs`](docs/README.md) directory.
 
-
+<a name="Prerequisites"></a>
 ## Prerequisites
 
 [Node.js](http://nodejs.org) version v0.10.x is required. 
@@ -47,16 +62,18 @@ Details about the API are available in the [`docs`](docs/README.md) directory.
 To install the latest stable version of Node.js, visit 
 [http://nodejs.org/download/](http://nodejs.org/download/)
 
+<a name="Installation"></a>
 ## Installation
 
 The Aerospike Node.js client is a Node.js add-on module utilizing the Aerospike 
 C client. The installation will attempt to build the add-on module prior to 
 installation. The build step will resolve the Aerospike C client dependency as 
-described in [C Client Resolution](#c-client-resolution).
+described in [C Client Resolution](#C-Client-Resolution).
 
 The Aerospike Node.js client can be installed like any other Node.js module, however
 we provided the following information for those not so familiar with Node.js modules. 
 
+<a name="Primer-on-Node.js-Modules"></a>
 ### Primer on Node.js Modules
 
 Node.js modules are containers of JavaScript code and a `package.json`, which defines
@@ -70,6 +87,7 @@ is usually reserved for modules that are not directly depended on by an applicat
 but may have executables which you want to be able to call regardless of the 
 application. This is usually the case for tools like tools like `npm` and `mocha`.
 
+<a name="Installing-via-NPM-Registry"></a>
 ### Installing via NPM Registry
 
 Installing via NPM Registry is pretty simple and most common install method, as 
@@ -90,6 +108,7 @@ Once installed, the module can be required in the application:
 
 	var aerospike = require('aerospike')
 
+<a name="Installing-via-Git-Repository"></a>
 ### Installing via Git Repository
 
 The following is relevant for users who have cloned the repository, and want 
@@ -114,7 +133,7 @@ Once installed, the module can be required in the application:
 	var aerospike = require('aerospike')
 
 
-<a name="c-client-resolution"></a>
+<a name="C-Client-Resolution"></a>
 ### C Client Resolution
 
 When running `npm install`, `npm link` or `node-gyp rebuild`, the `.gyp`
@@ -136,10 +155,10 @@ If neither are found, then it will download the C client and create the
 
 You can modify the C client resolution via:
 
-- [force download](#force-download) the C client
-- Specifying a [custom search path](#custome-search-path) for the C client.
+- [force download](#Force-Download) the C client
+- Specifying a [custom search path](#Custom-Search-Path) for the C client.
 
-<a name="force-download"></a>
+<a name="Force-Download"></a>
 #### Force Download
 
 To force downloading of the C client, you can specify the `DOWNLOAD=1` 
@@ -147,7 +166,7 @@ environment variable. Example:
 
     $ DOWNLOAD=1 npm install
 
-<a name="custom-search-path"></a>
+<a name="Custom-Search-Path"></a>
 #### Custom Search Path 
 
 If you have the Aerospike C client installed in a non-standard location or 
@@ -163,6 +182,7 @@ build directory:
 
     $ PREFIX=~/aerospike-client-c/target/Linux-x86_64 npm install
 
+<a name="Tests"></a>
 ## Tests
 
 This module is packaged with a number of tests in the `test` directory.
@@ -174,20 +194,19 @@ To run all the test cases:
 For details on the tests, see [`test/README.md`](test/README.md).
 
 
+<a name="Examples"></a>
 ## Examples
 
-This module is packaged with a number of examples in the `examples` directory.
+A variety of example applications are provided in the [`examples`](examples) directory. 
+See the [`examples/README.md`](examples/README.md) for details.
 
-The `examples` directory contains the following subdirectories:
+<a name="Benchmarks"></a>
+## Benchmarks
 
-- [`benchmark`](examples/benchmark/README.md) - Benchmark applications, used 
-  gain understanding of the performance of the module.
-- [`client`](examples/client/README.md) – Client applications, used to 
-  illustrate the use of some of the client APIs.
+Benchmark utilies are provided in the [`benchmarks`](benchmarks) directory. 
+See the [`benchmarks/README.md`](benchmarks/README.md) for details.
 
-Each example directory contains a `README.md`, which provides details on using the examples.
-
-
-## API Documentations
+<a name="API-Documentation"></a>
+## API Documentation
 
 API documentation is provided in the [`docs`](docs/README.md) directory.
