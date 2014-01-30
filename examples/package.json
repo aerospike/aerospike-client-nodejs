@@ -14,10 +14,6 @@
   },
   "dependencies": {
     "aerospike": ">0",
-    "optimist": ">=0.6.0",
-    "mocha": ">0",
-    "expect.js": "0.2.x",
-    "superagent": "0.15.x",
-    "msgpack": "0.x"
+    "optimist": ">=0.6.0"
   }
 }
