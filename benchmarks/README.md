@@ -6,9 +6,10 @@ Benchmark is a collection of example programs which can be used to benchmark the
 
 To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory. 
 
-From the `benchmarks` directory, run the following to install the module:
+From the `benchmarks` directory, run the following to install the dependencies:
 
 	$ npm install ../
+	$ npm update
 
 ## Programs
 
