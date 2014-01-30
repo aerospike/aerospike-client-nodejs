@@ -1,13 +1,14 @@
-# Benchmark
+# Benchmarks
 
 Benchmark is a collection of example programs which can be used to benchmark the Aerospike Node.js Client.
 
 ## Setup
 
-From the current directory, you should be able to run the following
-to install the client:
+To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory. 
 
-	$ npm install ../../
+From the `benchmarks` directory, run the following to install the module:
+
+	$ npm install ../
 
 ## Programs
 

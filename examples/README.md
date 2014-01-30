@@ -2,10 +2,11 @@
 
 ## Setup
 
-From the current directory, you should be able to run the following
-to install the client:
+To use the examples, you will need to install the `aerospike` module into the `examples` directory. 
 
-	$ npm install ../../
+From the `examples` directory, run the following to install the module:
+
+	$ npm install ../
 
 ## Usage
 
