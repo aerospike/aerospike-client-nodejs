@@ -187,9 +187,13 @@ build directory:
 
 This module is packaged with a number of tests in the `test` directory.
 
+Before running the tests, you need to update the dependencies:
+
+    $ npm update
+
 To run all the test cases:
 
-	$ npm test
+    $ npm test
 
 For details on the tests, see [`test/README.md`](test/README.md).
 

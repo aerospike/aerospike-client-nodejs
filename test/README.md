@@ -5,7 +5,7 @@
 We also recommend installing Aerospike dependencies by running the following 
 from the module's root directory:
 
-    $ npm install
+    $ npm update
 
 This will install all required dependencies.
 
