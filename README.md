@@ -50,9 +50,9 @@ client.get(key, function(err, rec, meta) {
 ```
 
 More examples illustrating the use of the API are located in the 
-[`examples`](examples/README.md) directory. 
+[`examples`](examples) directory. 
 
-Details about the API are available in the [`docs`](docs/README.md) directory.
+Details about the API are available in the [`docs`](docs) directory.
 
 <a name="Prerequisites"></a>
 ## Prerequisites
