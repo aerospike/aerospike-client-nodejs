@@ -120,6 +120,37 @@ registry, in that you will be referencing the module by path, rather than name.
 Although the module may be installed globally or locally, we recommend performing 
 local installs.
 
+#### Installing Globally
+
+This option required root permissions. This will download the Aerospike C client
+only once, which will improve the experience of using the module for many users. 
+However, you will need to first install the package globally using root permissions.
+
+Run the following as a user with root permission or using the sudo command:
+
+	$ npm install -g <PATH>
+
+Where `<PATH>` is the path to the Aerospike Node.js client's Git respository is 
+located. This will install the module in a globally accessible location.
+
+To install the module as a dependency of your application, run the following 
+from your application's directory:
+
+	$ npm link aerospike
+
+Linking to the module does not require root permission.
+
+Once linked, the module can be required in the application:
+
+	var aerospike = require('aerospike')
+
+#### Installing Locally
+
+This option does not require root permissions to install the module as a 
+dependency of an application. However, it will require resolving the Aerospike
+C client each time you install the dependency, as it will need to exist local
+to the application.
+
 To install the module as a dependency of your application, run the following 
 from your application's directory:
 
