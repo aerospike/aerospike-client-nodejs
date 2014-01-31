@@ -24,6 +24,7 @@ var optimist = require('optimist');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
+var fs  = require('fs');
 
 /*******************************************************************************
  *
@@ -94,6 +95,7 @@ if ( argv.help === true ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
+function aerospike_setup ( callback) {
 
 var client = aerospike.client({
     hosts: [
@@ -106,36 +108,38 @@ var client = aerospike.client({
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err) {
+}).connect(function(err, client) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+    callback(client);
+
 });
 
 
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
-    return;
 }
-
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
 
-function put_done(start, end) {
+function put_done(client, start, end) {
     var total = end - start + 1;
     var done = 0;
     var timeLabel = "range_put @ " + total;
 
     console.time(timeLabel);
 
-    return function(err, metadata, key) {
+    return function(err, key) {
         switch ( err.code ) {
             case status.AEROSPIKE_OK:
-                console.log("OK - ", key, metadata);
+                console.log("OK - ", key);
                 break;
             default:
                 console.log("ERR - ", err, key);
@@ -145,13 +149,13 @@ function put_done(start, end) {
         if ( done >= total ) {
             console.timeEnd(timeLabel);
             console.log();
-            get_start(start, end);
+            get_start(client, start, end);
         }
     }
 }
 
-function put_start(start, end) {
-    var done = put_done(start, end);
+function put_start(client, start, end) {
+    var done = put_done(client, start, end);
     var i = 0;
 
     for ( i = start; i <= end; i++ ) {
@@ -177,7 +181,7 @@ function put_start(start, end) {
     }
 }
 
-function get_done(start, end) {
+function get_done(client, start, end) {
     var total = end - start + 1;
     var done = 0;
     var timeLabel = "range_get @ " + total;
@@ -216,8 +220,8 @@ function get_done(start, end) {
     };
 }
 
-function get_start(start, end) {
-    var done = get_done(start, end);
+function get_start(client, start, end) {
+    var done = get_done(client, start, end);
     var i = 0;
 
     for ( i = start; i <= end; i++ ) {
@@ -231,4 +235,15 @@ function get_start(start, end) {
     }
 }
 
-put_start(argv.start, argv.end);
+if ( argv['log-file'] !== undefined ) {
+    fs.open( argv['log-file'], 'a', function (err, fd) {
+        argv['log-file'] = fd;
+        aerospike_setup ( function (client) {
+            put_start(client, argv.start, argv.end);
+        });
+    });
+} else {
+    aerospike_setup ( function (client) {
+        put_start(client, argv.start, argv.end);
+    });
+}

@@ -5,6 +5,7 @@
  ******************************************************************************/
 
 var optimist = require('optimist');
+var fs = require('fs');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -86,7 +87,7 @@ if ( argv._.length === 0 ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
-
+function aerospike_setup( callback) {
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
@@ -98,25 +99,25 @@ var client = aerospike.client({
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err) {
+}).connect(function(err,client ) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+    callback(client);
 });
 
-
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
-    return;
 }
-
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-
+function Select( client) {
 var key = {
     ns:  argv.namespace,
     set: argv.set,
@@ -141,3 +142,18 @@ client.select(key, bins, function(err, record, metadata, key) {
     
     client.close();
 });
+
+}
+
+if (argv['log-file'] !== undefined) {
+    fs.open( argv['log-file'], 'a', function ( err, fd) {
+        argv['log-file'] = fd;
+        aerospike_setup( function (client) {
+            Select(client);
+        });
+    });
+} else {
+    aerospike_setup( function (client) {
+        Select(client);
+    });
+}

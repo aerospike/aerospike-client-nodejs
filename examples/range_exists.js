@@ -21,6 +21,7 @@
  ******************************************************************************/
 
 var optimist = require('optimist');
+var fs = require('fs');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -98,6 +99,7 @@ if ( argv.help === true ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
+function aerospike_setup( callback ) {
 
 var client = aerospike.client({
     hosts: [
@@ -110,26 +112,27 @@ var client = aerospike.client({
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err) {
+}).connect(function(err, client) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+    callback(client);
 });
 
 
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
-    return;
 }
-
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
 
-function exists_done(start, end, skip) {
+function exists_done(client, start, end, skip) {
     var total = end - start + 1;
     var done = 0;
     var success = 0;
@@ -175,8 +178,8 @@ function exists_done(start, end, skip) {
     }
 }
 
-function exists_start(start, end, skip) {
-    var done = exists_done(start, end, skip);
+function exists_start(client, start, end, skip) {
+    var done = exists_done(client, start, end, skip);
     var i = start, s = 0;
 
     for (; i <= end; i++ ) {
@@ -196,4 +199,16 @@ function exists_start(start, end, skip) {
     }
 }
 
-exists_start(argv.start, argv.end, argv.skip);
+if (argv['log-file'] !== undefined) {
+    fs.open( argv['log-file'], 'a', function( err, fd ){
+        argv['log-file'] = fd;
+        aerospike_setup( function (client) {
+            exists_start(client, argv.start, argv.end, argv.skip);
+        });
+    });
+} else {
+    aerospike_setup( function (client) {
+        exists_start(client, argv.start, argv.end, argv.skip);
+    });
+}
+

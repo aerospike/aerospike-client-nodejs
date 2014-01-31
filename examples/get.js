@@ -78,39 +78,25 @@ if ( keyv === null ) {
  * Create a client object
  *
  ******************************************************************************/
+function aerospike_setup( callback) {
 
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    log : {
+        level : argv['log-level'],
+        file  : argv['log-file'] ? argv['log-file'] : 2
+    },
     policies: {
         timeout: argv.timeout
     }
-});
-
-/*****************************************************************************
- *
- * set the logger if --log-file option is set
- *
- *****************************************************************************/
-if(argv['log-file'] != undefined) {
-    fs.open(argv['log-file'], 'a', function(err, fd) {
-        client.updateLogging({level:argv['log-level'], file: fd});
-    });
-}
-
-
-/*******************************************************************************
- *
- * Establish a connection to the cluster.
- * 
- ******************************************************************************/
-
-var client = client.connect(function(err) {
+}).connect(function (err, client) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
+    callback(client);
 });
 
 if ( client === null ) {
@@ -118,12 +104,13 @@ if ( client === null ) {
     return;
 }
 
+}
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-
+function Get(client) {
 var key = {
     ns:  argv.namespace,
     set: argv.set,
@@ -149,3 +136,17 @@ client.get(key, function(err, record, metadata, key) {
     
     client.close();
 });
+}
+
+if(argv['log-file'] != undefined) {
+    fs.open(argv['log-file'], 'a', function(err, fd) {
+        argv['log-file'] = fd;
+        aerospike_setup(function (client) {
+            Get(client);
+        });
+    });
+} else {
+    aerospike_setup(function (client) {
+        Get(client);
+    });
+}

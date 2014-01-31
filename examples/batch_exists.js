@@ -5,6 +5,7 @@
  ******************************************************************************/
 
 var optimist = require('optimist');
+var fs = require('fs');
 var aerospike = require('aerospike');
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -80,59 +81,77 @@ if ( keys.length === 0 ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
+function aerospike_setup( callback) {
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
     log: {
         level: argv['log-level'],
-        file: argv['log-file']
+        file: argv['log-file'] ? argv['log-file'] : 2
     },
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err) {
+}).connect(function(err, client) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+    callback(client);
 });
 
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
-    return;
 }
-
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
+function batchExist( client) {
+    console.time("batchExists");
 
-console.time("batchExists");
-
-client.batchExists(keys, function (err, results) {
-    var i = 0;
-    if ( err.code == status.AEROSPIKE_OK ) {
-        for ( i = 0; i < results.length; i++ ) {
-            switch ( results[i].status ) {
-                case status.AEROSPIKE_OK:
-                    console.log("OK - ", results[i].key, results[i].metadata);
-                    break;
-                case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-                    console.log("NOT_FOUND - ", results[i].key);
-                    break;
-                default:
-                    console.log("ERR - %d - ", results[i].status, results[i].key);
+    client.batchExists(keys, function (err, results) {
+        var i = 0;
+        if ( err.code == status.AEROSPIKE_OK ) {
+            for ( i = 0; i < results.length; i++ ) {
+                switch ( results[i].status ) {
+                    case status.AEROSPIKE_OK:
+                        console.log("OK - ", results[i].key, results[i].metadata);
+                        break;
+                    case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                        console.log("NOT_FOUND - ", results[i].key);
+                        break;
+                    default:
+                        console.log("ERR - %d - ", results[i].status, results[i].key);
+                }
             }
         }
-    }
-    else {
-        console.log("ERR - ", err);
-    }
+        else {
+            console.log("ERR - ", err);
+        }
 
-    console.timeEnd("batchExists");
-    console.log();
+        console.timeEnd("batchExists");
+        console.log();
     
-    client.close();
-})
+        client.close();
+    })
+}
+
+// open the log-file if argv['log-file'] option is set.
+if (argv['log-file'] !== undefined) {
+    fs.open(argv['log-file'], 'a', function (err, fd) {
+        argv['log-file'] = fd;
+        aerospike_setup( function (client) {
+            batchExist(client);
+        });
+    });
+} else { // log-file is not a parameter. Use the default value for log-file
+    aerospike_setup( function (client) {
+        batchExist(client);
+    });
+}
+
