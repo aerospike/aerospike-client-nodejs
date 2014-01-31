@@ -169,56 +169,54 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
 
 int log_from_jsobject( LogInfo * log, Local<Object> obj)
 {
+    int rc = AS_NODE_PARAM_OK;
+    int level = log->severity;
+    int fd = log->fd;
+
     if ( obj->IsObject() ) {
         Local<Object> v8_log = obj->ToObject();
 
-        if (v8_log->Has(String::New("level"))) {
+        // `level` is optional
+        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(String::New("level")) ) {
             Local<Value> v8_log_level = v8_log->Get(String::NewSymbol("level"));
-            if ( v8_log_level->IsNumber()){
-                log->severity = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
+            if ( v8_log_level->IsNumber() ){
+                level = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
+            }
+            else if ( v8_log_level->IsNull() || v8_log_level->IsUndefined() ){
+                // `null` and `undefined` imply the value should not change.
             }
             else {
-                fprintf(stderr, "Log level should be an integer between 0 and 5.\n");
-                return AS_NODE_PARAM_ERR;
+                // Any other value is a bad parameter
+                rc = AS_NODE_PARAM_ERR;
             }
         }
         
-        if ( v8_log->Has(String::NewSymbol("file"))) {
+        // `file` is optional
+        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(String::NewSymbol("file"))) {
             Local<Value> v8_file = obj->Get(String::NewSymbol("file"));
-            /*if ( v8_file->IsString() ) {
-                log->fd = open(*String::Utf8Value(v8_file), O_WRONLY|O_CREAT|O_APPEND|O_NONBLOCK, S_IRUSR|S_IWUSR);    
-                as_v8_debug(log, "log file at location %s", *String::Utf8Value(v8_file));
-                return AS_NODE_PARAM_OK;
-            } */
             if ( v8_file->IsNumber() ) {
-                log->fd = V8INTEGER_TO_CINTEGER(v8_file);
-                as_v8_debug(log, "log file %d", log->fd);
-                return AS_NODE_PARAM_OK;
+                fd = V8INTEGER_TO_CINTEGER(v8_file);
             }
             else if (v8_file->IsNull() || v8_file->IsUndefined()){
-                //Set the log fd to stderr,
-                goto set_stderr;
+                // `null` and `undefined` imply the value should not change.
             }
             else {
-                fprintf(stderr, "invalid log file argument");
-                //should we return error or go ahead setting the fd to stderr.
-                //For now return error
-                return AS_NODE_PARAM_ERR;
+                // Any other value is a bad parameter
+                rc = AS_NODE_PARAM_ERR;
             }
-        }
-        else { 
-            goto set_stderr;
         }
     }
     else {
-        fprintf(stderr, "Log value should be an object \n");
-        return AS_NODE_PARAM_ERR;
+        // The value should be an object. Otherwise it should fail.
+        rc = AS_NODE_PARAM_ERR;
     }
 
+    // Only if no error occurred do we set the log values.
+    if ( rc == AS_NODE_PARAM_OK ) {
+        log->severity = (as_log_level) level;
+        log->fd = fd;
+    }
 
-set_stderr:
-    log->fd = 2;
-    as_v8_debug(log, "redirecting log to stderr");
     return AS_NODE_PARAM_OK;
 }
 

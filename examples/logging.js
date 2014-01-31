@@ -20,11 +20,12 @@
  *
  ******************************************************************************/
 
-var optimist = require('optimist');
-var aerospike = require('aerospike');
-var status = aerospike.status;
-var policy = aerospike.policy;
 var fs = require('fs');
+var aerospike = require('aerospike');
+var optimist = require('optimist');
+
+var policy = aerospike.policy;
+var status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -33,7 +34,7 @@ var fs = require('fs');
  ******************************************************************************/
 
 var argp = optimist
-    .usage("$0 [options]")
+    .usage("$0 [options] logfile")
     .options({
         help: {
             boolean: true,
@@ -54,15 +55,6 @@ var argp = optimist
             default: 10,
             describe: "Timeout in milliseconds."
         },
-        'log-level': {
-            alias: "l",
-            default: aerospike.log.INFO,
-            describe: "Log level [0-5]"
-        },
-        'log-file': {
-            default: undefined,
-            describe: "Path to a file send log messages to."
-        },
         namespace: {
             alias: "n",
             default: "test",
@@ -76,133 +68,142 @@ var argp = optimist
     });
 
 var argv = argp.argv;
+var logfile = argv._.length === 1 ? argv._[0] : null;
 
 if ( argv.help === true ) {
     argp.showHelp();
     return;
 }
 
-
-// create a client object and set up a connection to the aerospike cluster.
-function aerospike_setup( callback) {
-    var client = aerospike.client({
-        hosts: [
-            { addr: argv.host, port: argv.port }
-        ],
-        log: {
-            level: argv['log-level'],
-            file: argv['log-file'] ? argv['log-file'] : 2
-        },
-        policies: {
-            timeout: argv.timeout
-        }
-    }).connect(function(err, client) {
-        if (err.code != status.AEROSPIKE_OK) {
-            console.log("Aerospike server connection Error: %j", err)
-            return;
-        }
-        callback(client);
-});
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
+if ( logfile === null ) {
+    console.error("Error: Please provide a logfile for the operation");
+    console.error();
+    argp.showHelp();
     return;
 }
 
-}
+
+/*******************************************************************************
+ *
+ * Establish a connection to the cluster.
+ * 
+ ******************************************************************************/
+
+var client = aerospike.client({
+    hosts: [
+        { addr: argv.host, port: argv.port }
+    ],
+    policies: {
+        timeout: argv.timeout
+    }
+}).connect(function(err, client) {
+    if ( err.code != status.AEROSPIKE_OK ) {
+        console.log("Aerospike server connection Error: %j", err)
+        return;
+    }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+});
+
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
 
-function put_done(client) {
-
-
-    return function(err, key) {
-        switch ( err.code ) {
-            case status.AEROSPIKE_OK:
-                console.log("OK - ", key);
-                break;
-            default:
-                console.log("ERR - ", err, key);
-        }
-        console.log();
-        get_start(client);
+Function.prototype.curry = function() {
+    var fn = this, args = Array.prototype.slice.call(arguments);
+    return function() {
+        return fn.apply(this, args.concat(Array.prototype.slice.call(arguments)));
     };
+};
+
+function header(message, callback) {
+    return function() {
+        console.log('');
+        console.log('********************************************************************************');
+        console.log('* ', message);
+        console.log('********************************************************************************');
+        console.log('');
+        if ( callback ) callback();
+    }
 }
 
-function put_start(client) {
-    var done = put_done(client);
-        var key = {
-            ns:  argv.namespace,
-            set: argv.set,
-            key: 123
-        };
-
-        var record = {
-            k: 123,
-            s: "abc",
-            i: 123 * 1000 + 123,
-            b: new Buffer([0xa, 0xb, 0xc])
-        };
-
-        var metadata = {
-            ttl: 10000,
-            gen: 0
-        };
-        client.put(key, record, metadata, done);
-}
-
-function get_done(client) {
-
-    return function(err, record, metadata, key) {
-        switch ( err.code ) {
-            case status.AEROSPIKE_OK:
-                if ( record.k != key.key ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.k != key.key");
-                }
-                else if ( record.i != record.k * 1000 + 123 ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.i != record.k * 1000 + 123");
-                }
-                else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.b != [0xa,0xb,0xc]");
-                }
-                else {
-                    console.log("VALID - ", key, metadata, record);
-                }
-                break;
-            default:
-                console.log("ERR - ", err, key);
-
-        }
-        console.log();
-    };
-}
-
-function get_start(client ) {
-    var done = get_done(client);
-        var key = {
-            ns:  argv.namespace,
-            set: argv.set,
-            key: 123
-        };
-
-        client.get(key, done);
-}
-
-// Set the logger through config object, when aerospike.client object is created.
-if (argv['log-file'] !== undefined) {
-    fs.open(argv['log-file'], 'a', function (err, fd) {
-        argv['log-file'] = fd;
-        aerospike_setup( function (client) {
-            put_start(client );
+function get(key, callback) {
+    return function() {
+        console.log('*** get')
+        client.get(key, function(err, record, metadata, key) {
+            if ( callback ) callback();
         });
-    });
-} else {
-     aerospike_setup( function (client) {
-        put_start(client);
-    });
+    }
 }
+
+function put(key, rec, callback) {
+    return function() {
+        console.log('*** put')
+        client.put(key, rec, function(err, key) {
+            if ( callback ) callback();
+        });
+    }
+}
+
+function log(level, file, callback) {
+    return function() {
+        var fd;
+        if ( file ) {
+            if ( !isNaN(parseInt(file, 10)) && isFinite(file) ) {
+                fd = parseInt(file, 10);
+            }
+            else {
+                fd = fs.openSync(file, "a");
+            }
+        }
+
+        console.log('*** log level=%d file=%s', level, file);
+        client.updateLogging({
+            level: level,
+            file: fd
+        });
+        if ( callback ) callback();
+    }
+}
+
+function close() {
+    return function() {
+        client.close();
+    }
+}
+
+var key = {
+    ns:  argv.namespace,
+    set: argv.set,
+    key: "abc"
+};
+
+operations = [
+    
+    header.curry('Log: default settings'),
+    put.curry(key, {a: 1}),
+    get.curry(key),
+
+    header.curry('Log: level=4(TRACE)'),
+    log.curry(5, null),
+    put.curry(key, {a: 2}),
+    get.curry(key),
+    
+    header.curry('Log: file=' + logfile),
+    log.curry(null, logfile),
+    put.curry(key, {a: 3}),
+    get.curry(key),
+    
+    header.curry('Log: level=3(DEBUG) file=STDERR'),
+    log.curry(3, 2),
+    put.curry(key, {a:4}),
+    get.curry(key)
+];
+
+operations.reduceRight(function(r, l) {
+    return l(r);
+})();

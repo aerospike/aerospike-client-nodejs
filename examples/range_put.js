@@ -20,11 +20,13 @@
  *
  ******************************************************************************/
 
-var optimist = require('optimist');
-var aerospike = require('aerospike');
-var status = aerospike.status;
-var policy = aerospike.policy;
 var fs = require('fs');
+var aerospike = require('aerospike');
+var optimist = require('optimist');
+
+var policy = aerospike.policy;
+var status = aerospike.status;
+
 /*******************************************************************************
  *
  * Options parsing
@@ -98,20 +100,20 @@ if ( argv.help === true ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
-function aerospike_setup(callback) {
+
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
     log: {
         level: argv['log-level'],
-        file: argv['log-file']
+        file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err, client) {
-    if (err.code != status.AEROSPIKE_OK) {
+}).connect(function (err, client ) {
+    if ( err.code != status.AEROSPIKE_OK ) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
@@ -119,12 +121,8 @@ var client = aerospike.client({
         console.error("Error: Client not initialized.");
         return;
     }
-    callback(client);
 });
 
-
-
-}
 /*******************************************************************************
  *
  * Perform the operation
@@ -205,15 +203,4 @@ function put_start(client, start, end, skip) {
     }
 }
 
-if (argv['log-file'] !== undefined) {
-    fs.open( argv['log-file'], 'a', function (err, fd) { 
-        argv['log-file'] = fd;
-        aerospike_setup( function ( client) {            
-            put_start(client, argv.start, argv.end, argv.skip);
-        });
-    });
-} else {
-    aerospike_setup( function ( client) {            
-        put_start(client, argv.start, argv.end, argv.skip);
-    });
-}
+put_start(client, argv.start, argv.end, argv.skip);

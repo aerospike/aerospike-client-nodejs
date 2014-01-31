@@ -153,7 +153,7 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
 
     if (args[0]->IsObject()){
         LogInfo * log = client->log;
-        if ( log_from_jsobject(log, args[0]->ToObject()) != AS_NODE_PARAM_OK) {
+        if ( log_from_jsobject(log, args[0]->ToObject()) != AS_NODE_PARAM_OK ) {
             log->severity = AS_LOG_LEVEL_INFO;
             log->fd       = 2;
         }

@@ -4,11 +4,12 @@
  * 
  ******************************************************************************/
 
-var optimist = require('optimist');
 var fs = require('fs');
 var aerospike = require('aerospike');
-var status = aerospike.status;
+var optimist = require('optimist');
+
 var policy = aerospike.policy;
+var status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -72,20 +73,20 @@ if ( argv.help === true ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
-function aerospike_setup ( callback) {
+
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
     log: {
         level: argv['log-level'],
-        file: argv['log-file']
+        file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err, client) {
-    if (err.code != status.AEROSPIKE_OK) {
+}).connect(function (err, client ) {
+    if ( err.code != status.AEROSPIKE_OK ) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
@@ -93,16 +94,14 @@ var client = aerospike.client({
         console.error("Error: Client not initialized.");
         return;
     }
-    callback(client);
 });
 
-}
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-function Info( client) {
+
 console.log("host...");
 
 client.info(request, {addr: argv.host, port: argv.port}, function(err, response, host) {
@@ -132,17 +131,3 @@ client.info(request, {addr: argv.host, port: argv.port}, function(err, response,
     });
 
 });
-}
-
-if (argv['log-file'] !== undefined) {
-    fs.open( argv['log-file'], 'a', function(err, fd) {
-        argv['log-file'] = fd;
-        aerospike_setup( function (client) {
-            Info(client);
-        });
-    });
-} else {
-    aerospike_setup(function (client) {
-        Info(client);
-    });
-}

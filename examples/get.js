@@ -4,11 +4,12 @@
  * 
  ******************************************************************************/
 
-var optimist = require('optimist');
 var fs = require('fs');
 var aerospike = require('aerospike');
-var status = aerospike.status;
+var optimist = require('optimist');
+
 var policy = aerospike.policy;
+var status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -78,39 +79,35 @@ if ( keyv === null ) {
  * Create a client object
  *
  ******************************************************************************/
-function aerospike_setup( callback) {
 
 var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
-    log : {
-        level : argv['log-level'],
-        file  : argv['log-file'] ? argv['log-file'] : 2
+    log: {
+        level: argv['log-level'],
+        file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client) {
-    if (err.code != status.AEROSPIKE_OK) {
+}).connect(function (err, client ) {
+    if ( err.code != status.AEROSPIKE_OK ) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
-    callback(client);
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
 });
 
-if ( client === null ) {
-    console.error("Error: Client not initialized.");
-    return;
-}
-
-}
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-function Get(client) {
+
 var key = {
     ns:  argv.namespace,
     set: argv.set,
@@ -136,17 +133,3 @@ client.get(key, function(err, record, metadata, key) {
     
     client.close();
 });
-}
-
-if(argv['log-file'] != undefined) {
-    fs.open(argv['log-file'], 'a', function(err, fd) {
-        argv['log-file'] = fd;
-        aerospike_setup(function (client) {
-            Get(client);
-        });
-    });
-} else {
-    aerospike_setup(function (client) {
-        Get(client);
-    });
-}
