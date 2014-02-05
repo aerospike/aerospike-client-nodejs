@@ -121,6 +121,14 @@ var argp = optimist
             default: 1000,
             describe: "The number of keys to use."
         },
+        datatype: {
+            default: "INTEGER",
+            describe: "The datatype of the record."
+        },
+        datasize: {
+            default: 8,
+            describe: "Size of the record."
+        },
         'chart-memory': {
             boolean: false,
             default: false,
@@ -225,6 +233,12 @@ function worker_shutdown() {
 }
 
 /**
+ * Data to be written for the record type string.
+ */
+var STRING_DATA = "This the test data to be written to the server"
+var CHAR_DATA = "DATAS";
+
+/**
  * key are in range [1 ... argv.keyrange]
  */
 function keygen() {
@@ -232,9 +246,38 @@ function keygen() {
     return rand < 1 ? 1 : rand;
 }
 
+/**
+ * Generate data of size argv.datasize with a gven datatype argv.datatype
+ * Currently string datatype from size 5 to argv.datatype.
+ * And 8 byte size integers are supported
+ */
+
+function datagen ( key ) {
+    var data; 
+    switch (argv.datatype) {
+        case "INTEGER" :
+        {
+            return key;
+        }
+        case "STRING"  :
+        {
+            data =  CHAR_DATA;
+            while ( data.length < argv.datasize )
+            {
+                data += STRING_DATA;
+            }
+            data += key;
+            return data;
+        }   
+        default :
+            return key;
+    }
+    
+}
 function putgen(commands) {
     var key = keygen();
-    commands.push(['put', key, {k: key}]);
+    var data = datagen( key);
+    commands.push(['put', key, {k: data}]);
 }
 
 function getgen(commands) {
