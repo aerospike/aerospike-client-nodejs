@@ -51,7 +51,7 @@ Handle<Value> key(const Arguments& args)
         Local<Object> key = Object::New();
         key->Set(String::NewSymbol("ns"), args[0]);
         key->Set(String::NewSymbol("set"), args[1]);
-        key->Set(String::NewSymbol("value"), args[2]);
+        key->Set(String::NewSymbol("key"), args[2]);
         return scope.Close(key);
     }
 
