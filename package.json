@@ -1,6 +1,6 @@
 {
   "name" : "aerospike",
-  "version" : "v0.1.0",
+  "version" : "1.0.0",
   "description" : "Aerospike Client Library",
   "tags" : [ "aerospike", "database", "nosql" ],
   "homepage" : "https://github.com/aerospike/aerospike-client-nodejs",
