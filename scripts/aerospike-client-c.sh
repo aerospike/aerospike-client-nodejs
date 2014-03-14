@@ -1,7 +1,7 @@
 #! /bin/bash
 ################################################################################
 #
-# This script is used by bindings.gyp, to detect if libaerospike.a is 
+# This script is used by bindings.gyp, to detect if libaerospike.a is
 # installed and exporting the proper environment variables.
 #
 ################################################################################
@@ -61,7 +61,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       DIST_NAME=${DIST_IDEN}${DIST_VERS}
 
       case ${DIST_NAME} in
-        "centos6" | "redhatenterpriceserver6" ) 
+        "centos6" | "redhatenterpriceserver6" )
           PKG_DIST="el6"
           PKG_TYPE="rpm"
           ;;
@@ -86,6 +86,15 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
         PKG_DIST="el6"
         PKG_TYPE="rpm"
       fi
+
+    elif [ -f /etc/system-release ]; then
+      # Check for Amazon Linux
+      dist=$(cat /etc/system-release | grep "Amazon Linux")
+      if [ ! -z "$dist" ]; then
+        PKG_DIST="el6"
+        PKG_TYPE="rpm"
+      fi
+
     else
       printf "error: OS not supported\n" >&2
       exit 1
@@ -147,7 +156,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     ##############################################################################
     # EXTRACT FILES FROM DEVEL INSTALLER
     ##############################################################################
-    
+
     # Extract the contents of the `devel` installer package into `aerospike-client`
     case ${PKG_TYPE} in
       "rpm" )
