@@ -82,7 +82,7 @@ typedef struct AsyncData {
  *  FUNCTIONS
  ******************************************************************************/
 
-bool aerospike_info_cluster_callback(const as_error * error, const as_node * node, const char * info_req, const char* response, void *udata)
+bool aerospike_info_cluster_callback(const as_error * error, const as_node * node, const char * info_req, char * response, void *udata)
 {
     // Scope for the callback operation.
 
