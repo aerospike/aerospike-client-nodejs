@@ -2,7 +2,7 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js 0.10.x. 
+This module is compatible with Node.js 0.10.x and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -61,6 +61,13 @@ Details about the API are available in the [`docs`](docs) directory.
 
 To install the latest stable version of Node.js, visit 
 [http://nodejs.org/download/](http://nodejs.org/download/)
+
+Supported operating systems: 
+
+- CentOS/RHEL 6.x
+- Debian 6+
+- Ubuntu 12.04
+- Mac OS X
 
 <a name="Installation"></a>
 ## Installation
