@@ -10,9 +10,117 @@
 CWD=$(pwd)
 AEROSPIKE=${CWD}/aerospike-client-c
 
+unset PKG_DIST
+unset PKG_TYPE
+unset PKG_PATH
+
+################################################################################
+#
+# FUNCTIONS
+#
+################################################################################
+
+detect_linux()
+{
+  # check to see if `lsb_release` is available.
+  if [ ! -z "$(which lsb_release)" ]; then
+
+    # We have LSB, so use it.
+    DIST_IDEN=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+    DIST_VERS=$(lsb_release -rs | cut -d. -f1 )
+    DIST_NAME=${DIST_IDEN}${DIST_VERS}
+
+    case ${DIST_NAME} in
+
+      "centos6" | "redhatenterpriceserver6" )
+        echo "el6" "rpm"
+        return 0
+        ;;
+
+      "debian6" )
+        echo ${DIST_NAME} "deb"
+        return 0
+        ;;
+
+      "ubuntu12" )
+        echo "ubuntu12.04" "deb"
+        return 0
+        ;;
+
+      * )
+        echo "error: ${DIST_NAME} is not supported."
+        return 1
+        ;;
+
+    esac
+  fi
+
+  if [ -f /etc/redhat-release ]; then
+    # Ok, no LSB, so check if it is a Redhat based distro
+    dist=$(cat /etc/redhat-release | grep "CentOS")
+    if [ ! -z "$dist" ]; then
+      echo "el6" "rpm"
+      return 0
+    fi
+  fi
+
+  if [ -f /etc/system-release ]; then
+    # Check for Amazon Linux
+    dist=$(cat /etc/system-release | grep "Amazon Linux")
+    if [ ! -z "$dist" ]; then
+      echo "el6" "rpm"
+      return 0
+    fi
+  fi
+
+  echo "error: Linux Distro not supported"
+  return 1
+}
+
+download()
+{
+  # create the package directory
+  mkdir -p ${AEROSPIKE}/package
+
+  # check to see if `curl` is available.
+  curl_path=`which curl`
+  has_curl=$?
+
+  if [ $has_curl != 0 ]; then
+    echo "error: 'curl' not found. This is required to download the package."
+    return 1
+  fi
+
+  # Compose the URL for the client tgz
+  URL="http://www.aerospike.com/latest.php?package=client-c&os=${PKG_DIST}"
+
+  # Download and extract the client tgz
+  printf "info: fetching '${URL}'\n"
+  location=$(curl -Is "${URL}" | grep Location)
+  if [ $? != 0 ]; then
+    echo "error: Unable to download package from '${URL}'"
+    return 1
+  fi
+
+  if [ ${PKG_DIST} == 'mac' ]; then
+    location=${location/.x86_64/}
+  fi
+
+  # Download and extract the client tgz
+  printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
+  curl -s ${location} > ${AEROSPIKE}/package/aerospike-client-c.tgz
+  if [ $? != 0 ]; then
+    echo "error: Unable to download package from '${URL}'"
+    return 1
+  fi
+
+  return 0
+}
+
 ################################################################################
 # PREFIX is not defined, so we want to see if we can derive it.
 ################################################################################
+
 if [ ! $DOWNLOAD ] && [ ! $PREFIX ]; then
   if [ -d ${AEROSPIKE} ] && [ -f ${AEROSPIKE}/package/usr/lib/libaerospike.a ] && [ -f ${AEROSPIKE}/package/usr/include/aerospike/aerospike.h ]; then
     # first, check to see if there is a local client
@@ -31,6 +139,47 @@ fi
 if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
   ##############################################################################
+  # DETECT OPERATING ENVIRONMENT
+  ##############################################################################
+
+  sysname=$(uname | tr '[:upper:]' '[:lower:]')
+
+  case ${sysname} in
+
+    ############################################################################
+    # LINUX
+    ############################################################################
+    "linux" )
+      result=$(detect_linux)
+      if [ $? -ne 0 ]; then
+        printf "$result\n" &>2
+        exit 1
+      fi
+
+      IFS=" " read PKG_DIST PKG_TYPE <<< "${result}"
+      PKG_PATH=${AEROSPIKE}/package/usr
+      ;;
+
+    ############################################################################
+    # MAC OS X
+    ############################################################################
+    "darwin" )
+      PKG_DIST="mac"
+      PKG_TYPE="pkg"
+      PKG_PATH=${AEROSPIKE}/package/usr/local
+      ;;
+
+    ############################################################################
+    # OTHER
+    ############################################################################
+    * )
+      printf "error: OS not supported\n" >&2
+      exit 1
+      ;;
+
+  esac
+
+  ##############################################################################
   # DOWNLOAD and extract the package, if it does not exist.
   # We will then move the files to the correct location for building.
   ##############################################################################
@@ -46,61 +195,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   else
 
     ##############################################################################
-    # DETECT OPERATING ENVIRONMENT
-    ##############################################################################
-
-    # check to see if `lsb_release` is available.
-    lsb_path=`which lsb_release`
-
-    # get the OS name and version
-    if [ ! -z ${lsb_path} ]; then
-
-      # We have LSB, so use it.
-      DIST_IDEN=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-      DIST_VERS=$(lsb_release -rs | cut -d. -f1 )
-      DIST_NAME=${DIST_IDEN}${DIST_VERS}
-
-      case ${DIST_NAME} in
-        "centos6" | "redhatenterpriceserver6" )
-          PKG_DIST="el6"
-          PKG_TYPE="rpm"
-          ;;
-        "debian6" )
-          PKG_DIST=${DIST_NAME}
-          PKG_TYPE="deb"
-          ;;
-        "ubuntu12" )
-          PKG_DIST="ubuntu12.04"
-          PKG_TYPE="deb"
-          ;;
-        * )
-          printf "error: ${DIST_NAME} is not supported.\n" >&2
-          exit 1
-          ;;
-      esac
-
-    elif [ -f /etc/redhat-release ]; then
-      # Ok, no LSB, so check if it is a Redhat based distro
-      dist=$(cat /etc/redhat-release | grep "CentOS")
-      if [ ! -z "$dist" ]; then
-        PKG_DIST="el6"
-        PKG_TYPE="rpm"
-      fi
-
-    elif [ -f /etc/system-release ]; then
-      # Check for Amazon Linux
-      dist=$(cat /etc/system-release | grep "Amazon Linux")
-      if [ ! -z "$dist" ]; then
-        PKG_DIST="el6"
-        PKG_TYPE="rpm"
-      fi
-
-    else
-      printf "error: OS not supported\n" >&2
-      exit 1
-    fi
-
-    ##############################################################################
     # DOWNLOAD TGZ
     ##############################################################################
 
@@ -112,30 +206,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: 'aerospike-client.tgz' from this directory.\n"
       printf "warning: \n"
     else
-
-      # create the package directory
-      mkdir -p ${AEROSPIKE}/package
-
-      # check to see if `curl` is available.
-      curl_path=`which curl`
-      has_curl=$?
-
-      if [ $has_curl != 0 ]; then
-        printf "error: 'curl' not found. This is required to download the package.\n" >&2
-        exit 1
-      fi
-
-      # Compose the URL for the client tgz
-      URL="http://www.aerospike.com/latest.php?package=client-c&os=${PKG_DIST}"
-
-      # Download and extract the client tgz
-      printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
-      curl -Ls ${URL} > ${AEROSPIKE}/package/aerospike-client-c.tgz
-      if [ $? != 0 ]; then
-        printf "error: Unable to download package from '${URL}'\n" >&2
-        exit 1
-      fi
-
+      download
     fi
 
     ##############################################################################
@@ -152,7 +223,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     printf "info: extracting '${INST_PATH}' from 'aerospike-client-c.tgz'\n"
     tar -xzf aerospike-client-c.tgz --strip=1 ${INST_PATH}
 
-
     ##############################################################################
     # EXTRACT FILES FROM DEVEL INSTALLER
     ##############################################################################
@@ -162,11 +232,16 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       "rpm" )
         printf "info: extracting files from '${INST_PATH}'\n"
         rpm2cpio aerospike-client-c-devel-*.rpm | cpio -idm --no-absolute-filenames
-        cd ..
         ;;
       "deb" )
         printf "info: extracting files from '${INST_PATH}'\n"
         dpkg -x aerospike-client-c-devel-*.deb .
+        ;;
+      "pkg" )
+        printf "info: extracting files from '${INST_PATH}'\n"
+        xar -xf aerospike-client-c-devel-*.pkg
+        cat Payload | gunzip -dc |cpio -i
+        rm Bom PackageInfo Payload
         ;;
     esac
 
@@ -175,11 +250,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
   fi
 
-  ##############################################################################
-  # Set PREFIX Variable
-  ##############################################################################
-
-  PREFIX=${AEROSPIKE}/package/usr
+  PREFIX=${PKG_PATH}
 
 fi
 
