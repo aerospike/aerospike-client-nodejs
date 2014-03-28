@@ -8,7 +8,7 @@
   "engines" : {
     "node" : ">=0.10"
   },
-  "os" : [ "linux" ],
+  "os" : [ "linux", "darwin" ],
   "cpu" : [ "x64" ],
   "repository" : {
     "type" : "git",
