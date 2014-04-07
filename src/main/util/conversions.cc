@@ -35,6 +35,12 @@ extern "C" {
     #include <aerospike/as_record.h>
     #include <aerospike/as_record_iterator.h>
     #include <aerospike/aerospike_batch.h>  
+    #include <aerospike/as_arraylist.h>
+    #include <aerospike/as_hashmap.h>
+    #include <aerospike/as_hashmap_iterator.h>
+    #include <aerospike/as_pair.h>
+    #include <aerospike/as_map.h>
+    #include <aerospike/as_stringmap.h>
 }
 
 #include "../client.h"
@@ -315,13 +321,9 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
     return scope.Close(err);
 }
 
-// This callback is called by v8 garbage collector, when Buffer object 
-// is garbage collected. 
-void callback(char* data, void * ptr) 
+void map_callback(const as_val* key, const as_val * val, void * udata) 
 {
-    if ( ptr != NULL) {
-        free(ptr);
-    }
+    
 }
 
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
@@ -369,6 +371,31 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 
                 return scope.Close(buff->handle_);
             } 
+        }
+        case AS_LIST : {
+            as_arraylist* listval = (as_arraylist*) as_list_fromval(val);
+            int size = as_arraylist_size(listval);
+            Handle<Array> jsarray = Array::New(size);
+            for ( int i = 0; i < size; i++ ) {
+                as_val * arr_val = as_arraylist_get(listval, i);
+                Handle<Value> jsval = val_to_jsvalue(arr_val, log);
+                jsarray->Set(i, jsval);
+            }
+
+            return scope.Close(jsarray);
+        }
+        case AS_MAP : {
+            Handle<Object> jsobj = Object::New();
+            as_hashmap* map = (as_hashmap*) as_map_fromval(val);
+            as_iterator * it = (as_iterator*) as_hashmap_iterator_new(map);
+            while ( as_iterator_has_next(it) ) {
+                as_pair *p = (as_pair*) as_iterator_next(it);
+                as_val* key = as_pair_1(p);
+                as_val* val = as_pair_2(p);
+                jsobj->Set(val_to_jsvalue(key, log), val_to_jsvalue(val, log));
+            }
+
+            return scope.Close(jsobj);
         }
         default:
             break;
@@ -445,11 +472,64 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
 //Forward references;
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log );
 
+as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
+{
+    if(obj->IsString()){
+        String::Utf8Value v(obj);
+        as_string *str = as_string_new(strdup(*v), true);
+        return (as_val*) str;
+        
+    }
+    else if(obj->IsNumber()){
+        as_integer *num = as_integer_new(obj->IntegerValue());
+        return (as_val*) num;
+    }
+    else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
+        int size ;
+        uint8_t* data ;
+        if (extract_blob_from_jsobject(obj->ToObject(), &data, &size, log) != AS_NODE_PARAM_OK) {
+            return NULL;
+        }
+        as_bytes *bytes = as_bytes_new_wrap( data, size, true);
+        return (as_val*) bytes;
+
+    } 
+    else if(obj->IsArray()){
+        Local<Array> js_list = Local<Array>::Cast(obj);
+        as_arraylist *list = as_arraylist_new( js_list->Length(), 0);
+        if (list == NULL) {
+            return NULL;
+        }
+        for ( uint32_t i = 0; i < js_list->Length(); i++ ) {
+            Local<Value> val = js_list->Get(i);
+            as_val* asval = asval_from_jsobject(val, log);
+            as_arraylist_append(list, asval);
+        }
+        return (as_val*) list;
+
+    }
+    else {
+        const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
+        const uint32_t count = props->Length();
+         as_hashmap *map = as_hashmap_new(count);
+         if( map == NULL)
+              return NULL;
+        for ( uint32_t i = 0; i < count; i++) {
+            const Local<Value> name = props->Get(i);
+            const Local<Value> value = obj->ToObject()->Get(name);
+            String::Utf8Value n(name);
+            as_val* val = asval_from_jsobject(value, log);
+            as_stringmap_set((as_map*) map, *n, val);
+        }
+        return (as_val*) map;
+
+    }
+    return NULL;
+}
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
-
     as_record_init(rec, count);
     for ( uint32_t i = 0; i < count; i++ ) {
 
@@ -457,31 +537,29 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         const Local<Value> value = obj->Get(name);
 
         String::Utf8Value n(name);
+        as_val* val = asval_from_jsobject( value, log);
 
-
-        String::Utf8Value p(value);
-        if ( value->IsString() ) {
-            String::Utf8Value v(value);
-            as_record_set_str(rec, *n, strdup(*v));
-            as_record_get_string(rec, *n)->free = true;
-        }
-        else if ( value->IsNumber() ) {
-            int64_t v = value->IntegerValue();
-            as_record_set_int64(rec, *n, v);
-        }
-        else if ( value->IsObject() ) {
-            Local<Object> obj = value->ToObject();
-            int len ;
-            uint8_t* data ;
-            if (extract_blob_from_jsobject(obj, &data, &len, log) != AS_NODE_PARAM_OK) {
-                return AS_NODE_PARAM_ERR;
-            }
-            as_record_set_rawp(rec, *n, data, len, true);
-            //as_record_get_bytes(rec, *n)->free = true;
-
-        }
-        else {
+        if( val == NULL) 
             return AS_NODE_PARAM_ERR;
+    
+        switch(as_val_type(val)){
+            case AS_INTEGER:
+                as_record_set_integer(rec, *n, (as_integer*)val);
+                break;
+            case AS_STRING:
+                as_record_set_string(rec, *n, (as_string*)val);
+                break;
+            case AS_BYTES:
+                as_record_set_bytes(rec, *n, (as_bytes*) val);
+                break;
+            case AS_LIST:
+                as_record_set_list(rec, *n, (as_list*) val);
+                break;
+            case AS_MAP:
+                as_record_set_map(rec, *n, (as_map*) val);
+                break;
+            default:
+                break;
         }
     }
 
@@ -509,6 +587,7 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 
     return AS_NODE_PARAM_OK;
 }
+     
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
     if ( obj->Has(String::NewSymbol("ttl"))) {

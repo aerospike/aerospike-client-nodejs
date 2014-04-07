@@ -116,8 +116,10 @@ var key = {
 };
 
 var record = {
-    s: "abc",
     i: 123,
+    s: "abc",
+    arr: [1, 2, 3],
+    map: { str: "g3", num: 3, buff: new Buffer( [0xa, 0xb, 0xc])},
     b: new Buffer([0xa, 0xb, 0xc]),
     b2: new Uint8Array([0xa, 0xb, 0xc])
 };
