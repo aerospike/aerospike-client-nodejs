@@ -130,12 +130,10 @@ describe('client.put()', function() {
         var kgen = keygen.bytes(options.namespace, options.set);
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
-
         // values
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
-
         // write the record then check
         client.put(key, record, meta, function(err, key) {
             client.get(key, function(err, record, metadata, key) {
@@ -147,6 +145,52 @@ describe('client.put()', function() {
         });
     });
 
+    it('shoule write an array, map type of bin and read', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({list: valgen.array(), map: valgen.map()});
+
+        //values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        //write the record and then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record1, metadata, key){
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record1).to.eql(record);
+                done();
+            });
+        });
+    });
+
+    it('should write an array of map and array, map of array and map, then read', function(done){
+
+        //generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl:1000});
+        var rgen = recgen.record({list_of_list: valgen.array_of_array(), map_of_list: valgen.map_of_map()});
+
+        //values
+        var key = kgen();
+        var meta = mgen(key);
+        var record = rgen(key, meta);
+
+        //write the record and then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record1, metadata, key){
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record1).to.eql(record);
+                done();
+            });
+        });
+
+    });
     it('should write, read, write, and check gen', function(done) {
 
         // generators

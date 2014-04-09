@@ -95,6 +95,43 @@ function integer(options) {
     }
 }
 
+function array() {
+    return function() {
+        var itype = integer();
+        var stype = string();
+        var btype = bytes();
+        var arr = [itype(), stype(), btype()];
+        return arr;
+    }
+}
+
+function map() {
+    return function() {
+        var num = integer();
+        var str = string();
+        var uint = bytes();
+        var map = { itype: num(), stype: str(), btyte: uint()} ;
+        return map;
+    }
+}
+
+function array_of_array(){
+    return function(){
+        var arr =  array();
+        var obj =  map();
+        var list = [ arr(), obj() ];
+        return list;
+    }
+}
+
+function map_of_map() {
+    return function() {
+        var arr = array();
+        var obj = map();
+        var map_of_list = {inner_list: arr(), inner_map: obj() };
+        return map_of_list;
+    }
+}
 integer.defaults = {
     random: true,
     min: 0,
@@ -106,5 +143,9 @@ module.exports = {
     bytes: bytes,
     contant: constant,
     integer: integer,
-    string: string
+    string: string,
+    array: array,
+    map: map,
+    array_of_array: array_of_array,
+    map_of_map: map_of_map
 };

@@ -387,9 +387,11 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
         case AS_MAP : {
             Handle<Object> jsobj = Object::New();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
-            as_iterator * it = (as_iterator*) as_hashmap_iterator_new(map);
-            while ( as_iterator_has_next(it) ) {
-                as_pair *p = (as_pair*) as_iterator_next(it);
+            as_iterator  it; 
+            as_hashmap_iterator_init((as_hashmap_iterator*) &it, map);
+
+            while ( as_iterator_has_next(&it) ) {
+                as_pair *p = (as_pair*) as_iterator_next(&it);
                 as_val* key = as_pair_1(p);
                 as_val* val = as_pair_2(p);
                 jsobj->Set(val_to_jsvalue(key, log), val_to_jsvalue(val, log));
