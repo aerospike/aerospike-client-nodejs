@@ -40,6 +40,7 @@ extern "C" {
     #include <aerospike/as_hashmap_iterator.h>
     #include <aerospike/as_pair.h>
     #include <aerospike/as_map.h>
+    #include <aerospike/as_nil.h>
     #include <aerospike/as_stringmap.h>
 }
 
@@ -476,7 +477,10 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 
 as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 {
-    if(obj->IsString()){
+    if(obj->IsNull()){
+        return (as_val*) &as_nil;
+    }
+    else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
         return (as_val*) str;
@@ -560,6 +564,8 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
             case AS_MAP:
                 as_record_set_map(rec, *n, (as_map*) val);
                 break;
+            case AS_NIL:
+                as_record_set_nil(rec, *n);
             default:
                 break;
         }
