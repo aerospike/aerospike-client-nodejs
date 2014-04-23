@@ -480,6 +480,9 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
             //as_record_get_bytes(rec, *n)->free = true;
 
         }
+        else if ( value->IsNull() ) {
+            as_record_set_nil(rec, *n);
+        }
         else {
             return AS_NODE_PARAM_ERR;
         }
