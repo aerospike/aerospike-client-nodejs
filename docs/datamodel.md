@@ -1,4 +1,3 @@
-
 # Data Model
 
 <!--
@@ -10,15 +9,20 @@ record
 
 ## Record
 
-A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Integer, String or Buffer. 
+A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Integer, String, Array,  Buffer or an Object itself.
 
-Example of a record with 3 fields:
+Note: Array can contain an array or an object as a value in it. Similarly the object can contain an array or an object as a value in it. Essentially nesting of arrays in an object, and nesting of objects in an array is allowed.
+
+
+Example of a record with 5 fields:
 
 ```js
 var record = {
   a: 123,
   b: "xyz",
-  c: new Buffer("hello world!")
+  c: new Buffer("hello world!"),
+  d: [1, 2, 3],
+  e: { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])
 }
 ```
 
