@@ -368,7 +368,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                     );
 
                 // this constructor actually copies data into the new Buffer
-                node::Buffer * buff  = node::Buffer::New((char *) data, size);
+                node::Buffer *buff  = node::Buffer::New((char *) data, size);
 
                 return scope.Close(buff->handle_);
             } 
@@ -376,7 +376,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
         case AS_LIST : {
             as_arraylist* listval = (as_arraylist*) as_list_fromval(val);
             int size = as_arraylist_size(listval);
-            Handle<Array> jsarray = Array::New(size);
+            Local<Array> jsarray = Array::New(size);
             for ( int i = 0; i < size; i++ ) {
                 as_val * arr_val = as_arraylist_get(listval, i);
                 Handle<Value> jsval = val_to_jsvalue(arr_val, log);
@@ -386,13 +386,13 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             return scope.Close(jsarray);
         }
         case AS_MAP : {
-            Handle<Object> jsobj = Object::New();
+            Local<Object> jsobj = Object::New();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
-            as_iterator  it; 
-            as_hashmap_iterator_init((as_hashmap_iterator*) &it, map);
+            as_hashmap_iterator  it; 
+            as_hashmap_iterator_init(&it, map);
 
-            while ( as_iterator_has_next(&it) ) {
-                as_pair *p = (as_pair*) as_iterator_next(&it);
+            while ( as_hashmap_iterator_has_next(&it) ) {
+                as_pair *p = (as_pair*) as_hashmap_iterator_next(&it);
                 as_val* key = as_pair_1(p);
                 as_val* val = as_pair_2(p);
                 jsobj->Set(val_to_jsvalue(key, log), val_to_jsvalue(val, log));
