@@ -22,7 +22,7 @@ var record = {
   b: "xyz",
   c: new Buffer("hello world!"),
   d: [1, 2, 3],
-  e: { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])
+  e: { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])}
 }
 ```
 
