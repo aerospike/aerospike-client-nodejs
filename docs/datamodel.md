@@ -18,11 +18,11 @@ Example of a record with 5 fields:
 
 ```js
 var record = {
-  a: 123,
-  b: "xyz",
-  c: new Buffer("hello world!"),
-  d: [1, 2, 3],
-  e: { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])}
+  int_bin  : 123,
+  str_bin  : "xyz",
+  buff_bin : new Buffer("hello world!"),
+  arr_bin  : [1, 2, 3],
+  obj_bin  : { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])}
 }
 ```
 
