@@ -162,22 +162,26 @@ describe('client.operate()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key) {
             var ops = [
-                op.touch(1000)
+                op.touch(500)
             ];
-
-            client.operate(key, ops, function(err, record1, metadata1, key1) {
+            client.get(key, function(err, record3, metadata3, key3){
                 expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                ttl_diff = metadata3.ttl - meta.ttl;
 
-                client.get(key, function(err, record2, metadata2, key2) {
+                client.operate(key, ops, function(err, record1, metadata1, key1) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-                    expect(record['i']).to.equal(record2['i']);
-                    expect(record['s']).to.equal(record2['s']);
-                    expect(meta.ttl).to.equal(metadata2.ttl);
-                    done();
-                });
 
+                    client.get(key, function(err, record2, metadata2, key2) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_OK);
+                        expect(record['i']).to.equal(record2['i']);
+                        expect(record['s']).to.equal(record2['s']);
+                        expect(500 + ttl_diff).to.equal(metadata2.ttl);
+                        done();
+                    });
+
+                });
             });
         });
     });
