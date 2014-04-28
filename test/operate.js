@@ -159,6 +159,21 @@ describe('client.operate()', function() {
         var meta    = mgen(key);
         var record  = rgen(key, meta);
 
+        // TEST LOGIC
+        // 1.Write a record to an aerospike server.
+        // 2.Read the record, to get the ttl and calculate
+        //   the difference in the ttl written and the ttl returned by server.
+        // 3.Touch the record with a definite ttl.
+        // 4.Read the record and calculate the difference in the ttl between the 
+        //  touch ttl value and read ttl value.
+        // 5.Compare the difference with the earlier difference calculated.
+        // 6.This is to account for the clock asynchronicity between 
+        //   the client and the server machines.
+        // 7.Server returns a number, at which the record expires according the server clock.
+        // 8.The client calculates the time in seconds, and gives back ttl. In the case , where 
+        //   clocks are not synchronous between server and client, the ttl client calculates may not 
+        //   be accurate to the user. Nevertheless server expires the record in the correct time.
+
         // write the record then check
         client.put(key, record, meta, function(err, key) {
             var ops = [
@@ -177,7 +192,8 @@ describe('client.operate()', function() {
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
                         expect(record['i']).to.equal(record2['i']);
                         expect(record['s']).to.equal(record2['s']);
-                        expect(500 + ttl_diff).to.equal(metadata2.ttl);
+                        expect(500 + ttl_diff+10).to.be.above(metadata2.ttl);
+                        expect(500 + ttl_diff-10).to.be.below(metadata2.ttl);
                         done();
                     });
 
