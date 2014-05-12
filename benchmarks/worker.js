@@ -6,7 +6,7 @@
 
 var aerospike = require('aerospike');
 var cluster = require('cluster');
-var optimist = require('optimist');
+var yargs = require('yargs');
 var path = require('path');
 var util = require('util');
 var winston = require('winston');
@@ -18,7 +18,7 @@ var stats = require('./stats');
  *
  ***********************************************************************/
 
-var argp = optimist
+var argp = yargs
     .usage("$0 [options]")
     .options({
         help: {

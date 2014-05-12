@@ -7,7 +7,7 @@
 var spawn = require('child_process').spawn;
 
 var cluster = require('cluster');
-var optimist = require('optimist');
+var yargs = require('yargs');
 var os = require('os');
 var path = require('path');
 var util = require('util');
@@ -21,7 +21,7 @@ var stats = require('./stats');
  *
  ***********************************************************************/
 
-var argp = optimist
+var argp = yargs
     .usage("$0 [options]")
     .options({
         help: {

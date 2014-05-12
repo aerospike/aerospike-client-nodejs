@@ -6,7 +6,7 @@
 
 var fs = require('fs');
 var aerospike = require('aerospike');
-var optimist = require('optimist');
+var yargs = require('yargs');
 
 var op = aerospike.operator;
 var policy = aerospike.policy;
@@ -18,7 +18,7 @@ var status = aerospike.status;
  * 
  ******************************************************************************/
 
-var argp = optimist
+var argp = yargs
     .usage("$0 [options] key")
     .options({
         help: {

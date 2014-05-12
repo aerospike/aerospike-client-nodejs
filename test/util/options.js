@@ -1,6 +1,6 @@
 
 var aerospike = require('../../build/Release/aerospike');
-var optimist = require('optimist');
+var yargs = require('yargs');
 
 /*******************************************************************************
  *
@@ -8,7 +8,7 @@ var optimist = require('optimist');
  * 
  ******************************************************************************/
 
-var parser = optimist
+var parser = yargs
     .usage("$0 [options]")
     .options({
         help: {

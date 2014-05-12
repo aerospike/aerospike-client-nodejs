@@ -1,6 +1,6 @@
 
 var Table = require('cli-table');
-var optimist = require('optimist');
+var yargs = require('yargs');
 
 var MEM_MATCH = /(\d+(\.\d+)?) MB/
 
@@ -47,7 +47,7 @@ var mem_ranges = [];
  *
  ***********************************************************************/
 
-var argp = optimist
+var argp = yargs
     .usage("$0 [options]")
     .options({
         help: {
