@@ -88,7 +88,7 @@ download()
 
   if [ $has_curl != 0 ]; then
     echo "error: 'curl' not found. This is required to download the package."
-    return 1
+    exit 1
   fi
 
   # Compose the URL for the client tgz
@@ -99,7 +99,7 @@ download()
   location=$(curl -Is "${URL}" | grep Location)
   if [ $? != 0 ]; then
     echo "error: Unable to download package from '${URL}'"
-    return 1
+    exit 1
   fi
 
   if [ ${PKG_DIST} == 'mac' ]; then
@@ -111,7 +111,7 @@ download()
   curl -s ${location} > ${AEROSPIKE}/package/aerospike-client-c.tgz
   if [ $? != 0 ]; then
     echo "error: Unable to download package from '${URL}'"
-    return 1
+    exit 1
   fi
 
   return 0
@@ -207,6 +207,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: \n"
     else
       download
+      
     fi
 
     ##############################################################################
