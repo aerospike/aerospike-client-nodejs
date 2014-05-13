@@ -26,10 +26,19 @@ The following is very simple example of how to write and read a record from Aero
 ```js
 var aerospike = require('aerospike');
 
+
 // Connect to the cluster.
 var client = aerospike.client({
     hosts: [ { addr: '127.0.0.1', port: 3000 } ]
-}).connect();
+});
+
+function connect_cb( err, client) {
+    if (err.code == AEROSPIKE_OK) {
+        console.log("Aerospike Connection Success")
+    }
+}
+
+client.connect(connect_cb)
 
 // The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
