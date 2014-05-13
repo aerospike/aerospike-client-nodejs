@@ -71,6 +71,10 @@ Details about the API are available in the [`docs`](docs) directory.
 To install the latest stable version of Node.js, visit 
 [http://nodejs.org/download/](http://nodejs.org/download/)
 
+Aerospike Node.js has a dependency on Aerospike C client, which is
+downloaded during the installation. 
+To Download Aerospike C client, curl is required.
+
 Supported operating systems: 
 
 - CentOS/RHEL 6.x
