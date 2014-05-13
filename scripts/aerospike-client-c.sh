@@ -43,7 +43,7 @@ detect_linux()
         ;;
 
       "ubuntu12" | "ubuntu13" )
-        echo "ubuntu12.04" "deb"
+        echo ${DIST_NAME} "deb"
         return 0
         ;;
 
