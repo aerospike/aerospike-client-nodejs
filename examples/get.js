@@ -7,7 +7,6 @@
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
-var sleep = require('sleep');
 
 var policy = aerospike.policy;
 var status = aerospike.status;
@@ -85,38 +84,21 @@ var client = aerospike.client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
-    /*log: {
+    log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
-    },*/
+    },
     policies: {
         timeout: argv.timeout
     }
 });
-console.log("Client object formation over in node code ")
 function as_connect_callback( err, as_client ) {
     if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err);
         setTimeout( function() { client.connect(as_connect_callback)} , 1000);
     }
-    else {
-        console.log("Aerospike server connection success");
-    }
 }
 client.connect(as_connect_callback)
-    /*if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    } 
-    if (err.code != status.AEROSPIKE_OK) {
-        console.log("Aerospike server connection Error: %j", err);
-        setTimeout( as_client.connect, 2000, as_connect_callback);
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }*/
-//});
 /*******************************************************************************
  *
  * Perform the operation
