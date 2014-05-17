@@ -1,4 +1,4 @@
-# Testing Aerospile Node.js Client
+# Testing Aerospike Node.js Client
 
 ## Installation
 
