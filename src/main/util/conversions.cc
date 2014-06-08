@@ -36,6 +36,7 @@ extern "C" {
     #include <aerospike/as_record_iterator.h>
     #include <aerospike/aerospike_batch.h>  
     #include <aerospike/as_arraylist.h>
+    #include <aerospike/as_arraylist_iterator.h>
     #include <aerospike/as_hashmap.h>
     #include <aerospike/as_hashmap_iterator.h>
     #include <aerospike/as_pair.h>
@@ -247,8 +248,15 @@ bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
             char* strval = strdup(val->string.value);
             as_v8_detail(log, "String key value %s", strval);
             *dest = as_key_new_strp( src->ns, src->set, strval,true);
-            strcpy((*dest)->ns,src->ns);
-            strcpy((*dest)->set,src->set);
+            //strcpy((*dest)->ns,src->ns);
+            //strcpy((*dest)->set,src->set);
+            break;
+        }
+        case AS_BYTES: {
+            size_t size = val->bytes.size;
+            uint8_t *bytes = (uint8_t*) malloc(size);
+            as_v8_detail(log, "key blob value %u ", bytes);
+            *dest = as_key_new_rawp(src->ns, src->set, bytes, size, true);
             break;
         }
         default: 
@@ -270,8 +278,8 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     as_record_iterator_init(&it, src);
 
     while (as_record_iterator_has_next(&it)) {
-        as_bin * bin = as_record_iterator_next(&it);
-        as_bin_value * val = as_bin_get_value(bin);
+        as_bin * bin            = as_record_iterator_next(&it);
+        as_bin_value * val      = as_bin_get_value(bin);
         as_val_t t = as_bin_get_type(bin);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
 
@@ -295,10 +303,40 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
                 as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, size, true);
                 break;
             }
+            case AS_LIST: {
+                as_arraylist* list      = (as_arraylist*) &val->list; 
+                as_arraylist *clone_list    = as_arraylist_new( list->capacity, list->block_size);
+                as_arraylist_iterator it;
+                as_arraylist_iterator_init( &it, list);
+                int index = 0;
+                while( as_arraylist_iterator_has_next( &it)) {
+                    const as_val* val = as_arraylist_iterator_next( &it);
+                    as_val_reserve(val);
+                    as_arraylist_set( clone_list, index++, (as_val*) val);
+                }
+                as_record_set_list( *dest, as_bin_get_name(bin), (as_list*)clone_list);
+                break;
+            }
+            case AS_MAP: {
+                as_hashmap* map         = (as_hashmap*) &val->map;
+                as_hashmap *clone_map   = as_hashmap_new(as_hashmap_size(map));
+                as_hashmap_iterator it;
+                as_hashmap_iterator_init( &it, map);
+                while( as_hashmap_iterator_has_next( &it )) {
+                    as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
+                    as_val* key     = as_pair_1(pair); 
+                    as_val* val     = as_pair_2(pair);
+                    as_val_reserve(key);
+                    as_val_reserve(val);
+                    as_hashmap_set( clone_map, key, val);
+                }
+                as_record_set_map( *dest, as_bin_get_name(bin), (as_map*)clone_map);
+                break;
+            }
             default:
                break;
         }
-    }           
+    }       
 
     return true;
 }
