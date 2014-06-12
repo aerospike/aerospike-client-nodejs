@@ -45,7 +45,7 @@
         'src/main/util/log.cc'
       ],
       'include_dirs': [
-        'aerospike-client-c/include'
+        'aerospike-client-c/include',
         'aerospike-client-c/include/ck'
       ],
       'link_settings': {
