@@ -94,9 +94,11 @@ download()
   # Compose the URL for the client tgz
   URL="http://www.aerospike.com/latest.php?package=client-c&os=${PKG_DIST}"
 
-  # Download and extract the client tgz
+  # Fetch the redirected URL
   printf "info: fetching '${URL}'\n"
-  location=$(curl -Is "${URL}" | grep Location)
+  location=$(curl -Is "${URL}" | grep Location | grep -o "http.*")
+  # Remove the carriage return (\r) control character that may be present
+  location=${location//}
   if [ $? != 0 ]; then
     echo "error: Unable to download package from '${URL}'"
     exit 1
@@ -106,9 +108,10 @@ download()
     location=${location/.x86_64/}
   fi
 
-  # Download and extract the client tgz
-  printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
-  curl -s ${location} > ${AEROSPIKE}/package/aerospike-client-c.tgz
+  # Download and extract the client tgz.
+  # Use non-slient mode to show progress about the download. Important for slower networks.
+  printf "info: downloading '${location}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
+  curl ${location} > ${AEROSPIKE}/package/aerospike-client-c.tgz
   if [ $? != 0 ]; then
     echo "error: Unable to download package from '${URL}'"
     exit 1
