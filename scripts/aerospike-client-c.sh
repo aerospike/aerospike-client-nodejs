@@ -43,7 +43,7 @@ detect_linux()
         ;;
 
       "ubuntu12" )
-        echo "ubuntu12.04" "deb"
+        echo ${DIST_NAME}  "deb"
         return 0
         ;;
 
@@ -94,24 +94,11 @@ download()
   # Compose the URL for the client tgz
   URL="http://www.aerospike.com/latest.php?package=client-c&os=${PKG_DIST}"
 
-  # Fetch the redirected URL
-  printf "info: fetching '${URL}'\n"
-  location=$(curl -Is "${URL}" | grep Location | grep -o "http.*")
-  # Remove the carriage return (\r) control character that may be present
-  location=${location//}
-  if [ $? != 0 ]; then
-    echo "error: Unable to download package from '${URL}'"
-    exit 1
-  fi
-
-  if [ ${PKG_DIST} == 'mac' ]; then
-    location=${location/.x86_64/}
-  fi
-
+  
   # Download and extract the client tgz.
   # Use non-slient mode to show progress about the download. Important for slower networks.
-  printf "info: downloading '${location}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
-  curl ${location} > ${AEROSPIKE}/package/aerospike-client-c.tgz
+  printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
+  curl -L ${URL} > ${AEROSPIKE}/package/aerospike-client-c.tgz
   if [ $? != 0 ]; then
     echo "error: Unable to download package from '${URL}'"
     exit 1
@@ -167,7 +154,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # MAC OS X
     ############################################################################
     "darwin" )
-      PKG_DIST="mac"
+      PKG_DIST="macosx"
       PKG_TYPE="pkg"
       PKG_PATH=${AEROSPIKE}/package/usr/local
       ;;
