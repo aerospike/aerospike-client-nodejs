@@ -154,7 +154,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # MAC OS X
     ############################################################################
     "darwin" )
-      PKG_DIST="macosx"
+      PKG_DIST="mac"
       PKG_TYPE="pkg"
       PKG_PATH=${AEROSPIKE}/package/usr/local
       ;;
