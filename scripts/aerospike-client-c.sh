@@ -30,6 +30,8 @@ detect_linux()
     DIST_VERS=$(lsb_release -rs | cut -d. -f1 )
     DIST_NAME=${DIST_IDEN}${DIST_VERS}
 
+    DIST_NAME="ubuntu13"
+
     case ${DIST_NAME} in
 
       "centos6" | "redhatenterpriceserver6" )
@@ -42,8 +44,8 @@ detect_linux()
         return 0
         ;;
 
-      "ubuntu12" )
-        echo ${DIST_NAME}  "deb"
+      "ubuntu12" | "ubuntu13" )
+        echo "ubuntu12"  "deb"
         return 0
         ;;
 
@@ -92,7 +94,7 @@ download()
   fi
 
   # Compose the URL for the client tgz
-  URL="http://www.aerospike.com/latest.php?package=client-c&os=${PKG_DIST}"
+  URL="http://www.aerospike.com/download/client/c/latest/artifact/${PKG_DIST}"
 
   
   # Download and extract the client tgz.
@@ -142,7 +144,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     "linux" )
       result=$(detect_linux)
       if [ $? -ne 0 ]; then
-        printf "$result\n" &>2
+        printf "$result\n" >&2
         exit 1
       fi
 
