@@ -55,7 +55,7 @@
       },
       'conditions': [
         ['OS=="linux"',{
-          'cflags': [ '-Wall', '-Warray-bounds' ]
+          'cflags': [ '-Wall', '-Warray-bounds', '-fpermissive']
         }]
       ] 
     }

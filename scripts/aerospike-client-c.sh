@@ -30,8 +30,6 @@ detect_linux()
     DIST_VERS=$(lsb_release -rs | cut -d. -f1 )
     DIST_NAME=${DIST_IDEN}${DIST_VERS}
 
-    DIST_NAME="ubuntu13"
-
     case ${DIST_NAME} in
 
       "centos6" | "redhatenterpriceserver6" )
