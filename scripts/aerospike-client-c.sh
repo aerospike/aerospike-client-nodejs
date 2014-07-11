@@ -42,7 +42,7 @@ detect_linux()
         return 0
         ;;
 
-      "ubuntu12" | "ubuntu13" )
+      "ubuntu12" | "ubuntu13" | "ubuntu14" )
         echo "ubuntu12"  "deb"
         return 0
         ;;
