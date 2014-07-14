@@ -82,26 +82,39 @@ download()
   # create the package directory
   mkdir -p ${AEROSPIKE}/package
 
-  # check to see if `curl` is available.
+  # check to see if `curl` or `wget` is available.
   curl_path=`which curl`
   has_curl=$?
 
-  if [ $has_curl != 0 ]; then
-    echo "error: 'curl' not found. This is required to download the package."
+  # check for `wget`
+  wget_path=`which wget`
+  has_wget=$?
+
+  # Check 
+  if [ $has_curl != 0 ] && [ $has_wget != 0 ]; then
+    echo "error: Not able to find 'curl' or `wget`. Either is required to download the package."
     exit 1
   fi
 
   # Compose the URL for the client tgz
   URL="http://www.aerospike.com/download/client/c/latest/artifact/${PKG_DIST}"
-
   
   # Download and extract the client tgz.
   # Use non-slient mode to show progress about the download. Important for slower networks.
   printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
-  curl -L ${URL} > ${AEROSPIKE}/package/aerospike-client-c.tgz
-  if [ $? != 0 ]; then
-    echo "error: Unable to download package from '${URL}'"
-    exit 1
+
+  if [ $has_curl == 0 ]; then
+    curl -L ${URL} > ${AEROSPIKE}/package/aerospike-client-c.tgz
+    if [ $? != 0 ]; then
+      echo "error: Unable to download package from '${URL}'"
+      exit 1
+    fi
+  elif [ $has_wget == 0 ]; then
+    wget -O ${AEROSPIKE}/package/aerospike-client-c.tgz ${URL}
+    if [ $? != 0 ]; then
+      echo "error: Unable to download package from '${URL}'"
+      exit 1
+    fi
   fi
 
   return 0
