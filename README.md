@@ -1,4 +1,4 @@
-# Aerospike Client for Node.js
+# Aerospike Node.js Client
 
 An Aerospike add-on module for Node.js.
 
@@ -265,3 +265,10 @@ See the [`benchmarks/README.md`](benchmarks/README.md) for details.
 ## API Documentation
 
 API documentation is provided in the [`docs`](docs/README.md) directory.
+
+## License
+
+The Aerospike Node.js Client is made availabled under the terms of the Apache License, Version 2, as stated in the file `LICENSE`.
+
+Individual files may be made available under their own specific license, 
+all compatible with Apache License, Version 2. Please see individual files for details.
