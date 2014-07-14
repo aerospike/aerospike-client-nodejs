@@ -1,20 +1,18 @@
 #! /bin/bash
 ################################################################################
+# Copyright 2013-2014 Aerospike, Inc.
 #
-#   Copyright 2013-2014 Aerospike, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ################################################################################
 
 AEROSPIKE_C_VERSION='latest'
@@ -76,9 +74,9 @@ detect_linux()
 
   # Ok, no LSB, so check for /etc/issue
   if [ -f /etc/issue ]; then
-    dist=$(cat /etc/issue | head -n 1 | tr '[:upper:]' '[:lower:]')
+    dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
     case ${dist} in
-      
+
       "centos"* | "red hat enterprise linux"* | "fedora"* )
         echo "el6" "rpm"
         return 0
@@ -119,21 +117,17 @@ detect_linux()
         esac
         ;;
 
+      "amazon linux"* )
+        echo "el6" "rpm"
+        return 0
+        ;;
+
       * )
-        echo "error: ${dist} is not supported."
+        echo "error: ${DIST_NAME} is not supported."
         return 1
         ;;
 
     esac
-  fi
-
-  if [ -f /etc/system-release ]; then
-    # Check for Amazon Linux
-    dist=$(cat /etc/system-release | grep "Amazon Linux")
-    if [ ! -z "$dist" ]; then
-      echo "el6" "rpm"
-      return 0
-    fi
   fi
 
   echo "error: Linux Distro not supported"
@@ -376,4 +370,3 @@ cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
 rm -rf ${AEROSPIKE}/include
 mkdir -p ${AEROSPIKE}/include
 cp -R ${PREFIX}/include ${AEROSPIKE}
-
