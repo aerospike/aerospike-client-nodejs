@@ -74,13 +74,57 @@ detect_linux()
     esac
   fi
 
-  if [ -f /etc/redhat-release ]; then
-    # Ok, no LSB, so check if it is a Redhat based distro
-    dist=$(cat /etc/redhat-release | grep "CentOS")
-    if [ ! -z "$dist" ]; then
-      echo "el6" "rpm"
-      return 0
-    fi
+  # Ok, no LSB, so check for /etc/issue
+  if [ -f /etc/issue ]; then
+    dist=$(cat /etc/issue | head -n 1 | tr '[:upper:]' '[:lower:]')
+    case ${dist} in
+      
+      "centos"* | "red hat enterprise linux"* | "fedora"* )
+        echo "el6" "rpm"
+        return 0
+        ;;
+
+      "debian"* )
+        vers=$(cat /etc/debian_version)
+        case ${vers} in
+          "6."* )
+            echo "debian6" "deb"
+            return 0
+            ;;
+
+          "7."* )
+            echo "debian7" "deb"
+            return 0
+            ;;
+
+          * )
+            echo "error: Debian ${vers} is not supported."
+            return 1
+            ;;
+        esac
+        ;;
+
+      "ubuntu"* )
+        vers=$(lsb_release -r -s)
+        case ${vers} in
+          "12."* | "13."* | "14.*" )
+            echo "ubuntu12"  "deb"
+            return 0
+            ;;
+
+          * )
+            echo "error: Ubuntu ${vers} is not supported."
+            return 1
+            ;;
+        esac
+        ;;
+
+      * )
+        echo "error: ${dist} is not supported."
+        return 1
+        ;;
+
+    esac
   fi
 
   if [ -f /etc/system-release ]; then
