@@ -1,11 +1,13 @@
 #! /bin/bash
+
+AEROSPIKE_C_VERSION='latest'
+
 ################################################################################
 #
 # This script is used by bindings.gyp, to detect if libaerospike.a is
 # installed and exporting the proper environment variables.
 #
 ################################################################################
-
 
 CWD=$(pwd)
 AEROSPIKE=${CWD}/aerospike-client-c
@@ -97,7 +99,7 @@ download()
   fi
 
   # Compose the URL for the client tgz
-  URL="http://www.aerospike.com/download/client/c/latest/artifact/${PKG_DIST}"
+  URL="http://www.aerospike.com/download/client/c/${AEROSPIKE_C_VERSION}/artifact/${PKG_DIST}"
   
   # Download and extract the client tgz.
   # Use non-slient mode to show progress about the download. Important for slower networks.
