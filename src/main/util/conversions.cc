@@ -373,7 +373,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-                return scope.Close(Integer::New(data));
+                return scope.Close(Number::New((double) data));
             }
         }
         case AS_STRING : {
