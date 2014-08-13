@@ -15,7 +15,7 @@
 # limitations under the License.
 ################################################################################
 
-AEROSPIKE_C_VERSION=${AEROSPIKE_C_CLIENT:-'latest'}
+AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'latest'}
 
 ################################################################################
 #
@@ -30,6 +30,8 @@ AEROSPIKE=${CWD}/aerospike-client-c
 unset PKG_DIST
 unset PKG_TYPE
 unset PKG_PATH
+
+LUA_PATH=${AEROSPIKE_LUA_PATH}
 
 ################################################################################
 #
@@ -185,9 +187,19 @@ if [ ! $DOWNLOAD ] && [ ! $PREFIX ]; then
   if [ -d ${AEROSPIKE} ] && [ -f ${AEROSPIKE}/package/usr/lib/libaerospike.a ] && [ -f ${AEROSPIKE}/package/usr/include/aerospike/aerospike.h ]; then
     # first, check to see if there is a local client
     PREFIX=${AEROSPIKE}/package/usr
+    if [ -f ${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
+    elif [ -f ${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
+    fi
   elif [ -f /usr/lib/libaerospike.a ] && [ -f /usr/include/aerospike/aerospike.h ]; then
     # next, check to see if there is an installed client
     PREFIX=/usr
+    if [ -f /opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=/opt/aerospike/client/sys/udf/lua
+    elif [ -f /usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+      LUA_PATH=/usr/local/aerospike/client/sys/udf/lua
+    fi
   fi
 
   # If we can't find it, then download it.
@@ -218,6 +230,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
       IFS=" " read PKG_DIST PKG_TYPE <<< "${result}"
       PKG_PATH=${AEROSPIKE}/package/usr
+      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -227,6 +240,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       PKG_DIST="mac"
       PKG_TYPE="pkg"
       PKG_PATH=${AEROSPIKE}/package/usr/local
+      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -301,7 +315,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       "pkg" )
         printf "info: extracting files from '${INST_PATH}'\n"
         xar -xf aerospike-client-c-devel-*.pkg
-        cat Payload | gunzip -dc |cpio -i
+        cat Payload | gunzip -dc | cpio -i
         rm Bom PackageInfo Payload
         ;;
     esac
@@ -321,6 +335,7 @@ fi
 
 AEROSPIKE_LIBRARY=${PREFIX}/lib/libaerospike.a
 AEROSPIKE_INCLUDE=${PREFIX}/include/aerospike
+AEROSPIKE_LUA=${LUA_PATH}
 
 printf "\n" >&1
 
@@ -340,26 +355,16 @@ else
   FAILED=1
 fi
 
+if [ -f ${AEROSPIKE_LUA}/aerospike.lua ]; then
+  printf "   [✓] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+else
+  printf "   [✗] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+  FAILED=1
+fi
+
 printf "\n" >&1
 
 if [ $FAILED ]; then
-
-  printf "error: It appears as though one or more files cannot be found.\n" >&1
-  printf "error: \n" >&1
-  printf "error: You can either:\n" >&1
-  printf "error: \n" >&1
-  printf "error:    a. Re-run with 'DOWNLOAD=1'\n" >&1
-  printf "error:    \n" >&1
-  printf "error:       $ DOWNLOAD=1 npm install\n" >&1
-  printf "error: \n" >&1
-  printf "error:    b. Set the 'PREFIX' variable to the path containing the files\n" >&1
-  printf "error:    \n" >&1
-  printf "error:       $ PREFIX=/usr npm install\n" >&1
-  printf "error: \n" >&1
-  printf "error:    c. Download and install the the Aerospike C Client development package,\n" >&1
-  printf "error:       then retry the command.\n" >&1
-  printf "error: \n" >&1
-
   exit 1
 fi
 
@@ -369,4 +374,8 @@ cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
 
 rm -rf ${AEROSPIKE}/include
 mkdir -p ${AEROSPIKE}/include
-cp -R ${PREFIX}/include ${AEROSPIKE}
+cp -R ${PREFIX}/include/* ${AEROSPIKE}/include
+
+rm -rf ${AEROSPIKE}/lua
+mkdir -p ${AEROSPIKE}/lua
+cp -R ${AEROSPIKE_LUA}/* ${AEROSPIKE}/lua
