@@ -966,6 +966,9 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
                 size > 3 ? " ..." : ""
                 );
         }
+        else {
+            goto ReturnError;
+        }
     }
 
     // close the scope, so that garbage collector can collect the v8 variables.
