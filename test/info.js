@@ -55,7 +55,8 @@ describe('client.info()', function() {
     });
 
     it('should get "objects" from entire cluster', function(done) {
-        client.info("objects", function(err, response, host) {
+        var host = {addr: options.host, port: options.port};
+        client.info("objects", host, function(err, response, host) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
