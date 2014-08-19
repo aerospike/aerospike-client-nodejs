@@ -1,0 +1,29 @@
+language: node_js
+
+node_js:
+  - "0.10"
+
+install:
+  - wget -O aerospike-server.tgz http://aerospike.com/download/server/latest/artifact/tgz
+  - tar xvzf aerospike-server.tgz
+  - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
+  - cd aerospike-server
+  - mkdir instance1
+  - mkdir instance2
+  - ./bin/aerospike init --home instance1 --instance 1 --service-port 3000
+  - ./bin/aerospike init --home instance2 --instance 2 --service-port 3010
+  - cd instance1
+  - sudo ./bin/aerospike start
+  - cd ..
+  - cd instance2
+  - sudo ./bin/aerospike start
+  - cd ../..
+  - sleep 3
+
+script:
+  - npm install
+  - npm test
+
+notifications:
+  slack:
+    secure: QaCE4lTfpv57X921q5oCrHrB1qqkLsnGM2+L/zCTEQKc20tNnfNjrDsFJGrLibZbEvZCcVOfr1xH0WhaPurngG6uTRLUqWBf3evwnMgTWDxFU0wcZlKR/Vww3zNXBuD4tDafC1bEa/fm+9xDDmtlV8AaySpiwQazLtwqOatoTD8=
