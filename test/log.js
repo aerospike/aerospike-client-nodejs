@@ -39,6 +39,7 @@ describe('client.updateLogging()', function() {
     after(function(done) {
         done();
     });
+
     var config = {
         hosts: [
             { addr: options.host, port: options.port }
@@ -58,8 +59,8 @@ describe('client.updateLogging()', function() {
         var count = 0;
         fs.open('test.log','a', function(err, fd) {
             config.log.file = fd;
-            aerospike.client(config)
-                .info("objects", host, function(err, response, host) {
+            aerospike.client(config).connect(function(err, client) {
+                client.info("objects", host, function(err, response, host) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     count++;
@@ -68,8 +69,7 @@ describe('client.updateLogging()', function() {
                         expect(data).to.be.ok();
                         done();
                     });
-                }, function() {
-                    expect(count).to.equal(1);
+                });
             });
         });
     });
