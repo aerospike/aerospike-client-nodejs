@@ -74,7 +74,6 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("udfRegister"), FunctionTemplate::New(Register)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("execute"), FunctionTemplate::New(Execute)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("udfRemove"), FunctionTemplate::New(UDFRemove)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("scanInfo"), FunctionTemplate::New(ScanInfo)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("updateLogging"), FunctionTemplate::New(SetLogLevel)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
