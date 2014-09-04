@@ -29,11 +29,13 @@ extern "C" {
     #include <aerospike/as_record.h>
     #include <aerospike/as_record_iterator.h>
     #include <aerospike/aerospike_batch.h>  
+    #include <aerospike/aerospike_scan.h>  
     #include <aerospike/as_arraylist.h>
     #include <aerospike/as_arraylist_iterator.h>
     #include <aerospike/as_hashmap.h>
     #include <aerospike/as_hashmap_iterator.h>
     #include <aerospike/as_pair.h>
+    #include <aerospike/as_scan.h>
     #include <aerospike/as_map.h>
     #include <aerospike/as_nil.h>
     #include <aerospike/as_stringmap.h>
@@ -459,6 +461,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
         as_val * val = (as_val *) as_bin_get_value(bin);
         Handle<Value> obj = val_to_jsvalue(val, log );
         bins->Set(String::NewSymbol(name), obj);
+		as_v8_detail(log, "Setting binname %s ", name);
     }
 
     return scope.Close(bins);
@@ -475,7 +478,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     }
     
     meta = Object::New();
-    meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
+    meta->Set(String::NewSymbol("ttl"), Number::New(record->ttl));
     as_v8_detail(log, "TTL of the record %d", record->ttl);
     meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);
@@ -510,16 +513,19 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 {
     if(obj->IsNull()){
+		as_v8_detail(log, "The as_val is NULL");
         return (as_val*) &as_nil;
     }
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
+		as_v8_detail(log, "The as_val string is %s", as_val_tostring(str));
         return (as_val*) str;
         
     }
     else if(obj->IsNumber()){
-        as_integer *num = as_integer_new(obj->IntegerValue());
+        as_integer *num = as_integer_new(obj->NumberValue());
+		as_v8_detail(log, "The as_val is integer %s", as_val_tostring(num));
         return (as_val*) num;
     }
     else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
@@ -529,6 +535,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             return NULL;
         }
         as_bytes *bytes = as_bytes_new_wrap( data, size, true);
+		as_v8_detail(log, "The as_val is bytes %s", as_val_tostring(bytes));
         return (as_val*) bytes;
 
     } 
@@ -543,6 +550,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* asval = asval_from_jsobject(val, log);
             as_arraylist_append(list, asval);
         }
+		as_v8_detail(log, "The as_val is array %s", as_val_tostring(list));
         return (as_val*) list;
 
     }
@@ -559,6 +567,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* val = asval_from_jsobject(value, log);
             as_stringmap_set((as_map*) map, *n, val);
         }
+		as_v8_detail(log, "The as_val is map %s", as_val_tostring(map));
         return (as_val*) map;
 
     }
@@ -830,6 +839,37 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     return AS_NODE_PARAM_OK;
 }
 
+int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo* log)
+{
+	as_policy_apply_init( policy);
+	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+	as_v8_detail( log, "Parsing apply policy : success");
+	return AS_NODE_PARAM_OK;
+}
+
+int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo* log)
+{
+	as_policy_scan_init( policy);
+	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+    if ( obj->Has(String::NewSymbol("failOnClusterChange")) ) {  
+        Local<Value> failOnClusterChange = obj->Get(String::NewSymbol("failOnClusterChange"));
+        if ( failOnClusterChange->IsBoolean() ) {
+            policy->fail_on_cluster_change = (as_policy_bool) failOnClusterChange->ToBoolean()->Value();
+            as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
+        }
+        else {
+            as_v8_error(log, "failOnClusterChange should be a boolean object");
+            return AS_NODE_PARAM_ERR;
+        }
+    }
+
+	as_v8_detail( log, "Parsing scan policy : success");
+	return AS_NODE_PARAM_OK;
+}
+
 Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
     HANDLESCOPE;
@@ -856,7 +896,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
             case AS_INTEGER: {
                 as_integer * ival = as_integer_fromval(val);
                 as_v8_debug(log, "key.key = %d", as_integer_get(ival));
-                obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
+                obj->Set(String::NewSymbol("key"), Number::New(as_integer_get(ival)));
                 break;
             }
             case AS_STRING: {
@@ -886,6 +926,28 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     }
 
     return scope.Close(obj);
+}
+
+Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
+{
+	HANDLESCOPE;
+	Local<Object> scaninfo;
+
+    if(info == NULL) {
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
+        return scope.Close(scaninfo);
+    }
+    
+    scaninfo = Object::New();
+    scaninfo->Set(String::NewSymbol("progressPct"), Integer::New(info->progress_pct));
+    as_v8_detail(log, "Progress pct of the scan %d", info->progress_pct);
+    scaninfo->Set(String::NewSymbol("recordScanned"), Number::New(info->records_scanned));
+    as_v8_detail(log, "Number of records scanned so far %d", info->records_scanned);
+	scaninfo->Set(String::NewSymbol("status"), Integer::New(info->status));
+
+    return scope.Close(scaninfo);
+
+	
 }
 
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
@@ -1055,12 +1117,194 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
+int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * log)
+{
+	uint32_t  capacity = arr->Length();
+
+	if ( capacity <= 0) {
+		capacity = 0;
+	}
+	as_v8_detail(log, "Capacity of the asarray to be initialized %d", capacity);
+	if ( *udfargs != NULL) {
+		as_arraylist_init( *udfargs, capacity, 0);
+	} else {
+		*udfargs = as_arraylist_new( capacity, 0);
+	}
+
+	for ( uint32_t i = 0; i < capacity; i++) {
+		as_val* val = asval_from_jsobject( arr->Get(i), log);
+		as_arraylist_append(*udfargs, val);
+		as_v8_detail(log, "element added to the array %s", as_val_tostring(val));
+	}
+	return AS_NODE_PARAM_OK;
+
+}
+
+int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
+{
+	// Extract UDF module name
+	if( obj->Has(String::NewSymbol("module"))) {
+		Local<Value> module = obj->Get( String::NewSymbol("module"));
+		if( module->IsString()) {
+			if( *filename == NULL) {
+				int size = module->ToString()->Length();
+				*filename = (char*) malloc(sizeof(char) * size);
+			}
+			strcpy( *filename, *String::Utf8Value(module));
+			as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
+		}
+		else {
+			as_v8_error(log, "UDF module name should be string");
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	else {
+		as_v8_error(log, "UDF module name should be passed to execute UDF");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	// Extract UDF function name
+	if( obj->Has(String::NewSymbol("funcname"))) { 
+		Local<Value> v8_funcname = obj->Get( String::NewSymbol("funcname"));
+		if ( v8_funcname->IsString()) {
+			if( *funcname == NULL) {
+				int size = v8_funcname->ToString()->Length();
+				*funcname = (char*) malloc( sizeof(char) * size);
+			}
+			strcpy( *funcname, *String::Utf8Value( v8_funcname));
+			as_v8_detail(log, "The function name in the UDF args set to %s ", *funcname);
+		}
+		else {
+			as_v8_error(log, "UDF function name should be string");
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	else {
+		as_v8_error(log, "UDF function name should be passed to execute UDF");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	// Is it fair to expect an array always. For a single argument UDF invocation
+	// should we relax.
+	// Extract UDF arglist as_arraylist
+	if( obj->Has( String::NewSymbol("args"))) {
+		Local<Value> arglist = obj->Get( String::NewSymbol("args"));
+		if ( ! arglist->IsArray()){
+			as_v8_error(log, "UDF args should be an array");
+			return AS_NODE_PARAM_ERR;
+		}
+		asarray_from_jsarray( args, Local<Array>::Cast(arglist), log);
+		as_v8_detail(log, "Parsing UDF args -- done !!!");
+		return AS_NODE_PARAM_OK;
+	}
+	else {
+		// no argument case. Initialize array with 0 elements and invoke UDF.
+		if (*args != NULL) {
+			as_arraylist_init(*args, 0, 0);
+		}
+		return AS_NODE_PARAM_OK;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
+	if ( scan == NULL) {
+		// should never land in here.
+		as_v8_error(log, "scan object is NULL, internal error");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_namespace ns = {'\0'};
+	as_set set		= {'\0'};
+	
+	if ( obj->Has(String::NewSymbol("ns"))) {
+		Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
+		if ( ! ns_obj->IsString()) {
+			as_v8_error( log, "namespace for scan must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		strncpy( ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+		as_v8_detail( log, "namespace for scan operation is set to value %s", ns);
+	}
+	else {
+		as_v8_error( log, "namespace should be set for scan object");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if ( obj->Has(String::NewSymbol("set"))) {
+		Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+		if ( !set_obj->IsString()) {
+			as_v8_error( log, "set for scan must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		strncpy( set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+		as_v8_detail( log, "set for scan operation is set to value %s", set);
+	}
+
+	if( ns == NULL || set == NULL) {
+		// Should never land here.
+		// If one of them is not present in the object, error is returned from there.
+		as_v8_error( log, "namespace/set is NULL. Internal Error !!!");
+		return AS_NODE_PARAM_ERR;
+	}
+	as_scan_init( scan, ns, set);
+	as_v8_detail( log, "scan object is initialized");
+	if ( obj->Has(String::NewSymbol("noBins"))) {
+		Local<Value> noBins = obj->Get(String::NewSymbol("noBins"));
+		if ( ! noBins->IsBoolean()) {
+			as_v8_error( log, "noBins value should be of type boolean in a scan object");
+			return AS_NODE_PARAM_ERR;
+		}
+		scan->no_bins = (as_policy_bool) noBins->ToBoolean()->Value();
+		as_v8_detail( log, "no_bins value for scan operation is set to %d ", scan->no_bins);
+	}
+	if ( obj->Has(String::NewSymbol("concurrent"))) {
+		Local<Value> concurrent = obj->Get(String::NewSymbol("concurrent"));
+		if ( ! concurrent->IsBoolean()) {
+			as_v8_error( log, "concurrent value in a scan object should be a boolean type");
+			return AS_NODE_PARAM_ERR;
+		}
+		scan->concurrent = concurrent->ToBoolean()->Value();
+		as_v8_detail( log, "concurrent in scan object is set to %d", scan->concurrent);
+	}
+	//Parsing binlist from an array of bins
+	//Two APIs use this feature. 1. select and scan
+	//@TO-DO  Gayathri
+	//Move the parsing function to conversion.cc and use it 
+	//in both APIs. -- Do not replicate code.
+
+	if( obj->Has(String::NewSymbol("applyEach"))) {
+		Local<Value> applyEach = obj->Get(String::NewSymbol("applyEach"));
+		char file[255] = {'\0'};
+		char* filename = file; 
+		char* funcname ;  
+		as_arraylist *list = NULL;
+		int ret = udfargs_from_jsobject(&filename, &funcname, &list, applyEach->ToObject(), log);
+		if ( funcname == NULL || filename == NULL) {
+			printf("To hell with filename and funcname is NULL\n");
+			return AS_NODE_PARAM_ERR;
+		}
+		if ( ret == AS_NODE_PARAM_ERR) {
+			as_v8_error( log, "parsing udf args for scan failed");
+			return ret;
+		}
+		as_v8_detail(log, "Invoking scan apply each with filename %s, funcname %s", filename, funcname);
+		as_v8_detail(log, "And the arguments to apply each %s", as_val_tostring((as_val*) list));
+		as_scan_apply_each( scan, (const char*)filename, (const char*) funcname, (as_list*) list);
+	}
+	else {
+		as_v8_error( log, "applyEach value should be an argument for scan operation");
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 
     if ( obj->Has(String::NewSymbol("bin"))) {
         Local<Value> val = obj->Get(String::NewSymbol("bin"));
         if ( !val->IsString()) {
-            as_v8_debug(log, "Type error in bin_name(bin should be string"); 
+            as_v8_error(log, "Type error in bin_name(bin should be string"); 
             return AS_NODE_PARAM_ERR;
         }
         (*binName) = strdup(*String::Utf8Value(val));
@@ -1090,7 +1334,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
 
     Local<Value> v8val = GetBinValue(obj, log);
     if ( v8val->IsNumber() ) {
-        int64_t val = v8val->IntegerValue();
+        int64_t val = v8val->NumberValue();
         as_v8_detail(log, "integer value to be written %d", val);
         as_operations_add_write_int64(op, binName, val);
         if ( binName != NULL) free(binName);
@@ -1152,7 +1396,7 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
     as_v8_detail(log, "Incr operation on bin :%s", binName);
     Local<Value> v8val = GetBinValue(obj, log);
     if ( v8val->IsNumber()) {
-        int64_t binValue = v8val->IntegerValue();
+        int64_t binValue = v8val->NumberValue();
         as_v8_detail(log, "value to be incremented %d", binValue);
         as_operations_add_incr( ops, binName, binValue);
         if (binName != NULL) free (binName);

@@ -145,4 +145,29 @@ class AerospikeClient : public ObjectWrap {
          *undefined client.set_log_level(Log log)
          */
         static Handle<Value> SetLogLevel(const Arguments& args);
+
+        /*
+         *undefined client.udf_register(udf_filepath, udf_type, function( Error))
+         */
+        static Handle<Value> Register(const Arguments& args);
+
+        /*
+         *undefined client.udf_execute(Key, udf_args, function( Error, Response))
+         */
+        static Handle<Value> Execute(const Arguments& args);
+
+        /*
+         *undefined client.udf_remove(udf_filename, function( Error ))
+         */
+        static Handle<Value> UDFRemove(const Arguments& args);
+
+        /*
+         *undefined client.udf_remove(udf_filename, function( Error ))
+         */
+        static Handle<Value> UDFScan(const Arguments& args);
+
+        /*
+         *undefined client.udf_remove(udf_filename, function( Error ))
+         */
+        static Handle<Value> ScanInfo(const Arguments& args);
 };
