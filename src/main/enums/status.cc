@@ -44,5 +44,6 @@ Handle<Object> status()
     set(obj, "AEROSPIKE_ERR_RECORD_GENERATION",     604);
     set(obj, "AEROSPIKE_ERR_RECORD_TOO_BIG",        605);
     set(obj, "AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE", 606);
+	set(obj, "AEROSPIKE_ERR_UDF",					1300);
     return scope.Close(obj);
 }

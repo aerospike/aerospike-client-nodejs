@@ -105,6 +105,7 @@ static void * prepare(const Arguments& args)
 	// The first argument should be the UDF file name.
 	if ( args[UDF_ARG_FILE]->IsString()) {
 		strcpy( filename, *String::Utf8Value(args[UDF_ARG_FILE]->ToString()));
+		as_v8_detail(log, "The udf remove module name %s", filename);
 	}
 	else {
 		as_v8_error(log, "UDF file name should be string");

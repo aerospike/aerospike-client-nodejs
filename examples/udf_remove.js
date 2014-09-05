@@ -77,7 +77,7 @@ var argp = yargs
     });
 
 var argv = argp.argv;
-var file = argv._.length === 1 ? argv._[0] : "udf_test";
+var file = argv._.length === 1 ? argv._[0] : "udf_test.lua";
 
 
 if ( argv.help === true ) {
