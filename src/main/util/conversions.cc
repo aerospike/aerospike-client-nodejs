@@ -1,17 +1,23 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013 Aerospike Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  ******************************************************************************/
 
 #include <node.h>
@@ -37,6 +43,7 @@ extern "C" {
     #include <aerospike/as_map.h>
     #include <aerospike/as_nil.h>
     #include <aerospike/as_stringmap.h>
+    #include <citrusleaf/alloc.h>
 }
 
 #include "../client.h"
@@ -221,42 +228,82 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
 
     return AS_NODE_PARAM_OK;
 }
-
+as_val* asval_clone( as_val* val, LogInfo* log)
+{
+    as_val_t t = as_val_type( (as_val*)val);
+    as_val* clone_val = NULL;
+    switch(t) {
+        case AS_INTEGER: {
+            as_integer* int_val = as_integer_fromval( val );
+            int64_t ival        = as_integer_get( int_val);
+            as_v8_detail(log, "Cloning Integer value %d", ival);
+            clone_val = as_integer_toval(as_integer_new(ival)); 
+            break;
+        }
+        case AS_STRING: {
+            as_string* str_val = as_string_fromval( val );
+            char* strval = as_string_get( str_val);
+            as_v8_detail(log, "Cloning String  value %s", strval);
+            char* clone_str = (char*) cf_strdup( strval);
+            clone_val = as_string_toval( as_string_new(clone_str, true));
+            break;
+        }
+        case AS_BYTES: {
+            as_bytes* bytes_val = as_bytes_fromval( val);
+            size_t size         = as_bytes_size(bytes_val);
+            uint8_t *bytes      = (uint8_t*) cf_malloc(size);
+            memcpy(bytes, as_bytes_get(bytes_val), size);
+            as_v8_detail(log, "Cloning Blob value %u ", bytes);
+            clone_val = as_bytes_toval(as_bytes_new_wrap( bytes, size, true));    
+            break;
+        }
+        case AS_LIST: {
+                as_arraylist* list      = (as_arraylist*) as_list_fromval( val); 
+                clone_val =  as_list_toval( (as_list*)as_arraylist_new(as_arraylist_size(list), list->block_size));
+                as_arraylist_iterator it;
+                as_arraylist_iterator_init( &it, list);
+                int index = 0;
+                as_v8_detail(log, "Cloning a list value of size %d ", as_arraylist_size(list));
+                while( as_arraylist_iterator_has_next( &it)) {
+                    as_val* arr_element   = (as_val*) as_arraylist_iterator_next( &it);
+                    as_val* clone_element = asval_clone( arr_element, log);
+                    as_arraylist_set((as_arraylist*) clone_val, index++, clone_element);
+                }
+                as_v8_detail(log, "Cloning a list SUCCESS");
+                break;
+        }
+        case AS_MAP: {
+                as_hashmap* map         = (as_hashmap*) as_map_fromval(val);
+                clone_val               = as_map_toval( (as_map*)as_hashmap_new(as_hashmap_size(map)));
+                as_hashmap_iterator it;
+                as_hashmap_iterator_init( &it, map);
+                while( as_hashmap_iterator_has_next( &it )) {
+                    as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
+                    as_val* orig_key     = as_pair_1(pair); 
+                    as_val* orig_val     = as_pair_2(pair);
+                    as_val* clone_key    = asval_clone( orig_key, log);
+                    as_val* clone_mapval = asval_clone( orig_val, log);
+                    as_hashmap_set( (as_hashmap*) clone_val, clone_key, clone_mapval);
+                }
+                as_v8_detail( log, "Cloning a map SUCCESS");
+                break;
+        }
+        default:
+            as_v8_error( log, "as_val received is UNKNOWN type");
+            break;
+    }
+    return clone_val;
+}
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
 {
     if ( src == NULL || dest == NULL ) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
         return false;
     }
-
-    as_key_value* val = src->valuep;
-    as_val_t t = as_val_type((as_val*)val);
-
-    switch(t){
-        case AS_INTEGER: {
-            as_v8_detail(log, "Integer key value %d", val->integer.value);
-            *dest = as_key_new_int64(src->ns, src->set, val->integer.value);
-            break;
-        }
-        case AS_STRING: {
-            char* strval = strdup(val->string.value);
-            as_v8_detail(log, "String key value %s", strval);
-            *dest = as_key_new_strp( src->ns, src->set, strval,true);
-            //strcpy((*dest)->ns,src->ns);
-            //strcpy((*dest)->set,src->set);
-            break;
-        }
-        case AS_BYTES: {
-            size_t size = val->bytes.size;
-            uint8_t *bytes = (uint8_t*) malloc(size);
-            as_v8_detail(log, "key blob value %u ", bytes);
-            *dest = as_key_new_rawp(src->ns, src->set, bytes, size, true);
-            break;
-        }
-        default: 
-            break;
-    }
-
+    as_v8_detail(log, "Cloning the key");
+    as_key_value* val           = src->valuep;
+    as_key_value* clone_val     = (as_key_value*) asval_clone( (as_val*) val, log);
+    *dest                       = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
     return true;
 }
 
@@ -265,7 +312,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     if(src == NULL || dest == NULL) {
         return false;
     }
-
+    as_v8_detail( log, "Cloning the record");
     (*dest)->ttl = src->ttl;
     (*dest)->gen = src->gen;
     as_record_iterator it;
@@ -274,62 +321,10 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     while (as_record_iterator_has_next(&it)) {
         as_bin * bin            = as_record_iterator_next(&it);
         as_bin_value * val      = as_bin_get_value(bin);
-        as_val_t t = as_bin_get_type(bin);
+        as_bin_value* clone_val = (as_bin_value*) asval_clone( (as_val*) val, log);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
+        as_record_set( *dest, as_bin_get_name(bin), clone_val);
 
-        switch(t) {
-            case AS_INTEGER: {
-                as_v8_detail(log, "Integer bin value %d", val->integer.value);
-                as_record_set_int64(*dest, as_bin_get_name(bin), val->integer.value); 
-                break;
-            }
-            case AS_STRING: {
-                char* strval = strdup(val->string.value);
-                as_v8_detail(log, "String bin value %s", strval);
-                as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
-                break;
-            }
-            case AS_BYTES: {
-                size_t size = val->bytes.size;
-                uint8_t *bytes = (uint8_t*) malloc(size);
-                memcpy(bytes, val->bytes.value, size);
-                as_v8_detail(log, "Blob bin value %u ", bytes);
-                as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, size, true);
-                break;
-            }
-            case AS_LIST: {
-                as_arraylist* list      = (as_arraylist*) &val->list; 
-                as_arraylist *clone_list    = as_arraylist_new( list->capacity, list->block_size);
-                as_arraylist_iterator it;
-                as_arraylist_iterator_init( &it, list);
-                int index = 0;
-                while( as_arraylist_iterator_has_next( &it)) {
-                    const as_val* val = as_arraylist_iterator_next( &it);
-                    as_val_reserve(val);
-                    as_arraylist_set( clone_list, index++, (as_val*) val);
-                }
-                as_record_set_list( *dest, as_bin_get_name(bin), (as_list*)clone_list);
-                break;
-            }
-            case AS_MAP: {
-                as_hashmap* map         = (as_hashmap*) &val->map;
-                as_hashmap *clone_map   = as_hashmap_new(as_hashmap_size(map));
-                as_hashmap_iterator it;
-                as_hashmap_iterator_init( &it, map);
-                while( as_hashmap_iterator_has_next( &it )) {
-                    as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
-                    as_val* key     = as_pair_1(pair); 
-                    as_val* val     = as_pair_2(pair);
-                    as_val_reserve(key);
-                    as_val_reserve(val);
-                    as_hashmap_set( clone_map, key, val);
-                }
-                as_record_set_map( *dest, as_bin_get_name(bin), (as_map*)clone_map);
-                break;
-            }
-            default:
-               break;
-        }
     }       
 
     return true;
@@ -373,7 +368,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-                return scope.Close(Number::New((double) data));
+                return scope.Close(Integer::New(data));
             }
         }
         case AS_STRING : {
@@ -622,7 +617,7 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
     }
 
     (*len) = obj->GetIndexedPropertiesExternalArrayDataLength();
-    (*data) = (uint8_t*) malloc(sizeof(uint8_t) * (*len));
+    (*data) = (uint8_t*) cf_malloc(sizeof(uint8_t) * (*len));
     memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len));
 
     return AS_NODE_PARAM_OK;
@@ -965,9 +960,6 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
                 size > 2 ? data[2] : 0,
                 size > 3 ? " ..." : ""
                 );
-        }
-        else {
-            goto ReturnError;
         }
     }
 
