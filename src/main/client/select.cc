@@ -1,17 +1,23 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013 Aerospike Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  ******************************************************************************/
 
 extern "C" {
@@ -21,6 +27,7 @@ extern "C" {
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
     #include <aerospike/as_record_iterator.h>
+    #include <citrusleaf/alloc.h>
 }
 
 #include <node.h>
@@ -120,11 +127,11 @@ static void * prepare(const Arguments& args)
         Local<Array> barray = Local<Array>::Cast(args[1]);
         int num_bins = barray->Length();
         data->num_bins = num_bins;
-        data->bins = (char **)calloc(sizeof(char *), num_bins+1);
+        data->bins = (char **)cf_calloc(sizeof(char *), num_bins+1);
         as_v8_debug(log, "Number of bins requested %d", num_bins);
         for (int i=0; i < num_bins; i++) {
             Local<Value> bname = barray->Get(i);
-            data->bins[i] = (char*) malloc(AS_BIN_NAME_MAX_SIZE);
+            data->bins[i] = (char*) cf_malloc(AS_BIN_NAME_MAX_SIZE);
             strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
             as_v8_detail(log, "bin[%d] : %s", i, data->bins[i]);
         }
@@ -195,9 +202,9 @@ static void execute(uv_work_t * req)
         aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
 
         for ( int i = 0; i < data->num_bins; i++) {
-            free(data->bins[i]);
+            cf_free(data->bins[i]);
         }
-        free(data->bins);
+        cf_free(data->bins);
     }
 
 }
