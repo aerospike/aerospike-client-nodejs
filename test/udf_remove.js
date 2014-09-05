@@ -52,21 +52,7 @@ describe('client.udfRemove()', function(done) {
     after(function(done) {
         done();
     });
-
-    it('should remove an UDF module from aerospike cluster', function(done) {
-        var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
-        client.udfRegister(filename, function(err) {
-            expect(err).to.be.ok();
-            expect(err.code).to.equal(status.AEROSPIKE_OK);
-			client.udfRemove("udf_test.lua", function(err) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				done();
-			});
-        }); 
-    });
-
+    
 	it('should remove an UDF module with a info policy from aerospike cluster', function(done) {
         var dir = __dirname;
 		var filename = dir + "/udf_test.lua"
