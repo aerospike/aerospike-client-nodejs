@@ -19,6 +19,24 @@ When invoking an operation, you can choose to provide a policy:
 ```js
 client.get(key, {timeout: 1000}, callback);
 ```
+<!--
+################################################################################
+ApplyPolicy
+################################################################################
+-->
+<a name="ApplyPolicy"></a>
+
+### Apply Policy Object
+
+A policy effecting the behavior of UDF execution.
+
+Attributes:
+
+- `key`             – Specifies the behavior for the key. 
+                       For values, see [Key Policy Values](policies.md#key).
+- `timeout`         – Maximum time in milliseconds to wait for the operation to 
+                      complete. If 0 (zero), then the value will default to 
+                      global default timeout value
 
 <!--
 ################################################################################
