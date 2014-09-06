@@ -87,8 +87,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     HANDLESCOPE;
 
     AerospikeClient * client = new AerospikeClient();
-    client->as = (aerospike*) malloc(sizeof(aerospike));
-    client->log = (LogInfo*) malloc(sizeof(LogInfo));
+    client->as = (aerospike*) cf_malloc(sizeof(aerospike));
+    client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
 
 	// initialize the log to default values.
     LogInfo * log = client->log;

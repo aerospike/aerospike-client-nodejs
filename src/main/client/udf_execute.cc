@@ -61,7 +61,7 @@ typedef struct AsyncData {
     as_policy_apply policy;
     as_key key;
 	char filename[FILESIZE];
-	char* funcname;
+	char funcname[FILESIZE];
 	as_arraylist udfargs;
     LogInfo * log;
 	as_val* result;
@@ -101,7 +101,9 @@ static void * prepare(const Arguments& args)
     as_policy_apply* policy     = &data->policy;
     LogInfo * log               = data->log = client->log;
 	as_arraylist* udfargs		= &data->udfargs;
-	char * filename				= data->filename;
+	data->filename				= {'\0'};
+	data->funcname				= {'\0'};
+	char * filename				= data->filename;  
 	char * funcname				= data->funcname;
     int arglength				= args.Length();
 
@@ -221,14 +223,14 @@ static void respond(uv_work_t * req, int status)
     Handle<Value> argv[3];
     if (data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = key_to_jsobject(key, log);
 
 		// should it be moved into a new function.
 		// APIs for query and scan should determine that.
 		Handle<Object> res  = Object::New();
 		Handle<Value> jsval = val_to_jsvalue( data->result, log);
 		res->Set( String::NewSymbol( data->funcname), jsval);
-		argv[2] = res;
+		argv[1] = res;
+        argv[2] = key_to_jsobject(key, log);
     }
     else {
         err->func = NULL;

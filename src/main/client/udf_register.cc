@@ -90,6 +90,7 @@ static void * prepare(const Arguments& args)
     data->param_err             = 0;
 	char* filepath				= NULL;
     int argc					= args.Length();
+	data->filename				= {'\0'};
 	int argpos					= 0;
 
 	// The last argument should be a callback function.
@@ -107,9 +108,10 @@ static void * prepare(const Arguments& args)
 
 	// The first argument should be the UDF file name.
 	if ( args[UDF_ARG_FILE]->IsString()) {
-		int length =  args[UDF_ARG_FILE]->ToString()->Length();
+		int length =  args[UDF_ARG_FILE]->ToString()->Length()+1;
 		filepath = (char*) cf_malloc( sizeof(char) * length);
-		strcpy( filepath, *String::Utf8Value(args[UDF_ARG_FILE]->ToString()));
+		strcpy( filepath, *String::Utf8Value(args[UDF_ARG_FILE]->ToString()) );
+		filepath[length-1] = '\0';
 		argpos++;
 	}
 	else {
@@ -123,9 +125,13 @@ static void * prepare(const Arguments& args)
 	FILE * file = fopen( filepath, "r");
 
 	if( !file) {
-		as_v8_detail(log, "Cannot open file %s \n", filepath);
+		as_v8_debug(log, "Cannot open file %s \n", filepath);
 		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR);
 		data->param_err = 1;
+		if ( filepath != NULL) 
+		{
+			cf_free(filepath);
+		}
 		scope.Close(Undefined());
 		return data;
 	}
@@ -136,25 +142,33 @@ static void * prepare(const Arguments& args)
 		as_v8_error(log, "file-seek operation failed with error : %d", rv);
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
 		data->param_err = 1;
+		if(filepath != NULL) 
+		{
+			cf_free(filepath);
+		}
 		scope.Close(Undefined());
 		return data;
 	}
 
-	long file_size = ftell(file);
+	int file_size = ftell(file);
 
 	if ( file_size == -1L) {
 		as_v8_error(log, "ftell operation failed with error %d ",file_size);
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
 		data->param_err = 1;
+		if(filepath != NULL) 
+		{
+			cf_free(filepath);
+		}
 		scope.Close(Undefined());
 		return data;
 	}
 
 	rewind(file);
 	//Read the file's content into local buffer.
-	uint8_t * content = (uint8_t*)cf_malloc(sizeof(uint8_t) * file_size);
+	uint8_t * file_content = (uint8_t*)cf_malloc(sizeof(uint8_t) * file_size);
 
-	if ( content == NULL) {
+	if ( file_content == NULL) {
 		as_v8_error(log, "UDF buffer - memory allocation failed ");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
 		data->param_err = 1;
@@ -162,7 +176,7 @@ static void * prepare(const Arguments& args)
 		return data;
 	}
 
-	uint8_t* p_write = content;
+	uint8_t* p_write = file_content;
 	int read = fread(p_write, 1, 512, file);
 	int size = 0;
 
@@ -178,13 +192,19 @@ static void * prepare(const Arguments& args)
 		as_v8_error(log, "Filename-length is greater than allowed size(255)");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		data->param_err = 1;
+		if(filepath != NULL) 
+		{
+			cf_free(filepath);
+		}
 		scope.Close(Undefined());
 		return data;
 	}
-	strcpy( data->filename, filename);
+	int filesize = strlen(filename);
+	strncpy( data->filename, filename, filesize);
+	data->filename[filesize+1] = '\0';
 
 	//Wrap the local buffer as an as_bytes object.
-	as_bytes_init_wrap(&data->content, content, size, true);
+	as_bytes_init_wrap(&data->content, file_content, size, true);
 	
 	
 	// The second argument should specify the type of the UDF.
@@ -204,6 +224,9 @@ static void * prepare(const Arguments& args)
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = 1;
+			if ( filepath != NULL) {
+				cf_free(filepath);
+			}
 			scope.Close(Undefined());
 			return data;
         } 
@@ -215,6 +238,10 @@ static void * prepare(const Arguments& args)
         as_policy_info_init(policy);
     }
 
+	if( filepath != NULL) 
+	{
+		cf_free(filepath);
+	}
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
     scope.Close(Undefined());
     return data;
@@ -306,12 +333,12 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
-		as_bytes_destroy(&data->content);
+		as_bytes_destroy( &data->content);
         as_v8_debug(log, "Cleaned up all the structures");
     }
 
-    //delete data;
-    //delete req;
+    delete data;
+    delete req;
     scope.Close(Undefined());
 }
 

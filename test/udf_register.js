@@ -54,6 +54,36 @@ describe('client.udfRegister()', function(done) {
 		client = null;
         done();
     });
+	it('should register an UDF file to aerospike cluster', function(done) {
+        var dir = __dirname;
+		var filename = dir + "/udf_test.lua"
+        client.udfRegister(filename, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+			done();
+        }); 
+    });
+
+	it('should register an UDF file with a LUA type to aerospike cluster', function(done) {
+        var dir = __dirname;
+		var filename = dir + "/udf_test.lua"
+        client.udfRegister(filename, language.LUA, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+			done();
+        }); 
+    });
+    it('should register an UDF file with a info policy to aerospike cluster', function(done) {
+        var dir = __dirname;
+		var filename = dir + "/udf_test.lua"
+		var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
+        client.udfRegister(filename, infopolicy, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+			done();
+        }); 
+    });
+
 
     it('should register an UDF file with a info policy and LUA type to aerospike cluster', function(done) {
         var dir = __dirname;

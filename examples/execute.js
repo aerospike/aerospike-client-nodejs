@@ -140,10 +140,8 @@ var key = {
 
 
 udf_args  = { module:"udf_test", funcname:"func_cache", args: [123, "str"] }
-client.execute(key, udf_args, function(err, key, res) {
+client.execute(key, udf_args, function(err, res, key) {
 
-	console.log( res);
-	console.log( key);
     switch ( err.code ) {
         case status.AEROSPIKE_OK:
             console.log("OK - ", err);

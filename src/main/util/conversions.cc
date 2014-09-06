@@ -1137,12 +1137,14 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 	// Extract UDF module name
 	if( obj->Has(String::NewSymbol("module"))) {
 		Local<Value> module = obj->Get( String::NewSymbol("module"));
+		int size = 0;
+
 		if( module->IsString()) {
+			size = module->ToString()->Length()+1;
 			if( *filename == NULL) {
-				int size = module->ToString()->Length();
-				*filename = (char*) malloc(sizeof(char) * size);
+				*filename = (char*) cf_malloc(sizeof(char) * size);
 			}
-			strcpy( *filename, *String::Utf8Value(module));
+			strcpy( *filename, *String::Utf8Value(module) );
 			as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
 		}
 		else {
@@ -1161,7 +1163,7 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		if ( v8_funcname->IsString()) {
 			if( *funcname == NULL) {
 				int size = v8_funcname->ToString()->Length();
-				*funcname = (char*) malloc( sizeof(char) * size);
+				*funcname = (char*) cf_malloc( sizeof(char) * size);
 			}
 			strcpy( *funcname, *String::Utf8Value( v8_funcname));
 			as_v8_detail(log, "The function name in the UDF args set to %s ", *funcname);
@@ -1273,7 +1275,6 @@ int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
 		as_arraylist *list = NULL;
 		int ret = udfargs_from_jsobject(&filename, &funcname, &list, applyEach->ToObject(), log);
 		if ( funcname == NULL || filename == NULL) {
-			printf("To hell with filename and funcname is NULL\n");
 			return AS_NODE_PARAM_ERR;
 		}
 		if ( ret == AS_NODE_PARAM_ERR) {
