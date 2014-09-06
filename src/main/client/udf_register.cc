@@ -90,9 +90,10 @@ static void * prepare(const Arguments& args)
     data->param_err             = 0;
 	char* filepath				= NULL;
     int argc					= args.Length();
-	data->filename				= {'\0'};
 	int argpos					= 0;
-
+	char* fname					= data->filename;
+	memset(fname, 0, FILESIZE);
+	
 	// The last argument should be a callback function.
     if ( args[argc-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-1]));

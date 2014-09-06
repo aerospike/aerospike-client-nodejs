@@ -105,8 +105,8 @@ static void * prepare(const Arguments& args)
 	char * funcname				= data->funcname;
     int arglength				= args.Length();
 
-	memset(data->filename, 0, FILESIZE);
-	memset(data->filename, 0, FILESIZE);
+	memset(filename, 0, FILESIZE);
+	memset(funcname, 0, FILESIZE);
 
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
