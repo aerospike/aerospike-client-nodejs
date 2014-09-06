@@ -101,11 +101,12 @@ static void * prepare(const Arguments& args)
     as_policy_apply* policy     = &data->policy;
     LogInfo * log               = data->log = client->log;
 	as_arraylist* udfargs		= &data->udfargs;
-	data->filename				= {'\0'};
-	data->funcname				= {'\0'};
 	char * filename				= data->filename;  
 	char * funcname				= data->funcname;
     int arglength				= args.Length();
+
+	memset(data->filename, 0, FILESIZE);
+	memset(data->filename, 0, FILESIZE);
 
     if ( args[arglength-1]->IsFunction()) {
         data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
