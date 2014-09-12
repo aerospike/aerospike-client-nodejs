@@ -1,17 +1,23 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013 Aerospike Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  ******************************************************************************/
 
 #include <node.h>
@@ -29,14 +35,17 @@ extern "C" {
     #include <aerospike/as_record.h>
     #include <aerospike/as_record_iterator.h>
     #include <aerospike/aerospike_batch.h>  
+    #include <aerospike/aerospike_scan.h>  
     #include <aerospike/as_arraylist.h>
     #include <aerospike/as_arraylist_iterator.h>
     #include <aerospike/as_hashmap.h>
     #include <aerospike/as_hashmap_iterator.h>
     #include <aerospike/as_pair.h>
+    #include <aerospike/as_scan.h>
     #include <aerospike/as_map.h>
     #include <aerospike/as_nil.h>
     #include <aerospike/as_stringmap.h>
+    #include <citrusleaf/alloc.h>
 }
 
 #include "../client.h"
@@ -221,42 +230,82 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
 
     return AS_NODE_PARAM_OK;
 }
-
+as_val* asval_clone( as_val* val, LogInfo* log)
+{
+    as_val_t t = as_val_type( (as_val*)val);
+    as_val* clone_val = NULL;
+    switch(t) {
+        case AS_INTEGER: {
+            as_integer* int_val = as_integer_fromval( val );
+            int64_t ival        = as_integer_get( int_val);
+            as_v8_detail(log, "Cloning Integer value %d", ival);
+            clone_val = as_integer_toval(as_integer_new(ival)); 
+            break;
+        }
+        case AS_STRING: {
+            as_string* str_val = as_string_fromval( val );
+            char* strval = as_string_get( str_val);
+            as_v8_detail(log, "Cloning String  value %s", strval);
+            char* clone_str = (char*) cf_strdup( strval);
+            clone_val = as_string_toval( as_string_new(clone_str, true));
+            break;
+        }
+        case AS_BYTES: {
+            as_bytes* bytes_val = as_bytes_fromval( val);
+            size_t size         = as_bytes_size(bytes_val);
+            uint8_t *bytes      = (uint8_t*) cf_malloc(size);
+            memcpy(bytes, as_bytes_get(bytes_val), size);
+            as_v8_detail(log, "Cloning Blob value %u ", bytes);
+            clone_val = as_bytes_toval(as_bytes_new_wrap( bytes, size, true));    
+            break;
+        }
+        case AS_LIST: {
+                as_arraylist* list      = (as_arraylist*) as_list_fromval( val); 
+                clone_val =  as_list_toval( (as_list*)as_arraylist_new(as_arraylist_size(list), list->block_size));
+                as_arraylist_iterator it;
+                as_arraylist_iterator_init( &it, list);
+                int index = 0;
+                as_v8_detail(log, "Cloning a list value of size %d ", as_arraylist_size(list));
+                while( as_arraylist_iterator_has_next( &it)) {
+                    as_val* arr_element   = (as_val*) as_arraylist_iterator_next( &it);
+                    as_val* clone_element = asval_clone( arr_element, log);
+                    as_arraylist_set((as_arraylist*) clone_val, index++, clone_element);
+                }
+                as_v8_detail(log, "Cloning a list SUCCESS");
+                break;
+        }
+        case AS_MAP: {
+                as_hashmap* map         = (as_hashmap*) as_map_fromval(val);
+                clone_val               = as_map_toval( (as_map*)as_hashmap_new(as_hashmap_size(map)));
+                as_hashmap_iterator it;
+                as_hashmap_iterator_init( &it, map);
+                while( as_hashmap_iterator_has_next( &it )) {
+                    as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
+                    as_val* orig_key     = as_pair_1(pair); 
+                    as_val* orig_val     = as_pair_2(pair);
+                    as_val* clone_key    = asval_clone( orig_key, log);
+                    as_val* clone_mapval = asval_clone( orig_val, log);
+                    as_hashmap_set( (as_hashmap*) clone_val, clone_key, clone_mapval);
+                }
+                as_v8_detail( log, "Cloning a map SUCCESS");
+                break;
+        }
+        default:
+            as_v8_error( log, "as_val received is UNKNOWN type");
+            break;
+    }
+    return clone_val;
+}
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
 {
     if ( src == NULL || dest == NULL ) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
         return false;
     }
-
-    as_key_value* val = src->valuep;
-    as_val_t t = as_val_type((as_val*)val);
-
-    switch(t){
-        case AS_INTEGER: {
-            as_v8_detail(log, "Integer key value %d", val->integer.value);
-            *dest = as_key_new_int64(src->ns, src->set, val->integer.value);
-            break;
-        }
-        case AS_STRING: {
-            char* strval = strdup(val->string.value);
-            as_v8_detail(log, "String key value %s", strval);
-            *dest = as_key_new_strp( src->ns, src->set, strval,true);
-            //strcpy((*dest)->ns,src->ns);
-            //strcpy((*dest)->set,src->set);
-            break;
-        }
-        case AS_BYTES: {
-            size_t size = val->bytes.size;
-            uint8_t *bytes = (uint8_t*) malloc(size);
-            as_v8_detail(log, "key blob value %u ", bytes);
-            *dest = as_key_new_rawp(src->ns, src->set, bytes, size, true);
-            break;
-        }
-        default: 
-            break;
-    }
-
+    as_v8_detail(log, "Cloning the key");
+    as_key_value* val           = src->valuep;
+    as_key_value* clone_val     = (as_key_value*) asval_clone( (as_val*) val, log);
+    *dest                       = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
     return true;
 }
 
@@ -265,7 +314,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     if(src == NULL || dest == NULL) {
         return false;
     }
-
+    as_v8_detail( log, "Cloning the record");
     (*dest)->ttl = src->ttl;
     (*dest)->gen = src->gen;
     as_record_iterator it;
@@ -274,62 +323,10 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     while (as_record_iterator_has_next(&it)) {
         as_bin * bin            = as_record_iterator_next(&it);
         as_bin_value * val      = as_bin_get_value(bin);
-        as_val_t t = as_bin_get_type(bin);
+        as_bin_value* clone_val = (as_bin_value*) asval_clone( (as_val*) val, log);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
+        as_record_set( *dest, as_bin_get_name(bin), clone_val);
 
-        switch(t) {
-            case AS_INTEGER: {
-                as_v8_detail(log, "Integer bin value %d", val->integer.value);
-                as_record_set_int64(*dest, as_bin_get_name(bin), val->integer.value); 
-                break;
-            }
-            case AS_STRING: {
-                char* strval = strdup(val->string.value);
-                as_v8_detail(log, "String bin value %s", strval);
-                as_record_set_strp(*dest, as_bin_get_name(bin), strval, true);
-                break;
-            }
-            case AS_BYTES: {
-                size_t size = val->bytes.size;
-                uint8_t *bytes = (uint8_t*) malloc(size);
-                memcpy(bytes, val->bytes.value, size);
-                as_v8_detail(log, "Blob bin value %u ", bytes);
-                as_record_set_rawp(*dest, as_bin_get_name(bin), bytes, size, true);
-                break;
-            }
-            case AS_LIST: {
-                as_arraylist* list      = (as_arraylist*) &val->list; 
-                as_arraylist *clone_list    = as_arraylist_new( list->capacity, list->block_size);
-                as_arraylist_iterator it;
-                as_arraylist_iterator_init( &it, list);
-                int index = 0;
-                while( as_arraylist_iterator_has_next( &it)) {
-                    const as_val* val = as_arraylist_iterator_next( &it);
-                    as_val_reserve(val);
-                    as_arraylist_set( clone_list, index++, (as_val*) val);
-                }
-                as_record_set_list( *dest, as_bin_get_name(bin), (as_list*)clone_list);
-                break;
-            }
-            case AS_MAP: {
-                as_hashmap* map         = (as_hashmap*) &val->map;
-                as_hashmap *clone_map   = as_hashmap_new(as_hashmap_size(map));
-                as_hashmap_iterator it;
-                as_hashmap_iterator_init( &it, map);
-                while( as_hashmap_iterator_has_next( &it )) {
-                    as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
-                    as_val* key     = as_pair_1(pair); 
-                    as_val* val     = as_pair_2(pair);
-                    as_val_reserve(key);
-                    as_val_reserve(val);
-                    as_hashmap_set( clone_map, key, val);
-                }
-                as_record_set_map( *dest, as_bin_get_name(bin), (as_map*)clone_map);
-                break;
-            }
-            default:
-               break;
-        }
     }       
 
     return true;
@@ -373,7 +370,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-                return scope.Close(Number::New((double) data));
+                return scope.Close(Integer::New(data));
             }
         }
         case AS_STRING : {
@@ -459,6 +456,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
         as_val * val = (as_val *) as_bin_get_value(bin);
         Handle<Value> obj = val_to_jsvalue(val, log );
         bins->Set(String::NewSymbol(name), obj);
+		as_v8_detail(log, "Setting binname %s ", name);
     }
 
     return scope.Close(bins);
@@ -475,7 +473,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     }
     
     meta = Object::New();
-    meta->Set(String::NewSymbol("ttl"), Integer::New(record->ttl));
+    meta->Set(String::NewSymbol("ttl"), Number::New(record->ttl));
     as_v8_detail(log, "TTL of the record %d", record->ttl);
     meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);
@@ -510,16 +508,19 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 {
     if(obj->IsNull()){
+		as_v8_detail(log, "The as_val is NULL");
         return (as_val*) &as_nil;
     }
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
+		as_v8_detail(log, "The as_val string is %s", as_val_tostring(str));
         return (as_val*) str;
         
     }
     else if(obj->IsNumber()){
-        as_integer *num = as_integer_new(obj->IntegerValue());
+        as_integer *num = as_integer_new(obj->NumberValue());
+		as_v8_detail(log, "The as_val is integer %s", as_val_tostring(num));
         return (as_val*) num;
     }
     else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
@@ -529,6 +530,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             return NULL;
         }
         as_bytes *bytes = as_bytes_new_wrap( data, size, true);
+		as_v8_detail(log, "The as_val is bytes %s", as_val_tostring(bytes));
         return (as_val*) bytes;
 
     } 
@@ -543,6 +545,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* asval = asval_from_jsobject(val, log);
             as_arraylist_append(list, asval);
         }
+		as_v8_detail(log, "The as_val is array %s", as_val_tostring(list));
         return (as_val*) list;
 
     }
@@ -559,6 +562,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* val = asval_from_jsobject(value, log);
             as_stringmap_set((as_map*) map, *n, val);
         }
+		as_v8_detail(log, "The as_val is map %s", as_val_tostring(map));
         return (as_val*) map;
 
     }
@@ -622,7 +626,7 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
     }
 
     (*len) = obj->GetIndexedPropertiesExternalArrayDataLength();
-    (*data) = (uint8_t*) malloc(sizeof(uint8_t) * (*len));
+    (*data) = (uint8_t*) cf_malloc(sizeof(uint8_t) * (*len));
     memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len));
 
     return AS_NODE_PARAM_OK;
@@ -830,6 +834,37 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     return AS_NODE_PARAM_OK;
 }
 
+int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo* log)
+{
+	as_policy_apply_init( policy);
+	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+	as_v8_detail( log, "Parsing apply policy : success");
+	return AS_NODE_PARAM_OK;
+}
+
+int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo* log)
+{
+	as_policy_scan_init( policy);
+	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+
+    if ( obj->Has(String::NewSymbol("failOnClusterChange")) ) {  
+        Local<Value> failOnClusterChange = obj->Get(String::NewSymbol("failOnClusterChange"));
+        if ( failOnClusterChange->IsBoolean() ) {
+            policy->fail_on_cluster_change = (as_policy_bool) failOnClusterChange->ToBoolean()->Value();
+            as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
+        }
+        else {
+            as_v8_error(log, "failOnClusterChange should be a boolean object");
+            return AS_NODE_PARAM_ERR;
+        }
+    }
+
+	as_v8_detail( log, "Parsing scan policy : success");
+	return AS_NODE_PARAM_OK;
+}
+
 Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
     HANDLESCOPE;
@@ -856,7 +891,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
             case AS_INTEGER: {
                 as_integer * ival = as_integer_fromval(val);
                 as_v8_debug(log, "key.key = %d", as_integer_get(ival));
-                obj->Set(String::NewSymbol("key"), Integer::New(as_integer_get(ival)));
+                obj->Set(String::NewSymbol("key"), Number::New(as_integer_get(ival)));
                 break;
             }
             case AS_STRING: {
@@ -886,6 +921,28 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     }
 
     return scope.Close(obj);
+}
+
+Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
+{
+	HANDLESCOPE;
+	Local<Object> scaninfo;
+
+    if(info == NULL) {
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
+        return scope.Close(scaninfo);
+    }
+    
+    scaninfo = Object::New();
+    scaninfo->Set(String::NewSymbol("progressPct"), Integer::New(info->progress_pct));
+    as_v8_detail(log, "Progress pct of the scan %d", info->progress_pct);
+    scaninfo->Set(String::NewSymbol("recordScanned"), Number::New(info->records_scanned));
+    as_v8_detail(log, "Number of records scanned so far %d", info->records_scanned);
+	scaninfo->Set(String::NewSymbol("status"), Integer::New(info->status));
+
+    return scope.Close(scaninfo);
+
+	
 }
 
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
@@ -965,9 +1022,6 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
                 size > 2 ? data[2] : 0,
                 size > 3 ? " ..." : ""
                 );
-        }
-        else {
-            goto ReturnError;
         }
     }
 
@@ -1055,12 +1109,195 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
+int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * log)
+{
+	uint32_t  capacity = arr->Length();
+
+	if ( capacity <= 0) {
+		capacity = 0;
+	}
+	as_v8_detail(log, "Capacity of the asarray to be initialized %d", capacity);
+	if ( *udfargs != NULL) {
+		as_arraylist_init( *udfargs, capacity, 0);
+	} else {
+		*udfargs = as_arraylist_new( capacity, 0);
+	}
+
+	for ( uint32_t i = 0; i < capacity; i++) {
+		as_val* val = asval_from_jsobject( arr->Get(i), log);
+		as_arraylist_append(*udfargs, val);
+		as_v8_detail(log, "element added to the array %s", as_val_tostring(val));
+	}
+	return AS_NODE_PARAM_OK;
+
+}
+
+int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
+{
+	// Extract UDF module name
+	if( obj->Has(String::NewSymbol("module"))) {
+		Local<Value> module = obj->Get( String::NewSymbol("module"));
+		int size = 0;
+
+		if( module->IsString()) {
+			size = module->ToString()->Length()+1;
+			if( *filename == NULL) {
+				*filename = (char*) cf_malloc(sizeof(char) * size);
+			}
+			strcpy( *filename, *String::Utf8Value(module) );
+			as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
+		}
+		else {
+			as_v8_error(log, "UDF module name should be string");
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	else {
+		as_v8_error(log, "UDF module name should be passed to execute UDF");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	// Extract UDF function name
+	if( obj->Has(String::NewSymbol("funcname"))) { 
+		Local<Value> v8_funcname = obj->Get( String::NewSymbol("funcname"));
+		if ( v8_funcname->IsString()) {
+			if( *funcname == NULL) {
+				int size = v8_funcname->ToString()->Length();
+				*funcname = (char*) cf_malloc( sizeof(char) * size);
+			}
+			strcpy( *funcname, *String::Utf8Value( v8_funcname));
+			as_v8_detail(log, "The function name in the UDF args set to %s ", *funcname);
+		}
+		else {
+			as_v8_error(log, "UDF function name should be string");
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	else {
+		as_v8_error(log, "UDF function name should be passed to execute UDF");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	// Is it fair to expect an array always. For a single argument UDF invocation
+	// should we relax.
+	// Extract UDF arglist as_arraylist
+	if( obj->Has( String::NewSymbol("args"))) {
+		Local<Value> arglist = obj->Get( String::NewSymbol("args"));
+		if ( ! arglist->IsArray()){
+			as_v8_error(log, "UDF args should be an array");
+			return AS_NODE_PARAM_ERR;
+		}
+		asarray_from_jsarray( args, Local<Array>::Cast(arglist), log);
+		as_v8_detail(log, "Parsing UDF args -- done !!!");
+		return AS_NODE_PARAM_OK;
+	}
+	else {
+		// no argument case. Initialize array with 0 elements and invoke UDF.
+		if (*args != NULL) {
+			as_arraylist_init(*args, 0, 0);
+		}
+		return AS_NODE_PARAM_OK;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
+	if ( scan == NULL) {
+		// should never land in here.
+		as_v8_error(log, "scan object is NULL, internal error");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_namespace ns = {'\0'};
+	as_set set		= {'\0'};
+	
+	if ( obj->Has(String::NewSymbol("ns"))) {
+		Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
+		if ( ! ns_obj->IsString()) {
+			as_v8_error( log, "namespace for scan must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		strncpy( ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+		as_v8_detail( log, "namespace for scan operation is set to value %s", ns);
+	}
+	else {
+		as_v8_error( log, "namespace should be set for scan object");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if ( obj->Has(String::NewSymbol("set"))) {
+		Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+		if ( !set_obj->IsString()) {
+			as_v8_error( log, "set for scan must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		strncpy( set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+		as_v8_detail( log, "set for scan operation is set to value %s", set);
+	}
+
+	if( ns == NULL || set == NULL) {
+		// Should never land here.
+		// If one of them is not present in the object, error is returned from there.
+		as_v8_error( log, "namespace/set is NULL. Internal Error !!!");
+		return AS_NODE_PARAM_ERR;
+	}
+	as_scan_init( scan, ns, set);
+	as_v8_detail( log, "scan object is initialized");
+	if ( obj->Has(String::NewSymbol("noBins"))) {
+		Local<Value> noBins = obj->Get(String::NewSymbol("noBins"));
+		if ( ! noBins->IsBoolean()) {
+			as_v8_error( log, "noBins value should be of type boolean in a scan object");
+			return AS_NODE_PARAM_ERR;
+		}
+		scan->no_bins = (as_policy_bool) noBins->ToBoolean()->Value();
+		as_v8_detail( log, "no_bins value for scan operation is set to %d ", scan->no_bins);
+	}
+	if ( obj->Has(String::NewSymbol("concurrent"))) {
+		Local<Value> concurrent = obj->Get(String::NewSymbol("concurrent"));
+		if ( ! concurrent->IsBoolean()) {
+			as_v8_error( log, "concurrent value in a scan object should be a boolean type");
+			return AS_NODE_PARAM_ERR;
+		}
+		scan->concurrent = concurrent->ToBoolean()->Value();
+		as_v8_detail( log, "concurrent in scan object is set to %d", scan->concurrent);
+	}
+	//Parsing binlist from an array of bins
+	//Two APIs use this feature. 1. select and scan
+	//@TO-DO  Gayathri
+	//Move the parsing function to conversion.cc and use it 
+	//in both APIs. -- Do not replicate code.
+
+	if( obj->Has(String::NewSymbol("applyEach"))) {
+		Local<Value> applyEach = obj->Get(String::NewSymbol("applyEach"));
+		char file[255] = {'\0'};
+		char* filename = file; 
+		char* funcname ;  
+		as_arraylist *list = NULL;
+		int ret = udfargs_from_jsobject(&filename, &funcname, &list, applyEach->ToObject(), log);
+		if ( funcname == NULL || filename == NULL) {
+			return AS_NODE_PARAM_ERR;
+		}
+		if ( ret == AS_NODE_PARAM_ERR) {
+			as_v8_error( log, "parsing udf args for scan failed");
+			return ret;
+		}
+		as_v8_detail(log, "Invoking scan apply each with filename %s, funcname %s", filename, funcname);
+		as_v8_detail(log, "And the arguments to apply each %s", as_val_tostring((as_val*) list));
+		as_scan_apply_each( scan, (const char*)filename, (const char*) funcname, (as_list*) list);
+	}
+	else {
+		as_v8_error( log, "applyEach value should be an argument for scan operation");
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 
     if ( obj->Has(String::NewSymbol("bin"))) {
         Local<Value> val = obj->Get(String::NewSymbol("bin"));
         if ( !val->IsString()) {
-            as_v8_debug(log, "Type error in bin_name(bin should be string"); 
+            as_v8_error(log, "Type error in bin_name(bin should be string"); 
             return AS_NODE_PARAM_ERR;
         }
         (*binName) = strdup(*String::Utf8Value(val));
@@ -1090,7 +1327,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
 
     Local<Value> v8val = GetBinValue(obj, log);
     if ( v8val->IsNumber() ) {
-        int64_t val = v8val->IntegerValue();
+        int64_t val = v8val->NumberValue();
         as_v8_detail(log, "integer value to be written %d", val);
         as_operations_add_write_int64(op, binName, val);
         if ( binName != NULL) free(binName);
@@ -1152,7 +1389,7 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
     as_v8_detail(log, "Incr operation on bin :%s", binName);
     Local<Value> v8val = GetBinValue(obj, log);
     if ( v8val->IsNumber()) {
-        int64_t binValue = v8val->IntegerValue();
+        int64_t binValue = v8val->NumberValue();
         as_v8_detail(log, "value to be incremented %d", binValue);
         as_operations_add_incr( ops, binName, binValue);
         if (binName != NULL) free (binName);

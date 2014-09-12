@@ -83,6 +83,29 @@ Alternatively:
 ```js
 aerospike.key("test", "demo", 123)
 ```
+<!--
+################################################################################
+UDFArgs
+################################################################################
+-->
+<a name="UDFArgs"></a>
+
+## UDFArgs 
+
+Arguments to execute a UDF in the database.
+
+- `module`   – The UDF module name to be invoked in the database.
+- `funcname` – The UDF function to be invoked in the database.
+- `args`	 - (optional) The arguments to be passed to the UDF function.
+Example:
+
+```js
+var udfArgs = {
+  module: udf_module,
+  funcname: udf_funcname,
+  args: [123, "str"]
+}
+```
 
 
 <!--

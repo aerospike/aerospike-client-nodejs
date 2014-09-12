@@ -190,6 +190,42 @@ client.connect(function (error) {
   }
 })
 ```
+<!--
+################################################################################
+execute()
+################################################################################
+-->
+<a name="execute"></a>
+
+### put(key, udfArgs, policy=null, callback)
+
+Executes an UDF on a record in the database. 
+
+Parameters:
+
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `udfArgs`     – A [Record object](datamodel.md#UDFArgs) used for specifying the fields to store.
+- `policy`      – (optional) A [ApplyPolicy object](policies.md#ApplyPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `response`	- A dictionary with the udf function name as the key and the value returned from the udf
+				  function as the value.
+- `key`         – A [Key object](datamodel.md#key) for the record that was written.
+
+Example:
+```js
+var key = aerospike.key
+var udfArgs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
+
+client.put(key('test','demo','key1'), udfArgs, function(error, res, key) {
+  // do something
+});
+```
+
 
 <!--
 ################################################################################
@@ -459,6 +495,65 @@ client.select(key('test','demo','key1'), ["name","age"] function(error, record, 
   // do something
 });
 ```
+<!--
+################################################################################
+udfRegister()
+################################################################################
+-->
+<a name="udfRegister"></a>
+
+### select(udfModule, policy=null, callback)
+
+Registers an UDF to the database cluster.
+
+Parameters:
+
+- `udfModule`   – UDF filename specifying absolute file path.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+
+Example:
+```js
+
+client.select("path/to/file/filename", function(error) {
+  // do something
+});
+```
+<!--
+################################################################################
+udfRemove()
+################################################################################
+-->
+<a name="udfRemove"></a>
+
+### select(udfModule, policy=null, callback)
+
+Registers an UDF to the database cluster.
+
+Parameters:
+
+- `udfModule`   – UDF module name to be removed.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+
+Example:
+```js
+
+client.select("udfModuleName", function(error) {
+  // do something
+});
+```
+
 <!--
 ################################################################################
 updateLogging()

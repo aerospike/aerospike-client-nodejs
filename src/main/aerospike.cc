@@ -64,6 +64,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     exports->Set(String::NewSymbol("status"),   status());
     exports->Set(String::NewSymbol("policy"),   policy());
     exports->Set(String::NewSymbol("operator"), operators());
+	exports->Set(String::NewSymbol("language"), languages()); 
     exports->Set(String::NewSymbol("log"),      log());
 }
 

@@ -36,10 +36,14 @@
         'src/main/client/put.cc',
         'src/main/client/remove.cc',
         'src/main/client/select.cc',
+        'src/main/client/udf_register.cc',
+        'src/main/client/udf_remove.cc',
+        'src/main/client/udf_execute.cc',
         'src/main/enums/log.cc',
         'src/main/enums/operators.cc',
         'src/main/enums/policy.cc',
         'src/main/enums/status.cc',
+        'src/main/enums/udf_languages.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
@@ -55,7 +59,7 @@
       },
       'conditions': [
         ['OS=="linux"',{
-          'cflags': [ '-Wall', '-Warray-bounds', '-fpermissive']
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
         }]
       ] 
     }

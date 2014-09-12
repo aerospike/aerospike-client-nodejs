@@ -71,6 +71,9 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("udfRegister"), FunctionTemplate::New(Register)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("execute"), FunctionTemplate::New(Execute)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("udfRemove"), FunctionTemplate::New(UDFRemove)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("updateLogging"), FunctionTemplate::New(SetLogLevel)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
@@ -84,9 +87,15 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     HANDLESCOPE;
 
     AerospikeClient * client = new AerospikeClient();
-    client->as = (aerospike*) malloc(sizeof(aerospike));
-    client->log = (LogInfo*) malloc(sizeof(LogInfo));
+    client->as = (aerospike*) cf_malloc(sizeof(aerospike));
+    client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
 
+	// initialize the log to default values.
+    LogInfo * log = client->log;
+    log->fd = 2;
+    log->severity = AS_LOG_LEVEL_INFO;
+
+	// initialize the config to default values.
     as_config config;
     as_config_init(&config);
 
@@ -103,9 +112,8 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
             }
         } 
         if ( default_log_set == 0 ) {
-            LogInfo * log = client->log;
-            log->fd = 2;
-            log->severity = AS_LOG_LEVEL_INFO;
+			LogInfo * log = client->log;
+			log->fd = 2;
         }
 
     }
