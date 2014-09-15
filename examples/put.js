@@ -24,8 +24,8 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -39,6 +39,10 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        profile: {
+            boolean: true,
+            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -81,43 +85,40 @@ var keyv = argv._.length === 1 ? argv._[0] : null;
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
-if ( keyv === null ) {
+if ( ! keyv ) {
     console.error("Error: Please provide a key for the operation");
     console.error();
     argp.showHelp();
-    return;
+    process.exit(1);
 }
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 /*******************************************************************************
  *
@@ -125,39 +126,59 @@ var client = aerospike.client({
  * 
  ******************************************************************************/
 
-var key = {
-    ns:  argv.namespace,
-    set: argv.set,
-    key: keyv
-};
+aerospike.client(config).connect(function (err, client) {
 
-var record = {
-    i: 123,
-    s: "abc",
-    arr: [1, 2, 3],
-    map: { str: "g3", num: 3, buff: new Buffer( [0xa, 0xb, 0xc])},
-    b: new Buffer([0xa, 0xb, 0xc]),
-    b2: new Uint8Array([0xa, 0xb, 0xc])
-};
-
-var metadata = {
-    ttl: 10000,
-    gen: 0
-};
-
-console.time("put");
-
-client.put(key, record, metadata, function(err, key) {
-    switch ( err.code ) {
-        case status.AEROSPIKE_OK:
-            console.log("OK - ", key);
-            break;
-        default:
-            console.log("ERR - ", err, key);
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
     }
 
-    console.timeEnd("put");
-    console.log();
-    
-    client.close();
+    //
+    // Perform the operation
+    //
+
+    var key = {
+        ns:  argv.namespace,
+        set: argv.set,
+        key: keyv
+    };
+
+    var bins = {
+        i: 123,
+        s: "abc",
+        l: [1, 2, 3],
+        m: { s: "g3", i: 3, b: new Buffer( [0xa, 0xb, 0xc])},
+        b: new Buffer([0xa, 0xb, 0xc]),
+        b2: new Uint8Array([0xa, 0xb, 0xc])
+    };
+
+    var metadata = {
+        ttl: 10000,
+        gen: 0
+    };
+
+    if ( argv.profile ) {
+        console.time("put");
+    }
+
+    client.put(key, bins, metadata, function(err, key) {
+
+        var exitCode = 0;
+
+        switch ( err.code ) {
+            case Status.AEROSPIKE_OK:
+                break;
+            default:
+                console.error("Error: " + err.message);
+                exitCode = 1;
+                break;
+        }
+
+        if ( argv.profile === true ) {
+            console.log("---");
+            console.timeEnd("exists");
+        }
+
+        process.exit(exitCode);
+    });
 });

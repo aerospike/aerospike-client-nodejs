@@ -40,8 +40,8 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -108,36 +108,33 @@ var argv = argp.argv;
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 /*******************************************************************************
  *
@@ -145,70 +142,83 @@ var client = aerospike.client({
  * 
  ******************************************************************************/
 
-function remove_done(client, start, end, skip) {
-    var total = end - start + 1;
-    var done = 0;
-    var success = 0;
-    var notfound = 0;
-    var failure = 0;
-    var skipped = 0;
-    var timeLabel = "range_remove @ " + total;
+aerospike.client(config).connect(function (err, client) {
 
-    console.time(timeLabel);
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
+    }
 
-    return function(err, key, skippy) {
+    //
+    // Perform the operation
+    //
+    
+    function remove_done(client, start, end, skip) {
+        var total = end - start + 1;
+        var done = 0;
+        var success = 0;
+        var notfound = 0;
+        var failure = 0;
+        var skipped = 0;
+        var timeLabel = "range_remove @ " + total;
 
-        if ( skippy === true ) {
-            console.log("SKIP - ", key);
-            skipped++;
-        }
-        else {
-            switch ( err.code ) {
-                case status.AEROSPIKE_OK:
-                    console.log("OK - ", key);
-                    success++;
-                    break;
-                case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-                    console.log("NOT_FOUND - ", key);
-                    notfound++;
-                    break;
-                default:
-                    console.log("ERR - ", err, key);
-                    failure++;
+        console.time(timeLabel);
+
+        return function(err, key, skippy) {
+
+            if ( skippy === true ) {
+                console.log("SKIP - ", key);
+                skipped++;
+            }
+            else {
+                switch ( err.code ) {
+                    case Status.AEROSPIKE_OK:
+                        console.log("OK - ", key);
+                        success++;
+                        break;
+                    case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                        console.log("NOT_FOUND - ", key);
+                        notfound++;
+                        break;
+                    default:
+                        console.log("ERR - ", err, key);
+                        failure++;
+                }
+            }
+
+            done++;
+            if ( done >= total ) {
+                console.timeEnd(timeLabel);
+                console.log();
+                console.log("RANGE: start=%d end=%d skip=%d", start, end, skip);
+                console.log("RESULTS: (%d completed, %d success, %d failed, %d notfound, %d skipped)", done, success, failure, notfound, skipped);
+                console.log();
+                client.close();
             }
         }
+    }
 
-        done++;
-        if ( done >= total ) {
-            console.timeEnd(timeLabel);
-            console.log();
-            console.log("RANGE: start=%d end=%d skip=%d", start, end, skip);
-            console.log("RESULTS: (%d completed, %d success, %d failed, %d notfound, %d skipped)", done, success, failure, notfound, skipped);
-            console.log();
-            client.close();
+    function remove_start(client, start, end, skip) {
+        var done = remove_done(client, start, end, skip);
+        var i = start, s = 0;
+
+        for (; i <= end; i++ ) {
+            var key = {
+                ns:  argv.namespace,
+                set: argv.set,
+                key: i
+            };
+
+            if ( skip !== 0 && ++s >= skip ) {
+                s = 0;
+                done(null, key, true);
+                continue;
+            }
+
+            client.remove(key, done);
         }
     }
-}
 
-function remove_start(client, start, end, skip) {
-    var done = remove_done(client, start, end, skip);
-    var i = start, s = 0;
+    remove_start(client, argv.start, argv.end, argv.skip);
 
-    for (; i <= end; i++ ) {
-        var key = {
-            ns:  argv.namespace,
-            set: argv.set,
-            key: i
-        };
-
-        if ( skip !== 0 && ++s >= skip ) {
-            s = 0;
-            done(null, key, true);
-            continue;
-        }
-
-        client.remove(key, done);
-    }
-}
-
-remove_start(client, argv.start, argv.end, argv.skip);
+});

@@ -40,8 +40,8 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -104,36 +104,33 @@ var argv = argp.argv;
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 /*******************************************************************************
  *
@@ -141,110 +138,123 @@ var client = aerospike.client({
  * 
  ******************************************************************************/
 
-function put_done(client, start, end) {
-    var total = end - start + 1;
-    var done = 0;
-    var timeLabel = "range_put @ " + total;
+aerospike.client(config).connect(function (err, client) {
 
-    console.time(timeLabel);
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
+    }
 
-    return function(err, key) {
-        switch ( err.code ) {
-            case status.AEROSPIKE_OK:
-                console.log("OK - ", key);
-                break;
-            default:
-                console.log("ERR - ", err, key);
-        }
-        
-        done++;
-        if ( done >= total ) {
-            console.timeEnd(timeLabel);
-            console.log();
-            get_start(client, start, end);
+    //
+    // Perform the operation
+    //
+
+    function put_done(client, start, end) {
+        var total = end - start + 1;
+        var done = 0;
+        var timeLabel = "range_put @ " + total;
+
+        console.time(timeLabel);
+
+        return function(err, key) {
+            switch ( err.code ) {
+                case Status.AEROSPIKE_OK:
+                    console.log("OK - ", key);
+                    break;
+                default:
+                    console.log("ERR - ", err, key);
+            }
+            
+            done++;
+            if ( done >= total ) {
+                console.timeEnd(timeLabel);
+                console.log();
+                get_start(client, start, end);
+            }
         }
     }
-}
 
-function put_start(client, start, end) {
-    var done = put_done(client, start, end);
-    var i = 0;
+    function put_start(client, start, end) {
+        var done = put_done(client, start, end);
+        var i = 0;
 
-    for ( i = start; i <= end; i++ ) {
-        var key = {
-            ns:  argv.namespace,
-            set: argv.set,
-            key: i
-        };
+        for ( i = start; i <= end; i++ ) {
+            var key = {
+                ns:  argv.namespace,
+                set: argv.set,
+                key: i
+            };
 
-        var record = {
-            k: i,
-            s: "abc",
-            i: i * 1000 + 123,
-            b: new Buffer([0xa, 0xb, 0xc])
-        };
+            var record = {
+                k: i,
+                s: "abc",
+                i: i * 1000 + 123,
+                b: new Buffer([0xa, 0xb, 0xc])
+            };
 
-        var metadata = {
-            ttl: 10000,
-            gen: 0
-        };
+            var metadata = {
+                ttl: 10000,
+                gen: 0
+            };
 
-        client.put(key, record, metadata, done);
-    }
-}
-
-function get_done(client, start, end) {
-    var total = end - start + 1;
-    var done = 0;
-    var timeLabel = "range_get @ " + total;
-
-    console.time(timeLabel);
-
-    return function(err, record, metadata, key) {
-        switch ( err.code ) {
-            case status.AEROSPIKE_OK:
-                if ( record.k != key.key ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.k != key.key");
-                }
-                else if ( record.i != record.k * 1000 + 123 ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.i != record.k * 1000 + 123");
-                }
-                else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
-                    console.log("INVALID - ", key, metadata, record);
-                    console.log("        - record.b != [0xa,0xb,0xc]");
-                }
-                else {
-                    console.log("VALID - ", key, metadata, record);
-                }
-                break;
-            default:
-                console.log("ERR - ", err, key);
+            client.put(key, record, metadata, done);
         }
-        
-        done++;
-        if ( done >= total ) {
-            console.timeEnd(timeLabel);
-            console.log();
-            client.close();
-        }
-    };
-}
-
-function get_start(client, start, end) {
-    var done = get_done(client, start, end);
-    var i = 0;
-
-    for ( i = start; i <= end; i++ ) {
-        var key = {
-            ns:  argv.namespace,
-            set: argv.set,
-            key: i
-        };
-
-        client.get(key, done);
     }
-}
 
-put_start(client, argv.start, argv.end);
+    function get_done(client, start, end) {
+        var total = end - start + 1;
+        var done = 0;
+        var timeLabel = "range_get @ " + total;
+
+        console.time(timeLabel);
+
+        return function(err, record, metadata, key) {
+            switch ( err.code ) {
+                case Status.AEROSPIKE_OK:
+                    if ( record.k != key.key ) {
+                        console.log("INVALID - ", key, metadata, record);
+                        console.log("        - record.k != key.key");
+                    }
+                    else if ( record.i != record.k * 1000 + 123 ) {
+                        console.log("INVALID - ", key, metadata, record);
+                        console.log("        - record.i != record.k * 1000 + 123");
+                    }
+                    else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
+                        console.log("INVALID - ", key, metadata, record);
+                        console.log("        - record.b != [0xa,0xb,0xc]");
+                    }
+                    else {
+                        console.log("VALID - ", key, metadata, record);
+                    }
+                    break;
+                default:
+                    console.log("ERR - ", err, key);
+            }
+            
+            done++;
+            if ( done >= total ) {
+                console.timeEnd(timeLabel);
+                console.log();
+                client.close();
+            }
+        };
+    }
+
+    function get_start(client, start, end) {
+        var done = get_done(client, start, end);
+        var i = 0;
+
+        for ( i = start; i <= end; i++ ) {
+            var key = {
+                ns:  argv.namespace,
+                set: argv.set,
+                key: i
+            };
+
+            client.get(key, done);
+        }
+    }
+
+    put_start(client, argv.start, argv.end);
+
+});

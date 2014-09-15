@@ -19,6 +19,7 @@ extern "C" {
     #include <aerospike/aerospike_udf.h>
 	#include <aerospike/as_udf.h>
     #include <aerospike/as_config.h>
+    #include <aerospike/as_string.h>
 }
 
 #include <node.h>
@@ -188,9 +189,23 @@ static void * prepare(const Arguments& args)
 	}
 	fclose(file);
 
-	char* filename = basename(filepath);
-	if( filename == NULL || strlen(filename) > FILESIZE) {
-		as_v8_error(log, "Filename-length is greater than allowed size(255)");
+    as_string filename;
+    as_basename(&filename, filepath);
+    size_t filesize = as_string_len(&filename);
+	// char* filename = basename(filepath);
+	if ( as_string_get(&filename) == NULL ) {
+        as_v8_error(log, "Filename could not be parsed from path");
+        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        data->param_err = 1;
+        if(filepath != NULL) 
+        {
+            cf_free(filepath);
+        }
+        scope.Close(Undefined());
+        return data;
+    } 
+    else if ( filesize > FILESIZE ) {
+		as_v8_error(log, "Filename length is greater than allowed size(255)");
 		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
 		data->param_err = 1;
 		if(filepath != NULL) 
@@ -200,8 +215,8 @@ static void * prepare(const Arguments& args)
 		scope.Close(Undefined());
 		return data;
 	}
-	int filesize = strlen(filename);
-	strncpy( data->filename, filename, filesize);
+
+	strncpy( data->filename, as_string_get(&filename), filesize);
 	data->filename[filesize+1] = '\0';
 
 	//Wrap the local buffer as an as_bytes object.

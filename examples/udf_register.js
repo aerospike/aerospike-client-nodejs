@@ -24,9 +24,10 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
-var language = aerospike.language;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
+var Language = aerospike.language;
+
 /*******************************************************************************
  *
  * Options parsing
@@ -34,11 +35,15 @@ var language = aerospike.language;
  ******************************************************************************/
 
 var argp = yargs
-    .usage("$0 [options] key")
+    .usage("$0 [options] filepath")
     .options({
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        profile: {
+            boolean: true,
+            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -77,57 +82,79 @@ var argp = yargs
     });
 
 var argv = argp.argv;
-var file = argv._.length === 1 ? argv._[0] : __dirname + "/udf_test.lua";
+var file = argv._.shift();
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
+}
+
+if ( ! file ) {
+    console.error("Error: Please provide a file to register.");
+    console.error();
+    argp.showHelp();
+    process.exit(1);
 }
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 
-/*******************************************************************************
- *
- * Perform the operation
- * 
- ******************************************************************************/
-client.udfRegister(file , function(err) {
+aerospike.client(config).connect(function (err, client) {
 
-    switch ( err.code ) {
-        case status.AEROSPIKE_OK:
-            console.log("OK - ", err);
-            console.log();
-            break;
-        default:
-            console.log("ERR - ", err);
-            console.log();
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
     }
-    
+
+    //
+    // Perform the operation
+    //
+
+    if ( argv.profile ) {
+        console.time("udfRegister");
+    }
+
+    client.udfRegister(file, function(err) {
+
+        var exitCode = 0;
+
+        switch ( err.code ) {
+            case Status.AEROSPIKE_OK:
+                break;
+            default:
+                console.error("Error: " + err.message);
+                exitCode = 1;
+                break;
+        }
+
+        if ( argv.profile ) {
+            console.log("---");
+            console.timeEnd("udfRegister");
+        }
+        
+        process.exit(exitCode);
+    });
 });

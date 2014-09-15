@@ -221,24 +221,16 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "UDF execute operation : response is %d", err->code);
 
     // Build the arguments array for the callback
-    Handle<Value> argv[3];
+    Handle<Value> argv[2];
+    
     if (data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log);
-
-		// should it be moved into a new function.
-		// APIs for query and scan should determine that.
-		Handle<Object> res  = Object::New();
-		Handle<Value> jsval = val_to_jsvalue( data->result, log);
-		res->Set( String::NewSymbol( data->funcname), jsval);
-		argv[1] = res;
-        argv[2] = key_to_jsobject(key, log);
+		argv[1] = val_to_jsvalue( data->result, log);
     }
     else {
         err->func = NULL;
-        as_v8_debug(log, "Parameter error for udf execute operation");
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
-		argv[2] = Null();
     }   
 
     // Surround the callback in a try/catch for safety
