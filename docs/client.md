@@ -212,9 +212,7 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `response`	- A dictionary with the udf function name as the key and the value returned from the udf
-				  function as the value.
-- `key`         – A [Key object](datamodel.md#key) for the record that was written.
+- `response`	- The value returned from the udf function.
 
 Example:
 ```js
@@ -502,7 +500,7 @@ udfRegister()
 -->
 <a name="udfRegister"></a>
 
-### select(udfModule, policy=null, callback)
+### udfRegister(udfModule, policy=null, callback)
 
 Registers an UDF to the database cluster.
 
@@ -520,7 +518,7 @@ The parameters for the `callback` argument:
 Example:
 ```js
 
-client.select("path/to/file/filename", function(error) {
+client.udfRegister("path/to/file/filename", function(error) {
   // do something
 });
 ```
@@ -531,7 +529,7 @@ udfRemove()
 -->
 <a name="udfRemove"></a>
 
-### select(udfModule, policy=null, callback)
+### udfRemove(udfModule, policy=null, callback)
 
 Registers an UDF to the database cluster.
 
@@ -549,7 +547,7 @@ The parameters for the `callback` argument:
 Example:
 ```js
 
-client.select("udfModuleName", function(error) {
+client.udfRemove("udfModuleName", function(error) {
   // do something
 });
 ```
