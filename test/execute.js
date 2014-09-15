@@ -62,11 +62,10 @@ describe('client.Execute()', function(done) {
 		var udfArgs = { module: "udf_test", funcname: "rec_create" }
 		var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
 		var key		= kgen();
-		var response = { "rec_create" : 0 }
-		client.execute(key, udfArgs, function(err, res, key) {
+		client.execute(key, udfArgs, function(err, res) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.eql(response);
+			expect(res).to.equal(0);
 			done();
 		}); 
 	});
@@ -74,11 +73,10 @@ describe('client.Execute()', function(done) {
 		var udfArgs = { module: "udf_test", funcname: "rec_update", args: [123, "str"] }
 		var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
 		var key		= kgen();
-		var response = { "rec_update" : 0 }
-		client.execute(key, udfArgs, function( err, res, key) {
+		client.execute(key, udfArgs, function( err, res) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.eql(response);
+			expect(res).to.equal(0);
 			done();
 		});
 	});
@@ -86,12 +84,11 @@ describe('client.Execute()', function(done) {
 		var udfArgs		= { module: "udf_test", funcname: "rec_update" , args: [345, "bar"]}
 		var kgen		= keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
 		var key			= kgen();
-		var response	= { "rec_update" : 0 }
 		var applypolicy = { timeout : 1500}
-		client.execute(key, udfArgs, applypolicy, function( err, res, key) {
+		client.execute(key, udfArgs, applypolicy, function( err, res) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.eql(response);
+			expect(res).to.equal(0);
 			done();
 		});
 	});

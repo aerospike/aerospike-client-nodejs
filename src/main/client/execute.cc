@@ -238,7 +238,7 @@ static void respond(uv_work_t * req, int status)
 
     // Execute the callback.
     if ( data->callback != Null() ) {
-        data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+        data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
         as_v8_debug(log, "Invoked udf execute callback");
     }
 
