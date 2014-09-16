@@ -16,7 +16,7 @@
 
 /*******************************************************************************
  *
- * Write a record.
+ * Get state information from the cluster or a single host.
  * 
  ******************************************************************************/
 
@@ -39,10 +39,6 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
-        },
-        profile: {
-            boolean: true,
-            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -81,18 +77,11 @@ var argp = yargs
     });
 
 var argv = argp.argv;
-var keyv = argv._.length === 1 ? argv._[0] : null;
+var request = argv._.length !== 0 ? argv._.shift() : "statistics";
 
 if ( argv.help === true ) {
     argp.showHelp();
-    process.exit(0);
-}
-
-if ( ! keyv ) {
-    console.error("Error: Please provide a key for the operation");
-    console.error();
-    argp.showHelp();
-    process.exit(1);
+    return;
 }
 
 /*******************************************************************************
@@ -119,12 +108,15 @@ config = {
         timeout: argv.timeout
     }
 };
-
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
+
+function format(o) {
+    return JSON.stringify(o, null, '    ');
+}
 
 aerospike.client(config).connect(function (err, client) {
 
@@ -137,47 +129,30 @@ aerospike.client(config).connect(function (err, client) {
     // Perform the operation
     //
 
-    var key = {
-        ns:  argv.namespace,
-        set: argv.set,
-        key: keyv
-    };
-
-    var bins = {
-        i: 123,
-        s: "abc",
-        l: [1, 2, 3],
-        m: { s: "g3", i: 3, b: new Buffer( [0xa, 0xb, 0xc])},
-        b: new Buffer([0xa, 0xb, 0xc]),
-        b2: new Uint8Array([0xa, 0xb, 0xc])
-    };
-
-    var metadata = {
-        ttl: 10000,
-        gen: 0
-    };
-
     if ( argv.profile ) {
-        console.time("put");
+        console.time("info_host");
     }
 
-    client.put(key, bins, metadata, function(err, key) {
+    client.info(request, {addr: argv.host, port: argv.port}, function(err, response, host) {
 
         var exitCode = 0;
 
         switch ( err.code ) {
             case Status.AEROSPIKE_OK:
+                res = {
+                    host: host,
+                    response: response
+                };
+                console.log(format(res));
                 break;
-            
             default:
-                console.error("Error: " + err.message);
+                console.error("Error: ", err.message);
                 exitCode = 1;
-                break;
         }
-
-        if ( argv.profile === true ) {
+        
+        if ( argv.profile ) {
             console.log("---");
-            console.timeEnd("exists");
+            console.timeEnd("info_host");
         }
 
         process.exit(exitCode);

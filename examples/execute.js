@@ -192,6 +192,7 @@ aerospike.client(config).connect(function (err, client) {
             case Status.AEROSPIKE_OK:
                 console.log(format(value));
                 break;
+            
             default:
                 console.error("Error: " + err.message);
                 exitCode = 1;

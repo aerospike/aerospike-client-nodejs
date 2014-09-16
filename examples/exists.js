@@ -180,12 +180,13 @@ aerospike.client(config).connect(function (err, client) {
                 }
 
                 console.log(format(record));
-
                 break;
+
             case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
                 console.error("Error: Not Found.");
                 exitCode = 1;
                 break;
+
             default:
                 console.error("Error: " + err.message);
                 exitCode = 1;

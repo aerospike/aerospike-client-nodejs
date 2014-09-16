@@ -24,8 +24,8 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -86,31 +86,28 @@ if ( argv.help === true ) {
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 /*******************************************************************************
  *
@@ -118,32 +115,47 @@ var client = aerospike.client({
  * 
  ******************************************************************************/
 
-console.log("host...");
+function format(o) {
+    return JSON.stringify(o, null, '    ');
+}
 
-client.info(request, {addr: argv.host, port: argv.port}, function(err, response, host) {
+aerospike.client(config).connect(function (err, client) {
 
-    switch ( err.code ) {
-        case status.AEROSPIKE_OK:
-            console.log("OK - ", host, response);
-            console.log();
-            break;
-        default:
-            console.log("ERR - ", err, key);
-            console.log();
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
     }
-    
-    console.log("cluster...");
+
+    //
+    // Perform the operation
+    //
+
+    if ( argv.profile ) {
+        console.time("info");
+    }
 
     client.info(request, function(err, response, host) {
+
+        var exitCode = 0;
+
         switch ( err.code ) {
-            case status.AEROSPIKE_OK:
-                console.log("OK - ", host, response);
+            case Status.AEROSPIKE_OK:
+                res = {
+                    host: host,
+                    response: response
+                };
+                console.log(format(res));
                 break;
             default:
-                console.log("ERR - ", err, key);
+                console.error("Error: ", err.message);
+                exitCode = 1;
+        }
+        
+        if ( argv.profile ) {
+            console.log("---");
+            console.timeEnd("info");
         }
 
-        console.log();
+        process.exit(exitCode);
     });
-
 });

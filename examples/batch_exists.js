@@ -16,7 +16,7 @@
 
 /*******************************************************************************
  *
- * Check existence of a batch of records.
+ * Read a batch of records.
  * 
  ******************************************************************************/
 
@@ -24,8 +24,8 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
 
-var policy = aerospike.policy;
-var status = aerospike.status;
+var Policy = aerospike.policy;
+var Status = aerospike.status;
 
 /*******************************************************************************
  *
@@ -83,43 +83,40 @@ var keys = argv._.map(function(key) {
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
 if ( keys.length === 0 ) {
     console.error("Error: Please provide one or more keys for the operation");
     console.error();
     argp.showHelp();
-    return;
+    process.exit(1);
 }
 
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Configure the client.
  * 
  ******************************************************************************/
 
-var client = aerospike.client({
+config = {
+
+    // the hosts to attempt to connect with.
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
+    
+    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
+
+    // default policies
     policies: {
         timeout: argv.timeout
     }
-}).connect(function (err, client) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
-});
+};
 
 /*******************************************************************************
  *
@@ -127,30 +124,46 @@ var client = aerospike.client({
  * 
  ******************************************************************************/
 
-console.time("batchExists");
+function format(o) {
+    return JSON.stringify(o, null, '    ');
+}
 
-client.batchExists(keys, function (err, results) {
-    var i = 0;
-    if ( err.code == status.AEROSPIKE_OK ) {
-        for ( i = 0; i < results.length; i++ ) {
-            switch ( results[i].status ) {
-                case status.AEROSPIKE_OK:
-                    console.log("OK - ", results[i].key, results[i].metadata);
-                    break;
-                case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-                    console.log("NOT_FOUND - ", results[i].key);
-                    break;
-                default:
-                    console.log("ERR - %d - ", results[i].status, results[i].key);
-            }
+aerospike.client(config).connect(function (err, client) {
+
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
+    }
+
+    //
+    // Perform the operation
+    //
+
+    if ( argv.profile ) {
+        console.time("batch_get");
+    }
+
+    client.batchExists(keys, function (err, results) {
+        
+        var exitCode = 0;
+
+        switch ( err.code ) {
+            case Status.AEROSPIKE_OK:
+                console.log(format(results));
+                break;
+
+            default:
+                console.error("Error: " + err.message);
+                exitCode = 1;
+                break;
         }
-    }
-    else {
-        console.log("ERR - ", err);
-    }
 
-    console.timeEnd("batchExists");
-    console.log();
 
-    client.close();
+        if ( argv.profile ) {
+            console.log("---");
+            console.timeEnd("batch_get");
+        }
+        
+        process.exit(exitCode);
+    });
 });
