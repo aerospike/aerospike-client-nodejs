@@ -163,9 +163,11 @@ static void * prepare(const Arguments& args)
         as_policy_read_init(policy);
     }
 
+    scope.Close(Undefined());
     return data;
 
 Err_Return:
+    scope.Close(Undefined());
     data->param_err = 1;
     return data;
 }
@@ -276,6 +278,7 @@ static void respond(uv_work_t * req, int status)
 
     delete data;
     delete req;
+    scope.Close(Undefined());
 }
 
 /*******************************************************************************

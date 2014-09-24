@@ -514,13 +514,11 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
-		as_v8_detail(log, "The as_val string is %s", as_val_tostring(str));
         return (as_val*) str;
         
     }
     else if(obj->IsNumber()){
         as_integer *num = as_integer_new(obj->NumberValue());
-		as_v8_detail(log, "The as_val is integer %s", as_val_tostring(num));
         return (as_val*) num;
     }
     else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
@@ -530,7 +528,6 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             return NULL;
         }
         as_bytes *bytes = as_bytes_new_wrap( data, size, true);
-		as_v8_detail(log, "The as_val is bytes %s", as_val_tostring(bytes));
         return (as_val*) bytes;
 
     } 
@@ -545,7 +542,6 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* asval = asval_from_jsobject(val, log);
             as_arraylist_append(list, asval);
         }
-		as_v8_detail(log, "The as_val is array %s", as_val_tostring(list));
         return (as_val*) list;
 
     }
@@ -562,7 +558,6 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_val* val = asval_from_jsobject(value, log);
             as_stringmap_set((as_map*) map, *n, val);
         }
-		as_v8_detail(log, "The as_val is map %s", as_val_tostring(map));
         return (as_val*) map;
 
     }
@@ -570,6 +565,8 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 }
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
+
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
     as_record_init(rec, count);
@@ -582,7 +579,10 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         as_val* val = asval_from_jsobject( value, log);
 
         if( val == NULL) 
+        {
+            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
+        }
     
         switch(as_val_type(val)){
             case AS_INTEGER:
@@ -607,14 +607,18 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         }
     }
 
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
+
     setTTL( obj, &rec->ttl, log);
     setGeneration( obj, &rec->gen, log);
 
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -649,6 +653,8 @@ int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 
 int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
 {
+    HANDLESCOPE;
+
     if ( obj->Has(String::NewSymbol("timeout")) ) { 
         Local<Value> v8timeout = obj->Get(String::NewSymbol("timeout")) ;
         if ( v8timeout->IsNumber() ) {
@@ -657,10 +663,11 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
         }
         else {
             as_v8_error(log, "timeout should be an integer");
+            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
         }
     }
-
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -683,6 +690,8 @@ int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 
 int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log ) 
 {
+    HANDLESCOPE;
+
     if ( obj->Has(String::NewSymbol(policyname)) ) {
         Local<Value> policy = obj->Get(String::NewSymbol(policyname));
 
@@ -693,22 +702,28 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
         else {    
             as_v8_error(log, "value for %s policy must be an integer", policyname);
             //Something other than expected type which is Number
+            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
         }
     }
 
     // The policyEnumValue will/should be inited to the default value by the caller
     // So, do not change anything if we get an non-integer from node layer
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
 {
+    HANDLESCOPE;
+
     if (setPolicyGeneric(obj, "key", (int *) keypolicy, log) != AS_NODE_PARAM_OK) {
+        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
 
     as_v8_detail(log, "Key policy is set to %d", *keypolicy);
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -775,6 +790,8 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
 }
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
+
     as_policy_operate_init( policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -782,21 +799,25 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
 
     as_policy_batch_init(policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
+    
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
 
     as_policy_remove_init(policy);
 
@@ -805,17 +826,22 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
+
     as_policy_read_init( policy );
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail(log, "Parsing read policy : success");
+
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -836,11 +862,15 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
 
 int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo* log)
 {
+    HANDLESCOPE;
+
 	as_policy_apply_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
 	as_v8_detail( log, "Parsing apply policy : success");
+    
+    scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1103,12 +1133,15 @@ Ret_Err:
 
 int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
 {
+    HANDLESCOPE;
+
     uint32_t capacity = arr->Length();
 
     if(capacity > 0) {
         as_batch_init(batch, capacity);
     }
     else {
+        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i=0; i < capacity; i++) {
@@ -1116,6 +1149,7 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
         key_from_jsobject(as_batch_keyat(batch, i), key, log);
     }
 
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -1136,7 +1170,6 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 	for ( uint32_t i = 0; i < capacity; i++) {
 		as_val* val = asval_from_jsobject( arr->Get(i), log);
 		as_arraylist_append(*udfargs, val);
-		as_v8_detail(log, "element added to the array %s", as_val_tostring(val));
 	}
 	return AS_NODE_PARAM_OK;
 
@@ -1144,6 +1177,8 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
 {
+    HANDLESCOPE;
+
 	// Extract UDF module name
 	if( obj->Has(String::NewSymbol("module"))) {
 		Local<Value> module = obj->Get( String::NewSymbol("module"));
@@ -1159,11 +1194,13 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		}
 		else {
 			as_v8_error(log, "UDF module name should be string");
+            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 	}
 	else {
 		as_v8_error(log, "UDF module name should be passed to execute UDF");
+        scope.Close(Undefined());
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1180,11 +1217,13 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		}
 		else {
 			as_v8_error(log, "UDF function name should be string");
+            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 	}
 	else {
 		as_v8_error(log, "UDF function name should be passed to execute UDF");
+        scope.Close(Undefined());
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1195,10 +1234,12 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		Local<Value> arglist = obj->Get( String::NewSymbol("args"));
 		if ( ! arglist->IsArray()){
 			as_v8_error(log, "UDF args should be an array");
+            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 		asarray_from_jsarray( args, Local<Array>::Cast(arglist), log);
 		as_v8_detail(log, "Parsing UDF args -- done !!!");
+        scope.Close(Undefined());
 		return AS_NODE_PARAM_OK;
 	}
 	else {
@@ -1206,8 +1247,10 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		if (*args != NULL) {
 			as_arraylist_init(*args, 0, 0);
 		}
+        scope.Close(Undefined());
 		return AS_NODE_PARAM_OK;
 	}
+    scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1292,7 +1335,6 @@ int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
 			return ret;
 		}
 		as_v8_detail(log, "Invoking scan apply each with filename %s, funcname %s", filename, funcname);
-		as_v8_detail(log, "And the arguments to apply each %s", as_val_tostring((as_val*) list));
 		as_scan_apply_each( scan, (const char*)filename, (const char*) funcname, (as_list*) list);
 	}
 	else {
@@ -1504,12 +1546,15 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
 
 int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log) 
 {
+    HANDLESCOPE;
+
     uint32_t capacity = arr->Length();
     as_v8_detail(log, "no op operations in the array %d", capacity);
     if ( capacity > 0 ) {
         as_operations_init( ops, capacity );
     }
     else {
+        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i = 0; i < capacity; i++ ) {
@@ -1545,9 +1590,11 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
                 }
                 default :
                     as_v8_info(log, "Operation Type not supported by the API");
+                    scope.Close(Undefined());
                     return AS_NODE_PARAM_ERR;
             }
         }
     }
+    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }

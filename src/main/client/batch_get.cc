@@ -177,9 +177,11 @@ static void * prepare(const Arguments& args)
         as_policy_batch_init(policy);
     }
 
+    scope.Close(Undefined());
     return data;
 
 Err_Return:
+    scope.Close(Undefined());
     data->node_err = 1;
     return data;
 }
