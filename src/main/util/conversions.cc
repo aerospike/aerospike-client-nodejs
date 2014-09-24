@@ -954,8 +954,14 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
+
     // All the v8 local variables have to declared before any of the goto
     // statements. V8 demands that.
+
+	if(obj == Null()) 
+	{
+		goto ReturnError;
+	}	
 
     // get the namespace
     if ( obj->Has(String::NewSymbol("ns")) ) {
@@ -993,6 +999,10 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // get the value
     if ( obj->Has(String::NewSymbol("key")) ) {
         Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
+		if(val_obj == Null()) 
+		{
+			goto ReturnError;
+		}
         if ( val_obj->IsString() ) {
             char * value = strdup(*String::Utf8Value(val_obj));
             as_key_init(key, ns, set, value);
