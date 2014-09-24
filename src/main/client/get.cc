@@ -214,7 +214,7 @@ static void respond(uv_work_t * req, int status)
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Null();
         argv[2] = Null();
-        argv[3] = key_to_jsobject(key, log); 
+        argv[3] = Null();
     }
 
     // Surround the callback in a try/catch for safety
