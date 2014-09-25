@@ -370,7 +370,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-                return scope.Close(Integer::New(data));
+                return scope.Close(Number::New((double)data));
             }
         }
         case AS_STRING : {
@@ -473,7 +473,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     }
     
     meta = Object::New();
-    meta->Set(String::NewSymbol("ttl"), Number::New(record->ttl));
+    meta->Set(String::NewSymbol("ttl"), Number::New((double)record->ttl));
     as_v8_detail(log, "TTL of the record %d", record->ttl);
     meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);
