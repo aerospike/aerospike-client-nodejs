@@ -988,7 +988,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // All the v8 local variables have to declared before any of the goto
     // statements. V8 demands that.
 
-	if(obj == Null()) 
+	if(obj->IsNull()) 
 	{
 		goto ReturnError;
 	}	
@@ -1029,7 +1029,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // get the value
     if ( obj->Has(String::NewSymbol("key")) ) {
         Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
-		if(val_obj == Null()) 
+		if(val_obj->IsNull()) 
 		{
 			goto ReturnError;
 		}
@@ -1053,7 +1053,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             if (extract_blob_from_jsobject(obj, &data, &size, log) != AS_NODE_PARAM_OK) {
                 return AS_NODE_PARAM_ERR;
             }
-            as_key_init_raw(key, ns, set, data, size);
+            as_key_init_rawp(key, ns, set, data, size, true);
 
             as_v8_detail(log, 
                 "key.key = <%x %x %x%s>", 
@@ -1400,7 +1400,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "Blob value to be written %u ", data);
-        as_operations_add_write_raw(op, binName, data, len);
+        as_operations_add_write_rawp(op, binName, data, len, true);
         if ( binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
     }
@@ -1483,7 +1483,7 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "prepending raw bytes %u", data);
-        as_operations_add_prepend_raw(ops, binName, data, len);
+        as_operations_add_prepend_rawp(ops, binName, data, len, true);
         if ( binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
     }
@@ -1522,7 +1522,7 @@ int populate_append_op( as_operations * ops, Local<Object> obj, LogInfo * log)
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "appending raw bytes %u", data);
-        as_operations_add_append_raw(ops, binName, data, len);
+        as_operations_add_append_rawp(ops, binName, data, len, true);
         if (binName != NULL) free(binName);
         return AS_NODE_PARAM_OK;
     }
