@@ -20,6 +20,7 @@ With a new client, you can use any of the methods specified below:
   - [batch_get()](#batch_get)
   - [close()](#close)
   - [connect()](#connect)
+  - [execute()](#execute)
   - [exists()](#exists)
   - [get()](#get)
   - [info()](#info)
@@ -27,6 +28,8 @@ With a new client, you can use any of the methods specified below:
   - [put()](#put)
   - [remove()](#remove)
   - [select()](#select)
+  - [udfRegister()](#udfRegister)
+  - [udfRemove()](#udfRemove)
   - [updateLogging()](#updateLogging)
 
 
