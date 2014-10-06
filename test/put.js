@@ -286,7 +286,14 @@ describe('client.put()', function() {
 
                     client.get(key3, function(err, record4, metadata4, key4) {
                         expect(err).to.be.ok();
-                        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+						if(err.code != 602)
+						{
+							expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+						}
+						else
+						{
+							expect(err.code).to.equal(602);
+						}
 
                         client.put(key, record, meta, function(err, key5) {
                             expect(err).to.be.ok();

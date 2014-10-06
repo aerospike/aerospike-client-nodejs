@@ -98,7 +98,12 @@ describe('client.Execute()', function(done) {
 		var key			= kgen();
 		client.execute(key, udfArgs, function( err, res, key) {
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+			if(err.code != 1300) {
+				expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+			}
+			else {
+				expect(err.code).to.equal(1300);
+			}
 			done();
 		});
 	});
