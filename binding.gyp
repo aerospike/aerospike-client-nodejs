@@ -29,6 +29,7 @@
         'src/main/client/batch_get.cc',
         'src/main/client/close.cc',
         'src/main/client/connect.cc',
+        'src/main/client/scan_foreach.cc',
         'src/main/client/execute.cc',
         'src/main/client/exists.cc',
         'src/main/client/get.cc',
@@ -37,6 +38,7 @@
         'src/main/client/put.cc',
         'src/main/client/remove.cc',
         'src/main/client/select.cc',
+        'src/main/client/scan.cc',
         'src/main/client/udf_register.cc',
         'src/main/client/udf_remove.cc',
         'src/main/enums/log.cc',
@@ -50,7 +52,8 @@
       ],
       'include_dirs': [
         'aerospike-client-c/include',
-        'aerospike-client-c/include/ck'
+        'aerospike-client-c/include/ck',
+		'src/include'
       ],
       'link_settings': {
         'libraries': [

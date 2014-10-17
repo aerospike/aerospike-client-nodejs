@@ -27,10 +27,10 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/async.h"
-#include "../util/conversions.h"
-#include "../util/log.h"
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
 
 #define REMOVE_ARG_POS_KEY     0
 #define REMOVE_ARG_POS_WPOLICY 1 // remove policy position and callback position is not same 

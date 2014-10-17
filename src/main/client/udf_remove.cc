@@ -25,10 +25,10 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/async.h"
-#include "../util/conversions.h"
-#include "../util/log.h"
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
 
 #define UDF_ARG_FILE 0
 #define UDF_ARG_IPOLICY 1

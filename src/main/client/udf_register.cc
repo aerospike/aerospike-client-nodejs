@@ -26,10 +26,10 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/async.h"
-#include "../util/conversions.h"
-#include "../util/log.h"
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
 
 #define UDF_ARG_FILE 0
 #define UDF_ARG_TYPE 1
@@ -218,7 +218,6 @@ static void * prepare(const Arguments& args)
 
 	strncpy( data->filename, as_string_get(&filename), filesize);
 	data->filename[filesize+1] = '\0';
-
 	//Wrap the local buffer as an as_bytes object.
 	as_bytes_init_wrap(&data->content, file_content, size, true);
 	

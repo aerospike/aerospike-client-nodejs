@@ -32,7 +32,7 @@ extern "C" {
 	#include <aerospike/as_arraylist.h>
 }
 
-#include "../client.h"
+#include "client.h"
 
 using namespace v8;
 

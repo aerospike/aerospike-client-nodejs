@@ -26,8 +26,8 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/log.h"
+#include "client.h"
+#include "log.h"
 
 using namespace v8;
 

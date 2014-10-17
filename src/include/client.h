@@ -21,7 +21,7 @@ extern "C" {
 }
 
 #include <node.h>
-#include "util/log.h"
+#include "log.h"
 using namespace node;
 using namespace v8;
 
@@ -170,4 +170,6 @@ class AerospikeClient : public ObjectWrap {
          *undefined client.udf_remove(udf_filename, function( Error ))
          */
         static Handle<Value> ScanInfo(const Arguments& args);
+
+		static Handle<Value> Scan(const Arguments& args);
 };

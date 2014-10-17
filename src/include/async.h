@@ -21,7 +21,6 @@
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
-
 /**
  *  Setup an asynchronous invocation of a function.
  */
@@ -31,3 +30,13 @@ Handle<Value> async_invoke(
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     );
+
+void async_init( uv_async_t * async, void (*async_callback)(uv_async_t *handle, int status));
+
+void async_send( uv_async_t * async);
+
+void async_close(uv_async_t* async);
+
+void uv_initialize_loop();
+
+void uv_finish_loop_execution();

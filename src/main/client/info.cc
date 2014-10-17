@@ -30,10 +30,10 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/async.h"
-#include "../util/conversions.h"
-#include "../util/log.h"
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
 
 #define INFO_ARG_POS_REQ     0
 #define INFO_ARG_POS_HOST    1

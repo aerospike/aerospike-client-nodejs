@@ -49,3 +49,19 @@ Handle<Value> async_invoke(
     // return an `undefined`.
     return Undefined();
 }
+
+void async_init( uv_async_t * async, void (*async_callback)(uv_async_t * handle, int status))
+{
+	uv_async_init( uv_default_loop(), async, async_callback);
+}
+
+void async_send( uv_async_t * async)
+{
+	uv_async_send( async);
+}
+
+void async_close(uv_async_t * async)
+{
+	uv_close((uv_handle_t*) async, NULL);
+}
+

@@ -24,7 +24,7 @@ extern "C" {
 #include <libgen.h>
 
 #include "log.h"
-#include "../enums/enums.h"
+#include "enums.h"
 
 const char log_severity_strings[7][10] = {
     "OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", {0}

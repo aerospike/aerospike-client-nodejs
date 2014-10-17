@@ -48,10 +48,10 @@ extern "C" {
     #include <citrusleaf/alloc.h>
 }
 
-#include "../client.h"
+#include "client.h"
 #include "conversions.h"
 #include "log.h"
-#include "../enums/enums.h"
+#include "enums.h"
 
 using namespace node;
 using namespace v8;

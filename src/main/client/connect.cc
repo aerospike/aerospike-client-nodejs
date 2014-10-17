@@ -26,10 +26,10 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 
-#include "../client.h"
-#include "../util/async.h"
-#include "../util/conversions.h"
-#include "../util/log.h"
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
 
 using namespace v8;
 
@@ -67,7 +67,7 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
 
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
-        argv[1] = Null();
+        argv[1] = client->handle_;
         as_v8_error(client->log, "Connecting to Cluster Failed");
         callback->Call(Context::GetCurrent()->Global(), 2, argv);
         return scope.Close(Null());

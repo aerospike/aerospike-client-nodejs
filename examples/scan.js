@@ -22,11 +22,13 @@
 
 var fs = require('fs');
 var aerospike = require('aerospike');
+var client    = aerospike.client;
 var yargs = require('yargs');
-
-var Policy = aerospike.policy;
-var Status = aerospike.status;
-
+var events = require('events')
+var util = require('util')
+var policy = aerospike.policy;
+var status = aerospike.status;
+var AsScan = require('../lib/AsScan');
 /*******************************************************************************
  *
  * Options parsing
@@ -39,10 +41,6 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
-        },
-        profile: {
-            boolean: true,
-            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -81,105 +79,60 @@ var argp = yargs
     });
 
 var argv = argp.argv;
-var keyv = argv._.length === 1 ? argv._[0] : null;
 
 if ( argv.help === true ) {
     argp.showHelp();
-    process.exit(0);
+    return;
 }
 
-if ( ! keyv ) {
-    console.error("Error: Please provide a key for the operation");
-    console.error();
-    argp.showHelp();
-    process.exit(1);
-}
 
 /*******************************************************************************
  *
- * Configure the client.
+ * Establish a connection to the cluster.
  * 
  ******************************************************************************/
 
-config = {
-
-    // the hosts to attempt to connect with.
+var client = new client({
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
-    
-    // log configuration
     log: {
         level: argv['log-level'],
         file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
     },
-
-    // default policies
     policies: {
         timeout: argv.timeout
     }
-};
-
+}).connect(function (err, client ) {
+    if ( err.code != status.AEROSPIKE_OK ) {
+        console.log("Aerospike server connection Error: %j", err)
+        return;
+    }
+    if ( client === null ) {
+        console.error("Error: Client not initialized.");
+        return;
+    }
+});
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-var client = aerospike.client(config);
-client.connect(function (err, client) {
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
+var scan = AsScan({ client_obj : client, ns: argv.namespace, set: argv.set, highWaterMark : 1})
 
-    //
-    // Perform the operation
-    //
+//udf_args = { module:"udf_test", funcname: "func_cache", args: [123, "str"] }
 
-    var key = {
-        ns:  argv.namespace,
-        set: argv.set,
-        key: keyv
-    };
+//scan.setUDFargs(udf_args);
+var i = 0;
+scan.on('data', function(record) {
+		console.log(i++);
+		console.log(JSON.parse(record));
+})
+scan.on('error', function(err){
+			console.log(JSON.parse(err));
+})
+scan.on('end', function() {
+	process.exit(0)
 
-    var bins = {
-        i: 123,
-        s: "abc",
-        l: [1, 2, 3],
-        m: { s: "g3", i: 3, b: new Buffer( [0xa, 0xb, 0xc])},
-        b: new Buffer([0xa, 0xb, 0xc]),
-        b2: new Uint8Array([0xa, 0xb, 0xc])
-    };
-
-    var metadata = {
-        ttl: 10000,
-        gen: 0
-    };
-
-    if ( argv.profile ) {
-        console.time("put");
-    }
-
-    client.put(key, bins, metadata, function(err, key) {
-
-        var exitCode = 0;
-
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                break;
-            
-            default:
-                console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
-        }
-
-        if ( argv.profile === true ) {
-            console.log("---");
-            console.timeEnd("exists");
-        }
-
-        process.exit(exitCode);
-    });
 });

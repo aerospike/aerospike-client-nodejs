@@ -16,7 +16,7 @@
 
 #include <node.h>
 #include "client.h"
-#include "./enums/enums.h"
+#include "enums.h"
 using namespace v8;
 
 /*******************************************************************************

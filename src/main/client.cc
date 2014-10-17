@@ -24,7 +24,8 @@ extern "C" {
 
 #include <node.h>
 #include "client.h"
-#include "util/conversions.h"
+#include "conversions.h"
+#include "scan.h"
 using namespace v8;
 
 /*******************************************************************************
@@ -70,6 +71,7 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
+	cons->PrototypeTemplate()->Set(String::NewSymbol("scan"), FunctionTemplate::New(Scan)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("udfRegister"), FunctionTemplate::New(Register)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("execute"), FunctionTemplate::New(Execute)->GetFunction());
@@ -162,3 +164,12 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
     }
     return scope.Close(client->handle_);
 }
+
+Handle<Value> AerospikeClient::Scan(const Arguments& args)
+{
+	HANDLESCOPE;
+
+	AerospikeScan::Init();
+	return scope.Close(AerospikeScan::NewInstance(args));
+}
+
