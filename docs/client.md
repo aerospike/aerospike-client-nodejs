@@ -20,6 +20,7 @@ With a new client, you can use any of the methods specified below:
   - [batch_get()](#batch_get)
   - [close()](#close)
   - [connect()](#connect)
+  - [execute()](#execute)
   - [exists()](#exists)
   - [get()](#get)
   - [info()](#info)
@@ -27,6 +28,8 @@ With a new client, you can use any of the methods specified below:
   - [put()](#put)
   - [remove()](#remove)
   - [select()](#select)
+  - [udfRegister()](#udfRegister)
+  - [udfRemove()](#udfRemove)
   - [updateLogging()](#updateLogging)
 
 
@@ -197,7 +200,7 @@ execute()
 -->
 <a name="execute"></a>
 
-### put(key, udfArgs, policy=null, callback)
+### execute(key, udfArgs, policy=null, callback)
 
 Executes an UDF on a record in the database. 
 
@@ -219,7 +222,7 @@ Example:
 var key = aerospike.key
 var udfArgs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
 
-client.put(key('test','demo','key1'), udfArgs, function(error, res, key) {
+client.execute(key('test','demo','key1'), udfArgs, function(error, res, key) {
   // do something
 });
 ```
