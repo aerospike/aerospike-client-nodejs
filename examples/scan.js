@@ -24,11 +24,12 @@ var fs = require('fs');
 var aerospike = require('aerospike');
 var client    = aerospike.client;
 var yargs = require('yargs');
-var events = require('events')
-var util = require('util')
-var policy = aerospike.policy;
-var status = aerospike.status;
-var AsScan = require('../lib/AsScan');
+var events = require('events');
+var util = require('util');
+
+var Policy = aerospike.policy;
+var Status = aerospike.status;
+
 /*******************************************************************************
  *
  * Options parsing
@@ -85,6 +86,30 @@ if ( argv.help === true ) {
     return;
 }
 
+/*******************************************************************************
+ *
+ * Configure the client.
+ * 
+ ******************************************************************************/
+
+config = {
+
+    // the hosts to attempt to connect with.
+    hosts: [
+        { addr: argv.host, port: argv.port }
+    ],
+    
+    // log configuration
+    log: {
+        level: argv['log-level'],
+        file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
+    },
+
+    // default policies
+    policies: {
+        timeout: argv.timeout
+    }
+};
 
 /*******************************************************************************
  *
@@ -92,47 +117,37 @@ if ( argv.help === true ) {
  * 
  ******************************************************************************/
 
-var client = new client({
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    log: {
-        level: argv['log-level'],
-        file: argv['log-file'] ? fs.openSync(argv['log-file'], "a") : 2
-    },
-    policies: {
-        timeout: argv.timeout
+aerospike.client(config).connect(function (err, client) {
+
+    if ( err.code != Status.AEROSPIKE_OK ) {
+        console.error("Error: Aerospike server connection error. ", err.message);
+        process.exit(1);
     }
-}).connect(function (err, client ) {
-    if ( err.code != status.AEROSPIKE_OK ) {
-        console.log("Aerospike server connection Error: %j", err)
-        return;
-    }
-    if ( client === null ) {
-        console.error("Error: Client not initialized.");
-        return;
-    }
+
+    //
+    // Perform the operation
+    //
+
+    var count = 0;
+
+    var scan = client.scan(argv.namespace, argv.set);
+
+    scan.on('data', function(rec) {
+        console.log(count++, rec);
+    });
+
+    scan.on('error', function(err){
+        console.log(err);
+    });
+
+    scan.on('end', function() {
+        console.log('TOTAL SCANNED:', count++);
+        process.exit(0)
+    });
+
 });
 /*******************************************************************************
  *
  * Perform the operation
  * 
  ******************************************************************************/
-
-var scan = AsScan({ client_obj : client, ns: argv.namespace, set: argv.set, highWaterMark : 1})
-
-//udf_args = { module:"udf_test", funcname: "func_cache", args: [123, "str"] }
-
-//scan.setUDFargs(udf_args);
-var i = 0;
-scan.on('data', function(record) {
-		console.log(i++);
-		console.log(JSON.parse(record));
-})
-scan.on('error', function(err){
-			console.log(JSON.parse(err));
-})
-scan.on('end', function() {
-	process.exit(0)
-
-});

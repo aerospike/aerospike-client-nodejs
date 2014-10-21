@@ -4,7 +4,7 @@
   "description" : "Aerospike Client Library",
   "tags" : [ "aerospike", "database", "nosql" ],
   "homepage" : "https://github.com/aerospike/aerospike-client-nodejs",
-  "main" : "./build/Release/aerospike.node",
+  "main" : "lib/aerospike",
   "engines" : {
     "node" : ">=0.10"
   },
