@@ -128,9 +128,11 @@ static void * prepare(const Arguments& args)
         as_policy_remove_init(policy);
     }
 
+    scope.Close(Undefined());
     return data;
 
 Err_Return:
+    scope.Close(Undefined());
     data->param_err = 1;
     return data;
 }
@@ -196,7 +198,7 @@ static void respond(uv_work_t * req, int status)
         as_v8_debug(log, "Delete operation succeeded for the key");
         // DEBUG(log, _KEY,  key);
         argv[0] = error_to_jsobject(err, log),
-            argv[1] = key_to_jsobject(key, log);
+        argv[1] = key_to_jsobject(key, log);
 
     }
     else {
@@ -232,6 +234,7 @@ static void respond(uv_work_t * req, int status)
     }
     delete data;
     delete req;
+    scope.Close(Undefined());
 }
 
 /*******************************************************************************

@@ -223,8 +223,8 @@ static void respond(uv_work_t * req, int status)
         as_v8_debug(log, "Cleaned up all the structures");
     }
 
-    //delete data;
-    //delete req;
+    delete data;
+    delete req;
     scope.Close(Undefined());
 }
 

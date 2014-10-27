@@ -130,10 +130,12 @@ static void * prepare(const Arguments& args)
     }
     
     as_record_init(rec, 0);
+    scope.Close(Undefined());
     return data;
 
 Err_Return:
     data->param_err = 1;
+    scope.Close(Undefined());
     return data;
 }
 /**

@@ -230,6 +230,7 @@ static void * prepare(const Arguments& args)
         data->done = Persistent<Function>::New(NODE_ISOLATE_PRE emptyFunction->GetFunction());
     }
 
+    scope.Close(Undefined());
     return data;
 
 // Err_Return:
@@ -392,6 +393,7 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
     delete data;
     delete req;
+    scope.Close(Undefined());
 }
 
 /*******************************************************************************
