@@ -25,9 +25,8 @@ Handle<Object> key_policy_values()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-    set(obj, "UNDEF",   0);
-    set(obj, "DIGEST",  1);
-    set(obj, "SEND",    2);
+    set(obj, "DIGEST",  0);
+    set(obj, "SEND",    1);
     return scope.Close(obj);
 }
 
@@ -35,9 +34,8 @@ Handle<Object> retry_policy_values()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-    set(obj, "UNDEF",   0);
-    set(obj, "NONE",    1);
-    set(obj, "ONCE",    2);
+    set(obj, "NONE",    0);
+    set(obj, "ONCE",    1);
     return scope.Close(obj);
 }
 
@@ -45,11 +43,10 @@ Handle<Object> generation_policy_values()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-    set(obj, "UNDEF",   0);
-    set(obj, "IGNORE",  1);
-    set(obj, "EQ",      2);
-    set(obj, "GT",      3);
-    set(obj, "DUP",     4);
+    set(obj, "IGNORE",  0);
+    set(obj, "EQ",      1);
+    set(obj, "GT",      2);
+    set(obj, "DUP",     3);
     return scope.Close(obj);
 }
 
@@ -57,10 +54,11 @@ Handle<Object> exists_policy_values()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-    set(obj, "UNDEF",   0);
-    set(obj, "IGNORE",  1);
-    set(obj, "CREATE",  2);
-    set(obj, "UPDATE",  3);
+    set(obj, "IGNORE",  0);
+    set(obj, "CREATE",  1);
+    set(obj, "UPDATE",  2);
+	set(obj, "REPLACE", 3);
+	set(obj, "CREATE_OR_REPLACE", 4);
     return scope.Close(obj);
 }
 
