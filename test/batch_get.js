@@ -127,7 +127,14 @@ describe('client.batchGet()', function() {
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
-                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				if(result.status != 602) 
+				{
+	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				}
+				else 
+				{
+	                expect(result.status).to.equal(602);
+				}
             }
 
             done();

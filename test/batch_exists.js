@@ -120,7 +120,14 @@ describe('client.batchExists()', function() {
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
-                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				// This if-else check is introduced to handle test failures
+				// in backward compatibility issues. Should be removed when an official release
+				// of C client is done, with error code changes.
+				if(result.status != 602) {
+	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+				} else {
+	                expect(result.status).to.equal(602);
+				}					
             }
 
             done();

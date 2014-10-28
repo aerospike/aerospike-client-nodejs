@@ -766,7 +766,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("send_as_is")) ) {  
         Local<Value> v8send_as_is = obj->Get(String::NewSymbol("send_as_is"));
         if ( v8send_as_is->IsBoolean() ) {
-            policy->send_as_is = (as_policy_bool) v8send_as_is->ToBoolean()->Value();
+            policy->send_as_is = (bool) v8send_as_is->ToBoolean()->Value();
             as_v8_detail(log,"info policy send_as_is is set to %s", policy->send_as_is ? "true":"false");
         }
         else {
@@ -777,7 +777,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("check_bounds")) ) {    
         Local<Value> v8check_bounds = obj->Get(String::NewSymbol("check_bounds"));
         if ( v8check_bounds->IsBoolean() ) {
-            policy->check_bounds = (as_policy_bool) v8check_bounds->ToBoolean()->Value();
+            policy->check_bounds = (bool) v8check_bounds->ToBoolean()->Value();
             as_v8_detail(log, "info policy check bounds is set to %s", policy->check_bounds ? "true" : "false");
         }
         else {
@@ -882,7 +882,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("failOnClusterChange")) ) {  
         Local<Value> failOnClusterChange = obj->Get(String::NewSymbol("failOnClusterChange"));
         if ( failOnClusterChange->IsBoolean() ) {
-            policy->fail_on_cluster_change = (as_policy_bool) failOnClusterChange->ToBoolean()->Value();
+            policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
             as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
         }
         else {
@@ -1302,7 +1302,7 @@ int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
 			as_v8_error( log, "noBins value should be of type boolean in a scan object");
 			return AS_NODE_PARAM_ERR;
 		}
-		scan->no_bins = (as_policy_bool) noBins->ToBoolean()->Value();
+		scan->no_bins = (bool) noBins->ToBoolean()->Value();
 		as_v8_detail( log, "no_bins value for scan operation is set to %d ", scan->no_bins);
 	}
 	if ( obj->Has(String::NewSymbol("concurrent"))) {
