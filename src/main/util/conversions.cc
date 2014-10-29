@@ -532,9 +532,15 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 
     } 
     else if(obj->IsArray()){
+		
         Local<Array> js_list = Local<Array>::Cast(obj);
+		if(js_list->Length() == 0 ) 
+		{
+			return (as_val*) &as_nil;
+		}
+
         as_arraylist *list = as_arraylist_new( js_list->Length(), 0);
-        if (list == NULL) {
+		        if (list == NULL) {
             return NULL;
         }
         for ( uint32_t i = 0; i < js_list->Length(); i++ ) {
@@ -548,6 +554,10 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
     else {
         const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
         const uint32_t count = props->Length();
+		if( count == 0) 
+		{
+			return (as_val*) &as_nil;
+		}
          as_hashmap *map = as_hashmap_new(count);
          if( map == NULL)
               return NULL;
