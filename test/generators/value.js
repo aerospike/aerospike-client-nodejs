@@ -67,7 +67,6 @@ function string(options) {
         }
     }
 }
-
 string.defaults = {
     random: true,
     length: {
@@ -110,6 +109,11 @@ function integer(options) {
         return opt.random === true ? random(opt.min, opt.max) : seq++;
     }
 }
+integer.defaults = {
+    random: true,
+    min: 0,
+    max: 0xffffff
+};
 
 function array() {
     return function() {
@@ -148,16 +152,11 @@ function map_of_map() {
         return map_of_list;
     }
 }
-integer.defaults = {
-    random: true,
-    min: 0,
-    max: 0xffffff
-};
 
 
 module.exports = {
     bytes: bytes,
-    contant: constant,
+    constant: constant,
     integer: integer,
     string: string,
     array: array,
