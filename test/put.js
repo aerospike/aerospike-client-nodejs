@@ -207,6 +207,7 @@ describe('client.put()', function() {
         });
 
     });
+
     it('should write, read, write, and check gen', function(done) {
 
         // generators
@@ -312,6 +313,43 @@ describe('client.put()', function() {
                         });
                     }); 
                 });
+            });
+        });
+    });
+
+    it('should write null for bins with empty list and map', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l:  valgen.constant([1,2,3]),
+            le: valgen.constant([]),
+            m:  valgen.constant({a: 1, b: 2}),
+            me: valgen.constant({})
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(key1).to.eql(key);
+
+            client.get(key1, function(err, record2, metadata2, key2) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(key2).to.eql(key);
+                expect(record2).not.to.eql(record);
+                expect(record2.m).to.eql({a: 1, b: 2});
+                expect(record2.me).to.be(undefined);
+                expect(record2.l).to.eql([1,2,3]);
+                expect(record2.le).to.be(undefined);
+                done();
             });
         });
     });
