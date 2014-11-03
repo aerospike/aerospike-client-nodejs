@@ -121,8 +121,10 @@ void empty_record_queue( ScanCallbackData * data)
 	while(data->record_q && cf_queue_sz(data->record_q) > 0) {
 		rv = cf_queue_pop( data->record_q, &record, CF_QUEUE_FOREVER);
 		if( rv == CF_QUEUE_OK) {
-			Handle<Value> cbargs[1] = { recordbins_to_jsobject( record, data->log)};
-			data->record_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
+			Handle<Value> cbargs[3] = { recordbins_to_jsobject(record, data->log),
+										recordmeta_to_jsobject(record, data->log),
+										key_to_jsobject(&record->key, data->log)};
+			data->record_cb->Call(Context::GetCurrent()->Global(), 3, cbargs);
 			as_record_destroy(record);
 		}
 	}
@@ -350,6 +352,5 @@ static void respond(uv_work_t * req, int status)
  */
 Handle<Value> AerospikeScan::foreach(const Arguments& args)
 {
-    async_invoke(args, prepare, execute, respond);
-	return Undefined();
+    return async_invoke(args, prepare, execute, respond);
 }

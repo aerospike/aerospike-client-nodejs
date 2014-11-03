@@ -223,12 +223,16 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-            expect(key1).to.eql(key);
+            expect(key1).to.have.property('ns', key.ns);
+            expect(key1).to.have.property('set', key.set);
+            expect(key1).to.have.property('key', key.key);
 
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(key2).to.eql(key);
+				expect(key2).to.have.property('ns', key.ns);
+				expect(key2).to.have.property('set', key.set);
+				expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
 
                 var key3 = key2;
@@ -239,12 +243,16 @@ describe('client.put()', function() {
                 client.put(key3, record3, meta, function(err, key4) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-                    expect(key4).to.eql(key);
+					expect(key4).to.have.property('ns', key.ns);
+					expect(key4).to.have.property('set', key.set);
+					expect(key4).to.have.property('key', key.key);
 
                     client.get(key4, function(err, record5, metadata5, key5) {
                         expect(err).to.be.ok();
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
-                        expect(key5).to.eql(key);
+						expect(key5).to.have.property('ns', key.ns);
+						expect(key5).to.have.property('set', key.set);
+						expect(key5).to.have.property('key', key.key);
                         expect(record5).to.eql(record3);
                         expect(metadata5.gen).to.equal(metadata2.gen+1);
                         expect(record5.i).to.equal(record3.i);
@@ -271,32 +279,49 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-            expect(key1).to.eql(key);
+			expect(key1).to.have.property('ns', key.ns);
+			expect(key1).to.have.property('set', key.set);
+			expect(key1).to.have.property('key', key.key);
 
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(key2).to.eql(key);
+				expect(key2).to.have.property('ns', key.ns);
+				expect(key2).to.have.property('set', key.set);
+				expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
 
                 client.remove(key2, function(err, key3) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-                    expect(key3).to.eql(key);
+					expect(key3).to.have.property('ns', key.ns);
+					expect(key3).to.have.property('set', key.set);
+					expect(key3).to.have.property('key', key.key);
 
                     client.get(key3, function(err, record4, metadata4, key4) {
                         expect(err).to.be.ok();
-                        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+						if(err.code != 602)
+						{
+							expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+						}
+						else
+						{
+							expect(err.code).to.equal(602);
+						}
 
                         client.put(key, record, meta, function(err, key5) {
                             expect(err).to.be.ok();
                             expect(err.code).to.equal(status.AEROSPIKE_OK);
-                            expect(key5).to.eql(key);
+							expect(key5).to.have.property('ns', key.ns);
+							expect(key5).to.have.property('set', key.set);
+							expect(key5).to.have.property('key', key.key);
 
                             client.get(key5, function(err, record6, metadata6, key6) {
                                 expect(err).to.be.ok();
                                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                                expect(key6).to.eql(key);
+								expect(key6).to.have.property('ns', key.ns);
+								expect(key6).to.have.property('set', key.set);
+								expect(key6).to.have.property('key', key.key);
                                 expect(record6).to.eql(record);
                                 expect(metadata6.gen).to.equal(1);
 

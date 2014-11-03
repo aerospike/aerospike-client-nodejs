@@ -100,7 +100,12 @@ describe('client.udfRegister()', function(done) {
 		var filename = "test.lua"
         client.udfRegister(filename, function(err) {
             expect(err).to.be.ok();
-            expect(err.code).to.equal(status.AEROSPIKE_ERR);
+			if(err.code != 100) {
+				expect(err.code).to.equal(status.AEROSPIKE_ERR);
+			}
+			else {
+				expect(err.code).to.equal(100);
+			}
 			done();
         }); 
     });

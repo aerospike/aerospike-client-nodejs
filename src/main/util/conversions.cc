@@ -296,16 +296,43 @@ as_val* asval_clone( as_val* val, LogInfo* log)
     }
     return clone_val;
 }
-bool key_clone(const as_key* src, as_key** dest, LogInfo * log)
+bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
 {
-    if ( src == NULL || dest == NULL ) {
+    if(src == NULL || dest== NULL ) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
         return false;
     }
+
     as_v8_detail(log, "Cloning the key");
-    as_key_value* val           = src->valuep;
-    as_key_value* clone_val     = (as_key_value*) asval_clone( (as_val*) val, log);
-    *dest                       = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
+    as_key_value* val   = src->valuep;
+	if(val != NULL) 
+	{
+		as_key_value* clone_val = (as_key_value*) asval_clone( (as_val*) val, log);
+		if( alloc_key) 
+		{
+			*dest   = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
+		}
+		else
+		{
+			as_key_init_value(*dest, src->ns, src->set, (as_key_value*) clone_val);
+		}
+	}
+	else if( src->digest.init == true)
+	{
+		if( alloc_key) 
+		{
+			*dest = as_key_new_digest( src->ns, src->set, src->digest.value);
+		}
+		else
+		{
+			as_key_init_digest(*dest, src->ns, src->set, src->digest.value);
+		}
+	}
+	else
+	{
+		as_v8_detail(log, "Key has neither value nor digest ");
+	}
+
     return true;
 }
 
@@ -326,9 +353,16 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
         as_bin_value* clone_val = (as_bin_value*) asval_clone( (as_val*) val, log);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
         as_record_set( *dest, as_bin_get_name(bin), clone_val);
+    } 
 
-    }       
-
+	as_key* src_key  = (as_key*) &src->key;
+	as_key* dest_key = (as_key*) &(*dest)->key;
+	if(src_key != NULL) 
+	{
+		//clone the key but do not malloc the key structure,
+		// use the structure available inside record structure.
+		key_clone( src_key, &dest_key, log, false);
+	}
     return true;
 }
 
@@ -766,7 +800,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("send_as_is")) ) {  
         Local<Value> v8send_as_is = obj->Get(String::NewSymbol("send_as_is"));
         if ( v8send_as_is->IsBoolean() ) {
-            policy->send_as_is = (as_policy_bool) v8send_as_is->ToBoolean()->Value();
+            policy->send_as_is = (bool) v8send_as_is->ToBoolean()->Value();
             as_v8_detail(log,"info policy send_as_is is set to %s", policy->send_as_is ? "true":"false");
         }
         else {
@@ -777,7 +811,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("check_bounds")) ) {    
         Local<Value> v8check_bounds = obj->Get(String::NewSymbol("check_bounds"));
         if ( v8check_bounds->IsBoolean() ) {
-            policy->check_bounds = (as_policy_bool) v8check_bounds->ToBoolean()->Value();
+            policy->check_bounds = (bool) v8check_bounds->ToBoolean()->Value();
             as_v8_detail(log, "info policy check bounds is set to %s", policy->check_bounds ? "true" : "false");
         }
         else {
@@ -882,7 +916,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     if ( obj->Has(String::NewSymbol("failOnClusterChange")) ) {  
         Local<Value> failOnClusterChange = obj->Get(String::NewSymbol("failOnClusterChange"));
         if ( failOnClusterChange->IsBoolean() ) {
-            policy->fail_on_cluster_change = (as_policy_bool) failOnClusterChange->ToBoolean()->Value();
+            policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
             as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
         }
         else {
@@ -949,6 +983,16 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                 break;
         }
     }
+
+	if(key->digest.init == true) {
+		Buffer * buf = Buffer::New(AS_DIGEST_VALUE_SIZE);
+		memcpy(Buffer::Data(buf), key->digest.value, AS_DIGEST_VALUE_SIZE);
+        Local<Object> globalObj = v8::Context::GetCurrent()->Global();
+        Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
+        Handle<Value> constructorArgs[3] = { buf->handle_, Integer::New(AS_DIGEST_VALUE_SIZE), Integer::New(0) };
+        Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+        obj->Set(String::NewSymbol("digest"), actualBuffer);
+	}
 
     return scope.Close(obj);
 }
@@ -1179,6 +1223,10 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 {
     HANDLESCOPE;
 
+	if(obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	// Extract UDF module name
 	if( obj->Has(String::NewSymbol("module"))) {
 		Local<Value> module = obj->Get( String::NewSymbol("module"));
@@ -1302,7 +1350,7 @@ int scan_from_jsobject( as_scan * scan, Local<Object> obj, LogInfo * log) {
 			as_v8_error( log, "noBins value should be of type boolean in a scan object");
 			return AS_NODE_PARAM_ERR;
 		}
-		scan->no_bins = (as_policy_bool) noBins->ToBoolean()->Value();
+		scan->no_bins = (bool) noBins->ToBoolean()->Value();
 		as_v8_detail( log, "no_bins value for scan operation is set to %d ", scan->no_bins);
 	}
 	if ( obj->Has(String::NewSymbol("concurrent"))) {

@@ -89,7 +89,7 @@ int scan_from_jsobject( as_scan* scan, Local<Object> obj, LogInfo * log);
 
 //clone function for record and key
 bool record_clone(const as_record * src, as_record ** dest, LogInfo * log );
-bool key_clone(const as_key* src, as_key** dest, LogInfo * log );
+bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key = true );
 
 
 // Function to convert v8 policies to C structures

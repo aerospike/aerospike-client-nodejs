@@ -170,9 +170,12 @@ Handle<Value> AerospikeScan::applyEach(const Arguments& args)
 	char* filename = module;
 	char* funcname = func;
 	as_arraylist * arglist= NULL;
-	udfargs_from_jsobject(&filename, &funcname, &arglist, args[0]->ToObject(), NULL);
-	
-	as_scan_apply_each( &scan->scan, filename, funcname, (as_list*) arglist);
+	int ret = udfargs_from_jsobject(&filename, &funcname, &arglist, args[0]->ToObject(), NULL);
+
+	if( ret == AS_NODE_PARAM_OK) 
+	{
+		as_scan_apply_each( &scan->scan, filename, funcname, (as_list*) arglist);
+	}
 
 	return scope.Close(scan->handle_);
 }
