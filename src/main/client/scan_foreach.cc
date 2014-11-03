@@ -36,7 +36,6 @@ extern "C" {
 #include "log.h"
 using namespace v8;
 #define QUEUE_SZ 10000
-#define ASYNC_SIGNAL_SZ (QUEUE_SZ/20)
 /*******************************************************************************
  *  TYPES
  ******************************************************************************/
@@ -49,6 +48,7 @@ typedef struct ScanCallbackData{
     Persistent<Function> error_cb;
     Persistent<Function> end_cb;
 	cf_queue * record_q;
+	int q_size;
     LogInfo * log;
 	int delta;
 	uv_async_t async_handle;
@@ -96,7 +96,7 @@ bool aerospike_scan_callback(const as_val * val, void* udata)
 	}
 	
 	// if the record queue is full sleep for n microseconds.
-	if( cf_queue_sz(scan_cbdata->record_q) > QUEUE_SZ) {
+	if( cf_queue_sz(scan_cbdata->record_q) > scan_cbdata->q_size) {
 		// why 20 - no reason right now.
 		usleep(20);
 	}
@@ -105,7 +105,8 @@ bool aerospike_scan_callback(const as_val * val, void* udata)
 	cf_queue_push( scan_cbdata->record_q, &scan_rec); 
 	scan_cbdata->delta++;
 
-	if ( scan_cbdata->delta % ASYNC_SIGNAL_SZ == 0) {
+	int async_signal_sz = (scan_cbdata->q_size)/20;
+	if ( scan_cbdata->delta % async_signal_sz == 0) {
 		scan_cbdata->async_handle.data		= scan_cbdata;
 		async_send( &scan_cbdata->async_handle);	
 	}
@@ -166,6 +167,7 @@ static void * prepare(const Arguments& args)
 	scan_cbdata->log				= log;
 	scan_cbdata->delta				= 0;
 	scan_cbdata->record_q			= cf_queue_create(sizeof(as_record*), false);
+	scan_cbdata->q_size				= scan->q_size ? scan->q_size : QUEUE_SZ;
 	data->scan_cbdata				= scan_cbdata;
     data->param_err					= 0;
     // Local variables

@@ -45,6 +45,7 @@
         'src/main/enums/operators.cc',
         'src/main/enums/policy.cc',
         'src/main/enums/status.cc',
+        'src/main/enums/scanPriority.cc',
         'src/main/enums/udf_languages.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',

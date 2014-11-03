@@ -31,6 +31,7 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "scan.h"
+#include "enums.h"
 using namespace v8;
 
 /*******************************************************************************
@@ -68,6 +69,11 @@ void AerospikeScan::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("applyEach"), FunctionTemplate::New(applyEach)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("foreach"), FunctionTemplate::New(foreach)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setNobins"), FunctionTemplate::New(setNobins)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setConcurrent"), FunctionTemplate::New(setConcurrent)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setPercent"), FunctionTemplate::New(setPercent)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setRecordQsize"), FunctionTemplate::New(setRecordQsize)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
 
@@ -88,8 +94,11 @@ Handle<Value> AerospikeScan::New(const Arguments& args)
 	AerospikeClient* client =  ObjectWrap::Unwrap<AerospikeClient>(args[2]->ToObject());
 
 
+	scan->q_size	 =  0;
 	scan->as		 =  client->as;
-	scan->log		 =  client->log;
+	LogInfo* log     =  scan->log		 =  client->log;
+
+
 	as_namespace ns  = {'\0'};
 	as_set		 set = {'\0'};
 
@@ -100,6 +109,7 @@ Handle<Value> AerospikeScan::New(const Arguments& args)
 	else 
 	{
 		strncpy(ns, *String::Utf8Value(args[0]), AS_NAMESPACE_MAX_SIZE);
+		as_v8_debug(log, "namespace to scan %s", ns);
 	}
 
 	if( !args[1]->IsString())
@@ -109,6 +119,7 @@ Handle<Value> AerospikeScan::New(const Arguments& args)
 	else
 	{
 		strncpy(set, *String::Utf8Value(args[1]), AS_SET_MAX_SIZE);
+		as_v8_debug(log, "set to scan %s", set); 
 	}
 
 	as_scan_init( &scan->scan, ns, set);
@@ -140,15 +151,18 @@ Handle<Value> AerospikeScan::Select(const Arguments& args)
 	HANDLESCOPE;
 	AerospikeScan * asScan    = ObjectWrap::Unwrap<AerospikeScan>(args.This());
 	as_scan * scan			  = &asScan->scan; 
+	LogInfo * log			  = asScan->log;
 	// Parse the bin names and set the bin values to scan object
 	if ( args[0]->IsArray() ) 
 	{ 
 		Local<Array> bins	= Local<Array>::Cast(args[0]);
 		int size			= bins->Length();
+		as_v8_debug(log, "Number of bins to select in scan %d", size);
 		as_scan_select_init(scan, size);
 		for (int i=0; i < size; i++) {
 			Local<Value> bin = bins->Get(i);
 			as_scan_select( scan, *String::Utf8Value(bin));
+			as_v8_debug(log, "bin %d = %s", i, *String::Utf8Value(bin));
 		}   
 	}   
 	else 
@@ -157,6 +171,105 @@ Handle<Value> AerospikeScan::Select(const Arguments& args)
 	}   
 	return scope.Close(asScan->handle_);
 }
+
+Handle<Value> AerospikeScan::setPriority( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
+	as_scan * scan			= &asScan->scan;
+	LogInfo * log			= asScan->log;
+	//Set the priority of the scan.
+	if( args[0]->IsNumber() )
+	{
+		as_scan_set_priority( scan, (as_scan_priority) args[0]->ToObject()->IntegerValue());
+		as_v8_debug(log, "Scan priority is set to %d ", args[0]->ToObject()->IntegerValue()); 
+	}
+	else
+	{
+		//Throw an exception.
+	}
+	return scope.Close(asScan->handle_);
+}
+Handle<Value> AerospikeScan::setPercent( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
+	as_scan * scan			= &asScan->scan;
+	LogInfo * log			= asScan->log;
+
+	//Set the priority of the scan.
+	if( args[0]->IsNumber() )
+	{
+		as_scan_set_percent( scan, (uint8_t) args[0]->ToObject()->IntegerValue());
+		as_v8_debug(log, "Scan percent is set to %u", (uint8_t) args[0]->ToObject()->IntegerValue());
+	}
+	else
+	{
+		//Throw an exception.
+	}
+	return scope.Close(asScan->handle_);
+}
+
+Handle<Value> AerospikeScan::setNobins( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
+	as_scan * scan		= &asScan->scan;
+	LogInfo * log		= asScan->log;
+
+	// Set the nobins value here.
+	if( args[0]->IsBoolean() ) 
+	{
+		
+		as_scan_set_nobins( scan, (bool) args[0]->ToObject()->ToBoolean()->Value());
+		as_v8_debug(log, "scan nobins value is set");
+	}
+	else
+	{
+		// Throw exception.
+	}
+	return scope.Close(asScan->handle_);
+}
+
+Handle<Value> AerospikeScan::setConcurrent( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
+	as_scan * scan			= &asScan->scan;
+	LogInfo * log			= asScan->log;
+	//Set the concurrent value here.
+	if(args[0]->IsBoolean())
+	{
+		as_scan_set_concurrent( scan, (bool) args[0]->ToObject()->ToBoolean()->Value());
+		as_v8_debug(log, "Concurrent node scan property is set");
+	}
+	else
+	{
+		// Throw exception.
+	}
+	return scope.Close(asScan->handle_);
+}
+
+Handle<Value> AerospikeScan::setRecordQsize( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeScan * asScan	= ObjectWrap::Unwrap<AerospikeScan>(args.This());
+	LogInfo * log			= asScan->log;
+
+	//Set the concurrent value here.
+	if(args[0]->IsNumber())
+	{
+		asScan->q_size = (int) args[0]->ToObject()->IntegerValue();
+		as_v8_debug(log, "Record Q size is set to %d ", (int) args[0]->ToObject()->IntegerValue());
+
+	}
+	else
+	{
+		// Throw exception.
+	}
+	return scope.Close(asScan->handle_);
+}
+
 
 Handle<Value> AerospikeScan::applyEach(const Arguments& args)
 {

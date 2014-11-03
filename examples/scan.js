@@ -29,6 +29,7 @@ var util = require('util');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
+var scanPriority  = aerospike.scanPriority;
 
 /*******************************************************************************
  *

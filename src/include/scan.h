@@ -43,8 +43,18 @@ class AerospikeScan: public ObjectWrap {
     public:
         static void Init();
         static Handle<Value> NewInstance(const Arguments& args);
+
+		// C structure to store all the scan properties.
 		as_scan scan;
+
+		// Size of queye that's used in the scan_callback, it's user adjustable.
+		int q_size;
+
+		// stores all aerospike related information. One common structure for 
+		// a client instance.
 		aerospike* as;
+
+		// Logger to log.
 		LogInfo* log;
         /***************************************************************************
          *  PRIVATE
@@ -76,5 +86,30 @@ class AerospikeScan: public ObjectWrap {
          *  undefined scan.select(String[])
          */
         static Handle<Value> Select(const Arguments& args);
+
+		/**
+         *  undefined scan.setPriority(SCAN_PRIORITY)
+         */
+        static Handle<Value> setPriority(const Arguments& args);
+
+		/**
+         *  undefined scan.setNobins(Boolean)
+         */
+        static Handle<Value> setNobins(const Arguments& args);
+
+		/**
+         *  undefined scan.setPercent(integer)
+         */
+        static Handle<Value> setPercent(const Arguments& args);
+
+		/**
+         *  undefined scan.setConcurrent(Boolean)
+         */
+        static Handle<Value> setConcurrent(const Arguments& args);
+
+		/**
+         *  undefined scan.setRecordQsize(integer)
+         */
+        static Handle<Value> setRecordQsize(const Arguments& args);
 
 };
