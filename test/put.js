@@ -344,11 +344,11 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(key2).to.eql(key);
-                expect(record2).not.to.eql(record);
+                expect(record2).to.eql(record);
                 expect(record2.m).to.eql({a: 1, b: 2});
-                expect(record2.me).to.be(undefined);
+                expect(record2.me).to.be.eql({});
                 expect(record2.l).to.eql([1,2,3]);
-                expect(record2.le).to.be(undefined);
+                expect(record2.le).to.be.eql([]);
                 done();
             });
         });
