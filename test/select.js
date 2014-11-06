@@ -83,6 +83,30 @@ describe('client.select()', function() {
             });
         });
     });
+	it('should fail - when a select is called without key ', function(done) {
+        
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/select/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+        var bins    = Object.keys(record).slice(0,1);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+			var select_key = { ns:options.namespace, set: options.set}
+            client.select(select_key, bins, function(err, _record, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+
+                done();
+            });
+        });
+    });
 
     it('should not find the record', function(done) {
 
