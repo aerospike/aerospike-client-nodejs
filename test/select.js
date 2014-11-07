@@ -16,15 +16,16 @@
 
 // we want to test the built aerospike module
 var aerospike = require('../build/Release/aerospike');
-var options = require('./util/options');
-var assert = require('assert');
-var expect = require('expect.js');
+var options   = require('./util/options');
+var assert    = require('assert');
+var expect    = require('expect.js');
+var fs	      = require('fs');
 
-var keygen = require('./generators/key');
+var keygen  = require('./generators/key');
 var metagen = require('./generators/metadata');
-var recgen = require('./generators/record');
-var putgen = require('./generators/put');
-var valgen = require('./generators/value');
+var recgen  = require('./generators/record');
+var putgen  = require('./generators/put');
+var valgen  = require('./generators/value');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
@@ -36,7 +37,8 @@ describe('client.select()', function() {
             { addr: options.host, port: options.port }
         ],
         log: {
-            level: options.log
+            level: options.log,
+			file: fs.openSync("test.log", "a")
         },
         policies: {
             timeout: options.timeout
