@@ -51,7 +51,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "redhatenterpriceserver6" )
+      "centos6" | "redhatenterpriseserver6" )
         echo "el6" "rpm"
         return 0
         ;;
