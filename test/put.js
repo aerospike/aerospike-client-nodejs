@@ -405,5 +405,32 @@ describe('client.put()', function() {
             done();
         });
     });
+	it('should write a set with empty string and write should pass', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, "", {prefix: "test/set/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l	  :  valgen.constant([1,2,3]),
+            m	  :  valgen.constant({a: 1, b: 2}),
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+			client.get(key1, function(err, bins, meta, key2) {
+				expect(err).to.be.ok();
+				expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(bins.m).to.eql({a: 1, b: 2});
+                expect(bins.l).to.eql([1,2,3]);
+				done();
+			});
+        });
+    });
 
 });

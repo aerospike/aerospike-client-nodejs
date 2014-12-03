@@ -1265,14 +1265,19 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // get the set
     if ( obj->Has(String::NewSymbol("set")) ) {
         Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+		//check if set is string or a null value.
         if ( set_obj->IsString() ) {
             strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
             as_v8_detail(log,"key.set = \"%s\"", set);
             if ( strlen(set) == 0 ) {
-                goto ReturnError;
+				as_v8_debug(log, "Set passed is empty string");
+                //goto ReturnError;
             }
         }
-        else {
+		// null value for set is valid in a key. 
+		// Any value other than null and string is not 
+		// acceptable for string.
+        else if( !set_obj->IsNull()){
             goto ReturnError;
         }
     }
