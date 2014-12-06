@@ -25,6 +25,7 @@ The following is very simple example of how to write and read a record from Aero
 
 ```js
 var aerospike = require('aerospike');
+var status = aerospike.status;
 
 
 // Connect to the cluster.
@@ -33,7 +34,7 @@ var client = aerospike.client({
 });
 
 function connect_cb( err, client) {
-    if (err.code == AEROSPIKE_OK) {
+    if (err.code == status.AEROSPIKE_OK) {
         console.log("Aerospike Connection Success")
     }
 }
@@ -47,7 +48,7 @@ var key = aerospike.key('test','demo','foo');
 client.get(key, function(err, rec, meta) {
     
     // Check for errors
-    if ( err.code == aerospike.status.AEROSPIKE_OK ) {
+    if ( err.code == status.AEROSPIKE_OK ) {
     	// The record was successfully read.
     	console.log(rec, meta);
     }
