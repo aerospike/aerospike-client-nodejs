@@ -139,18 +139,18 @@ aerospike.client(config).connect(function (err, client) {
 					udfArgs: {module: 'scan', funcname: 'updateRecord'}
 				  }
 
-    var q = client.query(argv.namespace, argv.set, options );
+    var scanBackground = client.query(argv.namespace, argv.set, options );
 
-    var que = q.execute();
+    var scanStream = scanBackground.execute();
 
-    que.on('error', function(err){
+    scanStream.on('error', function(err){
         console.log(err);
     });
 
-	var checkStatus = function(queryStatus)
+	var checkStatus = function(scanJobStats)
 	{
-		console.log(queryStatus);
-		if(queryStatus.status != scanStatus.COMPLETED)
+		console.log(scanJobStats);
+		if(scanJobStats.status != scanStatus.COMPLETED)
 		{
 			return false;
 		}
@@ -160,20 +160,20 @@ aerospike.client(config).connect(function (err, client) {
 		}
 	}
 
-	var infoCallback = function(queryStatus, scanId)
+	var infoCallback = function(scanJobStats, scanId)
 	{
-		if(!checkStatus(queryStatus))
+		if(!checkStatus(scanJobStats))
 		{
 			sleep.sleep(1)
-			q.Info(scanId, infoCallback);
+			scanBackground.Info(scanId, infoCallback);
 		}
 	}
 
 	var info = function(scanId)
 	{
-		q.Info(scanId, infoCallback);
+		scanBackground.Info(scanId, infoCallback);
 	}
-    que.on('end', info);
+    scanStream.on('end', info);
 
 });
 /*******************************************************************************

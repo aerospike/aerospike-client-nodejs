@@ -21,15 +21,15 @@ var assert = require('assert');
 var expect = require('expect.js');
  
 
-var keygen = require('./generators/key');
+var keygen  = require('./generators/key');
 var metagen = require('./generators/metadata');
-var recgen = require('./generators/record');
-var putgen = require('./generators/put');
-var valgen = require('./generators/value');
+var recgen  = require('./generators/record');
+var putgen  = require('./generators/put');
+var valgen  = require('./generators/value');
 
-var status = aerospike.status;
-var policy = aerospike.policy;
-
+var status     = aerospike.status;
+var policy	   = aerospike.policy;
+var scanStatus = aerospike.scanStatus;
 describe('client.scan()', function() {
 
     var client = aerospike.client({
@@ -96,7 +96,7 @@ describe('client.scan()', function() {
         done();
     });
 
-    it('should scan 100 records', function(done) {
+    it('should scan all the records', function(done) {
         
         // counters
         var total = 100;
@@ -115,14 +115,14 @@ describe('client.scan()', function() {
 			err++;
 		});
 		scan.on('end', function(end){
-			expect(count).to.equal(100);
+			expect(count).to.be.greaterThan(99);
 			expect(err).to.equal(0);
 
 			done();
 		});
     });
 
-	it('should select no bins', function(done) {
+	it('should scan and select no bins', function(done) {
 			var total = 100;
 			var count = 0;
 			var err   = 0;
@@ -145,8 +145,8 @@ describe('client.scan()', function() {
 				done();
 			});
 	});
-    it('should select only few bins in the record', function(done) {
-			var total = 100;
+    it('should scan and select only few bins in the record', function(done) {
+			var total = 99;
 			var count = 0;
 			var err   = 0;
 			
@@ -163,10 +163,31 @@ describe('client.scan()', function() {
 				err++;
 			});
 			scan.on('end', function(end) {
-				console.log(count);
-				expect(count).to.equal(total);
+				expect(count).to.be.greaterThan(total);
 				expect(err).to.equal(0);
 				done();
+			});
+	});
+	it('should fire a scan background and check for scan job completion', function(done) {
+			var args = { udfArgs: {module: 'scan', funcname: 'updateRecord'}}
+			var scanBackground = client.query( options.namespace, options.set, args);
+
+			var err = 0;
+			var scanStream = scanBackground.execute();
+
+			var infoCallback = function( scanJobStats, scanId) {
+				if(scanJobStats.status != scanStatus.COMPLETED) {
+					scanBackground.Info(scanId, infoCallback);
+				}
+				else {
+					done();
+				}
+			}
+			scanStream.on('error', function(error) {
+				err++;
+			});
+			scanStream.on('end', function(scanId) {
+				scanBackground.Info(scanId, infoCallback);
 			});
 	});
 
