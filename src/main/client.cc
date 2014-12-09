@@ -26,7 +26,6 @@ extern "C" {
 #include <node.h>
 #include "client.h"
 #include "conversions.h"
-#include "scan.h"
 #include "query.h"
 using namespace v8;
 
@@ -169,13 +168,6 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
     return scope.Close(client->handle_);
 }
 
-Handle<Value> AerospikeClient::Scan(const Arguments& args)
-{
-	HANDLESCOPE;
-
-	AerospikeScan::Init();
-	return scope.Close(AerospikeScan::NewInstance(args));
-}
 
 Handle<Value> AerospikeClient::Query(const Arguments& args)
 {
