@@ -82,7 +82,7 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
     msg[pos] = '\0';
 
     if( 0 >= write(log->fd, msg, pos)) {
-        fprintf(stderr, "Internal failure in log message write :%d \n", errno);
+        //fprintf(stderr, "Internal failure in log message write :%d \n", errno);
     }
 }
 

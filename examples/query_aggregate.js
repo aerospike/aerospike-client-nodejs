@@ -130,8 +130,8 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-	var options = { udfArgs : {module: 'nodejs_query', funcname: 'sum_test_bin'},
-					filters : [filter.range('i', 100, 1000000)],
+	var options = { udfArgs : {module: 'query', funcname: 'sum_test_bin'},
+					filters : [filter.equal('s', 'abc')],
 					select : ['s', 'i'] }
 
     var query = client.query(argv.namespace, argv.set, options);

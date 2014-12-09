@@ -59,7 +59,7 @@ describe('client.scan()', function() {
 			function iteration(i) {
 
 			// values
-			var key     = { ns: options.namespace, set: options.set, key: i}
+			var key     = { ns: options.namespace, set: options.set, key: "test/scan" + i.toString()}
 			var meta    = mgen(key);
 			var record  = rgen(key, meta);
 
@@ -88,7 +88,7 @@ describe('client.scan()', function() {
     after(function(done) {
 		var total = 100;
 		for ( var j = 0; j < total; j++) {
-			var key = { ns: options.namespace, set: options.set, key: j}
+			var key = { ns: options.namespace, set: options.set, key: "test/scan" + j.toString()}
 			client.remove(key, function(err, key){});
 		}
         client.close();
@@ -168,55 +168,5 @@ describe('client.scan()', function() {
 				done();
 			});
 	});
-	it('should fire a scan background and check for scan job completion', function(done) {
-			var args = { udfArgs: {module: 'scan', funcname: 'updateRecord'}}
-			var scanBackground = client.query( options.namespace, options.set, args);
-
-			var err = 0;
-			var scanStream = scanBackground.execute();
-
-			var infoCallback = function( scanJobStats, scanId) {
-				if(scanJobStats.status != scanStatus.COMPLETED) {
-					scanBackground.Info(scanId, infoCallback);
-				}
-				else {
-					done();
-				}
-			}
-			scanStream.on('error', function(error) {
-				err++;
-			});
-			scanStream.on('end', function(scanId) {
-				scanBackground.Info(scanId, infoCallback);
-			});
-	});
-	it('Query without where clause and an UDF - should do a foreground scan of all records', function(done) {
-        
-        // counters
-        var total = 100;
-        var count = 0;
-		var err = 0;
-
-		var scan = client.query(options.namespace, options.set);
-	
-		var stream = scan.execute();
-
-		stream.on('data', function(rec){
-			expect(rec.bins).to.have.property('s');
-			expect(rec.bins).to.have.property('i');
-			expect(rec.bins).to.have.property('b');
-			count++;
-		});
-		stream.on('error', function(error){
-			err++;
-		});
-		stream.on('end', function(end){
-			expect(count).to.be.greaterThan(99);
-			expect(err).to.equal(0);
-
-			done();
-		});
-    });
-
 
 });
