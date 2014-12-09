@@ -68,12 +68,12 @@ describe('client.udfRemove()', function(done) {
         }); 
     });
 
-//	it('remove non-existent UDF module from aerospike cluster - should fail',function(done) {
-//		var filename = "noudf.lua"
-//       client.udfRemove(filename, function(err) {
-//            expect(err).to.be.ok();
-//            expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
-//			done();
-//       }); 
-//    });
+	it('remove non-existent UDF module from aerospike cluster - should fail',function(done) {
+		var filename = "noudf.lua"
+       client.udfRemove(filename, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+			done();
+       }); 
+    });
 });

@@ -14,33 +14,20 @@
  * limitations under the License.
  ******************************************************************************/
 
-#pragma once
-
 #include <node.h>
-#include "client.h"
+#include "enums.h"
 
 using namespace v8;
 
-Handle<Object> status();
+#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
 
-Handle<Object> key_policy_values();
-
-Handle<Object> retry_policy_values();
-
-Handle<Object> generation_policy_values();
-
-Handle<Object> policy();
-
-Handle<Object> operators();
-
-Handle<Object> log();
-
-Handle<Object> languages();
-
-Handle<Object> scanPriority();
-
-Handle<Object> filter();
-
-Handle<Object> indexType();
-
-Handle<Object> scanStatus();
+Handle<Object> scanStatus() 
+{
+    HANDLESCOPE;
+    Handle<Object> obj = Object::New();
+    set(obj, "UNDEF",    0);
+    set(obj, "INPROGRESS",     1);
+    set(obj, "ABORTED",  2);
+    set(obj, "COMPLETED",    3);
+    return scope.Close(obj);
+}

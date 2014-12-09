@@ -163,6 +163,7 @@ describe('client.scan()', function() {
 				err++;
 			});
 			scan.on('end', function(end) {
+				console.log(count);
 				expect(count).to.equal(total);
 				expect(err).to.equal(0);
 				done();

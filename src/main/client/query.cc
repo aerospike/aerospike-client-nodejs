@@ -22,6 +22,7 @@ extern "C" {
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
     #include <aerospike/as_query.h>
+    #include <aerospike/as_scan.h>
     #include <aerospike/as_bin.h>
     #include <aerospike/as_arraylist.h>
 }
@@ -72,6 +73,11 @@ void AerospikeQuery::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("foreach"), FunctionTemplate::New(foreach)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("where"), FunctionTemplate::New(where)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setRecordQsize"), FunctionTemplate::New(setRecordQsize)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("queryInfo"), FunctionTemplate::New(queryInfo)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setPercent"), FunctionTemplate::New(setPercent)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setNobins"), FunctionTemplate::New(setNobins)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setConcurrent"), FunctionTemplate::New(setConcurrent)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
 
@@ -95,7 +101,17 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 	query->q_size	 =  0;
 	query->as		 =  client->as;
 	LogInfo* log     =  query->log		 =  client->log;
+	
+	// Default assume it as a scan. (Query without a where clause).
+	// Set this variable to true, when there's a where clause in the query.
+	query->IsQuery   = false;
+	query->hasUDF	 = false;
 
+	// set the default values of scan properties.
+	query->percent    = AS_SCAN_PERCENT_DEFAULT;
+	query->nobins     = AS_SCAN_NOBINS_DEFAULT;
+	query->concurrent = AS_SCAN_CONCURRENT_DEFAULT;
+	query->scan_priority   = AS_SCAN_PRIORITY_DEFAULT;
 
 	as_namespace ns  = {'\0'};
 	as_set		 set = {'\0'};
@@ -141,6 +157,8 @@ Handle<Value> AerospikeQuery::NewInstance( const Arguments& args)
 
 	// Invoked with namespace and set.
     Handle<Value> argv[argc] = {args[0], args[1], args.This()};
+	// Default assume it as a scan. (Query without a where clause).
+	// Set this variable to true, when there's a where clause in the query.;
 
     Local<Object> instance	 = constructor->NewInstance( argc, argv);
 
@@ -181,6 +199,12 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 	AerospikeQuery* asQuery		= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	as_query * query			= &asQuery->query; 
 	LogInfo * log				= asQuery->log;
+
+
+	// If a where clause is set in a query it's a normal query.
+	// Otherwise it's a background scan.
+	asQuery->IsQuery			= true;
+
 	// Parse the filters and set the filters to query object
 	if ( args[0]->IsArray() ) 
 	{ 
@@ -261,7 +285,8 @@ Handle<Value> AerospikeQuery::apply(const Arguments& args)
 {
 	HANDLESCOPE;
 	AerospikeQuery * query	= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
-	
+
+	query->hasUDF			= true;
 	// Parse the UDF args from jsobject and populate the query object with it.
 	char module[255];
 	char func[255];
@@ -269,7 +294,7 @@ Handle<Value> AerospikeQuery::apply(const Arguments& args)
 	char* filename = module;
 	char* funcname = func;
 	as_arraylist * arglist= NULL;
-	int ret = udfargs_from_jsobject(&filename, &funcname, &arglist, args[0]->ToObject(), NULL);
+	int ret = udfargs_from_jsobject(&filename, &funcname, &arglist, args[0]->ToObject(), query->log);
 
 	if( ret == AS_NODE_PARAM_OK) 
 	{
@@ -283,3 +308,84 @@ Handle<Value> AerospikeQuery::apply(const Arguments& args)
 }
 
 
+Handle<Value> AerospikeQuery::setPriority( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeQuery* asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+	LogInfo * log           = asQuery->log;
+	//Set the scan_priority of the scan.
+	if( args[0]->IsNumber() )
+	{
+		asQuery->scan_priority = args[0]->ToObject()->IntegerValue();
+		as_v8_debug(log, "Scan scan_priority is set to %d ", args[0]->ToObject()->IntegerValue()); 
+	}   
+	else
+	{   
+		//Throw an exception.
+		as_v8_error(log, "Scan scan_priority must be an enumerator of type scanPriority");
+	}   
+	return scope.Close(asQuery->handle_);
+}
+
+Handle<Value> AerospikeQuery::setPercent( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+	LogInfo * log           = asQuery->log;
+
+	//Set the percentage to be scanned in each partition.
+	if( args[0]->IsNumber() )
+	{
+		asQuery->percent = args[0]->ToObject()->IntegerValue();
+		as_v8_debug(log, "Scan percent is set to %u", (uint8_t) args[0]->ToObject()->IntegerValue());
+	}
+	else
+	{
+		//Throw an exception.
+		as_v8_error(log, "scan percentage is a number less than 100");
+	}
+	return scope.Close(asQuery->handle_);
+}
+
+Handle<Value> AerospikeQuery::setNobins( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+	LogInfo * log       = asQuery->log;
+
+	// Set the nobins value here.
+	// When nobins is true in a scan, only metadata of the record
+	// is returned not bins
+	if( args[0]->IsBoolean() )
+	{
+		asQuery->nobins = (bool) args[0]->ToObject()->ToBoolean()->Value();
+		as_v8_debug(log, "scan nobins value is set");
+	}
+	else
+	{
+		// Throw exception.
+		as_v8_error(log," setNobins should be a boolean value");
+	}
+	return scope.Close(asQuery->handle_);
+}
+
+Handle<Value> AerospikeQuery::setConcurrent( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+	LogInfo * log			  = asQuery->log;
+	//Set the concurrent value here.
+	if(args[0]->IsBoolean())
+	{
+		asQuery->concurrent =  (bool) args[0]->ToObject()->ToBoolean()->Value();
+		as_v8_debug(log, "Concurrent node scan property is set");
+	}
+	else
+	{
+		as_v8_error(log, "setConcuurent should be a boolean value");
+		// Throw exception.
+	}
+	return scope.Close(asQuery->handle_);
+}
+
+	

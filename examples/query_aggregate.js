@@ -136,14 +136,12 @@ aerospike.client(config).connect(function (err, client) {
 
     var query = client.query(argv.namespace, argv.set, options);
 
-	var queryStream = query.aggregate();
+	var queryStream = query.execute();
     queryStream.on('data', function(rec) {
-		console.log("at data");
         console.log(count++, rec);
     });
 
     queryStream.on('error', function(err){
-		console.log("at error");
         console.log(err);
     });
 

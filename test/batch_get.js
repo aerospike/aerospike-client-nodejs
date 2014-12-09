@@ -36,7 +36,8 @@ describe('client.batchGet()', function() {
             { addr: options.host, port: options.port }
         ],
         log: {
-            level: options.log
+            level: options.log,
+			file: options.log_file
         },
         policies: {
             timeout: options.timeout

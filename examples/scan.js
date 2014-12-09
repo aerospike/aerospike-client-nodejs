@@ -131,10 +131,12 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-    var scan = client.scan(argv.namespace, argv.set);
+	//var options = { select: ['i', 's']}
+    var scan = client.scan(argv.namespace, argv.set );
+
 
     scan.on('data', function(rec) {
-        console.log(count++, rec);
+        console.log(count++);
     });
 
     scan.on('error', function(err){

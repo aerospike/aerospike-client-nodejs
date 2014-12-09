@@ -33,7 +33,6 @@ Handle<Value> range(const Arguments& args)
 	Handle<Object> range_obj = Object::New();
 	range_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_INTEGER_RANGE));
 	range_obj->Set(String::NewSymbol("bin"), args[0]);
-	printf("range has been invoked \n");
 	range_obj->Set(String::NewSymbol("min"), args[1]);
 	range_obj->Set(String::NewSymbol("max"), args[2]);
 	return scope.Close(range_obj);

@@ -134,21 +134,23 @@ aerospike.client(config).connect(function (err, client) {
 
     var q= client.query(argv.namespace, argv.set, options);
 
-	var query = q.queryData();
-    query.on('data', function(rec) {
+	var stream = q.execute();
+
+    stream.on('data', function(rec) {
 		console.log("at data");
         console.log(count++, rec);
     });
 
-    query.on('error', function(err){
+    stream.on('error', function(err){
 		console.log("at error");
         console.log(err);
     });
 
-    query.on('end', function() {
+    stream.on('end', function() {
         console.log('TOTAL QUERIED:', count++);
         process.exit(0)
     });
+
 
 });
 /*******************************************************************************

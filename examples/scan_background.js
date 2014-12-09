@@ -16,17 +16,22 @@
 
 /*******************************************************************************
  *
- * Get state information from the cluster or a single host.
+ * Write a record.
  * 
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
+var client    = aerospike.client;
 var yargs = require('yargs');
+var events = require('events');
+var util = require('util');
+var sleep = require('sleep');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
-var Language = aerospike.Language;
+var filter = aerospike.filter;
+var scanStatus = aerospike.scanStatus;
 
 /*******************************************************************************
  *
@@ -35,15 +40,11 @@ var Language = aerospike.Language;
  ******************************************************************************/
 
 var argp = yargs
-    .usage("$0 [options] module function [args ...]")
+    .usage("$0 [options] key")
     .options({
         help: {
             boolean: true,
             describe: "Display this message."
-        },
-        profile: {
-            boolean: true,
-            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -72,37 +73,20 @@ var argp = yargs
         namespace: {
             alias: "n",
             default: "test",
-            describe: "Namespace to scan."
+            describe: "Namespace for the keys."
         },
         set: {
             alias: "s",
             default: "demo",
-            describe: "Set to scan."
+            describe: "Set for the keys."
         }
     });
 
 var argv = argp.argv;
-var udf_module = argv._.shift();
-var udf_function = argv._.shift();
-var udf_args = argv._;
 
 if ( argv.help === true ) {
     argp.showHelp();
-    process.exit(0);
-}
-
-if ( ! udf_module ) {
-    console.error("Error: Please provide a key for the operation");
-    console.error();
-    argp.showHelp();
-    process.exit(1);
-}
-
-if ( ! udf_function ) {
-    console.error("Error: Please provide a key for the operation");
-    console.error();
-    argp.showHelp();
-    process.exit(1);
+    return;
 }
 
 /*******************************************************************************
@@ -136,10 +120,6 @@ config = {
  * 
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
-}
-
 aerospike.client(config).connect(function (err, client) {
 
     if ( err.code != Status.AEROSPIKE_OK ) {
@@ -149,23 +129,55 @@ aerospike.client(config).connect(function (err, client) {
 
     //
     // Perform the operation
+	// Fire up a background scan command and check the status of the scan
+	// every 1 second
     //
-    
-    var udf = {
-        module: udf_module,
-        funcname: udf_function,
-        args: udf_args.map(function(v) {
-            // we allow the arguments to be simple strings, integers or 
-            // JSON encoded values.
-            try {
-                return JSON.parse(v);
-            }
-            catch ( exception ) {
-                return "" + v;
-            }
-        })
-    };
 
-	var scan = client.scan(argv.namespace, argv.set);
+    var count = 0;
+
+	var options = { select: ['i', 's'],
+					udfArgs: {module: 'scan', funcname: 'updateRecord'}
+				  }
+
+    var q = client.query(argv.namespace, argv.set, options );
+
+    var que = q.execute();
+
+    que.on('error', function(err){
+        console.log(err);
+    });
+
+	var checkStatus = function(queryStatus)
+	{
+		console.log(queryStatus);
+		if(queryStatus.status != scanStatus.COMPLETED)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	var infoCallback = function(queryStatus, scanId)
+	{
+		if(!checkStatus(queryStatus))
+		{
+			sleep.sleep(1)
+			q.Info(scanId, infoCallback);
+		}
+	}
+
+	var info = function(scanId)
+	{
+		q.Info(scanId, infoCallback);
+	}
+    que.on('end', info);
 
 });
+/*******************************************************************************
+ *
+ * Perform the operation
+ * 
+ ******************************************************************************/

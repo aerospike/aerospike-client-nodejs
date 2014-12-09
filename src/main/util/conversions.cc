@@ -1210,7 +1210,7 @@ Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
 	Local<Object> scaninfo;
 
     if(info == NULL) {
-        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
+        as_v8_debug( log, "Scan Info ( C structure) is NULL, cannot form node.js scanInfo object"); 
         return scope.Close(scaninfo);
     }
     
@@ -1222,8 +1222,6 @@ Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
 	scaninfo->Set(String::NewSymbol("status"), Integer::New(info->status));
 
     return scope.Close(scaninfo);
-
-	
 }
 
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
@@ -1440,6 +1438,7 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     HANDLESCOPE;
 
 	if(obj->IsNull()) {
+		as_v8_error(log, "Object passed is NULL");
 		return AS_NODE_PARAM_ERR;
 	}
 

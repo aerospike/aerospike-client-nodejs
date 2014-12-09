@@ -76,7 +76,6 @@ void AerospikeClient::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
 	cons->PrototypeTemplate()->Set(String::NewSymbol("query"), FunctionTemplate::New(Query)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("scan"), FunctionTemplate::New(Scan)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("udfRegister"), FunctionTemplate::New(Register)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("execute"), FunctionTemplate::New(Execute)->GetFunction());

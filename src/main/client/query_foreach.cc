@@ -40,14 +40,22 @@ using namespace v8;
 /*******************************************************************************
  *  TYPES
  ******************************************************************************/
-
-
 typedef struct AsyncData {
     int param_err;
     aerospike * as;
-	as_query* query;
+	bool is_query;
+	bool has_udf;
+	uint64_t  scan_id;
+	union {
+		as_query* query;
+		as_scan* scan;
+	} query_scan;
     as_error err;
-    as_policy_query policy;
+    union {
+		as_policy_query query;
+		as_policy_scan scan;
+	} policy;
+	as_status res;
     LogInfo * log;
 	AsyncCallbackData* query_cbdata;
 } AsyncData;
@@ -80,6 +88,70 @@ bool aerospike_query_callback(const as_val * val, void* udata)
 	return async_queue_populate(val, query_cbdata);
 }
 
+/* There is one common class AerospikeQuery for both scan and query.
+ * This function parses the values from AerospikeQuery and populates either
+ * scan or query depending on the boolean combination of isQuery and hasUDF variables.
+ * ---------------------------------------
+ * IsQuery  | hasUDF | Function          |
+ * ---------------------------------------
+ *  0	    | 0      | Scan Foreground   |
+ *  0       | 1      | Scan Background   |
+ *  1       | 0      | Query             |
+ *  1       | 1      | Aggregation       |
+ * --------------------------------------- */
+bool populate_scan_or_query(AsyncData* data, AerospikeQuery* v8_query)
+{
+	// populate the values for scan. 
+	// we have not allocated the as_scan object anywhere earlier. 
+	// Allocate as_scan here.
+	LogInfo * log = v8_query->log;
+	if(!v8_query->IsQuery)
+	{
+		as_v8_debug(log, "The Scan operation invoked");
+		data->query_scan.scan = (as_scan*) cf_malloc(sizeof(as_scan));
+		as_scan * scan  = data->query_scan.scan;
+		as_query* query = &v8_query->query;
+
+		data->is_query = v8_query->IsQuery;
+		data->has_udf  =  v8_query->hasUDF;
+		if(data->has_udf)
+		{
+			as_v8_debug(log,"It's a background scan operation");
+		}
+		as_scan_init(scan, query->ns, query->set);
+		as_v8_debug(log,"ns = %s and set = %s for scan ", query->ns, query->set); 
+		as_scan_apply_each(scan, query->apply.module, query->apply.function, query->apply.arglist);
+		as_v8_detail(log, "Number of bins to select in scan %d ", query->select.size);
+		as_scan_select_init(scan, query->select.size);
+		for ( uint16_t i = 0; i < query->select.size; i++)
+		{
+			as_scan_select(scan, (const char*) query->select.entries[i]);
+			as_v8_detail(log, "setting the select bin in scan to %s", scan->select.entries[i]);
+		}
+
+		// set the scan properties from AerospikeQuery object.
+		as_scan_set_concurrent( scan, v8_query->concurrent);
+		as_v8_detail(log, "concurrent property in scan is set to %d", (int) v8_query->concurrent);
+		as_scan_set_nobins(scan, v8_query->nobins);
+		as_v8_detail(log, "nobins property in scan is set to %d", (int) v8_query->nobins);
+		as_scan_set_percent(scan, v8_query->percent);
+		as_v8_detail(log, "percent in scan is set to %d", v8_query->percent);
+		as_scan_set_priority(scan, (as_scan_priority) v8_query->scan_priority);
+		as_v8_detail(log, "priority in scan is set to %d", v8_query->scan_priority);
+
+	}
+	else // it's a normal query - just update the query pointer. 
+	{
+		// query structure is populated in AerospikeQuery class itself.
+		// But scan structure is populated above because
+		// in future scan will be merged to query structure. Then this 
+		// if else won't be necessary.
+		data->query_scan.query  = &v8_query->query;
+	}
+	return true;
+
+}
+
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
  *  
@@ -97,65 +169,95 @@ static void * prepare(const Arguments& args)
     AsyncData * data				= new AsyncData;
 	AsyncCallbackData* query_cbdata	= new AsyncCallbackData;
     data->as						= query->as;
-	data->query						= &query->query;
     LogInfo * log					= data->log = query->log;
-
 	query_cbdata->log				= log;
-	query_cbdata->signal_interval	= 0;
-	query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), false);
-	query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
 	data->query_cbdata				= query_cbdata;
+	data->is_query					= query->IsQuery;
+	data->has_udf					= query->hasUDF;
     data->param_err					= 0;
+	data->res						= AEROSPIKE_OK;
+	int curr_arg_pos				= 0;
+
+	populate_scan_or_query(data, query);
+
+	//scan background - no need to create a result queue.
+	if(!data->is_query && data->has_udf)
+	{
+		data->scan_id					= 0;
+	}
+	else // queue creation job for scan_foreground, query, aggregation.
+	{
+		query_cbdata->signal_interval	= 0;
+		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), false);
+		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
+	}
+		
     // Local variables
-    as_policy_query * policy		= &data->policy;
 
     int arglength					= args.Length();
 
-	if(args[0]->IsFunction())
+	// For query, aggregation and scan foreground data callback must be present
+	// for scan_background callback for data is NULL.
+	if((args[curr_arg_pos]->IsFunction()) || ( !data->is_query && data->has_udf && args[curr_arg_pos]->IsNull()))
 	{
-		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[0]));
+		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		curr_arg_pos++;
 	}
-	else 
+	else
 	{
 		as_v8_error(log, "Callback not passed to process the  query results");
+		data->param_err = 1;
 		goto ErrReturn;
 	}
     
-	if(args[1]->IsFunction())
+	if(args[curr_arg_pos]->IsFunction())
 	{
-		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[1]));
+		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		curr_arg_pos++;
 	}
 	else 
 	{
 		as_v8_error(log, "Callback not passed to process the error message");
+		data->param_err = 1;
 		goto ErrReturn;
 	}
-	if(args[2]->IsFunction())
+	if(args[curr_arg_pos]->IsFunction())
 	{
-		query_cbdata->end_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[2]));
+		query_cbdata->end_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		curr_arg_pos++;
 	}
 	else 
 	{
 		as_v8_error(log, "Callback not passed to notify the end of query");
+		data->param_err = 1;
 		goto ErrReturn;
 	}
 
 
-    if ( arglength > 3 ) 
+	// If it's a query, then there are 3 callbacks and one optional policy objects.
+    if (arglength > 3)  
 	{
-        if ( args[3]->IsObject()) 
+        if ( args[curr_arg_pos]->IsObject()) 
 		{
-            if (querypolicy_from_jsobject( policy, args[3]->ToObject(), log) != AS_NODE_PARAM_OK) 
+            if (data->is_query && querypolicy_from_jsobject( &data->policy.query, args[curr_arg_pos]->ToObject(), log)
+					!= AS_NODE_PARAM_OK) 
 			{
                 as_v8_error(log, "Parsing of querypolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 				data->param_err = 1;
 				goto ErrReturn;
             }
+			else if( scanpolicy_from_jsobject( &data->policy.scan, args[curr_arg_pos]->ToObject(), log) != AS_NODE_PARAM_OK )
+			{
+                as_v8_error(log, "Parsing of scanpolicy from object failed");
+                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				data->param_err = 1;
+				goto ErrReturn;
+			}
         }
         else 
 		{
-            as_v8_error(log, "Querypolicy should be an object");
+            as_v8_error(log, "Policy should be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
 			data->param_err = 1;
 			goto ErrReturn;
@@ -164,7 +266,14 @@ static void * prepare(const Arguments& args)
     else 
 	{
         as_v8_detail(log, "Argument list does not contain query policy, using default values for query policy");
-        as_policy_query_init(policy);
+		if( data->is_query) 
+		{
+			as_policy_query_init(&data->policy.query);
+		}
+		else
+		{
+			as_policy_scan_init(&data->policy.scan);
+		}
     }
 
 	
@@ -185,11 +294,9 @@ static void execute(uv_work_t * req)
     AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
     // Data to be used.
-    aerospike * as          = data->as;
-    as_error *  err         = &data->err;
-    as_policy_query* policy = &data->policy;
-
-    LogInfo * log           = data->log;
+    aerospike * as					 = data->as;
+    as_error *  err					 = &data->err;
+    LogInfo * log					 = data->log;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -200,21 +307,62 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0 ) {
-		// register the uv_async_init event here, for the query callback to be invoked at regular interval.
-		async_init(&data->query_cbdata->async_handle, async_callback);
-		data->query_cbdata->async_handle.data = data->query_cbdata;
-        as_v8_debug(log, "Invoking aerospike_query_foreach  ");
+		// it's a query with a where clause.
+		if( data->is_query) 
+		{
+			// register the uv_async_init event here, for the query callback to be invoked at regular interval.
+			async_init(&data->query_cbdata->async_handle, async_callback);
+			data->query_cbdata->async_handle.data = data->query_cbdata;
+			as_v8_debug(log, "Invoking aerospike_query_foreach  ");
 
-		as_status res = aerospike_query_foreach( as, err, policy, data->query, aerospike_query_callback, 
-												(void*) data->query_cbdata); 
+			data->res = aerospike_query_foreach( as, err, &data->policy.query, data->query_scan.query, aerospike_query_callback, 
+					(void*) data->query_cbdata); 
 
-		if(res != AEROSPIKE_OK) {
-			as_v8_error(log, "query foreach returned %d", res);
+			// send an async signal here. If at all there's any residual records left in the result_q,
+			// this signal's callback will send it to node layer.
+			data->query_cbdata->async_handle.data = data->query_cbdata;
+			async_send(&data->query_cbdata->async_handle);
 		}
-		// send an async signal here. If at all there's any residual records left in the result_q,
-		// this signal's callback will send it to node layer.
-		data->query_cbdata->async_handle.data = data->query_cbdata;
-		async_send(&data->query_cbdata->async_handle);
+		else if( !data->is_query && data->has_udf) // query without where clause, becomes a scan background.
+		{
+			// generating a 32 bit random number. 
+			// Because when converting to node.js integer, the last two digits precision is lost.
+			// more comments on why this rand is generated here.
+			data->scan_id    = 0;
+			int32_t dummy_id = 0;
+			srand(time(NULL));
+			dummy_id = rand();
+			data->scan_id = dummy_id;
+			as_v8_debug(log, "The random number generated for scan_id %d ", data->scan_id);
+
+			as_v8_debug(log, "Scan id generated is %d", data->scan_id);
+			data->res = aerospike_scan_background( as, err, &data->policy.scan, data->query_scan.scan, &data->scan_id);
+		}
+		else if( !data->is_query && !data->has_udf)
+		{
+			// register the uv_async_init event here, for the scan callback to be invoked at regular interval.
+			async_init(&data->query_cbdata->async_handle, async_callback);
+			data->query_cbdata->async_handle.data = data->query_cbdata;
+			as_v8_debug(log, "Invoking scan foreach with ");
+
+			aerospike_scan_foreach( as, err, &data->policy.scan, data->query_scan.scan, aerospike_query_callback, (void*) data->query_cbdata); 
+
+			// send an async signal here. If at all there's any residual records left in the queue,
+			// this signal's callback will parse and send it to node layer.
+			data->query_cbdata->async_handle.data = data->query_cbdata;
+			async_send(&data->query_cbdata->async_handle);
+
+		}
+		else
+		{
+			as_v8_error(log, "Request is neither a query nor a scan ");
+		}
+
+
+	}
+	else
+	{
+		as_v8_debug(log, "Parameter error - Not making the call to Aerospike Cluster");
 	}
 
 }
@@ -239,22 +387,58 @@ static void respond(uv_work_t * req, int status)
 	AsyncCallbackData* query_data = data->query_cbdata;
     LogInfo * log				= data->log;
 
+	if(data->param_err == 1)
+	{
+		Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
+		if(  !query_data->error_cb->IsUndefined() && !query_data->error_cb->IsNull())
+		{
+			query_data->error_cb->Call(Context::GetCurrent()->Global(), 1, err_args);
+		}
+	}
+	// If query returned an error invoke error callback
+	if( data->res != AEROSPIKE_OK)
+	{
+		as_v8_debug(log,"An error occured in aerospike scan background");
+		Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
+		if(  !query_data->error_cb->IsUndefined() && !query_data->error_cb->IsNull())
+		{
+			query_data->error_cb->Call(Context::GetCurrent()->Global(), 1, err_args);
+		}
+	}
+
 	// Check the queue size for zero.
 	// if the queue has some records to passed to node layer,
 	// Pass the record to node layer
-	if (query_data->result_q && !CF_Q_EMPTY(query_data->result_q))	
+	// If it's a query, not a background scan and query call returned AEROSPIKE_OK
+	// then empty the queue.
+	if( !data->is_query && data->has_udf)
+	{
+		as_v8_debug(log, "scan background request completed");
+	}
+	else if(data->res == AEROSPIKE_OK 
+			&& query_data->result_q && !CF_Q_EMPTY(query_data->result_q))	
 	{
 		async_queue_process(query_data);
 	}
 	// Surround the callback in a try/catch for safety
 	TryCatch try_catch;
 	
-	Handle<Value> argv[1] = { String::New("Finished query!!!") };
+	Handle<Value> argv[1];
+	if( !data->is_query && data->has_udf)
+	{
+		as_v8_debug(log, "Invoking scan background callback with scan id %d", data->scan_id);
+		argv[0] = Number::New(data->scan_id);
 
-	// Execute the callback.
-	if ( query_data->end_cb!= Null()) {
+	}
+	else
+	{
+		as_v8_debug(log, "Invoking query callback");
+		argv[0] = String::New("Finished query!!!") ;
+	}
+
+	// Execute the callback
+	if ( !query_data->end_cb->IsUndefined() && !query_data->end_cb->IsNull()) {
 		query_data->end_cb->Call(Context::GetCurrent()->Global(), 1, argv);
-		as_v8_debug(log, "Invoked Get callback");
 	}
 
 	// Process the exception, if any
@@ -264,18 +448,29 @@ static void respond(uv_work_t * req, int status)
 
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
-	query_data->data_cb.Dispose();
+	if( !data->is_query && data->has_udf)
+	{
+		as_v8_debug(log,"scan background no need to clean up the queue structure");
+	}
+	else 
+	{
+		query_data->data_cb.Dispose();
+		async_close(&query_data->async_handle);
+		if(query_data->result_q != NULL) 
+		{
+			cf_queue_destroy(query_data->result_q);
+			query_data->result_q = NULL;
+		}
+	}
 	query_data->error_cb.Dispose();
 	query_data->end_cb.Dispose();
 
-	async_close(&query_data->async_handle);
-	if(query_data->result_q != NULL) 
-	{
-		cf_queue_destroy(query_data->result_q);
-		query_data->result_q = NULL;
-	}
 
 	delete query_data;
+	if( !data->is_query)
+	{
+		cf_free(data->query_scan.scan);
+	}
 	delete data;
 	delete req;
 

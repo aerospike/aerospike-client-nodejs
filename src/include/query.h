@@ -22,6 +22,7 @@ extern "C" {
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_udf.h>
 	#include <aerospike/as_query.h>
+	#include <aerospike/as_scan.h>
 }
 
 #include <node.h>
@@ -56,6 +57,29 @@ class AerospikeQuery: public ObjectWrap {
 
 		// Logger to log.
 		LogInfo* log;
+
+		// Query wihtout a where clause is a background scan.
+		// To differentiate at API level whether it's a query or scan.
+		bool IsQuery;
+
+		// scan background and query aggregation has UDF whereas normal query and
+		// foreground scan do not have UDFs associated with them.
+		bool hasUDF;
+
+
+		// If query is scan, the properties related to only scan.
+		// For now, these are individual fields in AerospikeQuery Class.
+		// Once the C API/structure is unified for scan and query these fields 
+		// will become part of the unified query/scan structure.
+		int scan_priority;
+
+		uint8_t percent;
+
+		bool nobins;
+
+		bool concurrent;
+
+
         /***************************************************************************
          *  PRIVATE
          **************************************************************************/
@@ -96,5 +120,32 @@ class AerospikeQuery: public ObjectWrap {
          *  undefined query.setRecordQsize(integer)
          */
         static Handle<Value> setRecordQsize(const Arguments& args);
+
+		/**
+         *  undefined query.queryInfo(queryId, policy, callback)
+         */
+        static Handle<Value> queryInfo(const Arguments& args);
+
+		// Functions related to SCAN api calls.
+		//
+		/** 
+		 *  undefined scan.setPriority(SCAN_PRIORITY)
+		 */
+		static Handle<Value> setPriority(const Arguments& args);
+
+		/** 
+		 *  undefined scan.setNobins(Boolean)
+		 */
+		static Handle<Value> setNobins(const Arguments& args);
+
+		/** 
+		 *  undefined scan.setPercent(integer)
+		 */
+		static Handle<Value> setPercent(const Arguments& args);
+
+		/** 
+		 *  undefined scan.setConcurrent(Boolean)
+		 */
+		static Handle<Value> setConcurrent(const Arguments& args);
 
 };
