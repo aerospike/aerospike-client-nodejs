@@ -190,5 +190,33 @@ describe('client.scan()', function() {
 				scanBackground.Info(scanId, infoCallback);
 			});
 	});
+	it('Query without where clause and an UDF - should do a foreground scan of all records', function(done) {
+        
+        // counters
+        var total = 100;
+        var count = 0;
+		var err = 0;
+
+		var scan = client.query(options.namespace, options.set);
+	
+		var stream = scan.execute();
+
+		stream.on('data', function(rec){
+			expect(rec.bins).to.have.property('s');
+			expect(rec.bins).to.have.property('i');
+			expect(rec.bins).to.have.property('b');
+			count++;
+		});
+		stream.on('error', function(error){
+			err++;
+		});
+		stream.on('end', function(end){
+			expect(count).to.be.greaterThan(99);
+			expect(err).to.equal(0);
+
+			done();
+		});
+    });
+
 
 });
