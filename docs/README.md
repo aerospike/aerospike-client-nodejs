@@ -32,9 +32,11 @@ For more details on client operations, see [Client Class](client.md).
 
 - [Aerospike Module](aerospike.md)
 - [Client Class](client.md)
-- [Data Models](datamodel.md)
 - [Configuration Object](configuration.md)
-- [Policy Objects](policies.md)
+- [Data Models](datamodel.md)
+- [Filters](filters.md)
 - [Operator Objects](operators.md)
+- [Policy Objects](policies.md)
 - [Status Codes](status.md)
+- [Scan Properties](scanproperties.md)
 

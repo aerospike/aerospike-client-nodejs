@@ -23,15 +23,15 @@ var config = {
      file : fd  // fd  opened by the application using fs.open()
   },
   modlua: {
-	  systemPath: 
-	  userPath:
+	  systemPath: 'path to system UDF files', 
+	  userPath: ' 'path to user UDF files'
   }
 };
 
 var client = aerospike.client(config);
 ```
 
-The attributes of the configuration enumerated below.
+The attributes of the configuration are enumerated below.
 
 ## Configuration Attributes
 
@@ -70,7 +70,7 @@ The attributes of `log` object.
 
 ### `modlua` attribute
 
-The `modlua` object contains configuration values for mod-lua paths.
+The `modlua` object contains configuration values for mod-lua system and user paths.
 
 The attributes of `mod-lua` object.
 

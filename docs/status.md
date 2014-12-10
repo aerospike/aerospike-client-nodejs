@@ -2,7 +2,7 @@
 
 Error codes returned by the aerospike server for all the database operations. 
 
-An enumeration of the status codes are available in `aerospike.status` object, which can be accessed similarly to:
+An enumeration of the status codes are available in `aerospike.status` object, which can be accessed as follows:
 
 ```js
 var aerospike = require('aerospike');

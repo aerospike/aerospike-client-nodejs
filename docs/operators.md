@@ -5,9 +5,9 @@ The Operators object provides functions to easily define operations to be perfor
 Example:
 
 ```js
-var op = aerospike.operator
+var filter = aerospike.filter
 
-var ops = [
+var filters = [
   op.append('a', 'hello'),
   op.append('a', 'world'),
   op.increment('b',10),

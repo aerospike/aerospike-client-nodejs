@@ -2,10 +2,13 @@
 
 - [Usage](#usage)
 - [Fields](#fields)
+	- [filter](#filter)
+    - [log](#log)
 	- [operators](#operators)
 	- [policies](#Policies)
 	- [status](#status)
-    - [log](#log)
+	- [scanStatus](#scanStatus)
+	- [scanPriority](#scanPriority)
 - [Functions](#functions)
 	- [client()](#client)
 	- [key()](#key)
@@ -76,6 +79,41 @@ aerospike.status
 ```
 
 For details, see [status Object](status.md)
+
+<!--
+################################################################################
+scanStatus
+################################################################################
+-->
+<a name="scanStatus"></a>
+
+### scanStatus
+
+Status of a particular background scan.
+
+```js
+aerospike.scanStatus
+```
+
+For details, see [scanStatus Object](scanproperties.md#scanStatus)
+
+<!--
+################################################################################
+scanPriority
+################################################################################
+-->
+<a name="scanPriority"></a>
+
+### scanPriority
+
+Priority levels for a given scan operation.
+
+```js
+aerospike.scanPriority
+```
+
+For details, see [scanPriority Object](scanproperties.md#scanPriority)
+
 <!--
 ################################################################################
 Log

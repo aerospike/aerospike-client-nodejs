@@ -29,6 +29,7 @@ With a new client, you can use any of the methods specified below:
   - [indexRemove()](#indexRemove)
   - [operate()](#operate)
   - [put()](#put)
+  - [query()](#query)
   - [remove()](#remove)
   - [select()](#select)
   - [udfRegister()](#udfRegister)
@@ -281,7 +282,7 @@ Executes an UDF on a record in the database.
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `udfArgs`     – A [Record object](datamodel.md#UDFArgs) used for specifying the fields to store.
+- `udfArgs`     – A [UDFArgs object](datamodel.md#UDFArgs) used for specifying the fields to store.
 - `policy`      – (optional) A [ApplyPolicy object](policies.md#ApplyPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -535,6 +536,30 @@ client.put(key('test','demo','key1'), rec, function(error, key) {
   // do something
 });
 ```
+<!--
+################################################################################
+query()
+################################################################################
+-->
+<a name="query"></a>
+
+### query(namespace, set, statement):query
+
+creates a new [query](query.md) object, which is used to define query in the database.
+
+
+Parameters:
+- `namespace`	- Namespace to be queried.
+- `set`         - Set on which the query has to be executed.
+- `statement`   - an Instance of [Statement](query.md#Statement), which specifies the properties of 
+				  a given query.
+Example:
+
+```js
+var query = client.query(ns, set);
+```
+
+For details, see [Query Class](query.md)
 
 <!--
 ################################################################################
