@@ -14,10 +14,10 @@ var query = client.query(ns, set, stmt);
 
 The `statement` in the query object can be modified to perform any of the following functionalities.
 
-- [query on an index](#QueryIndex())
-- [aggregation on an index](#QueryAggregate())
-- [Scan foreground](#ScanForeground())
-- [scan backgorund](#ScanBackground())
+- [query on an index](#QueryIndex)
+- [aggregation on an index](#QueryAggregate)
+- [Scan foreground](#ScanForeground)
+- [scan backgorund](#ScanBackground)
 
 <!--
 ################################################################################
@@ -136,12 +136,12 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 ```
 <!--
 ################################################################################
-scanBackground()
+ScanBackground()
 ################################################################################
 -->
-<a name="scanBackground"></a>
+<a name="ScanBackground"></a>
 
-##scanBackground()
+##ScanBackground
 
 To do full scan of Aerospike database and apply an UDF through a background,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'error' and 'end' events.
