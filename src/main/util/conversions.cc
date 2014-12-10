@@ -150,15 +150,35 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         }
         as_v8_debug(log, "Parsing global policies : Done");
     }
-	if ( obj->Has(String::NewSymbol("luaSyspath")))
+	// stores information about mod-lua userpath and systempath.
+	bool syspath_set = false;
+	bool usrpath_set = false;
+
+	// If modlua path is passed in config object, set those values here
+	if( obj->Has(String::NewSymbol("modlua")))
 	{
-		 Local<Value> v8syspath = obj->Get(String::NewSymbol("luaSyspath"));
-		 strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
-		 as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
+		Handle<Object> v8_modlua = obj->Get(String::NewSymbol("modlua"));
+
+		if ( v8_modlua->Has(String::NewSymbol("systemPath")))
+		{
+			Local<Value> v8syspath = v8_modlua->Get(String::NewSymbol("systemPath"));
+			strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
+			as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
+			syspath_set = true;
+		}
+		if( v8_modlua->Has(String::NewSymbol("userPath")))
+		{
+			Local<Value> v8usrpath = v8_modlua->Get(String::NewSymbol("userPath"));
+			strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
+			as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
+			usrpath_set = true;
+		}
 	}
-	else
+
+	// Modlua system and user path is not passed in a config object. 
+	// Set them to default values here.
+	if(!syspath_set)	
 	{
-		//set the default modlua system path here.
 		char const *syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 		int rc = access(syspath, R_OK);
 		if(rc == 0)
@@ -179,15 +199,8 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 			}
 		}
 	}
-	if( obj->Has(String::NewSymbol("luaUsrpath")))
+	if(!usrpath_set)	
 	{
-		Local<Value> v8usrpath = obj->Get(String::NewSymbol("luaUsrpath"));
-		strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
-		as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
-	}
-	else
-	{
-		//set the default modlua user path here.
 		char const *usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
 		int rc = access(usrpath, R_OK);
 		if ( rc == 0) 
@@ -210,8 +223,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 	}
 
-	
-    return AS_NODE_PARAM_OK;
+return AS_NODE_PARAM_OK;
 }
 
 int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)

@@ -108,7 +108,10 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+	modlua: {
+		userPath: __dirname
+	}
 };
 
 /*******************************************************************************
@@ -130,7 +133,7 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-	var options = { udfArgs : {module: 'query', funcname: 'sum_test_bin'},
+	var options = { aggregationUDF : {module: 'query', funcname: 'sum_test_bin'},
 					filters : [filter.equal('s', 'abc')],
 					select : ['s', 'i'] }
 

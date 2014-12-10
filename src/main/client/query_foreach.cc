@@ -398,7 +398,7 @@ static void respond(uv_work_t * req, int status)
 	// If query returned an error invoke error callback
 	if( data->res != AEROSPIKE_OK)
 	{
-		as_v8_debug(log,"An error occured in aerospike scan background");
+		as_v8_debug(log,"An error occured in C API invocation");
 		Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
 		if(  !query_data->error_cb->IsUndefined() && !query_data->error_cb->IsNull())
 		{

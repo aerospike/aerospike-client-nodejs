@@ -132,18 +132,19 @@ aerospike.client(config).connect(function (err, client) {
     var count = 0;
 
 	//var options = { select: ['i', 's']}
-    var scan = client.scan(argv.namespace, argv.set );
+    var query = client.query(argv.namespace, argv.set );
 
+	var stream = query.execute();
 
-    scan.on('data', function(rec) {
-        console.log(count++);
+    stream.on('data', function(rec) {
+        console.log(count++, rec);
     });
 
-    scan.on('error', function(err){
+    stream.on('error', function(err){
         console.log(err);
     });
 
-    scan.on('end', function() {
+    stream.on('end', function() {
         console.log('TOTAL SCANNED:', count++);
         process.exit(0)
     });

@@ -44,7 +44,9 @@ describe('client.query()', function() {
         policies: {
             timeout: options.timeout
         },
-		luaUsrpath: __dirname
+		modlua: {
+			userPath : __dirname
+		}
     });
 
     before(function(done) {
@@ -216,7 +218,7 @@ describe('client.query()', function() {
 
 		var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
 					 select: ['queryBinString', 'queryBinInt'],
-					 udfArgs: {module:'aggregate', funcname:'sum_test_bin'}}
+					 aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
 		var query = client.query(options.namespace, options.set, args);
 
 		var stream = query.execute();
@@ -225,6 +227,8 @@ describe('client.query()', function() {
 			count++;
 		});
 		stream.on('error', function(error){
+			expect(error).to.be.ok();
+			expect(error.code).to.equal(status.AEROSPIKE_OK);
 			err++;
 		});
 		stream.on('end', function(end){
@@ -234,55 +238,4 @@ describe('client.query()', function() {
 			done();
 		});
     });
-	it('should do a scan background and check for scan job completion', function(done) {
-			var args = { udfArgs: {module: 'scan', funcname: 'updateRecord'}}
-			var scanBackground = client.query( options.namespace, options.set, args);
-
-			var err = 0;
-			var scanStream = scanBackground.execute();
-
-			var infoCallback = function( scanJobStats, scanId) {
-				if(scanJobStats.status != scanStatus.COMPLETED) {
-					scanBackground.Info(scanId, infoCallback);
-				}   
-				else {
-					done();
-				}   
-			}   
-			scanStream.on('error', function(error) {
-				err++;
-			}); 
-			scanStream.on('end', function(scanId) {
-				scanBackground.Info(scanId, infoCallback);
-			}); 
-	}); 
-
-	it('Query without where clause and an UDF - should do a foreground scan of all records', function(done){	        
-		// counters
-		var total = 100;
-		var count = 0;
-		var err = 0;
-
-		var scan = client.query(options.namespace, options.set);
-
-		var stream = scan.execute();
-
-		stream.on('data', function(rec){
-			expect(rec.bins).to.have.property('queryBinString');
-			expect(rec.bins).to.have.property('queryBinInt');
-			count++;
-		});
-		stream.on('error', function(error){
-			err++;
-		});
-		stream.on('end', function(end){
-			expect(count).to.be.greaterThan(99);
-			expect(err).to.equal(0);
-
-			done();
-		});
-	});
-
-
-
 });

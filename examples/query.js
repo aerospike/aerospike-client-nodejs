@@ -108,7 +108,13 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+	
+	//modlua userpath
+	modlua: {
+		userPath: __dirname
+	}
+
 };
 
 /*******************************************************************************

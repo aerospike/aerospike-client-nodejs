@@ -1,12 +1,10 @@
 -- A simple UDF that just returns the value of the bin 'test-bin'.
 local function get_test_bin(rec)
-	print(rec['queryBinInt'])
 	return rec['queryBinInt']
 end
 
 -- A simple arithmetic UDF that adds two arguments and returns the result.
 local function add(a, b)
-	print(a+b)
 	return a + b
 end
 

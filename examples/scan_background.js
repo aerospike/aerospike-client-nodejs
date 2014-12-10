@@ -111,7 +111,10 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+	modllua: {
+		userPath: __dirname
+	}
 };
 
 /*******************************************************************************
@@ -136,7 +139,7 @@ aerospike.client(config).connect(function (err, client) {
     var count = 0;
 
 	var options = { select: ['i', 's'],
-					udfArgs: {module: 'scan', funcname: 'updateRecord'}
+					scanUDF : {module: 'scan', funcname: 'updateRecord'}
 				  }
 
     var scanBackground = client.query(argv.namespace, argv.set, options );
