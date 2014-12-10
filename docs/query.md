@@ -34,7 +34,7 @@ Statement
 
 #### `filters` attribute
 
- `filters` is an array of [filter](#filters.md) in a given query.
+ `filters` is an array of [filter](filters.md) in a given query.
 
 #### `aggregationUDF` attribute
 
@@ -82,9 +82,9 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	var errorCallback = function(error) { //do something}
 	var endCallback = function() { //do something}
 	var stream = query.execute(); // returns a stream object.
-	stream.on('data', callback);
-	stream.on('error', callback);
-	stream.on('end', callback);
+	stream.on('data', dataCallback);
+	stream.on('error', errorCallback);
+	stream.on('end', endCallback);
 
 ```
 
@@ -108,9 +108,9 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	var errorCallback = function(error) { //do something}
 	var endCallback = function() { //do something}
 	var stream = query.execute(); // returns a stream object.
-	stream.on('data', callback);
-	stream.on('error', callback);
-	stream.on('end', callback);
+	stream.on('data', dataCallback);
+	stream.on('error', errorCallback);
+	stream.on('end', endCallback);
 
 ```
 ###scanForeground()
@@ -129,9 +129,9 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	var errorCallback = function(error) { //do something}
 	var endCallback = function() { //do something}
 	var stream = query.execute(); // returns a stream object.
-	stream.on('data', callback);
-	stream.on('error', callback);
-	stream.on('end', callback);
+	stream.on('data', dataCallback);
+	stream.on('error', errorCallback);
+	stream.on('end', endCallback);
 
 ```
 ###scanBackground()
@@ -153,8 +153,8 @@ Query on execution returns a stream object, which emits 'error' and 'end' events
 	var errorCallback = function(error) { //do something}
 	var endCallback = function() { //do something}
 	var stream = query.execute(); // returns a stream object.
-	stream.on('error', callback);
-	stream.on('end', callback);
+	stream.on('error', errorCallback);
+	stream.on('end', endCallback);
 
 ```
 
