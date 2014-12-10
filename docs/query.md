@@ -28,37 +28,37 @@ Statement
 
 ###Statement Attributes
 
-#### `select` attribute
+#### `select` 
 
 `select` is an array of bins to be projected in a given query resultset.
 
-#### `filters` attribute
+#### `filters`
 
  `filters` is an array of [filter](filters.md) in a given query.
 
-#### `aggregationUDF` attribute
+#### `aggregationUDF` 
 
   `aggregationUDF` is an instance [udfArgs](datamodel.md#UDFArgs). It is the aggregation UDF to be
    be run on a query resultset.
 
-#### `scanUDF` attribute
+#### `scanUDF` 
 
   `scanUDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
    in the Aerospike database through a background job.
 
-#### `priority` attribute
+#### `priority` 
 
   `priority` is an instance of [scanPriority](scanproperties.md#scanPriority). 
 
-#### `percent` attribute
+#### `percent` 
 
   `percent` is the percentage of data to be scanned in each partitiion.
 
-#### `nobins` attribute
+#### `nobins` 
 
   `nobins` is a bool value, setting to true results in projection of zero bins.
 
-#### `concurrent` attribute
+#### `concurrent` 
 
   `concurrent` is a bool value, setting to true results in parallel scanning of data in
 	all nodes in Aerospike cluster.
@@ -74,7 +74,9 @@ QueryIndex()
 
 To query data on a secondar index, the `Query` object has to be instantiated.
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
-
+'data' event is emitted for every record that is returned by the query.
+'errror' is emitted in an event of error.
+'end' marks the end of recordset returned by query.
 ```js
 	var statement = { filters:[filter.equal['a', 'abc']} 
 
@@ -104,6 +106,9 @@ QueryAggregate()
 
 To do an aggregation on data by a  query, the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
+'data' event is emitted for every result returned by query aggregation.
+'errror' is emitted in an event of error.
+'end' marks the end of resultset returned by query.
 
 ```js
 	var statement = { filters:[filter.equal['a', 'abc'],
@@ -133,8 +138,11 @@ ScanForeground()
 <a name="ScanForeground"></a>
 ###scanForeground
 
-To do full scan of Aerospike database,  the `Query` object has to be instantiated. 
+To do full scan of Aerospike database which returns all the records,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
+'data' event is emitted for every record that returned by scan.
+'errror' is emitted in an event of error.
+'end' marks the end of recordset returned by query.
 
 ```js
 
@@ -161,8 +169,11 @@ ScanBackground()
 
 ##ScanBackground
 
-To do full scan of Aerospike database and apply an UDF through a background,  the `Query` object has to be instantiated. 
+To do full scan of Aerospike database and apply an UDF through a background job,  
+the `Query` object has to be instantiated and background scan does not return any data.
 Query on execution returns a stream object, which emits 'error' and 'end' events.
+'errror' is emitted in an event of error.
+'end'  signifies that a scan background job has been fired successfully..
 
 ```js
 
