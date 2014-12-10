@@ -48,19 +48,19 @@ Statement
 
 #### `priority` attribute
 
-	`priority` is an instance of [scanPriority](scanproperties.md#scanPriority). 
+  `priority` is an instance of [scanPriority](scanproperties.md#scanPriority). 
 
 #### `percent` attribute
 
-	`percent` is the percentage of data to be scanned in each partitiion.
+  `percent` is the percentage of data to be scanned in each partitiion.
 
 #### `nobins` attribute
 
-	`nobins` is a bool value, setting to true results in projection of zero bins.
+  `nobins` is a bool value, setting to true results in projection of zero bins.
 
 #### `concurrent` attribute
 
-	`concurrent` is a bool value, setting to true results in parallel scanning of data in
+  `concurrent` is a bool value, setting to true results in parallel scanning of data in
 	all nodes in Aerospike cluster.
 
 
@@ -134,7 +134,12 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	stream.on('end', endCallback);
 
 ```
-###scanBackground()
+<!--
+################################################################################
+scanBackground()
+################################################################################
+--!>
+<a name="scanBackground"></a>
 
 To do full scan of Aerospike database and apply an UDF through a background,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'error' and 'end' events.
