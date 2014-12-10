@@ -1,11 +1,6 @@
 #scanProperties
 
-<!--
-################################################################################
-scanStatus
-################################################################################
--->
-<a name="scanStatus"></a>
+##scanStatus
 
 Status of a particular background scan.
 
@@ -26,12 +21,7 @@ aerospike.scanStatus.INPROGESS
 
 #####  3 - COMPLETED
 
-<!--
-################################################################################
-scanPriority
-################################################################################
--->
-<a name="scanPriority"></a>
+##scanPriority
 
 Priority levels for a given scan operation.
 
