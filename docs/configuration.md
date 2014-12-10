@@ -21,6 +21,10 @@ var config = {
   log : {
      log : aerospike.log.INFO,
      file : fd  // fd  opened by the application using fs.open()
+  },
+  modlua: {
+	  systemPath: 
+	  userPath:
   }
 };
 
@@ -64,4 +68,11 @@ The attributes of `log` object.
 - `level` - logging severity, defined using [aerospike.log object](log.md). 
 - `file`  - file descriptor which is obtained using fs.open().
 
+### `modlua` attribute
 
+The `modlua` object contains configuration values for mod-lua paths.
+
+The attributes of `mod-lua` object.
+
+- `systemPath` - The path to the system UDF files. These UDF files are installed with the aerospike client library. Default location relative to node_modules is : 'node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/'
+- `userPath`   - The path to user's UDF files. Default location relative to node modules is : 'node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/'
