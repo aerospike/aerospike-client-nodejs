@@ -64,7 +64,13 @@ Statement
 	all nodes in Aerospike cluster.
 
 
-###QueryIndex()
+<!--
+################################################################################
+QueryIndex()
+################################################################################
+-->
+<a name="QueryIndex"></a>
+###QueryIndex
 
 To query data on a secondar index, the `Query` object has to be instantiated.
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
@@ -88,7 +94,13 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 
 ```
 
-###QueryAggregate()
+<!--
+################################################################################
+QueryAggregate()
+################################################################################
+-->
+<a name="QueryAggregate"></a>
+###QueryAggregate
 
 To do an aggregation on data by a  query, the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
@@ -113,7 +125,13 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	stream.on('end', endCallback);
 
 ```
-###scanForeground()
+<!--
+################################################################################
+ScanForeground()
+################################################################################
+-->
+<a name="ScanForeground"></a>
+###scanForeground
 
 To do full scan of Aerospike database,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
