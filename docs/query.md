@@ -14,10 +14,10 @@ var query = client.query(ns, set, stmt);
 
 The `statement` in the query object can be modified to perform any of the following functionalities.
 
-- [query on an index](#QueryIndex)
-- [aggregation on an index](#QueryAggregate)
-- [Scan foreground](#ScanForeground)
-- [scan backgorund](#ScanBackground)
+- [query on an index](#QueryIndex())
+- [aggregation on an index](#QueryAggregate())
+- [Scan foreground](#ScanForeground())
+- [scan backgorund](#ScanBackground())
 
 <!--
 ################################################################################
