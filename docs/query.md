@@ -138,8 +138,10 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 ################################################################################
 scanBackground()
 ################################################################################
---!>
+-->
 <a name="scanBackground"></a>
+
+##scanBackground()
 
 To do full scan of Aerospike database and apply an UDF through a background,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'error' and 'end' events.
