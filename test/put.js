@@ -428,6 +428,7 @@ describe('client.put()', function() {
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(bins.m).to.eql({a: 1, b: 2});
                 expect(bins.l).to.eql([1,2,3]);
+				client.remove(key2, function(err, key3){});
 				done();
 			});
         });
