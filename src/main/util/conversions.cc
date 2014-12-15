@@ -157,18 +157,18 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	// If modlua path is passed in config object, set those values here
 	if( obj->Has(String::NewSymbol("modlua")))
 	{
-		Handle<Object> v8_modlua = obj->Get(String::NewSymbol("modlua"));
+		Handle<Object> modlua = obj->Get(String::NewSymbol("modlua"))->ToObject();
 
-		if ( v8_modlua->Has(String::NewSymbol("systemPath")))
+		if ( modlua->Has(String::NewSymbol("systemPath")))
 		{
-			Local<Value> v8syspath = v8_modlua->Get(String::NewSymbol("systemPath"));
+			Local<Value> v8syspath = modlua->Get(String::NewSymbol("systemPath"));
 			strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
 			as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
 			syspath_set = true;
 		}
-		if( v8_modlua->Has(String::NewSymbol("userPath")))
+		if( modlua->Has(String::NewSymbol("userPath")))
 		{
-			Local<Value> v8usrpath = v8_modlua->Get(String::NewSymbol("userPath"));
+			Local<Value> v8usrpath = modlua->Get(String::NewSymbol("userPath"));
 			strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
 			as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
 			usrpath_set = true;
