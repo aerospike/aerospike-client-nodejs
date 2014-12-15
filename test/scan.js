@@ -126,6 +126,7 @@ describe('client.query() - without where clause(Scan)', function() {
 			err++;
 		});
 		stream.on('end', function(end){
+			// derive it as a percentage.
 			expect(count).to.be.greaterThan(99);
 			expect(err).to.equal(0);
 
