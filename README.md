@@ -75,15 +75,13 @@ Aerospike Node.js has a dependency on Aerospike C client, which is
 downloaded during the installation.  To Download Aerospike C client, curl is required.
 The client library requires the following libraries to be present on the machine for building and running.
 
-
-- CentOS/RHEL 6.x
-
-
 | Library Name | .rpm Package | Description |
 | --- | --- | --- |
 | libssl | openssl | |
 | libcrypto | openssl | Required for RIPEMD160 hash function. |
 | liblua5.1 | lua | Required for Lua execution. |
+
+- CentOS/RHEL 6.x
 
 To install library prerequisites via `yum`:
 
@@ -97,9 +95,52 @@ Some CentOS installation paths do not include necessary C development tools. You
 sudo yum install gcc gcc-c++
 ```
 - Debian 6+
-- Ubuntu 12.04
-- Ubuntu 14.04
+
+To install library prerequisites via `apt-get`:
+
+```bash
+sudo apt-get install libssl0.9.8 libssl-dev liblua5.1-dev
+```
+
+The following symlinks need to be created for Aerospike's packaged examples to compile:
+
+```bash
+sudo ln -s /usr/lib/liblua5.1.so /usr/lib/liblua.so
+sudo ln -s /usr/lib/liblua5.1.a /usr/lib/liblua.a
+```
+- Ubuntu 12.04+
+
+To install library prerequisites via `apt-get`:
+
+```bash
+sudo apt-get install libssl0.9.8 libssl-dev liblua5.1-dev
+```
+
+The following symlinks need to be created for Aerospike's packaged examples to compile:
+
+```bash
+sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
+sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
+```
+
 - Mac OS X
+Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
+- Mac OS X 10.8 or greater.
+- Xcode 5 or greater.
+- Lua 5.1.5 library.  Required when running queries with user defined aggregations.  Lua installation instructions:
+
+#####Lua
+
+Lua is required for performing aggregations on results returned from the database. The following are instruction for installing Lua 5.1:
+
+```bash
+$ curl -O http://www.lua.org/ftp/lua-5.1.5.tar.gz
+$ tar xvf lua-5.1.5.tar.gz
+$ cd lua-5.1.5
+$ make macosx
+$ make test
+$ sudo make install
+```
 
 <a name="Installation"></a>
 ## Installation
