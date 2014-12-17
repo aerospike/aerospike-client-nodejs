@@ -128,9 +128,9 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
 Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
-- Lua 5.1.5 library.  Required when running queries with user defined aggregations.  Lua installation instructions:
+- Lua 5.1.5 library.  Required when running queries with user defined aggregations.  
 
-#####Lua
+#####Lua Installation in Mac OS X
 
 Lua is required for performing aggregations on results returned from the database. The following are instruction for installing Lua 5.1:
 
