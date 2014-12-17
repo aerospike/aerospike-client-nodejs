@@ -72,12 +72,13 @@ To install the latest stable version of Node.js, visit
 [http://nodejs.org/download/](http://nodejs.org/download/)
 
 Aerospike Node.js has a dependency on Aerospike C client, which is
-downloaded during the installation. 
-To Download Aerospike C client, curl is required.
+downloaded during the installation.  To Download Aerospike C client, curl is required.
 The client library requires the following libraries to be present on the machine for building and running.
 
 
 - CentOS/RHEL 6.x
+
+
 | Library Name | .rpm Package | Description |
 | --- | --- | --- |
 | libssl | openssl | |
