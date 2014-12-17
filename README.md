@@ -124,6 +124,7 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
 ```
 
 - Mac OS X
+
 Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
