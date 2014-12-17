@@ -2,7 +2,7 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js 0.10.x and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Mac OS X.
+This module is compatible with Node.js 0.10.x and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Ubuntu 14.04, Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -74,12 +74,30 @@ To install the latest stable version of Node.js, visit
 Aerospike Node.js has a dependency on Aerospike C client, which is
 downloaded during the installation. 
 To Download Aerospike C client, curl is required.
+The client library requires the following libraries to be present on the machine for building and running.
 
-Supported operating systems: 
 
 - CentOS/RHEL 6.x
+| Library Name | .rpm Package | Description |
+| --- | --- | --- |
+| libssl | openssl | |
+| libcrypto | openssl | Required for RIPEMD160 hash function. |
+| liblua5.1 | lua | Required for Lua execution. |
+
+To install library prerequisites via `yum`:
+
+```bash
+sudo yum install openssl-devel lua-devel
+```
+
+Some CentOS installation paths do not include necessary C development tools. You may need the following packages:
+
+```bash
+sudo yum install gcc gcc-c++
+```
 - Debian 6+
 - Ubuntu 12.04
+- Ubuntu 14.04
 - Mac OS X
 
 <a name="Installation"></a>
