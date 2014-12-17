@@ -2,6 +2,7 @@ language: node_js
 node_js:
 - '0.10'
 install:
+- sudo apt-get install autoconf libssl-dev liblua5.1-dev
 - wget -O aerospike-server.tgz http://aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
