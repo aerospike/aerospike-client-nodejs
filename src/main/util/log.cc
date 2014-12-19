@@ -58,7 +58,6 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
 	 */ 
 	 if( fcntl(log->fd, F_GETFD) == -1 || errno == EBADF)
 	 {
-		 fprintf(stderr, "Invalid file descriptor for logging \n");
 		 return;
 	 }
     /* Make sure there's always enough space for the \n\0. */
