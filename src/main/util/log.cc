@@ -22,6 +22,7 @@ extern "C" {
 #include <errno.h>
 #include <unistd.h>
 #include <libgen.h>
+#include<fcntl.h>
 
 #include "log.h"
 #include "../enums/enums.h"
@@ -51,6 +52,15 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
         return;
     }
 
+	/* sometimes this part gets executed after the client object is closed.
+	 * This is due to the asynchronous execution nature of node.js
+	 * So check the validity of FD before forming the log message
+	 */ 
+	 if( fcntl(log->fd, F_GETFD) == -1 || errno == EBADF)
+	 {
+		 fprintf(stderr, "Invalid file descriptor for logging \n");
+		 return;
+	 }
     /* Make sure there's always enough space for the \n\0. */
     char msg[1024] = {0};
 
