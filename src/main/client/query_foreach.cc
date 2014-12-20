@@ -36,7 +36,7 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 using namespace v8;
-#define QUEUE_SZ 10000
+#define QUEUE_SZ 100000
 /*******************************************************************************
  *  TYPES
  ******************************************************************************/
@@ -188,7 +188,7 @@ static void * prepare(const Arguments& args)
 	else // queue creation job for scan_foreground, query, aggregation.
 	{
 		query_cbdata->signal_interval	= 0;
-		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), false);
+		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
 		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
 	}
 		

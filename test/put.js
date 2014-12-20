@@ -63,7 +63,7 @@ describe('client.put()', function() {
         var count = 0;
 
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
 
@@ -81,7 +81,6 @@ describe('client.put()', function() {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(_record).to.eql(record);
-					client.remove(_key, function(err, key){});
                     count++;
                     if ( count >= total ) {
                         done();
@@ -98,7 +97,7 @@ describe('client.put()', function() {
     it('should write the record w/ string key', function(done) {
         
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -112,8 +111,9 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -135,9 +135,10 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
+				client.remove(key, function(err, key){
+					done();
+				});
 
-                done();
             });
         });
     });
@@ -157,8 +158,9 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -166,7 +168,7 @@ describe('client.put()', function() {
     it('shoule write an array, map type of bin and read', function(done) {
 
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({list: valgen.array(), map: valgen.map()});
 
@@ -181,8 +183,9 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -190,7 +193,7 @@ describe('client.put()', function() {
     it('should write an array of map and array, map of array and map, then read', function(done){
 
         //generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl:1000});
         var rgen = recgen.record({list_of_list: valgen.array_of_array(), map_of_list: valgen.map_of_map()});
 
@@ -205,8 +208,9 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
 
@@ -215,7 +219,7 @@ describe('client.put()', function() {
     it('should write, read, write, and check gen', function(done) {
 
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -261,8 +265,9 @@ describe('client.put()', function() {
                         expect(record5).to.eql(record3);
                         expect(metadata5.gen).to.equal(metadata2.gen+1);
                         expect(record5.i).to.equal(record3.i);
-						client.remove(key5, function(err, key){});
-                        done();
+						client.remove(key5, function(err, key){
+							done();
+						});
                     }); 
                 });
             });
@@ -271,7 +276,7 @@ describe('client.put()', function() {
 
     it('should write, read, remove, read, write, and check gen', function(done) {
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
 
@@ -329,8 +334,9 @@ describe('client.put()', function() {
 								expect(key6).to.have.property('key', key.key);
                                 expect(record6).to.eql(record);
                                 expect(metadata6.gen).to.equal(1);
-								client.remove(key6, function(err, key){});
-                                done();
+								client.remove(key6, function(err, key){
+									done();
+								});
                             }); 
                         });
                     }); 
@@ -342,7 +348,7 @@ describe('client.put()', function() {
     it('should write null for bins with empty list and map', function(done) {
 
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({
             l:  valgen.constant([1,2,3]),
@@ -377,15 +383,16 @@ describe('client.put()', function() {
                 expect(record2.me).to.be.eql({});
                 expect(record2.l).to.eql([1,2,3]);
                 expect(record2.le).to.be.eql([]);
-				client.remove(key, function(err, key) {});
-                done();
+				client.remove(key, function(err, key) {
+					done();
+				});
             });
         });
     });
     it('should write a bin of type undefined and write should fail', function(done) {
 
         // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({
             l	  :  valgen.constant([1,2,3]),
@@ -401,14 +408,15 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-			client.remove(key, function(err,key){});
-            done();
+			client.remove(key, function(err,key){
+				done();
+			});
         });
     });
 	it('should write a set with empty string and write should pass', function(done) {
 
         // generators
-        var kgen = keygen.string(options.namespace, "", {prefix: "test/set/"});
+        var kgen = keygen.string(options.namespace, "", {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({
             l	  :  valgen.constant([1,2,3]),
@@ -428,8 +436,9 @@ describe('client.put()', function() {
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(bins.m).to.eql({a: 1, b: 2});
                 expect(bins.l).to.eql([1,2,3]);
-				client.remove(key2, function(err, key3){});
-				done();
+				client.remove(key2, function(err, key3){
+					done();
+				});
 			});
         });
     });

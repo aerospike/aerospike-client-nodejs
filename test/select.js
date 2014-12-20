@@ -80,8 +80,9 @@ describe('client.select()', function() {
                     expect(_record[bin]).to.be(record[bin]);
                 }
 				
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -104,8 +105,9 @@ describe('client.select()', function() {
             client.select(select_key, bins, function(err, _record, metadata, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -163,8 +165,9 @@ describe('client.select()', function() {
                 for ( var bin in _record ) {
                     expect(_record[bin]).to.be(record[bin]);
                 }
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });

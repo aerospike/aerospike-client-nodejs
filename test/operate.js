@@ -83,8 +83,9 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i'] + 432).to.equal(record2['i']);
                     expect(record['s']).to.equal(record2['s']);
-					client.remove(key2, function(err, key){});
-                    done();
+					client.remove(key2, function(err, key){
+						done();
+					});
                 });
 
             });
@@ -120,8 +121,9 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect(record['s'] + 'def').to.equal(record2['s']);
-					client.remove(key2, function(err, key){});
-                    done();
+					client.remove(key2, function(err, key){
+						done();
+					});
                 });
 
             });
@@ -159,8 +161,9 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect('def'+record['s'] ).to.equal(record2['s']);
-					client.remove(key2, function(err, key){});
-                    done();
+					client.remove(key2, function(err, key){
+						done();
+					});
                 });
 
             });
@@ -213,8 +216,9 @@ describe('client.operate()', function() {
                         expect(record['s']).to.equal(record2['s']);
                         expect(500 + ttl_diff+10).to.be.above(metadata2.ttl);
                         expect(500 + ttl_diff-10).to.be.below(metadata2.ttl);
-						client.remove(key2, function(err, key){});
-                        done();
+						client.remove(key2, function(err, key){
+							done();
+						});
                     });
 
                 });

@@ -313,14 +313,24 @@ as_val* asval_clone( as_val* val, LogInfo* log)
     switch(t) {
 		case AS_BOOLEAN: {
 			as_boolean *bool_val = as_boolean_fromval(val);
-			clone_val			 = as_boolean_toval(as_boolean_new(bool_val->value));
+			as_boolean *clone_bool = as_boolean_new(bool_val->value);
+			if( clone_bool == NULL)
+			{
+				as_v8_error(log, "cloning a boolean value failed");
+			}
+			clone_val			 = as_boolean_toval(clone_bool);
 			break;
 		}
         case AS_INTEGER: {
             as_integer* int_val = as_integer_fromval( val );
             int64_t ival        = as_integer_get( int_val);
             as_v8_detail(log, "Cloning Integer value %d", ival);
-            clone_val = as_integer_toval(as_integer_new(ival)); 
+			as_integer* clone_int = as_integer_new(ival);
+			if(clone_int == NULL) 
+			{
+				as_v8_error(log, "Cloning integer failed");
+			}
+            clone_val = as_integer_toval(clone_int); 
             break;
         }
         case AS_STRING: {
@@ -328,7 +338,16 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             char* strval = as_string_get( str_val);
             as_v8_detail(log, "Cloning String  value %s", strval);
             char* clone_str = (char*) cf_strdup( strval);
-            clone_val = as_string_toval( as_string_new(clone_str, true));
+			if(clone_str == NULL)
+			{
+				as_v8_error(log, "cloning string failed");
+			}
+			as_string* clone_as = as_string_new(clone_str, true);
+			if(clone_as == NULL)
+			{
+				as_v8_error(log, "cloning string failed");
+			}
+            clone_val = as_string_toval( clone_as);
             break;
         }
         case AS_BYTES: {
@@ -792,14 +811,19 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 				as_v8_error(data->log, "record returned in the callback is NULL");
 				return false;
 			}
-			int numbins = p_rec->bins.size;
+			uint16_t numbins = as_record_numbins(p_rec);
 			rec         = as_record_new(numbins);
 			// clone the record into Asyncdata structure here.
 			// as_val is freed up after the callback. We need to retain a copy of this
 			// as_val until we pass this structure to nodejs
 			record_clone( p_rec, &rec, data->log);
 
-			cf_queue_push( data->result_q, (as_val*) &rec);
+			as_val* clone_rec = as_record_toval(rec);
+			if( cf_queue_sz( data->result_q) >= data->max_q_size)
+			{
+				sleep(1);
+			}
+			cf_queue_push( data->result_q, &clone_rec);
 			data->signal_interval++;
 			break;
 		}
@@ -811,6 +835,10 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 		case AS_MAP:
 		{
 			as_val* clone = asval_clone((as_val*) val, data->log);
+			if( cf_queue_sz( data->result_q) >= data->max_q_size)
+			{
+				sleep(1);
+			}
 			cf_queue_push( data->result_q, &clone);
 			data->signal_interval++;
 			break;
@@ -823,6 +851,7 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 
 	int async_signal_sz = (data->max_q_size)/20;
 	if ( data->signal_interval% async_signal_sz == 0) {
+		data->signal_interval = 0;
 		data->async_handle.data     = data;
 		async_send( &data->async_handle);
 	}
@@ -835,6 +864,15 @@ void async_queue_process(AsyncCallbackData * data)
 
 	// Pop each record from the queue and invoke the node callback with this record.
 	while(data->result_q && cf_queue_sz(data->result_q) > 0) {
+		if (cf_queue_sz(data->result_q) > data->max_q_size) {
+		
+		}
+		if(data->signal_interval%10000 == 0)
+		{
+			v8::HeapStatistics h = v8::HeapStatistics();
+			v8::V8::GetHeapStatistics(&h);
+			//printf(" heap size from v8 %d \n", h.used_heap_size());
+		}
 		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
 		if( rv == CF_QUEUE_OK) {
 			if(as_val_type(val) == AS_REC)
@@ -843,14 +881,14 @@ void async_queue_process(AsyncCallbackData * data)
 				Handle<Value> cbargs[3] = { recordbins_to_jsobject(record, data->log),
 											recordmeta_to_jsobject(record, data->log),
 											key_to_jsobject(&record->key, data->log)};
-				data->data_cb->Call(Context::GetCurrent()->Global(), 3, cbargs);
 				as_record_destroy(record);
+				data->data_cb->Call(Context::GetCurrent()->Global(), 3, cbargs);
 			}
 			else
 			{
 				Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
-				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
 				as_val_destroy(val);
+				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
 			}
 		}
 	}

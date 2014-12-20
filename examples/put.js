@@ -177,7 +177,7 @@ client.connect(function (err, client) {
 
         if ( argv.profile === true ) {
             console.log("---");
-            console.timeEnd("exists");
+            console.timeEnd("put");
         }
 
         process.exit(exitCode);

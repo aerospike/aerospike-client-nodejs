@@ -131,13 +131,15 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-	//var options = { select: ['i', 's']}
     var query = client.query(argv.namespace, argv.set );
 
 	var stream = query.execute();
 
     stream.on('data', function(rec) {
-        console.log(count++, rec);
+		// process the scanned record here
+		count++;
+
+		console.log(rec);
     });
 
     stream.on('error', function(err){

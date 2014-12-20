@@ -46,6 +46,7 @@ describe('client.query()', function() {
         },
 		modlua: {
 			userPath : __dirname
+			//systemPath: "/opt/aerospike/sys/udf/lua"
 		}
     });
 
@@ -99,7 +100,6 @@ describe('client.query()', function() {
 
 					expect(err).to.be.ok();
 					expect(err.code).to.equal(status.AEROSPIKE_OK);
-					expect(_record).to.eql(record);
 					count++;
 					if ( count >= total ) {
 						done();
@@ -117,11 +117,6 @@ describe('client.query()', function() {
     });
 
     after(function(done) {
-		var total = 100;
-		for ( var j = 1; j <= total; j++) {
-			var key = { ns: options.namespace, set: options.set, key: "test/query" + j.toString()}
-			client.remove(key, function(err, key){});
-		}
         client.close();
         client = null;
         done();
@@ -150,7 +145,6 @@ describe('client.query()', function() {
 		stream.on('end', function(end){
 			expect(count).to.be.equal(1);
 			expect(err).to.equal(0);
-
 			done();
 		});
     });
@@ -175,9 +169,8 @@ describe('client.query()', function() {
 			err++;
 		});
 		stream.on('end', function(end){
-			expect(count).to.be.equal(100);
+			expect(count).to.be.equal(total);
 			expect(err).to.equal(0);
-
 			done();
 		});
     });
@@ -202,7 +195,7 @@ describe('client.query()', function() {
 			err++;
 		});
 		stream.on('end', function(end){
-			expect(count).to.be.equal(100);
+			expect(count).to.be.equal(total);
 			expect(err).to.equal(0);
 
 			done();
@@ -234,7 +227,6 @@ describe('client.query()', function() {
 		stream.on('end', function(end){
 			expect(count).to.be.equal(1);
 			expect(err).to.equal(0);
-
 			done();
 		});
     });

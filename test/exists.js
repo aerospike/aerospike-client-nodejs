@@ -72,8 +72,9 @@ describe('client.exists()', function() {
             client.exists(key, function(err, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });

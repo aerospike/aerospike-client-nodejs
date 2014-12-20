@@ -67,8 +67,9 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
-			client.remove(key, function(err, key){});
-			done();
+			client.remove(key, function(err, key){
+				done();
+			});
 		}); 
 	});
 	it('should invoke an UDF with arguments', function(done) {
@@ -79,8 +80,9 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
-			client.remove(key, function(err, key) {});
-			done();
+			client.remove(key, function(err, key) {
+				done();
+			});
 		});
 	});
 	it('should invoke an UDF with apply policy', function(done) {
@@ -92,8 +94,9 @@ describe('client.Execute()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(res).to.equal(0);
-			client.remove(key, function(err, key){});
-			done();
+			client.remove(key, function(err, key){
+				done();
+			});
 		});
 	});
 	it('should invoke an UDF function which does not exist - expected to fail', function(done) {

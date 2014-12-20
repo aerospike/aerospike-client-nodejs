@@ -70,8 +70,9 @@ describe('client.get()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });
@@ -116,8 +117,9 @@ describe('client.get()', function() {
             client.get(key, pol, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){});
-                done();
+				client.remove(key, function(err, key){
+					done();
+				});
             });
         });
     });

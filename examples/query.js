@@ -143,8 +143,8 @@ aerospike.client(config).connect(function (err, client) {
 	var stream = q.execute();
 
     stream.on('data', function(rec) {
-		console.log("at data");
-        console.log(count++, rec);
+		//process the record here
+		count++;
     });
 
     stream.on('error', function(err){

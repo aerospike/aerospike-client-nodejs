@@ -58,6 +58,7 @@ describe('client.batchExists()', function() {
 
     it('should successfully find 10 records', function(done) {
 
+		this.timeout(3000);
         // number of records
         var nrecords = 10;
 
@@ -89,19 +90,19 @@ describe('client.batchExists()', function() {
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
-                }
-				for ( j = 0; j < nrecords; j++) {
-					client.remove(keys[j], function(err, key){
-					});
+					if( j == nrecords-1)
+				    {
+						done();
+					}
 				}
 
-                done();
             });
         });
     });
 
     it('should fail finding 10 records', function(done) {
 
+		this.timeout(3000);
         // number of records
         var nrecords = 10;
 
@@ -141,6 +142,7 @@ describe('client.batchExists()', function() {
     
     it('should successfully find 1000 records', function(done) {
 
+		this.timeout(5000);
         // number of records
         var nrecords = 1000;
 
@@ -173,12 +175,11 @@ describe('client.batchExists()', function() {
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
-                }
-				for ( j = 0; j < results.length; j++) {
-					client.remove(keys[j], function(err, key){});
+					if( j == results.length-1) {
+						done();
+					}
 				}
 
-                done();
             });
         });
     });
