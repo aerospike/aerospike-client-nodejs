@@ -18,6 +18,7 @@ The `statement` in the query object can be modified to perform any of the follow
 - [aggregation on an index](#QueryAggregate)
 - [Scan foreground](#ScanForeground)
 - [scan backgorund](#ScanBackground)
+- [Scan info](#ScanInfo)
 
 <!--
 ################################################################################
@@ -191,6 +192,38 @@ Query on execution returns a stream object, which emits 'error' and 'end' events
 	var stream = query.execute(); // returns a stream object.
 	stream.on('error', errorCallback);
 	stream.on('end', endCallback);
+
+```
+<!--
+################################################################################
+ScanInfo()
+################################################################################
+-->
+<a name="ScanInfo"></a>
+
+##Info(scanid, callback)
+
+To get the status of the background scan fired using `Query` object. The status contains information 
+about the percentage completed, number of records scanned so far and the status of the scan.
+
+Parameters:
+
+- `scanid` - A valid scan Id returned when a scan background job is triggered.
+
+The parameters for the `callback` argument:
+Returns an object with the following entries.
+- `progressPct`   - Percentage of records in Aerospike database on which scan UDF has been applied.
+- `recordScanned` - Total number of records in Aerospike database on which scan UDF has been applied.
+- `status`		  - An instance [Scan Status](scanproperties.md#scanStatus) object and it contains status 
+					of scan(in-progress, completed, aborted).
+```js
+ var query = client.query(namespace, set);
+ query.Info( scanId, function(scanInfo) {
+	 if (scanInfo.status == scanStatus.COMPLETED)
+	 {
+		 // implies scan completed.
+	 }
+ }); 
 
 ```
 

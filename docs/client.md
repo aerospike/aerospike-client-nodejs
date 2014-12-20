@@ -223,7 +223,8 @@ The parameters for the `callback` argument:
 
 Example:
 ```js
-client.createIntegerIndex(function (error) {
+var args = { ns: "test", set: "demo", bin: "bin1", index:"index_name"}
+client.createIntegerIndex(args, function (error) {
   if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
     // handle success
   }
@@ -258,7 +259,8 @@ The parameters for the `callback` argument:
 
 Example:
 ```js
-client.createStringIndex(function (error) {
+var args = { ns: "test", set: "demo", bin: "bin1", index: "index_name"}
+client.createStringIndex(args, function (error) {
   if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
     // handle success
   }
