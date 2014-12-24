@@ -180,9 +180,9 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	if(!syspath_set)	
 	{
 		#ifdef __linux
-			char const *syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
+			char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 		#elif __APPLE__
-			char const *syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
+			char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
 		#endif	
 		int rc = access(syspath, R_OK);
 		if(rc == 0)
@@ -191,8 +191,11 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 		else
 		{
-			as_v8_debug(log, "the LUA path is not valid %s", syspath);
-			char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
+			#ifdef __linux	
+				char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
+			#elif __APPLE__
+				char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";	
+			#endif
 			rc = access(syspath, R_OK);
 			if ( rc== 0)
 			{
@@ -207,9 +210,9 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	if(!usrpath_set)	
 	{
 		#ifdef __linux
-			char const *usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
+			char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
 		#elif __APPLE__
-			char const *usrpath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua/";
+			char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua/";
 		#endif
 		int rc = access(usrpath, R_OK);
 		if ( rc == 0) 
@@ -218,7 +221,11 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 		else
 		{
-			usrpath = "./aerospike-client-c/package/opt/aerospike/client/usr/udf/lua";
+			#ifdef __linux
+				char const * usrpath = "./aerospike-client-c/package/opt/aerospike/client/usr/udf/lua";
+			#elif __APPLE__
+				char const * usrpath = "./aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua";
+			#endif
 			rc = access(usrpath, R_OK);
 			if( rc == 0)
 			{
