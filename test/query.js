@@ -46,7 +46,6 @@ describe('client.query()', function() {
         },
 		modlua: {
 			userPath : __dirname
-			//systemPath: "/opt/aerospike/sys/udf/lua"
 		}
     });
 
