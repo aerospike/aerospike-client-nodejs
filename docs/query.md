@@ -203,8 +203,8 @@ ScanInfo()
 
 ##Info(scanid, callback)
 
-To get the status of the background scan fired using `Query` object. The status contains information 
-about the percentage completed, number of records scanned so far and the status of the scan.
+To get the information of the background scan fired using `Query` object. The result contains information 
+about the percentage of scan completed in Aeropsike database, number of records scanned so far and the status of the scan(aborted, in-progress and completed).
 
 Parameters:
 
