@@ -211,6 +211,7 @@ Parameters:
 - `scanid` - A valid scan Id returned when a scan background job is triggered.
 
 The parameters for the `callback` argument:
+
 Returns an object with the following entries.
 - `progressPct`   - Percentage of records in Aerospike database on which scan UDF has been applied.
 - `recordScanned` - Total number of records in Aerospike database on which scan UDF has been applied.
