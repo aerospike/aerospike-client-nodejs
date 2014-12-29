@@ -1335,12 +1335,10 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             as_v8_detail(log,"key.set = \"%s\"", set);
             if ( strlen(set) == 0 ) {
 				as_v8_debug(log, "Set passed is empty string");
-                //goto ReturnError;
             }
         }
-		// null value for set is valid in a key. 
-		// Any value other than null and string is not 
-		// acceptable for string.
+		// null value for set is valid in a key. Any value other than null and string is not 
+		// acceptable for set
         else if( !set_obj->IsNull()){
             goto ReturnError;
         }
