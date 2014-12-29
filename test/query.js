@@ -168,7 +168,7 @@ describe('client.query()', function() {
 			err++;
 		});
 		stream.on('end', function(end){
-			expect(count).to.be.equal(total);
+			expect(count).to.be.greaterThan(total-1);
 			expect(err).to.equal(0);
 			done();
 		});
@@ -194,7 +194,7 @@ describe('client.query()', function() {
 			err++;
 		});
 		stream.on('end', function(end){
-			expect(count).to.be.equal(total);
+			expect(count).to.be.greaterThan(total-1);
 			expect(err).to.equal(0);
 
 			done();
