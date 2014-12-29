@@ -139,7 +139,7 @@ aerospike.client(config).connect(function (err, client) {
     var count = 0;
 
 	var options = { select: ['i', 's'],
-					scanUDF : {module: 'scan', funcname: 'updateRecord'}
+					UDF : {module: 'scan', funcname: 'updateRecord'}
 				  }
 
     var scanBackground = client.query(argv.namespace, argv.set, options );
