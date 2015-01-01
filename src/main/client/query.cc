@@ -126,9 +126,8 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 		strncpy(ns, *String::Utf8Value(args[0]), AS_NAMESPACE_MAX_SIZE);
 		as_v8_debug(log, "namespace to query %s", ns);
 	}
-
-	// set is an optional parameter. So the constructor can have 2 or 3 arguments.
-	if( args.Length() > 2 && !args[1]->IsString())
+	// set is an optional parameter. So the constructor should either have NULL for set or a string.
+	if( !args[1]->IsNull() && !args[1]->IsString())
 	{
 		as_v8_error(log, "set to be queried should be string");
 		return scope.Close(Undefined());
@@ -138,7 +137,7 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 		strncpy(set, *String::Utf8Value(args[1]), AS_SET_MAX_SIZE);
 		as_v8_debug(log, "set to query %s", set); 
 	}
-
+	
 	as_query_init( &query->query, ns, set);
     query->Wrap(args.This());
 
@@ -156,11 +155,9 @@ Handle<Value> AerospikeQuery::NewInstance( const Arguments& args)
     const unsigned argc = 3;
 
 	// Invoked with namespace and set.
-    Handle<Value> argv[argc] = {args[0], args[1], args.This()};
-	// Default assume it as a scan. (Query without a where clause).
-	// Set this variable to true, when there's a where clause in the query.;
-
-    Local<Object> instance	 = constructor->NewInstance( argc, argv);
+    Handle<Value> argv[argc] = { args[0], args[1], args.This()};
+	
+	Local<Object> instance	 = constructor->NewInstance( argc, argv);
 
     return scope.Close(instance);
 }
