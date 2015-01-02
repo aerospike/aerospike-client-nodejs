@@ -79,7 +79,9 @@ The client library requires the following libraries to be present on the machine
 | --- | --- | --- |
 | libssl | openssl | |
 | libcrypto | openssl | Required for RIPEMD160 hash function. |
-| liblua5.1 | lua | Required for Lua execution. |
+| liblua5.1 | lua | Required for Lua execution, used in query aggregation. |
+
+Note: Lua is used for query aggregation. If the application is not using the aggregation feature, lua installation can be skipped.
 
 - CentOS/RHEL 6.x
 
@@ -168,6 +170,16 @@ is usually reserved for modules that are not directly depended on by an applicat
 but may have executables which you want to be able to call regardless of the 
 application. This is usually the case for tools like tools like `npm` and `mocha`.
 
+If the application uses query aggregation feature, LUA library should be installed 
+following the instruction given in [Prerequisites](#Prerequisites). The last step 
+in aggregation is executed in the client machine which  uses LUA. To install `aerospike`
+library with LUA enabled, an environment variable `USELUA` must be set. For more details
+[Aerospike with Aggregation](#Aerospike with Aggregation)
+
+```bash
+$ export USELUA=1
+```
+
 <a name="Installing-via-NPM-Registry"></a>
 ### Installing via NPM Registry
 
@@ -244,6 +256,18 @@ Once installed, the module can be required in the application:
 
 	var aerospike = require('aerospike')
 
+<a name="Aerospike with Aggregation">
+### Aerospike with Aggregation
+Aerospike nodejs client does not include LUA by default during installation. Application can set 
+an environment variable `USELUA` to inclue LUA library, and can use the Aggregation feature in 
+Aerospike. To install with Aggregation enabled:
+	
+	$USELUA=1 npm install
+
+If application includes `aerospike` as a dependency in `package.json` the variable `USELUA`
+can be exported as a environment variable as follows:
+
+	$export USELUA=1
 
 <a name="C-Client-Resolution"></a>
 ### C Client Resolution
