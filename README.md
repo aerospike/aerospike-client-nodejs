@@ -132,6 +132,13 @@ Before starting with the Aerospike Nodejs Client, please make sure the following
 - Xcode 5 or greater.
 - Lua 5.1.5 library.  Required when running queries with user defined aggregations.  
 
+####Openssl library installation in Mac OS X.
+
+```bash
+$ brew install openssl
+$ brew link openssl --force
+```
+
 #####Lua Installation in Mac OS X
 
 Lua is required for performing aggregations on results returned from the database. The following are instruction for installing Lua 5.1:
