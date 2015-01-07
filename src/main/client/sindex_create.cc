@@ -59,7 +59,7 @@ typedef struct AsyncData {
 	as_set set;
 	as_bin_name bin;
 	char * index;
-	as_index_type type;
+	as_index_datatype type;
     LogInfo * log;
     Persistent<Function> callback;
 } AsyncData;
@@ -172,7 +172,7 @@ static void * prepare(const Arguments& args)
 		{
 			type_pos = INDEX_TYPE-1;
 		}
-		data->type = (as_index_type)args[type_pos]->ToInteger()->Value();
+		data->type = (as_index_datatype)args[type_pos]->ToInteger()->Value();
 		as_v8_detail(log, "The type of the index %d", data->type);
 	}
 	else

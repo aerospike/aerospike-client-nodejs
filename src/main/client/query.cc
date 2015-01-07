@@ -219,34 +219,37 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 			as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
 			switch(predicate)
 			{
-				case AS_PREDICATE_INTEGER_RANGE:
-				{
-					int min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
-					int max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
-					as_query_where( query, bin_name, AS_PREDICATE_INTEGER_RANGE, min, max);
-					as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
-					break;
-				}
-				case AS_PREDICATE_INTEGER_EQUAL:
-				{
-					int val = filter->Get(String::NewSymbol("val"))->ToObject()->IntegerValue();
-					as_query_where( query, bin_name, AS_PREDICATE_INTEGER_EQUAL, val);
-					as_v8_debug(log," Integer equality predicate %d", val);
-					break;
+				case AS_PREDICATE_RANGE:
+					{
+						int min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
+						int max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
+						as_query_where( query, bin_name, integer_range(min, max));
+						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
+						break;
+					}
+				case AS_PREDICATE_EQUAL:
+					{
+						as_index_datatype type = (as_index_datatype)filter->Get(String::NewSymbol("type"))->ToObject()->IntegerValue();
+						if( type == AS_INDEX_NUMERIC) 
+						{
+							int val = filter->Get(String::NewSymbol("val"))->ToObject()->IntegerValue();
+							as_query_where( query, bin_name, integer_equals(val));
+							as_v8_debug(log," Integer equality predicate %d", val);
+							break;
+						}
+						else if(type == AS_INDEX_STRING)
+						{
+							Local<Value> val = filter->Get(String::NewSymbol("val"));
+							bin_val   = strdup(*String::Utf8Value(val));
+							as_query_where( query, bin_name,string_equals(bin_val));
+							as_v8_debug(log, " String equality predicate %s", bin_val);
+							break;
+						}
+					}
 
-				}
-				case AS_PREDICATE_STRING_EQUAL:
-				{
-					Local<Value> val = filter->Get(String::NewSymbol("val"));
-					bin_val   = strdup(*String::Utf8Value(val));
-					as_query_where( query, bin_name,string_equals(bin_val));
-					as_v8_debug(log, " String equality predicate %s", bin_val);
-					break;
-				}
-			}
-		
-		}   
-	}   
+			}   
+		}
+	}
 	else 
 	{
 		// Throw an Exception here.
