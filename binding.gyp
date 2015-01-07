@@ -64,14 +64,19 @@
       ],
       'link_settings': {
         'libraries': [
-          '../aerospike-client-c/lib/libaerospike.a',
-		  '-llua'
+          '../aerospike-client-c/lib/libaerospike.a'
         ]
       },
+	  'variables': {
+		'uselua': '<!(echo $USELUA)'
+	  },
       'conditions': [
         ['OS=="linux"',{
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
-        }]
+        }],
+		['uselua==1',{
+		  'libraries': ['-llua']
+		}]
       ] 
     }
   ]

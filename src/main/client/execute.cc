@@ -218,6 +218,7 @@ static void respond(uv_work_t * req, int status)
     as_error *  err     = &data->err;
     as_key *    key     = &data->key;
     LogInfo * log       = data->log;
+	as_arraylist* array = &data->udfargs;
     as_v8_debug(log, "UDF execute operation : response is %d", err->code);
 
     // Build the arguments array for the callback
@@ -254,6 +255,8 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
+		as_arraylist_destroy(array);
+		as_val_destroy(data->result);
         as_key_destroy(key);
         as_v8_debug(log, "Cleaned up key structure");
     }
