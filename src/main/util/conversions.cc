@@ -659,8 +659,8 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         return (as_val*) &as_nil;
     }
 	else if(obj->IsUndefined()) {
-		as_v8_error(log, "Object passed is undefined");
-		return NULL;
+		as_v8_detail(log, "Object passed is undefined");
+		return (as_val*) &as_nil;
 	}
     else if(obj->IsString()){
         String::Utf8Value v(obj);
