@@ -407,7 +407,7 @@ describe('client.put()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
-            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
 			client.remove(key, function(err,key){
 				done();
 			});
