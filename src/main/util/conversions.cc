@@ -327,6 +327,10 @@ as_val* asval_clone( as_val* val, LogInfo* log)
     as_val_t t = as_val_type( (as_val*)val);
     as_val* clone_val = NULL;
     switch(t) {
+		case AS_NIL: {
+			clone_val = (as_val*) &as_nil;
+			break;
+		}
 		case AS_BOOLEAN: {
 			as_boolean *bool_val = as_boolean_fromval(val);
 			as_boolean *clone_bool = as_boolean_new(bool_val->value);
@@ -512,6 +516,10 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
     }
 
     switch ( as_val_type(val) ) {
+		case AS_NIL: {
+			as_v8_detail(log,"value is of type as_null");
+			return scope.Close(Null());
+		}
         case AS_INTEGER : {
             as_integer * ival = as_integer_fromval(val);
             if ( ival ) {
@@ -659,8 +667,8 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         return (as_val*) &as_nil;
     }
 	else if(obj->IsUndefined()) {
-		as_v8_error(log, "Object passed is undefined");
-		return NULL;
+		as_v8_detail(log, "Object passed is undefined");
+		return (as_val*) &as_nil;
 	}
     else if(obj->IsString()){
         String::Utf8Value v(obj);
@@ -843,6 +851,7 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 			data->signal_interval++;
 			break;
 		}
+		case AS_NIL:
 		case AS_BOOLEAN:
 		case AS_INTEGER:
 		case AS_STRING:
