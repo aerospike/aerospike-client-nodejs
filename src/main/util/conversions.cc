@@ -674,6 +674,10 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 		as_v8_detail(log, "Object passed is undefined");
 		return (as_val*) &as_nil;
 	}
+    else if(obj->IsBoolean()) {
+        as_v8_error(log, "Boolean datatype is not supported");
+        return NULL;
+    }
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
