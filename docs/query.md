@@ -87,9 +87,15 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 
 	var query = client.query(ns, set, statement); // returns a query object.
 
-	var dataCallback = function(record) { //do something}
-	var errorCallback = function(error) { //do something}
-	var endCallback = function() { //do something}
+	var dataCallback = function(record) { 
+		// process the scanned record
+	}
+	var errorCallback = function(error) { 
+		// process the error
+	}
+	var endCallback = function() { 
+		//process the end of query results.
+	}
 	var stream = query.execute(); // returns a stream object.
 	stream.on('data', dataCallback);
 	stream.on('error', errorCallback);
@@ -105,6 +111,9 @@ QueryAggregate()
 <a name="QueryAggregate"></a>
 ###QueryAggregate
 
+Aggregation executes a Map-Reduce job on all the records returned by a given query.
+The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
+job must be registered prior to using the given UDF in aggregation.
 To do an aggregation on data by a  query, the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
 'data' event is emitted for every result returned by query aggregation.
@@ -122,9 +131,15 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 
 	var query = client.query(ns, set, statement); // returns a query object.
 
-	var dataCallback = function(result) { //do something}
-	var errorCallback = function(error) { //do something}
-	var endCallback = function() { //do something}
+	var dataCallback = function(result) { 
+		//process the result of aggregation
+	}
+	var errorCallback = function(error) { 
+		//process the error
+	}
+	var endCallback = function() { 
+		//process the end of aggregation
+	}
 	var stream = query.execute(); // returns a stream object.
 	stream.on('data', dataCallback);
 	stream.on('error', errorCallback);
@@ -137,7 +152,7 @@ ScanForeground()
 ################################################################################
 -->
 <a name="ScanForeground"></a>
-###scanForeground
+###ScanForeground
 
 To do full scan of Aerospike database which returns all the records,  the `Query` object has to be instantiated. 
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
@@ -150,11 +165,17 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	// no filters should be applied during query instantiation.
 	// however 0 or more bins can be projected.
 	var statement = { nobins: false, concurrent: true, select: ['a', 'b']}
-	var query = client.query(ns, set, statement); // returns a query object.
+	var query = client.query(ns, set ); // returns a query object.
 
-	var dataCallback = function(record) { //do something}
-	var errorCallback = function(error) { //do something}
-	var endCallback = function() { //do something}
+	var dataCallback = function(record) { 
+		//process the record
+	}
+	var errorCallback = function(error) { 
+		//do something
+	}
+	var endCallback = function() { 
+		//process the end of scan
+	}
 	var stream = query.execute(); // returns a stream object.
 	stream.on('data', dataCallback);
 	stream.on('error', errorCallback);
@@ -170,9 +191,11 @@ ScanBackground()
 
 ##ScanBackground
 
-To do full scan of Aerospike database and apply an UDF through a background job,  
-the `Query` object has to be instantiated and background scan does not return any data.
+To do full scan of Aerospike database and apply an UDF on each record in Aerospike database
+through a background job,the `Query` object has to be instantiated. The background scan 
+does not return any data.
 Query on execution returns a stream object, which emits 'error' and 'end' events.
+The UDF used by scan background job must already be registered in the system.
 'errror' is emitted in an event of error.
 'end'  signifies that a scan background job has been fired successfully..
 
@@ -182,13 +205,16 @@ Query on execution returns a stream object, which emits 'error' and 'end' events
 	// however 0 or more bins can be projected.
 	// And scanUDF argument must be present.
 	var statement = { concurrent: true, 
-					  select: ['a', 'b'],
 					  UDF: {module:'scanUdf', funcname: 'scanFunc'}
 					}
 	var query = client.query(ns, set, statement); // returns a query object.
 
-	var errorCallback = function(error) { //do something}
-	var endCallback = function() { //do something}
+	var errorCallback = function(error) { 
+		//process the error 
+	}
+	var endCallback = function() { 
+		//signals that the scan background job has been successfully fired.
+	}
 	var stream = query.execute(); // returns a stream object.
 	stream.on('error', errorCallback);
 	stream.on('end', endCallback);
