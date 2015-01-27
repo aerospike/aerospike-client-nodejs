@@ -389,7 +389,7 @@ describe('client.put()', function() {
             });
         });
     });
-    it('should write a bin of type undefined and write should fail', function(done) {
+    it('should write a bin of type undefined and write should not fail', function(done) {
 
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
@@ -440,6 +440,52 @@ describe('client.put()', function() {
 					done();
 				});
 			});
+        });
+    });
+	it('should write a map with undefined entry and verify the record', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({
+            l	  :  valgen.constant([1,2,3, undefined]),
+            m	  :  valgen.constant({a: 1, b: 2, c:undefined}),
+        });
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+			client.get(key1, function(err, bins, meta, key2) {
+				expect(err).to.be.ok();
+				expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(bins.m).to.eql({a: 1, b: 2, c:null});
+                expect(bins.l).to.eql([1,2,3,null]);
+				client.remove(key2, function(err, key3){
+					done();
+				});
+			});
+        });
+    });
+	it('should write an object with boolean value and should fail', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
+        var mgen = metagen.constant({ttl: 1000});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = { boolbin: true}
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+			done();
         });
     });
 
