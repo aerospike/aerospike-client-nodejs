@@ -223,7 +223,7 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 					{
 						int min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
 						int max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
-						as_query_where( query, bin_name, integer_range(min, max));
+						as_query_where( query, bin_name, as_integer_range(min, max));
 						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
 						break;
 					}
@@ -233,7 +233,7 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 						if( type == AS_INDEX_NUMERIC) 
 						{
 							int val = filter->Get(String::NewSymbol("val"))->ToObject()->IntegerValue();
-							as_query_where( query, bin_name, integer_equals(val));
+							as_query_where( query, bin_name, as_integer_equals(val));
 							as_v8_debug(log," Integer equality predicate %d", val);
 							break;
 						}
@@ -241,7 +241,7 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 						{
 							Local<Value> val = filter->Get(String::NewSymbol("val"));
 							bin_val   = strdup(*String::Utf8Value(val));
-							as_query_where( query, bin_name,string_equals(bin_val));
+							as_query_where( query, bin_name,as_string_equals(bin_val));
 							as_v8_debug(log, " String equality predicate %s", bin_val);
 							break;
 						}
