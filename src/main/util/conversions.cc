@@ -667,9 +667,17 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         return (as_val*) &as_nil;
     }
 	else if(obj->IsUndefined()) {
+		// asval_from_jsobject is called recursively.
+		// If a bin value is undefined, it should be handled by the caller of
+		// this function gracefully.
+		// If an entry in a map/list is undefined the corresponding entry becomes null.
 		as_v8_detail(log, "Object passed is undefined");
 		return (as_val*) &as_nil;
 	}
+    else if(obj->IsBoolean()) {
+        as_v8_error(log, "Boolean datatype is not supported");
+        return NULL;
+    }
     else if(obj->IsString()){
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
@@ -737,6 +745,16 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 
         const Local<Value> name = props->Get(i);
         const Local<Value> value = obj->Get(name);
+
+		// A bin can be undefined, or an entry inside a CDT(list, map)
+		// can be an undefined value.
+		// If a bin is undefined, it must error out at the earliest.
+		if( value->IsUndefined()) 
+		{
+			as_v8_error(log, "Bin value passed for bin %s is undefined", *String::Utf8Value(name));
+			scope.Close(Undefined());
+			return AS_NODE_PARAM_ERR;
+		}
 
         String::Utf8Value n(name);
         as_val* val = asval_from_jsobject( value, log);

@@ -407,7 +407,7 @@ describe('client.put()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
-            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
 			client.remove(key, function(err,key){
 				done();
 			});
@@ -469,6 +469,23 @@ describe('client.put()', function() {
 					done();
 				});
 			});
+        });
+    });
+	it('should write an object with boolean value and should fail', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
+        var mgen = metagen.constant({ttl: 1000});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = { boolbin: true}
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+			done();
         });
     });
 

@@ -199,23 +199,21 @@ describe('client.operate()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key) {
             var ops = [
-                op.touch(500)
+                op.touch(2592000)
             ];
             client.get(key, function(err, record3, metadata3, key3){
                 expect(err).to.be.ok();
                 ttl_diff = metadata3.ttl - meta.ttl;
-
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-
-                    client.get(key, function(err, record2, metadata2, key2) {
+                    client.get(key1, function(err, record2, metadata2, key2) {
                         expect(err).to.be.ok();
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
                         expect(record['i']).to.equal(record2['i']);
                         expect(record['s']).to.equal(record2['s']);
-                        expect(500 + ttl_diff+10).to.be.above(metadata2.ttl);
-                        expect(500 + ttl_diff-10).to.be.below(metadata2.ttl);
+                        expect(2592000 + ttl_diff+10).to.be.above(metadata2.ttl);
+                        expect(2592000 + ttl_diff-10).to.be.below(metadata2.ttl);
 						client.remove(key2, function(err, key){
 							done();
 						});

@@ -25,7 +25,7 @@ Handle<Object> indexType()
 {
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
-    set(obj, "NUMERIC",    0);
-    set(obj, "STRING",     1);
+    set(obj, "STRING",    0);
+    set(obj, "NUMERIC",     1);
     return scope.Close(obj);
 }
