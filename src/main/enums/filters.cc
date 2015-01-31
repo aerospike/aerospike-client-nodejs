@@ -22,22 +22,23 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), FunctionTemplate::New(__value)->GetFunction())
 
-Handle<Value> range(const Arguments& args)
+Handle<Value> range_integer(const Arguments& args)
 {
 	HANDLESCOPE;
-
 	if(args.Length() != 3) {
 		return Null();	
 	}
 
 	Handle<Object> range_obj = Object::New();
-	range_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_INTEGER_RANGE));
+	range_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_RANGE));
+	range_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_NUMERIC));
 	range_obj->Set(String::NewSymbol("bin"), args[0]);
 	range_obj->Set(String::NewSymbol("min"), args[1]);
 	range_obj->Set(String::NewSymbol("max"), args[2]);
 	return scope.Close(range_obj);
 
 }
+
 Handle<Value> equal(const Arguments& args)
 {
 	HANDLESCOPE;
@@ -47,11 +48,13 @@ Handle<Value> equal(const Arguments& args)
 	}
 
 	Handle<Object> equal_obj = Object::New();
+	equal_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_EQUAL));
+
 	if(args[1]->IsString()) {
-		equal_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_STRING_EQUAL));
+		equal_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_STRING));
 	}
 	else if( args[1]->IsNumber()){
-		equal_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_INTEGER_EQUAL));
+		equal_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_NUMERIC));
 	}
 	else {
 		return Null();
@@ -67,6 +70,6 @@ Handle<Object> filter()
     HANDLESCOPE;
     Handle<Object> obj = Object::New();
     set(obj, "equal",   equal);
-    set(obj, "range",  range);
+    set(obj, "range",  range_integer);
     return scope.Close(obj);
 }

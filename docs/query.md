@@ -79,7 +79,7 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 'errror' is emitted in an event of error.
 'end' marks the end of recordset returned by query.
 ```js
-	var statement = { filters:[filter.equal('a', 'abc')}]} 
+	var statement = { filters:[filter.equal('a', 'abc')]} 
 
 	// NOTE bin a has to be indexed for it to be queried.
 	//To projects bins 'a' and 'b' alone
