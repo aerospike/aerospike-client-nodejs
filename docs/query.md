@@ -111,7 +111,7 @@ QueryAggregate()
 <a name="QueryAggregate"></a>
 ###QueryAggregate
 
-Aggregation executes a Map-Reduce job on all the records returned by a given query.
+Query Aggregation executes a Map-Reduce job on all the records returned by a given query.
 The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
 job must be registered prior to using the given UDF in aggregation.
 To do an aggregation on data by a  query, the `Query` object has to be instantiated. 
@@ -182,6 +182,49 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	stream.on('end', endCallback);
 
 ```
+<!--
+################################################################################
+ScanAggregate()
+################################################################################
+-->
+<a name="ScanAggregate"></a>
+###ScanAggregate
+
+Scan Aggregation executes a Map-Reduce job on all the records in the Aerospike database.
+The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
+job must be registered prior to using the given UDF in aggregation.
+To do an aggregation on data , the `Query` object has to be instantiated. 
+Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
+'data' event is emitted for every result returned by scan aggregation.
+'errror' is emitted in an event of error.
+'end' marks the end of resultset returned by scan aggregation.
+
+NOTE: Query aggregation without any filter becomes scan aggregation.
+
+```js
+	var statement = {
+					  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
+					} 
+
+
+	var query = client.query(ns, set ); // returns a query object.
+
+	var dataCallback = function(result) { 
+		//process the result of aggregation
+	}
+	var errorCallback = function(error) { 
+		//process the error
+	}
+	var endCallback = function() { 
+		//process the end of aggregation
+	}
+	var stream = query.execute(); // returns a stream object.
+	stream.on('data', dataCallback);
+	stream.on('error', errorCallback);
+	stream.on('end', endCallback);
+
+```
+
 <!--
 ################################################################################
 ScanBackground()

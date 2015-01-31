@@ -26,13 +26,10 @@ var client    = aerospike.client;
 var yargs = require('yargs');
 var events = require('events');
 var util = require('util');
-var sleep = require('sleep');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
 var filter = aerospike.filter;
-var scanStatus = aerospike.scanStatus;
-
 /*******************************************************************************
  *
  * Options parsing
@@ -112,7 +109,7 @@ config = {
     policies: {
         timeout: argv.timeout
     },
-	modllua: {
+	modlua: {
 		userPath: __dirname
 	}
 };
@@ -132,51 +129,28 @@ aerospike.client(config).connect(function (err, client) {
 
     //
     // Perform the operation
-	// Fire up a background scan command and check the status of the scan
-	// every 1 second
     //
 
     var count = 0;
 
-	var options = { 
-					UDF : {module: 'scan', funcname: 'updateRecord'}
-				  }
+	var options = { aggregationUDF : {module: 'query', funcname: 'sum_test_bin'},
+					select : ['s', 'i'] }
 
-    var scanBackground = client.query(argv.namespace, argv.set, options );
+    var query = client.query(argv.namespace, argv.set, options);
 
-    var scanStream = scanBackground.execute();
+	var queryStream = query.execute();
+    queryStream.on('data', function(rec) {
+        console.log(count++, rec);
+    });
 
-    scanStream.on('error', function(err){
+    queryStream.on('error', function(err){
         console.log(err);
     });
 
-	var checkStatus = function(scanJobStats)
-	{
-		console.log(scanJobStats);
-		if(scanJobStats.status != scanStatus.COMPLETED)
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-
-	var infoCallback = function(scanJobStats, scanId)
-	{
-		if(!checkStatus(scanJobStats))
-		{
-			sleep.sleep(1)
-			scanBackground.Info(scanId, infoCallback);
-		}
-	}
-
-	var info = function(scanId)
-	{
-		scanBackground.Info(scanId, infoCallback);
-	}
-    scanStream.on('end', info);
+    queryStream.on('end', function() {
+        console.log('TOTAL QUERIED:', count++);
+        process.exit(0)
+    });
 
 });
 /*******************************************************************************

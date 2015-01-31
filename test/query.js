@@ -229,4 +229,32 @@ describe('client.query()', function() {
 			done();
 		});
     });
+	it.skip('should scan aerospike database and apply aggregation user defined function', function(done) {
+        
+        // counters
+        var total = 100;
+        var count = 0;
+		var err = 0;
+
+		var args = { select: ['queryBinString', 'queryBinInt'],
+					 aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
+		var query = client.query(options.namespace, options.set, args);
+
+		var stream = query.execute();
+		stream.on('data', function(result){
+			expect(result).to.be.ok();
+			count++;
+		});
+		stream.on('error', function(error){
+			expect(error).to.be.ok();
+			expect(error.code).to.equal(status.AEROSPIKE_OK);
+			err++;
+		});
+		stream.on('end', function(end){
+			expect(count).to.be.equal(1);
+			expect(err).to.equal(0);
+			done();
+		});
+    });
+
 });

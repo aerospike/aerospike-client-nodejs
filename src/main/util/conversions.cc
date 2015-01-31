@@ -914,7 +914,6 @@ void async_queue_process(AsyncCallbackData * data)
 		{
 			v8::HeapStatistics h = v8::HeapStatistics();
 			v8::V8::GetHeapStatistics(&h);
-			//printf(" heap size from v8 %d \n", h.used_heap_size());
 		}
 		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
 		if( rv == CF_QUEUE_OK) {
