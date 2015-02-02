@@ -39,7 +39,7 @@ function connect_cb( err, client) {
     }
 }
 
-client.connect(connect_cb)
+client.connect(connect_cb);  // connect is synchronous
 
 // The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
