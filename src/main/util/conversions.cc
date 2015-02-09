@@ -1271,11 +1271,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                    as_v8_debug(log,"key.key = \"%u\"", bval->value);
                    Buffer * buf = Buffer::New(size);
                    memcpy(node::Buffer::Data(buf), bval->value, size);
-                   v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-                   v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-                   v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
-                   v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-                   obj->Set(String::NewSymbol("key"), actualBuffer);
+                   obj->Set(String::NewSymbol("key"), buf->handle_);
                    break;
                }
             }
@@ -1287,11 +1283,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 	if(key->digest.init == true) {
 		Buffer * buf = Buffer::New(AS_DIGEST_VALUE_SIZE);
 		memcpy(Buffer::Data(buf), key->digest.value, AS_DIGEST_VALUE_SIZE);
-        Local<Object> globalObj = v8::Context::GetCurrent()->Global();
-        Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-        Handle<Value> constructorArgs[3] = { buf->handle_, Integer::New(AS_DIGEST_VALUE_SIZE), Integer::New(0) };
-        Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-        obj->Set(String::NewSymbol("digest"), actualBuffer);
+        obj->Set(String::NewSymbol("digest"), buf->handle_);
 	}
 
     return scope.Close(obj);
