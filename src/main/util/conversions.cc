@@ -1324,6 +1324,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 
 	if(obj->IsNull()) 
 	{
+		as_v8_error(log, "The key object passed is Null");
 		goto ReturnError;
 	}	
 
@@ -1334,14 +1335,17 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
             as_v8_detail(log, "key.ns = \"%s\"", ns);
             if ( strlen(ns) == 0 ) {
+				as_v8_error(log, "The namespace has null string");
                 goto ReturnError;
             }
         }
         else {
+			as_v8_error(log, "The namespace passed must be string");
             goto ReturnError;
         }
     }
     else {
+		as_v8_error(log, "The key object should have an \"ns\" entry");
         goto ReturnError;
     }
 
@@ -1359,6 +1363,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 		// null value for set is valid in a key. Any value other than null and string is not 
 		// acceptable for set
         else if( !set_obj->IsNull()){
+			as_v8_error(log, "The set in the key must be a key");
             goto ReturnError;
         }
     }
@@ -1368,6 +1373,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
         Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 		if(val_obj->IsNull()) 
 		{
+			as_v8_error(log, "The key entry must not be null");
 			goto ReturnError;
 		}
         if ( val_obj->IsString() ) {
@@ -1403,6 +1409,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     }
 	else
 	{
+		as_v8_error(log, "The Key object must have a \" key \" entry ");
 		goto ReturnError;
 	}
 
@@ -1487,7 +1494,12 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     }
     for ( uint32_t i=0; i < capacity; i++) {
         Local<Object> key = arr->Get(i)->ToObject();
-        key_from_jsobject(as_batch_keyat(batch, i), key, log);
+        int status = key_from_jsobject(as_batch_keyat(batch, i), key, log);
+		if(status != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing batch keys failed \n");
+			scope.Close(Undefined());
+			return AS_NODE_PARAM_ERR;
+		}
     }
 
     scope.Close(Undefined());
