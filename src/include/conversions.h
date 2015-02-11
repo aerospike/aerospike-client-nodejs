@@ -124,5 +124,6 @@ bool async_queue_populate(const as_val * val, AsyncCallbackData* data);
 // Functions to set metadata of the record.
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log );
+int setGen( Local<Object> obj, uint16_t * generation, LogInfo * log );
 
 
