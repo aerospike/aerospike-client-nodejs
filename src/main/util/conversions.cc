@@ -797,7 +797,7 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
     HANDLESCOPE;
 
     setTTL( obj, &rec->ttl, log);
-    setGeneration( obj, &rec->gen, log);
+    setGen( obj, &rec->gen, log);
 
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
@@ -990,6 +990,23 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
 
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 {
+    if ( obj->Has(String::NewSymbol("generation")) ) {
+        Local<Value> v8gen = obj->Get(String::NewSymbol("generation"));
+        if ( v8gen->IsNumber() ) {
+            (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
+            as_v8_detail(log, "Generation value %d ", (*generation));
+        }
+        else {
+            as_v8_error(log, "Generation should be an integer");
+            return AS_NODE_PARAM_ERR;
+        }
+    }
+
+    return AS_NODE_PARAM_OK;
+}
+
+int setGen( Local<Object> obj, uint16_t * generation, LogInfo * log )
+{
     if ( obj->Has(String::NewSymbol("gen")) ) {
         Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
         if ( v8gen->IsNumber() ) {
@@ -1143,6 +1160,7 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     as_policy_remove_init(policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setGeneration( obj, &policy->generation, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
