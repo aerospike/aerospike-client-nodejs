@@ -984,14 +984,17 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
             return AS_NODE_PARAM_ERR;
         }
     }
+	else {
+		as_v8_detail(log, "Object does not have timeout");
+	}
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 {
-    if ( obj->Has(String::NewSymbol("gen")) ) {
-        Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
+    if ( obj->Has(String::NewSymbol("generation")) ) {
+        Local<Value> v8gen = obj->Get(String::NewSymbol("generation"));
         if ( v8gen->IsNumber() ) {
             (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
             as_v8_detail(log, "Generation value %d ", (*generation));
@@ -1023,7 +1026,9 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
             return AS_NODE_PARAM_ERR;
         }
     }
-
+	else {
+		as_v8_detail(log, "Object does not have %s ", policyname);
+	}
     // The policyEnumValue will/should be inited to the default value by the caller
     // So, do not change anything if we get an non-integer from node layer
     scope.Close(Undefined());
@@ -1075,6 +1080,35 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo
     return AS_NODE_PARAM_OK;
 }
 
+int setCommitLevelPolicy( Local<Object> obj, as_policy_commit_level* commitpolicy, LogInfo * log)
+{
+	if( setPolicyGeneric(obj, "commitLevel", (int*) commitpolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_detail(log, "Commit Level policy is set to %d", *commitpolicy);
+	return AS_NODE_PARAM_OK;
+}
+
+int setReplicaPolicy(Local<Object> obj, as_policy_replica *replicapolicy, LogInfo *log)
+{
+	if( setPolicyGeneric(obj, "replica", (int*) replicapolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_detail(log, "Replica policy is set to %d ", *replicapolicy);
+	return AS_NODE_PARAM_OK;
+}
+
+int setConsistencyLevelPolicy( Local<Object> obj, as_policy_consistency_level *consistencypolicy, LogInfo * log){
+	if( setPolicyGeneric(obj, "consistencyLevel", (int*) consistencypolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+	
+	as_v8_detail(log, "Consistency Level Policy is set to %d", *consistencypolicy);
+	return AS_NODE_PARAM_OK;
+}
+
 int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInfo * log)
 {
 	if ( obj->IsUndefined() || obj->IsNull())
@@ -1109,6 +1143,14 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
 
     return  AS_NODE_PARAM_OK;
 }
+
+int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogInfo * log)
+{
+	if( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	as_v8_detail(log, "Timeout in admin policy is set to %d", policy->timeout);
+	return AS_NODE_PARAM_OK;
+}
+
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log)
 {
     HANDLESCOPE;
@@ -1119,6 +1161,9 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
@@ -1146,6 +1191,8 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     if ( setGeneration( obj, &policy->generation, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
@@ -1159,7 +1206,9 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
+    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	
     as_v8_detail(log, "Parsing read policy : success");
 
     scope.Close(Undefined());
@@ -1176,6 +1225,7 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setExistsPolicy( obj, &policy->exists, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail(log, "Parsing write policy : success");
     return AS_NODE_PARAM_OK;
@@ -1188,6 +1238,7 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
 	as_policy_apply_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
 	as_v8_detail( log, "Parsing apply policy : success");
     
