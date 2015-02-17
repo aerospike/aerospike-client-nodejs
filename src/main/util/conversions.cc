@@ -983,14 +983,17 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
             return AS_NODE_PARAM_ERR;
         }
     }
+	else {
+		as_v8_detail(log, "Object does not have timeout");
+	}
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 {
-    if ( obj->Has(String::NewSymbol("gen")) ) {
-        Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
+    if ( obj->Has(String::NewSymbol("generation")) ) {
+        Local<Value> v8gen = obj->Get(String::NewSymbol("generation"));
         if ( v8gen->IsNumber() ) {
             (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
             as_v8_detail(log, "Generation value %d ", (*generation));
@@ -1022,7 +1025,9 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
             return AS_NODE_PARAM_ERR;
         }
     }
-
+	else {
+		as_v8_detail(log, "Object does not have %s ", policyname);
+	}
     // The policyEnumValue will/should be inited to the default value by the caller
     // So, do not change anything if we get an non-integer from node layer
     scope.Close(Undefined());
@@ -1074,6 +1079,35 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo
     return AS_NODE_PARAM_OK;
 }
 
+int setCommitLevelPolicy( Local<Object> obj, as_policy_commit_level* commitpolicy, LogInfo * log)
+{
+	if( setPolicyGeneric(obj, "commitLevel", (int*) commitpolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_detail(log, "Commit Level policy is set to %d", *commitpolicy);
+	return AS_NODE_PARAM_OK;
+}
+
+int setReplicaPolicy(Local<Object> obj, as_policy_replica *replicapolicy, LogInfo *log)
+{
+	if( setPolicyGeneric(obj, "replica", (int*) replicapolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_detail(log, "Replica policy is set to %d ", *replicapolicy);
+	return AS_NODE_PARAM_OK;
+}
+
+int setConsistencyLevelPolicy( Local<Object> obj, as_policy_consistency_level *consistencypolicy, LogInfo * log){
+	if( setPolicyGeneric(obj, "consistencyLevel", (int*) consistencypolicy, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+	
+	as_v8_detail(log, "Consistency Level Policy is set to %d", *consistencypolicy);
+	return AS_NODE_PARAM_OK;
+}
+
 int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInfo * log)
 {
 	if ( obj->IsUndefined() || obj->IsNull())
@@ -1108,6 +1142,14 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
 
     return  AS_NODE_PARAM_OK;
 }
+
+int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogInfo * log)
+{
+	if( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	as_v8_detail(log, "Timeout in admin policy is set to %d", policy->timeout);
+	return AS_NODE_PARAM_OK;
+}
+
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log)
 {
     HANDLESCOPE;
@@ -1118,6 +1160,9 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
@@ -1145,6 +1190,8 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     if ( setGeneration( obj, &policy->generation, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
@@ -1158,7 +1205,9 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
+    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	
     as_v8_detail(log, "Parsing read policy : success");
 
     scope.Close(Undefined());
@@ -1175,6 +1224,7 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setExistsPolicy( obj, &policy->exists, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail(log, "Parsing write policy : success");
     return AS_NODE_PARAM_OK;
@@ -1187,6 +1237,7 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
 	as_policy_apply_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 	if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+	if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
 	as_v8_detail( log, "Parsing apply policy : success");
     
@@ -1270,11 +1321,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                    as_v8_debug(log,"key.key = \"%u\"", bval->value);
                    Buffer * buf = Buffer::New(size);
                    memcpy(node::Buffer::Data(buf), bval->value, size);
-                   v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
-                   v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
-                   v8::Handle<v8::Value> constructorArgs[3] = { buf->handle_, v8::Integer::New(size), v8::Integer::New(0) };
-                   v8::Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-                   obj->Set(String::NewSymbol("key"), actualBuffer);
+                   obj->Set(String::NewSymbol("key"), buf->handle_);
                    break;
                }
             }
@@ -1286,11 +1333,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 	if(key->digest.init == true) {
 		Buffer * buf = Buffer::New(AS_DIGEST_VALUE_SIZE);
 		memcpy(Buffer::Data(buf), key->digest.value, AS_DIGEST_VALUE_SIZE);
-        Local<Object> globalObj = v8::Context::GetCurrent()->Global();
-        Local<Function> bufferConstructor = Local<Function>::Cast(globalObj->Get(String::New("Buffer")));
-        Handle<Value> constructorArgs[3] = { buf->handle_, Integer::New(AS_DIGEST_VALUE_SIZE), Integer::New(0) };
-        Local<v8::Object> actualBuffer = bufferConstructor->NewInstance(3, constructorArgs);
-        obj->Set(String::NewSymbol("digest"), actualBuffer);
+        obj->Set(String::NewSymbol("digest"), buf->handle_);
 	}
 
     return scope.Close(obj);
@@ -1331,6 +1374,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 
 	if(obj->IsNull()) 
 	{
+		as_v8_error(log, "The key object passed is Null");
 		goto ReturnError;
 	}	
 
@@ -1341,14 +1385,17 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
             as_v8_detail(log, "key.ns = \"%s\"", ns);
             if ( strlen(ns) == 0 ) {
+				as_v8_error(log, "The namespace has null string");
                 goto ReturnError;
             }
         }
         else {
+			as_v8_error(log, "The namespace passed must be string");
             goto ReturnError;
         }
     }
     else {
+		as_v8_error(log, "The key object should have an \"ns\" entry");
         goto ReturnError;
     }
 
@@ -1366,6 +1413,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 		// null value for set is valid in a key. Any value other than null and string is not 
 		// acceptable for set
         else if( !set_obj->IsNull()){
+			as_v8_error(log, "The set in the key must be a key");
             goto ReturnError;
         }
     }
@@ -1375,6 +1423,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
         Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
 		if(val_obj->IsNull()) 
 		{
+			as_v8_error(log, "The key entry must not be null");
 			goto ReturnError;
 		}
         if ( val_obj->IsString() ) {
@@ -1410,6 +1459,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     }
 	else
 	{
+		as_v8_error(log, "The Key object must have a \" key \" entry ");
 		goto ReturnError;
 	}
 
@@ -1494,7 +1544,12 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     }
     for ( uint32_t i=0; i < capacity; i++) {
         Local<Object> key = arr->Get(i)->ToObject();
-        key_from_jsobject(as_batch_keyat(batch, i), key, log);
+        int status = key_from_jsobject(as_batch_keyat(batch, i), key, log);
+		if(status != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing batch keys failed \n");
+			scope.Close(Undefined());
+			return AS_NODE_PARAM_ERR;
+		}
     }
 
     scope.Close(Undefined());
