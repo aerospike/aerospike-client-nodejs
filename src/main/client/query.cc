@@ -353,8 +353,8 @@ Handle<Value> AerospikeQuery::setNobins( const Arguments& args)
 	// is returned not bins
 	if( args[0]->IsBoolean() )
 	{
-		asQuery->nobins = (bool) args[0]->ToObject()->ToBoolean()->Value();
-		as_v8_debug(log, "scan nobins value is set");
+		asQuery->nobins = (bool) args[0]->ToBoolean()->Value();
+		as_v8_debug(log, "scan nobins value is set %d", (int)asQuery->nobins);
 	}
 	else
 	{
