@@ -193,25 +193,21 @@ static void * prepare(const Arguments& args)
 	}
 	else // queue creation job for scan_foreground, scan_aggregation, query and query aggregation.
 	{
-		query_cbdata->signal_interval	= 0;
-		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
-		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
 		// For query, aggregation and scan foreground data callback must be present
-		if((args[curr_arg_pos]->IsFunction()))
-		{
-			query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
-			curr_arg_pos++;
-		}
-		else
+		if(!args[curr_arg_pos]->IsFunction())
 		{
 			as_v8_error(log, "Callback not passed to process the  query results");
 			data->param_err = 1;
 			goto ErrReturn;
 		}
-
+		query_cbdata->signal_interval	= 0;
+		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
+		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
+		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		curr_arg_pos++;
 	}
 		
-	    
+	// check for error callback 
 	if(args[curr_arg_pos]->IsFunction())
 	{
 		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
@@ -223,6 +219,8 @@ static void * prepare(const Arguments& args)
 		data->param_err = 1;
 		goto ErrReturn;
 	}
+
+	// check for termination callback
 	if(args[curr_arg_pos]->IsFunction())
 	{
 		query_cbdata->end_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
