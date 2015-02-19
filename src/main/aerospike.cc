@@ -70,7 +70,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(String::NewSymbol("scanStatus"), scanStatus());
 	exports->Set(String::NewSymbol("filter"),	filter());
 	exports->Set(String::NewSymbol("indexType"),indexType());
-	exports->Set(String::NewSymbol("scanQueryAPI"),scanQueryAPI());
+	exports->Set(String::NewSymbol("queryType"),queryType());
 }
 
 NODE_MODULE(aerospike, Aerospike)

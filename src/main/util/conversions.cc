@@ -920,11 +920,13 @@ void async_queue_process(AsyncCallbackData * data)
 			if(as_val_type(val) == AS_REC)
 			{
 				as_record* record = as_record_fromval(val);
-				Handle<Value> cbargs[3] = { recordbins_to_jsobject(record, data->log),
-											recordmeta_to_jsobject(record, data->log),
-											key_to_jsobject(&record->key, data->log)};
+				Handle<Object> jsrecord = Object::New();
+				jsrecord->Set(String::NewSymbol("bins"),recordbins_to_jsobject(record, data->log));
+				jsrecord->Set(String::NewSymbol("meta"),recordmeta_to_jsobject(record, data->log));
+				jsrecord->Set(String::NewSymbol("key"),key_to_jsobject(&record->key, data->log));
 				as_record_destroy(record);
-				data->data_cb->Call(Context::GetCurrent()->Global(), 3, cbargs);
+				Handle<Value> cbargs[1] = { jsrecord};
+				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
 			}
 			else
 			{
