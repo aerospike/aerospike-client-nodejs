@@ -174,6 +174,7 @@ static void * prepare(const Arguments& args)
 	data->res						= AEROSPIKE_OK;
 	int curr_arg_pos				= 0;
 	int res							= 0;
+    int arglength					= args.Length();
 
 	populate_scan_or_query(data, query);
 
@@ -181,32 +182,36 @@ static void * prepare(const Arguments& args)
 	if(data->type == SCANUDF)
 	{
 		data->scan_id					= 0;
+		// for scan_background callback for data is NULL.
+		if(!args[curr_arg_pos]->IsNull())
+		{
+			as_v8_error(log, "Data callback must be NULL for scan background job");
+			data->param_err = 1;
+			goto ErrReturn;
+		}
+		curr_arg_pos++;
 	}
 	else // queue creation job for scan_foreground, scan_aggregation, query and query aggregation.
 	{
 		query_cbdata->signal_interval	= 0;
 		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
 		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
+		// For query, aggregation and scan foreground data callback must be present
+		if((args[curr_arg_pos]->IsFunction()))
+		{
+			query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+			curr_arg_pos++;
+		}
+		else
+		{
+			as_v8_error(log, "Callback not passed to process the  query results");
+			data->param_err = 1;
+			goto ErrReturn;
+		}
+
 	}
 		
-    // Local variables
-
-    int arglength					= args.Length();
-
-	// For query, aggregation and scan foreground data callback must be present
-	// for scan_background callback for data is NULL.
-	if((args[curr_arg_pos]->IsFunction()) || ( data->type == SCANUDF && args[curr_arg_pos]->IsNull()))
-	{
-		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
-		curr_arg_pos++;
-	}
-	else
-	{
-		as_v8_error(log, "Callback not passed to process the  query results");
-		data->param_err = 1;
-		goto ErrReturn;
-	}
-    
+	    
 	if(args[curr_arg_pos]->IsFunction())
 	{
 		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
