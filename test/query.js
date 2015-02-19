@@ -209,7 +209,6 @@ describe('client.query()', function() {
 		var err = 0;
 
 		var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
-					 select: ['queryBinString', 'queryBinInt'],
 					 aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
 		var query = client.query(options.namespace, options.set, args);
 
@@ -236,8 +235,7 @@ describe('client.query()', function() {
         var count = 0;
 		var err = 0;
 
-		var args = { select: ['queryBinString', 'queryBinInt'],
-					 aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
+		var args = { aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
 		var query = client.query(options.namespace, options.set, args);
 
 		var stream = query.execute();

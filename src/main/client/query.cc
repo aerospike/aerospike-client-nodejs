@@ -78,7 +78,7 @@ void AerospikeQuery::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("setNobins"), FunctionTemplate::New(setNobins)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setConcurrent"), FunctionTemplate::New(setConcurrent)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setScanQueryAPI"), FunctionTemplate::New(setScanQueryAPI)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setQueryType"), FunctionTemplate::New(setQueryType)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
 
@@ -383,7 +383,7 @@ Handle<Value> AerospikeQuery::setConcurrent( const Arguments& args)
 	return scope.Close(asQuery->handle_);
 }
 
-Handle<Value> AerospikeQuery::setScanQueryAPI( const Arguments& args)
+Handle<Value> AerospikeQuery::setQueryType( const Arguments& args)
 {
 	HANDLESCOPE;
 	AerospikeQuery * asQuery = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
@@ -391,8 +391,8 @@ Handle<Value> AerospikeQuery::setScanQueryAPI( const Arguments& args)
 
 	if(args[0]->IsNumber())
 	{
-		asQuery->api = (asScanQueryAPI)(args[0]->ToObject()->IntegerValue());
-		as_v8_debug(log, "scanQuery API is set to enum %d", asQuery->api);
+		asQuery->type= (asQueryType)(args[0]->ToObject()->IntegerValue());
+		as_v8_debug(log, "scanQuery API is set to enum %d", asQuery->type);
 	}
 	else
 	{

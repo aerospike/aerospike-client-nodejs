@@ -14,35 +14,22 @@
  * limitations under the License.
  ******************************************************************************/
 
-#pragma once
-
 #include <node.h>
-#include "client.h"
+#include "enums.h"
 
 using namespace v8;
 
-Handle<Object> status();
+#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
 
-Handle<Object> key_policy_values();
-
-Handle<Object> retry_policy_values();
-
-Handle<Object> generation_policy_values();
-
-Handle<Object> policy();
-
-Handle<Object> operators();
-
-Handle<Object> log();
-
-Handle<Object> languages();
-
-Handle<Object> scanPriority();
-
-Handle<Object> filter();
-
-Handle<Object> indexType();
-
-Handle<Object> scanStatus();
-
-Handle<Object> queryType();
+Handle<Object> queryType() 
+{
+    HANDLESCOPE;
+    Handle<Object> obj = Object::New();
+    set(obj, "QUERY",  0);
+    set(obj, "QUERYUDF",   1);
+    set(obj, "QUERYAGGREGATION",   2);
+    set(obj, "SCAN",  3);
+    set(obj, "SCANUDF", 4);
+    set(obj, "SCANAGGREGATION", 5);
+    return scope.Close(obj);
+}

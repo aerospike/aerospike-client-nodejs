@@ -30,7 +30,7 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
-enum asScanQueryAPI {
+enum asQueryType {
 	QUERY,
 	QUERYUDF,
 	QUERYAGGREGATION,
@@ -39,7 +39,7 @@ enum asScanQueryAPI {
 	SCANAGGREGATION
 };
 
-#define isQuery(api) (api == QUERY || api == QUERYUDF || api == QUERYAGGREGATION) ? true:false
+#define isQuery(type) (type == QUERY || type == QUERYUDF || type == QUERYAGGREGATION) ? true:false
 /*******************************************************************************
  *  CLASS
  ******************************************************************************/
@@ -69,7 +69,7 @@ class AerospikeQuery: public ObjectWrap {
 
 		//Which of the six APIs in scanQueryAPI enum, this is used to specify which of
 		// the underlying SCAN/QUERY API in C is to be invoked.
-		asScanQueryAPI api;
+		asQueryType type;
 
 
 
@@ -157,5 +157,5 @@ class AerospikeQuery: public ObjectWrap {
 		/** 
 		 *  undefined scan.setConcurrent(scanQueryAPI)
 		 */
-		static Handle<Value> setScanQueryAPI(const Arguments& args);
+		static Handle<Value> setQueryType(const Arguments& args);
 };
