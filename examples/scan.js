@@ -131,7 +131,8 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-    var query = client.query(argv.namespace, argv.set );
+	var options = { nobins:false, concurrent: true, select: ['i', 's'] }
+    var query = client.query(argv.namespace, argv.set, options );
 
 	var stream = query.execute();
 
@@ -152,8 +153,3 @@ aerospike.client(config).connect(function (err, client) {
     });
 
 });
-/*******************************************************************************
- *
- * Perform the operation
- * 
- ******************************************************************************/

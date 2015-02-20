@@ -138,7 +138,7 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-	var options = { select: ['i', 's'],
+	var options = { 
 					UDF : {module: 'scan', funcname: 'updateRecord'}
 				  }
 

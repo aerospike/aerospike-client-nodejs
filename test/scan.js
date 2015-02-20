@@ -100,7 +100,8 @@ describe('client.query() - without where clause(Scan)', function() {
     });
 
     it('should query all the records', function(done) {
-        
+       
+		this.timeout(5000);
         // counters
         var total = 100;
         var count = 0;
@@ -126,6 +127,8 @@ describe('client.query() - without where clause(Scan)', function() {
     });
 
 	it('should query and select no bins', function(done) {
+
+			this.timeout(5000);
 			var total = 100;
 			var count = 0;
 			var err   = 0;
@@ -148,6 +151,8 @@ describe('client.query() - without where clause(Scan)', function() {
 			});
 	});
     it('should query and select only few bins in the record', function(done) {
+
+			this.timeout(5000);
 			var total = 99;
 			var count = 0;
 			var err   = 0;
@@ -170,7 +175,7 @@ describe('client.query() - without where clause(Scan)', function() {
 			});
 	});
 	it('should do a scan background and check for the status of scan job ', function(done) {
-		var args = { scanUDF: {module: 'scan', funcname: 'updateRecord'}}
+		var args = { UDF: {module: 'scan', funcname: 'updateRecord'}}
 		var scanBackground = client.query( options.namespace, options.set, args);
 
 		var err = 0;

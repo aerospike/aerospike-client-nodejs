@@ -62,6 +62,33 @@ Handle<Object> exists_policy_values()
     return scope.Close(obj);
 }
 
+Handle<Object> replica_policy_values()
+{
+	HANDLESCOPE;
+	Handle<Object> obj = Object::New();
+	set(obj, "MASTER", 0); // read only from partition master replica node
+	set(obj, "ANY", 1);    // read from an unspecified replica node
+	return scope.Close(obj);
+}
+
+Handle<Object> consistency_level_policy_values()
+{
+	HANDLESCOPE;
+	Handle<Object> obj = Object::New();
+	set(obj, "ONE", 0); // Involve a single replica in the operation.
+	set(obj, "ALL", 1); // Involve all replicas in the operation
+	return scope.Close(obj);
+}
+
+Handle<Object> commit_level_policy_values()
+{
+	HANDLESCOPE;
+	Handle<Object> obj = Object::New();
+	set(obj, "ALL", 0); // Return succcess only after successfully committing all replicas
+	set(obj, "MASTER", 1); // Return succcess after successfully committing the master replica
+	return scope.Close(obj);
+}
+
 Handle<Object> policy()
 {
     HANDLESCOPE;
@@ -71,6 +98,9 @@ Handle<Object> policy()
     obj->Set(String::NewSymbol("retry"), retry_policy_values());
     obj->Set(String::NewSymbol("gen"), generation_policy_values());
     obj->Set(String::NewSymbol("exists"), exists_policy_values());
+	obj->Set(String::NewSymbol("replica"), replica_policy_values());
+	obj->Set(String::NewSymbol("consistencyLevel"), consistency_level_policy_values());
+	obj->Set(String::NewSymbol("commitLevel"), commit_level_policy_values());
 
     return scope.Close(obj);
 }

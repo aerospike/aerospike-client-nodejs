@@ -30,7 +30,16 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
+enum asQueryType {
+	QUERY,
+	QUERYUDF,
+	QUERYAGGREGATION,
+	SCAN,
+	SCANUDF,
+	SCANAGGREGATION
+};
 
+#define isQuery(type) (type == QUERY || type == QUERYUDF || type == QUERYAGGREGATION) ? true:false
 /*******************************************************************************
  *  CLASS
  ******************************************************************************/
@@ -58,13 +67,10 @@ class AerospikeQuery: public ObjectWrap {
 		// Logger to log.
 		LogInfo* log;
 
-		// Query wihtout a where clause is a background scan.
-		// To differentiate at API level whether it's a query or scan.
-		bool IsQuery;
+		//Which of the six APIs in scanQueryAPI enum, this is used to specify which of
+		// the underlying SCAN/QUERY API in C is to be invoked.
+		asQueryType type;
 
-		// scan background and query aggregation has UDF whereas normal query and
-		// foreground scan do not have UDFs associated with them.
-		bool hasUDF;
 
 
 		// If query is scan, the properties related to only scan.
@@ -148,4 +154,8 @@ class AerospikeQuery: public ObjectWrap {
 		 */
 		static Handle<Value> setConcurrent(const Arguments& args);
 
+		/** 
+		 *  undefined scan.setConcurrent(scanQueryAPI)
+		 */
+		static Handle<Value> setQueryType(const Arguments& args);
 };

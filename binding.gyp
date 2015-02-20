@@ -52,6 +52,7 @@
         'src/main/enums/status.cc',
         'src/main/enums/scanPriority.cc',
         'src/main/enums/scanStatus.cc',
+        'src/main/enums/queryType.cc',
         'src/main/enums/udf_languages.cc',
         'src/main/util/async.cc',
         'src/main/util/conversions.cc',

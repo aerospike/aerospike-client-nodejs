@@ -43,8 +43,7 @@ using namespace v8;
 typedef struct AsyncData {
     int param_err;
     aerospike * as;
-	bool is_query;
-	bool has_udf;
+	asQueryType type;
 	uint64_t  scan_id;
 	union {
 		as_query* query;
@@ -105,16 +104,14 @@ bool populate_scan_or_query(AsyncData* data, AerospikeQuery* v8_query)
 	// we have not allocated the as_scan object anywhere earlier. 
 	// Allocate as_scan here.
 	LogInfo * log = v8_query->log;
-	if(!v8_query->IsQuery)
+	if(data->type == SCAN || data->type == SCANUDF)
 	{
 		as_v8_debug(log, "The Scan operation invoked");
 		data->query_scan.scan = (as_scan*) cf_malloc(sizeof(as_scan));
 		as_scan * scan  = data->query_scan.scan;
 		as_query* query = &v8_query->query;
 
-		data->is_query = v8_query->IsQuery;
-		data->has_udf  =  v8_query->hasUDF;
-		if(data->has_udf)
+		if(data->type == SCANUDF)
 		{
 			as_v8_debug(log,"It's a background scan operation");
 		}
@@ -172,44 +169,45 @@ static void * prepare(const Arguments& args)
     LogInfo * log					= data->log = query->log;
 	query_cbdata->log				= log;
 	data->query_cbdata				= query_cbdata;
-	data->is_query					= query->IsQuery;
-	data->has_udf					= query->hasUDF;
     data->param_err					= 0;
+	data->type						= query->type;
 	data->res						= AEROSPIKE_OK;
 	int curr_arg_pos				= 0;
+	int res							= 0;
+    int arglength					= args.Length();
 
 	populate_scan_or_query(data, query);
 
 	//scan background - no need to create a result queue.
-	if(!data->is_query && data->has_udf)
+	if(data->type == SCANUDF)
 	{
 		data->scan_id					= 0;
+		// for scan_background callback for data is NULL.
+		if(!args[curr_arg_pos]->IsNull())
+		{
+			as_v8_error(log, "Data callback must be NULL for scan background job");
+			data->param_err = 1;
+			goto ErrReturn;
+		}
+		curr_arg_pos++;
 	}
-	else // queue creation job for scan_foreground, query, aggregation.
+	else // queue creation job for scan_foreground, scan_aggregation, query and query aggregation.
 	{
+		// For query, aggregation and scan foreground data callback must be present
+		if(!args[curr_arg_pos]->IsFunction())
+		{
+			as_v8_error(log, "Callback not passed to process the  query results");
+			data->param_err = 1;
+			goto ErrReturn;
+		}
 		query_cbdata->signal_interval	= 0;
 		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
 		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
-	}
-		
-    // Local variables
-
-    int arglength					= args.Length();
-
-	// For query, aggregation and scan foreground data callback must be present
-	// for scan_background callback for data is NULL.
-	if((args[curr_arg_pos]->IsFunction()) || ( !data->is_query && data->has_udf && args[curr_arg_pos]->IsNull()))
-	{
 		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
 		curr_arg_pos++;
 	}
-	else
-	{
-		as_v8_error(log, "Callback not passed to process the  query results");
-		data->param_err = 1;
-		goto ErrReturn;
-	}
-    
+		
+	// check for error callback 
 	if(args[curr_arg_pos]->IsFunction())
 	{
 		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
@@ -221,6 +219,8 @@ static void * prepare(const Arguments& args)
 		data->param_err = 1;
 		goto ErrReturn;
 	}
+
+	// check for termination callback
 	if(args[curr_arg_pos]->IsFunction())
 	{
 		query_cbdata->end_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
@@ -239,20 +239,35 @@ static void * prepare(const Arguments& args)
 	{
         if ( args[curr_arg_pos]->IsObject()) 
 		{
-            if (data->is_query && querypolicy_from_jsobject( &data->policy.query, args[curr_arg_pos]->ToObject(), log)
-					!= AS_NODE_PARAM_OK) 
+            if (isQuery(data->type))
 			{
-                as_v8_error(log, "Parsing of querypolicy from object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-				data->param_err = 1;
-				goto ErrReturn;
+				res = querypolicy_from_jsobject( &data->policy.query, args[curr_arg_pos]->ToObject(), log);
+				if(res != AS_NODE_PARAM_OK) 
+				{
+					as_v8_error(log, "Parsing of querypolicy from object failed");
+					COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+					data->param_err = 1;
+					goto ErrReturn;
+				}
+				else
+				{
+					as_v8_debug(log, "querypolicy parsed successfully");
+				}
             }
-			else if( scanpolicy_from_jsobject( &data->policy.scan, args[curr_arg_pos]->ToObject(), log) != AS_NODE_PARAM_OK )
+			else 			
 			{
-                as_v8_error(log, "Parsing of scanpolicy from object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-				data->param_err = 1;
-				goto ErrReturn;
+				res = scanpolicy_from_jsobject( &data->policy.scan, args[curr_arg_pos]->ToObject(), log);
+				if( res != AS_NODE_PARAM_OK)
+				{
+					as_v8_error(log, "Parsing of scanpolicy from object failed");
+					COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+					data->param_err = 1;
+					goto ErrReturn;
+				}
+				else
+				{
+					as_v8_debug(log, "scanpolicy parsed successfully");
+				}
 			}
         }
         else 
@@ -266,7 +281,7 @@ static void * prepare(const Arguments& args)
     else 
 	{
         as_v8_detail(log, "Argument list does not contain query policy, using default values for query policy");
-		if( data->is_query) 
+		if( isQuery(data->type)) 
 		{
 			as_policy_query_init(&data->policy.query);
 		}
@@ -307,8 +322,8 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0 ) {
-		// it's a query with a where clause.
-		if( data->is_query) 
+		// it's a query with a where clause or a scan aggregation(query without a where clause)
+		if( data->type == SCANAGGREGATION || isQuery(data->type))
 		{
 			// register the uv_async_init event here, for the query callback to be invoked at regular interval.
 			async_init(&data->query_cbdata->async_handle, async_callback);
@@ -323,7 +338,7 @@ static void execute(uv_work_t * req)
 			data->query_cbdata->async_handle.data = data->query_cbdata;
 			async_send(&data->query_cbdata->async_handle);
 		}
-		else if( !data->is_query && data->has_udf) // query without where clause, becomes a scan background.
+		else if(data->type == SCANUDF ) // query without where clause, becomes a scan background.
 		{
 			// generating a 32 bit random number. 
 			// Because when converting to node.js integer, the last two digits precision is lost.
@@ -338,7 +353,7 @@ static void execute(uv_work_t * req)
 			as_v8_debug(log, "Scan id generated is %d", data->scan_id);
 			data->res = aerospike_scan_background( as, err, &data->policy.scan, data->query_scan.scan, &data->scan_id);
 		}
-		else if( !data->is_query && !data->has_udf)
+		else if(data->type == SCAN )
 		{
 			// register the uv_async_init event here, for the scan callback to be invoked at regular interval.
 			async_init(&data->query_cbdata->async_handle, async_callback);
@@ -411,7 +426,7 @@ static void respond(uv_work_t * req, int status)
 	// Pass the record to node layer
 	// If it's a query, not a background scan and query call returned AEROSPIKE_OK
 	// then empty the queue.
-	if( !data->is_query && data->has_udf)
+	if( data->type == SCANUDF )
 	{
 		as_v8_debug(log, "scan background request completed");
 	}
@@ -424,7 +439,7 @@ static void respond(uv_work_t * req, int status)
 	TryCatch try_catch;
 	
 	Handle<Value> argv[1];
-	if( !data->is_query && data->has_udf)
+	if( data->type == SCANUDF)
 	{
 		as_v8_debug(log, "Invoking scan background callback with scan id %d", data->scan_id);
 		argv[0] = Number::New(data->scan_id);
@@ -448,7 +463,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
-	if( !data->is_query && data->has_udf)
+	if( data->type == SCANUDF)
 	{
 		as_v8_debug(log,"scan background no need to clean up the queue structure");
 	}
@@ -467,7 +482,7 @@ static void respond(uv_work_t * req, int status)
 
 
 	delete query_data;
-	if( !data->is_query)
+	if( data->type == SCAN && data->type == SCANUDF)
 	{
 		cf_free(data->query_scan.scan);
 	}

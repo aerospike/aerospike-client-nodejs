@@ -78,6 +78,7 @@ void AerospikeQuery::Init()
     cons->PrototypeTemplate()->Set(String::NewSymbol("setNobins"), FunctionTemplate::New(setNobins)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
     cons->PrototypeTemplate()->Set(String::NewSymbol("setConcurrent"), FunctionTemplate::New(setConcurrent)->GetFunction());
+    cons->PrototypeTemplate()->Set(String::NewSymbol("setQueryType"), FunctionTemplate::New(setQueryType)->GetFunction());
     constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
 }
 
@@ -104,8 +105,6 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 	
 	// Default assume it as a scan. (Query without a where clause).
 	// Set this variable to true, when there's a where clause in the query.
-	query->IsQuery   = false;
-	query->hasUDF	 = false;
 
 	// set the default values of scan properties.
 	query->percent    = AS_SCAN_PERCENT_DEFAULT;
@@ -198,9 +197,6 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 	LogInfo * log				= asQuery->log;
 
 
-	// If a where clause is set in a query it's a normal query.
-	// Otherwise it's a background scan.
-	asQuery->IsQuery			= true;
 
 	// Parse the filters and set the filters to query object
 	if ( args[0]->IsArray() ) 
@@ -286,7 +282,6 @@ Handle<Value> AerospikeQuery::apply(const Arguments& args)
 	HANDLESCOPE;
 	AerospikeQuery * query	= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 
-	query->hasUDF			= true;
 	// Parse the UDF args from jsobject and populate the query object with it.
 	char module[255];
 	char func[255];
@@ -358,8 +353,8 @@ Handle<Value> AerospikeQuery::setNobins( const Arguments& args)
 	// is returned not bins
 	if( args[0]->IsBoolean() )
 	{
-		asQuery->nobins = (bool) args[0]->ToObject()->ToBoolean()->Value();
-		as_v8_debug(log, "scan nobins value is set");
+		asQuery->nobins = (bool) args[0]->ToBoolean()->Value();
+		as_v8_debug(log, "scan nobins value is set %d", (int)asQuery->nobins);
 	}
 	else
 	{
@@ -388,4 +383,20 @@ Handle<Value> AerospikeQuery::setConcurrent( const Arguments& args)
 	return scope.Close(asQuery->handle_);
 }
 
-	
+Handle<Value> AerospikeQuery::setQueryType( const Arguments& args)
+{
+	HANDLESCOPE;
+	AerospikeQuery * asQuery = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+	LogInfo * log			 = asQuery->log;
+
+	if(args[0]->IsNumber())
+	{
+		asQuery->type= (asQueryType)(args[0]->ToObject()->IntegerValue());
+		as_v8_debug(log, "scanQuery API is set to enum %d", asQuery->type);
+	}
+	else
+	{
+		as_v8_error(log, "scanQueryAPI is an enumerator and takes integer value");
+	}
+	return scope.Close(asQuery->handle_);
+}

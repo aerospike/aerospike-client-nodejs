@@ -109,12 +109,9 @@ config = {
     policies: {
         timeout: argv.timeout
     },
-	
-	//modlua userpath
 	modlua: {
 		userPath: __dirname
 	}
-
 };
 
 /*******************************************************************************
@@ -136,27 +133,24 @@ aerospike.client(config).connect(function (err, client) {
 
     var count = 0;
 
-	var options = { filters: [ filter.equal("s", "abc")] }
+	var options = { aggregationUDF : {module: 'query', funcname: 'sum_test_bin'},
+					select : ['s', 'i'] }
 
-    var q= client.query(argv.namespace, argv.set, options);
+    var query = client.query(argv.namespace, argv.set, options);
 
-	var stream = q.execute();
-
-    stream.on('data', function(rec) {
-		//process the record here
-		count++;
+	var queryStream = query.execute();
+    queryStream.on('data', function(rec) {
+        console.log(count++, rec);
     });
 
-    stream.on('error', function(err){
-		console.log("at error");
+    queryStream.on('error', function(err){
         console.log(err);
     });
 
-    stream.on('end', function() {
+    queryStream.on('end', function() {
         console.log('TOTAL QUERIED:', count++);
         process.exit(0)
     });
-
 
 });
 
