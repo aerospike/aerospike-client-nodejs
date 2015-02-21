@@ -201,7 +201,7 @@ describe('client.query()', function() {
 		});
     });
 
-	it.skip('should query on an index and apply aggregation user defined function', function(done) {
+	it('should query on an index and apply aggregation user defined function', function(done) {
         
         // counters
         var total = 100;

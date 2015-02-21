@@ -258,6 +258,8 @@ The UDF used by scan background job must already be registered in the system.
 	var endCallback = function() { 
 		//signals that the scan background job has been successfully fired.
 	}
+		//do something
+	}
 	var stream = query.execute(); // returns a stream object.
 	stream.on('error', errorCallback);
 	stream.on('end', endCallback);

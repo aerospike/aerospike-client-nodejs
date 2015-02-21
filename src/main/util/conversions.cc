@@ -204,6 +204,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 			else
 			{
 				as_v8_debug(log,"Could not find a valid LUA system path %s", syspath);
+				strcpy(config->lua.system_path, "/opt/aerospike/sys/udf/lua");
 			}
 		}
 	}
@@ -1574,7 +1575,9 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 	for ( uint32_t i = 0; i < capacity; i++) {
 		as_val* val = asval_from_jsobject( arr->Get(i), log);
-		as_arraylist_append(*udfargs, val);
+		if( val->type != AS_NIL) {
+			as_arraylist_append(*udfargs, val);
+		}
 	}
 	return AS_NODE_PARAM_OK;
 
