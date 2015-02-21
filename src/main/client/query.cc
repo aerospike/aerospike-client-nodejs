@@ -217,8 +217,8 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 			{
 				case AS_PREDICATE_RANGE:
 					{
-						int min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
-						int max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
+						int64_t min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
+						int64_t max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
 						as_query_where( query, bin_name, as_integer_range(min, max));
 						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
 						break;

@@ -488,5 +488,43 @@ describe('client.put()', function() {
 			done();
         });
     });
+    it('should check generation and then update record only if generation is equal (CAS)', function(done) {
+
+        // generators
+        var kgen = keygen.integer(options.namespace, options.set);
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.record({i: valgen.integer(), s: valgen.string()});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+			expect(err).to.be.ok();
+			expect(err.code).to.equal(status.AEROSPIKE_OK);
+			// check the content of the record
+            client.get(key, function(err, record, metadata, key) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+				var mgen = metagen.constant({gen:1})
+				var meta = mgen(key);
+				var writePolicy = { gen: aerospike.policy.gen.EQ};
+				client.put(key, record, meta, writePolicy, function(err, key){
+					expect(err).to.be.ok();
+					expect(err.code).to.equal(status.AEROSPIKE_OK);
+					client.get(key, function( err, record, metadata, key) {
+						expect(err).to.be.ok();
+						expect(err.code).to.equal(status.AEROSPIKE_OK);
+						expect(metadata.gen).to.equal(2);
+						client.remove(key, function(err, key){
+							done();
+						});
+					});
+				});
+            });
+        });
+    });
 
 });
