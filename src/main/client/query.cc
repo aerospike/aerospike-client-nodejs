@@ -209,16 +209,37 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 		{
 			Local<Object> filter = filters->Get(i)->ToObject();
 			Local<Value> bin	 = filter->Get(String::NewSymbol("bin"));
-			char * bin_name		 = strdup(*String::Utf8Value(bin));
+			char * bin_name		 = NULL; 
 			char * bin_val		 = NULL;
+			if( bin->IsString() ) {
+				bin_name		 = strdup(*String::Utf8Value(bin));
+			}
+			else {
+				as_v8_error(log, "Bin value must be string");
+			}
 			int predicate		 = filter->Get(String::NewSymbol("predicate"))->ToObject()->IntegerValue();
 			as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
 			switch(predicate)
 			{
 				case AS_PREDICATE_RANGE:
 					{
-						int64_t min = filter->Get(String::NewSymbol("min"))->ToObject()->IntegerValue();
-						int64_t max = filter->Get(String::NewSymbol("max"))->ToObject()->IntegerValue();
+						Local<Value> v8min = filter->Get(String::NewSymbol("min"));
+						Local<Value> v8max = filter->Get(String::NewSymbol("max"));
+						int64_t min = 0, max = 0;
+						if( v8min->IsNumber()) {
+							min = v8min->IntegerValue();
+						}
+						else {
+							as_v8_error(log, "The range value passed must be an integer");
+							break;
+						}
+						if( v8max->IsNumber()){
+							max = v8max->IntegerValue();
+						}
+						else {
+							as_v8_error(log, "The range value passed must be an integer");
+							break;
+						}
 						as_query_where( query, bin_name, as_integer_range(min, max));
 						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
 						break;

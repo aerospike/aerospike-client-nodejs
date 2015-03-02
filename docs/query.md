@@ -14,10 +14,10 @@ var query = client.query(ns, set, stmt);
 
 The `statement` in the query object can be modified to perform any of the following functionalities.
 
-- [query on an index](#QueryIndex)
-- [aggregation on an index](#QueryAggregate)
+- [Query on an index](#QueryIndex)
+- [Aggregation on an index](#QueryAggregate)
 - [Scan foreground](#ScanForeground)
-- [scan backgorund](#ScanBackground)
+- [Scan backgorund](#ScanBackground)
 - [Scan info](#ScanInfo)
 
 <!--
@@ -207,7 +207,7 @@ NOTE: Query aggregation without any filter becomes scan aggregation.
 					} 
 
 
-	var query = client.query(ns, set ); // returns a query object.
+	var query = client.query(ns, set, statement ); // returns a query object.
 
 	var dataCallback = function(result) { 
 		//process the result of aggregation
