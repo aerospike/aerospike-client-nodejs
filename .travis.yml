@@ -20,7 +20,6 @@ install:
 - sudo ./bin/aerospike start
 - cd ../..
 - sleep 3
-- asinfo -v "set-config:context=namespace;id=test;ldt-enabled=true"
 script:
 - npm install
 - npm test
