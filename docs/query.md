@@ -251,10 +251,13 @@ The UDF used by scan background job must already be registered in the system.
 					  UDF: {module:'scanUdf', funcname: 'scanFunc'}
 					}
 	var query = client.query(ns, set, statement); // returns a query object.
-
+	
+	// callback to handle the error event emitted by query stream.
 	var errorCallback = function(error) { 
 		//process the error 
 	}
+	
+	// callback to handle the end event emitted by query stream.
 	var endCallback = function() { 
 		//signals that the scan background job has been successfully fired.
 	}
