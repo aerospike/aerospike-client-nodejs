@@ -56,7 +56,6 @@ Handle<Object> status()
 	set(obj, "AEROSPIKE_ERR_LUA_FILE_NOT_FOUND",	1302);
 
 	// LDT errors.
-	// @TO-DO
 	// Currently server does not return LDT errors as a error 
 	// code, but returns as a string with message and status code.
 	// The error message are parsed and populated into 
