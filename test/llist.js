@@ -53,7 +53,6 @@ describe('client.LargeList()', function(done) {
 	// Get a largelist object from client.
 	var listkey = {ns: options.namespace, set: options.set, key: "ldt_list_key"}
 	var writepolicy = { timeout: 1000, key: policy.key.SEND, commitLevel: policy.commitLevel.ALL};
-	//var args = { key: listkey, binName: "ldt_list_bin", writePolicy: writepolicy}
 	var LList = client.LargeList(listkey, "ldt_list_bin", writepolicy);
 
     before(function(done) {
@@ -184,7 +183,7 @@ describe('client.LargeList()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			//verify the inserted element in the list.
-			LList.range("arraybytesvalue", "arraystrvalue", function(err, val) {
+			LList.findRange("arraybytesvalue", "arraystrvalue", function(err, val) {
 				expect(err).to.be.ok();
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
 				expect(val[0].value).to.eql(valList[0]);
@@ -196,38 +195,17 @@ describe('client.LargeList()', function(done) {
 			});
 		});
 	});
-	it('should verify the add API of LList which takes variable number of arguments', function(done) {
-		var mgen       = valgen.map();
-		var agen	   = valgen.array();
-		var igen       = valgen.integer();
-		var sgen       = valgen.string();
-		var bgen       = valgen.bytes();
-		var valList	   = [ bgen(), igen(), agen(), mgen(), sgen()]
-
-		var bytesval   = {"key": "varbytesvalue", "value" : valList[0]};
-		var integerval = {"key": "varintvalue",   "value" : valList[1]};
-		var arrayval   = {"key": "varlistvalue",  "value" : valList[2]}; 
-		var mapval     = {"key": "varmapvalue",   "value" : valList[3]};
-		var stringval  = {"key": "varstrvalue",	  "value" : valList[4]};
-		
-		LList.add(mapval, arrayval, bytesval, stringval, integerval, function(err, retVal){
+	it('should verify that passing wrong number of arguments to add API fails gracefully', function(done) {
+		var igen = valgen.integer();
+		var listval  = igen();
+		var intval = {"key":"intvalue", "value": listval}
+		LList.add(intval, undefined, function(err, retVal){
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			//verify the inserted element in the list.
-			LList.range("varbytesvalue", "varstrvalue", function(err, val) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				// LList is a sorted list. So key with bytesvalue appears on top of the list.
-				var returnVal = val[0].value
-				expect(val[0].value).to.eql(valList[0]);
-				expect(val[1].value).to.equal(valList[1]);
-				expect(val[2].value).to.eql(valList[2]);
-				expect(val[3].value).to.eql(valList[3]);
-				expect(val[4].value).to.equal(valList[4]);
-				done();
-			});
+			expect(err.func).to.equal('add ');
+			done();
 		});
 	});
+
 	it('should update an element in the LList ', function(done) {
 		var igen = valgen.integer();
 		var listval  = igen();
@@ -266,7 +244,7 @@ describe('client.LargeList()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			//verify the updated elements in the list.
-			LList.range("arraybytesvalue", "arraystrvalue", function(err, val) {
+			LList.findRange("arraybytesvalue", "arraystrvalue", function(err, val) {
 				expect(err).to.be.ok();
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
 				expect(val[0].value).to.eql(valList[0]);
@@ -278,39 +256,17 @@ describe('client.LargeList()', function(done) {
 			});
 		});
 	});
-	it('should verify the update API of LList which takes variable number of arguments', function(done) {
-		var mgen       = valgen.map();
-		var agen	   = valgen.array();
-		var igen       = valgen.integer();
-		var sgen       = valgen.string();
-		var bgen       = valgen.bytes();
-		var valList	   = [ bgen(), igen(), agen(), mgen(), sgen()]
-
-		var bytesval   = {"key": "varbytesvalue", "value" : valList[0]};
-		var integerval = {"key": "varintvalue",   "value" : valList[1]};
-		var arrayval   = {"key": "varlistvalue",  "value" : valList[2]}; 
-		var mapval     = {"key": "varmapvalue",   "value" : valList[3]};
-		var stringval  = {"key": "varstrvalue",	  "value" : valList[4]};
-	
-		// update all the above elements in the list.
-		LList.update(mapval, arrayval, bytesval, stringval, integerval, function(err, retVal){
+	it('should verify that passing wrong number of arguments to update API fails gracefully', function(done) {
+		var igen = valgen.integer();
+		var listval  = igen();
+		var intval = {"key":"intvalue", "value": listval}
+		LList.update(intval, undefined, function(err, retVal){
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			//verify the updated element in the list.
-			LList.range("varbytesvalue", "varstrvalue", function(err, val) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				// LList is a sorted list. So key with bytesvalue appears on top of the list.
-				var returnVal = val[0].value
-				expect(val[0].value).to.eql(valList[0]);
-				expect(val[1].value).to.equal(valList[1]);
-				expect(val[2].value).to.eql(valList[2]);
-				expect(val[3].value).to.eql(valList[3]);
-				expect(val[4].value).to.equal(valList[4]);
-				done();
-			});
+			expect(err.func).to.equal('update ');
+			done();
 		});
 	});
+
 	it('should verify the find API of LList -finds an existing element', function(done) {
 		//find an element in the list.
 		LList.find({"key":"intvalue"}, function(err, val) {
@@ -324,13 +280,14 @@ describe('client.LargeList()', function(done) {
 		//find an element in the list.
 		LList.find({"key":"novalue"}, function(err, val) {
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+			expect(err.code).to.equal(status.AEROSPIKE_ERR_LDT_NOT_FOUND);
 			done();
 		});
 	})
+
 	it('should verify the range API of LList- expected to find existing elements', function(done) {
 		
-		LList.range("varbytesvalue", "varstrvalue", function(err, val) {
+		LList.findRange("arraybytesvalue", "arraystrvalue", function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val.length).to.equal(5);
@@ -339,7 +296,7 @@ describe('client.LargeList()', function(done) {
 	});
 	it('should verify the range API of LList- expected to not find any elements', function(done) {
 		
-		LList.range("zbytesvalue", "zstrvalue", function(err, val) {
+		LList.findRange("zbytesvalue", "zstrvalue", function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val.length).to.eql(0);
@@ -351,7 +308,15 @@ describe('client.LargeList()', function(done) {
 		LList.size(function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(val).to.equal(15);
+			expect(val).to.equal(10);
+			done();
+		});
+	});
+	it('should verify that size API fails gracefully when passing wrong number of arguments', function(done) {
+		
+		LList.size(2, function(err, val) {
+			expect(err).to.be.ok();
+			expect(err.func).to.equal('size ');
 			done();
 		});
 	});
@@ -369,15 +334,38 @@ describe('client.LargeList()', function(done) {
 			});
 		});
 	});
+	it('should verify the getCapacity and setCapacity API fails gracefully when wrong number of arguments are passed', function(done) {
+	
+		var capacity = 25;
+		LList.setCapacity(capacity, 24, function(err, val) {
+			expect(err).to.be.ok();
+			expect(err.func).to.equal('setCapacity ');
+			LList.getCapacity(3, function(err, val) {
+				expect(err).to.be.ok();
+				expect(err.func).to.equal('getCapacity ');
+				done();
+			});
+		});
+	});
+
 	it('should verify the scan API of LList ', function(done) {
 		
 		LList.scan(function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(val.length).to.equal(15);
+			expect(val.length).to.equal(10);
 			done();
 		});
 	});
+	it('should verify the scan API fails gracefully when wrong number of arguments are passed', function(done) {
+		
+		LList.scan("scan", function(err, val) {
+			expect(err).to.be.ok();
+			expect(err.func).to.equal('scan ');
+			done();
+		});
+	});
+
 	it('should remove an element from the LList ', function(done) {
 		var intval = {"key":"intvalue"}
 		// remove the integer value into the list.
@@ -387,11 +375,11 @@ describe('client.LargeList()', function(done) {
 			//verify the removed element in the list.
 			LList.find({"key":"intvalue"}, function(err, val) {
 				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+				expect(err.code).to.equal(status.AEROSPIKE_ERR_LDT_NOT_FOUND);
 				LList.size(function(err, val){
 					expect(err).to.be.ok();
 					expect(err.code).to.equal(status.AEROSPIKE_OK);
-					expect(val).to.equal(14);
+					expect(val).to.equal(9);
 					done();
 				});
 			});
@@ -411,40 +399,26 @@ describe('client.LargeList()', function(done) {
 			LList.size(function(err, val){
 				expect(err).to.be.ok();
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				expect(val).to.equal(10);
+				expect(val).to.equal(5);
 				done();
 			})
 		});
 	});
-	it('should verify the remove API of LList which takes variable number of arguments', function(done) {
-		var bytesval   = {"key": "varbytesvalue"};
-		var integerval = {"key": "varintvalue"};
-		var arrayval   = {"key": "varlistvalue"}; 
-		var mapval     = {"key": "varmapvalue"};
-		var stringval  = {"key": "varstrvalue"};
-		
-		LList.remove(mapval, arrayval, bytesval, stringval, integerval, function(err, retVal){
+	it('should verify remove API fails when invalid number of arguments are passed', function(done) {
+	
+		// remove an array of elements from the list.
+		LList.remove("list", 123, function(err, retVal){
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			//verify the removed elements from the list.
-			LList.range("varbytesvalue", "varstrvalue", function(err, val) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				expect(val.length).to.equal(0);
-				LList.size(function(err, val){
-					expect(err).to.be.ok();
-					expect(err.code).to.equal(status.AEROSPIKE_OK);
-					expect(val).to.equal(5);
-					done();
-				});
-			});
+			expect(err.func).to.equal('remove ');
+			done();
 		});
 	});
-	it('should verify rangeRemove API of LList ', function(done) {
+
+	it('should verify removing a range of values in LList ', function(done) {
 		LList.removeRange("arraybytesvalue", "arraystrvalue", function(err, retVal){
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			LList.range("arraybytesvalue", "arraystrvalue", function(err, val) {
+			LList.findRange("arraybytesvalue", "arraystrvalue", function(err, val) {
 				expect(err).to.be.ok();
 				expect(err.code).to.equal(status.AEROSPIKE_OK);
 				expect(val.length).to.equal(0);
@@ -457,4 +431,13 @@ describe('client.LargeList()', function(done) {
 			});
 		});
 	});
+	it('should verify removeRange API fails when invalid number of arguments are passed', function(done) {
+	
+		LList.removeRange("list", 123, 345, function(err, retVal){
+			expect(err).to.be.ok();
+			expect(err.func).to.equal('removeRange ');
+			done();
+		});
+	});
+
 });

@@ -23,25 +23,22 @@ var llist	  = client.LargeList(key, binName, policy);
 
 - [add(value)](#add)
 - [add([values])](#addArray)
-- [add(val1, val2, ...)](#addMany)
 - [destroy()](#destroy)
 - [filter()](#filter)
-- [find()](#find)
-- [findThenFilter()](#findThenFilter)
+- [find(key)](#find)
+- [find(key, filter)](#findThenFilter)
 - [getCapacity()](#getCapacity)
 - [getConfig()](#getConfig)
-- [range()](#range)
-- [rangeFilter()](#rangeFilter)
+- [findRange(begin, end)](#range)
+- [findRange(begin, end, filter)](#rangeThenFilter)
 - [remove(value)](#remove)
 - [remove([values])](#removeArray)
-- [remove(val1, val2, val3, ...)](#removeMany)
-- [removeRange()](#rangeRemove)
+- [removeRange(begin, end)](#removeRange)
 - [scan()](#scan)
 - [setCapacity()](#setCapacity)
 - [size()](#size)
 - [update(value)](#update)
 - [update([values])](#updateArray)
-- [update(val1, val2, val3, ...)](#updateMany)
 
 <a name="methods"></a>
 ##Methods
@@ -117,41 +114,6 @@ llist.add(valArray, function(err, res){
 
 <!--
 ################################################################################
-add(values, ...)
-################################################################################
--->
-
-<a name="addMany"></a>
-
-###add([values], callback)
-Add values to list. Fail if value's key exists and list is configured for unique keys. If value is a map, 
-the key is identified by "key" entry. Otherwise, the value is the key. If large list does not exist, 
-create it using specified userModule configuration.
-
-Parameters:
-
-- `values`   - Values to add
-- `callback`- The function to call when the operation completes with the results of the operation.
-
-The parameters for `callback` argument:
-
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`  - The value returned from by the LDT function `add`.
-
-Example:
-```js
-var val1 = {"key":"ldt_key", "value":"ldtvalue"};
-var val2 = {"key":"ldt_array", "value":"ldtarrayvalue"}
-llist.add(val1, val2, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
-		//signals error.
-});
-
-```
-<!--
-################################################################################
 update(value)
 ################################################################################
 -->
@@ -210,41 +172,6 @@ Example:
 ```js
 var valArray = [ {"key":"ldt_key", "value":"ldtupdatevalue"}, {"key":"ldt_array", "value":"ldtarrayupdatedvalue"}]
 llist.update(valArray, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
-		//signals error.
-});
-
-```
-<!--
-################################################################################
-udpate(values, ...)
-################################################################################
--->
-
-<a name="updateMany"></a>
-
-###update(values..., callback)
-
-Update/Add each value depending if key exists or not. If value is a map, the key is identified by "key" entry. 
-Otherwise, the value is the key. If large list does not exist, create it using specified userModule configuration.
-
-Parameters:
-
-- `values`   - Values to update
-- `callback`- The function to call when the operation completes with the results of the operation.
-
-The parameters for `callback` argument:
-
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`  - The value returned from by the LDT function `add`.
-
-Example:
-```js
-var val1 = {"key":"ldt_key", "value":"ldtupdatedvalue"};
-var val2 = {"key":"ldt_array", "value":"ldtarrayupdatedvalue"}
-llist.update(val1, val2, function(err, res){
 	//check for err.code
 	if(err.code != aerospike.status.AEROSPIKE_OK) 
 		//signals error.
@@ -313,44 +240,10 @@ llist.remove(valArray, function(err, res){
 });
 
 ```
-<!--
-################################################################################
-remove(values, ...)
-################################################################################
--->
-
-<a name="removeMany"></a>
-
-###remove(values..., callback)
-
-Delete values from list.
-
-Parameters:
-
-- `values`   - Values to delete
-- `callback`- The function to call when the operation completes with the results of the operation.
-
-The parameters for `callback` argument:
-
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`  - The value returned from by the LDT function `add`.
-
-Example:
-```js
-var val1 = {"key":"ldt_key" };
-var val2 = {"key":"ldt_array" }
-llist.remove(val1, val2, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
-		//signals error.
-});
-
-```
 
 <!--
 ################################################################################
-removeRange()
+removeRange(begin, end)
 ################################################################################
 -->
 
@@ -414,7 +307,7 @@ llist.find("search_key", function(err, res){
 
 <!--
 ################################################################################
-findThenFilter()
+find(val, filter)
 ################################################################################
 -->
 
@@ -426,7 +319,7 @@ Select values from list and apply  specified Lua filter.
 
 Parameters:
 - `value`   - value to select.
-- `udfArgs` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying LUA file, function 
+- `filter` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying LUA file, function 
 	          and arguments to Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
@@ -438,8 +331,8 @@ The parameters for `callback` argument:
 
 Example:
 ```js
-var udfargs =  { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
-llist.find("search_key", udfagrs, function(err, res){
+var filter =  { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
+llist.find("search_key", filter, function(err, res){
 	//check for err.code
 	if(err.code != aerospike.status.AEROSPIKE_OK) 
 		//signals error.
@@ -449,7 +342,7 @@ llist.find("search_key", udfagrs, function(err, res){
 
 <!--
 ################################################################################
-range()
+findRange()
 ################################################################################
 -->
 
@@ -482,20 +375,20 @@ llist.range("begin", "end", function(err, res){
 
 <!--
 ################################################################################
-rangeThenFilter()
+findRange(begin, end, filter)
 ################################################################################
 -->
 
 <a name="rangeThenFilter"></a>
 
-###range(begin, end, udfArgs, callback)
+###range(begin, end, filter, callback)
 
 Select a range of values from the large list, then apply a Lua filter.
 
 Parameters:
 - `begin` - low value of the range (inclusive).
 - `end`   - high value of the range (inclusive).
-- `udfArgs`- A [UDFArgs object](datamodel.md#UDFArgs) used for specifying the Lua file, function
+- `filter`- A [UDFArgs object](datamodel.md#UDFArgs) used for specifying the Lua file, function
 			 and arguments to the Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
@@ -508,8 +401,8 @@ The parameters for `callback` argument:
 Example:
 ```js
 
-var udfargs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
-llist.range("begin", "end", udfargs, function(err, res){
+var filter = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
+llist.range("begin", "end", filter, function(err, res){
 	//check for err.code
 	if(err.code != aerospike.status.AEROSPIKE_OK) 
 		//signals error.

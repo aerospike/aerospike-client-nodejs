@@ -117,13 +117,7 @@ config = {
 
 };
 
-/*******************************************************************************
- *
- * Establish a connection to the cluster.
- * 
- ******************************************************************************/
-
-var checkError = function(err, msg, retVal) {
+var checkError = function(err, msg) {
 	if(err.code != Status.AEROSPIKE_OK) {
 		console.log(err);
 	}
@@ -133,118 +127,6 @@ var checkError = function(err, msg, retVal) {
 	}
 }
 
-var destroyList = function(list) {
-	list.destroy(function(err, val) {
-		checkError(err, "The list is destroyed");
-	});
-}
-
-var updateSingleValue = function(list) {
-	var updateVal = "listvalupdated";
-	list.update(updateVal, function(err, retVal){
-		checkError( err, "Updated a single value ");	
-		findEntry(list);
-	});
-}
-
-var addSingleValue = function(list) {
-	var val = "listvalsingle";
-	list.add(val, function(err, retVal){
-		checkError( err, "Added a single value ");
-		updateSingleValue(list);
-	});
-}
-
-var updateArrayValue = function(list) {
-	var val = ["listupdate1", "listupdate2", "listupdate3", "listupdate4", "listupdate5"];
-	list.update(val, function(err, val) {
-		checkError(err, "Updated an array of values");
-	});
-}
-
-var addArrayValue = function(list) {
-	var val = ["listadd1", "listadd2", "listadd3", "listadd4", "listadd5"];
-	list.add(val, function(err, retVal){
-		checkError(err, "Added an array of values");
-		updateArrayValue(list);
-	});
-}
-
-var updateVariableLength = function(list) {
-	list.update("listupdate6", "listupdate7", "listupdate8", "listupdate9",
-		function(err, val){
-			checkError(err, "Verified a variable length argument update");
-			getListSize(list);
-			findRangeEntry(list);
-		});
-}
-
-var addVariableLength = function(list) {
-	list.add("listadd6", "listadd7", "listadd8", "listadd9",
-		function(err, val){
-			checkError(err, "Verified a variable length argument add");
-			updateVariableLength(list);
-		});
-}
-
-var scanList = function(list) {
-	list.scan(function(err, val){
-		checkError(err, "Scan Completed", val);
-		console.log("scanned value", val);
-		//destroyList(list);
-	});
-}
-
-var findEntry = function(list) {
-	list.find("listvalsingle", function(err, val){
-		checkError(err, "Find function verified");
-		console.log("value found ", val);
-		removeEntry(list);
-	});
-}
-
-var findRangeEntry = function(list) {
-	list.range("listadd1", "listadd9", function(err, val){
-		checkError(err, "Find Range Entry Verified");
-		console.log(val);
-		removeRangeEntry(list);
-	});
-}
-
-var removeEntry = function(list) {
-	list.remove("listvalsingle", function(err, val){
-		checkError(err, "Remove an entry verified");
-	});
-}
-
-var removeRangeEntry = function(list) {
-	list.removeRange("listadd1", "listadd9", function(err, val){
-		checkError(err, "Remove a range of entries verified");
-		scanList(list);
-	});
-}
-
-var getListSize = function(list) {
-	list.size(function(err, val){
-		checkError(err, "Get size is verified");
-		console.log("The size of the list is ", val);
-	});
-}
-
-var setListCapacity = function(list) {
-	list.setCapacity(20, function(err, val){
-		checkError(err, "Set capacity verified");
-		console.log(val);
-		getListCapacity(list);
-	});
-}
-
-var getListCapacity = function(list) {
-	list.getCapacity(function(err, val){
-		checkError(err, "get capacity verified");
-		console.log(val);
-	});
-}
 /*******************************************************************************
  *
  * Perform the operation
@@ -261,27 +143,28 @@ aerospike.client(config).connect(function (err, client) {
 
 	// Get a largelist object from client.
 	var listkey = {ns: argv.namespace, set: argv.set, key: "ldt_list_key"}
+
 	var policy = { timeout: 1000};
-	//var options = { key: listkey, binName: "ldt_list_bin", writePolicy: policy}
+
     var list = client.LargeList(listkey, "ldt_list_bin", policy);
 
 	// perform all the largelist operations.
 	
 	// add single value to the list.
 	var val = "listvalsingle";
-	list.add(val, function(err, retVal){
+	list.add(val, function(err, val ){
 		checkError( err, "Added a single value ");
 	});
 
 
 	// update single value added to the list.
 	var updateVal = "listvalupdated";
-	list.update(updateVal, function(err, retVal){
+	list.update(updateVal, function(err, val ){
 		checkError( err, "Updated a single value ");	
 	});
 
 	// find an entry in the list.
-	list.find("listvalsingle", "findanotherval", function(err, val){
+	list.find("listvalsingle", function(err, val){
 		checkError(err, "Find function verified");
 		console.log("value found ", val);
 	});
@@ -302,22 +185,9 @@ aerospike.client(config).connect(function (err, client) {
 	list.update(val, function(err, val) {
 		checkError(err, "Updated an array of values");
 	});
-
-	// add many values to the list 
-	list.add("listadd6", "listadd7", "listadd8", "listadd9",
-		function(err, val){
-			checkError(err, "Verified a variable length argument add");
-	});
-
-	// update many values in the list.
-	list.update("listupdate6", "listupdate7", "listupdate8", "listupdate9",
-		function(err, val){
-			checkError(err, "Verified a variable length argument update");
-			getListSize(list);
-	});
-
+	
 	// find a range of entries in the list.
-	list.range("listadd1", "listadd9", function(err, val){
+	list.findRange("listadd1", "listadd9", function(err, val){
 		checkError(err, "Find Range Entry Verified");
 		console.log(val);
 	});
@@ -326,10 +196,16 @@ aerospike.client(config).connect(function (err, client) {
 	list.removeRange("listadd1", "listadd9", function(err, val){
 		checkError(err, "Remove a range of entries verified");
 	});
+
+	// remove an array of values in the list.
+	var val = ["listupdate1", "listupdate2", "listupdate3", "listupdate4", "listupdate5"];
+	list.remove(val, function(err,val) {
+		checkError(err, "Removed an array of values");
+	});
 	
 	// scan the whole llist.
 	list.scan(function(err, val){
-		checkError(err, "Scan Completed", val);
+		checkError(err, "Scan Completed" );
 		console.log("scanned value", val);
 	});
 

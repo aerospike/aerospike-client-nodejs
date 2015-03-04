@@ -51,12 +51,17 @@ Handle<Object> status()
     set(obj, "AEROSPIKE_ERR_NAMESPACE_NOT_FOUND",   20);
     set(obj, "AEROSPIKE_ERR_BIN_NAME",				21);
 	set(obj, "AEROSPIKE_ERR_UDF",					100);
+	set(obj, "AEROSPIKE_ERR_LDT_NOT_FOUND",         125);
 	set(obj, "AEROSPIKE_ERR_UDF_NOT_FOUND",			1301);
 	set(obj, "AEROSPIKE_ERR_LUA_FILE_NOT_FOUND",	1302);
 
 	// LDT errors.
+	// @TO-DO
+	// Currently server does not return LDT errors as a error 
+	// code, but returns as a string with message and status code.
+	// The error message are parsed and populated into 
+	// as_error for the application to use these error codes.
 	set(obj, "AEROSPIKE_ERR_LDT_INTERNAL",          1400);	
-	set(obj, "AEROSPIKE_ERR_LDT_NOT_FOUND",         1401);	
 	set(obj, "AEROSPIKE_ERR_LDT_UNIQUE_KEY",        1402);	
 	set(obj, "AEROSPIKE_ERR_LDT_INSERT",            1403);	
 	set(obj, "AEROSPIKE_ERR_LDT_SEARCH",            1404);	

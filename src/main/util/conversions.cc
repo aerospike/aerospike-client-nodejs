@@ -204,7 +204,6 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 			else
 			{
 				as_v8_debug(log,"Could not find a valid LUA system path %s", syspath);
-				strcpy(config->lua.system_path, "/opt/aerospike/sys/udf/lua");
 			}
 		}
 	}
@@ -498,11 +497,50 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
         return scope.Close(err);
     }
 
-    err->Set(String::NewSymbol("code"), Integer::New(error->code));
-    err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
-    err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
-    err->Set(String::NewSymbol("file"), error->file ? String::NewSymbol(error->file) : Null() );
-    err->Set(String::NewSymbol("line"), error->line ? Integer::New(error->line) : Null() );
+	// LDT error codes are populated as a string message.
+	// Parse the string and populate the error object appropriately 
+	// so that application can look up the error codes and doesn't have
+	// to look at strings.
+	// Check if it's an UDF ERROR and message has string LDT in it
+	// then it implies it is an LDT error, so parse the error 
+	// and populate the error object.
+	if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL)
+	{
+		char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
+		strcpy(err_message, error->message);
+		char *ptr;
+		ptr = strtok(err_message, ":");
+		if(ptr != NULL)
+		{
+			error->file = ptr;
+			ptr = strtok(NULL, ":");
+		}
+		if(ptr != NULL)
+		{
+			error->line =  atoi(ptr);
+			ptr = strtok(NULL, ":");
+		}
+		if(ptr != NULL)
+		{
+			error->code =  (as_status) atoi(ptr);
+			ptr = strtok(NULL, ":");
+		}
+
+		if(ptr != NULL)
+		{
+			strcpy(error->message, ptr);
+			ptr = strtok(NULL, ":");
+		}
+
+		// LDT error does not populate function name as of now.
+		error->func = NULL;
+
+	}
+	err->Set(String::NewSymbol("code"), Integer::New(error->code));
+	err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
+	err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
+	err->Set(String::NewSymbol("file"), error->file ? String::NewSymbol(error->file) : Null() );
+	err->Set(String::NewSymbol("line"), error->line ? Integer::New(error->line) : Null() );
     
     return scope.Close(err);
 }
@@ -1593,9 +1631,7 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 	for ( uint32_t i = 0; i < capacity; i++) {
 		as_val* val = asval_from_jsobject( arr->Get(i), log);
-		if( val->type != AS_NIL) {
-			as_arraylist_append(*udfargs, val);
-		}
+		as_arraylist_append(*udfargs, val);
 	}
 	return AS_NODE_PARAM_OK;
 
