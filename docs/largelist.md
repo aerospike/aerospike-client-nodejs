@@ -13,11 +13,12 @@ var createModule = "ListInitializer"
 var llist	  = client.LargeList(key, binName, policy);
 
 ```
+Parameters:
 
-`key`         - A [Key object](datamodel.md#key), used to locate the record in the cluster.
-`binName`     - Name of the LDT bin. 
-`policy`      - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
-`createModule`- (optional) Lua function name that initializes list configuration parameters, pass null for default list.
+- `key`         - A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `binName`     - Name of the LDT bin. 
+- `policy`      - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
+- `createModule`- (optional) Lua function name that initializes list configuration parameters, pass null for default list.
 
 `LargeList` has following APIs to modify a LargeList in the Aerospike server.
 
