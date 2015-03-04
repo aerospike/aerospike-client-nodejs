@@ -21,7 +21,6 @@ install:
 - cd ../..
 - sleep 3
 script:
-- asinfo -v 'set-config:context=namespace;id=test;ldt-enabled=true'
 - npm install
 - npm test
 notifications:
