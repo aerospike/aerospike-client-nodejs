@@ -249,7 +249,7 @@ removeRange(begin, end)
 
 <a name="removeRange"></a>
 
-###remove(begin, end, callback)
+###removeRange(begin, end, callback)
 
 Delete values from list between a given range.
 
@@ -348,7 +348,7 @@ findRange()
 
 <a name="range"></a>
 
-###range(begin, end, callback)
+###findRange(begin, end, callback)
 
 Select a range of values from the large list.
 
@@ -381,7 +381,7 @@ findRange(begin, end, filter)
 
 <a name="rangeThenFilter"></a>
 
-###range(begin, end, filter, callback)
+###findRange(begin, end, filter, callback)
 
 Select a range of values from the large list, then apply a Lua filter.
 
