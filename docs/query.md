@@ -42,9 +42,9 @@ Statement
   `aggregationUDF` is an instance [udfArgs](datamodel.md#UDFArgs). It is the aggregation UDF to be
    be run on a query resultset.
 
-#### `scanUDF` 
+#### `UDF` 
 
-  `scanUDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
+  `UDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
    in the Aerospike database through a background job.
 
 #### `priority` 
