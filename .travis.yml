@@ -24,5 +24,10 @@ script:
 - npm install
 - npm test
 notifications:
+  email:
+  - qe-notices@aerospike.com
+  hipchat:
+    rooms:
+      secure: C2zSj8z9fdfszR5Xl2Fjdj2Pno/x0Vc8Gl2ba4EiYrgoXNdEV2Cv7Ic3wwYj4giUyzzfeCzQ7FdziidM2WD6MSGkgSOJKqoVzRt7gYH3drABAw29kfyLJN8izN3mOmmLjuDUIBQ5XGrq3AQTKiLuCHVJDWrrGYSJPCkcDU/eo8I=
   slack:
     secure: BMIMHhqOMQnP7STsq/5WDoTKUlvB0pWCn6g6YnqKmVN2v2tMoTIBEmJlleMXBEL+0Ou4dLUmTmQKzzpiAw9tXtvgIjVh3luE+tM2QLJfwLqGshRemqwtF7DSzv5+UYEiZh0g18pQrk3HUJdD7BkU1LKkdjorgxC4rsnt+7Iz8Z0=

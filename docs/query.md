@@ -42,9 +42,9 @@ Statement
   `aggregationUDF` is an instance [udfArgs](datamodel.md#UDFArgs). It is the aggregation UDF to be
    be run on a query resultset.
 
-#### `scanUDF` 
+#### `UDF` 
 
-  `scanUDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
+  `UDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
    in the Aerospike database through a background job.
 
 #### `priority` 
@@ -191,6 +191,7 @@ ScanAggregate()
 ###ScanAggregate
 
 Scan Aggregation executes a Map-Reduce job on all the records in the Aerospike database.
+Scan Aggregation is supported by Aerospike server on versions later than 3.4.1
 The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
 job must be registered prior to using the given UDF in aggregation.
 To do an aggregation on data , the `Query` object has to be instantiated. 
