@@ -150,7 +150,14 @@ static void * prepare(const Arguments& args)
             as_v8_error(log, "apply policy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
-        } 
+        } // LDT operations are executed through same UDF execute code path.
+		// at times LDT can pass undefined value for apply policy.
+		// So handle the undefined scenario.
+		else if( args[UDF_ARG_APOLICY]->IsUndefined())
+		{
+			as_policy_apply_init(policy);
+			as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
+		}
     }
     else {
         // When node application does not pass any apply policy should be 
