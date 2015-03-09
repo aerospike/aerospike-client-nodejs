@@ -199,6 +199,11 @@ static void * prepare(const Arguments& args)
 			scope.Close(Undefined());
 			return data;
         } 
+        else if(args[ipolicy_pos]->IsUndefined())
+        {
+            as_v8_debug(log, "Argument list does not contain infopolicy, default infopolicy will be used");
+            as_policy_info_init(policy);
+        }
     }
     else {
         // When node application does not pass any info policy should be 
