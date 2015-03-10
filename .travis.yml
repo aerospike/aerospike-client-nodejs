@@ -26,6 +26,7 @@ script:
 notifications:
   email:
   - qe-notices@aerospike.com
+  - qe-notices-clients@aerospike.com
   hipchat:
     rooms:
       secure: C2zSj8z9fdfszR5Xl2Fjdj2Pno/x0Vc8Gl2ba4EiYrgoXNdEV2Cv7Ic3wwYj4giUyzzfeCzQ7FdziidM2WD6MSGkgSOJKqoVzRt7gYH3drABAw29kfyLJN8izN3mOmmLjuDUIBQ5XGrq3AQTKiLuCHVJDWrrGYSJPCkcDU/eo8I=
