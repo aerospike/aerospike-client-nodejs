@@ -26,7 +26,7 @@ extern "C" {
     #include <aerospike/as_bin.h>
     #include <aerospike/as_arraylist.h>
 }
-
+#include <inttypes.h>
 #include <node.h>
 #include "client.h"
 #include "conversions.h"
@@ -227,14 +227,14 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 						Local<Value> v8max = filter->Get(String::NewSymbol("max"));
 						int64_t min = 0, max = 0;
 						if( v8min->IsNumber()) {
-							min = v8min->IntegerValue();
+							min = v8min->NumberValue();
 						}
 						else {
 							as_v8_error(log, "The range value passed must be an integer");
 							break;
 						}
 						if( v8max->IsNumber()){
-							max = v8max->IntegerValue();
+							max = v8max->NumberValue();
 						}
 						else {
 							as_v8_error(log, "The range value passed must be an integer");
@@ -249,9 +249,9 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 						as_index_datatype type = (as_index_datatype)filter->Get(String::NewSymbol("type"))->ToObject()->IntegerValue();
 						if( type == AS_INDEX_NUMERIC) 
 						{
-							int val = filter->Get(String::NewSymbol("val"))->ToObject()->IntegerValue();
+							int64_t val = filter->Get(String::NewSymbol("val"))->ToObject()->NumberValue();
 							as_query_where( query, bin_name, as_integer_equals(val));
-							as_v8_debug(log," Integer equality predicate %d", val);
+							as_v8_debug(log," Integer equality predicate %llu", val);
 							break;
 						}
 						else if(type == AS_INDEX_STRING)
