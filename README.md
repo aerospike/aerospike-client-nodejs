@@ -324,7 +324,17 @@ Aerospike C client. The `<PATH>` must be the path to a directory containing
 The following is an example of specifying the path to the Aerospike C client 
 build directory:
 
-    $ PREFIX=~/aerospike-client-c/target/Linux-x86_64 npm install
+    $ export PREFIX=~/aerospike-client-c/target/Linux-x86_64 
+
+When Aerospike C Client is resolved through the environment variable PREFIX,
+the location to lua files that comes with C client installation must also be specified.
+Specifying lua file location is done using environment variable `AEROSPIKE_LUA_PATH=<PATH>`. 
+The `<PATH>` must be a path to a directory containing files `aerospike.lua` and `as.lua`.
+
+The following is an example of specifying `AEROSPIKE_LUA_PATH` and then installing.
+
+	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/sys/udf/lua/
+	$ npm install
 
 <a name="Tests"></a>
 ## Tests

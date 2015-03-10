@@ -10,7 +10,7 @@ var filter = aerospike.filter
 var filters = [
   op.append('a', 'hello'),
   op.append('a', 'world'),
-  op.increment('b',10),
+  op.incr('b',10),
   op.read('a'),
   op.read('b')
 ]
@@ -49,7 +49,7 @@ increment()
 -->
 <a name="increment"></a>
 
-### increment(bin, value)
+### incr(bin, value)
 
 Add the value to the bin. The bin must contain an Integer.
 
@@ -59,7 +59,7 @@ Parameters:
 - `value`       – The value to increment the bin by.
 
 ```js
-op.increment('b', 10)
+op.incr('b', 10)
 ```
 
 <!--

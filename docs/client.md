@@ -16,8 +16,8 @@ which needs to be populated and passed to `aerospike.client()`.
 With a new client, you can use any of the methods specified below:
 
 - [Methods](#methods)
-  - [batch_exists()](#batch_exists)
-  - [batch_get()](#batch_get)
+  - [batchExists()](#batchExists)
+  - [batchGet()](#batchGet)
   - [close()](#close)
   - [connect()](#connect)
   - [createIntegerIndex()](#createIntegerIndex)
@@ -43,10 +43,10 @@ With a new client, you can use any of the methods specified below:
 
 <!--
 ################################################################################
-batch_exists()
+batchExists()
 ################################################################################
 -->
-<a name="batch_exists"></a>
+<a name="batchExists"></a>
 
 ### batchExists(keys, policy=null, callback)
 
@@ -97,10 +97,10 @@ client.batchExists(keys, function(error, results) {
 
 <!--
 ################################################################################
-batch_get()
+batchGet()
 ################################################################################
 -->
-<a name="batch_get"></a>
+<a name="batchGet"></a>
 
 ### batchGet(keys, policy=null, callback)
 
