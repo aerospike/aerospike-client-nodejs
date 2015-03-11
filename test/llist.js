@@ -54,12 +54,26 @@ describe('client.LargeList()', function(done) {
 	var listkey = {ns: options.namespace, set: options.set, key: "ldt_list_key"}
 	var writepolicy = { timeout: 1000, key: policy.key.SEND, commitLevel: policy.commitLevel.ALL};
 	var LList = client.LargeList(listkey, "ldt_list_bin", writepolicy);
-
+	var ldtEnabled = true;
     before(function(done) {
 		client.connect(function(err){
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			done();
+			var ns = "namespace/" + options.namespace.toString();
+			client.info( ns, {addr:options.host, port: options.port}, 
+					function(err, response, host){
+					var nsConfig = response.split(";")
+					for (var i = 0; i < nsConfig.length; i++)
+					{
+						if(nsConfig[i].search("ldt-enabled=false") >= 0)
+						{
+							ldtEnabled = false;
+							console.log("Skipping LDT test cases");
+							break;
+						}
+					}
+					done();
+			});
 		});
     });
 
@@ -67,16 +81,25 @@ describe('client.LargeList()', function(done) {
 		// LList used in this test case is destructed here. The list will not be available after destroying
 		// the list.
 		LList.destroy(function(err, val) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			client.close();
-			client = null;
-			done();
+			if(ldtEnabled)
+			{
+				expect(err).to.be.ok();
+				expect(err.code).to.equal(status.AEROSPIKE_OK);
+				client.close();
+				client = null;
+				done();
+			}
+			else
+			{
+				done();
+			}
 		});
 
     });
 
 	it('should add an element of type integer to the LList ', function(done) {
+		if(ldtEnabled) 
+		{
 		var igen = valgen.integer();
 		var listval  = igen();
 		var intval = {"key":"intvalue", "value": listval}
@@ -92,8 +115,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should add an element of type string to the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var sgen = valgen.string();
 		var listval =  sgen();
 		var strval = {"key": "stringvalue", "value" : listval};
@@ -109,8 +139,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should add an element of type bytes to the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var bgen = valgen.bytes();
 		var listval =  bgen();
 		var bytesval = {"key": "bytesvalue", "value" : listval};
@@ -126,8 +163,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should add an element of type array to the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var agen = valgen.array();
 		var listval =  agen();
 		var bytesval = {"key": "arrayvalue", "value" : listval};
@@ -143,8 +187,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should add an element of type map to the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var mgen    = valgen.map();
 		var listval =  mgen();
 		var mapval  = {"key": "mapvalue", "value" : listval};
@@ -160,8 +211,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should add an array of values to LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var mgen       = valgen.map();
 		var agen	   = valgen.array();
 		var igen       = valgen.integer();
@@ -194,8 +252,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify that passing wrong number of arguments to add API fails gracefully', function(done) {
+		if(ldtEnabled)
+		{
 		var igen = valgen.integer();
 		var listval  = igen();
 		var intval = {"key":"intvalue", "value": listval}
@@ -204,9 +269,16 @@ describe('client.LargeList()', function(done) {
 			expect(err.func).to.equal('add ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 
 	it('should update an element in the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var igen = valgen.integer();
 		var listval  = igen();
 		var intval = {"key":"intvalue", "value": listval}
@@ -222,8 +294,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should update an array of values in the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var mgen       = valgen.map();
 		var agen	   = valgen.array();
 		var igen       = valgen.integer();
@@ -255,8 +334,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify that passing wrong number of arguments to update API fails gracefully', function(done) {
+		if(ldtEnabled)
+		{
 		var igen = valgen.integer();
 		var listval  = igen();
 		var intval = {"key":"intvalue", "value": listval}
@@ -265,9 +351,16 @@ describe('client.LargeList()', function(done) {
 			expect(err.func).to.equal('update ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 
 	it('should verify the find API of LList -finds an existing element', function(done) {
+		if(ldtEnabled)
+		{
 		//find an element in the list.
 		LList.find({"key":"intvalue"}, function(err, val) {
 			expect(err).to.be.ok();
@@ -275,53 +368,90 @@ describe('client.LargeList()', function(done) {
 			expect(val[0]).to.have.property('value');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the find API of LList -finds a non-existing element and fails', function(done) {
+		if(ldtEnabled)
+		{
 		//find an element in the list.
 		LList.find({"key":"novalue"}, function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_ERR_LDT_NOT_FOUND);
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	})
 
 	it('should verify the range API of LList- expected to find existing elements', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.findRange("arraybytesvalue", "arraystrvalue", function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val.length).to.equal(5);
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the range API of LList- expected to not find any elements', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.findRange("zbytesvalue", "zstrvalue", function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val.length).to.eql(0);
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the size API of LList ', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.size(function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val).to.equal(10);
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify that size API fails gracefully when passing wrong number of arguments', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.size(2, function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.func).to.equal('size ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the getCapacity and setCapacity API of LList ', function(done) {
-	
+		if(ldtEnabled)
+		{
 		var capacity = 25;
 		LList.setCapacity(capacity, function(err, val) {
 			expect(err).to.be.ok();
@@ -333,9 +463,15 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the getCapacity and setCapacity API fails gracefully when wrong number of arguments are passed', function(done) {
-	
+		if(ldtEnabled)
+		{
 		var capacity = 25;
 		LList.setCapacity(capacity, 24, function(err, val) {
 			expect(err).to.be.ok();
@@ -346,27 +482,46 @@ describe('client.LargeList()', function(done) {
 				done();
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 
 	it('should verify the scan API of LList ', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.scan(function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			expect(val.length).to.equal(10);
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify the scan API fails gracefully when wrong number of arguments are passed', function(done) {
-		
+		if(ldtEnabled)
+		{
 		LList.scan("scan", function(err, val) {
 			expect(err).to.be.ok();
 			expect(err.func).to.equal('scan ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 
 	it('should remove an element from the LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var intval = {"key":"intvalue"}
 		// remove the integer value into the list.
 		LList.remove(intval, function(err, retVal){
@@ -384,8 +539,15 @@ describe('client.LargeList()', function(done) {
 				});
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should remove an array of elements from LList ', function(done) {
+		if(ldtEnabled)
+		{
 		var bytesval   = {"key": "bytesvalue"}
 		var stringval  = {"key":"stringvalue"}
 		var arrayval   = {"key": "arrayvalue"}
@@ -403,18 +565,31 @@ describe('client.LargeList()', function(done) {
 				done();
 			})
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify remove API fails when invalid number of arguments are passed', function(done) {
-	
+		if(ldtEnabled)
+		{
 		// remove an array of elements from the list.
 		LList.remove("list", 123, function(err, retVal){
 			expect(err).to.be.ok();
 			expect(err.func).to.equal('remove ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 
 	it('should verify removing a range of values in LList ', function(done) {
+		if(ldtEnabled)
+		{
 		LList.removeRange("arraybytesvalue", "arraystrvalue", function(err, retVal){
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -430,14 +605,24 @@ describe('client.LargeList()', function(done) {
 				});
 			});
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
 	it('should verify removeRange API fails when invalid number of arguments are passed', function(done) {
-	
+		if(ldtEnabled)
+		{
 		LList.removeRange("list", 123, 345, function(err, retVal){
 			expect(err).to.be.ok();
 			expect(err.func).to.equal('removeRange ');
 			done();
 		});
+		}
+		else
+		{
+			done();
+		}
 	});
-
 });
