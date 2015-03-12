@@ -124,10 +124,15 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     }
     if (args[0]->IsObject() ) {
+		// parse the config object here. If parsing is successful then
+		// create an aerospike object. Else return null and fail here.
+		// This is done here because there's no way to recognize a Null value 
+		// returned(when an error happens) from New AerospikeClient::New().
         int parseConfig = config_from_jsobject(&config, args[0]->ToObject(), client->log);   
-		if(parseConfig != AS_NODE_PARAM_OK)
+		if( parseConfig != AS_NODE_PARAM_OK)
 		{
-			as_v8_error(log, "Parsing config object failed");
+			scope.Close(Undefined());
+			return Null();
 		}
     }
 
@@ -151,19 +156,13 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
 
     Handle<Value> argv[argc] = { args[0] };
 
+    Local<Object> instance = constructor->NewInstance(argc, argv);
 
-	// parse the config object here. If parsing is successful then
-	// create an aerospike object. Else return null and fail here.
-	as_config config;
-	as_config_init(&config);
-	int parseConfig = config_from_jsobject(&config, args[0]->ToObject(), NULL);
-
-	if( parseConfig == AS_NODE_PARAM_ERR)
+	if( instance->IsNull())
 	{
+		scope.Close(Undefined());
 		return Null();
 	}
-
-    Local<Object> instance = constructor->NewInstance(argc, argv);
 
 	return scope.Close(instance);
 }

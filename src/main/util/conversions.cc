@@ -242,29 +242,25 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	{
 		if(!obj->Has(String::NewSymbol("password")))
 		{
-			printf("Cannot see password \n");
-			as_v8_debug(log, "Password must be passed with username for connecting to secure cluster");
+			as_v8_error(log, "Password must be passed with username for connecting to secure cluster");
 			return AS_NODE_PARAM_ERR;
 		}
 		Local<Value> v8usr = obj->Get(String::NewSymbol("user"));
 		Local<Value> v8pwd = obj->Get(String::NewSymbol("password"));
 		if(!(v8usr->IsString()))
 		{
-			printf("Username is not string \n");
-			as_v8_debug(log, "Username passed must be string");
+			as_v8_error(log, "Username passed must be string");
 			return AS_NODE_PARAM_ERR;
 		}
 		if(!(v8pwd->IsString()))
 		{
-			printf("Password is not string \n");
-			as_v8_debug(log, "Password passed must be a string");
+			as_v8_error(log, "Password passed must be a string");
 			return AS_NODE_PARAM_ERR;
 		}
 		bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
 		if(!setConfig)
 		{
-			printf("Setting config failed in C client \n");
-			as_v8_debug(log, "Setting config failed");
+			as_v8_error(log, "Setting config failed");
 			return AS_NODE_PARAM_ERR;
 		}
 	}
