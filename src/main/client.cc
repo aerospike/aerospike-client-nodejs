@@ -95,6 +95,7 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     client->as = (aerospike*) cf_malloc(sizeof(aerospike));
     client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
 
+
 	// initialize the log to default values.
     LogInfo * log = client->log;
     log->fd = 2;
@@ -123,7 +124,11 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     }
     if (args[0]->IsObject() ) {
-        config_from_jsobject(&config, args[0]->ToObject(), client->log);   
+        int parseConfig = config_from_jsobject(&config, args[0]->ToObject(), client->log);   
+		if(parseConfig != AS_NODE_PARAM_OK)
+		{
+			as_v8_error(log, "Parsing config object failed");
+		}
     }
 
     aerospike_init(client->as, &config);
@@ -146,9 +151,21 @@ Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
 
     Handle<Value> argv[argc] = { args[0] };
 
+
+	// parse the config object here. If parsing is successful then
+	// create an aerospike object. Else return null and fail here.
+	as_config config;
+	as_config_init(&config);
+	int parseConfig = config_from_jsobject(&config, args[0]->ToObject(), NULL);
+
+	if( parseConfig == AS_NODE_PARAM_ERR)
+	{
+		return Null();
+	}
+
     Local<Object> instance = constructor->NewInstance(argc, argv);
 
-    return scope.Close(instance);
+	return scope.Close(instance);
 }
 
 

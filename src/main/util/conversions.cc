@@ -62,7 +62,6 @@ using namespace v8;
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
-
 int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 {
 
@@ -157,7 +156,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	// If modlua path is passed in config object, set those values here
 	if( obj->Has(String::NewSymbol("modlua")))
 	{
-		Handle<Object> modlua = obj->Get(String::NewSymbol("modlua"))->ToObject();
+		Local<Object> modlua = obj->Get(String::NewSymbol("modlua"))->ToObject();
 
 		if ( modlua->Has(String::NewSymbol("systemPath")))
 		{
@@ -239,7 +238,38 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 	}
 
-return AS_NODE_PARAM_OK;
+	if ( obj->Has(String::NewSymbol("user")))
+	{
+		if(!obj->Has(String::NewSymbol("password")))
+		{
+			printf("Cannot see password \n");
+			as_v8_debug(log, "Password must be passed with username for connecting to secure cluster");
+			return AS_NODE_PARAM_ERR;
+		}
+		Local<Value> v8usr = obj->Get(String::NewSymbol("user"));
+		Local<Value> v8pwd = obj->Get(String::NewSymbol("password"));
+		if(!(v8usr->IsString()))
+		{
+			printf("Username is not string \n");
+			as_v8_debug(log, "Username passed must be string");
+			return AS_NODE_PARAM_ERR;
+		}
+		if(!(v8pwd->IsString()))
+		{
+			printf("Password is not string \n");
+			as_v8_debug(log, "Password passed must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
+		if(!setConfig)
+		{
+			printf("Setting config failed in C client \n");
+			as_v8_debug(log, "Setting config failed");
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+
+	return AS_NODE_PARAM_OK;
 }
 
 int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)

@@ -132,7 +132,13 @@ var checkError = function(err, msg) {
  * Perform the operation
  * 
  ******************************************************************************/
-aerospike.client(config).connect(function (err, client) {
+var client = aerospike.client(config)
+if(client == null)
+{
+	console.error("Error: Client object not initialized");
+	process.exit(1);
+}
+client.connect(function (err, client) {
 
 					
     if ( err.code != Status.AEROSPIKE_OK ) {

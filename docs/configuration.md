@@ -8,6 +8,10 @@ The following is a configuration example and some guidlines on how to configure 
 var aerospike = require('aerospike');
 
 var config = {
+  // username and password must be passed only to cluster with security feature enabled.
+  // security feature is available only in Enterprise edition of Aerospike.
+  user: "username",
+  password: "password",
   hosts: [
     // add three nodes in the cluster.
     { addr: "192.168.0.1", port: 3000 },
@@ -34,6 +38,12 @@ var client = aerospike.client(config);
 The attributes of the configuration are enumerated below.
 
 ## Configuration Attributes
+### `username` attribute
+User authentication to cluster.  Leave empty for clusters running without restricted access.
+
+### `password` Attribute
+Password authentication to cluster.  The password will be stored by the client and sent to
+server in hashed format.  Leave empty for clusters running without restricted access.
 
 ### `hosts` attribute
 

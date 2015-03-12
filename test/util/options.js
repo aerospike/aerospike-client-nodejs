@@ -65,7 +65,17 @@ var parser = yargs
             alias: "s",
             default: "demo",
             describe: "Set for the keys."
-        }
+        },
+		user: {
+			alias: "u",
+			default:"admin",
+			describe: "Username to connect to a secure cluster"
+		},
+		password: {
+			alias: "p",
+			default: "admin",
+			describe: "Password to connect to a secure cluster"
+		}
     });
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv;
