@@ -42,8 +42,8 @@ The attributes of the configuration are enumerated below.
 User authentication to cluster.  Leave empty for clusters running without restricted access.
 
 ### `password` Attribute
-Password authentication to cluster.  The password will be stored by the client and sent to
-server in hashed format.  Leave empty for clusters running without restricted access.
+Password authentication to cluster.  The hashed value of the password will be stored by the client 
+and sent to server in same format.  Leave empty for clusters running without restricted access.
 
 ### `hosts` attribute
 
