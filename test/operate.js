@@ -15,7 +15,7 @@
  ******************************************************************************/
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike');
+var aerospike = require('../lib/aerospike');
 var options = require('./util/options');
 var assert = require('assert');
 var expect = require('expect.js');
