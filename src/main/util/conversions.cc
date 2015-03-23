@@ -66,14 +66,14 @@ using namespace v8;
 int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 {
 
-    Local<Value> hosts = obj->Get(String::NewSymbol("hosts"));
+    Local<Value> hosts = obj->Get(NanNew("hosts"));
 
     if(hosts->IsArray()) {
         Local<Array> hostlist = Local<Array>::Cast(hosts);
         for ( uint32_t i=0; i<hostlist->Length(); i++) {
 
-            Local<Value> addr = hostlist->Get(i)->ToObject()->Get(String::NewSymbol("addr"));
-            Local<Value> port = hostlist->Get(i)->ToObject()->Get(String::NewSymbol("port"));
+            Local<Value> addr = hostlist->Get(i)->ToObject()->Get(NanNew("addr"));
+            Local<Value> port = hostlist->Get(i)->ToObject()->Get(NanNew("port"));
 
 
             if ( addr->IsString() ) {
@@ -100,48 +100,48 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    if ( obj->Has(String::NewSymbol("policies"))){
+    if ( obj->Has(NanNew("policies"))){
 
-        Local<Value> policy_val = obj->Get(String::NewSymbol("policies"));
+        Local<Value> policy_val = obj->Get(NanNew("policies"));
 
         if ( policy_val->IsObject() ){
             Local<Object> policies = policy_val->ToObject();
-            if (policies->Has(String::NewSymbol("timeout"))) {
-                Local<Value> v8timeout = policies->Get(String::NewSymbol("timeout"));
+            if (policies->Has(NanNew("timeout"))) {
+                Local<Value> v8timeout = policies->Get(NanNew("timeout"));
                 config->policies.timeout = V8INTEGER_TO_CINTEGER(v8timeout);
             }
-            if ( policies->Has(String::NewSymbol("read") )){
-                Local<Value> readpolicy = policies->Get(String::NewSymbol("read"));
+            if ( policies->Has(NanNew("read") )){
+                Local<Value> readpolicy = policies->Get(NanNew("read"));
                 if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)  != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(String::NewSymbol("write"))){
-                Local<Value> writepolicy = policies->Get(String::NewSymbol("write"));
+            if ( policies->Has(NanNew("write"))){
+                Local<Value> writepolicy = policies->Get(NanNew("write"));
                 if( writepolicy_from_jsobject(&config->policies.write, writepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(String::NewSymbol("remove"))){
-                Local<Value> removepolicy = policies->Get(String::NewSymbol("remove"));
+            if ( policies->Has(NanNew("remove"))){
+                Local<Value> removepolicy = policies->Get(NanNew("remove"));
                 if( removepolicy_from_jsobject(&config->policies.remove, removepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(String::NewSymbol("batch"))){
-                Local<Value> batchpolicy = policies->Get(String::NewSymbol("batch"));
+            if ( policies->Has(NanNew("batch"))){
+                Local<Value> batchpolicy = policies->Get(NanNew("batch"));
                 if( batchpolicy_from_jsobject(&config->policies.batch, batchpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(String::NewSymbol("operate"))){
-                Local<Value> operatepolicy = policies->Get(String::NewSymbol("operate"));
+            if ( policies->Has(NanNew("operate"))){
+                Local<Value> operatepolicy = policies->Get(NanNew("operate"));
                 if( operatepolicy_from_jsobject(&config->policies.operate, operatepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(String::NewSymbol("info"))){
-                Local<Value> infopolicy = policies->Get(String::NewSymbol("info"));
+            if ( policies->Has(NanNew("info"))){
+                Local<Value> infopolicy = policies->Get(NanNew("info"));
                 if( infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
@@ -155,20 +155,20 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	bool usrpath_set = false;
 
 	// If modlua path is passed in config object, set those values here
-	if( obj->Has(String::NewSymbol("modlua")))
+	if( obj->Has(NanNew("modlua")))
 	{
-		Handle<Object> modlua = obj->Get(String::NewSymbol("modlua"))->ToObject();
+		Handle<Object> modlua = obj->Get(NanNew("modlua"))->ToObject();
 
-		if ( modlua->Has(String::NewSymbol("systemPath")))
+		if ( modlua->Has(NanNew("systemPath")))
 		{
-			Local<Value> v8syspath = modlua->Get(String::NewSymbol("systemPath"));
+			Local<Value> v8syspath = modlua->Get(NanNew("systemPath"));
 			strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
 			as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
 			syspath_set = true;
 		}
-		if( modlua->Has(String::NewSymbol("userPath")))
+		if( modlua->Has(NanNew("userPath")))
 		{
-			Local<Value> v8usrpath = modlua->Get(String::NewSymbol("userPath"));
+			Local<Value> v8usrpath = modlua->Get(NanNew("userPath"));
 			strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
 			as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
 			usrpath_set = true;
@@ -239,13 +239,13 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 	}
 
-return AS_NODE_PARAM_OK;
+	return AS_NODE_PARAM_OK;
 }
 
 int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)
 {
-    if (obj->Has(String::New("addr")) ) {
-        Local<Value> addrVal = obj->Get(String::NewSymbol("addr"));
+    if (obj->Has(NanNew("addr")) ) {
+        Local<Value> addrVal = obj->Get(NanNew("addr"));
         if ( addrVal->IsString() ) {
             *addr = (char*) malloc (HOST_ADDRESS_SIZE);
             strcpy(*addr, *String::Utf8Value(addrVal->ToString()));
@@ -256,8 +256,8 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
         }
     }
 
-    if ( obj->Has(String::New("port")) ){
-        Local<Value> portVal = obj->Get(String::NewSymbol("port"));
+    if ( obj->Has(NanNew("port")) ){
+        Local<Value> portVal = obj->Get(NanNew("port"));
         if ( portVal->IsNumber() ) {
             *port = V8INTEGER_TO_CINTEGER(portVal);
         }
@@ -279,8 +279,8 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
         Local<Object> v8_log = obj->ToObject();
 
         // `level` is optional
-        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(String::New("level")) ) {
-            Local<Value> v8_log_level = v8_log->Get(String::NewSymbol("level"));
+        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(NanNew("level")) ) {
+            Local<Value> v8_log_level = v8_log->Get(NanNew("level"));
             if ( v8_log_level->IsNumber() ){
                 level = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
             }
@@ -294,8 +294,8 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
         }
         
         // `file` is optional
-        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(String::NewSymbol("file"))) {
-            Local<Value> v8_file = obj->Get(String::NewSymbol("file"));
+        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(NanNew("file"))) {
+            Local<Value> v8_file = obj->Get(NanNew("file"));
             if ( v8_file->IsNumber() ) {
                 fd = V8INTEGER_TO_CINTEGER(v8_file);
             }
@@ -489,12 +489,12 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
 
 Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 {
-    HANDLESCOPE;  
-    Local<Object> err = Object::New();
+    NanEscapableScope();  
+    Local<Object> err = NanNew<Object>();
     
     if (error == NULL) {
         as_v8_info(log, "error(C structure) object is NULL, node.js error object cannot be constructed");
-        return scope.Close(err);
+        return NanEscapeScope(err);
     }
 
 	// LDT error codes are populated as a string message.
@@ -536,35 +536,36 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 		error->func = NULL;
 
 	}
-	err->Set(String::NewSymbol("code"), Integer::New(error->code));
-	err->Set(String::NewSymbol("message"), error->message[0] != '\0' ? String::NewSymbol(error->message) : Null() );
-	err->Set(String::NewSymbol("func"), error->func ? String::NewSymbol(error->func) : Null() );
-	err->Set(String::NewSymbol("file"), error->file ? String::NewSymbol(error->file) : Null() );
-	err->Set(String::NewSymbol("line"), error->line ? Integer::New(error->line) : Null() );
+	err->Set(NanNew("code"), NanNew(error->code));
+	err->Set(NanNew("message"), error->message[0] != '\0' ? NanNew(error->message) : NanNew("\0") );
+	err->Set(NanNew("func"), error->func ? NanNew(error->func) : NanNew("\0") );
+	err->Set(NanNew("file"), error->file ? NanNew(error->file) : NanNew("\0") );
+	err->Set(NanNew("line"), error->line ? NanNew(error->line) : NanNew((uint32_t)0) );
     
-    return scope.Close(err);
+    //return NanEscapeScope(err);
+	return NanEscapeScope(err);
 }
 
 
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
-    HANDLESCOPE;
+    NanEscapableScope();
     if ( val == NULL) {
         as_v8_debug(log, "value = NULL"); 
-        return scope.Close(Undefined());
+		return NanEscapeScope(NanNull());
     }
 
     switch ( as_val_type(val) ) {
 		case AS_NIL: {
 			as_v8_detail(log,"value is of type as_null");
-			return scope.Close(Null());
+			return NanEscapeScope(NanNull());
 		}
         case AS_INTEGER : {
             as_integer * ival = as_integer_fromval(val);
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-                return scope.Close(Number::New((double)data));
+				return NanEscapeScope(NanNew((double)data));
             }
         }
         case AS_STRING : {
@@ -572,7 +573,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( sval ) {
                 char * data = as_string_getorelse(sval, NULL);
                 as_v8_detail(log, "value = \"%s\"", data);
-                return scope.Close(String::NewSymbol(data));
+				return NanEscapeScope(NanNew(data));
             }
         }
         case AS_BYTES : {
@@ -589,27 +590,26 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                     size > 2 ? data[2] : 0,
                     size > 3 ? " ..." : ""
                     );
-
                 // this constructor actually copies data into the new Buffer
-                node::Buffer *buff  = node::Buffer::New((char *) data, size);
+				Local<Object> buff = NanNewBufferHandle((char*) data, size);
 
-                return scope.Close(buff->handle_);
+                return NanEscapeScope(buff);
             } 
         }
         case AS_LIST : {
             as_arraylist* listval = (as_arraylist*) as_list_fromval(val);
             int size = as_arraylist_size(listval);
-            Local<Array> jsarray = Array::New(size);
+            Local<Array> jsarray = NanNew<Array>(size);
             for ( int i = 0; i < size; i++ ) {
                 as_val * arr_val = as_arraylist_get(listval, i);
                 Handle<Value> jsval = val_to_jsvalue(arr_val, log);
                 jsarray->Set(i, jsval);
             }
 
-            return scope.Close(jsarray);
+			return NanEscapeScope(jsarray);
         }
         case AS_MAP : {
-            Local<Object> jsobj = Object::New();
+            Local<Object> jsobj = NanNew<Object>();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
             as_hashmap_iterator  it; 
             as_hashmap_iterator_init(&it, map);
@@ -621,26 +621,26 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                 jsobj->Set(val_to_jsvalue(key, log), val_to_jsvalue(val, log));
             }
 
-            return scope.Close(jsobj);
+			return NanEscapeScope(jsobj);
         }
         default:
             break;
     }
-    return scope.Close(Undefined());
+	return NanEscapeScope(NanUndefined());
 }
 
 
 Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 {
-    HANDLESCOPE;
+	NanEscapableScope();
 
     Local<Object> bins ;
     if (record == NULL) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
-        return scope.Close(bins);
+		return NanEscapeScope(bins);
     }
 
-    bins = Object::New();
+    bins = NanNew<Object>();
     as_record_iterator it;
     as_record_iterator_init(&it, record);
 
@@ -649,51 +649,51 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
         char * name = as_bin_get_name(bin);
         as_val * val = (as_val *) as_bin_get_value(bin);
         Handle<Value> obj = val_to_jsvalue(val, log );
-        bins->Set(String::NewSymbol(name), obj);
+        bins->Set(NanNew(name), obj);
 		as_v8_detail(log, "Setting binname %s ", name);
     }
 
-    return scope.Close(bins);
+	return NanEscapeScope(bins);
 }
 
 Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 {
-    HANDLESCOPE;
+    NanEscapableScope();
     Local<Object> meta;
 
     if(record == NULL) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
-        return scope.Close(meta);
+        return NanEscapeScope(meta);
     }
     
-    meta = Object::New();
-    meta->Set(String::NewSymbol("ttl"), Number::New((double)record->ttl));
+    meta = NanNew<Object>();
+    meta->Set(NanNew("ttl"), NanNew((double)record->ttl));
     as_v8_detail(log, "TTL of the record %d", record->ttl);
-    meta->Set(String::NewSymbol("gen"), Integer::New(record->gen));
+    meta->Set(NanNew("gen"), NanNew(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);
 
-    return scope.Close(meta);
+	return NanEscapeScope(meta);
 }
 
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
-    HANDLESCOPE;
+    NanEscapableScope();
     Handle<Object> okey;
 
     if ( record == NULL ) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
-        return scope.Close(okey);
+        return NanEscapeScope(okey);
     }
 
     okey = key_to_jsobject(key ? key : &record->key, log);
     Handle<Object> bins = recordbins_to_jsobject(record, log );
     Handle<Object> meta = recordmeta_to_jsobject(record, log);
-    Local<Object> rec = Object::New();
-    rec->Set(String::NewSymbol("key"), okey);
-    rec->Set(String::NewSymbol("meta"), meta);
-    rec->Set(String::NewSymbol("bins"), bins);
+    Local<Object> rec = NanNew<Object>();
+    rec->Set(NanNew("key"), okey);
+    rec->Set(NanNew("meta"), meta);
+    rec->Set(NanNew("bins"), bins);
 
-    return scope.Close(rec);
+	return NanEscapeScope(rec);
 }
 
 //Forward references;
@@ -775,7 +775,6 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 }
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
@@ -791,7 +790,6 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 		if( value->IsUndefined()) 
 		{
 			as_v8_error(log, "Bin value passed for bin %s is undefined", *String::Utf8Value(name));
-			scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 
@@ -800,7 +798,6 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 
         if( val == NULL) 
         {
-            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
         }
     
@@ -827,22 +824,21 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         }
     }
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 
 int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     setTTL( obj, &rec->ttl, log);
     setGeneration( obj, &rec->gen, log);
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
+
+//@TO-DO - GetIndexedProperties is to be checked
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log)
 {
     if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
@@ -950,29 +946,25 @@ void async_queue_process(AsyncCallbackData * data)
 		if (cf_queue_sz(data->result_q) > data->max_q_size) {
 		
 		}
-		if(data->signal_interval%10000 == 0)
-		{
-			v8::HeapStatistics h = v8::HeapStatistics();
-			v8::V8::GetHeapStatistics(&h);
-		}
+		Local<Function> cb = NanNew<Function>(data->data_cb);
 		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
 		if( rv == CF_QUEUE_OK) {
 			if(as_val_type(val) == AS_REC)
 			{
 				as_record* record = as_record_fromval(val);
-				Handle<Object> jsrecord = Object::New();
-				jsrecord->Set(String::NewSymbol("bins"),recordbins_to_jsobject(record, data->log));
-				jsrecord->Set(String::NewSymbol("meta"),recordmeta_to_jsobject(record, data->log));
-				jsrecord->Set(String::NewSymbol("key"),key_to_jsobject(&record->key, data->log));
+				Handle<Object> jsrecord = NanNew<Object>();
+				jsrecord->Set(NanNew("bins"),recordbins_to_jsobject(record, data->log));
+				jsrecord->Set(NanNew("meta"),recordmeta_to_jsobject(record, data->log));
+				jsrecord->Set(NanNew("key"),key_to_jsobject(&record->key, data->log));
 				as_record_destroy(record);
 				Handle<Value> cbargs[1] = { jsrecord};
-				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
+				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
 			}
 			else
 			{
 				Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
 				as_val_destroy(val);
-				data->data_cb->Call(Context::GetCurrent()->Global(), 1, cbargs);
+				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
 			}
 		}
 	}
@@ -981,7 +973,7 @@ void async_queue_process(AsyncCallbackData * data)
 }
 
 // Callback that gets invoked when an async signal is sent.
-void async_callback(uv_async_t * handle, int status)
+void async_callback(ResolveAsyncCallbackArgs)
 {
 	AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
 
@@ -996,8 +988,8 @@ void async_callback(uv_async_t * handle, int status)
 }
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
-    if ( obj->Has(String::NewSymbol("ttl"))) {
-        Local<Value> v8ttl = obj->Get(String::NewSymbol("ttl")) ;
+    if ( obj->Has(NanNew("ttl"))) {
+        Local<Value> v8ttl = obj->Get(NanNew("ttl")) ;
         if ( v8ttl->IsNumber() ) {
             (*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
         }
@@ -1011,31 +1003,28 @@ int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 
 int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
 {
-    HANDLESCOPE;
 
-    if ( obj->Has(String::NewSymbol("timeout")) ) { 
-        Local<Value> v8timeout = obj->Get(String::NewSymbol("timeout")) ;
+    if ( obj->Has(NanNew("timeout")) ) { 
+        Local<Value> v8timeout = obj->Get(NanNew("timeout")) ;
         if ( v8timeout->IsNumber() ) {
             (*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
             as_v8_detail(log, "timeout value %d", *timeout);
         }
         else {
             as_v8_error(log, "timeout should be an integer");
-            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
         }
     }
 	else {
 		as_v8_detail(log, "Object does not have timeout");
 	}
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 {
-    if ( obj->Has(String::NewSymbol("gen")) ) {
-        Local<Value> v8gen = obj->Get(String::NewSymbol("gen"));
+    if ( obj->Has(NanNew("gen")) ) {
+        Local<Value> v8gen = obj->Get(NanNew("gen"));
         if ( v8gen->IsNumber() ) {
             (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
             as_v8_detail(log, "Generation value %d ", (*generation));
@@ -1051,10 +1040,9 @@ int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 
 int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log ) 
 {
-    HANDLESCOPE;
 
-    if ( obj->Has(String::NewSymbol(policyname)) ) {
-        Local<Value> policy = obj->Get(String::NewSymbol(policyname));
+    if ( obj->Has(NanNew(policyname)) ) {
+        Local<Value> policy = obj->Get(NanNew(policyname));
 
         // Check if node layer is passing a legal integer value
         if (policy->IsNumber()) {
@@ -1063,7 +1051,6 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
         else {    
             as_v8_error(log, "value for %s policy must be an integer", policyname);
             //Something other than expected type which is Number
-            scope.Close(Undefined());
             return AS_NODE_PARAM_ERR;
         }
     }
@@ -1072,21 +1059,17 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
 	}
     // The policyEnumValue will/should be inited to the default value by the caller
     // So, do not change anything if we get an non-integer from node layer
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
 {
-    HANDLESCOPE;
 
     if (setPolicyGeneric(obj, "key", (int *) keypolicy, log) != AS_NODE_PARAM_OK) {
-        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
 
     as_v8_detail(log, "Key policy is set to %d", *keypolicy);
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -1159,8 +1142,8 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     as_policy_info_init(policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    if ( obj->Has(String::NewSymbol("send_as_is")) ) {  
-        Local<Value> v8send_as_is = obj->Get(String::NewSymbol("send_as_is"));
+    if ( obj->Has(NanNew("send_as_is")) ) {  
+        Local<Value> v8send_as_is = obj->Get(NanNew("send_as_is"));
         if ( v8send_as_is->IsBoolean() ) {
             policy->send_as_is = (bool) v8send_as_is->ToBoolean()->Value();
             as_v8_detail(log,"info policy send_as_is is set to %s", policy->send_as_is ? "true":"false");
@@ -1170,8 +1153,8 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
             return AS_NODE_PARAM_ERR;
         }
     }
-    if ( obj->Has(String::NewSymbol("check_bounds")) ) {    
-        Local<Value> v8check_bounds = obj->Get(String::NewSymbol("check_bounds"));
+    if ( obj->Has(NanNew("check_bounds")) ) {    
+        Local<Value> v8check_bounds = obj->Get(NanNew("check_bounds"));
         if ( v8check_bounds->IsBoolean() ) {
             policy->check_bounds = (bool) v8check_bounds->ToBoolean()->Value();
             as_v8_detail(log, "info policy check bounds is set to %s", policy->check_bounds ? "true" : "false");
@@ -1194,7 +1177,6 @@ int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogI
 
 int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     as_policy_operate_init( policy);
 
@@ -1206,33 +1188,29 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
     if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     as_policy_batch_init(policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     as_policy_remove_init(policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 	// only remove policy object has generation field, so directly look up 
 	// the generation field in "obj" argument and set the generation value in policy structure.
-	if ( obj->Has(String::NewSymbol("generation")) ) {
-        Local<Value> v8gen = obj->Get(String::NewSymbol("generation"));
+	if ( obj->Has(NanNew("generation")) ) {
+        Local<Value> v8gen = obj->Get(NanNew("generation"));
         if ( v8gen->IsNumber() ) {
             policy->generation = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
             as_v8_detail(log, "Generation value %d ", policy->generation);
@@ -1252,13 +1230,11 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
 int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
     as_policy_read_init( policy );
 
@@ -1269,7 +1245,6 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
 	
     as_v8_detail(log, "Parsing read policy : success");
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -1291,7 +1266,6 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
 
 int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo* log)
 {
-    HANDLESCOPE;
 
 	as_policy_apply_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -1300,20 +1274,17 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
 
 	as_v8_detail( log, "Parsing apply policy : success");
     
-    scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
 }
 
 int querypolicy_from_jsobject( as_policy_query* policy, Local<Object> obj, LogInfo* log)
 {
-    HANDLESCOPE;
 
 	as_policy_query_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
 	as_v8_detail( log, "Parsing query policy : success");
     
-    scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1322,8 +1293,8 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
 	as_policy_scan_init( policy);
 	if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    if ( obj->Has(String::NewSymbol("failOnClusterChange")) ) {  
-        Local<Value> failOnClusterChange = obj->Get(String::NewSymbol("failOnClusterChange"));
+    if ( obj->Has(NanNew("failOnClusterChange")) ) {  
+        Local<Value> failOnClusterChange = obj->Get(NanNew("failOnClusterChange"));
         if ( failOnClusterChange->IsBoolean() ) {
             policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
             as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
@@ -1340,21 +1311,21 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
 
 Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
-    HANDLESCOPE;
+    NanEscapableScope();
     Local<Object> obj;
     if (key == NULL) {
-        return scope.Close(obj);
+        return NanEscapeScope(obj);
     }
 
-    obj = Object::New();
+    obj = NanNew<Object>();
     if ( key->ns && strlen(key->ns) > 0 ) {
         as_v8_debug(log, "key.ns = \"%s\"", key->ns);
-        obj->Set(String::NewSymbol("ns"), String::NewSymbol(key->ns));
+        obj->Set(NanNew("ns"), NanNew(key->ns));
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
         as_v8_debug(log, "key.set = \"%s\"", key->set);
-        obj->Set(String::NewSymbol("set"), String::NewSymbol(key->set));
+        obj->Set(NanNew("set"), NanNew(key->set));
     }
 
     if ( key->valuep ) {
@@ -1364,23 +1335,22 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
             case AS_INTEGER: {
                 as_integer * ival = as_integer_fromval(val);
                 as_v8_debug(log, "key.key = %d", as_integer_get(ival));
-                obj->Set(String::NewSymbol("key"), Number::New(as_integer_get(ival)));
+                obj->Set(NanNew("key"), NanNew((double)as_integer_get(ival)));
                 break;
             }
             case AS_STRING: {
                 as_string * sval = as_string_fromval(val);
                 as_v8_debug(log, "key.key = \"%s\"", as_string_get(sval));
-                obj->Set(String::NewSymbol("key"), String::NewSymbol(as_string_get(sval)));
+                obj->Set(NanNew("key"), NanNew(as_string_get(sval)));
                 break;
             }
             case AS_BYTES: {
                as_bytes * bval = as_bytes_fromval(val);
                if ( bval ) {
-                   int size = as_bytes_size(bval);
+                   uint32_t size = as_bytes_size(bval);
                    as_v8_debug(log,"key.key = \"%u\"", bval->value);
-                   Buffer * buf = Buffer::New(size);
-                   memcpy(node::Buffer::Data(buf), bval->value, size);
-                   obj->Set(String::NewSymbol("key"), buf->handle_);
+				   Local<Object> buff = NanNewBufferHandle((char*)bval->value, size);
+                   obj->Set(NanNew("key"), buff);
                    break;
                }
             }
@@ -1390,40 +1360,35 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     }
 
 	if(key->digest.init == true) {
-		Buffer * buf = Buffer::New(AS_DIGEST_VALUE_SIZE);
-		memcpy(Buffer::Data(buf), key->digest.value, AS_DIGEST_VALUE_SIZE);
-        obj->Set(String::NewSymbol("digest"), buf->handle_);
+		Local<Object> buff = NanNewBufferHandle((char*)key->digest.value, AS_DIGEST_VALUE_SIZE);
+        obj->Set(NanNew("digest"), buff);
 	}
 
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
 {
-	HANDLESCOPE;
+	NanEscapableScope();
 	Local<Object> scaninfo;
 
     if(info == NULL) {
         as_v8_debug( log, "Scan Info ( C structure) is NULL, cannot form node.js scanInfo object"); 
-        return scope.Close(scaninfo);
+        return NanEscapeScope(scaninfo);
     }
     
-    scaninfo = Object::New();
-    scaninfo->Set(String::NewSymbol("progressPct"), Integer::New(info->progress_pct));
+    scaninfo = NanNew<Object>();
+    scaninfo->Set(NanNew("progressPct"), NanNew(info->progress_pct));
     as_v8_detail(log, "Progress pct of the scan %d", info->progress_pct);
-    scaninfo->Set(String::NewSymbol("recordScanned"), Number::New(info->records_scanned));
+    scaninfo->Set(NanNew("recordScanned"), NanNew((double)info->records_scanned));
     as_v8_detail(log, "Number of records scanned so far %d", info->records_scanned);
-	scaninfo->Set(String::NewSymbol("status"), Integer::New(info->status));
+	scaninfo->Set(NanNew("status"), NanNew(info->status));
 
-    return scope.Close(scaninfo);
+    return NanEscapeScope(scaninfo);
 }
 
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 {
-    // Every v8 object has be declared/accessed inside a scope, and the 
-    // scope has to be closed to avoid memory leak.
-    // Open a scope
-    HANDLESCOPE;
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
@@ -1438,8 +1403,8 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 	}	
 
     // get the namespace
-    if ( obj->Has(String::NewSymbol("ns")) ) {
-        Local<Value> ns_obj = obj->Get(String::NewSymbol("ns"));
+    if ( obj->Has(NanNew("ns")) ) {
+        Local<Value> ns_obj = obj->Get(NanNew("ns"));
         if ( ns_obj->IsString() ) {
             strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
             as_v8_detail(log, "key.ns = \"%s\"", ns);
@@ -1459,8 +1424,8 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     }
 
     // get the set
-    if ( obj->Has(String::NewSymbol("set")) ) {
-        Local<Value> set_obj = obj->Get(String::NewSymbol("set"));
+    if ( obj->Has(NanNew("set")) ) {
+        Local<Value> set_obj = obj->Get(NanNew("set"));
 		//check if set is string or a null value.
         if ( set_obj->IsString() ) {
             strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
@@ -1478,8 +1443,8 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     }
 
     // get the value
-    if ( obj->Has(String::NewSymbol("key")) ) {
-        Local<Value> val_obj = obj->Get(String::NewSymbol("key"));
+    if ( obj->Has(NanNew("key")) ) {
+        Local<Value> val_obj = obj->Get(NanNew("key"));
 		if(val_obj->IsNull()) 
 		{
 			as_v8_error(log, "The key entry must not be null");
@@ -1524,17 +1489,14 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 
     // close the scope, so that garbage collector can collect the v8 variables.
 ReturnOk:
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 
 ReturnError:
-    scope.Close(Undefined());
     return AS_NODE_PARAM_ERR;
 }
 
 int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log)
 {
-    HANDLESCOPE;
     as_namespace ns = { '\0' };
     as_set set = { '\0' };
 
@@ -1580,17 +1542,14 @@ int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log)
     }
 
 Ret_Ok:
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 
 Ret_Err:
-    scope.Close(Undefined());   
     return AS_NODE_PARAM_ERR;
 }
 
 int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
 {
-    HANDLESCOPE;
 
     uint32_t capacity = arr->Length();
 
@@ -1598,7 +1557,6 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
         as_batch_init(batch, capacity);
     }
     else {
-        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i=0; i < capacity; i++) {
@@ -1606,12 +1564,10 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
         int status = key_from_jsobject(as_batch_keyat(batch, i), key, log);
 		if(status != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing batch keys failed \n");
-			scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
     }
 
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }
 
@@ -1639,7 +1595,6 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
 {
-    HANDLESCOPE;
 
 	if(obj->IsNull()) {
 		as_v8_error(log, "Object passed is NULL");
@@ -1647,8 +1602,8 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 	}
 
 	// Extract UDF module name
-	if( obj->Has(String::NewSymbol("module"))) {
-		Local<Value> module = obj->Get( String::NewSymbol("module"));
+	if( obj->Has(NanNew("module"))) {
+		Local<Value> module = obj->Get( NanNew("module"));
 		int size = 0;
 
 		if( module->IsString()) {
@@ -1661,19 +1616,17 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		}
 		else {
 			as_v8_error(log, "UDF module name should be string");
-            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 	}
 	else {
 		as_v8_error(log, "UDF module name should be passed to execute UDF");
-        scope.Close(Undefined());
 		return AS_NODE_PARAM_ERR;
 	}
 
 	// Extract UDF function name
-	if( obj->Has(String::NewSymbol("funcname"))) { 
-		Local<Value> v8_funcname = obj->Get( String::NewSymbol("funcname"));
+	if( obj->Has(NanNew("funcname"))) { 
+		Local<Value> v8_funcname = obj->Get( NanNew("funcname"));
 		if ( v8_funcname->IsString()) {
 			if( *funcname == NULL) {
 				int size = v8_funcname->ToString()->Length();
@@ -1684,29 +1637,25 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		}
 		else {
 			as_v8_error(log, "UDF function name should be string");
-            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 	}
 	else {
 		as_v8_error(log, "UDF function name should be passed to execute UDF");
-        scope.Close(Undefined());
 		return AS_NODE_PARAM_ERR;
 	}
 
 	// Is it fair to expect an array always. For a single argument UDF invocation
 	// should we relax.
 	// Extract UDF arglist as_arraylist
-	if( obj->Has( String::NewSymbol("args"))) {
-		Local<Value> arglist = obj->Get( String::NewSymbol("args"));
+	if( obj->Has( NanNew("args"))) {
+		Local<Value> arglist = obj->Get( NanNew("args"));
 		if ( ! arglist->IsArray()){
 			as_v8_error(log, "UDF args should be an array");
-            scope.Close(Undefined());
 			return AS_NODE_PARAM_ERR;
 		}
 		asarray_from_jsarray( args, Local<Array>::Cast(arglist), log);
 		as_v8_detail(log, "Parsing UDF args -- done !!!");
-        scope.Close(Undefined());
 		return AS_NODE_PARAM_OK;
 	}
 	else {
@@ -1714,17 +1663,15 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 		if (*args != NULL) {
 			as_arraylist_init(*args, 0, 0);
 		}
-        scope.Close(Undefined());
 		return AS_NODE_PARAM_OK;
 	}
-    scope.Close(Undefined());
 	return AS_NODE_PARAM_OK;
 }
 
 int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 
-    if ( obj->Has(String::NewSymbol("bin"))) {
-        Local<Value> val = obj->Get(String::NewSymbol("bin"));
+    if ( obj->Has(NanNew("bin"))) {
+        Local<Value> val = obj->Get(NanNew("bin"));
         if ( !val->IsString()) {
             as_v8_error(log, "Type error in bin_name(bin should be string"); 
             return AS_NODE_PARAM_ERR;
@@ -1737,9 +1684,9 @@ int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
 }
 
 Local<Value> GetBinValue( Local<Object> obj, LogInfo * log) {
-    HANDLESCOPE;
-    Local<Value> val = obj->Get(String::NewSymbol("value"));
-    return scope.Close(val);
+    NanEscapableScope();
+    Local<Value> val = obj->Get(NanNew("value"));
+    return NanEscapeScope(val);
 }
 
 int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log) 
@@ -1923,21 +1870,19 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
 
 int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log) 
 {
-    HANDLESCOPE;
 
     uint32_t capacity = arr->Length();
-    as_v8_detail(log, "no op operations in the array %d", capacity);
+    as_v8_detail(log, "number of operations in the array %d", capacity);
     if ( capacity > 0 ) {
         as_operations_init( ops, capacity );
     }
     else {
-        scope.Close(Undefined());
         return AS_NODE_PARAM_ERR;
     }
     for ( uint32_t i = 0; i < capacity; i++ ) {
         Local<Object> obj = arr->Get(i)->ToObject();
         setTTL(obj, &ops->ttl, log);
-        Local<Value> v8op = obj->Get(String::NewSymbol("operation"));
+        Local<Value> v8op = obj->Get(NanNew("operation"));
         if ( v8op->IsNumber() ) {
             as_operator op = (as_operator) v8op->ToInteger()->Value();
             switch ( op ) {
@@ -1967,11 +1912,9 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
                 }
                 default :
                     as_v8_info(log, "Operation Type not supported by the API");
-                    scope.Close(Undefined());
                     return AS_NODE_PARAM_ERR;
             }
         }
     }
-    scope.Close(Undefined());
     return AS_NODE_PARAM_OK;
 }

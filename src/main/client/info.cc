@@ -127,11 +127,8 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
@@ -153,7 +150,7 @@ static void * prepare(const Arguments& args)
     int arg_policy  = -1;
 
     // empty function, used when callback not provided
-    Local<FunctionTemplate> emptyFunction = FunctionTemplate::New();
+    Local<FunctionTemplate> emptyFunction = NanNew<FunctionTemplate>();
 
     // The first argument should be the request string.
     if ( args[arg_request]->IsString()) {
@@ -172,7 +169,7 @@ static void * prepare(const Arguments& args)
         // We check the parameter to see if it a host or policy object.
         // Host objects should always have "addr" and "port" attributes.
 
-        if ( arg1->Has(String::NewSymbol("addr")) && arg1->Has(String::NewSymbol("port")) ) {
+        if ( arg1->Has(NanNew("addr")) && arg1->Has(NanNew("port")) ) {
             // Ok, we have a host object
             int rc = host_from_jsobject(arg1, &data->addr, &data->port, log);
             if ( rc != AS_NODE_PARAM_OK ) {
@@ -217,20 +214,20 @@ static void * prepare(const Arguments& args)
 
     if ( args[argc-1]->IsFunction() ) {
         if ( args[argc-2]->IsFunction() ) {
-            data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-2]));
-            data->done = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-1]));
+			NanAssignPersistent(data->callback, args[argc-2].As<Function>());
+			NanAssignPersistent(data->done, args[argc-1].As<Function>());
         }
         else {
-            data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[argc-1]));
-            data->done = Persistent<Function>::New(emptyFunction->GetFunction());
+			NanAssignPersistent(data->callback, args[argc-1].As<Function>());
+			NanAssignPersistent(data->done, emptyFunction->GetFunction());
         }
     }
     else {
-        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE emptyFunction->GetFunction());
-        data->done = Persistent<Function>::New(NODE_ISOLATE_PRE emptyFunction->GetFunction());
+
+		NanAssignPersistent(data->callback,emptyFunction->GetFunction());
+		NanAssignPersistent(data->done, emptyFunction->GetFunction());
     }
 
-    scope.Close(Undefined());
     return data;
 
 // Err_Return:
@@ -288,9 +285,6 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // callback arguments
     Handle<Value> argv[3];
@@ -321,43 +315,42 @@ static void respond(uv_work_t * req, int status)
             // response string parameter
             if ( response != NULL && strlen(response) > 0 ) {
                 as_v8_debug(log, "Response is %s", response);
-                argv[1] = String::NewSymbol((const char*)response);
+                argv[1] = NanNew((const char*)response);
             }
             else {
-                argv[1] = Null();
+                argv[1] = NanNull();
             }
             
             // host object parameter
             if ( data->addr != NULL && data->port != 0) {
-                Handle<Object> host = Object::New();
-                host->Set(String::NewSymbol("addr"), String::NewSymbol(data->addr));
-                host->Set(String::NewSymbol("port"), Integer::New(data->port));
+                Handle<Object> host = NanNew<Object>();
+                host->Set(NanNew("addr"), NanNew(data->addr));
+                host->Set(NanNew("port"), NanNew(data->port));
                 argv[2] = host;
             }
             else if( node_name != NULL && strlen(node_name) > 0 ) {
-                Handle<Object> host = Object::New();
+                Handle<Object> host = NanNew<Object>();
                 as_v8_debug(log, "The host is %s", node_name);
-                host->Set(String::NewSymbol("node_id"), String::NewSymbol(node_name));
+                host->Set(NanNew("node_id"), NanNew(node_name));
                 argv[2] = host;
             }
             else {
-                argv[2] = Null();
+                argv[2] = NanNull();
             }
         }
         else {
             err->func = NULL;
             argv[0] = error_to_jsobject(err, log);
-            argv[1] = Null();
-            argv[2] = Null();
+            argv[1] = NanNull();
+            argv[2] = NanNull();
         }   
 
         // Surround the callback in a try/catch for safety
         TryCatch try_catch;
 
         // Execute the callback.
-        if ( data->callback != Null() ) {
-            data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
-        }
+		Local<Function> cb = NanNew<Function>(data->callback);
+		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 3, argv);
 
         // Process the exception, if any
         if ( try_catch.HasCaught() ) {
@@ -367,22 +360,22 @@ static void respond(uv_work_t * req, int status)
 
     // Surround the callback in a try/catch for safety
     // Execute the callback.
-    if ( data->done != Null() ) {
-        TryCatch try_catch;
-    
-        Handle<Value> argv[0];
-        data->done->Call(Context::GetCurrent()->Global(), 0, argv);
+	TryCatch try_catch;
 
-        // Process the exception, if any
-        if ( try_catch.HasCaught() ) {
-            node::FatalException(try_catch);
-        }
-        data->done.Dispose();
-    }
+	Handle<Value> done_argv[0];
+	Local<Function> done_cb = NanNew<Function>(data->done);
+	NanMakeCallback(NanGetCurrentContext()->Global(), done_cb, 0, done_argv);
+
+	// Process the exception, if any
+	if ( try_catch.HasCaught() ) {
+		node::FatalException(try_catch);
+	}
+	NanDisposePersistent(data->done);
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    data->callback.Dispose();
+	NanDisposePersistent(data->callback);
+
 
     for ( int i = 0; i < num; i++ ) {
         if( results[i].response != NULL) {
@@ -393,7 +386,6 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
     delete data;
     delete req;
-    scope.Close(Undefined());
 }
 
 /*******************************************************************************
@@ -403,7 +395,8 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'info()' Operation
  */
-Handle<Value> AerospikeClient::Info(const Arguments& args)
+NAN_METHOD(AerospikeClient::Info)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }

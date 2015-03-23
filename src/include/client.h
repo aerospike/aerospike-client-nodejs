@@ -1,4 +1,4 @@
-/*******************************************************************************
+/***************************************************************************
  * Copyright 2013-2014 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,32 +16,24 @@
 
 #pragma once
 
+#if NODE_MODULE_VERSION > 0x000B
+#  define ResolveArgs(args) const v8::FunctionCallbackInfo<v8::Value>& args
+#  define ResolveAsyncCallbackArgs uv_async_t* handle
+#else
+#  define ResolveArgs(args) const Arguments& args
+#  define ResolveAsyncCallbackArgs uv_async_t* handle, int status 
+#endif
+
 extern "C" {
 	#include <aerospike/aerospike.h>
 }
 
 #include <node.h>
+#include <nan.h>
 #include "log.h"
 using namespace node;
 using namespace v8;
 
-/**********************************************************************
- *  MACRO DECLARATIONS FOR NODE.JS BACKWARD COMPATABILITY.
- *********************************************************************/ 
-
-#if NODE_MODULE_VERSION > 0x000B
-#  define NODE_ISOLATE_DECL Isolate* isolate = Isolate::GetCurrent();
-#  define NODE_ISOLATE      isolate
-#  define NODE_ISOLATE_PRE  isolate, 
-#  define NODE_ISOLATE_POST , isolate 
-#  define HANDLESCOPE v8::HandleScope scope(NODE_ISOLATE);
-#else
-#  define NODE_ISOLATE_DECL
-#  define NODE_ISOLATE
-#  define NODE_ISOLATE_PRE
-#  define NODE_ISOLATE_POST
-#  define HANDLESCOPE v8::HandleScope scope;
-#endif
 
 /*******************************************************************************
  *  CLASS
@@ -55,7 +47,7 @@ class AerospikeClient : public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(const Arguments& args);
+        static Handle<Value> NewInstance(Local<Object> args);
 
         aerospike *as;
         LogInfo *log;
@@ -69,8 +61,8 @@ class AerospikeClient : public ObjectWrap {
         AerospikeClient();
         ~AerospikeClient();
 
-        static Persistent<Function> constructor;
-        static Handle<Value> New(const Arguments& args);
+        static Persistent<FunctionTemplate> constructor;
+		static NAN_METHOD(New);
 
         /***********************************************************************
          *  CLIENT OPERATIONS
@@ -79,47 +71,47 @@ class AerospikeClient : public ObjectWrap {
         /**
          * undefined client.connect()
          */
-        static Handle<Value> Connect(const Arguments& args);
+		 static NAN_METHOD(Connect);
 
         /**
          *  undefined client.close()
          */
-        static Handle<Value> Close(const Arguments& args);
+		static NAN_METHOD(Close);
 
         /**
          *  undefined client.get(Key, function(Error, Record))
          */
-        static Handle<Value> Get(const Arguments& args);    
+		static NAN_METHOD(Get);
 
         /**
          *  undefined client.exists(Key, function(Error, exists))
          */
-        static Handle<Value> Exists(const Arguments& args); 
+		static NAN_METHOD(Exists);
 
         /**
          *  undefined client.put(Key, Record, function(Error))
          */
-        static Handle<Value> Put(const Arguments& args);
+		static NAN_METHOD(Put);
 
         /**
          *      undefined client.select(Key, String[], function(Error,Record))
          */ 
-        static Handle<Value> Select(const Arguments& args);
+		static NAN_METHOD(Select);
 
         /**
          *      undefined client.delete(Key, function(Error,Key))
          */
-        static Handle<Value> Remove(const Arguments& args);     
+		static NAN_METHOD(Remove);
 
         /**
          *  undefined client.batchGet(Key[], function(Error,Record))
          */
-        static Handle<Value> BatchGet(const Arguments& args);
+		static NAN_METHOD(BatchGet);
 
         /**
          *  undefined client.batchGet(Key[], function(Error,Record))
          */
-        static Handle<Value> BatchExists(const Arguments& args);
+		static NAN_METHOD(BatchExists);
 
         /**
          *  undefined client.batch_select(Key[],bins,function(Error,Record))
@@ -129,66 +121,66 @@ class AerospikeClient : public ObjectWrap {
         /*
          *undefined client.operate( Key, Operation, function(Error, Record))
          */ 
-        static Handle<Value> Operate(const Arguments& args);
+		static NAN_METHOD(Operate);
 
         /*
          *undefined client.info( host, port, function(Error, Response))
          */ 
-        static Handle<Value> Info(const Arguments& args);
+		static NAN_METHOD(Info);
 
         /*
          *undefined client.info( host, port, function(Error, Response))
          */ 
-        static Handle<Value> Info_Cluster(const Arguments& args);
+		static NAN_METHOD(Info_Cluster);
 
         /*
          *undefined client.set_log_level(Log log)
          */
-        static Handle<Value> SetLogLevel(const Arguments& args);
+		static NAN_METHOD(SetLogLevel);
 
         /*
          *undefined client.udf_register(udf_filepath, udf_type, function( Error))
          */
-        static Handle<Value> Register(const Arguments& args);
+		static NAN_METHOD(Register);
 
         /*
          *undefined client.udf_execute(Key, udf_args, function( Error, Response))
          */
-        static Handle<Value> Execute(const Arguments& args);
+		static NAN_METHOD(Execute);
 
         /*
          *undefined client.udf_remove(udf_filename, function( Error ))
          */
-        static Handle<Value> UDFRemove(const Arguments& args);
+		static NAN_METHOD(UDFRemove);
 
         /*
          *undefined client.udf_remove(udf_filename, function( Error ))
          */
-        static Handle<Value> UDFScan(const Arguments& args);
+		static NAN_METHOD(UDFScan);
 
         /*
          *undefined client.udf_remove(udf_filename, function( Error ))
          */
-        static Handle<Value> ScanInfo(const Arguments& args);
+		static NAN_METHOD(ScanInfo);
 
 
 		/*
 		 * undefined client.scan(ns, set, options)
 		 */ 
-		static Handle<Value> Scan(const Arguments& args);
+		static NAN_METHOD(Scan);
 
 		/*
 		 * undefined client.query(ns, set, options)
 		 */ 
-		static Handle<Value> Query(const Arguments& args);
+		static NAN_METHOD(Query);
 
 		/*
 		 * undefined client.indexCreate(ns, set, bin, indexName, indexType)
 		 */ 
-		static Handle<Value> sindexCreate(const Arguments& args);
+		static NAN_METHOD(sindexCreate);
 
 		/*
 		 * undefined client.indexRemove(ns, indexName )
 		 */ 
-		static Handle<Value> sindexRemove(const Arguments& args);
+		static NAN_METHOD(sindexRemove);
 };

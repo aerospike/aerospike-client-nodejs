@@ -19,17 +19,17 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value) )
 
 Handle<Object> queryType() 
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "QUERY",  0);
     set(obj, "QUERYUDF",   1);
     set(obj, "QUERYAGGREGATION",   2);
     set(obj, "SCAN",  3);
     set(obj, "SCANUDF", 4);
     set(obj, "SCANAGGREGATION", 5);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }

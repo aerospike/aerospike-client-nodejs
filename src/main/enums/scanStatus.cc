@@ -19,15 +19,15 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
 Handle<Object> scanStatus() 
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "UNDEF",    0);
     set(obj, "INPROGRESS",     1);
     set(obj, "ABORTED",  2);
     set(obj, "COMPLETED",    3);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }

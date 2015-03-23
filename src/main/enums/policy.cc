@@ -19,88 +19,88 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
 Handle<Object> key_policy_values()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "DIGEST",  0);
     set(obj, "SEND",    1);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> retry_policy_values()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "NONE",    0);
     set(obj, "ONCE",    1);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> generation_policy_values()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "IGNORE",  0);
     set(obj, "EQ",      1);
     set(obj, "GT",      2);
     set(obj, "DUP",     3);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> exists_policy_values()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "IGNORE",  0);
     set(obj, "CREATE",  1);
     set(obj, "UPDATE",  2);
 	set(obj, "REPLACE", 3);
 	set(obj, "CREATE_OR_REPLACE", 4);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> replica_policy_values()
 {
-	HANDLESCOPE;
-	Handle<Object> obj = Object::New();
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
 	set(obj, "MASTER", 0); // read only from partition master replica node
 	set(obj, "ANY", 1);    // read from an unspecified replica node
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
 Handle<Object> consistency_level_policy_values()
 {
-	HANDLESCOPE;
-	Handle<Object> obj = Object::New();
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
 	set(obj, "ONE", 0); // Involve a single replica in the operation.
 	set(obj, "ALL", 1); // Involve all replicas in the operation
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
 Handle<Object> commit_level_policy_values()
 {
-	HANDLESCOPE;
-	Handle<Object> obj = Object::New();
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
 	set(obj, "ALL", 0); // Return succcess only after successfully committing all replicas
 	set(obj, "MASTER", 1); // Return succcess after successfully committing the master replica
-	return scope.Close(obj);
+	return NanEscapeScope(obj);
 }
 
 Handle<Object> policy()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     
-    obj->Set(String::NewSymbol("key"), key_policy_values());
-    obj->Set(String::NewSymbol("retry"), retry_policy_values());
-    obj->Set(String::NewSymbol("gen"), generation_policy_values());
-    obj->Set(String::NewSymbol("exists"), exists_policy_values());
-	obj->Set(String::NewSymbol("replica"), replica_policy_values());
-	obj->Set(String::NewSymbol("consistencyLevel"), consistency_level_policy_values());
-	obj->Set(String::NewSymbol("commitLevel"), commit_level_policy_values());
+    obj->Set(NanNew("key"), key_policy_values());
+    obj->Set(NanNew("retry"), retry_policy_values());
+    obj->Set(NanNew("gen"), generation_policy_values());
+    obj->Set(NanNew("exists"), exists_policy_values());
+	obj->Set(NanNew("replica"), replica_policy_values());
+	obj->Set(NanNew("consistencyLevel"), consistency_level_policy_values());
+	obj->Set(NanNew("commitLevel"), commit_level_policy_values());
 
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }

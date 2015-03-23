@@ -52,7 +52,7 @@ class AerospikeQuery: public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(const Arguments& args);
+        static Handle<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> client);
 
 		// C structure to store all the scan properties.
 		as_query query;
@@ -95,8 +95,8 @@ class AerospikeQuery: public ObjectWrap {
         AerospikeQuery();
         ~AerospikeQuery();
 
-        static Persistent<Function> constructor;
-        static Handle<Value> New(const Arguments& args);
+        static Persistent<FunctionTemplate> constructor;
+		static NAN_METHOD(New);
 
         /***********************************************************************
          *  SCAN OPERATIONS
@@ -105,57 +105,57 @@ class AerospikeQuery: public ObjectWrap {
         /**
          * undefined query.apply(udf_arg_list)
          */
-        static Handle<Value> apply(const Arguments& args);
+		static NAN_METHOD(apply);
 
         /**
          *  undefined query.foreach(callback())
          */
-        static Handle<Value> foreach(const Arguments& args);
+		static NAN_METHOD(foreach);
 		
 		/**
          *  undefined query.select(String[])
          */
-        static Handle<Value> select(const Arguments& args);
+		static NAN_METHOD(select);
 
 		/**
          *  undefined query.where(@TO-DO)
          */
-        static Handle<Value> where(const Arguments& args);
+		static NAN_METHOD(where);
 		
 		/**
          *  undefined query.setRecordQsize(integer)
          */
-        static Handle<Value> setRecordQsize(const Arguments& args);
+		static NAN_METHOD(setRecordQsize);
 
 		/**
          *  undefined query.queryInfo(queryId, policy, callback)
          */
-        static Handle<Value> queryInfo(const Arguments& args);
+		static NAN_METHOD(queryInfo);
 
 		// Functions related to SCAN api calls.
 		//
 		/** 
 		 *  undefined scan.setPriority(SCAN_PRIORITY)
 		 */
-		static Handle<Value> setPriority(const Arguments& args);
+		static NAN_METHOD(setPriority);
 
 		/** 
 		 *  undefined scan.setNobins(Boolean)
 		 */
-		static Handle<Value> setNobins(const Arguments& args);
+		static NAN_METHOD(setNobins);
 
 		/** 
 		 *  undefined scan.setPercent(integer)
 		 */
-		static Handle<Value> setPercent(const Arguments& args);
+		static NAN_METHOD(setPercent);
 
 		/** 
 		 *  undefined scan.setConcurrent(Boolean)
 		 */
-		static Handle<Value> setConcurrent(const Arguments& args);
+		static NAN_METHOD(setConcurrent);
 
 		/** 
 		 *  undefined scan.setConcurrent(scanQueryAPI)
 		 */
-		static Handle<Value> setQueryType(const Arguments& args);
+		static NAN_METHOD(setQueryType);
 };

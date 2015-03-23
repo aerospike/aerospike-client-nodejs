@@ -115,7 +115,7 @@ int querypolicy_from_jsobject( as_policy_query * policy, Local<Object> obj, LogI
 
 // Functions to handle query and scan kind of API which returns a bunch of records.
 // Callback that's invoked when an async signal is sent by a scan or query callback.
-void async_callback( uv_async_t * handle, int status);
+void async_callback( ResolveAsyncCallbackArgs);
 // Process each element in the queue and call the nodejs callback with the processed data.
 void async_queue_process( AsyncCallbackData * data);
 // Push the result from C callback into a queue.

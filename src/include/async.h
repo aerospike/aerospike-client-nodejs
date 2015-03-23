@@ -18,6 +18,7 @@
 
 #include <node.h>
 
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
@@ -25,13 +26,13 @@
  *  Setup an asynchronous invocation of a function.
  */
 Handle<Value> async_invoke(
-    const Arguments& args, 
-    void *  (* prepare)(const Arguments& args), 
+    ResolveArgs(args), 
+    void *  (* prepare)(ResolveArgs(args)), 
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     );
 
-void async_init( uv_async_t * async, void (*async_callback)(uv_async_t *handle, int status));
+void async_init( uv_async_t * async, void (*async_callback)(ResolveAsyncCallbackArgs));
 
 void async_send( uv_async_t * async);
 

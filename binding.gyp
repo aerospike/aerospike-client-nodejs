@@ -61,7 +61,8 @@
       'include_dirs': [
         'aerospike-client-c/include',
         'aerospike-client-c/include/ck',
-		'src/include'
+		'src/include',
+		"<!(node -e \"require('nan')\")"
       ],
       'link_settings': {
         'libraries': [

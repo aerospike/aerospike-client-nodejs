@@ -53,11 +53,8 @@ typedef struct AsyncData {
  *  FUNCTIONS
  ******************************************************************************/
 
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
     // Build the async data
@@ -74,7 +71,7 @@ static void * prepare(const Arguments& args)
 
 	if(args[arglength-1]->IsFunction())
 	{
-		data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
+		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
 	}
 	else 
 	{
@@ -118,7 +115,6 @@ static void * prepare(const Arguments& args)
 	
 
 ErrReturn:
-	scope.Close(Undefined());
 	return data;
 }
 /**
@@ -168,9 +164,6 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
@@ -184,11 +177,12 @@ static void respond(uv_work_t * req, int status)
 	// Arguments to scan info callback.
 	// Send status, progresPct and recScanned
 	Handle<Value> argv[2] = { scaninfo_to_jsobject(scan_info, log),
-							  Number::New(data->scan_id)};
+							  NanNew((double)data->scan_id)};
 
+	Local<Function> cb = NanNew<Function>(data->callback);
 	// Execute the callback.
-	if ( data->callback != Null()) {
-		data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+	if ( !cb->IsNull()) {
+		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
 		as_v8_debug(log, "Invoked scan info callback");
 	}
 
@@ -199,14 +193,13 @@ static void respond(uv_work_t * req, int status)
 
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
-	data->callback.Dispose();
+	NanDisposePersistent(data->callback);
 
 	delete data;
 	delete req;
 
     as_v8_debug(log, "Scan Info operation done");
 
-    scope.Close(Undefined());
 	return;
 }
 
@@ -217,7 +210,8 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'scan.foreach()' Operation
  */
-Handle<Value> AerospikeQuery::queryInfo(const Arguments& args)
+NAN_METHOD(AerospikeQuery::queryInfo)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }

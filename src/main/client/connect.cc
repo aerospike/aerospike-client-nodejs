@@ -40,11 +40,9 @@ using namespace v8;
 /**
  * Connect to an Aerospike Cluster
  */
-Handle<Value> AerospikeClient::Connect(const Arguments& args)
+NAN_METHOD(AerospikeClient::Connect)
 {
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
-
+	NanScope();
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
     
     Local<Function> callback;
@@ -54,7 +52,7 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
     }
     else {
         as_v8_error(client->log, " Callback not provided, Parameter error");
-        return Null();
+        NanReturnNull();
     }
 
     as_error err;
@@ -67,15 +65,15 @@ Handle<Value> AerospikeClient::Connect(const Arguments& args)
 
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
-        argv[1] = client->handle_;
+        argv[1] = args.Holder();
         as_v8_error(client->log, "Connecting to Cluster Failed");
-        callback->Call(Context::GetCurrent()->Global(), 2, argv);
-        return scope.Close(Null());
+		NanMakeCallback(NanGetCurrentContext()->Global(), callback, 2, argv);
+        NanReturnNull();
     }
     else {
-        argv[1] = client->handle_;
+        argv[1] = args.Holder();
         as_v8_debug(client->log, "Connecting to Cluster: Success");
-        callback->Call(Context::GetCurrent()->Global(), 2, argv);
-        return scope.Close(client->handle_);
+		NanMakeCallback(NanGetCurrentContext()->Global(), callback, 2, argv);
+        NanReturnValue(args.Holder());
     }
 }

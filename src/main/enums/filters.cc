@@ -20,56 +20,69 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), FunctionTemplate::New(__value)->GetFunction())
+// @TO-DO there's a warning with this function around. Have to figure that out.
+//#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew<Function>(__value))
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
-Handle<Value> range_integer(const Arguments& args)
+Handle<Value> range_integer(ResolveArgs(args))
 {
-	HANDLESCOPE;
+	NanEscapableScope();
+	
+	Handle<Object> range_obj = NanNew<Object>();
 	if(args.Length() != 3) {
-		return Null();	
+		return NanEscapeScope(NanNull());	
 	}
 
-	Handle<Object> range_obj = Object::New();
-	range_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_RANGE));
-	range_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_NUMERIC));
-	range_obj->Set(String::NewSymbol("bin"), args[0]);
-	range_obj->Set(String::NewSymbol("min"), args[1]);
-	range_obj->Set(String::NewSymbol("max"), args[2]);
-	return scope.Close(range_obj);
+	range_obj->Set(NanNew("predicate"), NanNew(AS_PREDICATE_RANGE));
+	range_obj->Set(NanNew("type"), NanNew(AS_INDEX_NUMERIC));
+	range_obj->Set(NanNew("bin"), args[0]);
+	range_obj->Set(NanNew("min"), args[1]);
+	range_obj->Set(NanNew("max"), args[2]);
+	return NanEscapeScope(range_obj);	
 
 }
 
-Handle<Value> equal(const Arguments& args)
+Handle<Value> equal(ResolveArgs(args))
 {
-	HANDLESCOPE;
+	NanEscapableScope();
+
+
+	Handle<Object> equal_obj = NanNew<Object>();
 
 	if(args.Length() != 2) {
-		return Null();
+		return NanEscapeScope(NanNull());
 	}
-
-	Handle<Object> equal_obj = Object::New();
-	equal_obj->Set(String::NewSymbol("predicate"), Integer::New(AS_PREDICATE_EQUAL));
+	equal_obj->Set(NanNew("predicate"), NanNew(AS_PREDICATE_EQUAL));
 
 	if(args[1]->IsString()) {
-		equal_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_STRING));
+		equal_obj->Set(NanNew("type"), NanNew(AS_INDEX_STRING));
 	}
 	else if( args[1]->IsNumber()){
-		equal_obj->Set(String::NewSymbol("type"), Integer::New(AS_INDEX_NUMERIC));
+		equal_obj->Set(NanNew("type"), NanNew(AS_INDEX_NUMERIC));
 	}
 	else {
-		return Null();
+		return NanEscapeScope(equal_obj);
 	}
-	equal_obj->Set(String::NewSymbol("bin"), args[0]);
-	equal_obj->Set(String::NewSymbol("val"), args[1]);
+	equal_obj->Set(NanNew("bin"), args[0]);
+	equal_obj->Set(NanNew("val"), args[1]);
 
-	return scope.Close(equal_obj);
+	return NanEscapeScope(equal_obj);
 	
 }
-Handle<Object> filter() 
+/*Handle<Object> filter() 
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "equal",   equal);
     set(obj, "range",  range_integer);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
+}*/
+
+Handle<Object> predicates()
+{
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
+	set(obj, "EQUAL", AS_PREDICATE_EQUAL);
+	set(obj, "RANGE", AS_PREDICATE_RANGE);
+	return NanEscapeScope(obj);
 }

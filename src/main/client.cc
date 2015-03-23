@@ -36,7 +36,7 @@ using namespace v8;
 /**
  *  JavaScript constructor for AerospikeClient
  */
-Persistent<Function> AerospikeClient::constructor;
+Persistent<FunctionTemplate> AerospikeClient::constructor;
 
 /*******************************************************************************
  *  Constructor and Destructor
@@ -57,39 +57,38 @@ AerospikeClient::~AerospikeClient() {}
 void AerospikeClient::Init()
 {
     // Prepare constructor template
-    Local<FunctionTemplate> cons = FunctionTemplate::New(New);
-    cons->SetClassName(String::NewSymbol("AerospikeClient"));
+    Local<FunctionTemplate> cons = NanNew<FunctionTemplate>(AerospikeClient::New);
+    cons->SetClassName(NanNew("AerospikeClient"));
     cons->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
-    cons->PrototypeTemplate()->Set(String::NewSymbol("batchGet"), FunctionTemplate::New(BatchGet)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("batchExists"), FunctionTemplate::New(BatchExists)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("close"), FunctionTemplate::New(Close)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("connect"), FunctionTemplate::New(Connect)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("exists"), FunctionTemplate::New(Exists)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("get"), FunctionTemplate::New(Get)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("info"), FunctionTemplate::New(Info)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("indexCreate"), FunctionTemplate::New(sindexCreate)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("indexRemove"), FunctionTemplate::New(sindexRemove)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("operate"), FunctionTemplate::New(Operate)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("put"), FunctionTemplate::New(Put)->GetFunction());
-	cons->PrototypeTemplate()->Set(String::NewSymbol("query"), FunctionTemplate::New(Query)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("remove"), FunctionTemplate::New(Remove)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(Select)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("udfRegister"), FunctionTemplate::New(Register)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("execute"), FunctionTemplate::New(Execute)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("udfRemove"), FunctionTemplate::New(UDFRemove)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("updateLogging"), FunctionTemplate::New(SetLogLevel)->GetFunction());
-    constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
+	NODE_SET_PROTOTYPE_METHOD(cons, "batchGet", BatchGet);
+	NODE_SET_PROTOTYPE_METHOD(cons, "batchExists", BatchExists);
+	NODE_SET_PROTOTYPE_METHOD(cons, "close", Close);
+	NODE_SET_PROTOTYPE_METHOD(cons, "connect", Connect);
+	NODE_SET_PROTOTYPE_METHOD(cons, "exists", Exists);
+	NODE_SET_PROTOTYPE_METHOD(cons, "get", Get);
+	NODE_SET_PROTOTYPE_METHOD(cons, "info", Info);
+	NODE_SET_PROTOTYPE_METHOD(cons, "indexCreate", sindexCreate);
+	NODE_SET_PROTOTYPE_METHOD(cons, "indexRemove", sindexRemove);
+	NODE_SET_PROTOTYPE_METHOD(cons, "operate", Operate);
+	NODE_SET_PROTOTYPE_METHOD(cons, "put", Put);
+	NODE_SET_PROTOTYPE_METHOD(cons, "query", Query);
+	NODE_SET_PROTOTYPE_METHOD(cons, "remove", Remove);
+	NODE_SET_PROTOTYPE_METHOD(cons, "select", Select);
+	NODE_SET_PROTOTYPE_METHOD(cons, "udfRegister", Register);
+	NODE_SET_PROTOTYPE_METHOD(cons, "execute", Execute);
+	NODE_SET_PROTOTYPE_METHOD(cons, "udfRemove", UDFRemove);
+	NODE_SET_PROTOTYPE_METHOD(cons, "updateLogging", SetLogLevel);
+	NanAssignPersistent(constructor, cons);
 }
 
 /**
  *  Instantiate a new 'Aerospike(config)'
  */
-Handle<Value> AerospikeClient::New(const Arguments& args)
+NAN_METHOD(AerospikeClient::New)
 {
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
+	NanScope();
 
     AerospikeClient * client = new AerospikeClient();
     client->as = (aerospike*) cf_malloc(sizeof(aerospike));
@@ -107,9 +106,9 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
     // Assume by default log is not set
     if(args[0]->IsObject()) {
         int default_log_set = 0;
-        if (args[0]->ToObject()->Has(String::NewSymbol("log")))  
+        if (args[0]->ToObject()->Has(NanNew("log")))  
         {
-            Local<Value> log_val = args[0]->ToObject()->Get(String::NewSymbol("log")) ;
+            Local<Value> log_val = args[0]->ToObject()->Get(NanNew("log")) ;
             if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
                 default_log_set = 1; // Log is passed as an argument. set the default value	
             } else {
@@ -132,31 +131,33 @@ Handle<Value> AerospikeClient::New(const Arguments& args)
 
     client->Wrap(args.This());
 
-    return scope.Close(args.This());
+    NanReturnValue(args.This());
 }
 
 /**
  *  Instantiate a new 'Aerospike(config)'
  */
-Handle<Value> AerospikeClient::NewInstance(const Arguments& args)
+Handle<Value> AerospikeClient::NewInstance(Local<Object> args)
 {
-    HANDLESCOPE;
+    NanEscapableScope();
 
     const unsigned argc = 1;
 
-    Handle<Value> argv[argc] = { args[0] };
+    Handle<Value> argv[argc] = { args };
 
-    Local<Object> instance = constructor->NewInstance(argc, argv);
+	Local<FunctionTemplate> constructorHandle = NanNew<FunctionTemplate>(constructor);
 
-    return scope.Close(instance);
+    Local<Object> instance = constructorHandle->GetFunction()->NewInstance(argc, argv);
+
+    return NanEscapeScope(instance);
 }
 
 
-Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
+NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-    HANDLESCOPE;
+    NanScope();
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.Holder());
 
     if (args[0]->IsObject()){
         LogInfo * log = client->log;
@@ -165,15 +166,19 @@ Handle<Value> AerospikeClient::SetLogLevel(const Arguments& args)
             log->fd       = 2;
         }
     }
-    return scope.Close(client->handle_);
+    
+	NanReturnValue(args.Holder());
 }
 
 
-Handle<Value> AerospikeClient::Query(const Arguments& args)
+NAN_METHOD(AerospikeClient::Query)
 {
-	HANDLESCOPE;
+	NanScope();
 
 	AerospikeQuery::Init();
-	return scope.Close(AerospikeQuery::NewInstance(args));
+	Local<Object> ns	 = args[0].As<Object>();
+	Local<Object> set	 = args[1].As<Object>();
+	Local<Object> client = args.This();
+	NanReturnValue(AerospikeQuery::NewInstance(ns, set, client));
 }
 

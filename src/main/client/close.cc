@@ -28,6 +28,7 @@ extern "C" {
 
 #include "client.h"
 #include "log.h"
+#include "async.h"
 
 using namespace v8;
 
@@ -38,11 +39,10 @@ using namespace v8;
 /**
  *  Close the connections to the Aeropsike cluster.
  */
-Handle<Value> AerospikeClient::Close(const Arguments& args)
+NAN_METHOD(AerospikeClient::Close)
 {
     //should call aerospike_close and aerospike_destroy
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
+	NanScope();
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
     as_error err;
@@ -52,5 +52,5 @@ Handle<Value> AerospikeClient::Close(const Arguments& args)
     aerospike_destroy( client->as);
     free(client->as);
     free(client->log);
-    return scope.Close(Undefined());
+	NanReturnUndefined();
 }

@@ -19,120 +19,122 @@
 #include <aerospike/as_operations.h>
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), FunctionTemplate::New(__value)->GetFunction())
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew<Function>(__value))
 
 #define set_bin(__obj, __args) \
-    __obj->Set(String::NewSymbol("bin"), __args[0]);\
-    __obj->Set(String::NewSymbol("value"), __args[1]);
-
-Handle<Value> operator_write(const Arguments& args)
+    __obj->Set(NanNew("bin"), __args[0]);\
+    __obj->Set(NanNew("value"), __args[1]);
+#define set_op(__obj, __str, __val) __obj->Set(NanNew(__str), NanNew(__val))
+Handle<Value> operator_write(ResolveArgs(args))
 {
-    HANDLESCOPE;
+    NanEscapableScope();
     
+
+    Handle<Object> write_op = NanNew<Object>();
     if (args.Length() != 2) {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    Handle<Object> write_op = Object::New();
-
-    write_op->Set(String::NewSymbol("operation"),Integer::New(AS_OPERATOR_WRITE)); 
+    write_op->Set(NanNew("operation"),NanNew(AS_OPERATOR_WRITE)); 
     set_bin(write_op, args);
 
-    return scope.Close(write_op);
+    return NanEscapeScope(write_op);
 }
 
-Handle<Value> operator_read(const Arguments& args)
+Handle<Value> operator_read(ResolveArgs(args))
 {
-    HANDLESCOPE;
+    NanEscapableScope();
 
     if (args.Length() != 1) {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    Handle<Object> read_op = Object::New();
+    Handle<Object> read_op = NanNew<Object>();
     
-    read_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_READ));
+    read_op->Set(NanNew("operation"), NanNew(AS_OPERATOR_READ));
     if ( !args[0]->IsUndefined()) {
-        read_op->Set(String::NewSymbol("bin"), args[0]);
+        read_op->Set(NanNew("bin"), args[0]);
     } else {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    return scope.Close(read_op);
+    return NanEscapeScope(read_op);
 }
 
-Handle<Value> operator_incr(const Arguments& args)
+Handle<Value> operator_incr(ResolveArgs(args))
 {
-    HANDLESCOPE;
+    NanEscapableScope();
 
     if (args.Length() != 2 ) {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    Handle<Object> incr_op = Object::New();
+    Handle<Object> incr_op = NanNew<Object>();
 
-    incr_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_INCR));
+    incr_op->Set(NanNew("operation"), NanNew(AS_OPERATOR_INCR));
     set_bin(incr_op, args);
 
-    return scope.Close(incr_op);
+    return NanEscapeScope(incr_op);
 
 }
 
-Handle<Value> operator_append(const Arguments &args)
+Handle<Value> operator_append(ResolveArgs(args))
 {
-    HANDLESCOPE;
+    NanEscapableScope();
+
     
     if (args.Length() != 2) {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    Handle<Object> append_op = Object::New();
+    Handle<Object> append_op = NanNew<Object>();
 
-    append_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_APPEND));
+    append_op->Set(NanNew("operation"), NanNew(AS_OPERATOR_APPEND));
     set_bin(append_op, args);
 
-    return scope.Close(append_op);
+    return NanEscapeScope(append_op);
 }
 
-Handle<Value> operator_prepend(const Arguments& args)
+Handle<Value> operator_prepend(ResolveArgs(args))
 {
-    HANDLESCOPE;
+    NanEscapableScope();
 
     if(args.Length() != 2) {
-        return Null();
+        return NanEscapeScope(NanNull());
     }
 
-    Handle<Object> prepend_op = Object::New();
+    Handle<Object> prepend_op = NanNew<Object>();
 
-    prepend_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_PREPEND));
+    prepend_op->Set(NanNew("operation"), NanNew(AS_OPERATOR_PREPEND));
     set_bin(prepend_op, args);
 
-    return scope.Close(prepend_op);
+    return NanEscapeScope(prepend_op);
 }
 
-Handle<Value> operator_touch(const Arguments& args)
+Handle<Value> operator_touch(ResolveArgs(args))
 {
-    HANDLESCOPE;
+	NanEscapableScope();
 
-    Handle<Object> touch_op = Object::New();
+    Handle<Object> touch_op = NanNew<Object>();
 
-    touch_op->Set(String::NewSymbol("operation"), Integer::New(AS_OPERATOR_TOUCH));
+    touch_op->Set(NanNew("operation"), NanNew(AS_OPERATOR_TOUCH));
     if ( !args[0]->IsUndefined()) {
-        touch_op->Set(String::NewSymbol("ttl"), args[0]);
+        touch_op->Set(NanNew("ttl"), args[0]);
     }
 
-    return scope.Close(touch_op);
+    return NanEscapeScope(touch_op);
 
 }
-Handle<Object> operators() 
+Handle<Object> operations()
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
-    set(obj, "read",    operator_read);
-    set(obj, "write",   operator_write);
-    set(obj, "incr",    operator_incr); 
-    set(obj, "prepend", operator_prepend);
-    set(obj, "append",  operator_append);
-    set(obj, "touch", operator_touch);
-    return scope.Close(obj);
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
+	set_op(obj, "READ", AS_OPERATOR_READ);
+	set_op(obj, "WRITE", AS_OPERATOR_WRITE);
+	set_op(obj, "INCR", AS_OPERATOR_INCR);
+	set_op(obj, "APPEND", AS_OPERATOR_APPEND);
+	set_op(obj, "PREPEND", AS_OPERATOR_PREPEND);
+	set_op(obj, "TOUCH", AS_OPERATOR_TOUCH);
+	return NanEscapeScope(obj);
 }
+

@@ -33,6 +33,7 @@ extern "C" {
 #include "log.h"
 #include "query.h"
 #include "enums.h"
+#include "async.h"
 using namespace v8;
 
 /*******************************************************************************
@@ -42,7 +43,7 @@ using namespace v8;
 /**
  *  JavaScript constructor for AerospikeQuery
  */
-Persistent<Function> AerospikeQuery::constructor;
+Persistent<FunctionTemplate> AerospikeQuery::constructor;
 
 /*******************************************************************************
  *  Constructor and Destructor
@@ -63,32 +64,31 @@ AerospikeQuery::~AerospikeQuery() {}
 void AerospikeQuery::Init()
 {
     // Prepare constructor template
-    Local<FunctionTemplate> cons = FunctionTemplate::New(New);
-    cons->SetClassName(String::NewSymbol("AerospikeQuery"));
+    Local<FunctionTemplate> cons = NanNew<FunctionTemplate>(AerospikeQuery::New);
+    cons->SetClassName(NanNew("AerospikeQuery"));
     cons->InstanceTemplate()->SetInternalFieldCount(3);
 
     // Prototype
-    cons->PrototypeTemplate()->Set(String::NewSymbol("select"), FunctionTemplate::New(select)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("apply"), FunctionTemplate::New(apply)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("foreach"), FunctionTemplate::New(foreach)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("where"), FunctionTemplate::New(where)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setRecordQsize"), FunctionTemplate::New(setRecordQsize)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("queryInfo"), FunctionTemplate::New(queryInfo)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setPercent"), FunctionTemplate::New(setPercent)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setNobins"), FunctionTemplate::New(setNobins)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setPriority"), FunctionTemplate::New(setPriority)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setConcurrent"), FunctionTemplate::New(setConcurrent)->GetFunction());
-    cons->PrototypeTemplate()->Set(String::NewSymbol("setQueryType"), FunctionTemplate::New(setQueryType)->GetFunction());
-    constructor = Persistent<Function>::New(NODE_ISOLATE_PRE cons->GetFunction());
+	NODE_SET_PROTOTYPE_METHOD(cons, "select", select);
+	NODE_SET_PROTOTYPE_METHOD(cons, "apply", apply);
+	NODE_SET_PROTOTYPE_METHOD(cons, "foreach", foreach);
+	NODE_SET_PROTOTYPE_METHOD(cons, "where", where);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setRecordQsize", setRecordQsize);
+	NODE_SET_PROTOTYPE_METHOD(cons, "queryInfo", queryInfo);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setPercent", setPercent);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setNobins", setNobins);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setPrority", setPriority);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setConcurrent", setConcurrent);
+	NODE_SET_PROTOTYPE_METHOD(cons, "setQueryType", setQueryType);
+	NanAssignPersistent(constructor, cons);
 }
 
 /**
  *  Instantiate a new 'AerospikeQuery(ns, set)'
  */
-Handle<Value> AerospikeQuery::New(const Arguments& args)
+NAN_METHOD(AerospikeQuery::New)
 {
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
+	NanScope();
 
 	// Create a new V8 query object, which in turn contains
 	// the as_query ( C structure) 
@@ -118,7 +118,7 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 	if ( !args[0]->IsString())
 	{
 		as_v8_error(log, "namespace to be queried should be string");
-		return scope.Close(Undefined());
+		NanReturnUndefined();
 	}
 	else 
 	{
@@ -129,7 +129,7 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 	if( !args[1]->IsNull() && !args[1]->IsString())
 	{
 		as_v8_error(log, "set to be queried should be string");
-		return scope.Close(Undefined());
+		NanReturnUndefined();
 	}
 	else
 	{
@@ -140,30 +140,31 @@ Handle<Value> AerospikeQuery::New(const Arguments& args)
 	as_query_init( &query->query, ns, set);
     query->Wrap(args.This());
 
-    return scope.Close(args.This());
+	NanReturnValue(args.This());
 }
 
 /**
  *  Instantiate a new 'AerospikeQuery(ns, set)'
  */
-Handle<Value> AerospikeQuery::NewInstance( const Arguments& args)
+Handle<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> client)
 {
-	NODE_ISOLATE_DECL;
-    HANDLESCOPE;
+	NanEscapableScope();
 
     const unsigned argc = 3;
 
 	// Invoked with namespace and set.
-    Handle<Value> argv[argc] = { args[0], args[1], args.This()};
-	
-	Local<Object> instance	 = constructor->NewInstance( argc, argv);
+    Handle<Value> argv[argc] = { ns, set, client};
 
-    return scope.Close(instance);
+	Local<FunctionTemplate> constructorHandle = NanNew<FunctionTemplate>(constructor);
+
+	Local<Object> instance	 = constructorHandle->GetFunction()->NewInstance( argc, argv);
+
+	return NanEscapeScope(instance);
 }
 
-Handle<Value> AerospikeQuery::select(const Arguments& args)
+NAN_METHOD(AerospikeQuery::select)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery* asQuery		= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	as_query * query			= &asQuery->query; 
 	LogInfo * log				= asQuery->log;
@@ -186,12 +187,12 @@ Handle<Value> AerospikeQuery::select(const Arguments& args)
 		// Throw an Exception here.
 		as_v8_error(log, "Bins to be selected should be an array");
 	}   
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::where(const Arguments& args)
+NAN_METHOD(AerospikeQuery::where)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery* asQuery		= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	as_query * query			= &asQuery->query; 
 	LogInfo * log				= asQuery->log;
@@ -208,7 +209,7 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 		for (int i=0; i < size; i++) 
 		{
 			Local<Object> filter = filters->Get(i)->ToObject();
-			Local<Value> bin	 = filter->Get(String::NewSymbol("bin"));
+			Local<Value> bin	 = filter->Get(NanNew("bin"));
 			char * bin_name		 = NULL; 
 			char * bin_val		 = NULL;
 			if( bin->IsString() ) {
@@ -217,14 +218,14 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 			else {
 				as_v8_error(log, "Bin value must be string");
 			}
-			int predicate		 = filter->Get(String::NewSymbol("predicate"))->ToObject()->IntegerValue();
+			int predicate		 = filter->Get(NanNew("predicate"))->ToObject()->IntegerValue();
 			as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
 			switch(predicate)
 			{
 				case AS_PREDICATE_RANGE:
 					{
-						Local<Value> v8min = filter->Get(String::NewSymbol("min"));
-						Local<Value> v8max = filter->Get(String::NewSymbol("max"));
+						Local<Value> v8min = filter->Get(NanNew("min"));
+						Local<Value> v8max = filter->Get(NanNew("max"));
 						int64_t min = 0, max = 0;
 						if( v8min->IsNumber()) {
 							min = v8min->NumberValue();
@@ -246,17 +247,17 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 					}
 				case AS_PREDICATE_EQUAL:
 					{
-						as_index_datatype type = (as_index_datatype)filter->Get(String::NewSymbol("type"))->ToObject()->IntegerValue();
+						as_index_datatype type = (as_index_datatype)filter->Get(NanNew("type"))->ToObject()->IntegerValue();
 						if( type == AS_INDEX_NUMERIC) 
 						{
-							int64_t val = filter->Get(String::NewSymbol("val"))->ToObject()->NumberValue();
+							int64_t val = filter->Get(NanNew("val"))->ToObject()->NumberValue();
 							as_query_where( query, bin_name, as_integer_equals(val));
 							as_v8_debug(log," Integer equality predicate %llu", val);
 							break;
 						}
 						else if(type == AS_INDEX_STRING)
 						{
-							Local<Value> val = filter->Get(String::NewSymbol("val"));
+							Local<Value> val = filter->Get(NanNew("val"));
 							bin_val   = strdup(*String::Utf8Value(val));
 							as_query_where( query, bin_name,as_string_equals(bin_val));
 							as_v8_debug(log, " String equality predicate %s", bin_val);
@@ -271,13 +272,13 @@ Handle<Value> AerospikeQuery::where(const Arguments& args)
 	{
 		// Throw an Exception here.
 		as_v8_error(log, "Filters should be passed as an array");
-	}   
-	return scope.Close(asQuery->handle_);
+	} 
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::setRecordQsize( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setRecordQsize)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * asQuery	= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log				= asQuery->log;
 
@@ -294,13 +295,13 @@ Handle<Value> AerospikeQuery::setRecordQsize( const Arguments& args)
 		// Throw exception.
 		as_v8_error(log, "The queue size must be an integer");
 	}
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
 
-Handle<Value> AerospikeQuery::apply(const Arguments& args)
+NAN_METHOD(AerospikeQuery::apply)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * query	= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 
 	// Parse the UDF args from jsobject and populate the query object with it.
@@ -320,13 +321,13 @@ Handle<Value> AerospikeQuery::apply(const Arguments& args)
 	{
 		as_v8_error(query->log, " Parsing udfArgs for query object failed");
 	}
-	return scope.Close(query->handle_);
+	NanReturnValue(args.This());
 }
 
 
-Handle<Value> AerospikeQuery::setPriority( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setPriority)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery* asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log           = asQuery->log;
 	//Set the scan_priority of the scan.
@@ -340,12 +341,12 @@ Handle<Value> AerospikeQuery::setPriority( const Arguments& args)
 		//Throw an exception.
 		as_v8_error(log, "Scan scan_priority must be an enumerator of type scanPriority");
 	}   
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::setPercent( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setPercent)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log           = asQuery->log;
 
@@ -360,12 +361,12 @@ Handle<Value> AerospikeQuery::setPercent( const Arguments& args)
 		//Throw an exception.
 		as_v8_error(log, "scan percentage is a number less than 100");
 	}
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::setNobins( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setNobins)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log       = asQuery->log;
 
@@ -382,12 +383,12 @@ Handle<Value> AerospikeQuery::setNobins( const Arguments& args)
 		// Throw exception.
 		as_v8_error(log," setNobins should be a boolean value");
 	}
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::setConcurrent( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setConcurrent)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * asQuery  = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log			  = asQuery->log;
 	//Set the concurrent value here.
@@ -401,12 +402,12 @@ Handle<Value> AerospikeQuery::setConcurrent( const Arguments& args)
 		as_v8_error(log, "setConcuurent should be a boolean value");
 		// Throw exception.
 	}
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }
 
-Handle<Value> AerospikeQuery::setQueryType( const Arguments& args)
+NAN_METHOD(AerospikeQuery::setQueryType)
 {
-	HANDLESCOPE;
+	NanScope();
 	AerospikeQuery * asQuery = ObjectWrap::Unwrap<AerospikeQuery>(args.This());
 	LogInfo * log			 = asQuery->log;
 
@@ -419,5 +420,5 @@ Handle<Value> AerospikeQuery::setQueryType( const Arguments& args)
 	{
 		as_v8_error(log, "scanQueryAPI is an enumerator and takes integer value");
 	}
-	return scope.Close(asQuery->handle_);
+	NanReturnValue(args.This());
 }

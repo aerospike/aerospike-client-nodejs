@@ -31,7 +31,7 @@ Handle<Object> generation_policy_values();
 
 Handle<Object> policy();
 
-Handle<Object> operators();
+Handle<Object> operations();
 
 Handle<Object> log();
 
@@ -39,7 +39,7 @@ Handle<Object> languages();
 
 Handle<Object> scanPriority();
 
-Handle<Object> filter();
+Handle<Object> predicates();
 
 Handle<Object> indexType();
 

@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <node.h>
+#include "client.h"
 
 using namespace v8;
 
@@ -26,8 +27,8 @@ using namespace v8;
  *  Setup an asynchronous invocation of a function.
  */
 Handle<Value> async_invoke(
-    const Arguments& args, 
-    void *  (* prepare)(const Arguments& args), 
+    ResolveArgs(args), 
+    void *  (* prepare)(ResolveArgs(args)), 
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     )
@@ -47,10 +48,10 @@ Handle<Value> async_invoke(
 
     // Return value for the function. Because we are async, we will
     // return an `undefined`.
-    return Undefined();
+    return NanUndefined();
 }
 
-void async_init( uv_async_t * async, void (*async_callback)(uv_async_t * handle, int status))
+void async_init( uv_async_t * async, void (*async_callback)(ResolveAsyncCallbackArgs ))
 {
 	uv_async_init( uv_default_loop(), async, async_callback);
 }

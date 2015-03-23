@@ -111,11 +111,8 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
  *      This should only keep references to V8 or V8 structures for use in 
  *      `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
@@ -134,7 +131,7 @@ static void * prepare(const Arguments& args)
     LogInfo * log = data->log = client->log;
 
     if ( args[arglength-1]->IsFunction()) { 
-        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));   
+		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
         as_v8_detail(log, "batch_get callback registered");
     }
     else {
@@ -177,11 +174,9 @@ static void * prepare(const Arguments& args)
         as_policy_batch_init(policy);
     }
 
-    scope.Close(Undefined());
     return data;
 
 Err_Return:
-    scope.Close(Undefined());
     data->node_err = 1;
     return data;
 }
@@ -235,10 +230,6 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
-
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -256,18 +247,18 @@ static void respond(uv_work_t * req, int status)
         err->line = 0;
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = Null();
+        argv[1] = NanNull();
     }
     else if ( num_rec == 0 || batch_results == NULL ) {
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = Null();
+        argv[1] = NanNull();
     }
     else {
 
         int rec_found = 0;
 
         // the result is an array of batch results
-        Handle<Array> results = Array::New(num_rec);
+        Handle<Array> results = NanNew<Array>(num_rec);
 
         for ( uint32_t i = 0; i< num_rec; i++) {
             
@@ -280,21 +271,21 @@ static void respond(uv_work_t * req, int status)
             //   - key
             //   - metadata
             //   - record
-            Handle<Object> result = Object::New();
+            Handle<Object> result = NanNew<Object>();
 
             // status attribute
-            result->Set(String::NewSymbol("status"), Integer::New(status));
+            result->Set(NanNew("status"), NanNew(status));
 
             // key attribute - should always be sent
-            result->Set(String::NewSymbol("key"), key_to_jsobject(key ? key : &record->key, log));
+            result->Set(NanNew("key"), key_to_jsobject(key ? key : &record->key, log));
 
             if( batch_results[i].result == AEROSPIKE_OK ) {
 
                 // metadata attribute
-                result->Set(String::NewSymbol("metadata"), recordmeta_to_jsobject(record, log));
+                result->Set(NanNew("metadata"), recordmeta_to_jsobject(record, log));
 
                 // record attribute
-                result->Set(String::NewSymbol("record"), recordbins_to_jsobject(record, log));
+                result->Set(NanNew("record"), recordbins_to_jsobject(record, log));
                 
                 rec_found++;
             }
@@ -319,7 +310,8 @@ static void respond(uv_work_t * req, int status)
     TryCatch try_catch;
 
     // Execute the callback.
-    data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
+	Local<Function> cb = NanNew<Function>(data->callback);
+	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
@@ -329,7 +321,7 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log,"Invoked the callback");
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    data->callback.Dispose();
+	NanDisposePersistent(data->callback);
 
     // clean up any memory we allocated
     if ( data->node_err == 1) {
@@ -344,7 +336,6 @@ static void respond(uv_work_t * req, int status)
 
     delete data;
     delete req;
-    scope.Close(Undefined());
 }
 
 /*******************************************************************************
@@ -354,8 +345,9 @@ static void respond(uv_work_t * req, int status)
 /**
  *      The 'batchGet()' Operation
  */
-Handle<Value> AerospikeClient::BatchGet(const Arguments& args)
+NAN_METHOD(AerospikeClient::BatchGet)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }
 

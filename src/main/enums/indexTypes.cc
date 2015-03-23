@@ -19,13 +19,13 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
 Handle<Object> indexType() 
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "STRING",    0);
     set(obj, "NUMERIC",     1);
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }

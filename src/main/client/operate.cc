@@ -70,11 +70,8 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
@@ -93,7 +90,7 @@ static void * prepare(const Arguments& args)
     int arglength = args.Length();
 
     if ( args[arglength-1]->IsFunction() ){
-        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
+		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
     else {
@@ -158,11 +155,9 @@ static void * prepare(const Arguments& args)
 
     as_record_init(rec, 0);
 
-    scope.Close(Undefined());
     return data;
 
 Err_Return:
-    scope.Close(Undefined());
     data->param_err = 1;
     return data;
 }
@@ -214,9 +209,6 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
@@ -246,16 +238,18 @@ static void respond(uv_work_t * req, int status)
         err->file = NULL;
         as_v8_debug(log, "Parameter error while parsing the arguments");
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = Null();
-        argv[2] = Null();
-        argv[3] = Null();
+        argv[1] = NanNull();
+        argv[2] = NanNull();
+        argv[3] = NanNull();
     }
 
     // Surround the callback in a try/catch for safety
     TryCatch try_catch;
 
+	Local<Function> cb = NanNew<Function>(data->callback);
+
     // Execute the callback.
-    data->callback->Call(Context::GetCurrent()->Global(), 4, argv);
+	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 4, argv);
 
     as_v8_debug(log, "Invoked operate callback");
     // Process the exception, if any
@@ -265,7 +259,7 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    data->callback.Dispose();
+	NanDisposePersistent(data->callback);
 
     // clean up any memory we allocated
 
@@ -276,7 +270,6 @@ static void respond(uv_work_t * req, int status)
     }
     delete data;
     delete req;
-    scope.Close(Undefined());
 }
 
 /*******************************************************************************
@@ -286,7 +279,8 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'get()' Operation
  */
-Handle<Value> AerospikeClient::Operate(const Arguments& args)
+NAN_METHOD(AerospikeClient::Operate)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }

@@ -155,11 +155,8 @@ bool populate_scan_or_query(AsyncData* data, AerospikeQuery* v8_query)
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
     // Build the async data
@@ -203,14 +200,14 @@ static void * prepare(const Arguments& args)
 		query_cbdata->signal_interval	= 0;
 		query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
 		query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
-		query_cbdata->data_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		NanAssignPersistent(query_cbdata->data_cb, args[curr_arg_pos].As<Function>());
 		curr_arg_pos++;
 	}
 		
 	// check for error callback 
 	if(args[curr_arg_pos]->IsFunction())
 	{
-		query_cbdata->error_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		NanAssignPersistent(query_cbdata->error_cb, args[curr_arg_pos].As<Function>());
 		curr_arg_pos++;
 	}
 	else 
@@ -223,7 +220,7 @@ static void * prepare(const Arguments& args)
 	// check for termination callback
 	if(args[curr_arg_pos]->IsFunction())
 	{
-		query_cbdata->end_cb	= Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[curr_arg_pos]));
+		NanAssignPersistent(query_cbdata->end_cb, args[curr_arg_pos].As<Function>());
 		curr_arg_pos++;
 	}
 	else 
@@ -294,7 +291,6 @@ static void * prepare(const Arguments& args)
 	
 
 ErrReturn:
-	scope.Close(Undefined());
 	return data;
 }
 /**
@@ -392,22 +388,20 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
 
 	AsyncCallbackData* query_data = data->query_cbdata;
     LogInfo * log				= data->log;
+	Local<Function> error_cb = NanNew<Function>(query_data->error_cb);
 
 	if(data->param_err == 1)
 	{
 		Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
-		if(  !query_data->error_cb->IsUndefined() && !query_data->error_cb->IsNull())
+		if(  !error_cb->IsUndefined() && !error_cb->IsNull())
 		{
-			query_data->error_cb->Call(Context::GetCurrent()->Global(), 1, err_args);
+			NanMakeCallback(NanGetCurrentContext()->Global(), error_cb, 1, err_args);
 		}
 	}
 	// If query returned an error invoke error callback
@@ -415,9 +409,9 @@ static void respond(uv_work_t * req, int status)
 	{
 		as_v8_debug(log,"An error occured in C API invocation");
 		Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
-		if(  !query_data->error_cb->IsUndefined() && !query_data->error_cb->IsNull())
+		if(  !error_cb->IsUndefined() && !error_cb->IsNull())
 		{
-			query_data->error_cb->Call(Context::GetCurrent()->Global(), 1, err_args);
+			NanMakeCallback(NanGetCurrentContext()->Global(), error_cb, 1, err_args);
 		}
 	}
 
@@ -442,18 +436,20 @@ static void respond(uv_work_t * req, int status)
 	if( data->type == SCANUDF)
 	{
 		as_v8_debug(log, "Invoking scan background callback with scan id %d", data->scan_id);
-		argv[0] = Number::New(data->scan_id);
+		argv[0] = NanNew((double)data->scan_id);
 
 	}
 	else
 	{
 		as_v8_debug(log, "Invoking query callback");
-		argv[0] = String::New("Finished query!!!") ;
+		argv[0] = NanNew("Finished query!!!") ;
 	}
 
 	// Execute the callback
-	if ( !query_data->end_cb->IsUndefined() && !query_data->end_cb->IsNull()) {
-		query_data->end_cb->Call(Context::GetCurrent()->Global(), 1, argv);
+	Local<Function> end_cb = NanNew<Function>(query_data->end_cb);
+
+	if ( !end_cb->IsUndefined() && !end_cb->IsNull()) {
+		NanMakeCallback(NanGetCurrentContext()->Global(), end_cb, 1, argv);
 	}
 
 	// Process the exception, if any
@@ -469,7 +465,7 @@ static void respond(uv_work_t * req, int status)
 	}
 	else 
 	{
-		query_data->data_cb.Dispose();
+		NanDisposePersistent(query_data->data_cb);
 		async_close(&query_data->async_handle);
 		if(query_data->result_q != NULL) 
 		{
@@ -477,8 +473,8 @@ static void respond(uv_work_t * req, int status)
 			query_data->result_q = NULL;
 		}
 	}
-	query_data->error_cb.Dispose();
-	query_data->end_cb.Dispose();
+	NanDisposePersistent(query_data->error_cb);
+	NanDisposePersistent(query_data->end_cb);
 
 
 	delete query_data;
@@ -491,7 +487,6 @@ static void respond(uv_work_t * req, int status)
 
     as_v8_debug(log, "Query operation done");
 
-    scope.Close(Undefined());
 	return;
 }
 
@@ -502,7 +497,8 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'query.foreach()' Operation
  */
-Handle<Value> AerospikeQuery::foreach(const Arguments& args)
+NAN_METHOD(AerospikeQuery::foreach)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }

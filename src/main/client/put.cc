@@ -75,11 +75,8 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(const Arguments& args)
+static void * prepare(ResolveArgs(args))
 {
-    // The current scope of the function
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
@@ -97,7 +94,7 @@ static void * prepare(const Arguments& args)
     int meta_present = 0;
 
     if ( args[arglength-1]->IsFunction()) {
-        data->callback = Persistent<Function>::New(NODE_ISOLATE_PRE Local<Function>::Cast(args[arglength-1]));
+		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -167,12 +164,10 @@ static void * prepare(const Arguments& args)
     }
 
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
-    scope.Close(Undefined());
     return data;
 
 Err_Return:
     data->param_err = 1;
-    scope.Close(Undefined());
     return data;
 }
 
@@ -220,9 +215,6 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    // Scope for the callback operation.
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -244,17 +236,16 @@ static void respond(uv_work_t * req, int status)
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = Null();
+        argv[1] = NanNull();
     }   
 
     // Surround the callback in a try/catch for safety
     TryCatch try_catch;
 
     // Execute the callback.
-    if ( data->callback != Null() ) {
-        data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
-        as_v8_debug(log, "Invoked Put callback");
-    }
+	Local<Function> cb = NanNew<Function>(data->callback);
+	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
+    as_v8_debug(log, "Invoked Put callback");
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
@@ -263,7 +254,7 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    data->callback.Dispose();
+	NanDisposePersistent(data->callback);
 
     // clean up any memory we allocated
 
@@ -275,7 +266,6 @@ static void respond(uv_work_t * req, int status)
 
     delete data;
     delete req;
-    scope.Close(Undefined());
 }
 
 /*******************************************************************************
@@ -285,7 +275,8 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'put()' Operation
  */
-Handle<Value> AerospikeClient::Put(const Arguments& args)
+NAN_METHOD(AerospikeClient::Put)
 {
-    return async_invoke(args, prepare, execute, respond);
+	NanScope();
+    NanReturnValue(async_invoke(args, prepare, execute, respond));
 }

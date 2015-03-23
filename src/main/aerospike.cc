@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <nan.h>
 #include "client.h"
 #include "enums.h"
 using namespace v8;
@@ -23,11 +24,11 @@ using namespace v8;
  *  FUNCTIONS
  ******************************************************************************/
 
-Handle<Value> client(const Arguments& args)
+NAN_METHOD(client)
 {
-    NODE_ISOLATE_DECL;
-    HANDLESCOPE;
-    return scope.Close(AerospikeClient::NewInstance(args));
+	NanScope();
+	Local<Object> config = args[0].As<Object>();
+    NanReturnValue(AerospikeClient::NewInstance(config));
 }
 
 /**
@@ -36,20 +37,19 @@ Handle<Value> client(const Arguments& args)
  *      aerospike.key(namespace, set, value);
  *
  */
-Handle<Value> key(const Arguments& args)
+NAN_METHOD(key)
 {
-    NODE_ISOLATE; 
-    HANDLESCOPE;
+	NanScope();
 
     if ( args.Length() == 3 ) {
-        Local<Object> key = Object::New();
-        key->Set(String::NewSymbol("ns"), args[0]);
-        key->Set(String::NewSymbol("set"), args[1]);
-        key->Set(String::NewSymbol("key"), args[2]);
-        return scope.Close(key);
+        Local<Object> key = NanNew<Object>();
+        key->Set(NanNew("ns"), args[0]);
+        key->Set(NanNew("set"), args[1]);
+        key->Set(NanNew("key"), args[2]);
+        NanReturnValue((key));
     }
 
-    return scope.Close(Undefined());
+    NanReturnUndefined();
 }
 
 /**
@@ -59,18 +59,18 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
     
-    exports->Set(String::NewSymbol("client"),   FunctionTemplate::New(client)->GetFunction());
-    exports->Set(String::NewSymbol("key"),      FunctionTemplate::New(key)->GetFunction());
-    exports->Set(String::NewSymbol("status"),   status());
-    exports->Set(String::NewSymbol("policy"),   policy());
-    exports->Set(String::NewSymbol("operator"), operators());
-	exports->Set(String::NewSymbol("language"), languages()); 
-    exports->Set(String::NewSymbol("log"),      log());
-	exports->Set(String::NewSymbol("scanPriority"), scanPriority());
-	exports->Set(String::NewSymbol("scanStatus"), scanStatus());
-	exports->Set(String::NewSymbol("filter"),	filter());
-	exports->Set(String::NewSymbol("indexType"),indexType());
-	exports->Set(String::NewSymbol("queryType"),queryType());
+    exports->Set(NanNew("client"),   NanNew<FunctionTemplate>(client)->GetFunction());
+    exports->Set(NanNew("key"),      NanNew<FunctionTemplate>(key)->GetFunction());
+    exports->Set(NanNew("status"),   status());
+    exports->Set(NanNew("policy"),   policy());
+    exports->Set(NanNew("operations"), operations());
+	exports->Set(NanNew("language"), languages()); 
+    exports->Set(NanNew("log"),      log());
+	exports->Set(NanNew("scanPriority"), scanPriority());
+	exports->Set(NanNew("scanStatus"), scanStatus());
+	exports->Set(NanNew("predicates"),	predicates());
+	exports->Set(NanNew("indexType"),indexType());
+	exports->Set(NanNew("queryType"),queryType());
 }
 
 NODE_MODULE(aerospike, Aerospike)

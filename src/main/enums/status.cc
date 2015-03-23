@@ -19,12 +19,12 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(String::NewSymbol(__name), Integer::New(__value), ReadOnly)
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
 Handle<Object> status() 
 {
-    HANDLESCOPE;
-    Handle<Object> obj = Object::New();
+    NanEscapableScope();
+    Handle<Object> obj = NanNew<Object>();
     set(obj, "AEROSPIKE_OK",                        0);
     set(obj, "AEROSPIKE_ERR",                       -1);
     set(obj, "AEROSPIKE_ERR_CLIENT",                -1);
@@ -96,5 +96,5 @@ Handle<Object> status()
 	set(obj, "AEROSPIKE_ERR_LDT_USER_MODULE_BAD",    1438);
 	set(obj, "AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND",1439);
 
-    return scope.Close(obj);
+    return NanEscapeScope(obj);
 }
