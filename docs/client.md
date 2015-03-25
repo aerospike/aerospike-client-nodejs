@@ -372,7 +372,7 @@ Example:
 ```js
 var key = aerospike.key
 
-client.gey(key('test','demo','key1'), function(error, record, metadata) {
+client.get(key('test','demo','key1'), function(error, record, metadata) {
   // do something
 });
 ```
