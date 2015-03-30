@@ -62,7 +62,6 @@ using namespace v8;
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
-
 int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 {
 
@@ -236,6 +235,33 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 				as_v8_debug(log, "Could not find valid LUA user path %s", usrpath);
 			}
 
+		}
+	}
+
+	if ( obj->Has(NanNew("user")))
+	{
+		if(!obj->Has(NanNew("password")))
+		{
+			as_v8_error(log, "Password must be passed with username for connecting to secure cluster");
+			return AS_NODE_PARAM_ERR;
+		}
+		Local<Value> v8usr = obj->Get(NanNew("user"));
+		Local<Value> v8pwd = obj->Get(NanNew("password"));
+		if(!(v8usr->IsString()))
+		{
+			as_v8_error(log, "Username passed must be string");
+			return AS_NODE_PARAM_ERR;
+		}
+		if(!(v8pwd->IsString()))
+		{
+			as_v8_error(log, "Password passed must be a string");
+			return AS_NODE_PARAM_ERR;
+		}
+		bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
+		if(!setConfig)
+		{
+			as_v8_error(log, "Setting config failed");
+			return AS_NODE_PARAM_ERR;
 		}
 	}
 

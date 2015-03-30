@@ -126,6 +126,11 @@ config = {
  * 
  ******************************************************************************/
 var client = aerospike.client(config);
+if(client == null)
+{
+	console.error("Client object not initialized");
+	process.exit(1);
+}
 client.connect(function (err, client) {
 
     if ( err.code != Status.AEROSPIKE_OK ) {
