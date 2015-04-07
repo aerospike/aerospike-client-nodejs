@@ -215,27 +215,19 @@ client.connect(function (err, client) {
 		console.log("scanned value", val);
 	});
 
-	// set the list and verify the capacity of the list. 
-	list.setCapacity(20, function(err, val){
-		checkError(err, "Set capacity verified");
-		list.getCapacity(function(err, val){
-			checkError(err, "get capacity verified");
+	// Get the size of the list and destroy the list.
+	list.size(function(err, val){
+		checkError(err, "Get size is verified");
+		console.log("The size of the list is ", val);
+		list.getConfig(function(err, val) {
 			console.log(val);
-			// Get the size of the list and destroy the list.
-			list.size(function(err, val){
-				checkError(err, "Get size is verified");
-				console.log("The size of the list is ", val);
-				list.getConfig(function(err, val) {
-					console.log(val);
-					// destroy the llist completely.
-					list.destroy(function(err, val) {
-						checkError(err, "The list is destroyed");
-					});
-				});
+			// destroy the llist completely.
+			list.destroy(function(err, val) {
+				checkError(err, "The list is destroyed");
 			});
-
 		});
-	}); 
+	});
+
 
 	
 });
