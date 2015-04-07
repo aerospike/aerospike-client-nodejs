@@ -123,18 +123,13 @@ NAN_METHOD(AerospikeClient::New)
 
     }
     if (args[0]->IsObject() ) {
-		// parse the config object here. If parsing is successful then
-		// create an aerospike object. Else return null and fail here.
-		// This is done here because there's no way to recognize a Null value 
-		// returned(when an error happens) from New AerospikeClient::New().
-        int parseConfig = config_from_jsobject(&config, args[0]->ToObject(), client->log);   
-		/*if( parseConfig != AS_NODE_PARAM_OK)
+        int result = config_from_jsobject(&config, args[0]->ToObject(), client->log);   
+		if( result != AS_NODE_PARAM_OK)
 		{
-			printf("Returning null from config parser \n");
-			NanEscapeScope(NanUndefined());
-			NanReturnNull();
-		}*/
-    }
+			// Throw an exception if an error happens in parsing the config object.
+			return NanThrowError(NanNew("Configuration Error while creating client object"));
+		}
+	}
 
     aerospike_init(client->as, &config);
 
