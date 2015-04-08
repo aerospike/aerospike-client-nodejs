@@ -1468,6 +1468,12 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 			as_v8_error(log, "The key entry must not be null");
 			goto ReturnError;
 		}
+
+		if(val_obj->IsUndefined())
+		{
+			as_v8_error(log, "The key value cannot be undefined");
+			goto ReturnError;
+		}
         if ( val_obj->IsString() ) {
             char * value = strdup(*String::Utf8Value(val_obj));
             as_key_init(key, ns, set, value);

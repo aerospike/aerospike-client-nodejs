@@ -488,6 +488,23 @@ describe('client.put()', function() {
 			done();
         });
     });
+	it('should write a key with undefined value and it should fail gracefully', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, undefined);
+        var mgen = metagen.constant({ttl: 1000});
+        // values
+        var key     = aerospike.key(options.namespace, options.set, undefined); 
+        var meta    = mgen(key);
+        var record  = { }
+        // write the record then check
+        client.put(key, record, meta, function(err, key1) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+			done();
+        });
+    });
+
     it('should check generation and then update record only if generation is equal (CAS)', function(done) {
 
         // generators
