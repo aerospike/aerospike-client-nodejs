@@ -501,7 +501,7 @@ Performs multiple operations on a single record.
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `operations`  – An array of operations.
+- `operations`  – An array of operations.For the list of supported operations please refer [operators](operators.md)
 - `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
