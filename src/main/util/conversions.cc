@@ -1505,7 +1505,6 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
 		goto ReturnError;
 	}
 
-    // close the scope, so that garbage collector can collect the v8 variables.
 ReturnOk:
     return AS_NODE_PARAM_OK;
 

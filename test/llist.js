@@ -380,7 +380,7 @@ describe('client.LargeList()', function(done) {
 		//find an element in the list.
 		LList.find({"key":"novalue"}, function(err, val) {
 			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_ERR_LDT_NOT_FOUND);
+			expect(err.code).to.equal(status.AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND);
 			done();
 		});
 		}
@@ -491,7 +491,7 @@ describe('client.LargeList()', function(done) {
 			//verify the removed element in the list.
 			LList.find({"key":"intvalue"}, function(err, val) {
 				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_ERR_LDT_NOT_FOUND);
+				expect(err.code).to.equal(status.AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND);
 				LList.size(function(err, val){
 					expect(err).to.be.ok();
 					expect(err.code).to.equal(status.AEROSPIKE_OK);

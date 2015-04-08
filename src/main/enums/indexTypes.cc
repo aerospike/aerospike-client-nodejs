@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <aerospike/aerospike_index.h>
 #include "enums.h"
 
 using namespace v8;
@@ -25,7 +26,7 @@ Handle<Object> indexType()
 {
     NanEscapableScope();
     Handle<Object> obj = NanNew<Object>();
-    set(obj, "STRING",    0);
-    set(obj, "NUMERIC",     1);
+    set(obj, "STRING",    AS_INDEX_STRING);
+    set(obj, "NUMERIC",  AS_INDEX_NUMERIC);
     return NanEscapeScope(obj);
 }

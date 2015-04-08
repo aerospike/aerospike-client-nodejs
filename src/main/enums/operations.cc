@@ -16,19 +16,21 @@
 
 #include <node.h>
 #include "enums.h"
-#include <aerospike/as_scan.h>
-
+#include <aerospike/as_operations.h>
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value) )
+#define set_op(__obj, __str, __val) __obj->Set(NanNew(__str), NanNew(__val))
 
-Handle<Object> scanPriority() 
+Handle<Object> operations()
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
-    set(obj, "AUTO",   AS_SCAN_PRIORITY_AUTO );
-    set(obj, "LOW",    AS_SCAN_PRIORITY_LOW );
-    set(obj, "MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
-    set(obj, "HIGH",   AS_SCAN_PRIORITY_HIGH );
-    return NanEscapeScope(obj);
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
+	set_op(obj, "READ", AS_OPERATOR_READ);
+	set_op(obj, "WRITE", AS_OPERATOR_WRITE);
+	set_op(obj, "INCR", AS_OPERATOR_INCR);
+	set_op(obj, "APPEND", AS_OPERATOR_APPEND);
+	set_op(obj, "PREPEND", AS_OPERATOR_PREPEND);
+	set_op(obj, "TOUCH", AS_OPERATOR_TOUCH);
+	return NanEscapeScope(obj);
 }
+

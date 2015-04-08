@@ -16,19 +16,17 @@
 
 #include <node.h>
 #include "enums.h"
-#include <aerospike/as_scan.h>
+#include <aerospike/as_query.h>
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value) )
+#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
 
-Handle<Object> scanPriority() 
+Handle<Object> predicates()
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
-    set(obj, "AUTO",   AS_SCAN_PRIORITY_AUTO );
-    set(obj, "LOW",    AS_SCAN_PRIORITY_LOW );
-    set(obj, "MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
-    set(obj, "HIGH",   AS_SCAN_PRIORITY_HIGH );
-    return NanEscapeScope(obj);
+	NanEscapableScope();
+	Handle<Object> obj = NanNew<Object>();
+	set(obj, "EQUAL", AS_PREDICATE_EQUAL);
+	set(obj, "RANGE", AS_PREDICATE_RANGE);
+	return NanEscapeScope(obj);
 }

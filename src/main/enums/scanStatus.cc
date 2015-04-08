@@ -16,6 +16,7 @@
 
 #include <node.h>
 #include "enums.h"
+#include <aerospike/as_scan.h>
 
 using namespace v8;
 
@@ -25,9 +26,9 @@ Handle<Object> scanStatus()
 {
     NanEscapableScope();
     Handle<Object> obj = NanNew<Object>();
-    set(obj, "UNDEF",    0);
-    set(obj, "INPROGRESS",     1);
-    set(obj, "ABORTED",  2);
-    set(obj, "COMPLETED",    3);
+    set(obj, "UNDEF",    AS_SCAN_STATUS_UNDEF);
+    set(obj, "INPROGRESS",     AS_SCAN_STATUS_INPROGRESS);
+    set(obj, "ABORTED",  AS_SCAN_STATUS_ABORTED);
+    set(obj, "COMPLETED",    AS_SCAN_STATUS_COMPLETED);
     return NanEscapeScope(obj);
 }
