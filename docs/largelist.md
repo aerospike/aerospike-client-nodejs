@@ -28,7 +28,6 @@ Parameters:
 - [filter()](#filter)
 - [find(key)](#find)
 - [find(key, filter)](#findThenFilter)
-- [getCapacity()](#getCapacity)
 - [getConfig()](#getConfig)
 - [findRange(begin, end)](#range)
 - [findRange(begin, end, filter)](#rangeThenFilter)
@@ -36,7 +35,6 @@ Parameters:
 - [remove([values])](#removeArray)
 - [removeRange(begin, end)](#removeRange)
 - [scan()](#scan)
-- [setCapacity()](#setCapacity)
 - [size()](#size)
 - [update(value)](#update)
 - [update([values])](#updateArray)
@@ -561,67 +559,6 @@ The parameters for `callback` argument:
 Example:
 ```js
 llist.getConfig(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
-		//signals error.
-});
-
-```
-<!--
-################################################################################
-setCapacity()
-################################################################################
--->
-
-<a name="setCapacity"></a>
-
-###setCapacity(callback)
-
-Set maximum number of entries in the list.
-
-Parameters:
-- `callback`- The function to call when the operation completes with the results of the operation.
-
-The parameters for `callback` argument:
-
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`- `undefined`
-
-Example:
-```js
-llist.setCapacity(capacity, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
-		//signals error.
-});
-
-```
-
-<!--
-################################################################################
-getCapacity()
-################################################################################
--->
-
-<a name="getCapacity"></a>
-
-###getCapacity(callback)
-
-Retrieves the capacity of the list - that is maximum number of entries.
-
-Parameters:
-- `callback`- The function to call when the operation completes with the results of the operation.
-
-The parameters for `callback` argument:
-
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`- Maximum number of entries in the list.
-
-Example:
-```js
-llist.getCapacity(function(err, res){
 	//check for err.code
 	if(err.code != aerospike.status.AEROSPIKE_OK) 
 		//signals error.

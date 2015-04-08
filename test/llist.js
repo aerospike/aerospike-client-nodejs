@@ -449,46 +449,7 @@ describe('client.LargeList()', function(done) {
 			done();
 		}
 	});
-	it('should verify the getCapacity and setCapacity API of LList ', function(done) {
-		if(ldtEnabled)
-		{
-		var capacity = 25;
-		LList.setCapacity(capacity, function(err, val) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			LList.getCapacity(function(err, val) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				expect(val).to.equal(capacity);
-				done();
-			});
-		});
-		}
-		else
-		{
-			done();
-		}
-	});
-	it('should verify the getCapacity and setCapacity API fails gracefully when wrong number of arguments are passed', function(done) {
-		if(ldtEnabled)
-		{
-		var capacity = 25;
-		LList.setCapacity(capacity, 24, function(err, val) {
-			expect(err).to.be.ok();
-			expect(err.func).to.equal('setCapacity ');
-			LList.getCapacity(3, function(err, val) {
-				expect(err).to.be.ok();
-				expect(err.func).to.equal('getCapacity ');
-				done();
-			});
-		});
-		}
-		else
-		{
-			done();
-		}
-	});
-
+	
 	it('should verify the scan API of LList ', function(done) {
 		if(ldtEnabled)
 		{
