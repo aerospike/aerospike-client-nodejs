@@ -285,6 +285,16 @@ function datagen ( key ) {
             data += key;
             return data;
         }   
+		case "BYTES" :
+		{
+			data = new Buffer(argv.datasize);
+			var i = 0;
+			while( i < argv.datasize)
+			{
+				data.writeUInt8(i,i++);
+			}
+			return data;
+		}
         default :
             return key;
     }

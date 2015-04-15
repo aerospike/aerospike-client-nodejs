@@ -129,6 +129,7 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
  */
 static void * prepare(ResolveArgs(args))
 {
+	NanScope();
 
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
@@ -285,6 +286,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
+	NanScope();
 
     // callback arguments
     Handle<Value> argv[3];
@@ -397,6 +399,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Info)
 {
-	NanScope();
-    NanReturnValue(async_invoke(args, prepare, execute, respond));
+    V8_RETURN(async_invoke(args, prepare, execute, respond));
 }

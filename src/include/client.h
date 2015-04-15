@@ -19,9 +19,11 @@
 #if NODE_MODULE_VERSION > 0x000B
 #  define ResolveArgs(args) const v8::FunctionCallbackInfo<v8::Value>& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle
+#  define V8_RETURN     
 #else
 #  define ResolveArgs(args) const Arguments& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle, int status 
+#  define V8_RETURN return
 #endif
 
 extern "C" {

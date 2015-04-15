@@ -113,6 +113,7 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
  */
 static void * prepare(ResolveArgs(args))
 {
+	NanScope();
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
@@ -230,6 +231,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
+	NanScope();
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -347,7 +349,6 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::BatchGet)
 {
-	NanScope();
-    NanReturnValue(async_invoke(args, prepare, execute, respond));
+    V8_RETURN(async_invoke(args, prepare, execute, respond));
 }
 

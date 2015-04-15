@@ -157,6 +157,7 @@ bool populate_scan_or_query(AsyncData* data, AerospikeQuery* v8_query)
  */
 static void * prepare(ResolveArgs(args))
 {
+	NanScope();
 
     AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
     // Build the async data
@@ -388,6 +389,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
+	NanScope();
 
     // Fetch the AsyncData structure
     AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
@@ -499,6 +501,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeQuery::foreach)
 {
-	NanScope();
-    NanReturnValue(async_invoke(args, prepare, execute, respond));
+    V8_RETURN(async_invoke(args, prepare, execute, respond));
 }

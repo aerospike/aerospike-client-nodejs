@@ -515,11 +515,12 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
 
 Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 {
+	NanEscapableScope();
     Local<Object> err = NanNew<Object>();
     
     if (error == NULL) {
         as_v8_info(log, "error(C structure) object is NULL, node.js error object cannot be constructed");
-        return err;
+        return NanEscapeScope(err);
     }
 
 	// LDT error codes are populated as a string message.
@@ -567,28 +568,29 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 	err->Set(NanNew("file"), error->file ? NanNew(error->file) : NanNew("\0") );
 	err->Set(NanNew("line"), error->line ? NanNew(error->line) : NanNew((uint32_t)0) );
     
-	return err;
+	return NanEscapeScope(err);
 }
 
 
 Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
+	NanEscapableScope();
     if ( val == NULL) {
         as_v8_debug(log, "value = NULL"); 
-		return NanNull();
+		 return NanEscapeScope(NanNull());
     }
 
     switch ( as_val_type(val) ) {
 		case AS_NIL: {
 			as_v8_detail(log,"value is of type as_null");
-			return NanNull();
+			return NanEscapeScope(NanNull());
 		}
         case AS_INTEGER : {
             as_integer * ival = as_integer_fromval(val);
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
                 as_v8_detail(log, "value = %d ", data);
-				return NanNew((double)data);
+				return NanEscapeScope(NanNew((double)data));
             }
         }
         case AS_STRING : {
@@ -596,7 +598,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             if ( sval ) {
                 char * data = as_string_getorelse(sval, NULL);
                 as_v8_detail(log, "value = \"%s\"", data);
-				return NanNew(data);
+				return NanEscapeScope(NanNew(data));
             }
         }
         case AS_BYTES : {
@@ -615,8 +617,9 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                     );
                 // this constructor actually copies data into the new Buffer
 				Local<Object> buff = NanNewBufferHandle((char*) data, size);
+				//node::Buffer *buff  = node::Buffer::New((char *) data, size);
 
-                return buff;
+                return NanEscapeScope(buff);
             } 
         }
         case AS_LIST : {
@@ -629,7 +632,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                 jsarray->Set(i, jsval);
             }
 
-			return jsarray;
+			return NanEscapeScope(jsarray);
         }
         case AS_MAP : {
             Local<Object> jsobj = NanNew<Object>();
@@ -644,22 +647,23 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                 jsobj->Set(val_to_jsvalue(key, log), val_to_jsvalue(val, log));
             }
 
-			return jsobj;
+			return NanEscapeScope(jsobj);
         }
         default:
             break;
     }
-	return NanUndefined();
+	return NanEscapeScope(NanUndefined());
 }
 
 
 Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 {
+	NanEscapableScope();
 	
     Local<Object> bins ;
     if (record == NULL) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
-		return bins;
+		return NanEscapeScope(bins);
     }
 
     bins = NanNew<Object>();
@@ -675,16 +679,17 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 		as_v8_detail(log, "Setting binname %s ", name);
     }
 
-	return bins;
+	return NanEscapeScope(bins);
 }
 
 Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 {
+	NanEscapableScope();
     Local<Object> meta;
 
     if(record == NULL) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
-        return meta;
+        return NanEscapeScope(meta);
     }
     
     meta = NanNew<Object>();
@@ -693,16 +698,17 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     meta->Set(NanNew("gen"), NanNew(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);
 
-	return meta;
+	return NanEscapeScope(meta);
 }
 
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
+	NanEscapableScope();
     Handle<Object> okey;
 
     if ( record == NULL ) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
-        return okey;
+        return NanEscapeScope(okey);
     }
 
     okey = key_to_jsobject(key ? key : &record->key, log);
@@ -713,7 +719,7 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
     rec->Set(NanNew("meta"), meta);
     rec->Set(NanNew("bins"), bins);
 
-	return rec;
+	return NanEscapeScope(rec);
 }
 
 //Forward references;
@@ -1331,9 +1337,10 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
 
 Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
+	NanEscapableScope();
     Local<Object> obj;
     if (key == NULL) {
-        return obj;
+        return NanEscapeScope(obj);
     }
 
     obj = NanNew<Object>();
@@ -1383,7 +1390,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
         obj->Set(NanNew("digest"), buff);
 	}
 
-    return obj;
+    return NanEscapeScope(obj);
 }
 
 Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
