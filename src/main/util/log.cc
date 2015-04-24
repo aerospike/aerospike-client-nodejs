@@ -132,7 +132,7 @@ void stringify(char* err_str, const as_error *err, const char* data_type)
         sprintf(err_str, " [ message : %s, func : %s, file %s, line : %d] ", err->message, err->func, err->file, err->line);
     }
     else {
-        if ( err->message != '\0') {
+        if ( err->message[0] != '\0') {
             sprintf(err_str, "[ message : %s ]", err->message);
         }
         else {
