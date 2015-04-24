@@ -479,7 +479,7 @@ static void respond(uv_work_t * req, int status)
 	NanDisposePersistent(query_data->end_cb);
 
 
-	delete query_data;
+	//delete query_data;
 	if( data->type == SCAN && data->type == SCANUDF)
 	{
 		cf_free(data->query_scan.scan);

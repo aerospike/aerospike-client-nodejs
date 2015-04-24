@@ -16,6 +16,7 @@
 
 #include <node.h>
 #include "client.h"
+#include "conversions.h"
 
 using namespace v8;
 
@@ -61,9 +62,15 @@ void async_send( uv_async_t * async)
 	uv_async_send( async);
 }
 
+void release_handle(uv_handle_t* async_handle)
+{
+	AsyncCallbackData* cbdata = reinterpret_cast<AsyncCallbackData *>(async_handle->data);
+	delete cbdata;
+}
+
 void async_close(uv_async_t * async)
 {
-	uv_close((uv_handle_t*) async, NULL);
+	uv_close((uv_handle_t*) async, release_handle);
 }
 
 
