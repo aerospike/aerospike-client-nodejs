@@ -44,6 +44,9 @@ client.connect(connect_cb)
 // The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
 
+var bins = { i: 123, s: "str"}
+var metadata = { ttl: 10000, gen: 1}
+
 // write a record to database.
 client.put(key, bins, metadata, function(err, key){
 
