@@ -206,7 +206,8 @@ static void * prepare(ResolveArgs(args))
         else {
             // When node application does not pass any write policy should be 
             // initialized to defaults
-            as_policy_info_init(&data->policy);
+            //as_policy_info_init(&data->policy);
+			infopolicy_from_config(&data->as->config.policies, &data->policy, log);
         }
     }
 

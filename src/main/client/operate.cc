@@ -151,7 +151,8 @@ static void * prepare(ResolveArgs(args))
     }
     else {
         as_v8_detail(log, "Argument list does not contain operate policy, using default values for operate policy");
-        as_policy_operate_init(policy);
+        //as_policy_operate_init(policy);
+		operatepolicy_from_config(&data->as->config.policies, policy, log);
     }
 
     as_record_init(rec, 0);

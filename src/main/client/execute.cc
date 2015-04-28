@@ -160,8 +160,9 @@ static void * prepare(ResolveArgs(args))
     else {
         // When node application does not pass any apply policy should be 
         // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain applypolicy, default applypolicy will be used");
-        as_policy_apply_init(policy);
+        as_v8_debug(log, "Argument list does not contain applypolicy, values from global config will be used");
+        //as_policy_apply_init(policy);
+		applypolicy_from_config(&data->as->config.policies, policy, log);
     }
 
     as_v8_debug(log, "Parsing node.js Data Structures : Success");

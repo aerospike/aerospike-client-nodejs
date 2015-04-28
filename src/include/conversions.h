@@ -112,6 +112,18 @@ int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj, LogIn
 int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo * log);
 int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo * log);
 int querypolicy_from_jsobject( as_policy_query * policy, Local<Object> obj, LogInfo * log);
+int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogInfo * log);
+
+int writepolicy_from_config( as_policies* configpolicy, as_policy_write * policy, LogInfo * log );
+int readpolicy_from_config( as_policies* configpolicy, as_policy_read* policy, LogInfo * log );
+int removepolicy_from_config( as_policies* configpolicy, as_policy_remove* policy, LogInfo * log );
+int batchpolicy_from_config( as_policies* configpolicy, as_policy_batch * policy, LogInfo * log );
+int operatepolicy_from_config( as_policies* configpolicy, as_policy_operate * policy, LogInfo * log );
+int infopolicy_from_config( as_policies* configpolicy, as_policy_info * policy, LogInfo * log );
+int applypolicy_from_config( as_policies* configpolicy, as_policy_apply * policy, LogInfo * log);
+int scanpolicy_from_config( as_policies* configpolicy, as_policy_scan * policy, LogInfo * log);
+int querypolicy_from_config( as_policies* configpolicy, as_policy_query * policy, LogInfo * log);
+int adminpolicy_from_config( as_policies* configpolicy, as_policy_admin * policy, LogInfo * log);
 
 // Functions to handle query and scan kind of API which returns a bunch of records.
 // Callback that's invoked when an async signal is sent by a scan or query callback.

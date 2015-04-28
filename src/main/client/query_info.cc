@@ -109,7 +109,8 @@ static void * prepare(ResolveArgs(args))
     else 
 	{
         as_v8_detail(log, "Argument list does not contain info policy, using default values for info policy");
-        as_policy_info_init(policy);
+        //as_policy_info_init(policy);
+		infopolicy_from_config(&data->as->config.policies, policy, log);
     }
 
 	

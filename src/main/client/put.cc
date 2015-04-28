@@ -159,8 +159,9 @@ static void * prepare(ResolveArgs(args))
     else {
         // When node application does not pass any write policy should be 
         // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain writepolicy, default writepolicy will be used");
-        as_policy_write_init(policy);
+        as_v8_debug(log, "Argument list does not contain writepolicy, writepolicy will be used from the global object");
+        //as_policy_write_init(policy);
+		writepolicy_from_config(&data->as->config.policies, policy, log);
     }
 
     as_v8_debug(log, "Parsing node.js Data Structures : Success");

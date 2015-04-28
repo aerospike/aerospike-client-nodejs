@@ -123,7 +123,8 @@ static void * prepare(ResolveArgs(args))
     }
     else {
         as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
-        as_policy_remove_init(policy);
+        //as_policy_remove_init(policy);
+		removepolicy_from_config(&data->as->config.policies, policy, log);
     }
 
     return data;

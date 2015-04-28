@@ -171,8 +171,9 @@ static void * prepare(ResolveArgs(args))
         }
     }
     else {
-        as_v8_detail(log, "Arglist does not contain batch policy, using default values");
-        as_policy_batch_init(policy);
+        as_v8_detail(log, "Arglist does not contain batch policy, using values from global config");
+        //as_policy_batch_init(policy);
+		batchpolicy_from_config(&data->as->config.policies, policy, log);
     }
 
     return data;

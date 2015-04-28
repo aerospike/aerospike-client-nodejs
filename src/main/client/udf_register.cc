@@ -239,7 +239,8 @@ static void * prepare(ResolveArgs(args))
         // When node application does not pass any info policy should be 
         // initialized to defaults,
         as_v8_debug(log, "Argument list does not contain infopolicy, default infopolicy will be used");
-        as_policy_info_init(policy);
+        //as_policy_info_init(policy);
+		infopolicy_from_config(&data->as->config.policies, policy, log);
     }
 
 	if( filepath != NULL) 

@@ -109,42 +109,89 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
                 Local<Value> v8timeout = policies->Get(NanNew("timeout"));
                 config->policies.timeout = V8INTEGER_TO_CINTEGER(v8timeout);
             }
-            if ( policies->Has(NanNew("read") )){
+			if (policies->Has(NanNew("retry"))) {
+				Local<Value> v8retry = policies->Get(NanNew("retry"));
+				config->policies.retry = (as_policy_retry)V8INTEGER_TO_CINTEGER(v8retry);
+			}
+			if (policies->Has(NanNew("key"))) {
+				Local<Value> v8key = policies->Get(NanNew("key"));
+				config->policies.key = (as_policy_key)V8INTEGER_TO_CINTEGER(v8key);
+			}
+			if( policies->Has(NanNew("exists"))) {
+				Local<Value> v8exists = policies->Get(NanNew("exists"));
+				config->policies.exists = (as_policy_exists)V8INTEGER_TO_CINTEGER(v8exists);
+			}
+			if (policies->Has(NanNew("gen"))) {
+				Local<Value> v8gen = policies->Get(NanNew("gen"));
+				config->policies.gen = (as_policy_gen)V8INTEGER_TO_CINTEGER(v8gen);
+			}
+			if (policies->Has(NanNew("replica"))) {
+				Local<Value> v8replica = policies->Get(NanNew("replica"));
+				config->policies.gen = (as_policy_gen) V8INTEGER_TO_CINTEGER(v8replica);
+			}
+			if (policies->Has(NanNew("consistencyLevel"))) {
+				Local<Value> v8consistency = policies->Get(NanNew("consistencyLevel"));
+				config->policies.consistency_level = (as_policy_consistency_level) V8INTEGER_TO_CINTEGER(v8consistency);
+			}
+			if (policies->Has(NanNew("commitLevel"))) {
+				Local<Value> v8commitLevel = policies->Get(NanNew("commitLevel"));
+				config->policies.commit_level = (as_policy_commit_level) V8INTEGER_TO_CINTEGER(v8commitLevel);
+			}
+            if (policies->Has(NanNew("read"))) {
                 Local<Value> readpolicy = policies->Get(NanNew("read"));
                 if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)  != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("write"))){
+            if (policies->Has(NanNew("write"))) {
                 Local<Value> writepolicy = policies->Get(NanNew("write"));
                 if( writepolicy_from_jsobject(&config->policies.write, writepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("remove"))){
+            if (policies->Has(NanNew("remove"))) {
                 Local<Value> removepolicy = policies->Get(NanNew("remove"));
                 if( removepolicy_from_jsobject(&config->policies.remove, removepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("batch"))){
+            if (policies->Has(NanNew("batch"))) {
                 Local<Value> batchpolicy = policies->Get(NanNew("batch"));
                 if( batchpolicy_from_jsobject(&config->policies.batch, batchpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("operate"))){
+            if (policies->Has(NanNew("operate"))) {
                 Local<Value> operatepolicy = policies->Get(NanNew("operate"));
                 if( operatepolicy_from_jsobject(&config->policies.operate, operatepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("info"))){
+            if (policies->Has(NanNew("info"))) {
                 Local<Value> infopolicy = policies->Get(NanNew("info"));
                 if( infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
+			if (policies->Has(NanNew("admin"))) {
+				Local<Value> adminpolicy = policies->Get(NanNew("admin"));
+				if( adminpolicy_from_jsobject(&config->policies.admin, adminpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if (policies->Has(NanNew("scan"))) {
+				Local<Value> scanpolicy = policies->Get(NanNew("scan"));
+				if( scanpolicy_from_jsobject(&config->policies.scan, scanpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if (policies->Has(NanNew("query"))) {
+				Local<Value> querypolicy = policies->Get(NanNew("query"));
+				if( querypolicy_from_jsobject(&config->policies.query, querypolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+
 
         }
         as_v8_debug(log, "Parsing global policies : Done");
@@ -265,6 +312,161 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 	}
 
+	return AS_NODE_PARAM_OK;
+}
+
+int timeout_from_config(as_config* config, int *timeout, LogInfo* log)
+{
+	if(config->policies.timeout != AS_POLICY_TIMEOUT_DEFAULT)
+	{
+		(*timeout) = config->policies.timeout;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int retrypolicy_from_config( as_config* config, as_policy_retry* retry, LogInfo* log)
+{
+	if(config->policies.retry != AS_POLICY_RETRY_DEFAULT)
+	{
+		(*retry) = config->policies.retry;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int genpolicy_from_config( as_config* config, as_policy_gen* gen, LogInfo* log)
+{
+	if(config->policies.gen != AS_POLICY_GEN_DEFAULT)
+	{
+		(*gen) = config->policies.gen;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int existpolicy_from_config( as_config* config, as_policy_exists* exists, LogInfo* log)
+{
+	if(config->policies.exists != AS_POLICY_EXISTS_DEFAULT)
+	{
+		(*exists) = config->policies.exists;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int replicapolicy_from_config(as_config* config, as_policy_replica* replica, LogInfo* log)
+{
+	if(config->policies.replica != AS_POLICY_REPLICA_DEFAULT)
+	{
+		(*replica) = config->policies.replica;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+// If the global config object has a customized policy for a given operation
+// that is used. 
+// if global config policy has customized values for a given field in the 
+// policy object, that is used.
+// Note: This overrides the values from customized policy.
+// Else policy default values are used.
+#define resolve_timeout(policies, policy, value) \
+	policy->timeout = (policies->timeout != AS_POLICY_TIMEOUT_DEFAULT) ? policies->timeout : value;
+
+#define resolve_retry(policies, policy, value)	\
+	policy->retry = ( policies->retry != AS_POLICY_RETRY_DEFAULT ) ? policies->retry : value;
+
+#define resolve_key( policies, policy, value)	\
+	policy->key = ( policies->key != AS_POLICY_KEY_DEFAULT ) ? policies->key : value;
+
+#define resolve_gen(policies, policy, value) \
+	policy->gen = ( policies->gen != AS_POLICY_GEN_DEFAULT) ? policies->gen : value; 
+
+#define resolve_exists(policies, policy, value) \
+	policy->exists = (policies->exists != AS_POLICY_EXISTS_DEFAULT) ? policies->exists : value;
+
+#define resolve_commit_level(policies, policy, value) \
+	policy->commit_level = (policies->commit_level != AS_POLICY_COMMIT_LEVEL_DEFAULT) ? policies->commit_level: value;
+
+#define resolve_replica(policies, policy, value) \
+	policy->replica = (policies->replica != AS_POLICY_REPLICA_DEFAULT) ? policies->replica : value;
+
+#define resolve_consistency_level(policies, policy, value) \
+	policy->consistency_level = (policies->consistency_level != AS_POLICY_CONSISTENCY_LEVEL_DEFAULT) ? policies->consistency_level: value;
+
+int writepolicy_from_config( as_policies* policies, as_policy_write* policy, LogInfo* log)
+{
+	resolve_timeout(policies, policy, policies->write.timeout);
+	resolve_retry(policies, policy, policies->write.retry);
+	resolve_key(policies, policy, policies->write.key);
+	resolve_gen(policies, policy, policies->write.gen);
+	resolve_exists(policies, policy,policies->write.exists);
+	resolve_commit_level(policies, policy, policies->write.commit_level);
+	return AS_NODE_PARAM_OK;
+}
+
+int readpolicy_from_config( as_policies* policies, as_policy_read* policy, LogInfo * log)
+{
+	resolve_timeout(policies, policy, policies->read.timeout);
+	resolve_key(policies, policy, policies->read.key);
+	resolve_replica(policies, policy, policies->read.replica);
+	resolve_consistency_level(policies, policy, policies->read.consistency_level);
+	return AS_NODE_PARAM_OK;
+}
+
+int removepolicy_from_config( as_policies* policies, as_policy_remove* policy, LogInfo* log)
+{
+	// remove policy alone has generation. So this anamoly in coding.
+	policy->generation= policies->remove.generation;
+
+	resolve_timeout(policies, policy, policies->remove.timeout);
+	resolve_retry(policies, policy, policies->remove.retry);
+	resolve_key(policies, policy, policies->remove.key);
+	resolve_gen(policies, policy, policies->remove.gen);
+	resolve_commit_level(policies, policy, policies->remove.commit_level);
+	return AS_NODE_PARAM_OK;
+
+}
+
+int batchpolicy_from_config( as_policies* policies, as_policy_batch* policy, LogInfo* log)
+{
+	resolve_timeout( policies, policy, policies->batch.timeout);
+	return AS_NODE_PARAM_OK;
+}
+
+int operatepolicy_from_config( as_policies* policies, as_policy_operate* policy, LogInfo* log)
+{
+	resolve_timeout(policies, policy, policies->operate.timeout);
+	resolve_retry(policies, policy, policies->operate.retry);
+	resolve_key(policies, policy, policies->operate.key);
+	resolve_gen(policies, policy, policies->operate.gen);
+	resolve_consistency_level(policies, policy,policies->operate.consistency_level);
+	resolve_commit_level(policies, policy, policies->operate.commit_level);
+	return AS_NODE_PARAM_OK;
+}
+
+int infopolicy_from_config(as_policies* policies, as_policy_info* policy, LogInfo* log)
+{
+	resolve_timeout(policies, policy, policies->info.timeout);
+	policy->send_as_is = policies->info.send_as_is;
+	policy->check_bounds = policies ->info.check_bounds;
+	return AS_NODE_PARAM_OK;
+}
+
+int applypolicy_from_config(as_policies* policies, as_policy_apply * policy, LogInfo* log)
+{
+	resolve_timeout(policies, policy, policies->apply.timeout);
+	resolve_key(policies, policy, policies->apply.key);
+	resolve_commit_level(policies, policy, policies->apply.commit_level);
+	return AS_NODE_PARAM_OK;
+}
+
+int scanpolicy_from_config(as_policies* policies, as_policy_scan* policy, LogInfo* log)
+{
+	policy->timeout = policies->scan.timeout;
+	policy->fail_on_cluster_change = policies->scan.fail_on_cluster_change;
+	return AS_NODE_PARAM_OK;
+}
+
+int querypolicy_from_config(as_policies* policies, as_policy_query* policy, LogInfo* log)
+{
+	policy->timeout = policies->query.timeout;
 	return AS_NODE_PARAM_OK;
 }
 

@@ -281,11 +281,13 @@ static void * prepare(ResolveArgs(args))
         as_v8_detail(log, "Argument list does not contain query policy, using default values for query policy");
 		if( isQuery(data->type)) 
 		{
-			as_policy_query_init(&data->policy.query);
+			//as_policy_query_init(&data->policy.query);
+			querypolicy_from_config(&data->as->config.policies, &data->policy.query, log);
 		}
 		else
 		{
-			as_policy_scan_init(&data->policy.scan);
+			//as_policy_scan_init(&data->policy.scan);
+			scanpolicy_from_config(&data->as->config.policies, &data->policy.scan, log);
 		}
     }
 
