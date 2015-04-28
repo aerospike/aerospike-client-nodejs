@@ -55,21 +55,6 @@ __err.func = __func__;
 #define AS_NODE_PARAM_OK   0
 #define HOST_ADDRESS_SIZE 50
 
-/*******************************************************************************
- * STRUCTURES
- *******************************************************************************/
-// This structure is used by query and scan async handles.
-// To process the records from the callback and pass it to nodejs
-typedef struct AsyncCallbackData {
-	Persistent<Function> data_cb;
-	Persistent<Function> error_cb;
-	Persistent<Function> end_cb;
-	cf_queue * result_q;
-	int max_q_size;
-	LogInfo * log;
-	int signal_interval;
-	uv_async_t async_handle;
-}AsyncCallbackData;
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -124,14 +109,6 @@ int applypolicy_from_config( as_policies* configpolicy, as_policy_apply * policy
 int scanpolicy_from_config( as_policies* configpolicy, as_policy_scan * policy, LogInfo * log);
 int querypolicy_from_config( as_policies* configpolicy, as_policy_query * policy, LogInfo * log);
 int adminpolicy_from_config( as_policies* configpolicy, as_policy_admin * policy, LogInfo * log);
-
-// Functions to handle query and scan kind of API which returns a bunch of records.
-// Callback that's invoked when an async signal is sent by a scan or query callback.
-void async_callback( ResolveAsyncCallbackArgs);
-// Process each element in the queue and call the nodejs callback with the processed data.
-void async_queue_process( AsyncCallbackData * data);
-// Push the result from C callback into a queue.
-bool async_queue_populate(const as_val * val, AsyncCallbackData* data);
 
 // Functions to set metadata of the record.
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );

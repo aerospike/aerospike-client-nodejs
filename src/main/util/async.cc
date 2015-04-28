@@ -16,7 +16,7 @@
 
 #include <node.h>
 #include "client.h"
-#include "conversions.h"
+#include "async.h"
 
 using namespace v8;
 

@@ -53,7 +53,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "enums.h"
-#include "async.h"
 
 using namespace node;
 using namespace v8;
@@ -1046,7 +1045,7 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 // scan populates only as_val of type record.
 // In case of query it can be record - in case of query without aggregation
 // In query aggregation, the value can be any as_val.
-bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
+/*bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 {
 	if(data->result_q == NULL) 
 	{
@@ -1118,8 +1117,9 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 		async_send( &data->async_handle);
 	}
 	return true;
-}
-void async_queue_process(AsyncCallbackData * data)
+}*/
+
+/*void async_queue_process(AsyncCallbackData * data)
 {
 	int rv;
 	as_val * val = NULL;
@@ -1153,9 +1153,9 @@ void async_queue_process(AsyncCallbackData * data)
 	}
 	return;
 
-}
+}*/
 
-// Callback that gets invoked when an async signal is sent.
+/*// Callback that gets invoked when an async signal is sent.
 void async_callback(ResolveAsyncCallbackArgs)
 {
 	AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
@@ -1168,7 +1168,8 @@ void async_callback(ResolveAsyncCallbackArgs)
 	async_queue_process(data);
 	return;
 
-}
+}*/
+
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
     if ( obj->Has(NanNew("ttl"))) {
