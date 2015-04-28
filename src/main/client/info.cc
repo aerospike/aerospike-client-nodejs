@@ -65,7 +65,7 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_policy_info policy;
+    as_policy_info* policy;
     char * req;
     char * res;
     char * addr;
@@ -143,6 +143,7 @@ static void * prepare(ResolveArgs(args))
     data->num_nodes             = 0;
     data->addr                  = NULL;
     data->port                  = 0;
+	data->policy				= NULL;
     
     // Local variables
     int argc        = args.Length();
@@ -195,19 +196,14 @@ static void * prepare(ResolveArgs(args))
         }
 
         if ( arg_policy < argc && arg_policy != -1 ) {
-            int rc = infopolicy_from_jsobject(&data->policy, args[arg_policy]->ToObject(), log);
+			data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+            int rc = infopolicy_from_jsobject(data->policy, args[arg_policy]->ToObject(), log);
             if ( rc != AS_NODE_PARAM_OK ) {
                 as_v8_debug(log, "policy parameter is invalid");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 data->param_err = 1;
                 // goto Err_Return;
             }
-        }
-        else {
-            // When node application does not pass any write policy should be 
-            // initialized to defaults
-            //as_policy_info_init(&data->policy);
-			infopolicy_from_config(&data->as->config.policies, &data->policy, log);
         }
     }
 
@@ -249,7 +245,7 @@ static void execute(uv_work_t * req)
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
     char * request           = data->req;
-    as_policy_info * policy  = &data->policy;
+    as_policy_info * policy  = data->policy;
     char * addr              = data->addr;
     uint16_t port            = data->port;
     LogInfo * log            = data->log;
@@ -386,6 +382,10 @@ static void respond(uv_work_t * req, int status)
         }
     }
 
+	if(data->policy != NULL)
+	{
+		cf_free(data->policy);
+	}
     // clean up any memory we allocated
     delete data;
     delete req;

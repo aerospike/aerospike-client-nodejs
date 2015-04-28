@@ -51,7 +51,7 @@ typedef struct AsyncData {
     as_error err;
     as_key key;
     as_record rec;
-    as_policy_read policy;
+    as_policy_read* policy;
     LogInfo * log;
     Persistent<Function> callback;
 } AsyncData;
@@ -82,7 +82,8 @@ static void * prepare(ResolveArgs(args))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-    as_policy_read* policy  = &data->policy;
+	data->policy					= NULL;
+
 
     int arglength = args.Length();
 
@@ -111,7 +112,8 @@ static void * prepare(ResolveArgs(args))
 
     if ( arglength > 2 ) {
         if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
-            if (readpolicy_from_jsobject( policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+            if (readpolicy_from_jsobject( data->policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
@@ -123,14 +125,7 @@ static void * prepare(ResolveArgs(args))
             goto Err_Return;
         }
     }
-    else {
-        as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
-		// read policy is not passed for this read operation.
-		// Check the global config values and populate the read policy.
-        //as_policy_read_init(policy);
-		readpolicy_from_config(&data->as->config.policies, policy, log);
-    }
-
+   
     as_record_init(rec, 0);
 
     return data;
@@ -155,7 +150,7 @@ static void execute(uv_work_t * req)
     as_error *  err         = &data->err;
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-    as_policy_read* policy  = &data->policy;
+    as_policy_read* policy  = data->policy;
 
     LogInfo * log           = data->log;
 
@@ -236,6 +231,10 @@ static void respond(uv_work_t * req, int status)
     if( data->param_err == 0) { 
         as_key_destroy(key);
         as_record_destroy(rec);
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up the structures");
     }
 

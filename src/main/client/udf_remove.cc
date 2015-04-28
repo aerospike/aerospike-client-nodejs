@@ -52,7 +52,7 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_policy_info policy;
+    as_policy_info* policy;
 	char filename[FILESIZE];
     LogInfo * log;
     Persistent<Function> callback;
@@ -80,7 +80,7 @@ static void * prepare(ResolveArgs(args))
     AsyncData * data            = new AsyncData;
     data->as                    = client->as;
     // Local variables
-    as_policy_info * policy     = &data->policy;
+	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
 	char* filename				= data->filename;
@@ -113,21 +113,15 @@ static void * prepare(ResolveArgs(args))
 	    
     if ( argc > 2 ) {
         int ipolicy_pos = UDF_ARG_IPOLICY;
-        if ( infopolicy_from_jsobject(policy, args[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        if ( infopolicy_from_jsobject(data->policy, args[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = 1;
 			return data;
         } 
     }
-    else {
-        // When node application does not pass any info policy should be 
-        // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain infopolicy, default infopolicy will be used");
-        //as_policy_info_init(policy);
-		infopolicy_from_config(&data->as->config.policies, policy, log);
-    }
-
+    
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
@@ -144,7 +138,7 @@ static void execute(uv_work_t * req)
     AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
-    as_policy_info* policy   = &data->policy;
+    as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
 
     // Invoke the blocking call.
@@ -214,6 +208,10 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up all the structures");
     }
 

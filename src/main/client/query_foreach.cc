@@ -51,8 +51,8 @@ typedef struct AsyncData {
 	} query_scan;
     as_error err;
     union {
-		as_policy_query query;
-		as_policy_scan scan;
+		as_policy_query* query;
+		as_policy_scan* scan;
 	} policy;
 	as_status res;
     LogInfo * log;
@@ -300,6 +300,8 @@ static void * prepare(ResolveArgs(args))
     data->param_err					= 0;
 	data->type						= query->type;
 	data->res						= AEROSPIKE_OK;
+	data->policy.scan				= NULL;
+	data->policy.query				= NULL;
 	int curr_arg_pos				= 0;
 	int res							= 0;
     int arglength					= args.Length();
@@ -369,7 +371,8 @@ static void * prepare(ResolveArgs(args))
 		{
             if (isQuery(data->type))
 			{
-				res = querypolicy_from_jsobject( &data->policy.query, args[curr_arg_pos]->ToObject(), log);
+				data->policy.query = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
+				res = querypolicy_from_jsobject( data->policy.query, args[curr_arg_pos]->ToObject(), log);
 				if(res != AS_NODE_PARAM_OK) 
 				{
 					as_v8_error(log, "Parsing of querypolicy from object failed");
@@ -384,7 +387,8 @@ static void * prepare(ResolveArgs(args))
             }
 			else 			
 			{
-				res = scanpolicy_from_jsobject( &data->policy.scan, args[curr_arg_pos]->ToObject(), log);
+				data->policy.scan = (as_policy_scan*) cf_malloc(sizeof(as_policy_scan));
+				res = scanpolicy_from_jsobject( data->policy.scan, args[curr_arg_pos]->ToObject(), log);
 				if( res != AS_NODE_PARAM_OK)
 				{
 					as_v8_error(log, "Parsing of scanpolicy from object failed");
@@ -406,21 +410,7 @@ static void * prepare(ResolveArgs(args))
 			goto ErrReturn;
         }
     }
-    else 
-	{
-        as_v8_detail(log, "Argument list does not contain query policy, using default values for query policy");
-		if( isQuery(data->type)) 
-		{
-			//as_policy_query_init(&data->policy.query);
-			querypolicy_from_config(&data->as->config.policies, &data->policy.query, log);
-		}
-		else
-		{
-			//as_policy_scan_init(&data->policy.scan);
-			scanpolicy_from_config(&data->as->config.policies, &data->policy.scan, log);
-		}
-    }
-
+    
 	
 
 ErrReturn:
@@ -459,7 +449,7 @@ static void execute(uv_work_t * req)
 			data->query_cbdata->async_handle.data = data->query_cbdata;
 			as_v8_debug(log, "Invoking aerospike_query_foreach  ");
 
-			data->res = aerospike_query_foreach( as, err, &data->policy.query, data->query_scan.query, aerospike_query_callback, 
+			data->res = aerospike_query_foreach( as, err, data->policy.query, data->query_scan.query, aerospike_query_callback, 
 					(void*) data->query_cbdata); 
 
 			// send an async signal here. If at all there's any residual records left in the result_q,
@@ -480,7 +470,7 @@ static void execute(uv_work_t * req)
 			as_v8_debug(log, "The random number generated for scan_id %d ", data->scan_id);
 
 			as_v8_debug(log, "Scan id generated is %d", data->scan_id);
-			data->res = aerospike_scan_background( as, err, &data->policy.scan, data->query_scan.scan, &data->scan_id);
+			data->res = aerospike_scan_background( as, err, data->policy.scan, data->query_scan.scan, &data->scan_id);
 		}
 		else if(data->type == SCAN )
 		{
@@ -489,7 +479,7 @@ static void execute(uv_work_t * req)
 			data->query_cbdata->async_handle.data = data->query_cbdata;
 			as_v8_debug(log, "Invoking scan foreach with ");
 
-			aerospike_scan_foreach( as, err, &data->policy.scan, data->query_scan.scan, aerospike_query_callback, (void*) data->query_cbdata); 
+			aerospike_scan_foreach( as, err, data->policy.scan, data->query_scan.scan, aerospike_query_callback, (void*) data->query_cbdata); 
 
 			// send an async signal here. If at all there's any residual records left in the queue,
 			// this signal's callback will parse and send it to node layer.
@@ -618,6 +608,15 @@ static void respond(uv_work_t * req, int status)
 	{
 		cf_free(data->query_scan.scan);
 	}
+	if(data->policy.scan != NULL)
+	{
+		cf_free(data->policy.scan);
+	}
+	else if( data->policy.query != NULL)
+	{
+		cf_free(data->policy.query);
+	}
+
 	delete data;
 	delete req;
 
