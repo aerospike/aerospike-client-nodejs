@@ -315,51 +315,6 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 	return AS_NODE_PARAM_OK;
 }
 
-int timeout_from_config(as_config* config, int *timeout, LogInfo* log)
-{
-	if(config->policies.timeout != AS_POLICY_TIMEOUT_DEFAULT)
-	{
-		(*timeout) = config->policies.timeout;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
-int retrypolicy_from_config( as_config* config, as_policy_retry* retry, LogInfo* log)
-{
-	if(config->policies.retry != AS_POLICY_RETRY_DEFAULT)
-	{
-		(*retry) = config->policies.retry;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
-int genpolicy_from_config( as_config* config, as_policy_gen* gen, LogInfo* log)
-{
-	if(config->policies.gen != AS_POLICY_GEN_DEFAULT)
-	{
-		(*gen) = config->policies.gen;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
-int existpolicy_from_config( as_config* config, as_policy_exists* exists, LogInfo* log)
-{
-	if(config->policies.exists != AS_POLICY_EXISTS_DEFAULT)
-	{
-		(*exists) = config->policies.exists;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
-int replicapolicy_from_config(as_config* config, as_policy_replica* replica, LogInfo* log)
-{
-	if(config->policies.replica != AS_POLICY_REPLICA_DEFAULT)
-	{
-		(*replica) = config->policies.replica;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
 // If the global config object has a customized policy for a given operation
 // that is used. 
 // if global config policy has customized values for a given field in the 
