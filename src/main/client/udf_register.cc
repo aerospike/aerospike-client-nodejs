@@ -54,7 +54,7 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_policy_info policy;
+    as_policy_info* policy;
 	char filename[FILESIZE];
 	as_bytes content;
 	as_udf_type type;
@@ -84,7 +84,7 @@ static void * prepare(ResolveArgs(args))
     AsyncData * data            = new AsyncData;
     data->as                    = client->as;
     // Local variables
-    as_policy_info * policy     = &data->policy;
+	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
 	char* filepath				= NULL;
@@ -225,7 +225,8 @@ static void * prepare(ResolveArgs(args))
    
 	// policy can be passed after language type argument or without the language type argument.
     if ( argc > 3 || ( argc > 2 && !args[UDF_ARG_TYPE]->IsNumber())) {
-        if ( infopolicy_from_jsobject(policy, args[argpos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        if ( infopolicy_from_jsobject(data->policy, args[argpos]->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = 1;
@@ -235,13 +236,7 @@ static void * prepare(ResolveArgs(args))
 			return data;
         } 
     }
-    else {
-        // When node application does not pass any info policy should be 
-        // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain infopolicy, default infopolicy will be used");
-        as_policy_info_init(policy);
-    }
-
+   
 	if( filepath != NULL) 
 	{
 		cf_free(filepath);
@@ -262,7 +257,7 @@ static void execute(uv_work_t * req)
     AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
-    as_policy_info* policy   = &data->policy;
+    as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
 
     // Invoke the blocking call.
@@ -337,6 +332,10 @@ static void respond(uv_work_t * req, int status)
 
     if ( data->param_err == 0) {
 		as_bytes_destroy( &data->content);
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up all the structures");
     }
 

@@ -58,7 +58,7 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_policy_apply policy;
+    as_policy_apply* policy;
     as_key key;
 	char filename[FILESIZE];
 	char funcname[FILESIZE];
@@ -96,7 +96,7 @@ static void * prepare(ResolveArgs(args))
 
     // Local variables
     as_key *    key             = &data->key;
-    as_policy_apply* policy     = &data->policy;
+	data->policy				= NULL;
     LogInfo * log               = data->log = client->log;
 	as_arraylist* udfargs		= &data->udfargs;
 	char * filename				= data->filename;  
@@ -143,27 +143,24 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
     if ( arglength > 3 ) {
-        if ( args[UDF_ARG_APOLICY]->IsObject() &&
-                applypolicy_from_jsobject(policy, args[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-            as_v8_error(log, "apply policy shoule be an object");
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-            goto Err_Return;
-        } // LDT operations are executed through same UDF execute code path.
-		// at times LDT can pass undefined value for apply policy.
-		// So handle the undefined scenario.
+        if ( args[UDF_ARG_APOLICY]->IsObject())
+		{
+			data->policy = (as_policy_apply*) cf_malloc(sizeof(as_policy_apply));
+            if(applypolicy_from_jsobject(data->policy, args[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	            as_v8_error(log, "apply policy shoule be an object");
+		        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			    goto Err_Return;
+			}	// LDT operations are executed through same UDF execute code path.
+				// at times LDT can pass undefined value for apply policy.
+				// So handle the undefined scenario.
+		}
 		else if( args[UDF_ARG_APOLICY]->IsUndefined())
 		{
-			as_policy_apply_init(policy);
+			data->policy = NULL;
 			as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
 		}
     }
-    else {
-        // When node application does not pass any apply policy should be 
-        // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain applypolicy, default applypolicy will be used");
-        as_policy_apply_init(policy);
-    }
-
+    
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 
@@ -185,7 +182,7 @@ static void execute(uv_work_t * req)
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
     as_key *    key          = &data->key;
-    as_policy_apply * policy = &data->policy;
+    as_policy_apply * policy = data->policy;
     LogInfo * log            = data->log;
 
     // Invoke the blocking call.
@@ -258,6 +255,10 @@ static void respond(uv_work_t * req, int status)
 		as_val_destroy(data->result);
         as_key_destroy(key);
         as_v8_debug(log, "Cleaned up key structure");
+		if( data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
     }
 
     delete data;

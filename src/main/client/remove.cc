@@ -52,7 +52,7 @@ typedef struct AsyncData {
     aerospike * as;
     as_error err;
     as_key key;
-    as_policy_remove policy;
+    as_policy_remove* policy;
     Persistent<Function> callback;
     LogInfo * log;
 } AsyncData;
@@ -81,7 +81,7 @@ static void * prepare(ResolveArgs(args))
     as_key *    key = &data->key;
     LogInfo * log  = data->log = client->log;
 
-    as_policy_remove * policy = &data->policy;
+	data->policy					  = NULL;
     int arglength = args.Length();
 
     if ( args[arglength-1]->IsFunction() ){
@@ -109,7 +109,8 @@ static void * prepare(ResolveArgs(args))
 
     if ( arglength > 2 ) {
         if ( args[REMOVE_ARG_POS_WPOLICY]->IsObject() ) {
-            if (removepolicy_from_jsobject( policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject(), log ) != AS_NODE_PARAM_OK) {
+			data->policy = (as_policy_remove*) cf_malloc(sizeof(as_policy_remove));
+            if (removepolicy_from_jsobject( data->policy, args[REMOVE_ARG_POS_WPOLICY]->ToObject(), log ) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of removepolicy from object failed");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
@@ -121,11 +122,7 @@ static void * prepare(ResolveArgs(args))
             goto Err_Return;
         }
     }
-    else {
-        as_v8_detail(log, "Argument list does not contain remove policy, using default values for remove policy");
-        as_policy_remove_init(policy);
-    }
-
+    
     return data;
 
 Err_Return:
@@ -147,7 +144,7 @@ static void execute(uv_work_t * req)
     aerospike * as  = data->as;
     as_error *  err = &data->err;
     as_key *    key = &data->key;
-    as_policy_remove * policy = &data->policy;  
+    as_policy_remove * policy = data->policy;  
     LogInfo  * log  = data->log;
 
     // Invoke the blocking call.
@@ -225,6 +222,10 @@ static void respond(uv_work_t * req, int status)
 
     if( data->param_err == 0) { 
         as_key_destroy(key);
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up the structures");
     }
     delete data;

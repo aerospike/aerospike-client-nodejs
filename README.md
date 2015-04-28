@@ -74,7 +74,7 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-[Node.js](http://nodejs.org) version v0.10.x or greater  is required. 
+[Node.js](http://nodejs.org) version v0.10.x or v0.12.x is required. 
 
 Aerospike is an addon module written using V8. To compile V8 g++ must be installed in 
 the system.

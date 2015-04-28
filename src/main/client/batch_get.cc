@@ -53,7 +53,7 @@ typedef struct AsyncData {
     aerospike * as;
     int node_err;            // To Keep track of the parameter errors from Nodejs 
     as_error err;
-    as_policy_batch policy;
+    as_policy_batch* policy;
     as_batch batch;          // Passed as input to aerospike_batch_get
     as_batch_read  *results; // Results from a aerospike_batch_get operation
     uint32_t n;
@@ -125,7 +125,7 @@ static void * prepare(ResolveArgs(args))
     data->results = NULL;
     // Local variables
     as_batch * batch = &data->batch;
-    as_policy_batch * policy = &data->policy;
+	data->policy					 = NULL;
 
     int arglength = args.Length();
 
@@ -158,7 +158,8 @@ static void * prepare(ResolveArgs(args))
 
     if (arglength > 2 ) {
         if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
-            if (batchpolicy_from_jsobject(policy, args[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
+            if (batchpolicy_from_jsobject(data->policy, args[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing batch policy failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
@@ -170,11 +171,7 @@ static void * prepare(ResolveArgs(args))
             goto Err_Return;
         }
     }
-    else {
-        as_v8_detail(log, "Arglist does not contain batch policy, using default values");
-        as_policy_batch_init(policy);
-    }
-
+    
     return data;
 
 Err_Return:
@@ -196,7 +193,7 @@ static void execute(uv_work_t * req)
     aerospike *     as      = data->as;
     as_error  *     err     = &data->err;
     as_batch  *     batch   = &data->batch;
-    as_policy_batch * policy= &data->policy;
+    as_policy_batch * policy= data->policy;
     LogInfo * log           = data->log;
 
     if( as->cluster == NULL) {
@@ -333,6 +330,10 @@ static void respond(uv_work_t * req, int status)
         free(batch_results);
     }
 
+	if(data->policy != NULL)
+	{
+		cf_free(data->policy);
+	}
     as_v8_debug(log, "Cleaned up the resources");
 
 

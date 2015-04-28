@@ -54,7 +54,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "enums.h"
-#include "async.h"
 
 using namespace node;
 using namespace v8;
@@ -110,42 +109,89 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
                 Local<Value> v8timeout = policies->Get(NanNew("timeout"));
                 config->policies.timeout = V8INTEGER_TO_CINTEGER(v8timeout);
             }
-            if ( policies->Has(NanNew("read") )){
+			if (policies->Has(NanNew("retry"))) {
+				Local<Value> v8retry = policies->Get(NanNew("retry"));
+				config->policies.retry = (as_policy_retry)V8INTEGER_TO_CINTEGER(v8retry);
+			}
+			if (policies->Has(NanNew("key"))) {
+				Local<Value> v8key = policies->Get(NanNew("key"));
+				config->policies.key = (as_policy_key)V8INTEGER_TO_CINTEGER(v8key);
+			}
+			if( policies->Has(NanNew("exists"))) {
+				Local<Value> v8exists = policies->Get(NanNew("exists"));
+				config->policies.exists = (as_policy_exists)V8INTEGER_TO_CINTEGER(v8exists);
+			}
+			if (policies->Has(NanNew("gen"))) {
+				Local<Value> v8gen = policies->Get(NanNew("gen"));
+				config->policies.gen = (as_policy_gen)V8INTEGER_TO_CINTEGER(v8gen);
+			}
+			if (policies->Has(NanNew("replica"))) {
+				Local<Value> v8replica = policies->Get(NanNew("replica"));
+				config->policies.gen = (as_policy_gen) V8INTEGER_TO_CINTEGER(v8replica);
+			}
+			if (policies->Has(NanNew("consistencyLevel"))) {
+				Local<Value> v8consistency = policies->Get(NanNew("consistencyLevel"));
+				config->policies.consistency_level = (as_policy_consistency_level) V8INTEGER_TO_CINTEGER(v8consistency);
+			}
+			if (policies->Has(NanNew("commitLevel"))) {
+				Local<Value> v8commitLevel = policies->Get(NanNew("commitLevel"));
+				config->policies.commit_level = (as_policy_commit_level) V8INTEGER_TO_CINTEGER(v8commitLevel);
+			}
+            if (policies->Has(NanNew("read"))) {
                 Local<Value> readpolicy = policies->Get(NanNew("read"));
                 if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)  != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("write"))){
+            if (policies->Has(NanNew("write"))) {
                 Local<Value> writepolicy = policies->Get(NanNew("write"));
                 if( writepolicy_from_jsobject(&config->policies.write, writepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("remove"))){
+            if (policies->Has(NanNew("remove"))) {
                 Local<Value> removepolicy = policies->Get(NanNew("remove"));
                 if( removepolicy_from_jsobject(&config->policies.remove, removepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("batch"))){
+            if (policies->Has(NanNew("batch"))) {
                 Local<Value> batchpolicy = policies->Get(NanNew("batch"));
                 if( batchpolicy_from_jsobject(&config->policies.batch, batchpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("operate"))){
+            if (policies->Has(NanNew("operate"))) {
                 Local<Value> operatepolicy = policies->Get(NanNew("operate"));
                 if( operatepolicy_from_jsobject(&config->policies.operate, operatepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
-            if ( policies->Has(NanNew("info"))){
+            if (policies->Has(NanNew("info"))) {
                 Local<Value> infopolicy = policies->Get(NanNew("info"));
                 if( infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
                     return AS_NODE_PARAM_ERR;
                 }
             }
+			if (policies->Has(NanNew("admin"))) {
+				Local<Value> adminpolicy = policies->Get(NanNew("admin"));
+				if( adminpolicy_from_jsobject(&config->policies.admin, adminpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if (policies->Has(NanNew("scan"))) {
+				Local<Value> scanpolicy = policies->Get(NanNew("scan"));
+				if( scanpolicy_from_jsobject(&config->policies.scan, scanpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+			if (policies->Has(NanNew("query"))) {
+				Local<Value> querypolicy = policies->Get(NanNew("query"));
+				if( querypolicy_from_jsobject(&config->policies.query, querypolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
+					return AS_NODE_PARAM_ERR;
+				}
+			}
+
 
         }
         as_v8_debug(log, "Parsing global policies : Done");
@@ -268,6 +314,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 
 	return AS_NODE_PARAM_OK;
 }
+
 
 int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)
 {
@@ -880,139 +927,6 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
     return AS_NODE_PARAM_OK;
 }
 
-
-// Clone the as_val into a new val. And push the cloned value 
-// into the queue. When the queue size reaches 1/20th of total queue size
-// send an async signal to v8 thread to process the records in the queue.
-
-
-// This is common function used by both scan and query.
-// scan populates only as_val of type record.
-// In case of query it can be record - in case of query without aggregation
-// In query aggregation, the value can be any as_val.
-bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
-{
-	if(data->result_q == NULL) 
-	{
-		// in case result_q is not initialized, return from the callback.
-		// But this should never happen.
-		as_v8_error(data->log,"Internal Error: Queue not initialized");
-		return false;
-	}
-
-	// if the record queue is full sleep for n microseconds.
-	if( cf_queue_sz(data->result_q) > data->max_q_size) {
-		// why 20 - no reason right now.
-		usleep(20);
-	}
-	as_val_t type = as_val_type(val);
-	switch(type)
-	{
-		case AS_REC:
-		{
-			as_record* p_rec = as_record_fromval(val);
-			as_record* rec   = NULL;
-			if( !p_rec) {
-				as_v8_error(data->log, "record returned in the callback is NULL");
-				return false;
-			}
-			uint16_t numbins = as_record_numbins(p_rec);
-			rec         = as_record_new(numbins);
-			// clone the record into Asyncdata structure here.
-			// as_val is freed up after the callback. We need to retain a copy of this
-			// as_val until we pass this structure to nodejs
-			record_clone( p_rec, &rec, data->log);
-
-			as_val* clone_rec = as_record_toval(rec);
-			if( cf_queue_sz( data->result_q) >= data->max_q_size)
-			{
-				sleep(1);
-			}
-			cf_queue_push( data->result_q, &clone_rec);
-			data->signal_interval++;
-			break;
-		}
-		case AS_NIL:
-		case AS_BOOLEAN:
-		case AS_INTEGER:
-		case AS_STRING:
-		case AS_BYTES:
-		case AS_LIST:
-		case AS_MAP:
-		{
-			as_val* clone = asval_clone((as_val*) val, data->log);
-			if( cf_queue_sz( data->result_q) >= data->max_q_size)
-			{
-				sleep(1);
-			}
-			cf_queue_push( data->result_q, &clone);
-			data->signal_interval++;
-			break;
-		}
-		default:
-			as_v8_debug(data->log, "Query returned - unrecognizable type");
-			break;
-
-	}
-
-	int async_signal_sz = (data->max_q_size)/20;
-	if ( data->signal_interval% async_signal_sz == 0) {
-		data->signal_interval = 0;
-		data->async_handle.data     = data;
-		async_send( &data->async_handle);
-	}
-	return true;
-}
-void async_queue_process(AsyncCallbackData * data)
-{
-	int rv;
-	as_val * val = NULL;
-
-	// Pop each record from the queue and invoke the node callback with this record.
-	while(data->result_q && cf_queue_sz(data->result_q) > 0) {
-		if (cf_queue_sz(data->result_q) > data->max_q_size) {
-		
-		}
-		Local<Function> cb = NanNew<Function>(data->data_cb);
-		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
-		if( rv == CF_QUEUE_OK) {
-			if(as_val_type(val) == AS_REC)
-			{
-				as_record* record = as_record_fromval(val);
-				Handle<Object> jsrecord = NanNew<Object>();
-				jsrecord->Set(NanNew("bins"),recordbins_to_jsobject(record, data->log));
-				jsrecord->Set(NanNew("meta"),recordmeta_to_jsobject(record, data->log));
-				jsrecord->Set(NanNew("key"),key_to_jsobject(&record->key, data->log));
-				as_record_destroy(record);
-				Handle<Value> cbargs[1] = { jsrecord};
-				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
-			}
-			else
-			{
-				Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
-				as_val_destroy(val);
-				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
-			}
-		}
-	}
-	return;
-
-}
-
-// Callback that gets invoked when an async signal is sent.
-void async_callback(ResolveAsyncCallbackArgs)
-{
-	AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
-
-	if (data == NULL && data->result_q == NULL)
-	{
-		as_v8_error(data->log, "Internal error: data or result q is not initialized");
-		return;
-	}
-	async_queue_process(data);
-	return;
-
-}
 
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {

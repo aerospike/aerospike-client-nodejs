@@ -55,7 +55,7 @@ typedef struct AsyncData {
     as_key key;
     as_operations op;
     as_record rec;
-    as_policy_operate policy;
+    as_policy_operate* policy;
     Persistent<Function> callback;
     LogInfo * log;
 } AsyncData;
@@ -85,7 +85,7 @@ static void * prepare(ResolveArgs(args))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-    as_policy_operate* policy   = &data->policy;
+	data->policy						= NULL;
     as_operations* op = &data->op;
 
     int arglength = args.Length();
@@ -137,7 +137,8 @@ static void * prepare(ResolveArgs(args))
 
     if ( arglength > 3 ) {
         if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
-            if (operatepolicy_from_jsobject( policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
+            if (operatepolicy_from_jsobject( data->policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
@@ -149,11 +150,7 @@ static void * prepare(ResolveArgs(args))
             goto Err_Return;
         }
     }
-    else {
-        as_v8_detail(log, "Argument list does not contain operate policy, using default values for operate policy");
-        as_policy_operate_init(policy);
-    }
-
+    
     as_record_init(rec, 0);
 
     return data;
@@ -178,7 +175,7 @@ static void execute(uv_work_t * req)
     as_error *  err             = &data->err;
     as_key *    key             = &data->key;
     as_record * rec             = &data->rec;
-    as_policy_operate* policy   = &data->policy;
+    as_policy_operate* policy   = data->policy;
     as_operations * op          = &data->op;
     LogInfo * log               = data->log;
 
@@ -268,6 +265,10 @@ static void respond(uv_work_t * req, int status)
     if( data->param_err == 0) { 
         as_key_destroy(key);
         as_record_destroy(rec);
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up the structures");
     }
     delete data;

@@ -61,7 +61,7 @@ typedef struct AsyncData {
     as_error err;
     as_key key;
     as_record rec;
-    as_policy_read policy;
+    as_policy_read* policy;
     Persistent<Function> callback;
     LogInfo * log;
     uint32_t num_bins;
@@ -91,7 +91,7 @@ static void * prepare(ResolveArgs(args))
     // Local variables
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
-    as_policy_read * policy = &data->policy;
+	data->policy					= NULL;
     data->param_err = 0;
 
     int arglength = args.Length();
@@ -138,7 +138,8 @@ static void * prepare(ResolveArgs(args))
 
     if ( arglength > 3) {
         if ( args[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
-            if (readpolicy_from_jsobject( policy, args[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+            if (readpolicy_from_jsobject( data->policy, args[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
@@ -150,11 +151,7 @@ static void * prepare(ResolveArgs(args))
             goto Err_Return;
         }
     }
-    else {
-        as_v8_detail(log, "Argument list does not contain read policy, using default values for read policy");
-        as_policy_read_init(policy);
-    }
-
+    
     return data;
 
 Err_Return:
@@ -178,7 +175,7 @@ static void execute(uv_work_t * req)
     as_error *  err = &data->err;
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
-    as_policy_read * policy = &data->policy;
+    as_policy_read * policy = data->policy;
     LogInfo * log   = data->log;
     
     // Invoke the blocking call.
@@ -262,6 +259,10 @@ static void respond(uv_work_t * req, int status)
     if ( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
+		if( data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up the structures");
     }
 

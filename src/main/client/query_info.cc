@@ -41,7 +41,7 @@ typedef struct AsyncData {
     int param_err;
     aerospike * as;
     as_error err;
-    as_policy_info policy;
+    as_policy_info* policy;
 	uint64_t scan_id;
 	as_scan_info scan_info;
 	as_status  res;
@@ -64,8 +64,7 @@ static void * prepare(ResolveArgs(args))
 
     data->param_err					= 0;
     // Local variables
-    as_policy_info * policy			= &data->policy;
-
+	data->policy							= NULL;
     int arglength					= args.Length();
 	int curr_arg_pos				= 0;
 
@@ -90,7 +89,8 @@ static void * prepare(ResolveArgs(args))
 	{
         if ( args[curr_arg_pos]->IsObject()) 
 		{
-            if (infopolicy_from_jsobject( policy, args[3]->ToObject(), log) != AS_NODE_PARAM_OK) 
+			data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+            if (infopolicy_from_jsobject( data->policy, args[3]->ToObject(), log) != AS_NODE_PARAM_OK) 
 			{
                 as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
@@ -106,12 +106,7 @@ static void * prepare(ResolveArgs(args))
 			goto ErrReturn;
         }
     }
-    else 
-	{
-        as_v8_detail(log, "Argument list does not contain info policy, using default values for info policy");
-        as_policy_info_init(policy);
-    }
-
+    
 	
 
 ErrReturn:
@@ -131,7 +126,7 @@ static void execute(uv_work_t * req)
     // Data to be used.
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
-    as_policy_info * policy  = &data->policy;
+    as_policy_info * policy  = data->policy;
 	uint64_t scan_id		 = data->scan_id;
 	as_scan_info * scan_info = &data->scan_info; 
     LogInfo * log            = data->log;
@@ -195,6 +190,10 @@ static void respond(uv_work_t * req, int status)
 	// function can be garbage-collected
 	NanDisposePersistent(data->callback);
 
+	if(data->policy != NULL)
+	{
+		cf_free(data->policy);
+	}
 	delete data;
 	delete req;
 

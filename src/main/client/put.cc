@@ -57,7 +57,7 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_policy_write policy;
+    as_policy_write* policy;
     as_key key;
     as_record rec;
     LogInfo * log;
@@ -87,7 +87,7 @@ static void * prepare(ResolveArgs(args))
     // Local variables
     as_key *    key             = &data->key;
     as_record * rec             = &data->rec;
-    as_policy_write * policy    = &data->policy;
+	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
     int arglength = args.Length();
@@ -149,20 +149,16 @@ static void * prepare(ResolveArgs(args))
             as_v8_debug(log, "Argument list does not contain metadata, default values will be used");
             wpolicy_pos = PUT_ARG_POS_WPOLICY - 1;
         }
-        if ( args[wpolicy_pos]->IsObject() &&
-                writepolicy_from_jsobject(policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-            as_v8_error(log, "writepolicy shoule be an object");
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-            goto Err_Return;
+        if ( args[wpolicy_pos]->IsObject()){
+			data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
+            if(writepolicy_from_jsobject(data->policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "writepolicy shoule be an object");
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+				goto Err_Return;
+			}
         } 
     }
-    else {
-        // When node application does not pass any write policy should be 
-        // initialized to defaults,
-        as_v8_debug(log, "Argument list does not contain writepolicy, default writepolicy will be used");
-        as_policy_write_init(policy);
-    }
-
+    
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 
@@ -185,7 +181,7 @@ static void execute(uv_work_t * req)
     as_error *  err          = &data->err;
     as_key *    key          = &data->key;
     as_record * rec          = &data->rec;
-    as_policy_write * policy = &data->policy;
+    as_policy_write * policy = data->policy;
     LogInfo * log            = data->log;
 
     // Invoke the blocking call.
@@ -262,6 +258,10 @@ static void respond(uv_work_t * req, int status)
     if ( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
+		if(data->policy != NULL)
+		{
+			cf_free(data->policy);
+		}
         as_v8_debug(log, "Cleaned up record and key structures");
     }
 
