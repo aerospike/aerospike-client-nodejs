@@ -463,6 +463,8 @@ static void respond(uv_work_t * req, int status)
 
 	// Dispose the Persistent handle so the callback
 	// function can be garbage-collected
+	NanDisposePersistent(query_data->error_cb);
+	NanDisposePersistent(query_data->end_cb);
 	if( data->type == SCANUDF)
 	{
 		as_v8_debug(log,"scan background no need to clean up the queue structure");
@@ -470,18 +472,15 @@ static void respond(uv_work_t * req, int status)
 	else 
 	{
 		NanDisposePersistent(query_data->data_cb);
-		async_close(&query_data->async_handle);
 		if(query_data->result_q != NULL) 
 		{
 			cf_queue_destroy(query_data->result_q);
 			query_data->result_q = NULL;
 		}
+		async_close(&query_data->async_handle);
 	}
-	NanDisposePersistent(query_data->error_cb);
-	NanDisposePersistent(query_data->end_cb);
 
 
-	//delete query_data;
 	if( data->type == SCAN && data->type == SCANUDF)
 	{
 		cf_free(data->query_scan.scan);
