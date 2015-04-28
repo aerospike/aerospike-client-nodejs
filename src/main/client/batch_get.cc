@@ -330,6 +330,10 @@ static void respond(uv_work_t * req, int status)
         free(batch_results);
     }
 
+	if(data->policy != NULL)
+	{
+		cf_free(data->policy);
+	}
     as_v8_debug(log, "Cleaned up the resources");
 
 
