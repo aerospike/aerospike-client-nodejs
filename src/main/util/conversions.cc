@@ -30,6 +30,7 @@
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/aerospike_key.h>
+    #include <aerospike/aerospike_batch.h>
     #include <aerospike/as_config.h>
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
@@ -1012,6 +1013,7 @@ void async_callback(ResolveAsyncCallbackArgs)
 	return;
 
 }
+
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
     if ( obj->Has(NanNew("ttl"))) {
@@ -1623,6 +1625,26 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 }
 
+int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo* log)
+{
+	int arr_length = arr->Length();
+	char** c_bins = NULL;
+	c_bins = (char**) cf_calloc(sizeof(char*), arr_length+1);
+	as_v8_debug(log, "Number of bins requested %d", arr_length);
+	for( int i = 0; i < arr_length; i++)
+	{
+		Local<Value> bname = arr->Get(i);
+		c_bins[i] = (char*)cf_malloc(AS_BIN_NAME_MAX_SIZE);
+		strncpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+		as_v8_detail(log, "name of the bin %s", c_bins[i]);
+	}
+	// The last entry should be NULL because we are passing to select API calls.
+	c_bins[arr_length] = NULL;
+
+	*bins = c_bins;
+	*num_bins = (uint32_t) arr_length;
+	return AS_NODE_PARAM_OK;
+}
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
 {
 

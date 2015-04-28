@@ -23,6 +23,7 @@
 extern "C" {
 	#include <aerospike/aerospike.h>
 	#include <aerospike/aerospike_key.h>
+	#include <aerospike/aerospike_batch.h>
 	#include <aerospike/as_config.h>
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_record.h>
@@ -93,6 +94,7 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log )
 int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log );
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log );
 int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
+int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo * log);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
 int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log ); 
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log);
@@ -124,5 +126,4 @@ bool async_queue_populate(const as_val * val, AsyncCallbackData* data);
 // Functions to set metadata of the record.
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log );
-
 

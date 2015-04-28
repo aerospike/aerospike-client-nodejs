@@ -27,6 +27,7 @@
         'src/main/client.cc',
         'src/main/client/batch_exists.cc',
         'src/main/client/batch_get.cc',
+        'src/main/client/batch_select.cc',
         'src/main/client/close.cc',
         'src/main/client/connect.cc',
         'src/main/client/execute.cc',

@@ -118,7 +118,7 @@ class AerospikeClient : public ObjectWrap {
         /**
          *  undefined client.batch_select(Key[],bins,function(Error,Record))
          */
-        //static Handle<Value> Batch_Select(const Arguments& args);
+		static NAN_METHOD(BatchSelect);
 
         /*
          *undefined client.operate( Key, Operation, function(Error, Record))

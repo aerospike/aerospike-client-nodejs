@@ -18,6 +18,7 @@ With a new client, you can use any of the methods specified below:
 - [Methods](#methods)
   - [batchExists()](#batchExists)
   - [batchGet()](#batchGet)
+  - [batchSelect()](#batchSelect)
   - [close()](#close)
   - [connect()](#connect)
   - [createIntegerIndex()](#createIntegerIndex)
@@ -133,6 +134,63 @@ var keys = [
 ]
 
 client.batchGet(keys, function(error, results) {
+  for ( var i = 0; i<results.length; i++) {
+    var result = results[i];
+    switch ( result.status ) {
+      case status.AEROSPIKE_OK:
+      	// record found
+      	break;
+      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      	// record not found
+      	break;
+      default:
+      	// error while reading record
+        break;
+    }
+  }
+});
+```
+<!--
+################################################################################
+batchSelect()
+################################################################################
+-->
+<a name="batchSelect"></a>
+
+### batchSelect(keys, policy=null, callback)
+
+Reads a batch of records from the database cluster.
+
+Parameters:
+
+- `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
+- `bins`      – An array of bin names for the bins to be returned for the given keys.
+- `policy`    – (optional) The [Batch Policy object](policies.md#WritePolicy) to use for this operation.
+- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+
+The parameters for the `callback` argument:
+
+- `error`   – The [Error object](datamodel.md#error) representing the status of 
+              the operation.
+- `results` – An array of objects, where each object contains the following attributes:
+  - `status`     - status of the record. [Status code](status.md). 
+  - `key`        - key of the record. [Key object](datamodel.md#key).
+  - `record`     - the record read from the cluster containing only the selected bins. [Record object](datamodel.md#record).
+  - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
+
+Example:
+```js
+var key = aerospike.key
+
+var keys = [
+  key('test', 'demo', 'key1'),
+  key('test', 'demo', 'key2'),
+  key('test', 'demo', 'key3')
+]
+
+var bins = ['name', 'age'];
+
+client.batchSelect(keys, bins, function(error, results) {
   for ( var i = 0; i<results.length; i++) {
     var result = results[i];
     switch ( result.status ) {

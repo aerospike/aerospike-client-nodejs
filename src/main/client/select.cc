@@ -64,7 +64,7 @@ typedef struct AsyncData {
     as_policy_read policy;
     Persistent<Function> callback;
     LogInfo * log;
-    int num_bins;
+    uint32_t num_bins;
     char** bins;
 } AsyncData;
 
@@ -121,20 +121,14 @@ static void * prepare(ResolveArgs(args))
     as_record_init(rec, 0);
     // To select the values of given bin, not complete record.
     if ( args[SELECT_ARG_POS_BINS]->IsArray() ) {
-
-        Local<Array> barray = Local<Array>::Cast(args[1]);
-        int num_bins = barray->Length();
-        data->num_bins = num_bins;
-        data->bins = (char **)cf_calloc(sizeof(char *), num_bins+1);
-        as_v8_debug(log, "Number of bins requested %d", num_bins);
-        for (int i=0; i < num_bins; i++) {
-            Local<Value> bname = barray->Get(i);
-            data->bins[i] = (char*) cf_malloc(AS_BIN_NAME_MAX_SIZE);
-            strncpy(data->bins[i],  *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
-            as_v8_detail(log, "bin[%d] : %s", i, data->bins[i]);
-        }
-        // The last entry should be NULL because we are passing to aerospike_key_select
-        data->bins[num_bins] = NULL;
+		Local<Array> v8bins = Local<Array>::Cast(args[SELECT_ARG_POS_BINS]);
+		int res = bins_from_jsarray(&data->bins, &data->num_bins, v8bins, log);
+		if ( res != AS_NODE_PARAM_OK) 
+		{
+			as_v8_error(log,"Parsing bins failed in select ");
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
+		}
     }
     else {
         as_v8_error(log, "Bin names should be an array of string");
@@ -199,7 +193,7 @@ static void execute(uv_work_t * req)
         // DEBUG(log, _KEY,  key);
         aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
 
-        for ( int i = 0; i < data->num_bins; i++) {
+        for ( uint32_t i = 0; i < data->num_bins; i++) {
             cf_free(data->bins[i]);
         }
         cf_free(data->bins);
