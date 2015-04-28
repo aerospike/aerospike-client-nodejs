@@ -2,7 +2,7 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js 0.10.x and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Ubuntu 14.04, Mac OS X.
+This module is compatible with Node.js v0.10.x and v0.12.x, and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Ubuntu 14.04, Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -44,18 +44,25 @@ client.connect(connect_cb)
 // The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
 
-// Read the record from the database
-client.get(key, function(err, rec, meta) {
+var bins = { i: 123, s: "str"}
+var metadata = { ttl: 10000, gen: 1}
+
+// write a record to database.
+client.put(key, bins, metadata, function(err, key){
+
+	// Read the same record from database
+	client.get(key, function(err, rec, meta) {
     
-    // Check for errors
-    if ( err.code == status.AEROSPIKE_OK ) {
-    	// The record was successfully read.
-    	console.log(rec, meta);
-    }
-    else {
-        // An error occurred
-        console.error('error:', err);
-    }
+		// Check for errors
+		if ( err.code == status.AEROSPIKE_OK ) {
+			// The record was successfully read.
+			console.log(rec, meta);
+		}
+		else {
+			// An error occurred
+			console.error('error:', err);
+		}
+	});
 });
 ```
 
@@ -67,7 +74,10 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-[Node.js](http://nodejs.org) version v0.10.x is required. 
+[Node.js](http://nodejs.org) version v0.10.x or greater  is required. 
+
+Aerospike is an addon module written using V8. To compile V8 g++ must be installed in 
+the system.
 
 To install the latest stable version of Node.js, visit 
 [http://nodejs.org/download/](http://nodejs.org/download/)
