@@ -30,6 +30,7 @@
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/aerospike_key.h>
+    #include <aerospike/aerospike_batch.h>
     #include <aerospike/as_config.h>
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
@@ -927,140 +928,6 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
 }
 
 
-// Clone the as_val into a new val. And push the cloned value 
-// into the queue. When the queue size reaches 1/20th of total queue size
-// send an async signal to v8 thread to process the records in the queue.
-
-
-// This is common function used by both scan and query.
-// scan populates only as_val of type record.
-// In case of query it can be record - in case of query without aggregation
-// In query aggregation, the value can be any as_val.
-/*bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
-{
-	if(data->result_q == NULL) 
-	{
-		// in case result_q is not initialized, return from the callback.
-		// But this should never happen.
-		as_v8_error(data->log,"Internal Error: Queue not initialized");
-		return false;
-	}
-
-	// if the record queue is full sleep for n microseconds.
-	if( cf_queue_sz(data->result_q) > data->max_q_size) {
-		// why 20 - no reason right now.
-		usleep(20);
-	}
-	as_val_t type = as_val_type(val);
-	switch(type)
-	{
-		case AS_REC:
-		{
-			as_record* p_rec = as_record_fromval(val);
-			as_record* rec   = NULL;
-			if( !p_rec) {
-				as_v8_error(data->log, "record returned in the callback is NULL");
-				return false;
-			}
-			uint16_t numbins = as_record_numbins(p_rec);
-			rec         = as_record_new(numbins);
-			// clone the record into Asyncdata structure here.
-			// as_val is freed up after the callback. We need to retain a copy of this
-			// as_val until we pass this structure to nodejs
-			record_clone( p_rec, &rec, data->log);
-
-			as_val* clone_rec = as_record_toval(rec);
-			if( cf_queue_sz( data->result_q) >= data->max_q_size)
-			{
-				sleep(1);
-			}
-			cf_queue_push( data->result_q, &clone_rec);
-			data->signal_interval++;
-			break;
-		}
-		case AS_NIL:
-		case AS_BOOLEAN:
-		case AS_INTEGER:
-		case AS_STRING:
-		case AS_BYTES:
-		case AS_LIST:
-		case AS_MAP:
-		{
-			as_val* clone = asval_clone((as_val*) val, data->log);
-			if( cf_queue_sz( data->result_q) >= data->max_q_size)
-			{
-				sleep(1);
-			}
-			cf_queue_push( data->result_q, &clone);
-			data->signal_interval++;
-			break;
-		}
-		default:
-			as_v8_debug(data->log, "Query returned - unrecognizable type");
-			break;
-
-	}
-
-	int async_signal_sz = (data->max_q_size)/20;
-	if ( data->signal_interval% async_signal_sz == 0) {
-		data->signal_interval = 0;
-		data->async_handle.data     = data;
-		async_send( &data->async_handle);
-	}
-	return true;
-}*/
-
-/*void async_queue_process(AsyncCallbackData * data)
-{
-	int rv;
-	as_val * val = NULL;
-
-	// Pop each record from the queue and invoke the node callback with this record.
-	while(data->result_q && cf_queue_sz(data->result_q) > 0) {
-		if (cf_queue_sz(data->result_q) > data->max_q_size) {
-		
-		}
-		Local<Function> cb = NanNew<Function>(data->data_cb);
-		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
-		if( rv == CF_QUEUE_OK) {
-			if(as_val_type(val) == AS_REC)
-			{
-				as_record* record = as_record_fromval(val);
-				Handle<Object> jsrecord = NanNew<Object>();
-				jsrecord->Set(NanNew("bins"),recordbins_to_jsobject(record, data->log));
-				jsrecord->Set(NanNew("meta"),recordmeta_to_jsobject(record, data->log));
-				jsrecord->Set(NanNew("key"),key_to_jsobject(&record->key, data->log));
-				as_record_destroy(record);
-				Handle<Value> cbargs[1] = { jsrecord};
-				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
-			}
-			else
-			{
-				Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
-				as_val_destroy(val);
-				NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
-			}
-		}
-	}
-	return;
-
-}*/
-
-/*// Callback that gets invoked when an async signal is sent.
-void async_callback(ResolveAsyncCallbackArgs)
-{
-	AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
-
-	if (data == NULL && data->result_q == NULL)
-	{
-		as_v8_error(data->log, "Internal error: data or result q is not initialized");
-		return;
-	}
-	async_queue_process(data);
-	return;
-
-}*/
-
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 {
     if ( obj->Has(NanNew("ttl"))) {
@@ -1672,6 +1539,26 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
 
 }
 
+int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo* log)
+{
+	int arr_length = arr->Length();
+	char** c_bins = NULL;
+	c_bins = (char**) cf_calloc(sizeof(char*), arr_length+1);
+	as_v8_debug(log, "Number of bins requested %d", arr_length);
+	for( int i = 0; i < arr_length; i++)
+	{
+		Local<Value> bname = arr->Get(i);
+		c_bins[i] = (char*)cf_malloc(AS_BIN_NAME_MAX_SIZE);
+		strncpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+		as_v8_detail(log, "name of the bin %s", c_bins[i]);
+	}
+	// The last entry should be NULL because we are passing to select API calls.
+	c_bins[arr_length] = NULL;
+
+	*bins = c_bins;
+	*num_bins = (uint32_t) arr_length;
+	return AS_NODE_PARAM_OK;
+}
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
 {
 

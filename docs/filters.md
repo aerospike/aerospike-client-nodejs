@@ -9,9 +9,7 @@ Example:
 var filter = aerospike.filters
 
 var queryArgs = { filters = [
-					filter.equal('a', 'hello'),
-					filter.equal('b', 123),
-					filter.range('c', 1, 1000)
+					filter.equal('a', 'hello')
 				  ]
 }
 

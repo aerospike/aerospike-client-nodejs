@@ -64,6 +64,7 @@ void AerospikeClient::Init()
     // Prototype
 	NODE_SET_PROTOTYPE_METHOD(cons, "batchGet", BatchGet);
 	NODE_SET_PROTOTYPE_METHOD(cons, "batchExists", BatchExists);
+	NODE_SET_PROTOTYPE_METHOD(cons, "batchSelect", BatchSelect);
 	NODE_SET_PROTOTYPE_METHOD(cons, "close", Close);
 	NODE_SET_PROTOTYPE_METHOD(cons, "connect", Connect);
 	NODE_SET_PROTOTYPE_METHOD(cons, "exists", Exists);
