@@ -143,21 +143,22 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
     if ( arglength > 3 ) {
-        if ( args[UDF_ARG_APOLICY]->IsObject())
+        // LDT operations are executed through same UDF execute code path.
+		// at times LDT can pass undefined value for apply policy.
+		// So handle the undefined scenario.
+		if( args[UDF_ARG_APOLICY]->IsUndefined())
+		{
+			data->policy = NULL;
+			as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
+		}
+		else if ( args[UDF_ARG_APOLICY]->IsObject())
 		{
 			data->policy = (as_policy_apply*) cf_malloc(sizeof(as_policy_apply));
             if(applypolicy_from_jsobject(data->policy, args[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
 	            as_v8_error(log, "apply policy shoule be an object");
 		        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			    goto Err_Return;
-			}	// LDT operations are executed through same UDF execute code path.
-				// at times LDT can pass undefined value for apply policy.
-				// So handle the undefined scenario.
-		}
-		else if( args[UDF_ARG_APOLICY]->IsUndefined())
-		{
-			data->policy = NULL;
-			as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
+			}	
 		}
     }
     

@@ -186,6 +186,7 @@ NAN_METHOD(AerospikeQuery::select)
 	{
 		// Throw an Exception here.
 		as_v8_error(log, "Bins to be selected should be an array");
+		return NanThrowError(NanNew("Bins must be an array"));
 	}   
 	NanReturnValue(args.This());
 }
@@ -217,6 +218,7 @@ NAN_METHOD(AerospikeQuery::where)
 			}
 			else {
 				as_v8_error(log, "Bin value must be string");
+				return NanThrowError(NanNew("Bin value must be string"));
 			}
 			int predicate		 = filter->Get(NanNew("predicate"))->ToObject()->IntegerValue();
 			as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
@@ -232,14 +234,14 @@ NAN_METHOD(AerospikeQuery::where)
 						}
 						else {
 							as_v8_error(log, "The range value passed must be an integer");
-							break;
+							return NanThrowError(NanNew("The range value passed must be an integer"));
 						}
 						if( v8max->IsNumber()){
 							max = v8max->NumberValue();
 						}
 						else {
 							as_v8_error(log, "The range value passed must be an integer");
-							break;
+							return NanThrowError(NanNew("The range value passed must be an integer"));
 						}
 						as_query_where( query, bin_name, as_integer_range(min, max));
 						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
@@ -272,6 +274,7 @@ NAN_METHOD(AerospikeQuery::where)
 	{
 		// Throw an Exception here.
 		as_v8_error(log, "Filters should be passed as an array");
+		return NanThrowError(NanNew("filters should be passed as an array"));
 	} 
 	NanReturnValue(args.This());
 }
@@ -294,6 +297,7 @@ NAN_METHOD(AerospikeQuery::setRecordQsize)
 	{
 		// Throw exception.
 		as_v8_error(log, "The queue size must be an integer");
+		return NanThrowError(NanNew("Queue size must be an integer"));
 	}
 	NanReturnValue(args.This());
 }
@@ -320,6 +324,7 @@ NAN_METHOD(AerospikeQuery::apply)
 	else
 	{
 		as_v8_error(query->log, " Parsing udfArgs for query object failed");
+		return NanThrowError(NanNew("Error in parsing the query aggregate parameters"));
 	}
 	NanReturnValue(args.This());
 }
@@ -340,6 +345,7 @@ NAN_METHOD(AerospikeQuery::setPriority)
 	{   
 		//Throw an exception.
 		as_v8_error(log, "Scan scan_priority must be an enumerator of type scanPriority");
+		return NanThrowError(NanNew("Scan priority must be of type aerospike.scanPriority"));
 	}   
 	NanReturnValue(args.This());
 }
@@ -360,6 +366,7 @@ NAN_METHOD(AerospikeQuery::setPercent)
 	{
 		//Throw an exception.
 		as_v8_error(log, "scan percentage is a number less than 100");
+		return NanThrowError(NanNew("Scan percentage must be an integer less than 100"));
 	}
 	NanReturnValue(args.This());
 }
@@ -382,6 +389,7 @@ NAN_METHOD(AerospikeQuery::setNobins)
 	{
 		// Throw exception.
 		as_v8_error(log," setNobins should be a boolean value");
+		return NanThrowError(NanNew("setNobins must be a boolean value"));
 	}
 	NanReturnValue(args.This());
 }
@@ -401,6 +409,7 @@ NAN_METHOD(AerospikeQuery::setConcurrent)
 	{
 		as_v8_error(log, "setConcuurent should be a boolean value");
 		// Throw exception.
+		return NanThrowError(NanNew("setConcurrent must be a boolean value"));
 	}
 	NanReturnValue(args.This());
 }
@@ -419,6 +428,7 @@ NAN_METHOD(AerospikeQuery::setQueryType)
 	else
 	{
 		as_v8_error(log, "scanQueryAPI is an enumerator and takes integer value");
+		return NanThrowError(NanNew("Configuration Error while creating client object"));
 	}
 	NanReturnValue(args.This());
 }
