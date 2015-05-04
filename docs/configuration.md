@@ -23,7 +23,7 @@ var config = {
     timeout: 100 
   }
   log : {
-     log : aerospike.log.INFO,
+     level: aerospike.log.INFO,
      file : fd  // fd  opened by the application using fs.open()
   },
   modlua: {
