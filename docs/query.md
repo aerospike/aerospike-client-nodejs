@@ -27,6 +27,10 @@ Statement
 -->
 <a name="Statement"></a>
 
+Statement is used to specify the attributes of query object, during the object creation.
+The statement should be well formed for creating a query object, in case of error during the 
+query creation, an exception is thrown with appropriate error messages.
+
 ###Statement Attributes
 
 #### `select` 

@@ -16,6 +16,8 @@ which needs to be populated and passed to `aerospike.client()`.
 With a new client, you can use any of the methods specified below:
 
 - [Methods](#methods)
+  - [add()](#add)
+  - [append()](#append)
   - [batchExists()](#batchExists)
   - [batchGet()](#batchGet)
   - [batchSelect()](#batchSelect)
@@ -30,6 +32,7 @@ With a new client, you can use any of the methods specified below:
   - [indexRemove()](#indexRemove)
   - [LargeList()](#largeList)
   - [operate()](#operate)
+  - [prepend()](#prepend)
   - [put()](#put)
   - [query()](#query)
   - [remove()](#remove)
@@ -41,6 +44,79 @@ With a new client, you can use any of the methods specified below:
 
 <a name="methods"></a>
 ## Methods
+
+<!--
+################################################################################
+add()
+################################################################################
+-->
+<a name="add"></a>
+
+### add(key, bins, metadata=null, policy=null, callback)
+
+Adds integer values to existing record bin values. This call only works for integers values.
+
+Parameters:
+
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
+- `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`. Only generation is returned.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
+
+Example:
+
+```js
+var bins = { itemsShopped: 5}
+
+client.add(key, bins, function(error, record, metadata, key) {
+  // do something
+});
+```
+<!--
+################################################################################
+append()
+################################################################################
+-->
+<a name="append"></a>
+
+### append(key, bins, metadata=null, policy=null, callback)
+
+Appends bin string values to existing record bin values. This call only works for string values.
+
+Parameters:
+
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
+- `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`.Only generation is returned.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
+
+Example:
+
+```js
+var bins = {LastMovieSeen: "Imitation Game"}
+
+client.append(key, bins, function(error, record, metadata, key) {
+  // do something
+});
+```
 
 <!--
 ################################################################################
@@ -552,7 +628,7 @@ operate()
 -->
 <a name="operate"></a>
 
-### operate(key, operations, policy=null, callback)
+### operate(key, operations, metadata=null, policy=null, callback)
 
 Performs multiple operations on a single record. 
 
@@ -560,6 +636,7 @@ Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `operations`  – An array of operations.For the list of supported operations please refer [operators](operators.md)
+- `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
 - `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -583,6 +660,42 @@ var ops = [
 ]
 
 client.operate(key, ops, function(error, record, metadata, key) {
+  // do something
+});
+```
+<!--
+################################################################################
+prepend()
+################################################################################
+-->
+<a name="prepend"></a>
+
+### prepend(key, bins, metadata=null, policy=null, callback)
+
+Prepends bin string values to existing record bin values. This call only works for string values.
+
+Parameters:
+
+- `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
+- `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of 
+                  the operation.
+- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
+- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`. Only generation is returned.
+- `key`         – The [Key object](datamodel.md#key) for the `record`.
+
+Example:
+
+```js
+var bins = {FirstMovieSeen: "12 Angry Man"}
+
+client.prepend(key, bins, function(error, record, metadata, key) {
   // do something
 });
 ```

@@ -90,6 +90,8 @@ static void * prepare(ResolveArgs(args))
 
     int arglength = args.Length();
 
+	int meta_present = 0;
+
     if ( args[arglength-1]->IsFunction() ){
 		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
@@ -127,27 +129,40 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 
-    if ( args[OP_ARG_POS_META]->IsObject() ) {
-        setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
-        setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
-    }
-    else {
-        as_v8_debug(log, "Metadata should be an object");
-    }
+    if(arglength > 3){
+		if(!args[OP_ARG_POS_META]->IsNull() && args[OP_ARG_POS_META]->IsObject() ) {
+			setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
+			setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
+			meta_present = 1;
+		}
+		else {
+			as_v8_debug(log, "Metadata should be an object");
+		}
+	}
 
-    if ( arglength > 3 ) {
-        if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
+    if(arglength > 3 ) {
+		int opolicy_pos = OP_ARG_POS_OPOLICY;
+		if( meta_present == 0)
+		{
+			as_v8_debug(log, "metadata is not passed in the arguments");
+			opolicy_pos = OP_ARG_POS_OPOLICY - 1;
+		}
+		if( args[OP_ARG_POS_OPOLICY]->IsNull()) {
+			data->policy = NULL;
+			as_v8_debug(log, "Operate policy is not passed, using default values");
+		}
+		else if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
 			data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
             if (operatepolicy_from_jsobject( data->policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
-        }
-        else {
-            as_v8_error(log, "Operate policy should be an object");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-            goto Err_Return;
+			else {
+				as_v8_error(log, "Operate policy should be an object");
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				goto Err_Return;
+			}
         }
     }
     
