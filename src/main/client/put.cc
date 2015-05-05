@@ -130,12 +130,21 @@ static void * prepare(ResolveArgs(args))
     }
 
     if ( args[PUT_ARG_POS_META]->IsObject() ) {
-        if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-            as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-            goto Err_Return;
-        }
-        meta_present = 1;
+		// third argument could be metadata or policy.
+		// If the object ttl or gen, it is metadata, otherwise it is policy object.
+		if( args[PUT_ARG_POS_META]->ToObject()->Has(NanNew("ttl")) || args[PUT_ARG_POS_META]->ToObject()->Has(NanNew("gen")))
+		{
+			if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+				as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+				goto Err_Return;
+			}
+			meta_present = 1;
+		}
+		else
+		{
+			meta_present = 0;
+		}
     }
     else {
         as_v8_error(log, "Metadata should be an object");
