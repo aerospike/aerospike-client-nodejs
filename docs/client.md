@@ -430,7 +430,7 @@ Example:
 ```js
 var key = aerospike.key
 
-client.gey(key('test','demo','key1'), function(error, record, metadata) {
+client.get(key('test','demo','key1'), function(error, record, metadata) {
   // do something
 });
 ```
@@ -574,7 +574,7 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var op = aerospike.Operators
+var op = aerospike.operator
 
 var ops = [
   op.append('a', 'xyz'),
