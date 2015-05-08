@@ -90,7 +90,6 @@ static void * prepare(ResolveArgs(args))
 
     int arglength = args.Length();
 
-	int meta_present = 0;
 
     if ( args[arglength-1]->IsFunction() ){
 		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
@@ -131,7 +130,6 @@ static void * prepare(ResolveArgs(args))
 
     if(arglength > 3){
 		if(!args[OP_ARG_POS_META]->IsNull() && args[OP_ARG_POS_META]->IsObject() ) {
-			meta_present = 1;
 			setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
 			setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
 		}
