@@ -147,7 +147,7 @@ describe('client.batchSelect()', function() {
     it('should successfully read bins of 1000 records', function(done) {
 
         // this high for low-end hosts
-        this.timeout(3000);
+        this.timeout(5000);
 
         // number of records
         var nrecords = 1000;

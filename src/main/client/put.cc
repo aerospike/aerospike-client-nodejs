@@ -127,19 +127,24 @@ static void * prepare(ResolveArgs(args))
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-
-    if ( args[PUT_ARG_POS_META]->IsObject() ) {
-		if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-			as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
+	if( arglength > 3) {
+		if( args[PUT_ARG_POS_META]->IsNull() || args[PUT_ARG_POS_META]->IsUndefined())
+		{
+			as_v8_debug(log, "Metadata passed is null or undefined");
+		}
+		else if ( args[PUT_ARG_POS_META]->IsObject() ) {
+			if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+				as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
+				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+				goto Err_Return;
+			}
+		}
+		else {
+			as_v8_error(log, "Metadata should be an object");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
-    }
-    else {
-        as_v8_error(log, "Metadata should be an object");
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-        goto Err_Return;
-    }
+	}
 
     if ( arglength > 4 ) {
         int wpolicy_pos = PUT_ARG_POS_WPOLICY;

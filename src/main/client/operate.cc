@@ -116,7 +116,7 @@ static void * prepare(ResolveArgs(args))
 
     if ( args[OP_ARG_POS_OP]->IsArray() ) {
         Local<Array> operations = Local<Array>::Cast(args[OP_ARG_POS_OP]);
-        if ( operations_from_jsarray( op, operations, log ) != AS_NODE_PARAM_OK ) {
+        if( operations_from_jsarray( op, operations, log ) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing of as_operation (C structure) from operation object failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
@@ -129,24 +129,28 @@ static void * prepare(ResolveArgs(args))
     }
 
     if(arglength > 3){
-		if(!args[OP_ARG_POS_META]->IsNull() && args[OP_ARG_POS_META]->IsObject() ) {
+		if( args[OP_ARG_POS_META]->IsNull() || args[OP_ARG_POS_META]->IsUndefined()){
+			as_v8_debug(log, "metadata object passed is Null or undefined");
+		}
+		else if(args[OP_ARG_POS_META]->IsObject() ) {
 			setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
 			setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
 		}
 		else {
-			as_v8_debug(log, "Metadata should be an object");
+			as_v8_error(log, "Metadata should be an object");
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
 		}
 	}
 
     if(arglength > 4 ) {
-		int opolicy_pos = OP_ARG_POS_OPOLICY;
-		if( args[opolicy_pos]->IsUndefined() || args[opolicy_pos]->IsNull()) {
+		if( args[OP_ARG_POS_OPOLICY]->IsUndefined() || args[OP_ARG_POS_OPOLICY]->IsNull()) {
 			data->policy = NULL;
 			as_v8_debug(log, "Operate policy is not passed, using default values");
 		}
-		else if ( args[opolicy_pos]->IsObject() ) {
+		else if( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
 			data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
-            if (operatepolicy_from_jsobject( data->policy, args[opolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            if (operatepolicy_from_jsobject( data->policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
@@ -155,6 +159,7 @@ static void * prepare(ResolveArgs(args))
 		else
 		{
 			as_v8_error(log, "Operate policy passed must be an object");
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
     }

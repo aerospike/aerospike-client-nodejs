@@ -424,5 +424,76 @@ describe('client.operate()', function() {
         });
     });
 
+	it('should add a string value to a bin and expected fail', function(done) {
+        
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+
+			var bin = { i : "str"}
+            client.add(key, bin, meta, function(err, record1, metadata1, key1) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+				done();
+
+            });
+        });
+    });
+	it('should append a bin of type integer using append API and expected to fail', function(done) {
+        
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+			var bin = { s: 123};
+            client.append(key, bin, meta, function(err, record1, metadata1, key1) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+				done();
+
+            });
+        });
+    });
+	it('should prepend an integer using prepend API and expect to fail', function(done) {
+        
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+
+            var bin = { s: 123}
+
+            client.prepend(key, bin, meta, function(err, record1, metadata1, key1) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+				done();
+            });
+        });
+    });
 
 });
