@@ -85,7 +85,7 @@ static void * prepare(ResolveArgs(args))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-	data->policy						= NULL;
+	data->policy			= NULL;
     as_operations* op = &data->op;
 
     int arglength = args.Length();
@@ -131,39 +131,34 @@ static void * prepare(ResolveArgs(args))
 
     if(arglength > 3){
 		if(!args[OP_ARG_POS_META]->IsNull() && args[OP_ARG_POS_META]->IsObject() ) {
+			meta_present = 1;
 			setTTL(args[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
 			setGeneration(args[OP_ARG_POS_META]->ToObject(), &op->gen, log);
-			meta_present = 1;
 		}
 		else {
 			as_v8_debug(log, "Metadata should be an object");
 		}
 	}
 
-    if(arglength > 3 ) {
+    if(arglength > 4 ) {
 		int opolicy_pos = OP_ARG_POS_OPOLICY;
-		if( meta_present == 0)
-		{
-			as_v8_debug(log, "metadata is not passed in the arguments");
-			opolicy_pos = OP_ARG_POS_OPOLICY - 1;
-		}
-		if( args[OP_ARG_POS_OPOLICY]->IsNull()) {
+		if( args[opolicy_pos]->IsUndefined() || args[opolicy_pos]->IsNull()) {
 			data->policy = NULL;
 			as_v8_debug(log, "Operate policy is not passed, using default values");
 		}
-		else if ( args[OP_ARG_POS_OPOLICY]->IsObject() ) {
+		else if ( args[opolicy_pos]->IsObject() ) {
 			data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
-            if (operatepolicy_from_jsobject( data->policy, args[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            if (operatepolicy_from_jsobject( data->policy, args[opolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
-			else {
-				as_v8_error(log, "Operate policy should be an object");
-				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-				goto Err_Return;
-			}
         }
+		else
+		{
+			as_v8_error(log, "Operate policy passed must be an object");
+			goto Err_Return;
+		}
     }
     
     as_record_init(rec, 0);

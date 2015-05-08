@@ -91,7 +91,6 @@ static void * prepare(ResolveArgs(args))
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
     int arglength = args.Length();
-    int meta_present = 0;
 
     if ( args[arglength-1]->IsFunction()) {
 		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
@@ -130,12 +129,11 @@ static void * prepare(ResolveArgs(args))
     }
 
     if ( args[PUT_ARG_POS_META]->IsObject() ) {
-        if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-            as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-            goto Err_Return;
-        }
-        meta_present = 1;
+		if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+			as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
+			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+			goto Err_Return;
+		}
     }
     else {
         as_v8_error(log, "Metadata should be an object");
@@ -143,12 +141,8 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 
-    if ( arglength > 3 ) {
+    if ( arglength > 4 ) {
         int wpolicy_pos = PUT_ARG_POS_WPOLICY;
-        if ( 0 == meta_present) {
-            as_v8_debug(log, "Argument list does not contain metadata, default values will be used");
-            wpolicy_pos = PUT_ARG_POS_WPOLICY - 1;
-        }
         if ( args[wpolicy_pos]->IsObject()){
 			data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
             if(writepolicy_from_jsobject(data->policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
