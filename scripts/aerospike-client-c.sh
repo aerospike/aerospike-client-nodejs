@@ -51,7 +51,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "redhatenterpriseserver6" )
+      "centos6" | "redhatenterpriseserver6" | "centos7")
         echo "el6" "rpm"
         return 0
         ;;
@@ -73,7 +73,25 @@ detect_linux()
 
     esac
   fi
+  
+  # no LSB, check for /etc/centos-release
+  if [ -f /etc/centos-release ]; then
+    dist=$(cat /etc/redhat-release | tr '[:upper:]' '[:lower:]')
+    case ${dist} in
 
+      "centos"* | "red hat enterprise linux"* | "fedora"*)
+	echo "el6" "rpm"
+	return 0
+	;;
+	
+       * )
+	echo "error: ${DIST_NAME} is not supported."
+	return 1
+	;;
+     esac
+   fi
+
+	
   # Ok, no LSB, so check for /etc/issue
   if [ -f /etc/issue ]; then
     dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
