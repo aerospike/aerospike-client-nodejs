@@ -71,6 +71,21 @@ var argp = yargs
             default: "demo",
             describe: "Set for the keys."
         },
+		enable_security: {
+			default: false,
+			describe: "Set this to true to run benchmark in secured cluster"
+		},
+		user: {
+			alias: "u",
+			default:"admin",
+			describe: "Username to connect to a secure cluster"
+		},  
+		password: {
+			alias: "p",
+			default: "admin",
+			describe: "Password to connect to a secure cluster"
+		} 
+
     });
 
 var argv = argp.argv;
@@ -112,14 +127,23 @@ var logger = new (winston.Logger)({
  *
  ***********************************************************************/
 
-var client = aerospike.client({
+var config = {
+		
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
     policies: {
         timeout: argv.timeout
     }
-});
+}
+
+if(argv.enable_security)
+{
+	config.user = argv.user;
+	config.password = argv.password;
+}
+
+var client = aerospike.client(config);
 
 client.connect(function(err) {
     if ( err.code !== 0 ) {

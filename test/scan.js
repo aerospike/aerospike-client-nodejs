@@ -31,17 +31,8 @@ var policy	   = aerospike.policy;
 var queryStatus = aerospike.scanStatus;
 describe('client.query() - without where clause(Scan)', function() {
 
-    var client = aerospike.client({
-        hosts: [
-            { addr: options.host, port: options.port }
-        ],
-        log: {
-            level: options.log
-        },
-        policies: {
-            timeout: options.timeout
-        }
-    });
+	var config = options.getConfig();
+    var client = aerospike.client(config);
 
     before(function(done) {
         client.connect(function(err){

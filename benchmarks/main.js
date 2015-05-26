@@ -93,6 +93,20 @@ var argp = yargs
             default: "demo",
             describe: "Key set."
         },
+		enable_security: {
+			default: false,
+			describe: "set this to true to run benchmark in a secured cluster"
+		},
+		user: {
+			alias: "u",
+			default:"admin",
+			describe: "Username to connect to a secure cluster"
+		},  
+		password: {
+			alias: "p",
+			default: "admin",
+			describe: "Password to connect to a secure cluster"
+		},  
         json: {
             alias: "j",
             default: false,

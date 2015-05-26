@@ -40,18 +40,8 @@ describe('client.updateLogging()', function() {
         done();
     });
 
-    var config = {
-        hosts: [
-            { addr: options.host, port: options.port }
-        ],
-        log: {
-            level :options.log,
-            file : fd
-        },
-        policies: {
-            timeout: options.timeout
-        }
-    };
+    var config = options.getConfig();
+	config.log.file = null;
 
 
     it('should log the messages to test.log', function(done) {

@@ -66,6 +66,10 @@ var parser = yargs
             default: "demo",
             describe: "Set for the keys."
         },
+		enable_security: {
+			default: false,
+			describe: "Run the test cases in a secured cluster"
+		},
 		user: {
 			alias: "u",
 			default:"admin",
@@ -84,6 +88,21 @@ var parser = yargs
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv;
 
+options.getConfig = function()
+{
+	var config = {};
+	config = { 
+		hosts: [ {addr:options.host, port: options.port} ],
+		log: { level: options.log, file: options.log_file},
+		policies: { timeout: options.timeout}
+	}
+	if(options.enable_security)
+	{
+		config.user = options.user;
+		config.password = options.password;
+	}
+	return config;
+}
 if ( options.help === true ) {
     parser.showHelp();
     process.exit(0);

@@ -33,19 +33,9 @@ var language = aerospike.language;
 
 describe('client.LargeList()', function(done) {
 
-    var config = {
-        hosts: [
-            { addr: options.host, port: options.port }
-        ],
-        log: {
-            level: options.log,
-			file: options.log_file
-        },
-        policies: {
-            timeout: options.timeout
-        }
-    };
+    var config = options.getConfig()	
 	var client = aerospike.client(config);
+
 	// A single LList is created. All LList operations are done in this single list to demonstrate the 
 	// usage of LList API.
 	// The operations include adding an element, udpating an element, searching for an element

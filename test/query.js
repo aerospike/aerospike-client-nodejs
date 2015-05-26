@@ -34,20 +34,10 @@ var filter	   = aerospike.filter;
 
 describe('client.query()', function() {
 
-    var client = aerospike.client({
-        hosts: [
-            { addr: options.host, port: options.port }
-        ],
-        log: {
-            level: options.log
-        },
-        policies: {
-            timeout: options.timeout
-        },
-		modlua: {
-			userPath : __dirname
-		}
-    });
+	var config = options.getConfig();
+	config.modlua = {};
+	config.modlua.userPath = __dirname;
+    var client = aerospike.client(config);
 
     before(function(done) {
         client.connect(function(err){

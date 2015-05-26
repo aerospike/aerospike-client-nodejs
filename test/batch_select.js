@@ -31,18 +31,8 @@ var policy = aerospike.policy;
 
 describe('client.batchSelect()', function() {
 
-    var client = aerospike.client({
-        hosts: [
-            { addr: options.host, port: options.port }
-        ],
-        log: {
-            level: options.log,
-			file: options.log_file
-        },
-        policies: {
-            timeout: options.timeout
-        }
-    });
+	var config = options.getConfig();
+    var client = aerospike.client(config);
 
     before(function(done) {
         client.connect(function(err){

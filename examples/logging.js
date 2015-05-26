@@ -80,7 +80,21 @@ var argp = yargs
             alias: "s",
             default: "demo",
             describe: "Set for the keys."
-        }
+        },
+		enable_security: {
+			default: false,
+			describe: "set this to true to run example in a secured cluster"
+		},  
+		user: {
+			alias: "u",
+			default: "admin",
+			describe: "Username to connect to secured cluster"
+		},  
+		password: {
+			alias: "p",
+			default: "admin",
+			describe: "Password to connec to secured cluster"
+		}  
     });
 
 var argv = argp.argv;
@@ -104,15 +118,21 @@ if ( logfile === null ) {
  * Establish a connection to the cluster.
  * 
  ******************************************************************************/
-
-var client = aerospike.client({
+var config = {
     hosts: [
         { addr: argv.host, port: argv.port }
     ],
     policies: {
         timeout: argv.timeout
     }
-}).connect(function(err, client) {
+}
+if(argv.enable_security)
+{
+	config.user = argv.user;
+	config.password = argv.password;
+}
+
+var client = aerospike.client(config).connect(function(err, client) {
     if ( err.code != status.AEROSPIKE_OK ) {
         console.log("Aerospike server connection Error: %j", err)
         return;

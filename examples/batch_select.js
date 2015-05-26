@@ -78,7 +78,21 @@ var argp = yargs
 			alias: "b",
 			default: undefined,
 			describe: "Bins to select in the batch Call"
-		}
+		},
+		enable_security: {
+			default: false,
+			describe: "set this to true to run example in a secured cluster"
+		},  
+		user: {
+			alias: "u",
+			default: "admin",
+			describe: "Username to connect to secured cluster"
+		},  
+		password: {
+			alias: "p",
+			default: "admin",
+			describe: "Password to connec to secured cluster"
+		}  
     });
 
 var argv = argp.argv;
@@ -126,6 +140,11 @@ config = {
     }
 };
 
+if (argv.enable_security)
+{
+	config.user = argv.user;
+	config.password = argv.password;
+}
 /*******************************************************************************
  *
  * Perform the operation
