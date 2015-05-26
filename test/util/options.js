@@ -75,6 +75,10 @@ var parser = yargs
 			alias: "p",
 			default: "admin",
 			describe: "Password to connect to a secure cluster"
+		},
+		run_aggregation: {
+			default: false,
+			describe: "Set this to true to run aggregation tests"
 		}
     });
 
