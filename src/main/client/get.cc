@@ -15,12 +15,12 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
-    #include <aerospike/as_record_iterator.h>
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_key.h>
+	#include <aerospike/as_config.h>
+	#include <aerospike/as_key.h>
+	#include <aerospike/as_record.h>
+	#include <aerospike/as_record_iterator.h>
 }
 
 #include <node.h>
@@ -46,14 +46,14 @@ using namespace v8;
  *  AsyncData — Data to be used in async calls.
  */
 typedef struct AsyncData {
-    int param_err;
-    aerospike * as;
-    as_error err;
-    as_key key;
-    as_record rec;
-    as_policy_read* policy;
-    LogInfo * log;
-    Persistent<Function> callback;
+	int param_err;
+	aerospike * as;
+	as_error err;
+	as_key key;
+	as_record rec;
+	as_policy_read* policy;
+	LogInfo * log;
+	Persistent<Function> callback;
 } AsyncData;
 
 /*******************************************************************************
@@ -70,69 +70,69 @@ static void * prepare(ResolveArgs(args))
 {
 	NanScope();
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
 
-    // Build the async data
-    AsyncData * data = new AsyncData;
-    data->as = client->as;
+	// Build the async data
+	AsyncData * data = new AsyncData;
+	data->as = client->as;
 
-    LogInfo * log = data->log = client->log;
+	LogInfo * log = data->log = client->log;
 
-    data->param_err = 0;
-    // Local variables
-    as_key *    key         = &data->key;
-    as_record * rec         = &data->rec;
+	data->param_err = 0;
+	// Local variables
+	as_key *    key         = &data->key;
+	as_record * rec         = &data->rec;
 	data->policy					= NULL;
 
 
-    int arglength = args.Length();
+	int arglength = args.Length();
 
-    if ( args[arglength-1]->IsFunction()) {
+	if ( args[arglength-1]->IsFunction()) {
 		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
-        as_v8_detail(log, "Node.js callback registered");
-    }
-    else {
-        as_v8_error(log, "No callback to register");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-        goto Err_Return;
-    }
+		as_v8_detail(log, "Node.js callback registered");
+	}
+	else {
+		as_v8_error(log, "No callback to register");
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
+	}
 
-    if ( args[GET_ARG_POS_KEY]->IsObject() ) {
-        if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-            as_v8_error(log, "Parsing of key (C structure) from key object failed");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-            goto Err_Return;
-        }
-    }
-    else {
-        as_v8_error(log, "Key should be an object");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-        goto Err_Return;
-    }
+	if ( args[GET_ARG_POS_KEY]->IsObject() ) {
+		if (key_from_jsobject(key, args[GET_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+			as_v8_error(log, "Parsing of key (C structure) from key object failed");
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
+		}
+	}
+	else {
+		as_v8_error(log, "Key should be an object");
+		COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+		goto Err_Return;
+	}
 
-    if ( arglength > 2 ) {
-        if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
+	if ( arglength > 2 ) {
+		if ( args[GET_ARG_POS_RPOLICY]->IsObject() ) {
 			data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
-            if (readpolicy_from_jsobject( data->policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing of readpolicy from object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Readpolicy should be an object");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-            goto Err_Return;
-        }
-    }
+			if (readpolicy_from_jsobject( data->policy, args[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Parsing of readpolicy from object failed");
+				COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+				goto Err_Return;
+			}
+		}
+		else {
+			as_v8_error(log, "Readpolicy should be an object");
+			COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+			goto Err_Return;
+		}
+	}
    
-    as_record_init(rec, 0);
+	as_record_init(rec, 0);
 
-    return data;
+	return data;
 
 Err_Return:
-    data->param_err = 1;
-    return data;
+	data->param_err = 1;
+	return data;
 }
 /**
  *  execute() — Function to execute inside the worker-thread.
@@ -142,32 +142,32 @@ Err_Return:
  */
 static void execute(uv_work_t * req)
 {
-    // Fetch the AsyncData structure
-    AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+	// Fetch the AsyncData structure
+	AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
-    // Data to be used.
-    aerospike * as          = data->as;
-    as_error *  err         = &data->err;
-    as_key *    key         = &data->key;
-    as_record * rec         = &data->rec;
-    as_policy_read* policy  = data->policy;
+	// Data to be used.
+	aerospike * as          = data->as;
+	as_error *  err         = &data->err;
+	as_key *    key         = &data->key;
+	as_record * rec         = &data->rec;
+	as_policy_read* policy  = data->policy;
 
-    LogInfo * log           = data->log;
+	LogInfo * log           = data->log;
 
 
-    // Invoke the blocking call.
-    // The error is handled in the calling JS code.
-    if (as->cluster == NULL) {
-        as_v8_error(log, "Not connected to Cluster to perform the operation");
-        data->param_err = 1;
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-    }
+	// Invoke the blocking call.
+	// The error is handled in the calling JS code.
+	if (as->cluster == NULL) {
+		as_v8_error(log, "Not connected to Cluster to perform the operation");
+		data->param_err = 1;
+		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+	}
 
-    if ( data->param_err == 0 ) {
-        as_v8_debug(log, "Invoking get with ");
-        // DEBUG(log, _KEY,  key);
-        aerospike_key_get(as, err, policy, key, &rec);  
-    }
+	if ( data->param_err == 0 ) {
+		as_v8_debug(log, "Invoking get with ");
+		// DEBUG(log, _KEY,  key);
+		aerospike_key_get(as, err, policy, key, &rec);  
+	}
 
 }
 
@@ -182,64 +182,64 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
 	NanScope();
-    // Fetch the AsyncData structure
-    AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
+	// Fetch the AsyncData structure
+	AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
 
-    as_error *  err         = &data->err;
-    as_key *    key         = &data->key;
-    as_record * rec         = &data->rec;
-    LogInfo * log           = data->log;
-    as_v8_debug(log, "Get operations' the response is");
-    // DEBUG(log, ERROR, err);
-    
-    Handle<Value> argv[4];
-    // Build the arguments array for the callback
-    if( data->param_err == 0) {
-        argv[0] = error_to_jsobject(err, log),
-        argv[1] = recordbins_to_jsobject(rec, log ),
-        argv[2] = recordmeta_to_jsobject(rec, log),
-        argv[3] = key_to_jsobject(key, log);
-    }
-    else {
-        err->func = NULL;
-        as_v8_debug(log, "Parameter error while parsing the arguments");
-        argv[0] = error_to_jsobject(err, log);
-        argv[1] = NanNull();
-        argv[2] = NanNull();
-        argv[3] = NanNull();
-    }
+	as_error *  err         = &data->err;
+	as_key *    key         = &data->key;
+	as_record * rec         = &data->rec;
+	LogInfo * log           = data->log;
+	as_v8_debug(log, "Get operations' the response is");
+	// DEBUG(log, ERROR, err);
+	
+	Handle<Value> argv[4];
+	// Build the arguments array for the callback
+	if( data->param_err == 0) {
+		argv[0] = error_to_jsobject(err, log),
+		argv[1] = recordbins_to_jsobject(rec, log ),
+		argv[2] = recordmeta_to_jsobject(rec, log),
+		argv[3] = key_to_jsobject(key, log);
+	}
+	else {
+		err->func = NULL;
+		as_v8_debug(log, "Parameter error while parsing the arguments");
+		argv[0] = error_to_jsobject(err, log);
+		argv[1] = NanNull();
+		argv[2] = NanNull();
+		argv[3] = NanNull();
+	}
 
-    // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+	// Surround the callback in a try/catch for safety
+	TryCatch try_catch;
 
-    // Execute the callback.
+	// Execute the callback.
 	Local<Function> cb = NanNew<Function>(data->callback);
 	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 4, argv);
-    as_v8_debug(log, "Invoked Get callback");
+	as_v8_debug(log, "Invoked Get callback");
 
-    // Process the exception, if any
-    if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
-    }
+	// Process the exception, if any
+	if ( try_catch.HasCaught() ) {
+		node::FatalException(Isolate::GetCurrent(), try_catch);
+	}
 
-    // Dispose the Persistent handle so the callback
-    // function can be garbage-collected
+	// Dispose the Persistent handle so the callback
+	// function can be garbage-collected
 	NanDisposePersistent(data->callback);
 
-    // clean up any memory we allocated
+	// clean up any memory we allocated
 
-    if( data->param_err == 0) { 
-        as_key_destroy(key);
-        as_record_destroy(rec);
+	if( data->param_err == 0) { 
+		as_key_destroy(key);
+		as_record_destroy(rec);
 		if(data->policy != NULL)
 		{
 			cf_free(data->policy);
 		}
-        as_v8_debug(log, "Cleaned up the structures");
-    }
+		as_v8_debug(log, "Cleaned up the structures");
+	}
 
-    delete data;
-    delete req;
+	delete data;
+	delete req;
 
 
 }
@@ -253,5 +253,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Get)
 {
-    V8_RETURN async_invoke(args, prepare, execute, respond);
+	V8_RETURN async_invoke(args, prepare, execute, respond);
 }

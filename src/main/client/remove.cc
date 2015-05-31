@@ -211,7 +211,7 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "Invoked remove callback");
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        node::FatalException(Isolate::GetCurrent(), try_catch);
     }
 
     // Dispose the Persistent handle so the callback

@@ -314,7 +314,7 @@ static void respond(uv_work_t * req, int status)
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        node::FatalException(Isolate::GetCurrent(), try_catch);
     }
 
     as_v8_debug(log,"Invoked the callback");
