@@ -85,7 +85,7 @@ detect_linux()
 	;;
 	
        * )
-	echo "error: ${DIST_NAME} is not supported."
+	echo "error: ${dist} is not supported."
 	return 1
 	;;
      esac

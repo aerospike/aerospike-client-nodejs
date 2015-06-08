@@ -103,7 +103,7 @@ var argp = yargs
 			alias: "p",
 			default: "admin",
 			describe: "Password to connec to secured cluster"
-		}  
+		},  
         start: {
             default: 1,
             describe: "Start value for the key range."
