@@ -244,6 +244,7 @@ describe('client.query()', function() {
 			});
 			stream.on('error', function(error){
 				expect(error).to.be.ok();
+				console.log(error);
 				expect(error.code).to.equal(status.AEROSPIKE_OK);
 				err++;
 			});
