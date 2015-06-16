@@ -22,7 +22,7 @@ install:
 - sleep 3
 script:
 - npm install
-- OPTIONS="--run_aggregation true" npm test
+- OPTIONS="--run_aggregation=true" npm test
 notifications:
   email:
   - qe-notices@aerospike.com
