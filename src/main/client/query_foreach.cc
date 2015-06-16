@@ -148,6 +148,7 @@ bool async_queue_populate(const as_val* val, AsyncCallbackData * data)
 
 void async_queue_process(AsyncCallbackData * data)
 {
+
 	int rv;
 	as_val * val = NULL;
 	// Pop each record from the queue and invoke the node callback with this record.
@@ -155,9 +156,10 @@ void async_queue_process(AsyncCallbackData * data)
 		if (cf_queue_sz(data->result_q) > data->max_q_size) {
 
 		}
-		Local<Function> cb = NanNew<Function>(data->data_cb);
 		rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
 		if( rv == CF_QUEUE_OK) {
+			NanScope();
+			Local<Function> cb = NanNew<Function>(data->data_cb);
 			if(as_val_type(val) == AS_REC)
 			{
 				as_record* record = as_record_fromval(val);

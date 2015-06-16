@@ -665,7 +665,6 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                     );
                 // this constructor actually copies data into the new Buffer
 				Local<Object> buff = NanNewBufferHandle((char*) data, size);
-				//node::Buffer *buff  = node::Buffer::New((char *) data, size);
 
                 return NanEscapeScope(buff);
             } 
@@ -868,6 +867,11 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 		}
 
         String::Utf8Value n(name);
+		if( strlen(*n) > AS_BIN_NAME_MAX_SIZE ) 
+		{
+			as_v8_error(log, "Valid length for a bin name is 14. Bin name length exceeded");
+			return AS_NODE_PARAM_ERR;
+		}
         as_val* val = asval_from_jsobject( value, log);
 
         if( val == NULL) 

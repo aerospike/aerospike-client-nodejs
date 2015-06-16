@@ -92,7 +92,7 @@ var argp = yargs
             boolean: true,
             default: true,
             describe: "Display the record's bins."
-        }
+        },
 		enable_security: {
 			default: false,
 			describe: "set this to true to run example in a secured cluster"
