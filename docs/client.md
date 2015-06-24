@@ -68,9 +68,6 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of 
                   the operation.
-- `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
-- `metadata`    – The [Metadata object](datamodel.md#record) for the `record`. Only generation is returned.
-- `key`         – The [Key object](datamodel.md#key) for the `record`.
 
 Example:
 

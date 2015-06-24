@@ -187,7 +187,7 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0 ) {
-        // DEBUG(log, _KEY,  key);
+        // AS_DEBUG(log, _KEY,  key);
         aerospike_key_select(as, err, policy, key, (const char **)data->bins, &rec);
 
         for ( uint32_t i = 0; i < data->num_bins; i++) {
@@ -218,7 +218,7 @@ static void respond(uv_work_t * req, int status)
     LogInfo * log       = data->log;
 
     as_v8_debug(log, "Select operation : the response is");
-    // DEBUG(log, ERROR, err);
+    // AS_DEBUG(log, ERROR, err);
 
     // Build the arguments array for the callback
     Handle<Value> argv[4];

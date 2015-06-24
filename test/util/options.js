@@ -66,18 +66,14 @@ var parser = yargs
             default: "demo",
             describe: "Set for the keys."
         },
-		enable_security: {
-			default: false,
-			describe: "Run the test cases in a secured cluster"
-		},
 		user: {
 			alias: "u",
-			default:"admin",
+			default:null,
 			describe: "Username to connect to a secure cluster"
 		},
 		password: {
 			alias: "p",
-			default: "admin",
+			default: null,
 			describe: "Password to connect to a secure cluster"
 		},
 		run_aggregation: {
@@ -96,9 +92,12 @@ options.getConfig = function()
 		log: { level: options.log, file: options.log_file},
 		policies: { timeout: options.timeout}
 	}
-	if(options.enable_security)
+	if(options.user !== null)
 	{
 		config.user = options.user;
+	}
+	if(options.password !== null)
+	{
 		config.password = options.password;
 	}
 	return config;

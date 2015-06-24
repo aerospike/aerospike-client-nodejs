@@ -200,7 +200,7 @@ static void execute(uv_work_t * req)
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_exists(as, err, policy, batch, batch_exists_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            // DEBUG(log, ERROR, err);
+            // AS_DEBUG(log, ERROR, err);
             data->results = NULL;
             data->n = 0;
         }

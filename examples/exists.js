@@ -90,18 +90,14 @@ var argp = yargs
             boolean: true,
             describe: "Do not display the record's bins."
         },
-		enable_security: {
-			default: false,
-			describe: "set this to true to run example in a secured cluster"
-		},  
 		user: {
 			alias: "u",
-			default: "admin",
+			default: null,
 			describe: "Username to connect to secured cluster"
 		},  
 		password: {
 			alias: "p",
-			default: "admin",
+			default: null,
 			describe: "Password to connec to secured cluster"
 		}  
     });
@@ -146,11 +142,16 @@ config = {
     }
 };
 
-if(argv.enable_security)
+if(argv.user !== null)
 {
 	config.user = argv.user;
+}
+
+if(argv.password !== null)
+{
 	config.password = argv.password;
 }
+
 /*******************************************************************************
  *
  * Establish a connection and execute the opetation.

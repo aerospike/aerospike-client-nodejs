@@ -81,7 +81,7 @@ typedef struct LogInfo {
         as_v8_debug(__log, "%s : %s", __data_type, res_str);\
     }
 
-#define DEBUG(__log, __data_type, __data) \
+#define AS_DEBUG(__log, __data_type, __data) \
     if( (log) && AS_LOG_LEVEL_DEBUG <= (log)->severity) {\
         char res_str[MAX_STR_SIZE]; \
         stringify((char*)res_str, __data,(char*) __data_type); \
