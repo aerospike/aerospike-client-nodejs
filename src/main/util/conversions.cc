@@ -312,6 +312,61 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 		}
 	}
 
+	if ( obj->Has(NanNew("sharedMemory")))
+	{
+		Local<Object> shm_obj = obj->Get(NanNew("sharedMemory"))->ToObject();
+		config->use_shm = true;
+		if ( shm_obj->Has(NanNew("key")))
+		{
+			Local<Value> key = shm_obj->Get(NanNew("key"));
+			if (key->IsNumber()) {
+				config->shm_key =  key->ToInteger()->Value();
+				as_v8_debug(log, "SHM key is set to %x ", config->shm_key);
+			}
+			else {
+				as_v8_error(log, "SHM key is not an integer. Integer expected");
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		if ( shm_obj->Has(NanNew("maxNodes")))
+		{
+			Local<Value> max_nodes = shm_obj->Get(NanNew("maxNodes"));
+			if (max_nodes->IsNumber()) {
+				config->shm_max_nodes =  max_nodes->ToNumber()->Value();
+				as_v8_debug(log, "SHM max nodes is set to %d", config->shm_max_nodes);
+			}
+			else {
+				as_v8_error(log, "SHM max nodes is not an integer. Integer expected");
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		if ( shm_obj->Has(NanNew("maxNamespaces")))
+		{
+			Local<Value> max_namespaces = shm_obj->Get(NanNew("maxNamespaces"));
+			if (max_namespaces->IsNumber()) {
+				config->shm_max_namespaces =  V8INTEGER_TO_CINTEGER(max_namespaces);
+				as_v8_debug(log, "SHM max namespaces is set to %d", config->shm_max_namespaces);
+			}
+			else {
+				as_v8_error(log, "SHM max namespaces is not an integer. Integer expected");
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		if ( shm_obj->Has(NanNew("takeoverThresholdSeconds")))
+		{
+
+			Local<Value> takeover_threshold_secs = shm_obj->Get(NanNew("takeoverThresholdSeconds"));
+			if (takeover_threshold_secs->IsNumber()) {
+				config->shm_takeover_threshold_sec =  V8INTEGER_TO_CINTEGER(takeover_threshold_secs);
+				as_v8_debug(log, "SHM takeover threshold seconds is set to %d", config->shm_takeover_threshold_sec);
+			}
+			else {
+				as_v8_error(log, "SHM takeover threshold seconds is not an integer. Integer expected");
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+	}
+
 	return AS_NODE_PARAM_OK;
 }
 

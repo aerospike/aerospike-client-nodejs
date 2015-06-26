@@ -129,7 +129,13 @@ var config = {
     ],
     policies: {
         timeout: argv.timeout
-    }
+    },
+	sharedMemory: {
+		key: 0xA5000000,
+		maxNodes: 16,
+		maxNamespaces: 8,
+		takeoverThresholdSeconds : 30
+	}
 }
 
 if(argv.user !== null)
