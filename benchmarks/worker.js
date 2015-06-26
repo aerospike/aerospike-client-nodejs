@@ -33,7 +33,6 @@ var stats = require('./stats');
  * Options Parsing
  *
  ***********************************************************************/
-
 var argp = yargs
     .usage("$0 [options]")
     .options({
@@ -71,18 +70,14 @@ var argp = yargs
             default: "demo",
             describe: "Set for the keys."
         },
-		enable_security: {
-			default: false,
-			describe: "Set this to true to run benchmark in secured cluster"
-		},
 		user: {
-			alias: "u",
-			default:"admin",
+			alias: "U",
+			default:null,
 			describe: "Username to connect to a secure cluster"
 		},  
 		password: {
-			alias: "p",
-			default: "admin",
+			alias: "P",
+			default: null,
 			describe: "Password to connect to a secure cluster"
 		} 
 
@@ -118,7 +113,7 @@ var logger = new (winston.Logger)({
             colorize: true,
             timestamp: logger_timestamp
         })
-    ]
+	]
 });
 
 /***********************************************************************
@@ -137,9 +132,13 @@ var config = {
     }
 }
 
-if(argv.enable_security)
+if(argv.user !== null)
 {
 	config.user = argv.user;
+}
+
+if(argv.password !== null)
+{
 	config.password = argv.password;
 }
 

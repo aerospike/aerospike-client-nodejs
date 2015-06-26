@@ -94,12 +94,12 @@ var argp = yargs
             describe: "Display the record's bins."
         },
 		user: {
-			alias: "u",
+			alias: "U",
 			default: null,
 			describe: "Username to connect to secured cluster"
 		},  
 		password: {
-			alias: "p",
+			alias: "P",
 			default: null,
 			describe: "Password to connec to secured cluster"
 		}  

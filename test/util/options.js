@@ -67,12 +67,12 @@ var parser = yargs
             describe: "Set for the keys."
         },
 		user: {
-			alias: "u",
+			alias: "U",
 			default:null,
 			describe: "Username to connect to a secure cluster"
 		},
 		password: {
-			alias: "p",
+			alias: "P",
 			default: null,
 			describe: "Password to connect to a secure cluster"
 		},

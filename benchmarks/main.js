@@ -93,18 +93,14 @@ var argp = yargs
             default: "demo",
             describe: "Key set."
         },
-		enable_security: {
-			default: false,
-			describe: "set this to true to run benchmark in a secured cluster"
-		},
 		user: {
-			alias: "u",
-			default:"admin",
+			alias: "U",
+			default:null,
 			describe: "Username to connect to a secure cluster"
 		},  
 		password: {
-			alias: "p",
-			default: "admin",
+			alias: "P",
+			default: null,
 			describe: "Password to connect to a secure cluster"
 		},  
         json: {
@@ -127,7 +123,7 @@ var argp = yargs
             describe: "Total number of iterations to perform per process."
         },
         processes: {
-            alias: "P",
+            alias: "N",
             default: cpus.length,
             describe: "Total number of child processes."
         },
