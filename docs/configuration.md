@@ -18,7 +18,7 @@ var config = {
     { addr: "192.168.0.2", port: 3000 },
     { addr: "192.168.0.3", port: 3000 }
   ],
-  policies = {
+  policies : {
     // default timeout for all operations is 100ms
     timeout: 100 
   }
