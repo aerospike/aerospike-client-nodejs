@@ -160,6 +160,8 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
 
+    NanScope();
+
     // Fetch the AsyncData structure
     AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
     LogInfo * log				= data->log;
