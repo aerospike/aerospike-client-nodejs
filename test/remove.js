@@ -30,8 +30,8 @@ var status = aerospike.status;
 var policy = aerospike.policy;
 
 describe('client.remove()', function() {
-	
-	var config = options.getConfig();
+
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -66,15 +66,12 @@ describe('client.remove()', function() {
                 client.remove(key, function(err, key) {
                     client.get(key, function(err, record, metadata, key) {
                         expect(err).to.be.ok();
-						if(err.code != 602) 
-						{
-							expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-						}
-						else 
-						{
-							expect(err.code).to.equal(602);
-						}
-
+                        if(err.code != 602) {
+                            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                        }
+                        else {
+                            expect(err.code).to.equal(602);
+                        }
                         done();
                     });
                 });
@@ -102,22 +99,19 @@ describe('client.remove()', function() {
                 client.remove(key, function(err, key) {
                     client.get(key, function(err, record, metadata, key) {
                         expect(err).to.be.ok();
-						if(err.code != 602) 
-						{
-							expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-						}
-						else 
-						{
-							expect(err.code).to.equal(602);
-						}
-
+                        if(err.code != 602) {
+                            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                        }
+                        else {
+                            expect(err.code).to.equal(602);
+                        }
                         done();
                     });
                 });
             });
         });
     });
-    
+
     it('should not remove a non-existent key', function(done) {
 
         // generators
@@ -129,15 +123,12 @@ describe('client.remove()', function() {
         // write the record then check
         client.remove(key, function(err, key) {
             expect(err).to.be.ok();
-			if(err.code != 602) 
-			{
-				expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-			}
-			else
-			{
-				expect(err.code).to.equal(602);
-			}
-            
+            if(err.code != 602) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            }
+            else {
+                expect(err.code).to.equal(602);
+            }
             done();
         });
     });

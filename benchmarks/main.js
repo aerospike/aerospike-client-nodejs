@@ -93,16 +93,16 @@ var argp = yargs
             default: "demo",
             describe: "Key set."
         },
-		user: {
-			alias: "U",
-			default:null,
-			describe: "Username to connect to a secure cluster"
-		},  
-		password: {
-			alias: "P",
-			default: null,
-			describe: "Password to connect to a secure cluster"
-		},  
+        user: {
+            alias: "U",
+            default:null,
+            describe: "Username to connect to a secure cluster"
+        },  
+        password: {
+            alias: "P",
+            default: null,
+            describe: "Password to connect to a secure cluster"
+        },  
         json: {
             alias: "j",
             default: false,

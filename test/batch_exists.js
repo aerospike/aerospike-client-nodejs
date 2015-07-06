@@ -31,7 +31,7 @@ var policy = aerospike.policy;
 
 describe('client.batchExists()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -48,7 +48,7 @@ describe('client.batchExists()', function() {
 
     it('should successfully find 10 records', function(done) {
 
-		this.timeout(3000);
+        this.timeout(3000);
         // number of records
         var nrecords = 10;
 
@@ -80,19 +80,17 @@ describe('client.batchExists()', function() {
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
-					if( j == nrecords-1)
-				    {
-						done();
-					}
-				}
-
+                    if( j == nrecords-1) {
+                            done();
+                    }
+                }
             });
         });
     });
 
     it('should fail finding 10 records', function(done) {
 
-		this.timeout(3000);
+        this.timeout(3000);
         // number of records
         var nrecords = 10;
 
@@ -101,7 +99,7 @@ describe('client.batchExists()', function() {
 
         // values
         var keys = keygen.range(kgen, 10);
-        
+
         // writer using generators
         // callback provides an object of written records, where the
         // keys of the object are the record's keys.
@@ -109,30 +107,30 @@ describe('client.batchExists()', function() {
 
             var result;
             var j;
-            
+
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             expect(results.length).to.equal(10);
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
-				// This if-else check is introduced to handle test failures
-				// in backward compatibility issues. Should be removed when an official release
-				// of C client is done, with error code changes.
-				if(result.status != 602) {
-	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-				} else {
-	                expect(result.status).to.equal(602);
-				}					
+                // This if-else check is introduced to handle test failures
+                // in backward compatibility issues. Should be removed when an official release
+                // of C client is done, with error code changes.
+                if(result.status != 602) {
+                    expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                } else {
+                    expect(result.status).to.equal(602);
+                }					
             }
 
             done();
         });
     });
-    
+
     it('should successfully find 1000 records', function(done) {
 
-		this.timeout(5000);
+        this.timeout(5000);
         // number of records
         var nrecords = 1000;
 
@@ -165,10 +163,10 @@ describe('client.batchExists()', function() {
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
-					if( j == results.length-1) {
-						done();
-					}
-				}
+                    if( j == results.length-1) {
+                        done();
+                    }
+                }
 
             });
         });

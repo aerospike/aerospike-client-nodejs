@@ -31,7 +31,7 @@ var policy = aerospike.policy;
 
 describe('client.exists()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -45,7 +45,7 @@ describe('client.exists()', function() {
         client = null;
         done();
     });
-    
+
     it('should find the record', function(done) {
 
         // generators
@@ -63,9 +63,9 @@ describe('client.exists()', function() {
             client.exists(key, function(err, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
@@ -81,15 +81,12 @@ describe('client.exists()', function() {
         // write the record then check
         client.exists(key, function(err, metadata, key) {
             expect(err).to.be.ok();
-			if(err.code != 602) 
-			{
-	            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-			} 
-			else 
-			{
-				
-	            expect(err.code).to.equal(602);
-			}
+            if(err.code != 602) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            } 
+            else {
+                expect(err.code).to.equal(602);
+            }
             done();
         });
     });

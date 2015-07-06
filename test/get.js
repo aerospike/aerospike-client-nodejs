@@ -29,7 +29,7 @@ var status = aerospike.status;
 var policy = aerospike.policy;
 describe('client.get()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -45,7 +45,7 @@ describe('client.get()', function() {
     });
 
     it('should read the record', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -61,9 +61,9 @@ describe('client.get()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key) {
+                    done();
+                });
             });
         });
     });
@@ -79,13 +79,12 @@ describe('client.get()', function() {
         // write the record then check
         client.get(key, function(err, record, metadata, key) {
             expect(err).to.be.ok();
-			if(err.code != 602) {
-	            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-			}
-			else 
-			{
-	            expect(err.code).to.equal(602);
-			}
+            if(err.code != 602) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            }
+            else {
+                expect(err.code).to.equal(602);
+            }
             done();
         });
     });
@@ -108,9 +107,9 @@ describe('client.get()', function() {
             client.get(key, pol, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });

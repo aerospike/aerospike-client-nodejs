@@ -31,11 +31,11 @@ var policy = aerospike.policy;
 
 describe('client.batchGet()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
-        client.connect(function(err){
+        client.connect(function(err) {
             done();
         });
     });
@@ -61,7 +61,7 @@ describe('client.batchGet()', function() {
         // keys of the object are the record's keys.
         putgen.put(client, 10, kgen, rgen, mgen, function(written) {
 
-            var keys = Object.keys(written).map(function(key){
+            var keys = Object.keys(written).map(function(key) {
                 return written[key].key;
             });
 
@@ -103,7 +103,7 @@ describe('client.batchGet()', function() {
 
         // values
         var keys = keygen.range(kgen, 10);
-        
+
         // writer using generators
         // callback provides an object of written records, where the
         // keys of the object are the record's keys.
@@ -111,23 +111,20 @@ describe('client.batchGet()', function() {
 
             var result;
             var j;
-            
+
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             expect(results.length).to.equal(10);
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
-				if(result.status != 602) 
-				{
-	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-				}
-				else 
-				{
-	                expect(result.status).to.equal(602);
-				}
+                if(result.status != 602) {
+                    expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                }
+                else {
+                    expect(result.status).to.equal(602);
+                }
             }
-
             done();
         });
     });
@@ -144,13 +141,13 @@ describe('client.batchGet()', function() {
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/1000/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
-        
+
         // writer using generators
         // callback provides an object of written records, where the
         // keys of the object are the record's keys.
         putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
-            
-            var keys = Object.keys(written).map(function(key){
+
+            var keys = Object.keys(written).map(function(key) {
                 return written[key].key;
             });
 
@@ -161,7 +158,7 @@ describe('client.batchGet()', function() {
 
                 var result;
                 var j;
-                
+
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(results.length).to.equal(len);
@@ -175,11 +172,9 @@ describe('client.batchGet()', function() {
 
                     expect(record).to.eql(_record);
                 }
-
                 done();
             });
         });
     });
-
 });
 

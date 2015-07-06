@@ -70,17 +70,16 @@ var argp = yargs
             default: "demo",
             describe: "Set for the keys."
         },
-		user: {
-			alias: "U",
-			default:null,
-			describe: "Username to connect to a secure cluster"
-		},  
-		password: {
-			alias: "P",
-			default: null,
-			describe: "Password to connect to a secure cluster"
-		} 
-
+        user: {
+            alias: "U",
+            default:null,
+            describe: "Username to connect to a secure cluster"
+        },  
+        password: {
+            alias: "P",
+            default: null,
+            describe: "Password to connect to a secure cluster"
+        } 
     });
 
 var argv = argp.argv;

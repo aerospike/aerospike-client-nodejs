@@ -19,7 +19,7 @@ var aerospike = require('../lib/aerospike')
 var options = require('./util/options');
 var assert = require('assert');
 var expect = require('expect.js');
- 
+
 
 var keygen  = require('./generators/key');
 var metagen = require('./generators/metadata');
@@ -34,74 +34,74 @@ var filter	   = aerospike.filter;
 
 describe('client.query()', function() {
 
-	var config = options.getConfig();
-	config.modlua = {};
-	config.modlua.userPath = __dirname;
+    var config = options.getConfig();
+    config.modlua = {};
+    config.modlua.userPath = __dirname;
     var client = aerospike.client(config);
 
     before(function(done) {
         client.connect(function(err){
 
-			var indexCreationCallback  = function(err){
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-			}
-			// create integer and string index.
-			var indexObj = {
-				ns: options.namespace,
-				set: options.set,
-				bin: 'queryBinInt',
-				index: 'queryIndexInt'
-			}
-			client.createIntegerIndex(indexObj, indexCreationCallback);
+            var indexCreationCallback  = function(err){
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+            }
+            // create integer and string index.
+            var indexObj = {
+                ns: options.namespace,
+                set: options.set,
+                bin: 'queryBinInt',
+                index: 'queryIndexInt'
+            }
+            client.createIntegerIndex(indexObj, indexCreationCallback);
 
-			indexObj = {
-				ns: options.namespace,
-				set: options.set,
-				bin: 'queryBinString',
-				index: 'queryIndexString'
-			}
-			client.createStringIndex(indexObj, indexCreationCallback);
+            indexObj = {
+                ns: options.namespace,
+                set: options.set,
+                bin: 'queryBinString',
+                index: 'queryIndexString'
+            }
+            client.createStringIndex(indexObj, indexCreationCallback);
 
-			// Register the UDFs to be used in aggregation.
+            // Register the UDFs to be used in aggregation.
 
-			var dir = __dirname;
-			var filename = dir + "/aggregate.lua"
-			client.udfRegister(filename, function(err) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-			}); 
+            var dir = __dirname;
+            var filename = dir + "/aggregate.lua"
+            client.udfRegister(filename, function(err) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+            }); 
 
 
-			// load objects - to be queried in test case. 
-			var total = 100;
-			var count = 0;
+            // load objects - to be queried in test case. 
+            var total = 100;
+            var count = 0;
 
-			function iteration(i) {
+            function iteration(i) {
 
-			// values
-			var key     = { ns: options.namespace, set: options.set, key: "test/query" + i.toString()}
-			var meta    = { ttl: 10000, gen: 1}
-			var record  = { queryBinInt: i, queryBinString: 'querystringvalue'}
+                // values
+                var key     = { ns: options.namespace, set: options.set, key: "test/query" + i.toString()}
+                var meta    = { ttl: 10000, gen: 1}
+                var record  = { queryBinInt: i, queryBinString: 'querystringvalue'}
 
-			// write the record then check
-			client.put(key, record, meta, function(err, key) {
-				client.get(key, function(err, _record, _metadata, _key) {
+                // write the record then check
+                client.put(key, record, meta, function(err, key) {
+                    client.get(key, function(err, _record, _metadata, _key) {
 
-					expect(err).to.be.ok();
-					expect(err.code).to.equal(status.AEROSPIKE_OK);
-					count++;
-					if ( count >= total ) {
-						done();
-					}
-					});
-				});
-			}
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_OK);
+                        count++;
+                        if ( count >= total ) {
+                            done();
+                        }
+                    });
+                });
+            }
 
-			for ( var i = 1; i <= total; i++ ) {
-				iteration(i);
-			}
-		    	
-		});
+            for ( var i = 1; i <= total; i++ ) {
+                iteration(i);
+            }
+
+        });
 
     });
 
@@ -112,147 +112,147 @@ describe('client.query()', function() {
     });
 
     it('should query on an integer index - filter by equality of bin value', function(done) {
-        
+
         // counters
         var total = 100;
         var count = 0;
-		var err = 0;
+        var err = 0;
 
-		var args = { filters: [filter.equal('queryBinInt', 100)] }
-		var query = client.query(options.namespace, options.set, args);
+        var args = { filters: [filter.equal('queryBinInt', 100)] }
+        var query = client.query(options.namespace, options.set, args);
 
-		var stream = query.execute();
-		stream.on('data', function(rec){
-			expect(rec.bins).to.have.property('queryBinInt');
-			expect(rec.bins).to.have.property('queryBinString');
-			expect(rec.bins['queryBinInt']).to.equal(100);
-			count++;
-		});
-		stream.on('error', function(error){
-			err++;
-		});
-		stream.on('end', function(end){
-			expect(count).to.be.equal(1);
-			expect(err).to.equal(0);
-			done();
-		});
+        var stream = query.execute();
+        stream.on('data', function(rec){
+            expect(rec.bins).to.have.property('queryBinInt');
+            expect(rec.bins).to.have.property('queryBinString');
+            expect(rec.bins['queryBinInt']).to.equal(100);
+            count++;
+        });
+        stream.on('error', function(error){
+            err++;
+        });
+        stream.on('end', function(end){
+            expect(count).to.be.equal(1);
+            expect(err).to.equal(0);
+            done();
+        });
     });
-	it('should query on an integer index - filter by range of bin values', function(done) {
-        
+    it('should query on an integer index - filter by range of bin values', function(done) {
+
         // counters
         var total = 100;
         var count = 0;
-		var err = 0;
+        var err = 0;
 
-		var args = { filters: [filter.range('queryBinInt', 1, 100)] }
-		var query = client.query(options.namespace, options.set, args);
+        var args = { filters: [filter.range('queryBinInt', 1, 100)] }
+        var query = client.query(options.namespace, options.set, args);
 
-		var stream = query.execute();
-		stream.on('data', function(rec){
-			expect(rec.bins).to.have.property('queryBinInt');
-			expect(rec.bins).to.have.property('queryBinString');
-			expect(rec.bins['queryBinInt']).to.be.lessThan(101);
-			count++;
-		});
-		stream.on('error', function(error){
-			err++;
-		});
-		stream.on('end', function(end){
-			expect(count).to.be.greaterThan(total-1);
-			expect(err).to.equal(0);
-			done();
-		});
+        var stream = query.execute();
+        stream.on('data', function(rec){
+            expect(rec.bins).to.have.property('queryBinInt');
+            expect(rec.bins).to.have.property('queryBinString');
+            expect(rec.bins['queryBinInt']).to.be.lessThan(101);
+            count++;
+        });
+        stream.on('error', function(error){
+            err++;
+        });
+        stream.on('end', function(end){
+            expect(count).to.be.greaterThan(total-1);
+            expect(err).to.equal(0);
+            done();
+        });
     });
-	it('should query on a string index - filter by equality of bin value', function(done) {
-        
+    it('should query on a string index - filter by equality of bin value', function(done) {
+
         // counters
         var total = 100;
         var count = 0;
-		var err = 0;
+        var err = 0;
 
-		var args = { filters: [filter.equal('queryBinString', 'querystringvalue')] }
-		var query = client.query(options.namespace, options.set, args);
+        var args = { filters: [filter.equal('queryBinString', 'querystringvalue')] }
+        var query = client.query(options.namespace, options.set, args);
 
-		var stream = query.execute();
-		stream.on('data', function(rec){
-			expect(rec.bins).to.have.property('queryBinInt');
-			expect(rec.bins).to.have.property('queryBinString');
-			expect(rec.bins['queryBinString']).to.equal('querystringvalue');
-			count++;
-		});
-		stream.on('error', function(error){
-			err++;
-		});
-		stream.on('end', function(end){
-			expect(count).to.be.greaterThan(total-1);
-			expect(err).to.equal(0);
+        var stream = query.execute();
+        stream.on('data', function(rec){
+            expect(rec.bins).to.have.property('queryBinInt');
+            expect(rec.bins).to.have.property('queryBinString');
+            expect(rec.bins['queryBinString']).to.equal('querystringvalue');
+            count++;
+        });
+        stream.on('error', function(error){
+            err++;
+        });
+        stream.on('end', function(end){
+            expect(count).to.be.greaterThan(total-1);
+            expect(err).to.equal(0);
 
-			done();
-		});
+            done();
+        });
     });
 
-	it('should query on an index and apply aggregation user defined function', function(done) {
-       
-		if( !options.run_aggregation ) {
-			done();
-		}
-		else {
-			// counters
-			var total = 100;
-			var count = 0;
-			var err = 0;
+    it('should query on an index and apply aggregation user defined function', function(done) {
 
-			var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
-					 aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
-			var query = client.query(options.namespace, options.set, args);
+        if( !options.run_aggregation ) {
+            done();
+        }
+        else {
+            // counters
+            var total = 100;
+            var count = 0;
+            var err = 0;
 
-			var stream = query.execute();
-			stream.on('data', function(result){
-				expect(result).to.be.ok();
-				count++;
-			});
-			stream.on('error', function(error){
-				expect(error).to.be.ok();
-				expect(error.code).to.equal(status.AEROSPIKE_OK);
-				err++;
-			});
-			stream.on('end', function(end){
-				expect(count).to.be.equal(1);
-				expect(err).to.equal(0);
-				done();
-			});
-		}
+            var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
+                aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
+            var query = client.query(options.namespace, options.set, args);
+
+            var stream = query.execute();
+            stream.on('data', function(result){
+                expect(result).to.be.ok();
+                count++;
+            });
+            stream.on('error', function(error){
+                expect(error).to.be.ok();
+                expect(error.code).to.equal(status.AEROSPIKE_OK);
+                err++;
+            });
+            stream.on('end', function(end){
+                expect(count).to.be.equal(1);
+                expect(err).to.equal(0);
+                done();
+            });
+        }
     });
-	it('should scan aerospike database and apply aggregation user defined function', function(done) {
-       
-		if( !options.run_aggregation ) {
-			done();
-		}
-		else {
-			// counters
-	        var total = 100;
-		    var count = 0;
-			var err = 0;
+    it('should scan aerospike database and apply aggregation user defined function', function(done) {
 
-			var args = { aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
-			var query = client.query(options.namespace, options.set, args);
+        if( !options.run_aggregation ) {
+            done();
+        }
+        else {
+            // counters
+            var total = 100;
+            var count = 0;
+            var err = 0;
 
-			var stream = query.execute();
-			stream.on('data', function(result){
-				expect(result).to.be.ok();
-				count++;
-			});
-			stream.on('error', function(error){
-				expect(error).to.be.ok();
-				expect(error.code).to.equal(status.AEROSPIKE_OK);
-				err++;
-			});
-			stream.on('end', function(end){
-				expect(count).to.be.equal(1);
-				expect(err).to.equal(0);
-				done();
-			});
-		}
-	});
+            var args = { aggregationUDF: {module:'aggregate', funcname:'sum_test_bin'}}
+            var query = client.query(options.namespace, options.set, args);
+
+            var stream = query.execute();
+            stream.on('data', function(result){
+                expect(result).to.be.ok();
+                count++;
+            });
+            stream.on('error', function(error){
+                expect(error).to.be.ok();
+                expect(error.code).to.equal(status.AEROSPIKE_OK);
+                err++;
+            });
+            stream.on('end', function(end){
+                expect(count).to.be.equal(1);
+                expect(err).to.equal(0);
+                done();
+            });
+        }
+    });
 
 });

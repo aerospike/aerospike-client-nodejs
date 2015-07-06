@@ -90,16 +90,16 @@ var argp = yargs
             boolean: true,
             describe: "Do not display the record's bins."
         },
-		user: {
-			alias: "U",
-			default: null,
-			describe: "Username to connect to secured cluster"
-		},  
-		password: {
-			alias: "P",
-			default: null,
-			describe: "Password to connec to secured cluster"
-		}  
+        user: {
+            alias: "U",
+            default: null,
+            describe: "Username to connect to secured cluster"
+        },  
+        password: {
+            alias: "P",
+            default: null,
+            describe: "Password to connec to secured cluster"
+        }  
     });
 
 var argv = argp.argv;

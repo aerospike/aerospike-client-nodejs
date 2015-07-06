@@ -31,7 +31,7 @@ var op = aerospike.operator;
 
 describe('client.operate()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -47,7 +47,7 @@ describe('client.operate()', function() {
     });
 
     it('should increment a bin', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -74,9 +74,9 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i'] + 432).to.equal(record2['i']);
                     expect(record['s']).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
@@ -85,7 +85,7 @@ describe('client.operate()', function() {
 
 
     it('should append a bin', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -112,17 +112,17 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect(record['s'] + 'def').to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
-    
+
     it('should prepend and read a bin', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -152,16 +152,16 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect('def'+record['s'] ).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
     it('should touch a record(refresh ttl) ', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -205,17 +205,17 @@ describe('client.operate()', function() {
                         expect(record['s']).to.equal(record2['s']);
                         expect(2592000 + ttl_diff+10).to.be.above(metadata2.ttl);
                         expect(2592000 + ttl_diff-10).to.be.below(metadata2.ttl);
-						client.remove(key2, function(err, key){
-							done();
-						});
+                        client.remove(key2, function(err, key){
+                            done();
+                        });
                     });
 
                 });
             });
         });
     });
-	it('should prepend using prepend API and verify the bin', function(done) {
-        
+    it('should prepend using prepend API and verify the bin', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -240,16 +240,16 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect('def'+record['s'] ).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
-	it('should prepend using prepend API and verify the bin with metadata', function(done) {
-        
+    it('should prepend using prepend API and verify the bin with metadata', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -274,17 +274,17 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect('def'+record['s'] ).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
 
-	it('should append a bin using append API and verify the bin', function(done) {
-        
+    it('should append a bin using append API and verify the bin', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -297,7 +297,7 @@ describe('client.operate()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-			var bin = { s: 'def'};
+            var bin = { s: 'def'};
             client.append(key, bin, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -307,16 +307,16 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect(record['s'] + 'def').to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
-	it('should append a bin using append API and verify the bin with metadata', function(done) {
-        
+    it('should append a bin using append API and verify the bin with metadata', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -329,7 +329,7 @@ describe('client.operate()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-			var bin = { s: 'def'};
+            var bin = { s: 'def'};
             client.append(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -339,17 +339,17 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i']).to.equal(record2['i']);
                     expect(record['s'] + 'def').to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
 
-	it('should add a value to a bin and verify', function(done) {
-        
+    it('should add a value to a bin and verify', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -363,7 +363,7 @@ describe('client.operate()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key) {
 
-			var bin = { i : 432}
+            var bin = { i : 432}
             client.add(key, bin, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -373,16 +373,16 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i'] + 432).to.equal(record2['i']);
                     expect(record['s']).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
-	it('should add a value to a bin with metadata and verify', function(done) {
-        
+    it('should add a value to a bin with metadata and verify', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -396,7 +396,7 @@ describe('client.operate()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key) {
 
-			var bin = { i : 432}
+            var bin = { i : 432}
             client.add(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -406,17 +406,17 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
                     expect(record['i'] + 432).to.equal(record2['i']);
                     expect(record['s']).to.equal(record2['s']);
-					client.remove(key2, function(err, key){
-						done();
-					});
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
                 });
 
             });
         });
     });
 
-	it('should add a string value to a bin and expected fail', function(done) {
-        
+    it('should add a string value to a bin and expected fail', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -430,17 +430,17 @@ describe('client.operate()', function() {
         // write the record then check
         client.put(key, record, meta, function(err, key) {
 
-			var bin = { i : "str"}
+            var bin = { i : "str"}
             client.add(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
-				done();
+                done();
 
             });
         });
     });
-	it('should append a bin of type integer using append API and expected to fail', function(done) {
-        
+    it('should append a bin of type integer using append API and expected to fail', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -453,17 +453,17 @@ describe('client.operate()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-			var bin = { s: 123};
+            var bin = { s: 123};
             client.append(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
-				done();
+                done();
 
             });
         });
     });
-	it('should prepend an integer using prepend API and expect to fail', function(done) {
-        
+    it('should prepend an integer using prepend API and expect to fail', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -482,7 +482,7 @@ describe('client.operate()', function() {
             client.prepend(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
-				done();
+                done();
             });
         });
     });

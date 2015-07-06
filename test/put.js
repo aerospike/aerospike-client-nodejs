@@ -31,7 +31,7 @@ var policy = aerospike.policy;
 
 describe('client.put()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -47,7 +47,7 @@ describe('client.put()', function() {
     });
 
     it('should write and validate 100 records', function(done) {
-        
+
         // counters
         var total = 100;
         var count = 0;
@@ -85,7 +85,7 @@ describe('client.put()', function() {
     });
 
     it('should write the record w/ string key', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -101,9 +101,9 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
@@ -125,9 +125,9 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
 
             });
         });
@@ -148,9 +148,9 @@ describe('client.put()', function() {
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
@@ -173,9 +173,9 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
@@ -198,9 +198,9 @@ describe('client.put()', function() {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(record1).to.eql(record);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
 
@@ -229,9 +229,9 @@ describe('client.put()', function() {
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				expect(key2).to.have.property('ns', key.ns);
-				expect(key2).to.have.property('set', key.set);
-				expect(key2).to.have.property('key', key.key);
+                expect(key2).to.have.property('ns', key.ns);
+                expect(key2).to.have.property('set', key.set);
+                expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
 
                 var key3 = key2;
@@ -242,22 +242,22 @@ describe('client.put()', function() {
                 client.put(key3, record3, meta, function(err, key4) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-					expect(key4).to.have.property('ns', key.ns);
-					expect(key4).to.have.property('set', key.set);
-					expect(key4).to.have.property('key', key.key);
+                    expect(key4).to.have.property('ns', key.ns);
+                    expect(key4).to.have.property('set', key.set);
+                    expect(key4).to.have.property('key', key.key);
 
                     client.get(key4, function(err, record5, metadata5, key5) {
                         expect(err).to.be.ok();
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
-						expect(key5).to.have.property('ns', key.ns);
-						expect(key5).to.have.property('set', key.set);
-						expect(key5).to.have.property('key', key.key);
+                        expect(key5).to.have.property('ns', key.ns);
+                        expect(key5).to.have.property('set', key.set);
+                        expect(key5).to.have.property('key', key.key);
                         expect(record5).to.eql(record3);
                         expect(metadata5.gen).to.equal(metadata2.gen+1);
                         expect(record5.i).to.equal(record3.i);
-						client.remove(key5, function(err, key){
-							done();
-						});
+                        client.remove(key5, function(err, key){
+                            done();
+                        });
                     }); 
                 });
             });
@@ -279,54 +279,51 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(key1).to.have.property('ns', key.ns);
-			expect(key1).to.have.property('set', key.set);
-			expect(key1).to.have.property('key', key.key);
+            expect(key1).to.have.property('ns', key.ns);
+            expect(key1).to.have.property('set', key.set);
+            expect(key1).to.have.property('key', key.key);
 
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				expect(key2).to.have.property('ns', key.ns);
-				expect(key2).to.have.property('set', key.set);
-				expect(key2).to.have.property('key', key.key);
+                expect(key2).to.have.property('ns', key.ns);
+                expect(key2).to.have.property('set', key.set);
+                expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
 
                 client.remove(key2, function(err, key3) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-					expect(key3).to.have.property('ns', key.ns);
-					expect(key3).to.have.property('set', key.set);
-					expect(key3).to.have.property('key', key.key);
+                    expect(key3).to.have.property('ns', key.ns);
+                    expect(key3).to.have.property('set', key.set);
+                    expect(key3).to.have.property('key', key.key);
 
                     client.get(key3, function(err, record4, metadata4, key4) {
                         expect(err).to.be.ok();
-						if(err.code != 602)
-						{
-							expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-						}
-						else
-						{
-							expect(err.code).to.equal(602);
-						}
+                        if(err.code != 602) {
+                            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+                        } else {
+                            expect(err.code).to.equal(602);
+                        }
 
                         client.put(key, record, meta, function(err, key5) {
                             expect(err).to.be.ok();
                             expect(err.code).to.equal(status.AEROSPIKE_OK);
-							expect(key5).to.have.property('ns', key.ns);
-							expect(key5).to.have.property('set', key.set);
-							expect(key5).to.have.property('key', key.key);
+                            expect(key5).to.have.property('ns', key.ns);
+                            expect(key5).to.have.property('set', key.set);
+                            expect(key5).to.have.property('key', key.key);
 
                             client.get(key5, function(err, record6, metadata6, key6) {
                                 expect(err).to.be.ok();
                                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-								expect(key6).to.have.property('ns', key.ns);
-								expect(key6).to.have.property('set', key.set);
-								expect(key6).to.have.property('key', key.key);
+                                expect(key6).to.have.property('ns', key.ns);
+                                expect(key6).to.have.property('set', key.set);
+                                expect(key6).to.have.property('key', key.key);
                                 expect(record6).to.eql(record);
                                 expect(metadata6.gen).to.equal(1);
-								client.remove(key6, function(err, key){
-									done();
-								});
+                                client.remove(key6, function(err, key){
+                                    done();
+                                });
                             }); 
                         });
                     }); 
@@ -357,25 +354,25 @@ describe('client.put()', function() {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
 
-			expect(key1).to.have.property('ns', key.ns);
-			expect(key1).to.have.property('set', key.set);
-			expect(key1).to.have.property('key', key.key);
+            expect(key1).to.have.property('ns', key.ns);
+            expect(key1).to.have.property('set', key.set);
+            expect(key1).to.have.property('key', key.key);
 
             client.get(key1, function(err, record2, metadata2, key2) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
 
-				expect(key2).to.have.property('ns', key.ns);
-				expect(key2).to.have.property('set', key.set);
-				expect(key2).to.have.property('key', key.key);
+                expect(key2).to.have.property('ns', key.ns);
+                expect(key2).to.have.property('set', key.set);
+                expect(key2).to.have.property('key', key.key);
                 expect(record2).to.eql(record);
                 expect(record2.m).to.eql({a: 1, b: 2});
                 expect(record2.me).to.be.eql({});
                 expect(record2.l).to.eql([1,2,3]);
                 expect(record2.le).to.be.eql([]);
-				client.remove(key, function(err, key) {
-					done();
-				});
+                client.remove(key, function(err, key) {
+                    done();
+                });
             });
         });
     });
@@ -393,17 +390,17 @@ describe('client.put()', function() {
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
-		record.bin_un = undefined;
+        record.bin_un = undefined;
         // write the record then check
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-			client.remove(key, function(err,key){
-				done();
-			});
+            client.remove(key, function(err,key){
+                done();
+            });
         });
     });
-	it('should write a set with empty string and write should pass', function(done) {
+    it('should write a set with empty string and write should pass', function(done) {
 
         // generators
         var kgen = keygen.string(options.namespace, "", {prefix: "test/put/"});
@@ -421,18 +418,18 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			client.get(key1, function(err, bins, meta, key2) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
+            client.get(key1, function(err, bins, meta, key2) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(bins.m).to.eql({a: 1, b: 2});
                 expect(bins.l).to.eql([1,2,3]);
-				client.remove(key2, function(err, key3){
-					done();
-				});
-			});
+                client.remove(key2, function(err, key3){
+                    done();
+                });
+            });
         });
     });
-	it('should write a map with undefined entry and verify the record', function(done) {
+    it('should write a map with undefined entry and verify the record', function(done) {
 
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
@@ -450,18 +447,18 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			client.get(key1, function(err, bins, meta, key2) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
+            client.get(key1, function(err, bins, meta, key2) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(bins.m).to.eql({a: 1, b: 2, c:null});
                 expect(bins.l).to.eql([1,2,3,null]);
-				client.remove(key2, function(err, key3){
-					done();
-				});
-			});
+                client.remove(key2, function(err, key3){
+                    done();
+                });
+            });
         });
     });
-	it('should write an object with boolean value and should fail', function(done) {
+    it('should write an object with boolean value and should fail', function(done) {
 
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
@@ -475,10 +472,10 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-			done();
+            done();
         });
     });
-	it('should write a key with undefined value and it should fail gracefully', function(done) {
+    it('should write a key with undefined value and it should fail gracefully', function(done) {
 
         // generators
         var kgen = keygen.string(options.namespace, options.set, undefined);
@@ -491,7 +488,7 @@ describe('client.put()', function() {
         client.put(key, record, meta, function(err, key1) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-			done();
+            done();
         });
     });
 
@@ -509,27 +506,27 @@ describe('client.put()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			// check the content of the record
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            // check the content of the record
             client.get(key, function(err, record, metadata, key) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-				var mgen = metagen.constant({gen:1})
-				var meta = mgen(key);
-				var writePolicy = { gen: aerospike.policy.gen.EQ};
-				client.put(key, record, meta, writePolicy, function(err, key){
-					expect(err).to.be.ok();
-					expect(err.code).to.equal(status.AEROSPIKE_OK);
-					client.get(key, function( err, record, metadata, key) {
-						expect(err).to.be.ok();
-						expect(err.code).to.equal(status.AEROSPIKE_OK);
-						expect(metadata.gen).to.equal(2);
-						client.remove(key, function(err, key){
-							done();
-						});
-					});
-				});
+                var mgen = metagen.constant({gen:1})
+                var meta = mgen(key);
+                var writePolicy = { gen: aerospike.policy.gen.EQ};
+                client.put(key, record, meta, writePolicy, function(err, key){
+                    expect(err).to.be.ok();
+                    expect(err.code).to.equal(status.AEROSPIKE_OK);
+                    client.get(key, function( err, record, metadata, key) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_OK);
+                        expect(metadata.gen).to.equal(2);
+                        client.remove(key, function(err, key){
+                            done();
+                        });
+                    });
+                });
             });
         });
     });

@@ -32,72 +32,72 @@ var language = aerospike.language;
 describe('client.udfRegister()', function(done) {
 
     var config = options.getConfig();
-	var client = aerospike.client(config);
+    var client = aerospike.client(config);
 
     before(function(done) {
-		client.connect(function(err){
-			done();
-		});
+        client.connect(function(err){
+            done();
+        });
     });
 
     after(function(done) {
-		client.close()
-		client = null;
+        client.close()
+        client = null;
         done();
     });
-	it('should register an UDF file to aerospike cluster', function(done) {
+    it('should register an UDF file to aerospike cluster', function(done) {
         var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
+        var filename = dir + "/udf_test.lua"
         client.udfRegister(filename, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			done();
+            done();
         }); 
     });
 
-	it('should register an UDF file with a LUA type to aerospike cluster', function(done) {
+    it('should register an UDF file with a LUA type to aerospike cluster', function(done) {
         var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
+        var filename = dir + "/udf_test.lua"
         client.udfRegister(filename, language.LUA, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			done();
+            done();
         }); 
     });
     it('should register an UDF file with a info policy to aerospike cluster', function(done) {
         var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
-		var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
+        var filename = dir + "/udf_test.lua"
+        var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
         client.udfRegister(filename, infopolicy, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			done();
+            done();
         }); 
     });
 
 
     it('should register an UDF file with a info policy and LUA type to aerospike cluster', function(done) {
         var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
-		var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
+        var filename = dir + "/udf_test.lua"
+        var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
         client.udfRegister(filename, language.LUA, infopolicy, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			done();
+            done();
         }); 
     });
 
-	it('registering a non-existent UDF file to aerospike cluster - should fail',function(done) {
-		var filename = "test.lua"
+    it('registering a non-existent UDF file to aerospike cluster - should fail',function(done) {
+        var filename = "test.lua"
         client.udfRegister(filename, function(err) {
             expect(err).to.be.ok();
-			if(err.code != 100) {
-				expect(err.code).to.equal(status.AEROSPIKE_ERR);
-			}
-			else {
-				expect(err.code).to.equal(100);
-			}
-			done();
+            if(err.code != 100) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR);
+            }
+            else {
+                expect(err.code).to.equal(100);
+            }
+            done();
         }); 
     });
 });

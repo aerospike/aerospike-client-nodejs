@@ -32,77 +32,77 @@ var language = aerospike.language;
 describe('client.Execute()', function(done) {
 
     var config = options.getConfig(); 
-	var client = aerospike.client(config);
+    var client = aerospike.client(config);
 
     before(function(done) {
-		client.connect(function(err){
-			client.udfRegister(__dirname+"/udf_test.lua", function(err) {
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				done();
-			});
-		});
+        client.connect(function(err){
+            client.udfRegister(__dirname+"/udf_test.lua", function(err) {
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                done();
+            });
+        });
     });
 
     after(function(done) {
-		client.close()
-		client = null;
+        client.close()
+        client = null;
         done();
     });
 
-	it('should invoke an UDF to without any args', function(done) {
-		var udfArgs = { module: "udf_test", funcname: "rec_create" }
-		var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
-		var key		= kgen();
-		client.execute(key, udfArgs, function(err, res) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.equal(0);
-			client.remove(key, function(err, key){
-				done();
-			});
-		}); 
-	});
-	it('should invoke an UDF with arguments', function(done) {
-		var udfArgs = { module: "udf_test", funcname: "rec_update", args: [123, "str"] }
-		var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
-		var key		= kgen();
-		client.execute(key, udfArgs, function( err, res) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.equal(0);
-			client.remove(key, function(err, key) {
-				done();
-			});
-		});
-	});
-	it('should invoke an UDF with apply policy', function(done) {
-		var udfArgs		= { module: "udf_test", funcname: "rec_update" , args: [345, "bar"]}
-		var kgen		= keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
-		var key			= kgen();
-		var applypolicy = { timeout : 1500}
-		client.execute(key, udfArgs, applypolicy, function( err, res) {
-			expect(err).to.be.ok();
-			expect(err.code).to.equal(status.AEROSPIKE_OK);
-			expect(res).to.equal(0);
-			client.remove(key, function(err, key){
-				done();
-			});
-		});
-	});
-	it('should invoke an UDF function which does not exist - expected to fail', function(done) {
-		var udfArgs		= { module: "udf_test", funcname: "rec_nofunc" }
-		var kgen		= keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
-		var key			= kgen();
-		client.execute(key, udfArgs, function( err, res, key) {
-			expect(err).to.be.ok();
-			if(err.code != 1300) {
-				expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
-			}
-			else {
-				expect(err.code).to.equal(1300);
-			}
-			done();
-		});
-	});
+    it('should invoke an UDF to without any args', function(done) {
+        var udfArgs = { module: "udf_test", funcname: "rec_create" }
+        var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
+        var key		= kgen();
+        client.execute(key, udfArgs, function(err, res) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(res).to.equal(0);
+            client.remove(key, function(err, key){
+                done();
+            });
+        }); 
+    });
+    it('should invoke an UDF with arguments', function(done) {
+        var udfArgs = { module: "udf_test", funcname: "rec_update", args: [123, "str"] }
+        var kgen    = keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
+        var key		= kgen();
+        client.execute(key, udfArgs, function( err, res) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(res).to.equal(0);
+            client.remove(key, function(err, key) {
+                done();
+            });
+        });
+    });
+    it('should invoke an UDF with apply policy', function(done) {
+        var udfArgs		= { module: "udf_test", funcname: "rec_update" , args: [345, "bar"]}
+        var kgen		= keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
+        var key			= kgen();
+        var applypolicy = { timeout : 1500}
+        client.execute(key, udfArgs, applypolicy, function( err, res) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            expect(res).to.equal(0);
+            client.remove(key, function(err, key){
+                done();
+            });
+        });
+    });
+    it('should invoke an UDF function which does not exist - expected to fail', function(done) {
+        var udfArgs		= { module: "udf_test", funcname: "rec_nofunc" }
+        var kgen		= keygen.string(options.namespace, options.set, {prefix: "test/udfExecute/"});
+        var key			= kgen();
+        client.execute(key, udfArgs, function( err, res, key) {
+            expect(err).to.be.ok();
+            if(err.code != 1300) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
+            }
+            else {
+                expect(err.code).to.equal(1300);
+            }
+            done();
+        });
+    });
 
 });

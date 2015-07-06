@@ -32,39 +32,39 @@ var language = aerospike.language;
 describe('client.udfRemove()', function(done) {
 
     var config = options.getConfig();
-	var client = aerospike.client(config);
+    var client = aerospike.client(config);
 
     before(function(done) {
-		client.connect(function(err){
-			done();
-		});
+        client.connect(function(err){
+            done();
+        });
     });
 
     after(function(done) {
         done();
     });
-    
-	it('should remove an UDF module with a info policy from aerospike cluster', function(done) {
+
+    it('should remove an UDF module with a info policy from aerospike cluster', function(done) {
         var dir = __dirname;
-		var filename = dir + "/udf_test.lua"
-		var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
+        var filename = dir + "/udf_test.lua"
+        var infopolicy = { timeout : 1000, send_as_is: true, check_bounds: false }
         client.udfRegister(filename, infopolicy, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-			client.udfRemove("udf_test.lua", infopolicy, function(err) {
-				expect(err).to.be.ok();
-				expect(err.code).to.equal(status.AEROSPIKE_OK);
-				done();
-			});
+            client.udfRemove("udf_test.lua", infopolicy, function(err) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                done();
+            });
         }); 
     });
 
-	it('remove non-existent UDF module from aerospike cluster - should fail',function(done) {
-		var filename = "noudf.lua"
-       client.udfRemove(filename, function(err) {
+    it('remove non-existent UDF module from aerospike cluster - should fail',function(done) {
+        var filename = "noudf.lua"
+        client.udfRemove(filename, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
-			done();
-       }); 
+            done();
+        }); 
     });
 });

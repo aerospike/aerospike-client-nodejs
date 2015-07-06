@@ -31,7 +31,7 @@ var policy = aerospike.policy;
 
 describe('client.select()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -47,7 +47,7 @@ describe('client.select()', function() {
     });
 
     it('should read the record', function(done) {
-        
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/select/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -69,15 +69,15 @@ describe('client.select()', function() {
                 for ( var bin in _record ) {
                     expect(_record[bin]).to.be(record[bin]);
                 }
-				
-				client.remove(key, function(err, key){
-					done();
-				});
+
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
-	it('should fail - when a select is called without key ', function(done) {
-        
+    it('should fail - when a select is called without key ', function(done) {
+
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/select/"});
         var mgen = metagen.constant({ttl: 1000});
@@ -91,13 +91,13 @@ describe('client.select()', function() {
 
         // write the record then check
         client.put(key, record, meta, function(err, key1) {
-			var select_key = { ns:options.namespace, set: options.set}
+            var select_key = { ns:options.namespace, set: options.set}
             client.select(select_key, bins, function(err, _record, metadata, key1) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });
@@ -118,15 +118,12 @@ describe('client.select()', function() {
         // write the record then check
         client.select(key, bins, function(err, record, metadata, key) {
             expect(err).to.be.ok();
-			if(err.code != 602)
-			{
-				expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-			}
-			else 
-			{
-				expect(err.code).to.equal(602);
-			}
-
+            if(err.code != 602) {
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
+            }
+            else {
+                expect(err.code).to.equal(602);
+            }
             done();
         });
     });
@@ -155,9 +152,9 @@ describe('client.select()', function() {
                 for ( var bin in _record ) {
                     expect(_record[bin]).to.be(record[bin]);
                 }
-				client.remove(key, function(err, key){
-					done();
-				});
+                client.remove(key, function(err, key){
+                    done();
+                });
             });
         });
     });

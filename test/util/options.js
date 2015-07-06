@@ -66,16 +66,16 @@ var parser = yargs
             default: "demo",
             describe: "Set for the keys."
         },
-		user: {
-			alias: "U",
-			default:null,
-			describe: "Username to connect to a secure cluster"
-		},
-		password: {
-			alias: "P",
-			default: null,
-			describe: "Password to connect to a secure cluster"
-		},
+        user: {
+            alias: "U",
+            default:null,
+            describe: "Username to connect to a secure cluster"
+        },
+        password: {
+            alias: "P",
+            default: null,
+            describe: "Password to connect to a secure cluster"
+        },
 		run_aggregation: {
 			default: false,
 			describe: "Set this to true to run aggregation tests"
@@ -84,20 +84,17 @@ var parser = yargs
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv;
 
-options.getConfig = function()
-{
+options.getConfig = function() {
 	var config = {};
 	config = { 
 		hosts: [ {addr:options.host, port: options.port} ],
 		log: { level: options.log, file: options.log_file},
 		policies: { timeout: options.timeout}
 	}
-	if(options.user !== null)
-	{
+	if(options.user !== null) {
 		config.user = options.user;
 	}
-	if(options.password !== null)
-	{
+	if(options.password !== null) {
 		config.password = options.password;
 	}
 	return config;

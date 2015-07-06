@@ -30,9 +30,9 @@ var policy = aerospike.policy;
 
 describe('client.info()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
-	
+
     before(function(done) {
         client.connect(function(err){
             done();

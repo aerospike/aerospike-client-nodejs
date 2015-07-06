@@ -16,20 +16,18 @@
 
 /*******************************************************************************
  *
- * Write a record.
+ * Perform multiple operations on a single record.
  * 
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
-var client    = aerospike.client;
 var yargs = require('yargs');
-var events = require('events');
-var util = require('util');
 
+var Operator = aerospike.operator;
 var Policy = aerospike.policy;
 var Status = aerospike.status;
-var filter = aerospike.filter;
+
 /*******************************************************************************
  *
  * Options parsing
@@ -37,11 +35,15 @@ var filter = aerospike.filter;
  ******************************************************************************/
 
 var argp = yargs
-    .usage("$0 [options] scanId")
+    .usage("$0 [options] key")
     .options({
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        profile: {
+            boolean: true,
+            describe: "Profile the operation."
         },
         host: {
             alias: "h",
@@ -86,27 +88,28 @@ var argp = yargs
             alias: "P",
             default: null,
             describe: "Password to connec to secured cluster"
-        }  
+        }   
+
     });
 
 var argv = argp.argv;
+var keyv = argv._.shift();
 
 if ( argv.help === true ) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
-var scanId = argv._.length === 1 ? argv._[0] : null;
-
-if ( ! scanId) {
-	console.error("Error: Please provide the scan Id to get the status of scan")
-	console.error();
-	argp.showHelp();
-	process.exit(1);
+if ( ! keyv ) {
+    console.error("Error: Please provide a key for the operation");
+    console.error();
+    argp.showHelp();
+    process.exit(1);
 }
+
 /*******************************************************************************
  *
- * Configure the client.
+ * Establish a connection to the cluster.
  * 
  ******************************************************************************/
 
@@ -129,20 +132,15 @@ config = {
     }
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
+ * Perform the operation
  * 
  ******************************************************************************/
+
+function format(o) {
+    return JSON.stringify(o, null, '    ');
+}
 
 aerospike.client(config).connect(function (err, client) {
 
@@ -155,19 +153,43 @@ aerospike.client(config).connect(function (err, client) {
     // Perform the operation
     //
 
-    var count = 0;
+    var key = {
+        ns:  argv.namespace,
+        set: argv.set,
+        key: keyv
+    };
 
+	var bins = { s : "appendS"}
+    if ( argv.profile ) {
+        console.time("add");
+    }
 
-    var q = client.query(argv.namespace, argv.set );
+    client.append(key, bins, function(err) {
 
-	q.Info( scanId, function(scanInfo) {
-		console.log(scanInfo);
-		process.exit(0)
-	});
+        var exitCode = 0;
+
+        switch ( err.code ) {
+            case Status.AEROSPIKE_OK:
+                console.log("Record updated successfully");
+                break;
+
+            case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                console.error("Error: Not Found.");
+                exitCode = 1;
+                break;
+                
+            default:
+                console.error("Error: " + err.message);
+                exitCode = 1;
+                break;
+        }
+        
+
+        if ( argv.profile ) {
+            console.log("---");
+            console.timeEnd("add");
+        }
+        
+        process.exit(exitCode);
+    });
 });
-
-/*******************************************************************************
- *
- * Perform the operation
- * 
- ******************************************************************************/

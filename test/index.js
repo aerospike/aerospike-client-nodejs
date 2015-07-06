@@ -30,7 +30,7 @@ var policy = aerospike.policy;
 
 describe('client.index()', function() {
 
-	var config = options.getConfig();
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -46,8 +46,10 @@ describe('client.index()', function() {
     });
 
     it('should create an integer index', function(done) {
-		var args = { ns: options.namespace, set: options.set, bin : "integer_bin",
-						index: "integer_index" }
+        var args = { ns: options.namespace, 
+                     set: options.set, 
+                     bin : "integer_bin",
+                     index: "integer_index" }
         client.createIntegerIndex(args, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -55,8 +57,8 @@ describe('client.index()', function() {
         });
     });
     it('should create an string index', function(done) {
-		var args = { ns: options.namespace, set: options.set, bin : "string_bin",
-						index: "string_index" }
+        var args = { ns: options.namespace, set: options.set, bin : "string_bin",
+            index: "string_index" }
         client.createStringIndex(args, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
@@ -64,8 +66,8 @@ describe('client.index()', function() {
         });
     });
     it('should create an integer index with info policy', function(done) {
-		var args = { ns: options.namespace, set: options.set, bin : "policy_bin",
-						index: "policy_index", policy:{ timeout : 1000, send_as_is: true, check_bounds: false }}
+        var args = { ns: options.namespace, set: options.set, bin : "policy_bin",
+            index: "policy_index", policy:{ timeout : 1000, send_as_is: true, check_bounds: false }}
         client.createIntegerIndex(args, function(err) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);

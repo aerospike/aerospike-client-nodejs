@@ -78,17 +78,17 @@ var argp = yargs
 			alias: "b",
 			default: undefined,
 			describe: "Bins to select in the batch Call"
-		},
-		user: {
-			alias: "U",
-			default: null,
-			describe: "Username to connect to secured cluster"
-		},  
-		password: {
-			alias: "P",
-			default: null,
-			describe: "Password to connec to secured cluster"
-		}  
+        },
+        user: {
+            alias: "U",
+            default: null,
+            describe: "Username to connect to secured cluster"
+        },  
+        password: {
+            alias: "P",
+            default: null,
+            describe: "Password to connec to secured cluster"
+        }  
     });
 
 var argv = argp.argv;
