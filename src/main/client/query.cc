@@ -428,7 +428,7 @@ NAN_METHOD(AerospikeQuery::setQueryType)
 	else
 	{
 		as_v8_error(log, "scanQueryAPI is an enumerator and takes integer value");
-		return NanThrowError(NanNew("Configuration Error while creating client object"));
+		return NanThrowError(NanNew("Configuration Error while creating query object"));
 	}
 	NanReturnValue(args.This());
 }
