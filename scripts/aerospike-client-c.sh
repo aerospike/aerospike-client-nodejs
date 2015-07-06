@@ -391,8 +391,7 @@ mkdir -p ${AEROSPIKE}/lib
 cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
 
 rm -rf ${AEROSPIKE}/include
-mkdir -p ${AEROSPIKE}/include
-cp -R ${PREFIX}/include/* ${AEROSPIKE}/include
+ln -s ${PREFIX}/include ${AEROSPIKE}/include
 
 rm -rf ${AEROSPIKE}/lua
 mkdir -p ${AEROSPIKE}/lua
