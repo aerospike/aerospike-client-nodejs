@@ -178,7 +178,6 @@ aerospike.client(config).connect(function (err, client) {
                 break;
                 
             default:
-				console.log(err);
                 console.error("Error: " + err.message);
                 exitCode = 1;
                 break;
