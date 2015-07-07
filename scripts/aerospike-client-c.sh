@@ -56,13 +56,18 @@ detect_linux()
         return 0
         ;;
 
-      "debian6" | "debian7" | "debian8" )
+      "debian6" )
         echo ${DIST_NAME} "deb"
         return 0
         ;;
 
+      "debian7" | "debian8" )
+        echo "debian7" "deb"
+        return 0
+        ;;
+
       "ubuntu12" | "ubuntu13" | "ubuntu14" | "ubuntu15")
-        echo "ubuntu12"  "deb"
+        echo "ubuntu12" "deb"
         return 0
         ;;
 
