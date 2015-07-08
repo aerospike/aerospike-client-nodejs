@@ -62,25 +62,36 @@
       'include_dirs': [
         'aerospike-client-c/include',
         'aerospike-client-c/include/ck',
-		'src/include',
-		"<!(node -e \"require('nan')\")"
+                'src/include'
       ],
       'link_settings': {
         'libraries': [
           '../aerospike-client-c/lib/libaerospike.a'
         ]
       },
-	  'variables': {
-		'uselua': '<!(echo $USELUA)'
-	  },
+      'variables': {
+        'uselua': '<!(echo $USELUA)',
+        'isnode': '<!(which node > /dev/null 2> /dev/null; echo $?)',
+        'isnodejs': '<!(which nodejs > /dev/null 2> /dev/null; echo $?)'
+      },
       'conditions': [
         ['OS=="linux"',{
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
         }],
-		['uselua==1',{
-		  'libraries': ['-llua']
-		}]
-      ] 
+        ['uselua==1',{
+          'libraries': ['-llua']
+        }],
+        ['isnode==0',{
+          'include_dirs': [
+            "<!(node -e \"require('nan')\")"
+          ],
+        }],
+        ['isnodejs == 0',{
+          'include_dirs': [
+                "<!(nodejs -e \"require('nan')\")"
+          ],
+        }]
+     ]
     }
   ]
 }
