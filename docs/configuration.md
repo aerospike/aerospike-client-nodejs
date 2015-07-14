@@ -28,7 +28,7 @@ var config = {
   },
   modlua: {
 	  systemPath: 'path to system UDF files', 
-	  userPath: ' 'path to user UDF files'
+	  userPath: 'path to user UDF files'
   }
 };
 
