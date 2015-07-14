@@ -42,13 +42,22 @@ var GB = MB * 1024;
 var MEMCHART_MAX_MB = 400;
 var MEMCHART_BUCKETS = 100;
 var MEMCHART_BAR = new Buffer(MEMCHART_BUCKETS+1);
+var OP_TYPES = 2; // READ and WRITE
+var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
 
 var cpus = os.cpus();
 var online = 0;
 var exited = 0;
 var timerId;
+var date = new Date();
 
 var iterations_results = [];
+
+/**
+ * Number of completed operations(READ & WRITE), timed out operations and operations that ran into error per second
+ */
+var interval_stats = new Array(OP_TYPES);
+reset_interval_stats();
 
 /***********************************************************************
  *
@@ -110,7 +119,11 @@ var argp = yargs
         },
         silent: {
             default: false,
-            describe: "Suppress intermediate output from workers."
+            describe: "Supress the tps statistics printed every second."
+        },
+        longevity: {
+            default: false,
+            describe: "Print intermediate output from workers."
         },
         operations: {
             alias: "O",
@@ -119,7 +132,7 @@ var argp = yargs
         },
         iterations: {
             alias: "I",
-            default: 1,
+            default: undefined,
             describe: "Total number of iterations to perform per process."
         },
         processes: {
@@ -188,23 +201,9 @@ if ( (ROPS + WOPS) < argv.operations ) {
     ROPS += DOPS;
 }
 
-if ( argv.time !== undefined ) {
-    var time_match = argv.time.toString().match(/(\d+)([smh])?/)
-    if ( time_match !== null ) {
-        if ( time_match[2] !== null ) {
-            argv.time = parseInt(time_match[1],10);
-            var time_unit = time_match[2];
-            switch( time_unit ) {
-                case 'm':
-                    argv.time = argv.time * 60;
-                    break;
-                case 'h':
-                    argv.time = argv.time * 60 * 60;
-                    break;
-            }
-            argv.iterations = undefined;
-        }
-    }
+if(argv.time !== undefined){
+    argv.time = stats.parse_time_to_secs(argv.time);
+    argv.iterations = undefined;
 }
 
 /***********************************************************************
@@ -246,7 +245,7 @@ function worker_spawn() {
     var worker = cluster.fork();
     worker.iteration = 0;
     worker.on('message', worker_results(worker));
-}
+}	      
 
 function worker_exit(worker) {
     worker.send(['end']);
@@ -255,6 +254,15 @@ function worker_exit(worker) {
 function worker_shutdown() {
     Object.keys(cluster.workers).forEach(function(id) {
         worker_exit(cluster.workers[id]);
+    });
+}
+
+/**
+ * Signal all workers asking for data on transactions
+ */
+function worker_probe() {
+    Object.keys(cluster.workers).forEach(function(id) {
+        cluster.workers[id].send(['trans']);
     });
 }
 
@@ -295,21 +303,22 @@ function datagen ( key ) {
             data += key;
             return data;
         }   
-		case "BYTES" :
-		{
-			data = new Buffer(argv.datasize);
-			var i = 0;
-			while( i < argv.datasize)
-			{
-				data.writeUInt8(i,i++);
-			}
-			return data;
-		}
+        case "BYTES" :
+        {
+            data = new Buffer(argv.datasize);
+            var i = 0;
+            while( i < argv.datasize)
+            {
+                data.writeUInt8(i,i++);
+            }
+            return data;
+        }
         default :
             return key;
     }
     
 }
+
 function putgen(commands) {
     var key = keygen();
     var data = datagen( key);
@@ -349,8 +358,29 @@ function worker_run(worker) {
     worker.send(['run', commands]);
 }
 
-function worker_results_iteration(worker, iteration_stats) {
+/**
+ * Collects the data related to transactions and prints it once the data is recieved from all workers.
+ * (called per second)
+ */
+var counter = 0; // Number of times worker_results_interval is called
+function worker_results_interval(worker, interval_worker_stats){
+    for ( i = 0; i < OP_TYPES; i++ ) {
+	for (j = 0; j < STATS; j++)
+        interval_stats[i][j] = interval_stats[i][j] + interval_worker_stats[i][j];
+    }
+    if (++counter % argv.processes === 0){
+	    print_interval_stats();
+    }
+}
 
+function print_interval_stats(){
+    console.log("%s write(tps=%d timeouts=%d errors=%d) read(tps=%d timeouts=%d errors=%d)", 
+                date.toUTCString(), interval_stats[0][0],interval_stats[0][1],interval_stats[0][2],
+                interval_stats[1][0],interval_stats[1][1],interval_stats[1][2]);
+}
+
+
+function worker_results_iteration(worker, iteration_stats) {
     var result = {
         worker: worker.id,
         pid: worker.process.pid,
@@ -366,11 +396,11 @@ function worker_results_iteration(worker, iteration_stats) {
         stats.chart_iteration_memory(worker.iteration, 1, result, MEMCHART_BAR, MEMCHART_MAX_MB, MEMCHART_BUCKETS, logger.info)
     }
 
-    if ( !argv.silent ) {
+    if ( argv.longevity ) {
         stats.report_iteration(result, argv, logger.info);
     }
 
-    if ( worker.iteration < argv.iterations || argv.time !== undefined ) {
+    if ( argv.iterations === undefined || worker.iteration < argv.iterations || argv.time !== undefined ) {
         worker_run(worker);
     }
     else {
@@ -380,9 +410,31 @@ function worker_results_iteration(worker, iteration_stats) {
 
 function worker_results(worker) {
     return function(message) {
-        worker_results_iteration(worker, message);
-    }
+        if ( message[0] === 'stats' ) {
+            worker_results_iteration(worker, message[1]);
+        }else{
+            worker_results_interval(worker,message[1]);
+        }	 
+     };
 }
+
+/**
+ * Flush out the current interval_stats and probe the worker every second.
+ */
+if(!argv.silent && !argv.longevity){
+    setInterval(function(){
+        reset_interval_stats();
+        worker_probe(cluster); 
+    },1000);
+}
+
+/**
+ * Reset the value of internal_stats.
+ */
+function reset_interval_stats(){
+    interval_stats = [[0, 0, 0], [0, 0, 0]];
+}
+
 
 /***********************************************************************
  *
@@ -428,6 +480,7 @@ cluster.on('exit', function(worker, code, signal) {
         process.exit(0);
     }
 });
+
 /***********************************************************************
  *
  * Setup Workers

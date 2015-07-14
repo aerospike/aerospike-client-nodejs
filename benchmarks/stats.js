@@ -100,6 +100,27 @@ function duration(start, end) {
     return ms;
 }
 
+function parse_time_to_secs(time){
+    if ( time !== undefined ) {
+        var time_match = time.toString().match(/(\d+)([smh])?/);
+        if ( time_match !== null ) {
+            if ( time_match[2] !== null ) {
+                time = parseInt(time_match[1],10);
+                var time_unit = time_match[2];
+                switch( time_unit ) {
+                    case 'm':										
+                        time = time * 60;	
+                    break;
+                    case 'h':
+                        time = time * 60 * 60;  
+                    break;
+                }
+            }
+        }
+    }
+    return time;
+}
+
 
 function time_histogram(operations) {
 
@@ -392,7 +413,7 @@ function report_iteration(result, argv, print) {
     return 0;
 }
 
- function report_final(iterations, argv, print) {
+function report_final(iterations, argv, print) {
 
     var opcountfilter = equals(ITERATION_OPERATIONS, argv.operations);
     var itcount = 0;
@@ -537,4 +558,5 @@ module.exports = {
     print_histogram: print_histogram,
     report_iteration: report_iteration,
     report_final: report_final,
+    parse_time_to_secs: parse_time_to_secs
 }
