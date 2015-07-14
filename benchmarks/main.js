@@ -87,6 +87,10 @@ var argp = yargs
             default: 10,
             describe: "Timeout in milliseconds."
         },
+	ttl:{
+            default: 10000,
+            describe: "Time to live for the record (seconds). Units may be used: 1h, 30m, 30s"
+        },
         log: {
             alias: "l",
             default: 1,
