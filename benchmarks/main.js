@@ -199,6 +199,9 @@ if ( !cluster.isMaster ) {
 var FOPS = (argv.operations / (argv.reads + argv.writes));
 var ROPS = FOPS * argv.reads;
 var WOPS = FOPS * argv.writes;
+var ROPSPCT = ROPS / argv.operations * 100;
+var WOPSPCT = WOPS / argv.operations * 100;
+
 
 if ( (ROPS + WOPS) < argv.operations ) {
     DOPS = argv.operations - (ROPS + WOPS);
@@ -421,6 +424,13 @@ function worker_results(worker) {
         }	 
      };
 }
+
+/**
+*  * Print config information
+*   */
+console.log("Benchmark: "+argv.h+":"+argv.p+", namespace: "+argv.n+", set: " + argv.s
+	                                       + ", workers: " + argv.N + ", read: "+ ROPSPCT + "%, write: "+ WOPSPCT+"%");
+
 
 /**
  * Flush out the current interval_stats and probe the worker every second.
