@@ -27,6 +27,21 @@ var path = require('path');
 var util = require('util');
 var winston = require('winston');
 var stats = require('./stats');
+var status = aerospike.status;
+
+/**********************************************************************
+ *
+ *  MACROS
+ *
+ *********************************************************************/
+
+var OP_TYPES = 2; // READ and WRITE
+var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
+var READ = 0;
+var WRITE = 1;
+var TPS = 0;
+var TIMEOUT = 1; 
+var ERROR = 2;
 
 /***********************************************************************
  *
@@ -54,6 +69,10 @@ var argp = yargs
             alias: "t",
             default: 10,
             describe: "Timeout in milliseconds."
+        },
+        ttl:{
+            default: 10000,
+            describe: "Time to live for the record (seconds). Units may be used: 1h, 30m, 30s"
         },
         log: {
             alias: "l",
@@ -93,6 +112,8 @@ if ( !cluster.isWorker ) {
     console.error('worker.js must only be run as a child process of main.js.');
     return;
 }
+
+argv.ttl = stats.parse_time_to_secs(argv.ttl);
 
 /***********************************************************************
  *
@@ -167,19 +188,28 @@ function get(command, done) {
 
     client.get({ns: argv.namespace, set: argv.set, key: command[1]}, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done(_error.code, time_start, time_end);
+        done(_error.code, time_start, time_end, READ);
     });
 }
+
+// set the ttl for the write
+var metadata = {
+    ttl: argv.ttl
+};
 
 function put(command, done) {
     var time_start = process.hrtime();
     
-    client.put({ns: argv.namespace, set: argv.set, key: command[1]}, command[2], function(_error, _record, _metadata, _key) {
+    client.put({ns: argv.namespace, set: argv.set, key: command[1]}, command[2], metadata, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done(_error.code, time_start, time_end);
+        done(_error.code, time_start, time_end, WRITE);
     });
 }
 
+
+
+var interval_data = new Array(OP_TYPES);
+reset_interval_data();
 
 function run(commands) {
 
@@ -190,22 +220,29 @@ function run(commands) {
     var mem_start = process.memoryUsage();
     var time_start = process.hrtime();
 
-    function done(op_status, op_time_start, op_time_end) {
+    function done(op_status, op_time_start, op_time_end, op_type) {
 
         operations[completed] = [op_status, op_time_start, op_time_end];
+        interval_data[op_type][TPS]++;
+        if(op_status === status.AEROSPIKE_ERR_TIMEOUT){
+            interval_data[op_type][TIMEOUT]++;
+        }
+	    else if(op_status !== status.AEROSPIKE_OK && op_status !== status.AEROSPIKE_ERR_TIMEOUT){
+            interval_data[op_type][ERROR]++;
+        }
+
         completed++;
 
         if ( completed >= expected ) {
             var time_end = process.hrtime();
             var mem_end = process.memoryUsage();
-
-            process.send(stats.iteration(
+            process.send(['stats',stats.iteration(
                 operations,
                 time_start,
                 time_end,
                 mem_start,
                 mem_end
-            ));
+            )]);
         }
     }
 
@@ -215,6 +252,22 @@ function run(commands) {
             case 'put': return put(command, done);
         }
     });
+}
+
+/*
+ * Sends the populated interval_data to the parent and resets it for the next second
+ */
+function respond(){
+    process.send(['trans',interval_data]);
+    reset_interval_data();
+}
+
+/*
+ * Reset interval_data
+ */
+function reset_interval_data(){
+    interval_data[READ] = [0, 0, 0];  // [reads_performed, reads_timeout, reads_error]
+    interval_data[WRITE] = [0, 0, 0]; // [writes_performed, writes_timeout, writes_error]   
 }
 
 /***********************************************************************
@@ -259,6 +312,7 @@ process.on('message', function(msg) {
     logger.debug('command: ', util.inspect(msg[0]));
     switch( msg[0] ) {
         case 'run': return run(msg[1]);
+        case 'trans': respond(); break;	 // Listening on trans event. (this event occurs every second) 
         default: return process.exit(0);
     }
 });

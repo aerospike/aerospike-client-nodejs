@@ -72,7 +72,7 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var bins = { itemsShopped: 5}
+var bins = {itemsShopped: 5}
 
 client.add(key, bins, function(error, record, metadata, key) {
   // do something
