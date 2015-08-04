@@ -84,7 +84,7 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 0,
             describe: "Timeout in milliseconds."
         },
 	ttl:{
