@@ -211,12 +211,8 @@ NAN_METHOD(AerospikeQuery::where)
 		{
 			Local<Object> filter = filters->Get(i)->ToObject();
 			Local<Value> bin	 = filter->Get(NanNew("bin"));
-			char * bin_name		 = NULL; 
 			char * bin_val		 = NULL;
-			if( bin->IsString() ) {
-				bin_name		 = strdup(*String::Utf8Value(bin));
-			}
-			else {
+			if( !bin->IsString() ) {
 				as_v8_error(log, "Bin value must be string");
 				return NanThrowError(NanNew("Bin value must be string"));
 			}
@@ -243,7 +239,7 @@ NAN_METHOD(AerospikeQuery::where)
 							as_v8_error(log, "The range value passed must be an integer");
 							return NanThrowError(NanNew("The range value passed must be an integer"));
 						}
-						as_query_where( query, bin_name, as_integer_range(min, max));
+						as_query_where( query, *String::Utf8Value(bin), as_integer_range(min, max));
 						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
 						break;
 					}
@@ -253,7 +249,7 @@ NAN_METHOD(AerospikeQuery::where)
 						if( type == AS_INDEX_NUMERIC) 
 						{
 							int64_t val = filter->Get(NanNew("val"))->ToObject()->NumberValue();
-							as_query_where( query, bin_name, as_integer_equals(val));
+							as_query_where( query, *String::Utf8Value(bin), as_integer_equals(val));
 							as_v8_debug(log," Integer equality predicate %llu", val);
 							break;
 						}
@@ -261,7 +257,7 @@ NAN_METHOD(AerospikeQuery::where)
 						{
 							Local<Value> val = filter->Get(NanNew("val"));
 							bin_val   = strdup(*String::Utf8Value(val));
-							as_query_where( query, bin_name,as_string_equals(bin_val));
+							as_query_where( query, *String::Utf8Value(bin),as_string_equals(bin_val));
 							as_v8_debug(log, " String equality predicate %s", bin_val);
 							break;
 						}
