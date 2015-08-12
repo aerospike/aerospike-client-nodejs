@@ -648,7 +648,7 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var op = aerospike.Operators
+var op = aerospike.operator
 
 var ops = [
   op.append('a', 'xyz'),
