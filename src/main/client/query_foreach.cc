@@ -29,6 +29,7 @@ extern "C" {
 #include <cstdlib>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "query.h"
 #include "client.h"
@@ -466,11 +467,16 @@ static void execute(uv_work_t * req)
         else if(data->type == SCANUDF ) // query without where clause, becomes a scan background.
         {
             // generating a 32 bit random number. 
-            // Because when converting to node.js integer, the last two digits precision is lost.
-            // more comments on why this rand is generated here.
+            // Because when converting from node.js integer, the last two digits precision is lost.
             data->scan_id    = 0;
             int32_t dummy_id = 0;
-            srand(time(NULL));
+
+            // For seeding the random generator system's microseconds.
+            // If two scan requests are processed in the same microsecond, then same scan id
+            // is generated for both of them.
+            struct timeval time; 
+            gettimeofday(&time,NULL);
+            srand((time.tv_sec * 1000000) + (time.tv_usec ));
             dummy_id = rand();
             data->scan_id = dummy_id;
             as_v8_debug(log, "The random number generated for scan_id %d ", data->scan_id);
