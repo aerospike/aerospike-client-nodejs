@@ -57,7 +57,7 @@ detect_linux()
         ;;
 
       "debian6" )
-        echo ${DIST_NAME} "deb"
+        echo "debian6" "deb"
         return 0
         ;;
 
