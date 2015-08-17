@@ -1047,7 +1047,7 @@ int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int setRetryPolicy( Local<Object> obj, as_policy_retry * retrypolicy, LogInfo * log) 
+int setRetryPolicy( Local<Object> obj, uint32_t * retrypolicy, LogInfo * log) 
 {
     if (setPolicyGeneric(obj, "retry", (int *) retrypolicy, log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_OK;
