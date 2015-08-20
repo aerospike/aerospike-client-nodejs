@@ -67,7 +67,7 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 0,
             describe: "Timeout in milliseconds."
         },
         ttl:{
@@ -104,7 +104,7 @@ var argp = yargs
 var argv = argp.argv;
 
 if ( argv.help === true) {
-    argp.showHelp()
+    argp.showHelp();
     return;
 }
 
@@ -156,7 +156,7 @@ var config = {
 		maxNamespaces: 8,
 		takeoverThresholdSeconds : 30
 	}
-}
+};
 
 if(argv.user !== null)
 {

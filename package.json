@@ -1,29 +1,38 @@
 {
-  "name" : "aerospike",
-  "version" : "1.0.48",
-  "description" : "Aerospike Client Library",
-  "tags" : [ "aerospike", "database", "nosql" ],
-  "homepage" : "https://github.com/aerospike/aerospike-client-nodejs",
-  "main" : "lib/aerospike",
-  "engines" : {
-    "node" : ">=0.10"
+  "name": "aerospike",
+  "version": "1.0.49",
+  "description": "Aerospike Client Library",
+  "tags": [
+    "aerospike",
+    "database",
+    "nosql"
+  ],
+  "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
+  "main": "lib/aerospike",
+  "engines": {
+    "node": ">=0.10"
   },
-  "os" : [ "linux", "darwin" ],
-  "cpu" : [ "x64" ],
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
     "test": "node_modules/mocha/bin/mocha -R spec"
   },
-  "dependencies" : {
-    "nan" : "^1.8.4"
+  "dependencies": {
+    "nan": "^1.8.4"
   },
   "devDependencies": {
     "mocha": ">0",
     "expect.js": "0.2.x",
     "superagent": "0.15.x",
-    "yargs":"1.2.1"
+    "yargs": "1.2.1"
   }
 }

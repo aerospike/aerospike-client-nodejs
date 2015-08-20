@@ -84,10 +84,10 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 0,
             describe: "Timeout in milliseconds."
         },
-	ttl:{
+	    ttl:{
             default: 10000,
             describe: "Time to live for the record (seconds). Units may be used: 1h, 30m, 30s"
         },
@@ -161,7 +161,7 @@ var argp = yargs
         },
         keyrange: {
             alias: "K",
-            default: 1000,
+            default: 100000,
             describe: "The number of keys to use."
         },
         datatype: {
@@ -187,7 +187,7 @@ var argp = yargs
 var argv = argp.argv;
 
 if ( argv.help === true) {
-    argp.showHelp()
+    argp.showHelp();
     return;
 }
 
@@ -199,6 +199,9 @@ if ( !cluster.isMaster ) {
 var FOPS = (argv.operations / (argv.reads + argv.writes));
 var ROPS = FOPS * argv.reads;
 var WOPS = FOPS * argv.writes;
+var ROPSPCT = ROPS / argv.operations * 100;
+var WOPSPCT = WOPS / argv.operations * 100;
+
 
 if ( (ROPS + WOPS) < argv.operations ) {
     DOPS = argv.operations - (ROPS + WOPS);
@@ -217,7 +220,7 @@ if(argv.time !== undefined){
  ***********************************************************************/
 
 function logger_timestamp() {
-    var hrtime = process.hrtime()
+    var hrtime = process.hrtime();
     return util.format('[master: %d] [%s]', process.pid, hrtime);
 }
 
@@ -240,7 +243,7 @@ var logger = new (winston.Logger)({
  ***********************************************************************/
 
 function finalize() {
-    if ( argv['summary'] === true ) {
+    if ( argv.summary === true ) {
         return stats.report_final(iterations_results, argv, console.log);
     }
 }
@@ -273,7 +276,7 @@ function worker_probe() {
 /**
  * Data to be written for the record type string.
  */
-var STRING_DATA = "This the test data to be written to the server"
+var STRING_DATA = "This the test data to be written to the server";
 var CHAR_DATA = "DATAS";
 
 /**
@@ -392,12 +395,12 @@ function worker_results_iteration(worker, iteration_stats) {
         stats: iteration_stats
     };
 
-    if ( argv['summary'] === true ) {
+    if ( argv.summary === true ) {
         iterations_results.push(result);
     }
 
-    if ( argv['summary'] === false && argv['chart-memory'] === true && worker.id == 1 ) {
-        stats.chart_iteration_memory(worker.iteration, 1, result, MEMCHART_BAR, MEMCHART_MAX_MB, MEMCHART_BUCKETS, logger.info)
+    if ( argv.summary === false && argv['chart-memory'] === true && worker.id == 1 ) {
+        stats.chart_iteration_memory(worker.iteration, 1, result, MEMCHART_BAR, MEMCHART_MAX_MB, MEMCHART_BUCKETS, logger.info);
     }
 
     if ( argv.longevity ) {
@@ -421,6 +424,13 @@ function worker_results(worker) {
         }	 
      };
 }
+
+/**
+*  * Print config information
+*   */
+console.log("host: "+argv.h+" port:"+argv.p+", namespace: "+argv.n+", set: " + argv.s + ", worker processes: " +argv.N+ 
+            ", keys: " +argv.keyrange + ", read: "+ ROPSPCT + "%, write: "+ WOPSPCT+"%");
+
 
 /**
  * Flush out the current interval_stats and probe the worker every second.
