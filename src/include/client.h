@@ -33,6 +33,8 @@ extern "C" {
 #include <node.h>
 #include <nan.h>
 #include "log.h"
+#include "query.h"
+
 using namespace node;
 using namespace v8;
 

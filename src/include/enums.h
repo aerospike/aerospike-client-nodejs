@@ -45,4 +45,3 @@ Handle<Object> indexType();
 
 Handle<Object> scanStatus();
 
-Handle<Object> queryType();

@@ -45,10 +45,7 @@ typedef struct AsyncData {
     aerospike * as;
     asQueryType type;
     uint64_t  scan_id;
-    union {
-        as_query* query;
-        as_scan* scan;
-    } query_scan;
+    QueryScan* query_scan;
     as_error err;
     union {
         as_policy_query* query;
@@ -218,71 +215,6 @@ bool aerospike_query_callback(const as_val * val, void* udata)
     return async_queue_populate(val, query_cbdata);
 }
 
-/* There is one common class AerospikeQuery for both scan and query.
- * This function parses the values from AerospikeQuery and populates either
- * scan or query depending on the boolean combination of isQuery and hasUDF variables.
- * ---------------------------------------
- * IsQuery  | hasUDF | Function          |
- * ---------------------------------------
- *  0	    | 0      | Scan Foreground   |
- *  0       | 1      | Scan Background   |
- *  1       | 0      | Query             |
- *  1       | 1      | Aggregation       |
- * --------------------------------------- */
-bool populate_scan_or_query(AsyncData* data, AerospikeQuery* v8_query)
-{
-    // populate the values for scan. 
-    // we have not allocated the as_scan object anywhere earlier. 
-    // Allocate as_scan here.
-    LogInfo * log = v8_query->log;
-    if(data->type == SCAN || data->type == SCANUDF)
-    {
-        as_v8_debug(log, "The Scan operation invoked");
-        data->query_scan.scan = (as_scan*) cf_malloc(sizeof(as_scan));
-        as_scan * scan  = data->query_scan.scan;
-        as_query* query = &v8_query->query;
-
-        if(data->type == SCANUDF)
-        {
-            as_v8_debug(log,"It's a background scan operation");
-        }
-        as_scan_init(scan, query->ns, query->set);
-        as_v8_debug(log,"ns = %s and set = %s for scan ", query->ns, query->set); 
-        as_scan_apply_each(scan, query->apply.module, query->apply.function, query->apply.arglist);
-        as_v8_detail(log, "Number of bins to select in scan %d ", query->select.size);
-        as_scan_select_init(scan, query->select.size);
-        for ( uint16_t i = 0; i < query->select.size; i++)
-        {
-            as_scan_select(scan, (const char*) query->select.entries[i]);
-            as_v8_detail(log, "setting the select bin in scan to %s", scan->select.entries[i]);
-        }
-
-        // set the scan properties from AerospikeQuery object.
-        as_scan_set_concurrent( scan, v8_query->concurrent);
-        as_v8_detail(log, "concurrent property in scan is set to %d", (int) v8_query->concurrent);
-        as_scan_set_nobins(scan, v8_query->nobins);
-        as_v8_detail(log, "nobins property in scan is set to %d", (int) v8_query->nobins);
-        as_scan_set_percent(scan, v8_query->percent);
-        as_v8_detail(log, "percent in scan is set to %d", v8_query->percent);
-        as_scan_set_priority(scan, (as_scan_priority) v8_query->scan_priority);
-        as_v8_detail(log, "priority in scan is set to %d", v8_query->scan_priority);
-
-        //destroy the query here. All the values are populated into scan 
-        as_query_destroy(query);
-
-    }
-    else // it's a normal query - just update the query pointer. 
-    {
-        // query structure is populated in AerospikeQuery class itself.
-        // But scan structure is populated above because
-        // in future scan will be merged to query structure. Then this 
-        // if else won't be necessary.
-        data->query_scan.query  = &v8_query->query;
-    }
-    return true;
-
-}
-
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
  *  
@@ -309,8 +241,8 @@ static void * prepare(ResolveArgs(args))
     int curr_arg_pos				= 0;
     int res							= 0;
     int arglength					= args.Length();
+    data->query_scan                = &query->query_scan;
 
-    populate_scan_or_query(data, query);
 
     //scan background - no need to create a result queue.
     if(data->type == SCANUDF)
@@ -456,7 +388,7 @@ static void execute(uv_work_t * req)
         {
             as_v8_debug(log, "Invoking aerospike_query_foreach  ");
 
-            data->res = aerospike_query_foreach( as, err, data->policy.query, data->query_scan.query, aerospike_query_callback, 
+            data->res = aerospike_query_foreach( as, err, data->policy.query, data->query_scan->query, aerospike_query_callback, 
                     (void*) data->query_cbdata); 
 
             // send an async signal here. If at all there's any residual records left in the result_q,
@@ -476,13 +408,13 @@ static void execute(uv_work_t * req)
             as_v8_debug(log, "The random number generated for scan_id %d ", data->scan_id);
 
             as_v8_debug(log, "Scan id generated is %d", data->scan_id);
-            data->res = aerospike_scan_background( as, err, data->policy.scan, data->query_scan.scan, &data->scan_id);
+            data->res = aerospike_scan_background( as, err, data->policy.scan, data->query_scan->scan, &data->scan_id);
         }
         else if(data->type == SCAN )
         {
-            as_v8_debug(log, "Invoking scan foreach with ");
+            as_v8_debug(log, "Invoking scan foreach with percent %u", data->query_scan->scan->percent);
 
-            aerospike_scan_foreach( as, err, data->policy.scan, data->query_scan.scan, aerospike_query_callback, (void*) data->query_cbdata); 
+            aerospike_scan_foreach( as, err, data->policy.scan, data->query_scan->scan, aerospike_query_callback, (void*) data->query_cbdata); 
 
             // send an async signal here. If at all there's any residual records left in the queue,
             // this signal's callback will parse and send it to node layer.
@@ -608,11 +540,15 @@ static void respond(uv_work_t * req, int status)
 
     if( data->type == SCAN || data->type == SCANUDF)
     {
-        cf_free(data->query_scan.scan);
+        cf_free(data->query_scan->scan);
     }
     else 
     {
-        as_query_destroy(data->query_scan.query);
+        // @TO-DO A bug in c-client query destroy doesn't destroy the bin value
+        // for string type queries.
+        as_query_destroy(data->query_scan->query);
+
+        cf_free(data->query_scan->query);
     }
     if(data->policy.scan != NULL)
     {
@@ -627,7 +563,6 @@ static void respond(uv_work_t * req, int status)
     delete req;
 
     as_v8_debug(log, "Query operation done");
-
     return;
 }
 

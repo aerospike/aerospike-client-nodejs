@@ -58,7 +58,7 @@ NAN_METHOD(key)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-    
+    AerospikeQuery::Init(); 
     exports->Set(NanNew("client"),   NanNew<FunctionTemplate>(client)->GetFunction());
     exports->Set(NanNew("key"),      NanNew<FunctionTemplate>(key)->GetFunction());
     exports->Set(NanNew("status"),   status());
@@ -70,7 +70,6 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(NanNew("scanStatus"), scanStatus());
 	exports->Set(NanNew("predicates"),	predicates());
 	exports->Set(NanNew("indexType"),indexType());
-	exports->Set(NanNew("queryType"),queryType());
 }
 
 NODE_MODULE(aerospike, Aerospike)
