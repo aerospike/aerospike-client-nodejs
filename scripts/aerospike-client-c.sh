@@ -51,7 +51,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "redhatenterpriseserver6" | "centos7")
+      "centos6" | "redhatenterpriseserver6" | "centos7" | "fedora20" | "fedora21" | "fedora22")
         echo "el6" "rpm"
         return 0
         ;;
@@ -79,7 +79,7 @@ detect_linux()
 
     esac
   fi
-  
+
   # no LSB, check for /etc/centos-release
   if [ -f /etc/centos-release ]; then
     dist=$(cat /etc/redhat-release | tr '[:upper:]' '[:lower:]')
@@ -89,7 +89,7 @@ detect_linux()
 	echo "el6" "rpm"
 	return 0
 	;;
-	
+
        * )
 	echo "error: ${dist} is not supported."
 	return 1
@@ -97,7 +97,7 @@ detect_linux()
      esac
    fi
 
-	
+
   # Ok, no LSB, so check for /etc/issue
   if [ -f /etc/issue ]; then
     dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
@@ -173,7 +173,7 @@ download()
   wget_path=`which wget`
   has_wget=$?
 
-  # Check 
+  # Check
   if [ $has_curl != 0 ] && [ $has_wget != 0 ]; then
     echo "error: Not able to find 'curl' or `wget`. Either is required to download the package."
     exit 1
@@ -181,7 +181,7 @@ download()
 
   # Compose the URL for the client tgz
   URL="http://www.aerospike.com/download/client/c/${AEROSPIKE_C_VERSION}/artifact/${PKG_DIST}"
-  
+
   # Download and extract the client tgz.
   # Use non-slient mode to show progress about the download. Important for slower networks.
   printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
@@ -305,7 +305,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: \n"
     else
       download
-      
+
     fi
 
     ##############################################################################
