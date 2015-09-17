@@ -97,7 +97,7 @@ class AerospikeQuery: public ObjectWrap {
         bool hasUDF_;
         bool hasAggregation_;
 
-        static Persistent<FunctionTemplate> constructor;
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
         void SetQueryType(Local<Value> config); 

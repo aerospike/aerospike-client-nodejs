@@ -27,7 +27,7 @@
     "test": "node_modules/mocha/bin/mocha -R spec"
   },
   "dependencies": {
-    "nan": "^1.8.4"
+    "nan": "^2.0.0"
   },
   "devDependencies": {
     "mocha": ">0",

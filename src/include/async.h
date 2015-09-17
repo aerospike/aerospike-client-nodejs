@@ -25,9 +25,9 @@
 // This structure is used by query and scan async handles.
 // To process the records from the callback and pass it to nodejs
 typedef struct AsyncCallbackData {
-	Persistent<Function> data_cb;
-	Persistent<Function> error_cb;
-	Persistent<Function> end_cb;
+    Nan::Persistent<Function> data_cb;
+    Nan::Persistent<Function> error_cb;
+    Nan::Persistent<Function> end_cb;
 	cf_queue * result_q;
 	int max_q_size;
 	LogInfo * log;
@@ -43,8 +43,8 @@ typedef struct AsyncCallbackData {
  *  Setup an asynchronous invocation of a function.
  */
 Handle<Value> async_invoke(
-    ResolveArgs(args), 
-    void *  (* prepare)(ResolveArgs(args)), 
+    const Nan::FunctionCallbackInfo<v8::Value>& args,
+    void *  (* prepare)(const Nan::FunctionCallbackInfo<v8::Value>& args),
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     );

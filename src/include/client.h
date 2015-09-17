@@ -65,7 +65,7 @@ class AerospikeClient : public ObjectWrap {
         AerospikeClient();
         ~AerospikeClient();
 
-        static Persistent<FunctionTemplate> constructor;
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
         /***********************************************************************

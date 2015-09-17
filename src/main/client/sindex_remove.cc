@@ -54,7 +54,7 @@ typedef struct AsyncData {
 	as_namespace ns;
 	char * index;
     LogInfo * log;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -68,12 +68,12 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(const Nan::FunctionCallbackInfo<v8::Value>& info)
 {
 
-	NanScope();
+    Nan::HandleScope scope;
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -82,12 +82,12 @@ static void * prepare(ResolveArgs(args))
 	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    int argc					= args.Length();
+    int argc					= info.Length();
 
 
 	// The last argument should be a callback function.
-    if ( args[argc-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[argc-1].As<Function>());
+    if ( info[argc-1]->IsFunction()) {
+        data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -98,8 +98,8 @@ static void * prepare(ResolveArgs(args))
     }
 
 	// The first argument should be the namespace name.
-	if ( args[NS_NAME]->IsString()) {
-		strcpy( data->ns, *String::Utf8Value(args[NS_NAME]->ToString()));
+	if ( info[NS_NAME]->IsString()) {
+		strcpy( data->ns, *String::Utf8Value(info[NS_NAME]->ToString()));
 		as_v8_detail(log, "The index creation on namespace %s", data->ns);
 	}
 	else {
@@ -109,8 +109,8 @@ static void * prepare(ResolveArgs(args))
 		return data;
 	}
 
-	if ( args[INDEX_NAME]->IsString()) {
-		data->index = strdup(*String::Utf8Value(args[INDEX_NAME]->ToString()));
+	if ( info[INDEX_NAME]->IsString()) {
+		data->index = strdup(*String::Utf8Value(info[INDEX_NAME]->ToString()));
 		as_v8_detail(log, "The index to be created %s", data->index);
 	}
 	else
@@ -122,10 +122,10 @@ static void * prepare(ResolveArgs(args))
 	}
 
     if ( argc > 3 ) {
-        if ( !args[INFO_POLICY]->IsUndefined() && !args[INFO_POLICY]->IsNull())
+        if ( !info[INFO_POLICY]->IsUndefined() && !info[INFO_POLICY]->IsNull())
 		{
 			data->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
-			if(infopolicy_from_jsobject(data->policy, args[INFO_POLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			if(infopolicy_from_jsobject(data->policy, info[INFO_POLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
 				as_v8_error(log, "infopolicy shoule be an object");
 				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				data->param_err = 1;
@@ -178,7 +178,7 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
 
-	NanScope();
+    Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -199,23 +199,23 @@ static void respond(uv_work_t * req, int status)
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 	
-	Local<Function> cb = NanNew<Function>(data->callback);
+    Local<Function> cb = Nan::New<Function>(data->callback);
     // Execute the callback.
     if ( !cb->IsNull() ) {
-		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, argv);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
         as_v8_debug(log, "Invoked sindex remove callback");
     }
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        return Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+    data->callback.Reset();
 
     // clean up any memory we allocated
 
@@ -240,5 +240,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::sindexRemove)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    V8_RETURN(async_invoke(info, prepare, execute, respond));
 }
