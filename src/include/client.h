@@ -51,7 +51,7 @@ class AerospikeClient : public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> args);
+        static Local<Value> NewInstance(Local<Object> args);
 
         aerospike *as;
         LogInfo *log;
@@ -65,7 +65,7 @@ class AerospikeClient : public ObjectWrap {
         AerospikeClient();
         ~AerospikeClient();
 
-        static Persistent<FunctionTemplate> constructor;
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
         /***********************************************************************

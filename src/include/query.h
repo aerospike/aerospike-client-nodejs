@@ -64,7 +64,7 @@ class AerospikeQuery: public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client);
+        static Local<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client);
 
 		// C structure to store all the scan or query properties.
 		QueryScan query_scan;
@@ -97,7 +97,7 @@ class AerospikeQuery: public ObjectWrap {
         bool hasUDF_;
         bool hasAggregation_;
 
-        static Persistent<FunctionTemplate> constructor;
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
         void SetQueryType(Local<Value> config); 

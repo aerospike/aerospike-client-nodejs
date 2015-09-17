@@ -42,9 +42,9 @@ using namespace v8;
 NAN_METHOD(AerospikeClient::Close)
 {
     //should call aerospike_close and aerospike_destroy
-	NanScope();
+    Nan::HandleScope scope;
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
     as_error err;
     as_v8_debug(client->log, "Closing the connection to aerospike cluster");
     aerospike_close( client->as, &err);
@@ -52,5 +52,4 @@ NAN_METHOD(AerospikeClient::Close)
     aerospike_destroy( client->as);
     free(client->as);
     free(client->log);
-	NanReturnUndefined();
 }

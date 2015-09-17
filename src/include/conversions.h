@@ -67,7 +67,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo *log );
 Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );  
 Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
-Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log );
+Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
 Handle<Object> scaninfo_to_jsobject(const as_scan_info * info, LogInfo * log );
 
 

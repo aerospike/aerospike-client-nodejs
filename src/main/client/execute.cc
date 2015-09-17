@@ -65,7 +65,7 @@ typedef struct AsyncData {
 	as_arraylist udfargs;
     LogInfo * log;
 	as_val* result;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -79,12 +79,12 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(const Nan::FunctionCallbackInfo<v8::Value>& info)
 {
-	NanScope();
+    Nan::HandleScope scope;
 
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -101,13 +101,13 @@ static void * prepare(ResolveArgs(args))
 	as_arraylist* udfargs		= &data->udfargs;
 	char * filename				= data->filename;  
 	char * funcname				= data->funcname;
-    int arglength				= args.Length();
+    int arglength				= info.Length();
 
 	memset(filename, 0, FILESIZE);
 	memset(funcname, 0, FILESIZE);
 
-    if ( args[arglength-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
+    if ( info[arglength-1]->IsFunction()) {
+        data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -116,8 +116,8 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 
-    if ( args[UDF_ARG_KEY]->IsObject()) {
-        if (key_from_jsobject(key, args[UDF_ARG_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if ( info[UDF_ARG_KEY]->IsObject()) {
+        if (key_from_jsobject(key, info[UDF_ARG_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log,"Parsing as_key(C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
@@ -130,15 +130,15 @@ static void * prepare(ResolveArgs(args))
     }
    
 	// filename length should be finalized.
-    if ( args[UDF_ARG_UDFARGS]->IsObject() ) {	
-		if ( udfargs_from_jsobject( &filename, &funcname, &udfargs, args[UDF_ARG_UDFARGS]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if ( info[UDF_ARG_UDFARGS]->IsObject() ) {	
+		if ( udfargs_from_jsobject( &filename, &funcname, &udfargs, info[UDF_ARG_UDFARGS]->ToObject(), log) != AS_NODE_PARAM_OK ) {
 			as_v8_error(log, "Parsing UDF arguments failed"); 
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			goto Err_Return;
 		}
     }
     else {
-        as_v8_error(log, "UDF args should be an object"); 
+        as_v8_error(log, "UDF info should be an object"); 
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
@@ -146,15 +146,15 @@ static void * prepare(ResolveArgs(args))
         // LDT operations are executed through same UDF execute code path.
 		// at times LDT can pass undefined value for apply policy.
 		// So handle the undefined scenario.
-		if( args[UDF_ARG_APOLICY]->IsUndefined())
+		if( info[UDF_ARG_APOLICY]->IsUndefined())
 		{
 			data->policy = NULL;
 			as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
 		}
-		else if ( args[UDF_ARG_APOLICY]->IsObject())
+		else if ( info[UDF_ARG_APOLICY]->IsObject())
 		{
 			data->policy = (as_policy_apply*) cf_malloc(sizeof(as_policy_apply));
-            if(applypolicy_from_jsobject(data->policy, args[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            if(applypolicy_from_jsobject(data->policy, info[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
 	            as_v8_error(log, "apply policy shoule be an object");
 		        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			    goto Err_Return;
@@ -210,7 +210,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	NanScope();
+    Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -230,24 +230,24 @@ static void respond(uv_work_t * req, int status)
     else {
         err->func = NULL;
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = NanNull();
+        argv[1] = Nan::Null();
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = NanNew<Function>(data->callback);
-	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
+    Local<Function> cb = Nan::New<Function>(data->callback);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+    data->callback.Reset();
 
     // clean up any memory we allocated
 
@@ -275,5 +275,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Execute)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    V8_RETURN(async_invoke(info, prepare, execute, respond));
 }
