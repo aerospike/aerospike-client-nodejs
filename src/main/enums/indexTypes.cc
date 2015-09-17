@@ -25,7 +25,7 @@ using namespace v8;
 Handle<Object> indexType() 
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "STRING",    AS_INDEX_STRING);
     set(obj, "NUMERIC",  AS_INDEX_NUMERIC);
     return scope.Escape(obj);

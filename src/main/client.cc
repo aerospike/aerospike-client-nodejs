@@ -140,7 +140,7 @@ NAN_METHOD(AerospikeClient::New)
 /**
  *  Instantiate a new 'AerospikeClient(config)'
  */
-Handle<Value> AerospikeClient::NewInstance(Local<Object> info)
+Local<Value> AerospikeClient::NewInstance(Local<Object> info)
 {
     Nan::EscapableHandleScope scope;
 

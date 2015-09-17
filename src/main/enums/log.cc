@@ -24,7 +24,7 @@ using namespace v8;
 Handle<Object> log() 
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "OFF",    -1);
     set(obj, "ERROR",  0);
     set(obj, "WARN",   1);

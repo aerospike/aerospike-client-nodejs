@@ -25,7 +25,7 @@ using namespace v8;
 Handle<Object> scanStatus() 
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "UNDEF",    AS_SCAN_STATUS_UNDEF);
     set(obj, "INPROGRESS",     AS_SCAN_STATUS_INPROGRESS);
     set(obj, "ABORTED",  AS_SCAN_STATUS_ABORTED);

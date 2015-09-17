@@ -771,7 +771,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> okey;
+    Local<Object> okey;
 
     if ( record == NULL ) {
         as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
@@ -1271,7 +1271,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     return AS_NODE_PARAM_OK;
 }
 
-Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
+Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj;

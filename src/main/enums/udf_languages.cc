@@ -24,7 +24,7 @@ using namespace v8;
 Handle<Object> languages()
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "LUA",   0);
     return scope.Escape(obj);
 }

@@ -25,7 +25,7 @@ using namespace v8;
 Handle<Object> status() 
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "AEROSPIKE_OK",                        AEROSPIKE_OK);
     set(obj, "AEROSPIKE_ERR",                       AEROSPIKE_ERR);
     set(obj, "AEROSPIKE_ERR_CLIENT",                AEROSPIKE_ERR_CLIENT);

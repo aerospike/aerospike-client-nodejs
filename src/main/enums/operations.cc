@@ -24,7 +24,7 @@ using namespace v8;
 Handle<Object> operations()
 {
     Nan::EscapableHandleScope scope;
-	Handle<Object> obj = Nan::New<Object>();
+	Local<Object> obj = Nan::New<Object>();
 	set_op(obj, "READ", AS_OPERATOR_READ);
 	set_op(obj, "WRITE", AS_OPERATOR_WRITE);
 	set_op(obj, "INCR", AS_OPERATOR_INCR);

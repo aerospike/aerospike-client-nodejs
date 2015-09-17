@@ -42,7 +42,7 @@ typedef struct AsyncCallbackData {
 /**
  *  Setup an asynchronous invocation of a function.
  */
-Handle<Value> async_invoke(
+Local<Value> async_invoke(
     const Nan::FunctionCallbackInfo<v8::Value>& args,
     void *  (* prepare)(const Nan::FunctionCallbackInfo<v8::Value>& args),
     void    (* execute)(uv_work_t * req),

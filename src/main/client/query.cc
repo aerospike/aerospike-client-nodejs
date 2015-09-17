@@ -506,7 +506,7 @@ NAN_METHOD(AerospikeQuery::New)
     info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client)
+Local<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client)
 {
     Nan::EscapableHandleScope scope;
 

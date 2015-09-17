@@ -25,7 +25,7 @@ using namespace v8;
 Handle<Object> scanPriority() 
 {
     Nan::EscapableHandleScope scope;
-    Handle<Object> obj = Nan::New<Object>();
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "AUTO",   AS_SCAN_PRIORITY_AUTO );
     set(obj, "LOW",    AS_SCAN_PRIORITY_LOW );
     set(obj, "MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
