@@ -55,7 +55,7 @@ typedef struct AsyncData {
     as_policy_info* policy;
 	char filename[FILESIZE];
     LogInfo * log;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -69,12 +69,12 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
 
-	NanScope();
+	Nan::HandleScope scope;
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -84,12 +84,13 @@ static void * prepare(ResolveArgs(args))
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
 	char* filename				= data->filename;
-    int argc					= args.Length();
+    int argc					= info.Length();
 
 
 	// The last argument should be a callback function.
-    if ( args[argc-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[argc-1].As<Function>());
+    if ( info[argc-1]->IsFunction()) {
+		//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
+        data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -100,8 +101,8 @@ static void * prepare(ResolveArgs(args))
     }
 
 	// The first argument should be the UDF file name.
-	if ( args[UDF_ARG_FILE]->IsString()) {
-		strcpy( filename, *String::Utf8Value(args[UDF_ARG_FILE]->ToString()));
+	if ( info[UDF_ARG_FILE]->IsString()) {
+		strcpy( filename, *String::Utf8Value(info[UDF_ARG_FILE]->ToString()));
 		as_v8_detail(log, "The udf remove module name %s", filename);
 	}
 	else {
@@ -114,7 +115,7 @@ static void * prepare(ResolveArgs(args))
     if ( argc > 2 ) {
         int ipolicy_pos = UDF_ARG_IPOLICY;
 		data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if ( infopolicy_from_jsobject(data->policy, args[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if ( infopolicy_from_jsobject(data->policy, info[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = 1;
@@ -166,7 +167,7 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
 
-	NanScope();
+	Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -174,25 +175,25 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "UDF register operation : response is");
     // AS_DEBUG(log, ERROR, err);
 
-    Handle<Value> argv[1];
+    Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = error_to_jsobject(err, log);
+        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = error_to_jsobject(err, log);
+        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
     }   
 
     // Surround the callback in a try/catch for safety
     TryCatch try_catch;
 
-	Local<Function> cb = NanNew<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(data->callback);
     // Execute the callback.
     if ( !cb->IsNull() ) {
-		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, argv);
+		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
         as_v8_debug(log, "Invoked Put callback");
     }
 
@@ -203,7 +204,7 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+	data->callback.Reset();
 
     // clean up any memory we allocated
 
@@ -228,5 +229,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::UDFRemove)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    (async_invoke(info, prepare, execute, respond));
 }

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <nan.h>
 #include <node.h>
 #include "client.h"
 

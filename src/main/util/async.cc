@@ -49,7 +49,7 @@ Handle<Value> async_invoke(
 
     // Return value for the function. Because we are async, we will
     // return an `undefined`.
-    return NanUndefined();
+    return Nan::Undefined();
 }
 
 void async_init( uv_async_t * async, void (*async_callback)(ResolveAsyncCallbackArgs ))

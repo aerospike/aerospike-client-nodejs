@@ -16,8 +16,9 @@
 
 #pragma once
 
+#include <nan.h>
 #include <node.h>
- #include <citrusleaf/cf_queue.h>
+#include <citrusleaf/cf_queue.h>
 
 /*******************************************************************************
  * STRUCTURES
@@ -25,9 +26,9 @@
 // This structure is used by query and scan async handles.
 // To process the records from the callback and pass it to nodejs
 typedef struct AsyncCallbackData {
-	Persistent<Function> data_cb;
-	Persistent<Function> error_cb;
-	Persistent<Function> end_cb;
+    Nan::Persistent<Function> data_cb;
+    Nan::Persistent<Function> error_cb;
+    Nan::Persistent<Function> end_cb;
 	cf_queue * result_q;
 	int max_q_size;
 	LogInfo * log;
