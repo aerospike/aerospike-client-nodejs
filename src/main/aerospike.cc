@@ -14,8 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <node.h>
-#include <nan.h>
+//#include <node.h>
+//#include <nan.h>
 #include "client.h"
 #include "enums.h"
 using namespace v8;
@@ -29,7 +29,7 @@ NAN_METHOD(client)
     Nan::HandleScope();
 	Local<Object> config = info[0].As<Object>();
     //Nan::ReturnValue<Value>(AerospikeClient::NewInstance(config));
-    info.GetReturnValue().Set(Nan::New<Value>(AerospikeClient::NewInstance(config)));
+    info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
 }
 
 /**

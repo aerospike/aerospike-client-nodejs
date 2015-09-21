@@ -225,19 +225,19 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[2];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
-        argv[1] = Nan::New<Value>(key_to_jsobject(key, log));
+        argv[0] = (error_to_jsobject(err, log));
+        argv[1] = (key_to_jsobject(key, log));
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+        argv[0] = (error_to_jsobject(err, log));
         argv[1] = Nan::Null();
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
     // Execute the callback.
 	Local<Function> cb = Nan::New<Function>(data->callback);
@@ -246,7 +246,7 @@ static void respond(uv_work_t * req, int status)
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback

@@ -202,7 +202,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 
     // If modlua path is passed in config object, set those values here
     if( obj->Has(Nan::New<String>("modlua").ToLocalChecked())) {
-        Handle<Object> modlua = obj->Get(Nan::New<String>("modlua").ToLocalChecked())->ToObject();
+        Local<Object> modlua = obj->Get(Nan::New<String>("modlua").ToLocalChecked())->ToObject();
 
         if ( modlua->Has(Nan::New<String>("systemPath").ToLocalChecked())) {
             Local<Value> v8syspath = modlua->Get(Nan::New<String>("systemPath").ToLocalChecked());
@@ -586,7 +586,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     return true;
 }
 
-Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
+Local<Object> error_to_jsobject(as_error * error, LogInfo * log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> err = Nan::New<Object>();
@@ -640,7 +640,7 @@ Handle<Object> error_to_jsobject(as_error * error, LogInfo * log)
 }
 
 
-Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
+Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
     if ( val == NULL) {
@@ -695,7 +695,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             Local<Array> jsarray = Nan::New<Array>(size);
             for ( int i = 0; i < size; i++ ) {
                 as_val * arr_val = as_arraylist_get(listval, i);
-                Handle<Value> jsval = val_to_jsvalue(arr_val, log);
+                Local<Value> jsval = val_to_jsvalue(arr_val, log);
                 jsarray->Set(i, jsval);
             }
 
@@ -723,7 +723,7 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 }
 
 
-Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
+Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
 
@@ -741,7 +741,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
         as_bin * bin = as_record_iterator_next(&it);
         char * name = as_bin_get_name(bin);
         as_val * val = (as_val *) as_bin_get_value(bin);
-        Handle<Value> obj = val_to_jsvalue(val, log );
+        Local<Value> obj = val_to_jsvalue(val, log );
         bins->Set(Nan::New<String>(name).ToLocalChecked(), obj);
         as_v8_detail(log, "Setting binname %s ", name);
     }
@@ -749,7 +749,7 @@ Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
     return scope.Escape(bins);
 }
 
-Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
+Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> meta;
@@ -768,7 +768,7 @@ Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     return scope.Escape(meta);
 }
 
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
+Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
     Local<Object> okey;
@@ -778,9 +778,9 @@ Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, 
         return scope.Escape(okey);
     }
 
-    okey = Nan::New<Object>(key_to_jsobject(key ? key : &record->key, log));
-    Handle<Object> bins = recordbins_to_jsobject(record, log );
-    Handle<Object> meta = recordmeta_to_jsobject(record, log);
+    okey = (key_to_jsobject(key ? key : &record->key, log));
+    Local<Object> bins = recordbins_to_jsobject(record, log );
+    Local<Object> meta = recordmeta_to_jsobject(record, log);
     Local<Object> rec = Nan::New<Object>();
     rec->Set(Nan::New<String>("key").ToLocalChecked(), okey);
     rec->Set(Nan::New<String>("meta").ToLocalChecked(), meta);
@@ -820,7 +820,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_integer *num = as_integer_new(obj->NumberValue());
         return (as_val*) num;
     }
-    else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
+    else if(node::Buffer::HasInstance(obj)) {
         int size ;
         uint8_t* data ;
         if (extract_blob_from_jsobject(obj->ToObject(), &data, &size, log) != AS_NODE_PARAM_OK) {
@@ -937,14 +937,14 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 //@TO-DO - GetIndexedProperties is to be checked
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log)
 {
-    if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedByteArray ) {
+    if (!node::Buffer::HasInstance(obj)) {
         as_v8_error(log, "The binary data is not of the type UnsignedBytes");
         return AS_NODE_PARAM_ERR;
     }
 
-    (*len) = obj->GetIndexedPropertiesExternalArrayDataLength();
+    (*len) = node::Buffer::Length(obj);
     (*data) = (uint8_t*) cf_malloc(sizeof(uint8_t) * (*len));
-    memcpy((*data), static_cast<uint8_t*>(obj->GetIndexedPropertiesExternalArrayData()), (*len));
+    memcpy((*data), node::Buffer::Data(obj), (*len));
 
     return AS_NODE_PARAM_OK;
 }
@@ -1271,7 +1271,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     return AS_NODE_PARAM_OK;
 }
 
-Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
+Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj;
@@ -1329,7 +1329,7 @@ Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     return scope.Escape(obj);
 }
 
-Handle<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
+Local<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
 {
     Local<Object> scaninfo;
 

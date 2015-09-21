@@ -160,17 +160,17 @@ void async_queue_process(AsyncCallbackData * data)
             if(as_val_type(val) == AS_REC)
             {
                 as_record* record = as_record_fromval(val);
-                Handle<Object> jsrecord = Nan::New<Object>();
+                Local<Object> jsrecord = Nan::New<Object>();
                 jsrecord->Set(Nan::New("bins").ToLocalChecked(),recordbins_to_jsobject(record, data->log));
                 jsrecord->Set(Nan::New("meta").ToLocalChecked(),recordmeta_to_jsobject(record, data->log));
                 jsrecord->Set(Nan::New("key").ToLocalChecked(),key_to_jsobject(&record->key, data->log));
                 as_record_destroy(record);
-                Local<Value> cbinfo[1] = { Nan::New<Value>(jsrecord)};
+                Local<Value> cbinfo[1] = { (jsrecord)};
                 Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, cbinfo);
             }
             else
             {
-                Local<Value> cbinfo[1] = { Nan::New<Value>(val_to_jsvalue(val, data->log))};
+                Local<Value> cbinfo[1] = { (val_to_jsvalue(val, data->log))};
                 as_val_destroy(val);
                 Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, cbinfo);
             }
@@ -465,7 +465,7 @@ static void respond(uv_work_t * req, int status)
 
     if(data->param_err == 1)
     {
-        Local<Value> err_info[1] = { Nan::New<Value>(error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -475,7 +475,7 @@ static void respond(uv_work_t * req, int status)
     if( data->res != AEROSPIKE_OK)
     {
         as_v8_debug(log,"An error occured in C API invocation");
-        Local<Value> err_info[1] = { Nan::New<Value>(error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -497,7 +497,7 @@ static void respond(uv_work_t * req, int status)
         async_queue_process(query_data);
     }
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
     Local<Value> argv[1];
     if( data->type == SCANUDF)
@@ -521,7 +521,7 @@ static void respond(uv_work_t * req, int status)
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback

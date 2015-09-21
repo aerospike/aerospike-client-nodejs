@@ -22,7 +22,7 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(Nan::New<String>(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> key_policy_values()
+Local<Object> key_policy_values()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
@@ -31,7 +31,7 @@ Handle<Object> key_policy_values()
     return scope.Escape(obj);
 }
 
-Handle<Object> retry_policy_values()
+Local<Object> retry_policy_values()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
@@ -40,7 +40,7 @@ Handle<Object> retry_policy_values()
     return scope.Escape(obj);
 }
 
-Handle<Object> generation_policy_values()
+Local<Object> generation_policy_values()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
@@ -50,7 +50,7 @@ Handle<Object> generation_policy_values()
     return scope.Escape(obj);
 }
 
-Handle<Object> exists_policy_values()
+Local<Object> exists_policy_values()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
@@ -62,7 +62,7 @@ Handle<Object> exists_policy_values()
     return scope.Escape(obj);
 }
 
-Handle<Object> replica_policy_values()
+Local<Object> replica_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
@@ -71,7 +71,7 @@ Handle<Object> replica_policy_values()
 	return scope.Escape(obj);
 }
 
-Handle<Object> consistency_level_policy_values()
+Local<Object> consistency_level_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
@@ -80,7 +80,7 @@ Handle<Object> consistency_level_policy_values()
 	return scope.Escape(obj);
 }
 
-Handle<Object> commit_level_policy_values()
+Local<Object> commit_level_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
@@ -89,7 +89,7 @@ Handle<Object> commit_level_policy_values()
 	return scope.Escape(obj);
 }
 
-Handle<Object> policy()
+Local<Object> policy()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();

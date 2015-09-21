@@ -43,7 +43,7 @@ typedef struct AsyncCallbackData {
 /**
  *  Setup an asynchronous invocation of a function.
  */
-Handle<Value> async_invoke(
+Local<Value> async_invoke(
     ResolveArgs(args), 
     void *  (* prepare)(ResolveArgs(args)), 
     void    (* execute)(uv_work_t * req),

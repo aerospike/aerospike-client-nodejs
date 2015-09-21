@@ -62,18 +62,18 @@ NAN_METHOD(AerospikeClient::Connect)
 
     Local<Value> argv[2];
 
-    argv[0] = Nan::New<Value>(error_to_jsobject(&err, client->log));
+    argv[0] = (error_to_jsobject(&err, client->log));
 
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
-        argv[1] = Nan::New<Value>(info.Holder());
+        argv[1] = (info.Holder());
         as_v8_error(client->log, "Connecting to Cluster Failed");
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
         //NanReturnNull();
         info.GetReturnValue().Set(info.Holder());
     }
     else {
-        argv[1] = Nan::New<Value>(info.Holder());
+        argv[1] = (info.Holder());
         as_v8_debug(client->log, "Connecting to Cluster: Success");
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
         //NanReturnValue(info.Holder());

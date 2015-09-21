@@ -316,7 +316,7 @@ static void respond(uv_work_t * req, int status)
             char* response = result->response;
 
             // error object parameter
-            argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+            argv[0] = (error_to_jsobject(err, log));
 
             // response string parameter
             if ( response != NULL && strlen(response) > 0 ) {
@@ -329,16 +329,16 @@ static void respond(uv_work_t * req, int status)
             
             // host object parameter
             if ( data->addr != NULL && data->port != 0) {
-                Handle<Object> host = Nan::New<Object>();
+                Local<Object> host = Nan::New<Object>();
                 host->Set(Nan::New<String>("addr").ToLocalChecked(), Nan::New<String>(data->addr).ToLocalChecked());
                 host->Set(Nan::New<String>("port").ToLocalChecked(), Nan::New(data->port));
-                argv[2] = Nan::New<Value>(host);
+                argv[2] = (host);
             }
             else if( node_name != NULL && strlen(node_name) > 0 ) {
-                Handle<Object> host = Nan::New<Object>();
+                Local<Object> host = Nan::New<Object>();
                 as_v8_debug(log, "The host is %s", node_name);
                 host->Set(Nan::New<String>("node_id").ToLocalChecked(), Nan::New<String>(node_name).ToLocalChecked());
-                argv[2] = Nan::New<Value>(host);
+                argv[2] = (host);
             }
             else {
                 argv[2] = Nan::Null();
@@ -346,13 +346,13 @@ static void respond(uv_work_t * req, int status)
         }
         else {
             err->func = NULL;
-            argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+            argv[0] = (error_to_jsobject(err, log));
             argv[1] = Nan::Null();
             argv[2] = Nan::Null();
         }   
 
         // Surround the callback in a try/catch for safety
-        TryCatch try_catch;
+        Nan::TryCatch try_catch;
 
         // Execute the callback.
 		Local<Function> cb = Nan::New<Function>(data->callback);
@@ -360,13 +360,13 @@ static void respond(uv_work_t * req, int status)
 
         // Process the exception, if any
         if ( try_catch.HasCaught() ) {
-            node::FatalException(try_catch);
+            Nan::FatalException(try_catch);
         }
     }
 
     // Surround the callback in a try/catch for safety
     // Execute the callback.
-	TryCatch try_catch;
+	Nan::TryCatch try_catch;
 
 	Local<Value> done_argv[0];
 	Local<Function> done_cb = Nan::New<Function>(data->done);
@@ -374,7 +374,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
+		Nan::FatalException(try_catch);
 	}
 	//NanDisposePersistent(data->done);
     data->done.Reset();

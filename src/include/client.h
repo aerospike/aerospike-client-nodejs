@@ -50,7 +50,7 @@ class AerospikeClient : public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> args);
+        static Local<Value> NewInstance(Local<Object> args);
 
         aerospike *as;
         LogInfo *log;

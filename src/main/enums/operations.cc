@@ -21,7 +21,7 @@ using namespace v8;
 
 #define set_op(__obj, __str, __val) __obj->Set(Nan::New<String>(__str).ToLocalChecked(), Nan::New(__val))
 
-Handle<Object> operations()
+Local<Object> operations()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();

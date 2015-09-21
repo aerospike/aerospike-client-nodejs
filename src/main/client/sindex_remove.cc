@@ -190,17 +190,17 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+        argv[0] = (error_to_jsobject(err, log));
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for sindex remove");
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+        argv[0] = (error_to_jsobject(err, log));
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 	
 	Local<Function> cb = Nan::New<Function>(data->callback);
     // Execute the callback.
@@ -211,7 +211,7 @@ static void respond(uv_work_t * req, int status)
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback

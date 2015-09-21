@@ -27,16 +27,6 @@ extern "C" {
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
-using namespace v8;
-using v8::FunctionTemplate;
-using v8::Handle;
-using v8::Object;
-using v8::String;
-using Nan::GetFunction;
-using Nan::New;
-using Nan::Set;
-using Nan::HandleScope;
-using Nan::EscapableHandleScope;
 
 /*******************************************************************************
  *  Fields
@@ -84,7 +74,7 @@ NAN_METHOD(AerospikeClient::Query)
 	Local<Object> set	 = info[1].As<Object>();
     Local<Object> config = info[2].As<Object>();
 	Local<Object> client = info.This();
-    info.GetReturnValue().Set(Nan::New<Value>(AerospikeQuery::NewInstance(ns, set, config, client)));
+    info.GetReturnValue().Set(AerospikeQuery::NewInstance(ns, set, config, client));
 	//NanReturnValue(AerospikeQuery::NewInstance(ns, set, config, client));
 }
 
@@ -149,7 +139,7 @@ NAN_METHOD(AerospikeClient::New)
 /**
  *  Instantiate a new 'AerospikeClient(config)'
  */
-Handle<Value> AerospikeClient::NewInstance(Local<Object> info)
+Local<Value> AerospikeClient::NewInstance(Local<Object> info)
 {
     Nan::EscapableHandleScope scope;
 

@@ -510,14 +510,14 @@ NAN_METHOD(AerospikeQuery::New)
     info.GetReturnValue().Set(info.This());
 }
 
-Handle<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client)
+Local<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client)
 {
 	Nan::EscapableHandleScope scope;
 
     const unsigned argc = 4;
 
 	// Invoke the query constructor method with namespace, set, query configration options and client object .
-    Handle<Value> argv[argc] = { ns, set, config, client};
+    Local<Value> argv[argc] = { ns, set, config, client};
 
 	Local<FunctionTemplate> constructorHandle = Nan::New<FunctionTemplate>(constructor);
 

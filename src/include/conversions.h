@@ -62,13 +62,13 @@ __err.func = __func__;
  ******************************************************************************/
 
 // Functions to convert C client structure to v8 object(map)
-Handle<Object> error_to_jsobject(as_error * error, LogInfo *log);
-Handle<Value> val_to_jsvalue(as_val * val, LogInfo *log );
-Handle<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );  
-Handle<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
-Handle<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
-Handle<Object> key_to_jsobject(const as_key * key, LogInfo * log );
-Handle<Object> scaninfo_to_jsobject(const as_scan_info * info, LogInfo * log );
+Local<Object> error_to_jsobject(as_error * error, LogInfo *log);
+Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );
+Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );  
+Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
+Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
+Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
+Local<Object> scaninfo_to_jsobject(const as_scan_info * info, LogInfo * log );
 
 
 // Functions to convert v8 objects(maps) to C client structures

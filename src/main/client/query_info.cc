@@ -169,12 +169,12 @@ static void respond(uv_work_t * req, int status)
 	as_scan_info * scan_info	= &data->scan_info;
 
 	// Surround the callback in a try/catch for safety
-	TryCatch try_catch;
+	Nan::TryCatch try_catch;
 
 	as_v8_detail(log, "Inside respond of scan info ");
 	// Arguments to scan info callback.
 	// Send status, progresPct and recScanned
-	Local<Value> argv[2] = { Nan::New<Value>(scaninfo_to_jsobject(scan_info, log)),
+	Local<Value> argv[2] = { (scaninfo_to_jsobject(scan_info, log)),
 							  Nan::New((double)data->scan_id)};
 
 	Local<Function> cb = Nan::New<Function>(data->callback);
@@ -186,7 +186,7 @@ static void respond(uv_work_t * req, int status)
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
+		Nan::FatalException(try_catch);
 	}
 
 	// Dispose the Persistent handle so the callback

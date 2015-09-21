@@ -64,7 +64,7 @@ class AerospikeQuery: public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client);
+        static Local<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client);
 
 		// C structure to store all the scan or query properties.
 		QueryScan query_scan;

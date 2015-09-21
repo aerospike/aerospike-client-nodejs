@@ -239,24 +239,24 @@ static void respond(uv_work_t * req, int status)
 
     // Build the arguments array for the callback
     if( data->param_err == 0) {
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log)),
-        argv[1] = Nan::New<Value>(recordbins_to_jsobject(rec, log )),
-        argv[2] = Nan::New<Value>(recordmeta_to_jsobject(rec, log)),
-        argv[3] = Nan::New<Value>(key_to_jsobject(key, log));
+        argv[0] = (error_to_jsobject(err, log)),
+        argv[1] = (recordbins_to_jsobject(rec, log )),
+        argv[2] = (recordmeta_to_jsobject(rec, log)),
+        argv[3] = (key_to_jsobject(key, log));
     }
     else {
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
         as_v8_debug(log, "Parameter error while parsing the arguments");
-        argv[0] = Nan::New<Value>(error_to_jsobject(err, log));
+        argv[0] = (error_to_jsobject(err, log));
         argv[1] = Nan::Null();
         argv[2] = Nan::Null();
         argv[3] = Nan::Null();
     }
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
 	Local<Function> cb = Nan::New<Function>(data->callback);
 
@@ -266,7 +266,7 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "Invoked operate callback");
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
