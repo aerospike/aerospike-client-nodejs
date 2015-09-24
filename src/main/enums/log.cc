@@ -19,17 +19,17 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New<String>(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> log() 
+Local<Object> log() 
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "OFF",    -1);
     set(obj, "ERROR",  0);
     set(obj, "WARN",   1);
     set(obj, "INFO",   2);
     set(obj, "DEBUG",  3);
     set(obj, "DETAIL", 4);
-    return NanEscapeScope(obj);
+    return scope.Escape(obj);
 }

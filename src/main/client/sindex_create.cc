@@ -61,7 +61,7 @@ typedef struct AsyncData {
 	char * index;
 	as_index_datatype type;
     LogInfo * log;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -75,12 +75,12 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
-	NanScope();
+	Nan::HandleScope scope;
 
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -89,13 +89,14 @@ static void * prepare(ResolveArgs(args))
 	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    int argc					= args.Length();
+    int argc					= info.Length();
 	int set_present				= 0;
 
 
 	// The last argument should be a callback function.
-    if ( args[argc-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[argc-1].As<Function>());
+    if ( info[argc-1]->IsFunction()) {
+		//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
+        data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -106,8 +107,8 @@ static void * prepare(ResolveArgs(args))
     }
 
 	// The first argument should be the namespace name.
-	if ( args[NS_NAME]->IsString()) {
-		strcpy( data->ns, *String::Utf8Value(args[NS_NAME]->ToString()));
+	if ( info[NS_NAME]->IsString()) {
+		strcpy( data->ns, *String::Utf8Value(info[NS_NAME]->ToString()));
 		as_v8_detail(log, "The index creation on namespace %s", data->ns);
 	}
 	else {
@@ -118,8 +119,8 @@ static void * prepare(ResolveArgs(args))
 	}
 
 	// The second argument should be set
-	if ( args[SET_NAME]->IsString()) {
-		strcpy( data->set, *String::Utf8Value(args[SET_NAME]->ToString()));
+	if ( info[SET_NAME]->IsString()) {
+		strcpy( data->set, *String::Utf8Value(info[SET_NAME]->ToString()));
 		as_v8_detail(log, "The index creation on set %s", data->set);
 		set_present = 1;
 	}
@@ -127,13 +128,13 @@ static void * prepare(ResolveArgs(args))
 	// Set is an optional argument.
 	// If set is present bin name is a third argument
 	// Otherwise binname is second argument.
-	if ( (set_present && args[BIN_NAME]->IsString()) || (!set_present && args[BIN_NAME-1]->IsString())) {
+	if ( (set_present && info[BIN_NAME]->IsString()) || (!set_present && info[BIN_NAME-1]->IsString())) {
 		int bin_pos = BIN_NAME;
 		if(!set_present) 
 		{
 			bin_pos = BIN_NAME - 1;
 		}
-		strcpy( data->bin, *String::Utf8Value(args[bin_pos]->ToString()));
+		strcpy( data->bin, *String::Utf8Value(info[bin_pos]->ToString()));
 		as_v8_detail(log, "The index creation on bin %s", data->bin);
 	}
 	else
@@ -144,13 +145,13 @@ static void * prepare(ResolveArgs(args))
 		return data;
 	}
 
-	if ( (set_present && args[INDEX_NAME]->IsString()) || (!set_present && args[INDEX_NAME-1]->IsString())) {
+	if ( (set_present && info[INDEX_NAME]->IsString()) || (!set_present && info[INDEX_NAME-1]->IsString())) {
 		int index_pos = INDEX_NAME;
 		if(!set_present)
 		{
 			index_pos = INDEX_NAME -1 ;
 		}
-		data->index = strdup(*String::Utf8Value(args[index_pos]->ToString()));
+		data->index = strdup(*String::Utf8Value(info[index_pos]->ToString()));
 		as_v8_detail(log, "The index to be created %s", data->index);
 	}
 	else
@@ -160,13 +161,13 @@ static void * prepare(ResolveArgs(args))
 		data->param_err = 1;
 		return data;
 	}
-	if ( (set_present && args[INDEX_TYPE]->IsNumber()) || (!set_present && args[INDEX_TYPE-1]->IsNumber())) {
+	if ( (set_present && info[INDEX_TYPE]->IsNumber()) || (!set_present && info[INDEX_TYPE-1]->IsNumber())) {
 		int type_pos = INDEX_TYPE;
 		if( !set_present)
 		{
 			type_pos = INDEX_TYPE-1;
 		}
-		data->type = (as_index_datatype)args[type_pos]->ToInteger()->Value();
+		data->type = (as_index_datatype)info[type_pos]->ToInteger()->Value();
 		as_v8_detail(log, "The type of the index %d", data->type);
 	}
 	else
@@ -184,9 +185,9 @@ static void * prepare(ResolveArgs(args))
 		{
 			ipolicy_pos = INFO_POLICY-1;
 		}
-        if ( !args[ipolicy_pos]->IsUndefined() && !args[ipolicy_pos]->IsNull()) {
+        if ( !info[ipolicy_pos]->IsUndefined() && !info[ipolicy_pos]->IsNull()) {
 			data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-			if(infopolicy_from_jsobject(data->policy, args[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			if(infopolicy_from_jsobject(data->policy, info[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
 				as_v8_error(log, "infopolicy shoule be an object");
 				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				data->param_err = 1;
@@ -245,7 +246,7 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
 
-	NanScope();
+	Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -253,36 +254,36 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "SINDEX creation : response is");
     // AS_DEBUG(log, ERROR, err);
 
-    Handle<Value> argv[1];
+    Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = error_to_jsobject(err, log);
+        argv[0] = (error_to_jsobject(err, log));
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = error_to_jsobject(err, log);
+        argv[0] = (error_to_jsobject(err, log));
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
-	Local<Function> cb = NanNew<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(data->callback);
     // Execute the callback.
     if ( !cb->IsNull() ) {
-		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, argv);
+		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
         as_v8_debug(log, "Invoked Put callback");
     }
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+	data->callback.Reset();
 
     // clean up any memory we allocated
 
@@ -307,5 +308,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::sindexCreate)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    (async_invoke(info, prepare, execute, respond));
 }

@@ -16,32 +16,33 @@
 
 #pragma once
 
+#include <nan.h>
 #include <node.h>
 #include "client.h"
 
 using namespace v8;
 
-Handle<Object> status();
+Local<Object> status();
 
-Handle<Object> key_policy_values();
+Local<Object> key_policy_values();
 
-Handle<Object> retry_policy_values();
+Local<Object> retry_policy_values();
 
-Handle<Object> generation_policy_values();
+Local<Object> generation_policy_values();
 
-Handle<Object> policy();
+Local<Object> policy();
 
-Handle<Object> operations();
+Local<Object> operations();
 
-Handle<Object> log();
+Local<Object> log();
 
-Handle<Object> languages();
+Local<Object> languages();
 
-Handle<Object> scanPriority();
+Local<Object> scanPriority();
 
-Handle<Object> predicates();
+Local<Object> predicates();
 
-Handle<Object> indexType();
+Local<Object> indexType();
 
-Handle<Object> scanStatus();
+Local<Object> scanStatus();
 

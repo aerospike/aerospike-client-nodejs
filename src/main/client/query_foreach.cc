@@ -155,24 +155,24 @@ void async_queue_process(AsyncCallbackData * data)
         }
         rv = cf_queue_pop( data->result_q, &val, CF_QUEUE_FOREVER);
         if( rv == CF_QUEUE_OK) {
-            NanScope();
-            Local<Function> cb = NanNew<Function>(data->data_cb);
+            Nan::HandleScope scope;
+            Local<Function> cb = Nan::New<Function>(data->data_cb);
             if(as_val_type(val) == AS_REC)
             {
                 as_record* record = as_record_fromval(val);
-                Handle<Object> jsrecord = NanNew<Object>();
-                jsrecord->Set(NanNew("bins"),recordbins_to_jsobject(record, data->log));
-                jsrecord->Set(NanNew("meta"),recordmeta_to_jsobject(record, data->log));
-                jsrecord->Set(NanNew("key"),key_to_jsobject(&record->key, data->log));
+                Local<Object> jsrecord = Nan::New<Object>();
+                jsrecord->Set(Nan::New("bins").ToLocalChecked(),recordbins_to_jsobject(record, data->log));
+                jsrecord->Set(Nan::New("meta").ToLocalChecked(),recordmeta_to_jsobject(record, data->log));
+                jsrecord->Set(Nan::New("key").ToLocalChecked(),key_to_jsobject(&record->key, data->log));
                 as_record_destroy(record);
-                Handle<Value> cbargs[1] = { jsrecord};
-                NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
+                Local<Value> cbinfo[1] = { (jsrecord)};
+                Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, cbinfo);
             }
             else
             {
-                Handle<Value> cbargs[1] = { val_to_jsvalue(val, data->log)};
+                Local<Value> cbinfo[1] = { (val_to_jsvalue(val, data->log))};
                 as_val_destroy(val);
-                NanMakeCallback(NanGetCurrentContext()->Global(), cb, 1, cbargs);
+                Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, cbinfo);
             }
         }
     }
@@ -222,11 +222,11 @@ bool aerospike_query_callback(const as_val * val, void* udata)
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(args.This());
+    AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(info.This());
     // Build the async data
     AsyncData * data				= new AsyncData;
     AsyncCallbackData* query_cbdata	= new AsyncCallbackData;
@@ -241,7 +241,7 @@ static void * prepare(ResolveArgs(args))
     data->policy.query				= NULL;
     int curr_arg_pos				= 0;
     int res							= 0;
-    int arglength					= args.Length();
+    int arglength					= info.Length();
     data->query_scan                = &query->query_scan;
 
 
@@ -250,7 +250,7 @@ static void * prepare(ResolveArgs(args))
     {
         data->scan_id					= 0;
         // for scan_background callback for data is NULL.
-        if(!args[curr_arg_pos]->IsNull())
+        if(!info[curr_arg_pos]->IsNull())
         {
             as_v8_error(log, "Data callback must be NULL for scan background job");
             data->param_err = 1;
@@ -261,7 +261,7 @@ static void * prepare(ResolveArgs(args))
     else // queue creation job for scan_foreground, scan_aggregation, query and query aggregation.
     {
         // For query, aggregation and scan foreground data callback must be present
-        if(!args[curr_arg_pos]->IsFunction())
+        if(!info[curr_arg_pos]->IsFunction())
         {
             as_v8_error(log, "Callback not passed to process the  query results");
             data->param_err = 1;
@@ -270,7 +270,8 @@ static void * prepare(ResolveArgs(args))
         query_cbdata->signal_interval	= 0;
         query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
         query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
-        NanAssignPersistent(query_cbdata->data_cb, args[curr_arg_pos].As<Function>());
+        //NanAssignPersistent(query_cbdata->data_cb, info[curr_arg_pos].As<Function>());
+        query_cbdata->data_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
 
         // Should be registered in prepare.
@@ -281,9 +282,10 @@ static void * prepare(ResolveArgs(args))
     }
 
     // check for error callback 
-    if(args[curr_arg_pos]->IsFunction())
+    if(info[curr_arg_pos]->IsFunction())
     {
-        NanAssignPersistent(query_cbdata->error_cb, args[curr_arg_pos].As<Function>());
+        //NanAssignPersistent(query_cbdata->error_cb, info[curr_arg_pos].As<Function>());
+        query_cbdata->error_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
     else 
@@ -294,9 +296,10 @@ static void * prepare(ResolveArgs(args))
     }
 
     // check for termination callback
-    if(args[curr_arg_pos]->IsFunction())
+    if(info[curr_arg_pos]->IsFunction())
     {
-        NanAssignPersistent(query_cbdata->end_cb, args[curr_arg_pos].As<Function>());
+        //NanAssignPersistent(query_cbdata->end_cb, info[curr_arg_pos].As<Function>());
+        query_cbdata->end_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
     else 
@@ -310,12 +313,12 @@ static void * prepare(ResolveArgs(args))
     // If it's a query, then there are 3 callbacks and one optional policy objects.
     if (arglength > 3)  
     {
-        if ( args[curr_arg_pos]->IsObject()) 
+        if ( info[curr_arg_pos]->IsObject()) 
         {
             if (isQuery(data->type))
             {
                 data->policy.query = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
-                res = querypolicy_from_jsobject( data->policy.query, args[curr_arg_pos]->ToObject(), log);
+                res = querypolicy_from_jsobject( data->policy.query, info[curr_arg_pos]->ToObject(), log);
                 if(res != AS_NODE_PARAM_OK) 
                 {
                     as_v8_error(log, "Parsing of querypolicy from object failed");
@@ -331,7 +334,7 @@ static void * prepare(ResolveArgs(args))
             else 			
             {
                 data->policy.scan = (as_policy_scan*) cf_malloc(sizeof(as_policy_scan));
-                res = scanpolicy_from_jsobject( data->policy.scan, args[curr_arg_pos]->ToObject(), log);
+                res = scanpolicy_from_jsobject( data->policy.scan, info[curr_arg_pos]->ToObject(), log);
                 if( res != AS_NODE_PARAM_OK)
                 {
                     as_v8_error(log, "Parsing of scanpolicy from object failed");
@@ -450,31 +453,31 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
     AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
 
     AsyncCallbackData* query_data = data->query_cbdata;
     LogInfo * log				= data->log;
-    Local<Function> error_cb = NanNew<Function>(query_data->error_cb);
+    Local<Function> error_cb = Nan::New<Function>(query_data->error_cb);
 
     if(data->param_err == 1)
     {
-        Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
+        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
-            NanMakeCallback(NanGetCurrentContext()->Global(), error_cb, 1, err_args);
+            Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
         }
     }
     // If query returned an error invoke error callback
     if( data->res != AEROSPIKE_OK)
     {
         as_v8_debug(log,"An error occured in C API invocation");
-        Handle<Value> err_args[1] = { error_to_jsobject( &data->err, log)};
+        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
-            NanMakeCallback(NanGetCurrentContext()->Global(), error_cb, 1, err_args);
+            Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
         }
     }
 
@@ -493,37 +496,39 @@ static void respond(uv_work_t * req, int status)
         async_queue_process(query_data);
     }
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
-    Handle<Value> argv[1];
+    Local<Value> argv[1];
     if( data->type == SCANUDF)
     {
         as_v8_debug(log, "Invoking scan background callback with scan id %d", data->scan_id);
-        argv[0] = NanNew((double)data->scan_id);
+        argv[0] = Nan::New((double)data->scan_id);
 
     }
     else
     {
         as_v8_debug(log, "Invoking query callback");
-        argv[0] = NanNew("Finished query!!!") ;
+        argv[0] = Nan::New<String>("Finished query!!!").ToLocalChecked();
     }
 
     // Execute the callback
-    Local<Function> end_cb = NanNew<Function>(query_data->end_cb);
+    Local<Function> end_cb = Nan::New<Function>(query_data->end_cb);
 
     if ( !end_cb->IsUndefined() && !end_cb->IsNull()) {
-        NanMakeCallback(NanGetCurrentContext()->Global(), end_cb, 1, argv);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), end_cb, 1, argv);
     }
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    NanDisposePersistent(query_data->error_cb);
-    NanDisposePersistent(query_data->end_cb);
+    //NanDisposePersistent(query_data->error_cb);
+    query_data->error_cb.Reset();
+    //NanDisposePersistent(query_data->end_cb);
+    query_data->end_cb.Reset();
     if( data->type == SCANUDF)
     {
         as_v8_debug(log,"scan background no need to clean up the queue structure");
@@ -531,7 +536,8 @@ static void respond(uv_work_t * req, int status)
     }
     else 
     {
-        NanDisposePersistent(query_data->data_cb);
+        //NanDisposePersistent(query_data->data_cb);
+        query_data->data_cb.Reset();
         if(query_data->result_q != NULL) 
         {
             cf_queue_destroy(query_data->result_q);
@@ -580,5 +586,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeQuery::foreach)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    (async_invoke(info, prepare, execute, respond));
 }

@@ -61,7 +61,7 @@ typedef struct AsyncData {
     as_key key;
     as_record rec;
     LogInfo * log;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -75,11 +75,11 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
-	NanScope();
+	Nan::HandleScope scope;
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -90,10 +90,11 @@ static void * prepare(ResolveArgs(args))
 	data->policy						= NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    int arglength = args.Length();
+    int arglength = info.Length();
 
-    if ( args[arglength-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
+    if ( info[arglength-1]->IsFunction()) {
+		//NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
+        data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -102,8 +103,8 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 
-    if ( args[PUT_ARG_POS_KEY]->IsObject()) {
-        if (key_from_jsobject(key, args[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if ( info[PUT_ARG_POS_KEY]->IsObject()) {
+        if (key_from_jsobject(key, info[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log,"Parsing as_key(C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
@@ -115,8 +116,8 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
     
-    if ( args[PUT_ARG_POS_REC]->IsObject() ) {
-        if (recordbins_from_jsobject(rec, args[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+    if ( info[PUT_ARG_POS_REC]->IsObject() ) {
+        if (recordbins_from_jsobject(rec, info[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
             as_v8_error(log, "Parsing as_record(C structure) from record object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
@@ -128,12 +129,12 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 	if( arglength > 3) {
-		if( args[PUT_ARG_POS_META]->IsNull() || args[PUT_ARG_POS_META]->IsUndefined())
+		if( info[PUT_ARG_POS_META]->IsNull() || info[PUT_ARG_POS_META]->IsUndefined())
 		{
 			as_v8_debug(log, "Metadata passed is null or undefined");
 		}
-		else if ( args[PUT_ARG_POS_META]->IsObject() ) {
-			if (recordmeta_from_jsobject(rec, args[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+		else if ( info[PUT_ARG_POS_META]->IsObject() ) {
+			if (recordmeta_from_jsobject(rec, info[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
 				as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
 				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
@@ -148,9 +149,9 @@ static void * prepare(ResolveArgs(args))
 
     if ( arglength > 4 ) {
         int wpolicy_pos = PUT_ARG_POS_WPOLICY;
-        if ( args[wpolicy_pos]->IsObject()){
+        if ( info[wpolicy_pos]->IsObject()){
 			data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
-            if(writepolicy_from_jsobject(data->policy, args[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            if(writepolicy_from_jsobject(data->policy, info[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
 				as_v8_error(log, "writepolicy shoule be an object");
 				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 				goto Err_Return;
@@ -210,7 +211,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -221,36 +222,36 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "Put operation : response is");
     // AS_DEBUG(log, ERROR, err);
 
-    Handle<Value> argv[2];
+    Local<Value> argv[2];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = error_to_jsobject(err, log);
-        argv[1] = key_to_jsobject(key, log);
+        argv[0] = (error_to_jsobject(err, log));
+        argv[1] = (key_to_jsobject(key, log));
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = error_to_jsobject(err, log);
-        argv[1] = NanNull();
+        argv[0] = (error_to_jsobject(err, log));
+        argv[1] = Nan::Null();
     }   
 
     // Surround the callback in a try/catch for safety
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = NanNew<Function>(data->callback);
-	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
+	Local<Function> cb = Nan::New<Function>(data->callback);
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
     as_v8_debug(log, "Invoked Put callback");
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+	data->callback.Reset();
 
     // clean up any memory we allocated
 
@@ -278,5 +279,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Put)
 {
-    V8_RETURN async_invoke(args, prepare, execute, respond);
+     async_invoke(info, prepare, execute, respond);
 }
