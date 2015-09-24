@@ -51,8 +51,6 @@ NAN_METHOD(key)
         info.GetReturnValue().Set(key);
     }
 
-    //Nan::ReturnValue(Nan::Undefined());
-    info.GetReturnValue().Set(Nan::Undefined());
 }
 
 /**

@@ -82,8 +82,7 @@ static void * prepare(ResolveArgs(info))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-	data->policy					= NULL;
-
+	data->policy			= NULL;
 
     int arglength = info.Length();
 
