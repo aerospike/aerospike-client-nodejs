@@ -343,7 +343,7 @@ The `<PATH>` must be a path to a directory containing files `aerospike.lua` and 
 
 The following is an example of specifying `AEROSPIKE_LUA_PATH` and then installing.
 
-	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/sys/udf/lua/
+	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/client/sys/udf/lua/
 	$ npm install
 
 <a name="Tests"></a>

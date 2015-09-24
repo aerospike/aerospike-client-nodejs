@@ -515,8 +515,20 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             as_v8_detail( log, "Cloning a map SUCCESS");
             break;
         }
+		case AS_DOUBLE: {
+			as_double * dbl_val = as_double_fromval(val);
+			double dval = as_double_get(dbl_val);
+			as_v8_detail(log, "Cloning double value %g", dval);
+			as_double * clone_dbl = as_double_new(dval);
+			if(clone_dbl == NULL) 
+			{
+				as_v8_error(log, "Cloning double failed");
+			}
+			clone_val = as_double_toval(clone_dbl); 
+			break;
+		}
         default:
-            as_v8_error( log, "as_val received is UNKNOWN type");
+            as_v8_error( log, "as_val received is UNKNOWN type %d", (int)t);
             break;
     }
     return clone_val;
