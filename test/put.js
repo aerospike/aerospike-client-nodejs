@@ -193,13 +193,13 @@ describe('client.put()', function() {
             val : 123.45,
             dval: Double(456.00)
         }
-
         //write the record and then check
         client.put(key, record, meta, function(err, key) {
             client.get(key, function(err, record1, metadata, key){
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(record1).to.eql(record);
+                expect(record1.val).to.equal(record.val);
+                expect(record1.dval).to.equal(record.dval.Double);
                 client.remove(key, function(err, key){
                     done();
                 });

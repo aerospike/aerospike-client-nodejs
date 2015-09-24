@@ -28,6 +28,7 @@ var Policy = aerospike.policy;
 var Status = aerospike.status;
 var Double = aerospike.Double;
 
+console.log(Double);
 /*******************************************************************************
  *
  * Options parsing
@@ -164,12 +165,14 @@ client.connect(function (err, client) {
     // Perform the operation
     //
 
-    var key = {
+    /*var key = {
         ns:  argv.namespace,
         set: argv.set,
         key: keyv
 
-    };
+    };*/
+
+   var key = aerospike.key(argv.namespace, argv.set, keyv);
 
     var bins = {
         i: 1152921504606846976.456,
@@ -182,6 +185,7 @@ client.connect(function (err, client) {
         b2: new Uint8Array([0xa, 0xb, 0xc])
     };
 
+    console.log(bins.x);
     var metadata = {
         ttl: 10000,
         gen: 0
