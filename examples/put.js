@@ -26,6 +26,7 @@ var yargs = require('yargs');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
+var Double = aerospike.Double;
 
 /*******************************************************************************
  *
@@ -167,10 +168,13 @@ client.connect(function (err, client) {
         ns:  argv.namespace,
         set: argv.set,
         key: keyv
+
     };
 
     var bins = {
-        i: 123,
+        i: 1152921504606846976.456,
+        d: 456.78,
+        x: Double(123.00),
         s: "abc",
         l: [1, 2, 3],
         m: { s: "g3", i: 3, b: new Buffer( [0xa, 0xb, 0xc])},

@@ -28,6 +28,7 @@ var valgen = require('./generators/value');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
+var Double = aerospike.Double;
 
 describe('client.put()', function() {
 
@@ -166,6 +167,32 @@ describe('client.put()', function() {
         var key     = kgen();
         var meta    = mgen(key);
         var record  = rgen(key, meta);
+
+        //write the record and then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record1, metadata, key){
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record1).to.eql(record);
+                client.remove(key, function(err, key){
+                    done();
+                });
+            });
+        });
+    });
+    it('shoule write a bin with double value', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
+        var mgen = metagen.constant({ttl: 1000});
+
+        //values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = {
+            val : 123.45,
+            dval: Double(456.00)
+        }
 
         //write the record and then check
         client.put(key, record, meta, function(err, key) {

@@ -52,6 +52,23 @@ NAN_METHOD(key)
     NanReturnUndefined();
 }
 
+NAN_METHOD(Double)
+{
+    NanScope();
+
+    if(args.Length() == 1) {
+        Local<Object> val = NanNew<Object>();
+        if( args[0]->IsNumber()) {
+            val->Set(NanNew("Double"), args[0]);
+        }
+        else {
+            NanThrowError("The argument is not a number");
+        }
+        NanReturnValue(val);
+    }
+    NanReturnUndefined();
+}
+        
 /**
  *  aerospike object.
  */
@@ -61,6 +78,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     AerospikeQuery::Init(); 
     exports->Set(NanNew("client"),   NanNew<FunctionTemplate>(client)->GetFunction());
     exports->Set(NanNew("key"),      NanNew<FunctionTemplate>(key)->GetFunction());
+    exports->Set(NanNew("Double"), NanNew<FunctionTemplate>(Double)->GetFunction());
     exports->Set(NanNew("status"),   status());
     exports->Set(NanNew("policy"),   policy());
     exports->Set(NanNew("operations"), operations());

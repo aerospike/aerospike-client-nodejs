@@ -223,7 +223,7 @@ describe('client.query()', function() {
             });
         }
     });
-    it.skip('should scan aerospike database and apply aggregation user defined function', function(done) {
+    it('should scan aerospike database and apply aggregation user defined function', function(done) {
 
         if( !options.run_aggregation ) {
             done();

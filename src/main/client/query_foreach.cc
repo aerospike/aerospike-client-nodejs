@@ -399,7 +399,6 @@ static void execute(uv_work_t * req)
         else if(data->type == SCANUDF ) // query without where clause, becomes a scan background.
         {
             // generating a 32 bit random number. 
-            // Because when converting from node.js integer, the last two digits precision is lost.
             data->scan_id    = 0;
             int32_t dummy_id = 0;
 

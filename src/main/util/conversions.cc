@@ -657,8 +657,16 @@ Handle<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             as_integer * ival = as_integer_fromval(val);
             if ( ival ) {
                 int64_t data = as_integer_getorelse(ival, -1);
-                as_v8_detail(log, "value = %d ", data);
+                as_v8_detail(log, "value = %lf ", (double)data);
                 return NanEscapeScope(NanNew((double)data));
+            }
+        }
+        case AS_DOUBLE : {
+            as_double* dval = as_double_fromval(val);
+            if( dval ) {
+                double d    = as_double_getorelse(dval, -1);
+                as_v8_detail(log, "value = %lf ",d);
+                return NanEscapeScope(NanNew((double)d));
             }
         }
         case AS_STRING : {
@@ -810,15 +818,54 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_v8_error(log, "Boolean datatype is not supported");
         return NULL;
     }
-    else if(obj->IsString()){
+    else if(obj->IsString()) {
         String::Utf8Value v(obj);
         as_string *str = as_string_new(strdup(*v), true);
+        as_v8_detail(log, "The string value in %s ", *v);
         return (as_val*) str;
-
     }
-    else if(obj->IsNumber()){
-        as_integer *num = as_integer_new(obj->NumberValue());
+    else if( obj->IsInt32()) {
+        as_integer *num = as_integer_new(obj->ToInt32()->Value());
+        as_v8_detail(log, "The int32 value %d ", obj->ToInt32()->Value());
         return (as_val*) num;
+    }
+    else if( obj->IsUint32()) {
+        as_integer *num = as_integer_new(obj->ToUint32()->Value());
+        as_v8_detail(log, "The uint32 value %d ", obj->ToUint32()->Value());
+        return (as_val*) num;
+    }
+    else if( obj->IsNumber()) {
+        // nodejs stores all number values > 2^31 in the class Number.
+        // and values < 2^31 are stored in the class SMI (Small Integers).
+        // Where as Aerospike server has int64_t and double. To distinguish
+        // between a double and int64_t value in nodejs, retrieve the 
+        // value as double and also as int64_t. If the values are same, then store 
+        // it as int64_t. Else store it as double.
+        // The problem with this implementation is var 123.00 will be treated as int64_t.
+        // Application can enforce Aerospike to use this as double using the api
+        // `aerospike.AsDouble(123.00)`. Any value passed through this API, will be stored
+        // as double in Aerospike server.
+        int64_t num = obj->ToInteger()->Value();
+        double d = obj->ToNumber()->Value();
+        if( (double)num == d) {
+            as_integer *num = as_integer_new(obj->ToInteger()->Value());
+            as_v8_detail(log, "The integer value %lld ", obj->ToInteger()->Value());
+            return (as_val*) num;
+        }
+        else {
+            as_double * d = as_double_new(obj->ToNumber()->Value());
+            as_v8_detail(log, "The double value %lf ", d->value);
+            return (as_val*) d;
+        }
+        
+    }
+    else if( obj->ToObject()->Has(NanNew("AsDouble"))) {
+        // Any value passed using `aerospike.AsDouble()` will be stored as
+        // double in Aerospike server.
+        Local<Value> v8num = obj->ToObject()->Get(NanNew("AsDouble"));
+        as_double* d  = as_double_new(v8num->ToNumber()->Value());
+        as_v8_detail(log, "The double value %lf ", d->value);
+        return (as_val*) d;
     }
     else if(obj->ToObject()->GetIndexedPropertiesExternalArrayDataType() == kExternalUnsignedByteArray) {
         int size ;
@@ -900,6 +947,9 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         switch(as_val_type(val)) {
             case AS_INTEGER:
                 as_record_set_integer(rec, *n, (as_integer*)val);
+                break;
+            case AS_DOUBLE:
+                as_record_set_as_double(rec, *n, (as_double*)val);
                 break;
             case AS_STRING:
                 as_record_set_string(rec, *n, (as_string*)val);
