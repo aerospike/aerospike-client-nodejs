@@ -527,6 +527,24 @@ as_val* asval_clone( as_val* val, LogInfo* log)
 			clone_val = as_double_toval(clone_dbl); 
 			break;
 		}
+		case AS_GEOJSON: {
+			as_geojson * geo_val = as_geojson_fromval(val);
+			char* strval = as_geojson_get(geo_val);
+
+			as_v8_detail(log, "Cloning GeoJSON value %s", strval);
+			char* clone_str = (char*) cf_strdup(strval);
+			if(clone_str == NULL)
+			{
+				as_v8_error(log, "cloning GeoJSON failed");
+			}
+			as_geojson * clone_as = as_geojson_new(clone_str, true);
+			if(clone_as == NULL)
+			{
+				as_v8_error(log, "cloning GeoJSON failed");
+			}
+			clone_val = as_geojson_toval(clone_as);
+			break;
+        }
         default:
             as_v8_error( log, "as_val received is UNKNOWN type %d", (int)t);
             break;
