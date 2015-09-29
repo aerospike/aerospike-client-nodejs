@@ -555,8 +555,12 @@ static void respond(uv_work_t * req, int status)
     }
     else 
     {
-        // @TO-DO A bug in c-client query destroy doesn't destroy the bin value
-        // for string type queries.
+        as_predicate* p  = data->query_scan->query->where.entries;
+        if(p->dtype == AS_INDEX_STRING && p->type == AS_PREDICATE_EQUAL) {
+            if(p->value.string != NULL) {
+                cf_free(p->value.string);
+            }
+        }
         as_query_destroy(data->query_scan->query);
 
         cf_free(data->query_scan->query);
