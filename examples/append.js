@@ -42,10 +42,6 @@ var argp = yargs
             boolean: true,
             describe: "Display this message."
         },
-        profile: {
-            boolean: true,
-            describe: "Profile the operation."
-        },
         host: {
             alias: "h",
             default: "127.0.0.1",
@@ -143,7 +139,6 @@ config = {
  * Perform the operation
  *
  ******************************************************************************/
-
 
 function run(client) {
 
