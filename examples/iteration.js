@@ -9,6 +9,10 @@ function setLimit(i) {
     limit = i;
 };
 
+function current() {
+    return count;
+};
+
 function next(fn, arg) {
     count++;
     if (count >= limit) {

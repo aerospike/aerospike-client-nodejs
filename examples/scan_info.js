@@ -105,6 +105,9 @@ if (!scanId) {
     argp.showHelp();
     process.exit(1);
 }
+
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
@@ -143,7 +146,7 @@ config = {
 
 function run(client) {
     client.query(argv.namespace, argv.set).Info(scanId, function(res) {
-        console.log(JSON.stringify(res, null, '    '));
+        !argv.quiet && console.log(JSON.stringify(res, null, '    '));
     });
 }
 

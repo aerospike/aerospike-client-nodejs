@@ -42,6 +42,11 @@ var argp = yargs
             boolean: true,
             describe: "Display this message."
         },
+        quiet: {
+            alias: "q",
+            boolean: true,
+            describe: "Do not display content."
+        },
         host: {
             alias: "h",
             default: "127.0.0.1",
@@ -85,8 +90,12 @@ var argp = yargs
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }
-
+        },
+        iterations: {
+            alias: "I",
+            default: 1,
+            describe: "Number of iterations"
+        },
     });
 
 var argv = argp.argv;
@@ -103,6 +112,8 @@ if (!keyv) {
     argp.showHelp();
     process.exit(1);
 }
+
+iteration.setLimit(argv.iterations);
 
 /*******************************************************************************
  *
@@ -160,7 +171,7 @@ function run(client) {
         if (isError(err)) {
             process.exit(1);
         } else {
-            console.log("OK.");
+            !argv.quiet && console.log("OK.");
             iteration.next(run, client);
         }
     });

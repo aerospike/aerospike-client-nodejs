@@ -41,6 +41,11 @@ var argp = yargs
             boolean: true,
             describe: "Display this message."
         },
+        quiet: {
+            alias: "q",
+            boolean: true,
+            describe: "Do not display content."
+        },
         host: {
             alias: "h",
             default: "127.0.0.1",
@@ -122,6 +127,8 @@ if (!keyv) {
     process.exit(1);
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
@@ -169,7 +176,7 @@ function run(client) {
         if (isError(err)) {
             process.exit(1);
         } else {
-            console.log(JSON.stringify(result, null, '    '));
+            !argv.quiet && console.log(JSON.stringify(result, null, '    '));
             iteration.next(run, client);
         }
     });
