@@ -20,7 +20,7 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New<String>(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> scanStatus()
 {

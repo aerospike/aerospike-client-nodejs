@@ -27,7 +27,9 @@ var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
+var Double = aerospike.Double;
 
+console.log(Double);
 /*******************************************************************************
  *
  * Options parsing
@@ -150,7 +152,9 @@ function run(client) {
     };
 
     var bins = {
-        i: 123,
+        i: 1152921504606846976.456,
+        d: 456.78,
+        x: Double(123.00),
         s: "abc",
         l: [1, 2, 3],
         m: {
@@ -162,6 +166,7 @@ function run(client) {
         b2: new Uint8Array([0xa, 0xb, 0xc])
     };
 
+    console.log(bins.x);
     var metadata = {
         ttl: 10000,
         gen: 0

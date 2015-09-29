@@ -270,7 +270,6 @@ static void * prepare(ResolveArgs(info))
         query_cbdata->signal_interval   = 0;
         query_cbdata->result_q          = cf_queue_create(sizeof(as_val*), true);
         query_cbdata->max_q_size        = query->q_size ? query->q_size : QUEUE_SZ;
-        //NanAssignPersistent(query_cbdata->data_cb, info[curr_arg_pos].As<Function>());
         query_cbdata->data_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
 
@@ -284,7 +283,7 @@ static void * prepare(ResolveArgs(info))
     // check for error callback
     if(info[curr_arg_pos]->IsFunction())
     {
-        //NanAssignPersistent(query_cbdata->error_cb, info[curr_arg_pos].As<Function>());
+         
         query_cbdata->error_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
@@ -298,7 +297,7 @@ static void * prepare(ResolveArgs(info))
     // check for termination callback
     if(info[curr_arg_pos]->IsFunction())
     {
-        //NanAssignPersistent(query_cbdata->end_cb, info[curr_arg_pos].As<Function>());
+         
         query_cbdata->end_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
@@ -400,8 +399,7 @@ static void execute(uv_work_t * req)
         }
         else if(data->type == SCANUDF ) // query without where clause, becomes a scan background.
         {
-            // generating a 32 bit random number.
-            // Because when converting from node.js integer, the last two digits precision is lost.
+            // generating a 32 bit random number. 
             data->scan_id    = 0;
             int32_t dummy_id = 0;
 
@@ -461,7 +459,7 @@ static void respond(uv_work_t * req, int status)
 
     if(data->param_err == 1)
     {
-        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { error_to_jsobject( &data->err, log)};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -471,7 +469,7 @@ static void respond(uv_work_t * req, int status)
     if( data->res != AEROSPIKE_OK)
     {
         as_v8_debug(log,"An error occured in C API invocation");
-        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { error_to_jsobject( &data->err, log)};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -505,7 +503,7 @@ static void respond(uv_work_t * req, int status)
     else
     {
         as_v8_debug(log, "Invoking query callback");
-        argv[0] = Nan::New<String>("Finished query!!!").ToLocalChecked();
+        argv[0] = Nan::New("Finished query!!!").ToLocalChecked();
     }
 
     // Execute the callback
@@ -531,7 +529,7 @@ static void respond(uv_work_t * req, int status)
     }
     else
     {
-        //NanDisposePersistent(query_data->data_cb);
+         
         query_data->data_cb.Reset();
         if(query_data->result_q != NULL)
         {
@@ -550,8 +548,12 @@ static void respond(uv_work_t * req, int status)
     }
     else
     {
-        // @TO-DO A bug in c-client query destroy doesn't destroy the bin value
-        // for string type queries.
+        as_predicate* p  = data->query_scan->query->where.entries;
+        if(p->dtype == AS_INDEX_STRING && p->type == AS_PREDICATE_EQUAL) {
+            if(p->value.string != NULL) {
+                cf_free(p->value.string);
+            }
+        }
         as_query_destroy(data->query_scan->query);
 
         cf_free(data->query_scan->query);

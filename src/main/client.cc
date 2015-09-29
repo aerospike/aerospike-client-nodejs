@@ -63,7 +63,6 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
         }
     }
     info.GetReturnValue().Set(info.Holder());
-	//NanReturnValue(info.Holder());
 }
 
 
@@ -75,7 +74,6 @@ NAN_METHOD(AerospikeClient::Query)
     Local<Object> config = info[2].As<Object>();
 	Local<Object> client = info.This();
     info.GetReturnValue().Set(AerospikeQuery::NewInstance(ns, set, config, client));
-	//NanReturnValue(AerospikeQuery::NewInstance(ns, set, config, client));
 }
 
 /**
@@ -102,9 +100,9 @@ NAN_METHOD(AerospikeClient::New)
     // Assume by default log is not set
     if(info[0]->IsObject()) {
         int default_log_set = 0;
-        if (info[0]->ToObject()->Has(Nan::New<String>("log").ToLocalChecked()))
+        if (info[0]->ToObject()->Has(Nan::New("log").ToLocalChecked()))  
         {
-            Local<Value> log_val = info[0]->ToObject()->Get(Nan::New<String>("log").ToLocalChecked()) ;
+            Local<Value> log_val = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
             if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
                 default_log_set = 1; // Log is passed as an argument. set the default value	
             } else {
@@ -132,7 +130,6 @@ NAN_METHOD(AerospikeClient::New)
 
     client->Wrap(info.This());
 
-    //NanReturnValue(info.This());
     info.GetReturnValue().Set(info.This());
 }
 
@@ -162,7 +159,7 @@ void AerospikeClient::Init()
 {
     // Prepare constructor template
     Local<FunctionTemplate> cons = Nan::New<FunctionTemplate>(AerospikeClient::New);
-    cons->SetClassName(Nan::New<String>("AerospikeClient").ToLocalChecked());
+    cons->SetClassName(Nan::New("AerospikeClient").ToLocalChecked());
 
     // A client object created in node.js, holds reference to the wrapped c++
     // object using an internal field.
@@ -190,26 +187,6 @@ void AerospikeClient::Init()
     Nan::SetPrototypeMethod(cons, "execute", Execute);
     Nan::SetPrototypeMethod(cons, "udfRemove", UDFRemove);
     Nan::SetPrototypeMethod(cons, "updateLogging", SetLogLevel);
-    	/*NODE_SET_PROTOTYPE_METHOD(cons, "batchGet", BatchGet);
-	NODE_SET_PROTOTYPE_METHOD(cons, "batchExists", BatchExists);
-	NODE_SET_PROTOTYPE_METHOD(cons, "batchSelect", BatchSelect);
-	NODE_SET_PROTOTYPE_METHOD(cons, "close", Close);
-	NODE_SET_PROTOTYPE_METHOD(cons, "connect", Connect);
-	NODE_SET_PROTOTYPE_METHOD(cons, "exists", Exists);
-	NODE_SET_PROTOTYPE_METHOD(cons, "get", Get);
-	NODE_SET_PROTOTYPE_METHOD(cons, "info", Info);
-	NODE_SET_PROTOTYPE_METHOD(cons, "indexCreate", sindexCreate);
-	NODE_SET_PROTOTYPE_METHOD(cons, "indexRemove", sindexRemove);
-	NODE_SET_PROTOTYPE_METHOD(cons, "operate", Operate);
-	NODE_SET_PROTOTYPE_METHOD(cons, "put", Put);
-	NODE_SET_PROTOTYPE_METHOD(cons, "query", Query);
-	NODE_SET_PROTOTYPE_METHOD(cons, "remove", Remove);
-	NODE_SET_PROTOTYPE_METHOD(cons, "select", Select);
-	NODE_SET_PROTOTYPE_METHOD(cons, "udfRegister", Register);
-	NODE_SET_PROTOTYPE_METHOD(cons, "execute", Execute);
-	NODE_SET_PROTOTYPE_METHOD(cons, "udfRemove", UDFRemove);
-	NODE_SET_PROTOTYPE_METHOD(cons, "updateLogging", SetLogLevel);*/
-	//NanAssignPersistent(constructor, cons);
     constructor.Reset(cons);
 }
 

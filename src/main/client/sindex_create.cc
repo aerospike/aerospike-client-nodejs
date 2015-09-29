@@ -94,7 +94,6 @@ static void * prepare(ResolveArgs(info))
 
     // The last argument should be a callback function.
     if ( info[argc-1]->IsFunction()) {
-        //NanAssignPersistent(data->callback, info[argc-1].As<Function>());
         data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
@@ -213,7 +212,6 @@ static void execute(uv_work_t * req)
     as_error *  err          = &data->err;
     as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
-
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -251,13 +249,12 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = (error_to_jsobject(err, log));
-        // AS_DEBUG(log, _KEY,  key);
+        argv[0] = error_to_jsobject(err, log);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
     }
 
     // Surround the callback in a try/catch for safety

@@ -70,7 +70,6 @@ static void * prepare(ResolveArgs(info))
 
     if(info[arglength-1]->IsFunction())
     {
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
     }
     else
@@ -172,7 +171,7 @@ static void respond(uv_work_t * req, int status)
     as_v8_detail(log, "Inside respond of scan info ");
     // Arguments to scan info callback.
     // Send status, progresPct and recScanned
-    Local<Value> argv[2] = { (scaninfo_to_jsobject(scan_info, log)),
+    Local<Value> argv[2] = { scaninfo_to_jsobject(scan_info, log),
                               Nan::New((double)data->scan_id)};
 
     Local<Function> cb = Nan::New<Function>(data->callback);
