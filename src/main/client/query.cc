@@ -113,13 +113,13 @@ void ParseWhereClause(as_query* query, Local<Object> filter, LogInfo* log)
         as_query_where_init(query, (uint16_t)size);
         for (int i=0; i < size; i++) {
             Local<Object> filter = filters->Get(i)->ToObject();
-            Local<Value> bin     = filter->Get(Nan::New<String>("bin").ToLocalChecked());
+            Local<Value> bin     = filter->Get(Nan::New("bin").ToLocalChecked());
             char * bin_val       = NULL;
             if( !bin->IsString() ) {
                 as_v8_error(log, "Bin value must be string");
                 Nan::ThrowError("Bin value is not a string");
             }
-            int predicate        = filter->Get(Nan::New<String>("predicate").ToLocalChecked())->ToObject()->IntegerValue();
+            int predicate        = filter->Get(Nan::New("predicate").ToLocalChecked())->ToObject()->IntegerValue();
             as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
             switch(predicate)
             {
@@ -398,7 +398,6 @@ NAN_GETTER(AerospikeQuery::GetIsQuery)
     Nan::HandleScope scope;
     AerospikeQuery* queryObj = ObjectWrap::Unwrap<AerospikeQuery>(info.Holder());
     Local<Boolean> value     = Nan::New<Boolean>(queryObj->isQuery_);
-    //NanReturnValue(value);
     info.GetReturnValue().Set(value);
 }
 
@@ -414,7 +413,6 @@ NAN_GETTER(AerospikeQuery::GetHasUDF)
     Nan::HandleScope scope;
     AerospikeQuery* queryObj = ObjectWrap::Unwrap<AerospikeQuery>(info.Holder());
     Local<Boolean> value     = Nan::New<Boolean>(queryObj->hasUDF_);
-    //NanReturnValue(value);
     info.GetReturnValue().Set(value);
 }
 
@@ -430,7 +428,6 @@ NAN_GETTER(AerospikeQuery::GetHasAggregation)
     Nan::HandleScope scope;
     AerospikeQuery* queryObj = ObjectWrap::Unwrap<AerospikeQuery>(info.Holder());
     Local<Boolean> value     = Nan::New<Boolean>(queryObj->hasAggregation_);
-    //NanReturnValue(value);
     info.GetReturnValue().Set(value);
 }
 
@@ -502,8 +499,6 @@ NAN_METHOD(AerospikeQuery::New)
     }
 
     query->Wrap(info.This());
-
-    //NanReturnValue(info.This());
     info.GetReturnValue().Set(info.This());
 }
 
@@ -541,9 +536,9 @@ void AerospikeQuery::Init()
     // Prototype
     Nan::SetPrototypeMethod(cons, "foreach", AerospikeQuery::foreach);
     Nan::SetPrototypeMethod(cons, "queryInfo", AerospikeQuery::queryInfo);
-    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("isQuery").ToLocalChecked(), GetIsQuery, SetIsQuery);
-    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("hasUDF").ToLocalChecked(), GetHasUDF, SetHasUDF);
-    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("hasAggregation").ToLocalChecked(), GetHasAggregation, SetHasAggregation);
+    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New("isQuery").ToLocalChecked(), GetIsQuery, SetIsQuery);
+    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New("hasUDF").ToLocalChecked(), GetHasUDF, SetHasUDF);
+    Nan::SetAccessor(cons->InstanceTemplate(), Nan::New("hasAggregation").ToLocalChecked(), GetHasAggregation, SetHasAggregation);
 
     constructor.Reset(cons);
 }

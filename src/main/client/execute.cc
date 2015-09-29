@@ -107,7 +107,6 @@ static void * prepare(ResolveArgs(info))
     memset(funcname, 0, FILESIZE);
 
     if ( info[arglength-1]->IsFunction()) {
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
@@ -225,12 +224,12 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[2];
 
     if (data->param_err == 0) {
-        argv[0] = (error_to_jsobject(err, log));
-        argv[1] = (val_to_jsvalue( data->result, log));
+        argv[0] = error_to_jsobject(err, log);
+        argv[1] = val_to_jsvalue( data->result, log);
     }
     else {
         err->func = NULL;
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
     }
 

@@ -52,7 +52,7 @@ NAN_METHOD(AerospikeClient::Connect)
     }
     else {
         as_v8_error(client->log, " Callback not provided, Parameter error");
-        info.GetReturnValue().Set(info.Holder());
+        info.GetReturnValue().Set(Nan::Null());
     }
 
     as_error err;
@@ -61,14 +61,14 @@ NAN_METHOD(AerospikeClient::Connect)
 
     Local<Value> argv[2];
 
-    argv[0] = (error_to_jsobject(&err, client->log));
+    argv[0] = error_to_jsobject(&err, client->log);
 
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
         argv[1] = (info.Holder());
         as_v8_error(client->log, "Connecting to Cluster Failed");
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
-        info.GetReturnValue().Set(info.Holder());
+        info.GetReturnValue().Set(Nan::Null());
     }
     else {
         argv[1] = (info.Holder());

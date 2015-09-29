@@ -86,7 +86,6 @@ static void * prepare(ResolveArgs(info))
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction()) {
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -192,22 +191,22 @@ static void respond(uv_work_t * req, int status)
     // Build the arguments array for the callback
     if ( data->param_err == 0) {
 
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         as_v8_debug(log, "Return status %s %d", err->message, err->code);
 
         if ( rec != NULL && rec->gen != 0 ) {
             as_v8_debug(log, "Record found");
-            argv[1] = (recordmeta_to_jsobject(rec, log));
+            argv[1] = recordmeta_to_jsobject(rec, log);
         }
         else {
             argv[1] = Nan::Null();
         }
-        argv[2] = (key_to_jsobject(key, log));
+        argv[2] = key_to_jsobject(key, log);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error while parsing the arguments");
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
         argv[2] = Nan::Null();
     }
@@ -227,7 +226,6 @@ static void respond(uv_work_t * req, int status)
     as_v8_debug(log, "Invoked exists callback");
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    //data->callback.Reset();
     data->callback.Reset();
 
     // clean up any memory we allocated

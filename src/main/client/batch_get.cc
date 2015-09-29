@@ -82,15 +82,12 @@ bool batch_callback(const as_batch_read * results, uint32_t n, void * udata)
         for ( uint32_t i = 0; i < n; i++ ) {
             data->results[i].result = results[i].result;
             as_v8_debug(log, "batch result for the key");
-            // AS_DEBUG(log, _KEY, results[i].key);
             key_clone(results[i].key, (as_key**) &data->results[i].key, log);
             if (results[i].result == AEROSPIKE_OK) {
                 as_record * rec = NULL ;
                 rec = &data->results[i].record;
 
                 as_v8_detail(log, "Record[%d]", i);
-                // DETAIL(log, BINS, &results[i].record);
-                // DETAIL(log, META, &results[i].record);
 
                 as_record_init(rec, results[i].record.bins.size);
                 record_clone(&results[i].record, &rec, log);
@@ -132,8 +129,7 @@ static void * prepare(ResolveArgs(info))
 
     LogInfo * log = data->log = client->log;
 
-    if ( info[arglength-1]->IsFunction()) {
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
+    if ( info[arglength-1]->IsFunction()) { 
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "batch_get callback registered");
     }
@@ -211,7 +207,6 @@ static void execute(uv_work_t * req)
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_get(as, err, policy, batch, batch_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            // AS_DEBUG(log, ERROR, err);
             data->results = NULL;
             data->n = 0;
         }
@@ -246,11 +241,11 @@ static void respond(uv_work_t * req, int status)
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
     }
     else if ( num_rec == 0 || batch_results == NULL ) {
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
     }
     else {
@@ -302,7 +297,7 @@ static void respond(uv_work_t * req, int status)
         }
 
         as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = (results);
     }
 

@@ -92,7 +92,6 @@ static void * prepare(ResolveArgs(info))
 
 
     if ( info[arglength-1]->IsFunction() ){
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -205,7 +204,6 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0) {
         as_v8_debug(log, "Invoking aerospike operate with");
-        // AS_DEBUG(log, _KEY,  key);
         aerospike_key_operate(as, err, policy, key, op, &rec);
         as_operations_destroy( op );
     }
@@ -234,22 +232,21 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[4];
 
     as_v8_debug(log, "operate operation : the response is");
-    // AS_DEBUG(log, ERROR, err);
 
 
     // Build the arguments array for the callback
     if( data->param_err == 0) {
-        argv[0] = (error_to_jsobject(err, log)),
-        argv[1] = (recordbins_to_jsobject(rec, log )),
-        argv[2] = (recordmeta_to_jsobject(rec, log)),
-        argv[3] = (key_to_jsobject(key, log));
+        argv[0] = error_to_jsobject(err, log),
+        argv[1] = recordbins_to_jsobject(rec, log ),
+        argv[2] = recordmeta_to_jsobject(rec, log),
+        argv[3] = key_to_jsobject(key, log);
     }
     else {
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
         as_v8_debug(log, "Parameter error while parsing the arguments");
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
         argv[2] = Nan::Null();
         argv[3] = Nan::Null();

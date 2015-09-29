@@ -86,7 +86,6 @@ static void * prepare(ResolveArgs(info))
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction() ){
-        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -159,7 +158,6 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0) {
-        // AS_DEBUG(log, _KEY,  key);
         aerospike_key_remove(as, err, policy, key);
     }
 
@@ -188,16 +186,15 @@ static void respond(uv_work_t * req, int status)
     // Build the arguments array for the callback
     if( data->param_err == 0) {
         as_v8_debug(log, "Delete operation succeeded for the key");
-        // AS_DEBUG(log, _KEY,  key);
-        argv[0] = (error_to_jsobject(err, log)),
-        argv[1] = (key_to_jsobject(key, log));
+        argv[0] = error_to_jsobject(err, log),
+        argv[1] = key_to_jsobject(key, log);
 
     }
     else {
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         as_v8_debug(log, "Parameter error while parsing the arguments");
         argv[1] = Nan::Null();
     }

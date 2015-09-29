@@ -17,8 +17,7 @@
     "cli-table": "0.2.0",
     "colors": "0.6.2",
     "yargs":"1.2.1",
-    "winston": "0.7.2",
-    "memwatch": ">=0.2"
+    "winston": "0.7.2"
   },
   "main": "main.js"
 }
