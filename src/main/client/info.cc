@@ -171,8 +171,8 @@ static void * prepare(ResolveArgs(info))
         // We check the parameter to see if it a host or policy object.
         // Host objects should always have "addr" and "port" attributes.
 
-        if ( arg1->Has(Nan::New<String>("addr").ToLocalChecked()) && 
-                arg1->Has(Nan::New<String>("port").ToLocalChecked()) ) {
+        if ( arg1->Has(Nan::New("addr").ToLocalChecked()) && 
+                arg1->Has(Nan::New("port").ToLocalChecked()) ) {
             // Ok, we have a host object
             int rc = host_from_jsobject(arg1, &data->addr, &data->port, log);
             if ( rc != AS_NODE_PARAM_OK ) {
@@ -203,7 +203,6 @@ static void * prepare(ResolveArgs(info))
                 as_v8_debug(log, "policy parameter is invalid");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 data->param_err = 1;
-                // goto Err_Return;
             }
         }
     }
@@ -215,28 +214,26 @@ static void * prepare(ResolveArgs(info))
         if ( info[argc-2]->IsFunction() ) {
             data->callback.Reset(info[argc-2].As<Function>());
             data->done.Reset(info[argc-1].As<Function>());
-			//NanAssignPersistent(data->callback, info[argc-2].As<Function>());
-			//NanAssignPersistent(data->done, info[argc-1].As<Function>());
+			 
+			 
         }
         else {
             data->callback.Reset(info[argc-1].As<Function>());
             data->done.Reset(emptyFunction->GetFunction());
-			//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
-			//NanAssignPersistent(data->done, emptyFunction->GetFunction());
+			 
+			 
         }
     }
     else {
 
         data->callback.Reset(emptyFunction->GetFunction());
         data->done.Reset(emptyFunction->GetFunction());
-		//NanAssignPersistent(data->callback,emptyFunction->GetFunction());
-		//NanAssignPersistent(data->done, emptyFunction->GetFunction());
+		 
+		 
     }
 
     return data;
 
-// Err_Return:
-    // return data;
 }
 
 /**
@@ -316,12 +313,12 @@ static void respond(uv_work_t * req, int status)
             char* response = result->response;
 
             // error object parameter
-            argv[0] = (error_to_jsobject(err, log));
+            argv[0] = error_to_jsobject(err, log);
 
             // response string parameter
             if ( response != NULL && strlen(response) > 0 ) {
                 as_v8_debug(log, "Response is %s", response);
-                argv[1] = Nan::New<String>((const char*)response).ToLocalChecked();
+                argv[1] = Nan::New((const char*)response).ToLocalChecked();
             }
             else {
                 argv[1] = Nan::Null();
@@ -330,14 +327,14 @@ static void respond(uv_work_t * req, int status)
             // host object parameter
             if ( data->addr != NULL && data->port != 0) {
                 Local<Object> host = Nan::New<Object>();
-                host->Set(Nan::New<String>("addr").ToLocalChecked(), Nan::New<String>(data->addr).ToLocalChecked());
-                host->Set(Nan::New<String>("port").ToLocalChecked(), Nan::New(data->port));
+                host->Set(Nan::New("addr").ToLocalChecked(), Nan::New(data->addr).ToLocalChecked());
+                host->Set(Nan::New("port").ToLocalChecked(), Nan::New(data->port));
                 argv[2] = (host);
             }
             else if( node_name != NULL && strlen(node_name) > 0 ) {
                 Local<Object> host = Nan::New<Object>();
                 as_v8_debug(log, "The host is %s", node_name);
-                host->Set(Nan::New<String>("node_id").ToLocalChecked(), Nan::New<String>(node_name).ToLocalChecked());
+                host->Set(Nan::New("node_id").ToLocalChecked(), Nan::New(node_name).ToLocalChecked());
                 argv[2] = (host);
             }
             else {
@@ -346,7 +343,7 @@ static void respond(uv_work_t * req, int status)
         }
         else {
             err->func = NULL;
-            argv[0] = (error_to_jsobject(err, log));
+            argv[0] = error_to_jsobject(err, log);
             argv[1] = Nan::Null();
             argv[2] = Nan::Null();
         }   
@@ -376,7 +373,7 @@ static void respond(uv_work_t * req, int status)
 	if ( try_catch.HasCaught() ) {
 		Nan::FatalException(try_catch);
 	}
-	//NanDisposePersistent(data->done);
+	 
     data->done.Reset();
 
     // Dispose the Persistent handle so the callback

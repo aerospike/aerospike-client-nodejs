@@ -88,7 +88,7 @@ var argp = yargs
         password: {
             alias: "P",
             default: null,
-            describe: "Password to connec to secured cluster"
+            describe: "Password to connect to secured cluster"
         }  
     });
 

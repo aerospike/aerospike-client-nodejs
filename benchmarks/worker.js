@@ -22,13 +22,13 @@
 
 var aerospike = require('aerospike');
 var cluster = require('cluster');
+var fs  = require('fs');
 var yargs = require('yargs');
 var path = require('path');
 var util = require('util');
 var winston = require('winston');
 var stats = require('./stats');
 var status = aerospike.status;
-var memwatch = require('memwatch');
 var alerts   = require('./alerts.js');
 var argv     = require("./config.json");
 /**********************************************************************
@@ -412,6 +412,7 @@ function executeJob(options, callback) {
     stream.on('end', function(){
         // update a stat for number of jobs completed.
         callback(options);
+
     });
 }
 
@@ -425,12 +426,6 @@ var runLongRunningJob = function(options) {
  *
  ***********************************************************************/
 
-memwatch.on('leak', function(info) {
-    //generate alert.
-    var msg = { alert : info, severity: alerts.severity.HIGH};
-    process.send(['alert', msg]);
-   
-});
 /**
  * Listen for exit signal from parent. Hopefully we can do a clean 
  * shutdown and emit results.
@@ -473,3 +468,13 @@ process.on('message', function(msg) {
     }
 });
 
+// log the memory footprint of the process every 10 minutes.
+setTimeout(function(){
+    //write the memory usage to a file
+    var mem = process.memoryUsage();
+    fs.writeFile("longevityMemory", JSON.stringify(mem), function(err) {
+        if(err) {
+            console.log(err);
+        }
+    })
+}, 600000);
