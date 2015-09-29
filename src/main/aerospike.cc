@@ -27,7 +27,7 @@ using namespace v8;
 NAN_METHOD(client)
 {
     Nan::HandleScope();
-	Local<Object> config = info[0].As<Object>();
+    Local<Object> config = info[0].As<Object>();
     //Nan::ReturnValue<Value>(AerospikeClient::NewInstance(config));
     info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
 }
@@ -59,18 +59,18 @@ NAN_METHOD(key)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-    AerospikeQuery::Init(); 
+    AerospikeQuery::Init();
     exports->Set(Nan::New<String>("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
     exports->Set(Nan::New<String>("key").ToLocalChecked(),      Nan::New<FunctionTemplate>(key)->GetFunction());
     exports->Set(Nan::New<String>("status").ToLocalChecked(),   status());
     exports->Set(Nan::New<String>("policy").ToLocalChecked(),   policy());
     exports->Set(Nan::New<String>("operations").ToLocalChecked(), operations());
-	exports->Set(Nan::New<String>("language").ToLocalChecked(), languages()); 
+    exports->Set(Nan::New<String>("language").ToLocalChecked(), languages());
     exports->Set(Nan::New<String>("log").ToLocalChecked(),      log());
-	exports->Set(Nan::New<String>("scanPriority").ToLocalChecked(), scanPriority());
-	exports->Set(Nan::New<String>("scanStatus").ToLocalChecked(), scanStatus());
-	exports->Set(Nan::New<String>("predicates").ToLocalChecked(),	predicates());
-	exports->Set(Nan::New<String>("indexType").ToLocalChecked(),indexType());
+    exports->Set(Nan::New<String>("scanPriority").ToLocalChecked(), scanPriority());
+    exports->Set(Nan::New<String>("scanStatus").ToLocalChecked(), scanStatus());
+    exports->Set(Nan::New<String>("predicates").ToLocalChecked(),   predicates());
+    exports->Set(Nan::New<String>("indexType").ToLocalChecked(),indexType());
 }
 
 NODE_MODULE(aerospike, Aerospike)

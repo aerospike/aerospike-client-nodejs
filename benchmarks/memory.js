@@ -148,7 +148,7 @@ function report() {
         }
         return true;
     });
-    
+
     filtered.forEach(function(r, i) {
 
         var minceil = Math.ceil(r[0]);

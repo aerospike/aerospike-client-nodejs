@@ -56,7 +56,7 @@ describe('client.udfRemove()', function(done) {
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 done();
             });
-        }); 
+        });
     });
 
     it('remove non-existent UDF module from aerospike cluster - should fail',function(done) {
@@ -65,6 +65,6 @@ describe('client.udfRemove()', function(done) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF);
             done();
-        }); 
+        });
     });
 });

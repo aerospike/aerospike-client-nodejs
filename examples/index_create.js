@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Select bins of a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -30,7 +31,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -97,57 +98,59 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }  
+        }
     });
 
-var argv  = argp.argv;
-var bin   = argv._.shift();
+var argv = argp.argv;
+var bin = argv._.shift();
 var index = argv._.shift();
-var type  = argv._;
+var type = argv._.shift();
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
-if ( ! bin) {
+if (!bin) {
     console.error("Error: Please provide a bin to be indexed");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
 
-if ( !index ) {
+if (!index) {
     console.error("Error: Please provide a index name");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
 
-if ( ! type) {
+if (!type) {
     console.error("Error: Please provide a type of index to be created");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -157,83 +160,72 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
-
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if( argv.password !== null)
-{
-	config.password = argv.password;
-}
 
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
-}
-
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
+function run(client) {
 
     var options = {
-        ns:  argv.namespace,
+        ns: argv.namespace,
         set: argv.set,
-        bin : bin,
-		index: index
+        bin: bin,
+        index: index,
     };
 
-    if ( argv.profile ) {
-        console.time("indexIntegerCreate");
+    switch (type) {
+        case "integer":
+            client.createIntegerIndex(options, function(err) {
+                if (isError(err)) {
+                    process.exit(1);
+                } else {
+                    console.log("OK.");
+                }
+            });
+            break;
+        case "string":
+            client.createStringIndex(options, function(err) {
+                if (isError(err)) {
+                    process.exit(1);
+                } else {
+                    console.log("OK.");
+                }
+            });
+            break;
+        default:
+            console.error("Error: Only integer and string indices are supported.");
+            process.exit(1);
     }
+}
 
-    callback = function(err) {     
-        var exitCode = 0;
-
-        switch ( err.code ) {
-			case Status.AEROSPIKE_OK:
-				console.log("Index Creation Success");
-                break;
-                
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        switch (err.code) {
+            case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                console.error("Error: Not Found.");
+                return true;
             default:
-				console.log("Index creation failed ", err);
                 console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
-			}
+                return true;
+        }
+    } else {
+        return false;
+    }
+}
 
-			if ( argv.profile ) {
-				console.log("---");
-				console.timeEnd("createIntegerIndex");
-			}
-
-			process.exit(exitCode);
-		}
-	if( type == "integer" )
-	{
-		client.createIntegerIndex(options, callback);
-	}
-	else if( type == "string" )
-	{
-		client.createStringIndex(options, callback);
-	}
-	else
-	{
-		console.log("Only integer and string indices are supported - unrecognized type");
-	}
+aerospike.client(config).connect(function(err, client) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        process.exit(1);
+    } else {
+        run(client);
+    }
 });

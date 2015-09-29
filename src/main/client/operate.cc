@@ -35,7 +35,7 @@ extern "C" {
 #define OP_ARG_POS_KEY     0
 #define OP_ARG_POS_OP      1
 #define OP_ARG_POS_META    2
-#define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same 
+#define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same
 #define OP_ARG_POS_CB      4 // for every invoke of operate. If operatepolicy is not passed from node
 // application, argument position for callback changes.
 
@@ -66,13 +66,13 @@ typedef struct AsyncData {
 
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
@@ -85,14 +85,14 @@ static void * prepare(ResolveArgs(info))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-	data->policy			= NULL;
+    data->policy            = NULL;
     as_operations* op = &data->op;
 
     int arglength = info.Length();
 
 
     if ( info[arglength-1]->IsFunction() ){
-		//NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
+        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -130,41 +130,41 @@ static void * prepare(ResolveArgs(info))
     }
 
     if(arglength > 3){
-		if( info[OP_ARG_POS_META]->IsNull() || info[OP_ARG_POS_META]->IsUndefined()){
-			as_v8_debug(log, "metadata object passed is Null or undefined");
-		}
-		else if(info[OP_ARG_POS_META]->IsObject() ) {
-			setTTL(info[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
-			setGeneration(info[OP_ARG_POS_META]->ToObject(), &op->gen, log);
-		}
-		else {
-			as_v8_error(log, "Metadata should be an object");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	}
+        if( info[OP_ARG_POS_META]->IsNull() || info[OP_ARG_POS_META]->IsUndefined()){
+            as_v8_debug(log, "metadata object passed is Null or undefined");
+        }
+        else if(info[OP_ARG_POS_META]->IsObject() ) {
+            setTTL(info[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
+            setGeneration(info[OP_ARG_POS_META]->ToObject(), &op->gen, log);
+        }
+        else {
+            as_v8_error(log, "Metadata should be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    }
 
     if(arglength > 4 ) {
-		if( info[OP_ARG_POS_OPOLICY]->IsUndefined() || info[OP_ARG_POS_OPOLICY]->IsNull()) {
-			data->policy = NULL;
-			as_v8_debug(log, "Operate policy is not passed, using default values");
-		}
-		else if( info[OP_ARG_POS_OPOLICY]->IsObject() ) {
-			data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
+        if( info[OP_ARG_POS_OPOLICY]->IsUndefined() || info[OP_ARG_POS_OPOLICY]->IsNull()) {
+            data->policy = NULL;
+            as_v8_debug(log, "Operate policy is not passed, using default values");
+        }
+        else if( info[OP_ARG_POS_OPOLICY]->IsObject() ) {
+            data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
             if (operatepolicy_from_jsobject( data->policy, info[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of operatepolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
                 goto Err_Return;
             }
         }
-		else
-		{
-			as_v8_error(log, "Operate policy passed must be an object");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
+        else
+        {
+            as_v8_error(log, "Operate policy passed must be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
     }
-    
+
     as_record_init(rec, 0);
 
     return data;
@@ -173,9 +173,10 @@ Err_Return:
     data->param_err = 1;
     return data;
 }
+
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
@@ -205,24 +206,23 @@ static void execute(uv_work_t * req)
     if ( data->param_err == 0) {
         as_v8_debug(log, "Invoking aerospike operate with");
         // AS_DEBUG(log, _KEY,  key);
-        aerospike_key_operate(as, err, policy, key, op, &rec);  
+        aerospike_key_operate(as, err, policy, key, op, &rec);
         as_operations_destroy( op );
     }
-
 }
 
 /**
  *  respond() — Function to be called after `execute()`. Used to send response
  *  to the callback.
- *  
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
 
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
 
@@ -230,7 +230,7 @@ static void respond(uv_work_t * req, int status)
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
     LogInfo * log           = data->log;
-    
+
     Local<Value> argv[4];
 
     as_v8_debug(log, "operate operation : the response is");
@@ -258,10 +258,10 @@ static void respond(uv_work_t * req, int status)
     // Surround the callback in a try/catch for safety
     Nan::TryCatch try_catch;
 
-	Local<Function> cb = Nan::New<Function>(data->callback);
+    Local<Function> cb = Nan::New<Function>(data->callback);
 
     // Execute the callback.
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
 
     as_v8_debug(log, "Invoked operate callback");
     // Process the exception, if any
@@ -271,19 +271,20 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	data->callback.Reset();
+    data->callback.Reset();
 
     // clean up any memory we allocated
 
-    if( data->param_err == 0) { 
+    if( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
-		if(data->policy != NULL)
-		{
-			cf_free(data->policy);
-		}
+        if(data->policy != NULL)
+        {
+            cf_free(data->policy);
+        }
         as_v8_debug(log, "Cleaned up the structures");
     }
+    
     delete data;
     delete req;
 }
@@ -297,5 +298,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Operate)
 {
-    (async_invoke(info, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }

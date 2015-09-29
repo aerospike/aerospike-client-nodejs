@@ -2,7 +2,7 @@
 
 Policies provide the ability to modify the behavior of operations.
 
-This document provides information on the structure of policy objects for specific 
+This document provides information on the structure of policy objects for specific
 operations and the allowed values for some of the policies.
 
 - [`Policy Objects`](#Objects)
@@ -32,12 +32,12 @@ A policy effecting the behavior of UDF execution.
 
 Attributes:
 
-- `key`             – Specifies the behavior for the key. 
+- `key`             – Specifies the behavior for the key.
                        For values, see [Key Policy Values](policies.md#key).
-- `timeout`         – Maximum time in milliseconds to wait for the operation to 
-                      complete. If 0 (zero), then the value will default to 
+- `timeout`         – Maximum time in milliseconds to wait for the operation to
+                      complete. If 0 (zero), then the value will default to
                       global default timeout value
-- `commitLevel`		- Commit Level of the operation. Specifies whether to be commited 
+- `commitLevel`		- Commit Level of the operation. Specifies whether to be commited
 					  only in Master replica copy or all the replica copies.
 					   For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
@@ -55,7 +55,7 @@ A policy effecting the behavior of batch operations.
 Attributes:
 
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
-                      complete. If 0 (zero), then the value will default to 
+                      complete. If 0 (zero), then the value will default to
                       global default timeout value.
 
 <!--
@@ -73,8 +73,8 @@ Attributes:
 
 - `check_bounds`    – Ensure the request is within allowable size limits
 - `send_as_is`      – Send request without any further processing
-- `timeout`         – Maximum time in milliseconds to wait for the operation to 
-                      complete. If 0 (zero), then the value will default to 
+- `timeout`         – Maximum time in milliseconds to wait for the operation to
+                      complete. If 0 (zero), then the value will default to
                       global default timeout value
 
 
@@ -91,21 +91,21 @@ A policy effecting the behavior of operate operations.
 
 Attributes:
 
-- `key`              – Specifies the behavior for the key. 
+- `key`              – Specifies the behavior for the key.
                        For values, see [Key Policy Values](policies.md#key).
 - `gen`              – Specifies the behavior for the generation value.
                        For values, see [Generation Policy Values](policies.md#gen).
 - `retry`            – Specifies the behavior for failed operations.
                        For values, see [Retry Policy Values](policies.md#retry).
-- `timeout`          – Maximum time in milliseconds to wait for the operation to 
-                       complete. If 0 (zero), then the value will default to 
+- `timeout`          – Maximum time in milliseconds to wait for the operation to
+                       complete. If 0 (zero), then the value will default to
                        global default timeout value
-- `commitLevel`      - Commit Level of the operation. Specifies whether to be commited 
+- `commitLevel`      - Commit Level of the operation. Specifies whether to be commited
 					   only in Master replica copy or all the replica copies.
 					   For values, see [Commit Level Policy Values](policies.md#commitLevel).
 - `replica`			 - Specifies which partition replica to read from.
 					   For values, see [Replica Policy](policies.md#replica).
-- `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation 
+- `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation
 					   to provide the desired consistency guarantee.
 					   For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
 
@@ -123,14 +123,14 @@ A policy effecting the behaviour of read operations.
 
 Attributes:
 
-- `key`              – Specifies the behavior for the key. 
+- `key`              – Specifies the behavior for the key.
                        For values, see [Key Policy Values](policies.md#key).
 - `timeout`          – Integer datatype. Maximum time in milliseconds to wait for
-                       the operation to complete. If 0 (zero), then the value 
+                       the operation to complete. If 0 (zero), then the value
                        will default to global default timeout value.
 - `replica`			 - Specifies which partition replica to read from.
 					   For values, see [Replica Policy](policies.md#replica).
-- `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation 
+- `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation
 					   to provide the desired consistency guarantee.
 					   For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
 
@@ -151,11 +151,11 @@ Attributes:
 - `gen`             – Specifies the behavior for the generation value.
                       For values, see [Generation Policy Values](policies.md#gen).
 - `generation`      – The generation of the record to be removed.
-- `key`             – Specifies the behavior for the key. 
+- `key`             – Specifies the behavior for the key.
                       For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
                       For values, see [Retry Policy Values](policies.md#retry).
-- `commitLevel`     - Commit Level of the operation. Specifies whether to be commited 
+- `commitLevel`     - Commit Level of the operation. Specifies whether to be commited
 					  only in Master replica copy or all the replica copies.
 					  For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
@@ -176,14 +176,14 @@ Attributes:
                       For values, see [Generation Policy Values](policies.md#gen).
 - `exists`          – Specifies the behavior for the existence of the record.
                       For values, see [Exists Policy Values](policies.md#exists).
-- `key`             – Specifies the behavior for the key. 
+- `key`             – Specifies the behavior for the key.
                       For values, see [Key Policy Values](policies.md#key).
 - `retry`           – Specifies the retry behavior of failed operations.
                       For values, see [Retry Policy Values](policies.md#retry).
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
-                      complete. If 0 (zero), then the value will default to 
+                      complete. If 0 (zero), then the value will default to
                       global default values.
-- `commitLevel`     - Commit Level of the operation. Specifies whether to be commited 
+- `commitLevel`     - Commit Level of the operation. Specifies whether to be commited
 					  only in Master replica copy or all the replica copies.
 					  For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
@@ -213,7 +213,7 @@ key
 
 #### DIGEST
 
-Sends the digest value of the key. This is the recommended mode of operation. This calculates the digest and sends the digest to the server. The digest is only calculated on the client, and not on the server. 
+Sends the digest value of the key. This is the recommended mode of operation. This calculates the digest and sends the digest to the server. The digest is only calculated on the client, and not on the server.
 
 ```js
 aerospike.policy.key.DIGEST
@@ -335,7 +335,7 @@ Read only from Master Replica node.
 aerospike.policy.replica.MASTER
 ```
 
-#### ANY 
+#### ANY
 
 Read from an unspecified Replica node.
 

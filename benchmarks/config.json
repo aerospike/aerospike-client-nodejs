@@ -19,48 +19,48 @@
     "time"        : "24h",
     "reads"       : 1,
     "writes"      : 1,
-    "keyRange"     : { 
-        "min" : 0, 
+    "keyRange"     : {
+        "min" : 0,
         "max" : 100000
     },
     "binSpec"    : [
         {
-            "name" : "bin1", 
-            "type" : "STRING", 
+            "name" : "bin1",
+            "type" : "STRING",
             "size" : 1024
         },
         {
-            "name" : "bin2", 
-            "type" : "BYTES",  
+            "name" : "bin2",
+            "type" : "BYTES",
             "size" : 1024
         },
         {
-            "name" : "bin3", 
+            "name" : "bin3",
             "type" : "INTEGER"
         }
     ],
-    "indexSpec"  : [ 
+    "indexSpec"  : [
         {
-            "name":"ind1", 
-            "bin":"bin1", 
+            "name":"ind1",
+            "bin":"bin1",
             "type": "NUMERIC"
         }
     ],
     "querySpec"  : [
-        { 
-            "bin":"bin1", 
-            "btype":"NUMERIC", 
+        {
+            "bin":"bin1",
+            "btype":"NUMERIC",
             "qtype":"Range",
             "min"  : 0,
             "max"  : 100000
-        } 
+        }
     ],
     "scanSpec"   : [
         {
             "select": [
                 "bin1",
                 "bin3"
-            ], 
+            ],
             "concurrent":true
         }
     ],

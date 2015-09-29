@@ -44,7 +44,7 @@ var READ = 0;
 var WRITE = 1;
 var QUERY = 2;
 var TPS = 0;
-var TIMEOUT = 1; 
+var TIMEOUT = 1;
 var ERROR   = 2;
 var QPS     = 0;
 /***********************************************************************
@@ -97,7 +97,7 @@ var QPS     = 0;
             alias: "U",
             default:null,
             describe: "Username to connect to a secure cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
@@ -261,8 +261,8 @@ var STRING_DATA = "This the test data to be written to the server";
 * Generate a record with string and blob in it if run for longevity.
 * Size of strings and blob is argv.datasize ( default 1K).
 *
-* 
-*/ 
+*
+*/
 function recordgen( key, binSpec ) {
 
     var data = {};
@@ -270,18 +270,18 @@ function recordgen( key, binSpec ) {
     do {
         var bin= binSpec[i];
         switch (bin.type) {
-            case "INTEGER" : {   
-                data[bin.name] = key;            
+            case "INTEGER" : {
+                data[bin.name] = key;
                 break;
-            }   
-            case "STRING"  : {   
+            }
+            case "STRING"  : {
                 data[bin.name] =  STRING_DATA;
-                while ( data[bin.name].length < bin.size ) {   
+                while ( data[bin.name].length < bin.size ) {
                     data[bin.name] += STRING_DATA;
-                }   
+                }
                 data[bin.name] += key;
                 break;
-            }   
+            }
             case "BYTES" : {
                 var buf_data = STRING_DATA;
                 while( buf_data.length < bin.size ) {
@@ -289,13 +289,13 @@ function recordgen( key, binSpec ) {
                 }
                 data[bin.name] = new Buffer(buf_data);
                 break;
-            }   
+            }
             default :
                 data.num = key;
                 break;
         }
         i++;
-    } while(i < binSpec.length);  
+    } while(i < binSpec.length);
     return data;
 }
 
@@ -333,16 +333,16 @@ function run(options) {
     var expected = options.rops + options.wops;
     var completed = 0;
 
-    // @ TO-DO optimization. 
+    // @ TO-DO optimization.
     // Currently stats of all the operations is collected and sent to
-    // master at the end of an iteration. 
+    // master at the end of an iteration.
     // Master puts the stats in appropriate histogram.
-    // Consider having histogram for each worker Vs sending the 
+    // Consider having histogram for each worker Vs sending the
     // results in an array - Which one is more memory efficient.
     var operations  = Array(expected);
     var read_ops    = options.rops;
     var write_ops   = options.wops;
-   
+
     function done(op_status, op_time_start, op_time_end, op_type) {
 
         operations[completed] = [op_status, op_time_start, op_time_end];
@@ -384,24 +384,24 @@ function respond(){
 }
 
 /*
- * Reset interval_data 
+ * Reset interval_data
  */
 function reset_interval_data(){
     interval_data[READ] =  [0, 0, 0];  // [reads_performed, reads_timeout, reads_error]
-    interval_data[WRITE] = [0, 0, 0];  // [writes_performed, writes_timeout, writes_error]   
+    interval_data[WRITE] = [0, 0, 0];  // [writes_performed, writes_timeout, writes_error]
     interval_data[QUERY] = [0, 0, 0];  // [QueryRecords, query_timeout, query_error]
 }
 
 /*
  * Execute the long running job.
- */ 
+ */
 
 function executeJob(options, callback) {
 
     var job     = client.query(options.namespace, options.set, options.statement);
     var stream  = job.execute();
     stream.on('data', function(record) {
-       // count the records returned 
+       // count the records returned
        interval_data[QUERY][TPS]++;
     });
     stream.on('error', function(error) {
@@ -431,10 +431,10 @@ var runLongRunningJob = function(options) {
     //generate alert.
     var msg = { alert : info, severity: alerts.severity.HIGH};
     process.send(['alert', msg]);
-   
+
 });*/
 /**
- * Listen for exit signal from parent. Hopefully we can do a clean 
+ * Listen for exit signal from parent. Hopefully we can do a clean
  * shutdown and emit results.
  */
 process.on('exit', function() {
@@ -470,7 +470,7 @@ process.on('message', function(msg) {
     switch( msg[0] ) {
         case 'run'   : return run(msg[1]); break;
         case 'query' : return runLongRunningJob(msg[1]);
-        case 'trans' : return respond(); break;	 // Listening on trans event. (this event occurs every second) 
+        case 'trans' : return respond(); break;	 // Listening on trans event. (this event occurs every second)
         default: return process.exit(0);
     }
 });

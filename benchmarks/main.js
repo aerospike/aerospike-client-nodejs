@@ -113,12 +113,12 @@ reset_interval_stats();
             alias: "U",
             default:null,
             describe: "Username to connect to a secure cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to a secure cluster"
-        },  
+        },
         json: {
             alias: "j",
             default: false,
@@ -195,7 +195,7 @@ var argv = argp.argv;*/
 
 if( argv.querySpec !== undefined) {
     queryWorkers = argv.querySpec.length;
-} 
+}
 
 if( argv.scanSpec !== undefined) {
     scanWorkers  = argv.scanSpec.length;
@@ -207,7 +207,7 @@ if ( !cluster.isMaster ) {
     console.error('main.js must not run as a child process.');
     return;
 }
-    
+
 var FOPS = (argv.operations / (argv.reads + argv.writes));
 var ROPS = FOPS * argv.reads;
 var WOPS = FOPS * argv.writes;
@@ -260,7 +260,7 @@ function worker_spawn() {
     var worker = cluster.fork();
     worker.iteration = 0;
     worker.on('message', worker_results(worker));
-}	      
+}	
 
 function worker_exit(worker) {
     worker.send(['end']);
@@ -288,7 +288,7 @@ function rwWorkerJob(worker) {
         namespace   : argv.namespace,
         set         : argv.set,
         keyRange    : argv.keyRange,
-        rops        : ROPS, 
+        rops        : ROPS,
         wops        : WOPS,
         binSpec     : argv.binSpec
     };
@@ -297,7 +297,7 @@ function rwWorkerJob(worker) {
 }
 
 // @to-do this worker has to create index and then issue a query request
-// once the index is created. After implementing the task completed API 
+// once the index is created. After implementing the task completed API
 // this can be enhanced for that.
 function queryWorkerJob(worker, id) {
     var stmt = {};
@@ -350,7 +350,7 @@ function print_interval_stats(){
                 interval_stats[1][0], interval_stats[1][1],interval_stats[1][2])
     }
     if( queryWorkers || scanWorkers) {
-        logger.info("%s query(records returned = %d timeouts = %d errors = %d)", 
+        logger.info("%s query(records returned = %d timeouts = %d errors = %d)",
                new Date().toString(), interval_stats[2][0], interval_stats[2][1], interval_stats[2][2]);
     }
 }
@@ -375,7 +375,7 @@ function worker_results(worker) {
             alerts.handleAlert(message[1].alert, message[1].severity);
         } else{
             worker_results_interval(worker,message[1]);
-        }	 
+        }	
      };
 }
 
@@ -384,7 +384,7 @@ function worker_results(worker) {
 *   */
 var keyrange = argv.keyRange.max - argv.keyRange.min;
 
-logger.info("host: "+argv.host+" port:"+argv.port+", namespace: "+argv.namespace+", set: " + argv.set + ", worker processes: " +argv.processes+ 
+logger.info("host: "+argv.host+" port:"+argv.port+", namespace: "+argv.namespace+", set: " + argv.set + ", worker processes: " +argv.processes+
             ", keys: " +keyrange + ", read: "+ ROPSPCT + "%, write: "+ WOPSPCT+"%");
 
 
@@ -394,8 +394,8 @@ logger.info("host: "+argv.host+" port:"+argv.port+", namespace: "+argv.namespace
 if(!argv.silent){
     setInterval(function(){
         reset_interval_stats();
-        worker_probe(cluster); 
-    },1000); 
+        worker_probe(cluster);
+    },1000);
 }
 
 /**

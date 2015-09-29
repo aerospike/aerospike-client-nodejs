@@ -19,7 +19,7 @@
  *  node range_validate --start <start> --end <end>
  *
  *  Write and validate records with keys in given numeric range.
- *  
+ *
  *  Examples:
  *
  *    Write and Validate records with keys in range 1-99:
@@ -39,6 +39,7 @@
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -46,7 +47,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -94,12 +95,12 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }, 
+        },
         start: {
             default: 1,
             describe: "Start value for the key range."
@@ -112,7 +113,7 @@ var argp = yargs
 
 var argv = argp.argv;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
@@ -120,16 +121,17 @@ if ( argv.help === true ) {
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -139,27 +141,24 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
+
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-aerospike.client(config).connect(function (err, client) {
+aerospike.client(config).connect(function(err, client) {
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
+    if (err.code != Status.AEROSPIKE_OK) {
         console.error("Error: Aerospike server connection error. ", err.message);
         process.exit(1);
     }
@@ -176,16 +175,16 @@ aerospike.client(config).connect(function (err, client) {
         console.time(timeLabel);
 
         return function(err, key) {
-            switch ( err.code ) {
+            switch (err.code) {
                 case Status.AEROSPIKE_OK:
                     console.log("OK - ", key);
                     break;
                 default:
                     console.log("ERR - ", err, key);
             }
-            
+
             done++;
-            if ( done >= total ) {
+            if (done >= total) {
                 console.timeEnd(timeLabel);
                 console.log();
                 get_start(client, start, end);
@@ -197,9 +196,9 @@ aerospike.client(config).connect(function (err, client) {
         var done = put_done(client, start, end);
         var i = 0;
 
-        for ( i = start; i <= end; i++ ) {
+        for (i = start; i <= end; i++) {
             var key = {
-                ns:  argv.namespace,
+                ns: argv.namespace,
                 set: argv.set,
                 key: i
             };
@@ -228,30 +227,27 @@ aerospike.client(config).connect(function (err, client) {
         console.time(timeLabel);
 
         return function(err, record, metadata, key) {
-            switch ( err.code ) {
+            switch (err.code) {
                 case Status.AEROSPIKE_OK:
-                    if ( record.k != key.key ) {
+                    if (record.k != key.key) {
                         console.log("INVALID - ", key, metadata, record);
                         console.log("        - record.k != key.key");
-                    }
-                    else if ( record.i != record.k * 1000 + 123 ) {
+                    } else if (record.i != record.k * 1000 + 123) {
                         console.log("INVALID - ", key, metadata, record);
                         console.log("        - record.i != record.k * 1000 + 123");
-                    }
-                    else if ( record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc ) {
+                    } else if (record.b[0] == 0xa && record.b[0] == 0xb && record.b[0] == 0xc) {
                         console.log("INVALID - ", key, metadata, record);
                         console.log("        - record.b != [0xa,0xb,0xc]");
-                    }
-                    else {
+                    } else {
                         console.log("VALID - ", key, metadata, record);
                     }
                     break;
                 default:
                     console.log("ERR - ", err, key);
             }
-            
+
             done++;
-            if ( done >= total ) {
+            if (done >= total) {
                 console.timeEnd(timeLabel);
                 console.log();
                 client.close();
@@ -263,9 +259,9 @@ aerospike.client(config).connect(function (err, client) {
         var done = get_done(client, start, end);
         var i = 0;
 
-        for ( i = start; i <= end; i++ ) {
+        for (i = start; i <= end; i++) {
             var key = {
-                ns:  argv.namespace,
+                ns: argv.namespace,
                 set: argv.set,
                 key: i
             };

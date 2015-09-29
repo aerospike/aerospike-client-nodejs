@@ -83,7 +83,7 @@ describe('client.exists()', function() {
             expect(err).to.be.ok();
             if(err.code != 602) {
                 expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-            } 
+            }
             else {
                 expect(err.code).to.equal(602);
             }

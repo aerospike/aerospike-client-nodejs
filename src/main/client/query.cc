@@ -61,28 +61,25 @@ AerospikeQuery::~AerospikeQuery() {}
  *  Methods
  ******************************************************************************/
 
-
-
-
 void ParseSelectBins( AerospikeQuery* query, Local<Object> select)
 {
-	Nan::HandleScope scope;
-	LogInfo * log				= query->log;
-	// Parse the bin names and set the bin values to query object
-	// Query returns only this set of seleted bins.
-	if ( select->IsArray() ) 
-	{ 
-		Local<Array> bins	= Local<Array>::Cast(select);
-		int size			= bins->Length();
-		as_v8_debug(log, "Number of bins to select in query %d", size);
+    Nan::HandleScope scope;
+    LogInfo * log               = query->log;
+    // Parse the bin names and set the bin values to query object
+    // Query returns only this set of seleted bins.
+    if ( select->IsArray() )
+    {
+        Local<Array> bins   = Local<Array>::Cast(select);
+        int size            = bins->Length();
+        as_v8_debug(log, "Number of bins to select in query %d", size);
         if( query->type == SCAN || query->type == SCANUDF) {
             as_scan_select_init( query->query_scan.scan, size);
-        } 
-        else {
-    		as_query_select_init(query->query_scan.query, (uint16_t)size);
         }
-		for (int i=0; i < size; i++) {
-			Local<Value> bin = bins->Get(i);
+        else {
+            as_query_select_init(query->query_scan.query, (uint16_t)size);
+        }
+        for (int i=0; i < size; i++) {
+            Local<Value> bin = bins->Get(i);
             if(!bin->IsString()) {
                 as_v8_error(log, "Bin value passed must be string");
                 Nan::ThrowError("Bin name passed is not a string");
@@ -91,135 +88,135 @@ void ParseSelectBins( AerospikeQuery* query, Local<Object> select)
                 as_scan_select(query->query_scan.scan, *String::Utf8Value(bin));
             }
             else {
-    			as_query_select( query->query_scan.query, *String::Utf8Value(bin));
+                as_query_select( query->query_scan.query, *String::Utf8Value(bin));
             }
-			as_v8_debug(log, "bin %d = %s", i, *String::Utf8Value(bin));
-		}   
-	}   
-	else 
-	{
-		// Throw an Exception here.
-		as_v8_error(log, "Bins to be selected should be an array");
-		Nan::ThrowError("Bins to be selected is not an array ");
-	}   
+            as_v8_debug(log, "bin %d = %s", i, *String::Utf8Value(bin));
+        }
+    }
+    else
+    {
+        // Throw an Exception here.
+        as_v8_error(log, "Bins to be selected should be an array");
+        Nan::ThrowError("Bins to be selected is not an array ");
+    }
 }
 
 void ParseWhereClause(as_query* query, Local<Object> filter, LogInfo* log)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
-	// Parse the filters and set the filters to query object
-	if ( filter->IsArray() ) { 
-		Local<Array> filters = Local<Array>::Cast(filter);
-		int size			 = filters->Length();
-		as_v8_debug(log, "Number of filters %d", size);
-		as_query_where_init(query, (uint16_t)size);
-		for (int i=0; i < size; i++) {
-			Local<Object> filter = filters->Get(i)->ToObject();
-			Local<Value> bin	 = filter->Get(Nan::New<String>("bin").ToLocalChecked());
-			char * bin_val		 = NULL;
-			if( !bin->IsString() ) {
-				as_v8_error(log, "Bin value must be string");
-				Nan::ThrowError("Bin value is not a string");
-			}
-			int predicate		 = filter->Get(Nan::New<String>("predicate").ToLocalChecked())->ToObject()->IntegerValue();
-			as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
-			switch(predicate)
-			{
-				case AS_PREDICATE_RANGE:
-					{
-						Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
-						Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
-						int64_t min = 0, max = 0;
-						if( v8min->IsNumber()) {
-							min = v8min->NumberValue();
-						}
-						else {
-							as_v8_error(log, "The range value passed must be an integer");
-							Nan::ThrowError("The range value passed is not an integer");
-						}
-						if( v8max->IsNumber()){
-							max = v8max->NumberValue();
-						}
-						else {
-							as_v8_error(log, "The range value passed must be an integer");
-							Nan::ThrowError("The range value passed is not an integer");
-						}
-						as_query_where( query, *String::Utf8Value(bin), as_integer_range(min, max));
-						as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
-						break;
-					}
-				case AS_PREDICATE_EQUAL:
-					{
-						as_index_datatype type = (as_index_datatype)filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
-						if( type == AS_INDEX_NUMERIC) {
+    // Parse the filters and set the filters to query object
+    if ( filter->IsArray() ) {
+        Local<Array> filters = Local<Array>::Cast(filter);
+        int size             = filters->Length();
+        as_v8_debug(log, "Number of filters %d", size);
+        as_query_where_init(query, (uint16_t)size);
+        for (int i=0; i < size; i++) {
+            Local<Object> filter = filters->Get(i)->ToObject();
+            Local<Value> bin     = filter->Get(Nan::New<String>("bin").ToLocalChecked());
+            char * bin_val       = NULL;
+            if( !bin->IsString() ) {
+                as_v8_error(log, "Bin value must be string");
+                Nan::ThrowError("Bin value is not a string");
+            }
+            int predicate        = filter->Get(Nan::New<String>("predicate").ToLocalChecked())->ToObject()->IntegerValue();
+            as_v8_debug(log, "Bin name in the filter %s \n", *String::Utf8Value(bin));
+            switch(predicate)
+            {
+                case AS_PREDICATE_RANGE:
+                    {
+                        Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
+                        Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
+                        int64_t min = 0, max = 0;
+                        if( v8min->IsNumber()) {
+                            min = v8min->NumberValue();
+                        }
+                        else {
+                            as_v8_error(log, "The range value passed must be an integer");
+                            Nan::ThrowError("The range value passed is not an integer");
+                        }
+                        if( v8max->IsNumber()){
+                            max = v8max->NumberValue();
+                        }
+                        else {
+                            as_v8_error(log, "The range value passed must be an integer");
+                            Nan::ThrowError("The range value passed is not an integer");
+                        }
+                        as_query_where( query, *String::Utf8Value(bin), as_integer_range(min, max));
+                        as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
+                        break;
+                    }
+                case AS_PREDICATE_EQUAL:
+                    {
+                        as_index_datatype type = (as_index_datatype)filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
+                        if( type == AS_INDEX_NUMERIC) {
                             if( !filter->Get(Nan::New("val").ToLocalChecked())->IsNumber()) {
                                 as_v8_error(log, "querying an integer index with equal predicate - value must be an integer");
                                 Nan::ThrowError("Querying an integer index with equal predicate - value is not an integer");
                             }
-							int64_t val = filter->Get(Nan::New("val").ToLocalChecked())->ToObject()->NumberValue();
-							as_query_where( query, *String::Utf8Value(bin), as_integer_equals(val));
-							as_v8_debug(log," Integer equality predicate %llu", val);
-							break;
-						}
-						else if(type == AS_INDEX_STRING) {
-							Local<Value> val = filter->Get(Nan::New("val").ToLocalChecked());
+                            int64_t val = filter->Get(Nan::New("val").ToLocalChecked())->ToObject()->NumberValue();
+                            as_query_where( query, *String::Utf8Value(bin), as_integer_equals(val));
+                            as_v8_debug(log," Integer equality predicate %llu", val);
+                            break;
+                        }
+                        else if(type == AS_INDEX_STRING) {
+                            Local<Value> val = filter->Get(Nan::New("val").ToLocalChecked());
                             if( !val->IsString()) {
                                 as_v8_error(log," querying a string index with equal predicate - value must be a string");
                                 Nan::ThrowError("Querying a string index with equal predicate - value is not a string");
                             }
-							bin_val   = strdup(*String::Utf8Value(val));
-							as_query_where( query, *String::Utf8Value(bin),as_string_equals(bin_val));
-							as_v8_debug(log, " String equality predicate %s", bin_val);
-							break;
-						}
-					}
-			}   
-		}
-	}
-	else {
-		// Throw an Exception here.
-		as_v8_error(log, "Filters should be passed as an array");
-		Nan::ThrowError("filters should be passed as an array");
-	} 
+                            bin_val   = strdup(*String::Utf8Value(val));
+                            as_query_where( query, *String::Utf8Value(bin),as_string_equals(bin_val));
+                            as_v8_debug(log, " String equality predicate %s", bin_val);
+                            break;
+                        }
+                    }
+            }
+        }
+    }
+    else {
+        // Throw an Exception here.
+        as_v8_error(log, "Filters should be passed as an array");
+        Nan::ThrowError("filters should be passed as an array");
+    }
 }
 
 void ParseRecordQSize( int* q_size, Local<Object> qSize, LogInfo* log)
 {
-	//Set the queue size here.
-	//This is the temporary queue where objects returned by query callback is stored.
-	if(qSize->IsNumber()) {
-		*q_size = (int) qSize->IntegerValue();
-		as_v8_debug(log, "Record Q size is set to %d ", (int) qSize->IntegerValue());
+    //Set the queue size here.
+    //This is the temporary queue where objects returned by query callback is stored.
+    if(qSize->IsNumber()) {
+        *q_size = (int) qSize->IntegerValue();
+        as_v8_debug(log, "Record Q size is set to %d ", (int) qSize->IntegerValue());
 
-	}
-	else {
-		// Throw exception.
-		as_v8_error(log, "The queue size must be an integer");
-		Nan::ThrowError("Queue size must be an integer");
-	}
+    }
+    else {
+        // Throw exception.
+        as_v8_error(log, "The queue size must be an integer");
+        Nan::ThrowError("Queue size must be an integer");
+    }
 }
 
 
 void ParseUDFArgs(QueryScan* queryScan, Local<Object> udf, LogInfo* log, bool isQuery)
 {
     Nan::HandleScope scope;
-	// Parse the UDF info from jsobject and populate the query object with it.
-	char module[255];
-	char func[255];
+    // Parse the UDF info from jsobject and populate the query object with it.
+    char module[255];
+    char func[255];
 
-	char* filename = module;
-	char* funcname = func;
-	as_arraylist * arglist= NULL;
-	int ret = udfargs_from_jsobject(&filename, &funcname, &arglist, udf, log);
+    char* filename = module;
+    char* funcname = func;
+    as_arraylist * arglist= NULL;
+    int ret = udfargs_from_jsobject(&filename, &funcname, &arglist, udf, log);
 
     if(ret) {
-		as_v8_error(log, " Parsing udfArgs for query object failed");
-		Nan::ThrowError("Error in parsing the UDF parameters");
+        as_v8_error(log, " Parsing udfArgs for query object failed");
+        Nan::ThrowError("Error in parsing the UDF parameters");
     }
 
     if( isQuery) {
-	    as_query_apply( queryScan->query, filename, funcname, (as_list*) arglist);
+        as_query_apply( queryScan->query, filename, funcname, (as_list*) arglist);
     }
     else {
         as_scan_apply_each(queryScan->scan, filename, funcname, (as_list*) arglist);
@@ -230,71 +227,71 @@ void ParseUDFArgs(QueryScan* queryScan, Local<Object> udf, LogInfo* log, bool is
 void ParseScanPriority(as_scan* scan, Local<Object> obj, LogInfo* log)
 {
     //Nan::HandleScope scope;
-	//Set the scan_priority of the scan.
-	if( obj->IsNumber() )
-	{
-		as_scan_set_priority(scan, (as_scan_priority)obj->IntegerValue());
-		as_v8_debug(log, "Scan scan_priority is set to %d ", obj->IntegerValue()); 
-	}   
-	else
-	{   
-		//Throw an exception.
-		as_v8_error(log, "Scan scan_priority must be an enumerator of type scanPriority");
-		Nan::ThrowError("Scan priority must be of type aerospike.scanPriority");
-	}   
+    //Set the scan_priority of the scan.
+    if( obj->IsNumber() )
+    {
+        as_scan_set_priority(scan, (as_scan_priority)obj->IntegerValue());
+        as_v8_debug(log, "Scan scan_priority is set to %d ", obj->IntegerValue());
+    }
+    else
+    {
+        //Throw an exception.
+        as_v8_error(log, "Scan scan_priority must be an enumerator of type scanPriority");
+        Nan::ThrowError("Scan priority must be of type aerospike.scanPriority");
+    }
 }
 
 void ParseScanPercent(as_scan* scan, Local<Object> obj, LogInfo* log)
 {
     Nan::HandleScope scope;
-	//Set the percentage to be scanned in each partition.
-	if( obj->IsNumber() )
-	{
+    //Set the percentage to be scanned in each partition.
+    if( obj->IsNumber() )
+    {
         as_scan_set_percent(scan, obj->IntegerValue());
-		as_v8_debug(log, "Scan percent is set to %u", (uint8_t) obj->IntegerValue());
-	}
-	else
-	{
-		//Throw an exception.
-		as_v8_error(log, "scan percentage should be a number");
-		Nan::ThrowError("Scan percentage is not an integer - expected integer value");
-	}
+        as_v8_debug(log, "Scan percent is set to %u", (uint8_t) obj->IntegerValue());
+    }
+    else
+    {
+        //Throw an exception.
+        as_v8_error(log, "scan percentage should be a number");
+        Nan::ThrowError("Scan percentage is not an integer - expected integer value");
+    }
 }
 
 void ParseScanNobins( as_scan* scan, Local<Value> obj, LogInfo* log)
 {
     Nan::HandleScope scope;
-	// Set the nobins value here.
-	// When nobins is true in a scan, only metadata of the record
-	// is returned not bins
-	if( obj->IsBoolean() )
-	{
+    // Set the nobins value here.
+    // When nobins is true in a scan, only metadata of the record
+    // is returned not bins
+    if( obj->IsBoolean() )
+    {
         as_scan_set_nobins(scan, obj->ToBoolean()->Value());
-		as_v8_debug(log, "scan nobins value is set %d", (int)obj->ToBoolean()->Value());
-	}
-	else
-	{
-		// Throw exception.
-		as_v8_error(log," setNobins should be a boolean value");
-		Nan::ThrowError("setNobins must be a boolean value");
-	}
+        as_v8_debug(log, "scan nobins value is set %d", (int)obj->ToBoolean()->Value());
+    }
+    else
+    {
+        // Throw exception.
+        as_v8_error(log," setNobins should be a boolean value");
+        Nan::ThrowError("setNobins must be a boolean value");
+    }
 }
 
 void ParseScanConcurrent(as_scan* scan, Local<Value> obj, LogInfo* log)
 {
     Nan::HandleScope scope;
-	//Set the concurrent value here.
-	if(obj->IsBoolean())
-	{
+    //Set the concurrent value here.
+    if(obj->IsBoolean())
+    {
         as_scan_set_concurrent( scan, obj->ToBoolean()->Value());
-		as_v8_debug(log, "Concurrent node scan property is set");
-	}
-	else
-	{
-		// Throw exception.
-		as_v8_error(log, "setConcuurent should be a boolean value");
-		Nan::ThrowError("setConcurrent must be a boolean value");
-	}
+        as_v8_debug(log, "Concurrent node scan property is set");
+    }
+    else
+    {
+        // Throw exception.
+        as_v8_error(log, "setConcuurent should be a boolean value");
+        Nan::ThrowError("setConcurrent must be a boolean value");
+    }
 }
 
 void AerospikeQuery::SetQueryType( Local<Value> configVal)
@@ -306,9 +303,9 @@ void AerospikeQuery::SetQueryType( Local<Value> configVal)
         this->type = SCAN;
         return;
     }
-    
+
     Local<Object> config = configVal->ToObject();
-    // If config is passed, a combination of UDF, Aggregation and Where 
+    // If config is passed, a combination of UDF, Aggregation and Where
     // parameters determine the type of query/scan operation.
 
     if( config->Has(Nan::New("filters").ToLocalChecked())) {
@@ -377,7 +374,7 @@ void ParseConfig( AerospikeQuery* query, Local<Object> config)
         else if (query->type == SCANUDF) {
             ParseUDFArgs( &query->query_scan, udf, query->log, false);
         }
-    } 
+    }
 
     if( query->type == SCAN || query->type == SCANUDF) {
         as_scan* scan = query->query_scan.scan;
@@ -446,46 +443,46 @@ NAN_SETTER(AerospikeQuery::SetHasAggregation)
 
 NAN_METHOD(AerospikeQuery::New)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
-	AerospikeClient* client =  ObjectWrap::Unwrap<AerospikeClient>(info[3]->ToObject());
-	// Create a new V8 query object, which in turn contains
-	// the as_query ( C structure) 
-	// Initialize the as_query with namespace and set which 
-	// are constructor arguments.
+    AerospikeClient* client =  ObjectWrap::Unwrap<AerospikeClient>(info[3]->ToObject());
+    // Create a new V8 query object, which in turn contains
+    // the as_query ( C structure)
+    // Initialize the as_query with namespace and set which
+    // are constructor arguments.
     AerospikeQuery* query   = new AerospikeQuery();
 
-	query->q_size	        =  0;
-	query->as		        =  client->as;
-	LogInfo* log            =  query->log		 =  client->log;
+    query->q_size           =  0;
+    query->as               =  client->as;
+    LogInfo* log            =  query->log        =  client->log;
 
 
     as_namespace ns  = {'\0'};
-	as_set		 set = {'\0'};
+    as_set       set = {'\0'};
 
-	if ( !info[0]->IsString()) {
-		as_v8_error(log, "namespace to be queried should be string");
+    if ( !info[0]->IsString()) {
+        as_v8_error(log, "namespace to be queried should be string");
         Nan::ThrowError("Namespace to be queried is not a string - expected a string value");
-	}
-	else {
-		strncpy(ns, *String::Utf8Value(info[0]), AS_NAMESPACE_MAX_SIZE);
-		as_v8_debug(log, "namespace to query %s", ns);
-	}
-	// set is an optional parameter. So the constructor should either have NULL for set or a string.
-	if( !info[1]->IsNull() && !info[1]->IsString()) {
-		as_v8_error(log, "set to be queried should be string");
+    }
+    else {
+        strncpy(ns, *String::Utf8Value(info[0]), AS_NAMESPACE_MAX_SIZE);
+        as_v8_debug(log, "namespace to query %s", ns);
+    }
+    // set is an optional parameter. So the constructor should either have NULL for set or a string.
+    if( !info[1]->IsNull() && !info[1]->IsString()) {
+        as_v8_error(log, "set to be queried should be string");
         Nan::ThrowError("Set to be queried is not a string");
-	}
-	else {
-		strncpy(set, *String::Utf8Value(info[1]), AS_SET_MAX_SIZE);
-		as_v8_debug(log, "set to query %s", set); 
-	}
+    }
+    else {
+        strncpy(set, *String::Utf8Value(info[1]), AS_SET_MAX_SIZE);
+        as_v8_debug(log, "set to query %s", set);
+    }
 
-	// Decide if the Constructor is invoked for Scan or Query operation. 
+    // Decide if the Constructor is invoked for Scan or Query operation.
     // If the ConfigObject(passed as a parameter during query/scan construction)
     // has a where clause, it is a query operation otherwise it's a scan operation.
 
-    Local<Value> config= info[2]; 
+    Local<Value> config= info[2];
     query->SetQueryType(config);
 
     // The C API for scan and scan udf is different.
@@ -499,35 +496,35 @@ NAN_METHOD(AerospikeQuery::New)
         query->query_scan.query = (as_query*)cf_malloc(sizeof(as_query));
         as_query_init(query->query_scan.query, ns, set);
     }
-   
+
     if(!config->IsNull()) {
         ParseConfig( query, config->ToObject());
     }
 
     query->Wrap(info.This());
-    
-	//NanReturnValue(info.This());
+
+    //NanReturnValue(info.This());
     info.GetReturnValue().Set(info.This());
 }
 
 Local<Value> AerospikeQuery::NewInstance( Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client)
 {
-	Nan::EscapableHandleScope scope;
+    Nan::EscapableHandleScope scope;
 
     const unsigned argc = 4;
 
-	// Invoke the query constructor method with namespace, set, query configration options and client object .
+    // Invoke the query constructor method with namespace, set, query configration options and client object .
     Local<Value> argv[argc] = { ns, set, config, client};
 
-	Local<FunctionTemplate> constructorHandle = Nan::New<FunctionTemplate>(constructor);
+    Local<FunctionTemplate> constructorHandle = Nan::New<FunctionTemplate>(constructor);
 
-	Local<Object> instance	 = constructorHandle->GetFunction()->NewInstance( argc, argv);
+    Local<Object> instance   = constructorHandle->GetFunction()->NewInstance( argc, argv);
 
-	return scope.Escape(instance);
+    return scope.Escape(instance);
 }
 
 /*
- *  Initialize a query object. 
+ *  Initialize a query object.
  *  This creates a constructor function, and sets up the prototype.
  */
 void AerospikeQuery::Init()
@@ -536,30 +533,17 @@ void AerospikeQuery::Init()
     Local<FunctionTemplate> cons = Nan::New<FunctionTemplate>(AerospikeQuery::New);
     cons->SetClassName(Nan::New("AerospikeQuery").ToLocalChecked());
 
-    // When AerospikeQuery is initialized from node.js an internal reference is created to 
+    // When AerospikeQuery is initialized from node.js an internal reference is created to
     // a wrapped AerospikeQuery object. It should create a single reference to this query object
     // as constructor initializes only one wrapped object.
     cons->InstanceTemplate()->SetInternalFieldCount(1);
 
     // Prototype
-	//NODE_SET_PROTOTYPE_METHOD(cons, "foreach", AerospikeQuery::foreach);
-	//NODE_SET_PROTOTYPE_METHOD(cons, "queryInfo", AerospikeQuery::queryInfo);
     Nan::SetPrototypeMethod(cons, "foreach", AerospikeQuery::foreach);
     Nan::SetPrototypeMethod(cons, "queryInfo", AerospikeQuery::queryInfo);
-    //ATTR(cons, "isQuery", GetIsQuery, SetIsQuery);
-    //ATTR(cons, "hasUDF", GetHasUDF, SetHasUDF);
-    //ATTR(cons, "hasAggregation", GetHasAggregation, SetHasAggregation);
     Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("isQuery").ToLocalChecked(), GetIsQuery, SetIsQuery);
     Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("hasUDF").ToLocalChecked(), GetHasUDF, SetHasUDF);
     Nan::SetAccessor(cons->InstanceTemplate(), Nan::New<String>("hasAggregation").ToLocalChecked(), GetHasAggregation, SetHasAggregation);
 
-    /*cons->InstanceTemplate()->SetAccessor(Nan::New<String>("isQuery").ToLocalChecked(), 
-            AerospikeQuery::GetIsQuery, AerospikeQuery::SetIsQuery);
-    cons->InstanceTemplate()->SetAccessor(Nan::New<String>("hasUDF").ToLocalChecked(), 
-            AerospikeQuery::GetHasUDF, AerospikeQuery::SetHasUDF);
-    cons->InstanceTemplate()->SetAccessor(Nan::New<String>("hasAggregation").ToLocalChecked(), 
-            AerospikeQuery::GetHasAggregation, AerospikeQuery::SetHasAggregation);*/
-
-	//NanAssignPersistent(constructor, cons);
     constructor.Reset(cons);
 }

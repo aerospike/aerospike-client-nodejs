@@ -1,8 +1,8 @@
-# Examples 
+# Examples
 
 ## Setup
 
-To use the examples, you will need to install the `aerospike` module into the `examples` directory. 
+To use the examples, you will need to install the `aerospike` module into the `examples` directory.
 
 From the `examples` directory, run the following to install the dependencies:
 
@@ -15,8 +15,8 @@ You can simply run each example independently:
 
 	$ node <example>
 
-Most of these examples require a key, and can optionally take a hostname, 
-port, and namespace of the cluster. The default server is on 
+Most of these examples require a key, and can optionally take a hostname,
+port, and namespace of the cluster. The default server is on
 127.0.0.1 at port 3000 (a local server installation).
 
 Each example provides usage information via a `--help` flag:

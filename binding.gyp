@@ -79,7 +79,7 @@
 		['uselua==1',{
 		  'libraries': ['-llua']
 		}]
-      ] 
+      ]
     }
   ]
 }

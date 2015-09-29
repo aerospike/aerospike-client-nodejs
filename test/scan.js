@@ -59,7 +59,7 @@ describe('client.query() - without where clause(Scan)', function() {
                 client.udfRegister(filename, function(err) {
                     expect(err).to.be.ok();
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
-                }); 
+                });
 
 
                 // write the record then check
@@ -174,14 +174,14 @@ describe('client.query() - without where clause(Scan)', function() {
 
         var infoCallback = function( scanJobStats, scanId) {
             done();
-        }   
+        }
         scanStream.on('error', function(error) {
             err++;
-        }); 
+        });
         scanStream.on('end', function(scanId) {
             scanBackground.Info(scanId, infoCallback);
-        }); 
-    }); 
+        });
+    });
 
 
 });

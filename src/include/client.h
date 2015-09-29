@@ -19,10 +19,10 @@
 #if NODE_MODULE_VERSION > 0x000B
 #  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle
-#  define V8_RETURN     
+#  define V8_RETURN
 #else
 #  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
-#  define ResolveAsyncCallbackArgs uv_async_t* handle, int status 
+#  define ResolveAsyncCallbackArgs uv_async_t* handle, int status
 #  define V8_RETURN return
 #endif
 
@@ -98,7 +98,7 @@ class AerospikeClient : public ObjectWrap {
 
         /**
          *      undefined client.select(Key, String[], function(Error,Record))
-         */ 
+         */
 		static NAN_METHOD(Select);
 
         /**
@@ -123,17 +123,17 @@ class AerospikeClient : public ObjectWrap {
 
         /*
          *undefined client.operate( Key, Operation, function(Error, Record))
-         */ 
+         */
 		static NAN_METHOD(Operate);
 
         /*
          *undefined client.info( host, port, function(Error, Response))
-         */ 
+         */
 		static NAN_METHOD(Info);
 
         /*
          *undefined client.info( host, port, function(Error, Response))
-         */ 
+         */
 		static NAN_METHOD(Info_Cluster);
 
         /*
@@ -169,21 +169,21 @@ class AerospikeClient : public ObjectWrap {
 
 		/*
 		 * undefined client.scan(ns, set, options)
-		 */ 
+		 */
 		static NAN_METHOD(Scan);
 
 		/*
 		 * undefined client.query(ns, set, options)
-		 */ 
+		 */
 		static NAN_METHOD(Query);
 
 		/*
 		 * undefined client.indexCreate(ns, set, bin, indexName, indexType)
-		 */ 
+		 */
 		static NAN_METHOD(sindexCreate);
 
 		/*
 		 * undefined client.indexRemove(ns, indexName )
-		 */ 
+		 */
 		static NAN_METHOD(sindexRemove);
 };

@@ -44,8 +44,8 @@ typedef struct AsyncCallbackData {
  *  Setup an asynchronous invocation of a function.
  */
 Local<Value> async_invoke(
-    ResolveArgs(args), 
-    void *  (* prepare)(ResolveArgs(args)), 
+    ResolveArgs(args),
+    void *  (* prepare)(ResolveArgs(args)),
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     );
@@ -61,7 +61,7 @@ void uv_initialize_loop();
 void uv_finish_loop_execution();
 
 
-// Anyone using async infrastructure have to implement the following three 
+// Anyone using async infrastructure have to implement the following three
 // functions.
 // 1. Callback to be called when an async signal is sent.
 // 2. Function to populate the data coming from C, into the queue.

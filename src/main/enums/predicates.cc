@@ -23,9 +23,9 @@ using namespace v8;
 
 Local<Object> predicates()
 {
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set(obj, "EQUAL", AS_PREDICATE_EQUAL);
-	set(obj, "RANGE", AS_PREDICATE_RANGE);
-	return scope.Escape(obj);
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set(obj, "EQUAL", AS_PREDICATE_EQUAL);
+    set(obj, "RANGE", AS_PREDICATE_RANGE);
+    return scope.Escape(obj);
 }

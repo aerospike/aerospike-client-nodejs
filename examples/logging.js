@@ -21,7 +21,7 @@
  * Demonstrates logging from the API, for PUT and GET functions.
  *
  * Examples:
- *      
+ *
  *  Enable Debug logging to stderr.
  *
  *      node logging --log-level 3.
@@ -46,7 +46,7 @@ var status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -85,23 +85,23 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }  
+        }
     });
 
 var argv = argp.argv;
 var logfile = argv._.length === 1 ? argv._[0] : null;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     return;
 }
 
-if ( logfile === null ) {
+if (logfile === null) {
     console.error("Error: Please provide a logfile for the operation");
     console.error();
     argp.showHelp();
@@ -112,31 +112,31 @@ if ( logfile === null ) {
 /*******************************************************************************
  *
  * Establish a connection to the cluster.
- * 
+ *
  ******************************************************************************/
+
 var config = {
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
+
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     policies: {
         timeout: argv.timeout
-    }
-}
-if(argv.user !== null)
-{
-	config.user = argv.user;
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 }
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 var client = aerospike.client(config).connect(function(err, client) {
-    if ( err.code != status.AEROSPIKE_OK ) {
+    if (err.code != status.AEROSPIKE_OK) {
         console.log("Aerospike server connection Error: %j", err)
         return;
     }
-    if ( client === null ) {
+    if (client === null) {
         console.error("Error: Client not initialized.");
         return;
     }
@@ -145,11 +145,12 @@ var client = aerospike.client(config).connect(function(err, client) {
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
 Function.prototype.curry = function() {
-    var fn = this, args = Array.prototype.slice.call(arguments);
+    var fn = this,
+        args = Array.prototype.slice.call(arguments);
     return function() {
         return fn.apply(this, args.concat(Array.prototype.slice.call(arguments)));
     };
@@ -162,7 +163,7 @@ function header(message, callback) {
         console.log('* ', message);
         console.log('********************************************************************************');
         console.log('');
-        if ( callback ) callback();
+        if (callback) callback();
     }
 }
 
@@ -170,7 +171,7 @@ function get(key, callback) {
     return function() {
         console.log('*** get')
         client.get(key, function(err, record, metadata, key) {
-            if ( callback ) callback();
+            if (callback) callback();
         });
     }
 }
@@ -179,7 +180,7 @@ function put(key, rec, callback) {
     return function() {
         console.log('*** put')
         client.put(key, rec, function(err, key) {
-            if ( callback ) callback();
+            if (callback) callback();
         });
     }
 }
@@ -187,11 +188,10 @@ function put(key, rec, callback) {
 function log(level, file, callback) {
     return function() {
         var fd;
-        if ( file ) {
-            if ( !isNaN(parseInt(file, 10)) && isFinite(file) ) {
+        if (file) {
+            if (!isNaN(parseInt(file, 10)) && isFinite(file)) {
                 fd = parseInt(file, 10);
-            }
-            else {
+            } else {
                 fd = fs.openSync(file, "a");
             }
         }
@@ -201,7 +201,7 @@ function log(level, file, callback) {
             level: level,
             file: fd
         });
-        if ( callback ) callback();
+        if (callback) callback();
     }
 }
 
@@ -212,30 +212,38 @@ function close() {
 }
 
 var key = {
-    ns:  argv.namespace,
+    ns: argv.namespace,
     set: argv.set,
     key: "abc"
 };
 
 operations = [
-    
+
     header.curry('Log: default settings'),
-    put.curry(key, {a: 1}),
+    put.curry(key, {
+        a: 1
+    }),
     get.curry(key),
 
     header.curry('Log: level=4(TRACE)'),
     log.curry(5, null),
-    put.curry(key, {a: 2}),
+    put.curry(key, {
+        a: 2
+    }),
     get.curry(key),
-    
+
     header.curry('Log: file=' + logfile),
     log.curry(null, logfile),
-    put.curry(key, {a: 3}),
+    put.curry(key, {
+        a: 3
+    }),
     get.curry(key),
-    
+
     header.curry('Log: level=3(DEBUG) file=STDERR'),
     log.curry(3, 2),
-    put.curry(key, {a:4}),
+    put.curry(key, {
+        a: 4
+    }),
     get.curry(key)
 ];
 

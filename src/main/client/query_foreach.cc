@@ -61,7 +61,7 @@ typedef struct AsyncData {
  *  FUNCTIONS
  ******************************************************************************/
 
-// Clone the as_val into a new val. And push the cloned value 
+// Clone the as_val into a new val. And push the cloned value
 // into the queue. When the queue size reaches 1/20th of total queue size
 // send an async signal to v8 thread to process the records in the queue.
 
@@ -184,24 +184,24 @@ void async_callback(ResolveAsyncCallbackArgs)
     AsyncCallbackData * data = reinterpret_cast<AsyncCallbackData *>(handle->data);
 
     if (data == NULL && data->result_q == NULL)
-    {    
+    {
         as_v8_error(data->log, "Internal error: data or result q is not initialized");
         return;
-    }    
+    }
     async_queue_process(data);
     return;
 
 }
 
 // callback for query here.
-// Queue the record into a common queue and generate an event 
+// Queue the record into a common queue and generate an event
 // when the queue size reaches 1/20th of the total size of the queue.
 
 bool aerospike_query_callback(const as_val * val, void* udata)
 {
     AsyncCallbackData *query_cbdata = reinterpret_cast<AsyncCallbackData*>(udata);
 
-    if(val == NULL) 
+    if(val == NULL)
     {
         as_v8_debug(query_cbdata->log, "value returned by query callback is NULL");
         return false;
@@ -209,7 +209,7 @@ bool aerospike_query_callback(const as_val * val, void* udata)
 
     // push the record from the server to a queue.
     // Why? Here the record cannot be directly passed on from scan callback to v8 thread.
-    // Because v8 objects can only be created inside a v8 context. This callback is in 
+    // Because v8 objects can only be created inside a v8 context. This callback is in
     // C client thread, which is not aware of the v8 context.
     // So store this records in a temporary queue.
     // When a queue reaches a certain size, signal v8 thread to process this queue.
@@ -218,37 +218,37 @@ bool aerospike_query_callback(const as_val * val, void* udata)
 
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
 
-    AerospikeQuery* query			= ObjectWrap::Unwrap<AerospikeQuery>(info.This());
+    AerospikeQuery* query           = ObjectWrap::Unwrap<AerospikeQuery>(info.This());
     // Build the async data
-    AsyncData * data				= new AsyncData;
-    AsyncCallbackData* query_cbdata	= new AsyncCallbackData;
-    data->as						= query->as;
-    LogInfo * log					= data->log = query->log;
-    data->query_cbdata				= query_cbdata;
-    data->query_cbdata->log			= log;
-    data->param_err					= 0;
-    data->type						= query->type;
-    data->res						= AEROSPIKE_OK;
-    data->policy.scan				= NULL;
-    data->policy.query				= NULL;
-    int curr_arg_pos				= 0;
-    int res							= 0;
-    int arglength					= info.Length();
+    AsyncData * data                = new AsyncData;
+    AsyncCallbackData* query_cbdata = new AsyncCallbackData;
+    data->as                        = query->as;
+    LogInfo * log                   = data->log = query->log;
+    data->query_cbdata              = query_cbdata;
+    data->query_cbdata->log         = log;
+    data->param_err                 = 0;
+    data->type                      = query->type;
+    data->res                       = AEROSPIKE_OK;
+    data->policy.scan               = NULL;
+    data->policy.query              = NULL;
+    int curr_arg_pos                = 0;
+    int res                         = 0;
+    int arglength                   = info.Length();
     data->query_scan                = &query->query_scan;
 
 
     //scan background - no need to create a result queue.
     if(data->type == SCANUDF)
     {
-        data->scan_id					= 0;
+        data->scan_id                   = 0;
         // for scan_background callback for data is NULL.
         if(!info[curr_arg_pos]->IsNull())
         {
@@ -267,28 +267,28 @@ static void * prepare(ResolveArgs(info))
             data->param_err = 1;
             goto ErrReturn;
         }
-        query_cbdata->signal_interval	= 0;
-        query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
-        query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
+        query_cbdata->signal_interval   = 0;
+        query_cbdata->result_q          = cf_queue_create(sizeof(as_val*), true);
+        query_cbdata->max_q_size        = query->q_size ? query->q_size : QUEUE_SZ;
         //NanAssignPersistent(query_cbdata->data_cb, info[curr_arg_pos].As<Function>());
         query_cbdata->data_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
 
         // Should be registered in prepare.
-        // Reason. async_init is not thread safe. Prepare and respond are single threaded and 
+        // Reason. async_init is not thread safe. Prepare and respond are single threaded and
         // execute is multi threaded (4 uv_workers does the execute work here).
         async_init(&data->query_cbdata->async_handle, async_callback);
         data->query_cbdata->async_handle.data = data->query_cbdata;
     }
 
-    // check for error callback 
+    // check for error callback
     if(info[curr_arg_pos]->IsFunction())
     {
         //NanAssignPersistent(query_cbdata->error_cb, info[curr_arg_pos].As<Function>());
         query_cbdata->error_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
-    else 
+    else
     {
         as_v8_error(log, "Callback not passed to process the error message");
         data->param_err = 1;
@@ -302,7 +302,7 @@ static void * prepare(ResolveArgs(info))
         query_cbdata->end_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
-    else 
+    else
     {
         as_v8_error(log, "Callback not passed to notify the end of query");
         data->param_err = 1;
@@ -311,15 +311,15 @@ static void * prepare(ResolveArgs(info))
 
 
     // If it's a query, then there are 3 callbacks and one optional policy objects.
-    if (arglength > 3)  
+    if (arglength > 3)
     {
-        if ( info[curr_arg_pos]->IsObject()) 
+        if ( info[curr_arg_pos]->IsObject())
         {
             if (isQuery(data->type))
             {
                 data->policy.query = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
                 res = querypolicy_from_jsobject( data->policy.query, info[curr_arg_pos]->ToObject(), log);
-                if(res != AS_NODE_PARAM_OK) 
+                if(res != AS_NODE_PARAM_OK)
                 {
                     as_v8_error(log, "Parsing of querypolicy from object failed");
                     COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
@@ -331,7 +331,7 @@ static void * prepare(ResolveArgs(info))
                     as_v8_debug(log, "querypolicy parsed successfully");
                 }
             }
-            else 			
+            else            
             {
                 data->policy.scan = (as_policy_scan*) cf_malloc(sizeof(as_policy_scan));
                 res = scanpolicy_from_jsobject( data->policy.scan, info[curr_arg_pos]->ToObject(), log);
@@ -348,7 +348,7 @@ static void * prepare(ResolveArgs(info))
                 }
             }
         }
-        else 
+        else
         {
             as_v8_error(log, "Policy should be an object");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
@@ -357,14 +357,13 @@ static void * prepare(ResolveArgs(info))
         }
     }
 
-
-
 ErrReturn:
     return data;
 }
+
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
@@ -374,9 +373,9 @@ static void execute(uv_work_t * req)
     AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
 
     // Data to be used.
-    aerospike * as					 = data->as;
-    as_error *  err					 = &data->err;
-    LogInfo * log					 = data->log;
+    aerospike * as                   = data->as;
+    as_error *  err                  = &data->err;
+    LogInfo * log                    = data->log;
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -392,8 +391,8 @@ static void execute(uv_work_t * req)
         {
             as_v8_debug(log, "Invoking aerospike_query_foreach  ");
 
-            data->res = aerospike_query_foreach( as, err, data->policy.query, data->query_scan->query, aerospike_query_callback, 
-                    (void*) data->query_cbdata); 
+            data->res = aerospike_query_foreach( as, err, data->policy.query, data->query_scan->query, aerospike_query_callback,
+                    (void*) data->query_cbdata);
 
             // send an async signal here. If at all there's any residual records left in the result_q,
             // this signal's callback will send it to node layer.
@@ -401,7 +400,7 @@ static void execute(uv_work_t * req)
         }
         else if(data->type == SCANUDF ) // query without where clause, becomes a scan background.
         {
-            // generating a 32 bit random number. 
+            // generating a 32 bit random number.
             // Because when converting from node.js integer, the last two digits precision is lost.
             data->scan_id    = 0;
             int32_t dummy_id = 0;
@@ -409,7 +408,7 @@ static void execute(uv_work_t * req)
             // For seeding the random generator system's microseconds.
             // If two scan requests are processed in the same microsecond, then same scan id
             // is generated for both of them.
-            struct timeval time; 
+            struct timeval time;
             gettimeofday(&time,NULL);
             srand((time.tv_sec * 1000000) + (time.tv_usec ));
             dummy_id = rand();
@@ -423,19 +422,16 @@ static void execute(uv_work_t * req)
         {
             as_v8_debug(log, "Invoking scan foreach with percent %u", data->query_scan->scan->percent);
 
-            aerospike_scan_foreach( as, err, data->policy.scan, data->query_scan->scan, aerospike_query_callback, (void*) data->query_cbdata); 
+            aerospike_scan_foreach( as, err, data->policy.scan, data->query_scan->scan, aerospike_query_callback, (void*) data->query_cbdata);
 
             // send an async signal here. If at all there's any residual records left in the queue,
             // this signal's callback will parse and send it to node layer.
             async_send(&data->query_cbdata->async_handle);
-
         }
         else
         {
             as_v8_error(log, "Request is neither a query nor a scan ");
         }
-
-
     }
     else
     {
@@ -447,9 +443,9 @@ static void execute(uv_work_t * req)
 /**
  *  respond() — Function to be called after `execute()`. Used to send response
  *  to the callback.
- *  
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
@@ -457,10 +453,10 @@ static void respond(uv_work_t * req, int status)
     Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
-    AsyncData * data			= reinterpret_cast<AsyncData *>(req->data);
+    AsyncData * data            = reinterpret_cast<AsyncData *>(req->data);
 
     AsyncCallbackData* query_data = data->query_cbdata;
-    LogInfo * log				= data->log;
+    LogInfo * log               = data->log;
     Local<Function> error_cb = Nan::New<Function>(query_data->error_cb);
 
     if(data->param_err == 1)
@@ -491,8 +487,8 @@ static void respond(uv_work_t * req, int status)
     {
         as_v8_debug(log, "scan background request completed");
     }
-    else if(data->res == AEROSPIKE_OK 
-            && query_data->result_q && !CF_Q_EMPTY(query_data->result_q))	
+    else if(data->res == AEROSPIKE_OK
+            && query_data->result_q && !CF_Q_EMPTY(query_data->result_q))   
     {
         async_queue_process(query_data);
     }
@@ -526,20 +522,18 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    //NanDisposePersistent(query_data->error_cb);
     query_data->error_cb.Reset();
-    //NanDisposePersistent(query_data->end_cb);
     query_data->end_cb.Reset();
     if( data->type == SCANUDF)
     {
         as_v8_debug(log,"scan background no need to clean up the queue structure");
         delete query_data;
     }
-    else 
+    else
     {
         //NanDisposePersistent(query_data->data_cb);
         query_data->data_cb.Reset();
-        if(query_data->result_q != NULL) 
+        if(query_data->result_q != NULL)
         {
             cf_queue_destroy(query_data->result_q);
             query_data->result_q = NULL;
@@ -554,7 +548,7 @@ static void respond(uv_work_t * req, int status)
     {
         cf_free(data->query_scan->scan);
     }
-    else 
+    else
     {
         // @TO-DO A bug in c-client query destroy doesn't destroy the bin value
         // for string type queries.
@@ -587,5 +581,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeQuery::foreach)
 {
-    (async_invoke(info, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }

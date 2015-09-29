@@ -52,6 +52,5 @@ NAN_METHOD(AerospikeClient::Close)
     aerospike_destroy( client->as);
     free(client->as);
     free(client->log);
-	//NanReturnUndefined();
     info.GetReturnValue().Set(Nan::Undefined());
 }

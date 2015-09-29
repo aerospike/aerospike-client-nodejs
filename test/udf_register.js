@@ -52,7 +52,7 @@ describe('client.udfRegister()', function(done) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
-        }); 
+        });
     });
 
     it('should register an UDF file with a LUA type to aerospike cluster', function(done) {
@@ -62,7 +62,7 @@ describe('client.udfRegister()', function(done) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
-        }); 
+        });
     });
     it('should register an UDF file with a info policy to aerospike cluster', function(done) {
         var dir = __dirname;
@@ -72,7 +72,7 @@ describe('client.udfRegister()', function(done) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
-        }); 
+        });
     });
 
 
@@ -84,7 +84,7 @@ describe('client.udfRegister()', function(done) {
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             done();
-        }); 
+        });
     });
 
     it('registering a non-existent UDF file to aerospike cluster - should fail',function(done) {
@@ -98,6 +98,6 @@ describe('client.udfRegister()', function(done) {
                 expect(err.code).to.equal(100);
             }
             done();
-        }); 
+        });
     });
 });

@@ -1,6 +1,6 @@
 # Introduction
 
-This package describes the Aerospike Node.js Client API in detail. 
+This package describes the Aerospike Node.js Client API in detail.
 
 
 ## Build and Install
@@ -19,13 +19,13 @@ $ node-gyp rebuild
 
 ## Usage
 
-The aerospike module is the main entry point to the client API. 
+The aerospike module is the main entry point to the client API.
 
 ```node
 var aerospike = require('aerospike');
 ```
 
-Before connecting to a cluster, you must first define the client configuration to use while connected to the cluster. 
+Before connecting to a cluster, you must first define the client configuration to use while connected to the cluster.
 
 Example:
 

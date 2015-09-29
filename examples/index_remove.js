@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Select bins of a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -30,7 +31,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -97,24 +98,24 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }  
+        }
     });
 
-var argv  = argp.argv;
+var argv = argp.argv;
 var index = argv._.length === 1 ? argv._[0] : null;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
 
-if ( !index ) {
+if (!index) {
     console.error("Error: Please provide a index name");
     console.error();
     argp.showHelp();
@@ -124,16 +125,17 @@ if ( !index ) {
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -143,65 +145,50 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.enable_security)
-{
-	config.user = argv.user;
-	config.password = argv.password;
-}
+
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
-}
-
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
+function run(client) {
+    client.indexRemove(argv.namespace, index, function(err) {
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            console.log("OK.");
+        }
+    });
+});
 
 
-    if ( argv.profile ) {
-        console.time("indexRemove");
-    }
-
-    callback = function(err) {     
-        var exitCode = 0;
-
-        switch ( err.code ) {
-			case Status.AEROSPIKE_OK:
-				console.log("Index Deletion Success");
-                break;
-                
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        switch (err.code) {
             case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
                 console.error("Error: Not Found.");
-                exitCode = 1;
-                break;
-
+                return true;
             default:
                 console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
-			}
+                return true;
+        }
+    } else {
+        return false;
+    }
+}
 
-			if ( argv.profile ) {
-				console.log("---");
-				console.timeEnd("indexRemove");
-			}
-
-			process.exit(exitCode);
-		}
-		client.indexRemove(argv.namespace, index, callback);
+aerospike.client(config).connect(function(err, client) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        process.exit(1);
+    } else {
+        run(client)
+    }
 });

@@ -35,7 +35,7 @@ Append the value to the bin. The bin must contain either String or a Byte Array,
 Parameters:
 
 - `bin`         – The name of the bin to append a value to.
-- `value`       – The value to append to the bin. 
+- `value`       – The value to append to the bin.
 
 ```js
 op.append('a', 'hello')
@@ -76,7 +76,7 @@ Prepend the value to the bin. The bin must contain either String or a Byte Array
 Parameters:
 
 - `bin`         – The name of the bin to prepend a value to.
-- `value`       – The value to prepend to the bin. 
+- `value`       – The value to prepend to the bin.
 
 ```js
 op.prepend('c', 'world')
@@ -135,7 +135,7 @@ Update the value of the bin.
 Parameters:
 
 - `bin`         – The name of the bin to set the value for.
-- `value`       – The value to set the bin to. 
+- `value`       – The value to set the bin to.
 
 ```js
 op.write('e','hello world')

@@ -1,6 +1,6 @@
 # Configuration
 
-The Aerospike client can be configured using a JavaScript object. 
+The Aerospike client can be configured using a JavaScript object.
 
 The following is a configuration example and some guidlines on how to configure a client.
 
@@ -20,14 +20,14 @@ var config = {
   ],
   policies = {
     // default timeout for all operations is 100ms
-    timeout: 100 
+    timeout: 100
   }
   log : {
      level: aerospike.log.INFO,
      file : fd  // fd  opened by the application using fs.open()
   },
   modlua: {
-	  systemPath: 'path to system UDF files', 
+	  systemPath: 'path to system UDF files',
 	  userPath: 'path to user UDF files'
   }
 };
@@ -42,7 +42,7 @@ The attributes of the configuration are enumerated below.
 User authentication to cluster.  Leave empty for clusters running without restricted access.
 
 ### `password` Attribute
-Password authentication to cluster.  The hashed value of the password will be stored by the client 
+Password authentication to cluster.  The hashed value of the password will be stored by the client
 and sent to server in same format.  Leave empty for clusters running without restricted access.
 
 ### `hosts` attribute
@@ -51,7 +51,7 @@ The `hosts` attribute should contain an Array of hosts with which the client sho
 
 Each entry in the list is a Object containing the following attributes:
 
-- `addr` - The IP address or domain name of the host. 
+- `addr` - The IP address or domain name of the host.
 - `port` - The listening port of the host. If not specified, the default is 3000.
 
 ### `policies` attribute
@@ -75,7 +75,7 @@ The `log` attribute is an object that contatins configuration for logging from t
 
 The attributes of `log` object.
 
-- `level` - logging severity, defined using [aerospike.log object](log.md). 
+- `level` - logging severity, defined using [aerospike.log object](log.md).
 - `file`  - file descriptor which is obtained using fs.open().
 
 ### `modlua` attribute

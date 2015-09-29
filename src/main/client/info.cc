@@ -1,21 +1,21 @@
 /*******************************************************************************
  * Copyright 2013 Aerospike Inc.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
+ *
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  ******************************************************************************/
@@ -37,7 +37,7 @@ extern "C" {
 
 #define INFO_ARG_POS_REQ     0
 #define INFO_ARG_POS_HOST    1
-#define INFO_ARG_POS_IPOLICY 2 //Info  policy position and callback position is not same 
+#define INFO_ARG_POS_IPOLICY 2 //Info  policy position and callback position is not same
 #define INFO_ARG_POS_CB      3 // for every invoke of info. If infopolicy is not passed from node
 // application, argument position for callback changes.
 #define INFO_REQUEST_LEN  50
@@ -58,7 +58,7 @@ typedef struct node_info_result_s {
  *  AsyncData — Data to be used in async calls.
  *
  *  libuv allows us to pass around a pointer to an arbitraty object when
- *  running asynchronous functions. We create a data structure to hold the 
+ *  running asynchronous functions. We create a data structure to hold the
  *  data we need during and after async work.
  */
 typedef struct AsyncData {
@@ -121,15 +121,16 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
     data->num_nodes++;
     return true;
 }
+
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
@@ -143,8 +144,8 @@ static void * prepare(ResolveArgs(info))
     data->num_nodes             = 0;
     data->addr                  = NULL;
     data->port                  = 0;
-	data->policy				= NULL;
-    
+    data->policy                = NULL;
+
     // Local variables
     int argc        = info.Length();
     int arg_request = 0;
@@ -171,7 +172,7 @@ static void * prepare(ResolveArgs(info))
         // We check the parameter to see if it a host or policy object.
         // Host objects should always have "addr" and "port" attributes.
 
-        if ( arg1->Has(Nan::New<String>("addr").ToLocalChecked()) && 
+        if ( arg1->Has(Nan::New<String>("addr").ToLocalChecked()) &&
                 arg1->Has(Nan::New<String>("port").ToLocalChecked()) ) {
             // Ok, we have a host object
             int rc = host_from_jsobject(arg1, &data->addr, &data->port, log);
@@ -184,7 +185,7 @@ static void * prepare(ResolveArgs(info))
 
             // [chris] not sure why we need this
             data->num_nodes = 1;
-        
+
             // Next, it may be the policy (or not)
             if ( info[arg_host]->IsObject() && ! info[arg_host]->IsFunction() ) {
                 arg_policy = arg_host + 1;
@@ -197,7 +198,7 @@ static void * prepare(ResolveArgs(info))
         }
 
         if ( arg_policy < argc && arg_policy != -1 ) {
-			data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+            data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
             int rc = infopolicy_from_jsobject(data->policy, info[arg_policy]->ToObject(), log);
             if ( rc != AS_NODE_PARAM_OK ) {
                 as_v8_debug(log, "policy parameter is invalid");
@@ -215,33 +216,24 @@ static void * prepare(ResolveArgs(info))
         if ( info[argc-2]->IsFunction() ) {
             data->callback.Reset(info[argc-2].As<Function>());
             data->done.Reset(info[argc-1].As<Function>());
-			//NanAssignPersistent(data->callback, info[argc-2].As<Function>());
-			//NanAssignPersistent(data->done, info[argc-1].As<Function>());
         }
         else {
             data->callback.Reset(info[argc-1].As<Function>());
             data->done.Reset(emptyFunction->GetFunction());
-			//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
-			//NanAssignPersistent(data->done, emptyFunction->GetFunction());
         }
     }
     else {
 
         data->callback.Reset(emptyFunction->GetFunction());
         data->done.Reset(emptyFunction->GetFunction());
-		//NanAssignPersistent(data->callback,emptyFunction->GetFunction());
-		//NanAssignPersistent(data->done, emptyFunction->GetFunction());
     }
 
     return data;
-
-// Err_Return:
-    // return data;
 }
 
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
@@ -267,7 +259,7 @@ static void execute(uv_work_t * req)
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             return;
         }
-        
+
         as_v8_debug(log, "info request on entire cluster");
         aerospike_info_foreach(as, err, policy, request, aerospike_info_cluster_callback, (void*)data);
     }
@@ -284,13 +276,13 @@ static void execute(uv_work_t * req)
 /**
  *  AfterWork — Function to execute when the Work is complete
  *
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     // callback arguments
     Local<Value> argv[3];
@@ -326,7 +318,7 @@ static void respond(uv_work_t * req, int status)
             else {
                 argv[1] = Nan::Null();
             }
-            
+
             // host object parameter
             if ( data->addr != NULL && data->port != 0) {
                 Local<Object> host = Nan::New<Object>();
@@ -349,14 +341,14 @@ static void respond(uv_work_t * req, int status)
             argv[0] = (error_to_jsobject(err, log));
             argv[1] = Nan::Null();
             argv[2] = Nan::Null();
-        }   
+        }
 
         // Surround the callback in a try/catch for safety
         Nan::TryCatch try_catch;
 
         // Execute the callback.
-		Local<Function> cb = Nan::New<Function>(data->callback);
-		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 3, argv);
+        Local<Function> cb = Nan::New<Function>(data->callback);
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 3, argv);
 
         // Process the exception, if any
         if ( try_catch.HasCaught() ) {
@@ -366,22 +358,22 @@ static void respond(uv_work_t * req, int status)
 
     // Surround the callback in a try/catch for safety
     // Execute the callback.
-	Nan::TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
-	Local<Value> done_argv[0];
-	Local<Function> done_cb = Nan::New<Function>(data->done);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, done_argv);
+    Local<Value> done_argv[0];
+    Local<Function> done_cb = Nan::New<Function>(data->done);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, done_argv);
 
-	// Process the exception, if any
-	if ( try_catch.HasCaught() ) {
-		Nan::FatalException(try_catch);
-	}
-	//NanDisposePersistent(data->done);
+    // Process the exception, if any
+    if ( try_catch.HasCaught() ) {
+        Nan::FatalException(try_catch);
+    }
+    
     data->done.Reset();
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	data->callback.Reset();
+    data->callback.Reset();
 
 
     for ( int i = 0; i < num; i++ ) {
@@ -390,10 +382,11 @@ static void respond(uv_work_t * req, int status)
         }
     }
 
-	if(data->policy != NULL)
-	{
-		cf_free(data->policy);
-	}
+    if(data->policy != NULL)
+    {
+        cf_free(data->policy);
+    }
+
     // clean up any memory we allocated
     delete data;
     delete req;
@@ -408,5 +401,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Info)
 {
-    (async_invoke(info, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }

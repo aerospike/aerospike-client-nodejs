@@ -34,7 +34,7 @@ extern "C" {
 
 using namespace v8;
 #define GET_ARG_POS_KEY     0
-#define GET_ARG_POS_RPOLICY 1 // Write policy position and callback position is not same 
+#define GET_ARG_POS_RPOLICY 1 // Write policy position and callback position is not same
 #define GET_ARG_POS_CB      2 // for every invoke of put. If writepolicy is not passed from node
 // application, argument position for callback changes.
 
@@ -62,13 +62,13 @@ typedef struct AsyncData {
 
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
@@ -82,12 +82,12 @@ static void * prepare(ResolveArgs(info))
     // Local variables
     as_key *    key         = &data->key;
     as_record * rec         = &data->rec;
-	data->policy			= NULL;
+    data->policy            = NULL;
 
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction()) {
-		//NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
+        //NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -112,7 +112,7 @@ static void * prepare(ResolveArgs(info))
 
     if ( arglength > 2 ) {
         if ( info[GET_ARG_POS_RPOLICY]->IsObject() ) {
-			data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+            data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
             if (readpolicy_from_jsobject( data->policy, info[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
@@ -125,7 +125,7 @@ static void * prepare(ResolveArgs(info))
             goto Err_Return;
         }
     }
-   
+
     as_record_init(rec, 0);
 
     return data;
@@ -134,9 +134,10 @@ Err_Return:
     data->param_err = 1;
     return data;
 }
+
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
@@ -165,23 +166,21 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0 ) {
         as_v8_debug(log, "Invoking get with ");
-        // AS_DEBUG(log, _KEY,  key);
-        aerospike_key_get(as, err, policy, key, &rec);  
+        aerospike_key_get(as, err, policy, key, &rec);
     }
-
 }
 
 /**
  *  respond() — Function to be called after `execute()`. Used to send response
  *  to the callback.
- *  
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data        = reinterpret_cast<AsyncData *>(req->data);
 
@@ -191,7 +190,7 @@ static void respond(uv_work_t * req, int status)
     LogInfo * log           = data->log;
     as_v8_debug(log, "Get operations' the response is");
     // AS_DEBUG(log, ERROR, err);
-    
+
     Local<Value> argv[4];
     // Build the arguments array for the callback
     if( data->param_err == 0) {
@@ -213,8 +212,8 @@ static void respond(uv_work_t * req, int status)
     Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = Nan::New<Function>(data->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
+    Local<Function> cb = Nan::New<Function>(data->callback);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
     as_v8_debug(log, "Invoked Get callback");
 
     // Process the exception, if any
@@ -224,24 +223,22 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	data->callback.Reset();
+    data->callback.Reset();
 
     // clean up any memory we allocated
 
-    if( data->param_err == 0) { 
+    if( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
-		if(data->policy != NULL)
-		{
-			cf_free(data->policy);
-		}
+        if(data->policy != NULL)
+        {
+            cf_free(data->policy);
+        }
         as_v8_debug(log, "Cleaned up the structures");
     }
 
     delete data;
     delete req;
-
-
 }
 
 /*******************************************************************************
@@ -253,5 +250,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Get)
 {
-     async_invoke(info, prepare, execute, respond);
+    async_invoke(info, prepare, execute, respond);
 }

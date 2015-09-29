@@ -258,7 +258,7 @@ describe('client.put()', function() {
                         client.remove(key5, function(err, key){
                             done();
                         });
-                    }); 
+                    });
                 });
             });
         });
@@ -324,9 +324,9 @@ describe('client.put()', function() {
                                 client.remove(key6, function(err, key){
                                     done();
                                 });
-                            }); 
+                            });
                         });
-                    }); 
+                    });
                 });
             });
         });
@@ -481,7 +481,7 @@ describe('client.put()', function() {
         var kgen = keygen.string(options.namespace, options.set, undefined);
         var mgen = metagen.constant({ttl: 1000});
         // values
-        var key     = aerospike.key(options.namespace, options.set, undefined); 
+        var key     = aerospike.key(options.namespace, options.set, undefined);
         var meta    = mgen(key);
         var record  = { }
         // write the record then check

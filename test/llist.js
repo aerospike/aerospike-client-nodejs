@@ -36,7 +36,7 @@ describe('client.LargeList()', function(done) {
     var config = options.getConfig()	
 	var client = aerospike.client(config);
 
-	// A single LList is created. All LList operations are done in this single list to demonstrate the 
+	// A single LList is created. All LList operations are done in this single list to demonstrate the
 	// usage of LList API.
 	// The operations include adding an element, udpating an element, searching for an element
 	// and removing an element.
@@ -50,7 +50,7 @@ describe('client.LargeList()', function(done) {
 			expect(err).to.be.ok();
 			expect(err.code).to.equal(status.AEROSPIKE_OK);
 			var ns = "namespace/" + options.namespace.toString();
-			client.info( ns, {addr:options.host, port: options.port}, 
+			client.info( ns, {addr:options.host, port: options.port},
 					function(err, response, host){
 					var nsConfig = response.split(";")
 					for (var i = 0; i < nsConfig.length; i++)
@@ -88,7 +88,7 @@ describe('client.LargeList()', function(done) {
     });
 
 	it('should add an element of type integer to the LList ', function(done) {
-		if(ldtEnabled) 
+		if(ldtEnabled)
 		{
 		var igen = valgen.integer();
 		var listval  = igen();
@@ -222,7 +222,7 @@ describe('client.LargeList()', function(done) {
 		var bytesval   = {"key": "arraybytesvalue", "value" : valList[0]}
 		var integerval = {"key":"arrayintvalue",    "value" : valList[1]}
 		var arrayval   = {"key": "arraylistvalue",  "value" : valList[2]}
-		var mapval     = {"key": "arraymapvalue",   "value" : valList[3]} 
+		var mapval     = {"key": "arraymapvalue",   "value" : valList[3]}
 		var stringval  = {"key": "arraystrvalue",	"value" : valList[4]}
 		
 		// array of values with key to be inserted into the LList.
@@ -303,7 +303,7 @@ describe('client.LargeList()', function(done) {
 		var bytesval   = {"key": "arraybytesvalue", "value" : valList[0]}
 		var integerval = {"key":"arrayintvalue",    "value" : valList[1]}
 		var arrayval   = {"key": "arraylistvalue",  "value" : valList[2]}
-		var mapval     = {"key": "arraymapvalue",   "value" : valList[3]} 
+		var mapval     = {"key": "arraymapvalue",   "value" : valList[3]}
 		var stringval  = {"key": "arraystrvalue",	"value" : valList[4]}
 	
 		var arrayList  = [ mapval, arrayval, bytesval, stringval, integerval];
@@ -502,7 +502,7 @@ describe('client.LargeList()', function(done) {
 		var bytesval   = {"key": "bytesvalue"}
 		var stringval  = {"key":"stringvalue"}
 		var arrayval   = {"key": "arrayvalue"}
-		var mapval     = {"key": "mapvalue" } 
+		var mapval     = {"key": "mapvalue" }
 	
 		// remove an array of elements from the list.
 		var arrayList  = [ mapval, arrayval, bytesval, stringval ];

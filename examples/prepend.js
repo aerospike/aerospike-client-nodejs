@@ -16,13 +16,14 @@
 
 /*******************************************************************************
  *
- * Perform multiple operations on a single record.
- * 
+ * Perform prepend operation on a single record.
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Operator = aerospike.operator;
 var Policy = aerospike.policy;
@@ -31,7 +32,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -83,24 +84,24 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }   
+        }
 
     });
 
 var argv = argp.argv;
 var keyv = argv._.shift();
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
-if ( ! keyv ) {
+if (!keyv) {
     console.error("Error: Please provide a key for the operation");
     console.error();
     argp.showHelp();
@@ -110,16 +111,17 @@ if ( ! keyv ) {
 /*******************************************************************************
  *
  * Establish a connection to the cluster.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -129,67 +131,64 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
-}
-
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
+function run(client) {
 
     var key = {
-        ns:  argv.namespace,
+        ns: argv.namespace,
         set: argv.set,
         key: keyv
     };
 
-	var bins = { s : "prependS"}
-    if ( argv.profile ) {
+    var bins = {
+        s: "prependS"
+    }
+    if (argv.profile) {
         console.time("add");
     }
 
     client.prepend(key, bins, function(err, bins, metadata, key) {
 
-        var exitCode = 0;
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            console.log("OK.");
+            iteration.next(run, client);
+        }
+    });
+}
 
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                console.log("Record updated successfully");
-                break;
-
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        switch (err.code) {
             case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
                 console.error("Error: Not Found.");
-                exitCode = 1;
-                break;
-                
+                return true;
             default:
                 console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
+                return true;
         }
-        
+    } else {
+        return false;
+    }
+}
 
-        if ( argv.profile ) {
-            console.log("---");
-            console.timeEnd("add");
-        }
-        
-        process.exit(exitCode);
-    });
+aerospike.client(config).connect(function(err, client) {
+    if (isError(err)) {
+        process.exit(1);
+    } else {
+        run(client)
+    }
 });

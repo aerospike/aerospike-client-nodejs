@@ -39,6 +39,7 @@
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -46,7 +47,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -94,12 +95,12 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        },  
+        },
         start: {
             default: 1,
             describe: "Start value for the key range."
@@ -116,7 +117,7 @@ var argp = yargs
 
 var argv = argp.argv;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
@@ -124,16 +125,17 @@ if ( argv.help === true ) {
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -143,27 +145,24 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
+
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-aerospike.client(config).connect(function (err, client) {
+aerospike.client(config).connect(function(err, client) {
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
+    if (err.code != Status.AEROSPIKE_OK) {
         console.error("Error: Aerospike server connection error. ", err.message);
         process.exit(1);
     }
@@ -184,12 +183,11 @@ aerospike.client(config).connect(function (err, client) {
 
         return function(err, key, skippy) {
 
-            if ( skippy === true ) {
+            if (skippy === true) {
                 console.log("SKIP - ", key);
                 skipped++;
-            }
-            else {
-                switch ( err.code ) {
+            } else {
+                switch (err.code) {
                     case Status.AEROSPIKE_OK:
                         console.log("OK - ", key);
                         success++;
@@ -201,7 +199,7 @@ aerospike.client(config).connect(function (err, client) {
             }
 
             done++;
-            if ( done >= total ) {
+            if (done >= total) {
                 console.timeEnd(timeLabel);
                 console.log();
                 console.log("RANGE: start=%d end=%d skip=%d)", start, end, skip);
@@ -214,17 +212,18 @@ aerospike.client(config).connect(function (err, client) {
 
     function put_start(client, start, end, skip) {
         var done = put_done(client, start, end, skip);
-        var i = start, s = 0;
+        var i = start,
+            s = 0;
 
-        for (; i <= end; i++ ) {
+        for (; i <= end; i++) {
 
             var key = {
-                ns:  argv.namespace,
+                ns: argv.namespace,
                 set: argv.set,
                 key: i
             };
 
-            if ( skip !== 0 && ++s >= skip ) {
+            if (skip !== 0 && ++s >= skip) {
                 s = 0;
                 done(null, key, true);
                 continue;

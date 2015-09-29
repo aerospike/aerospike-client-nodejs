@@ -90,7 +90,7 @@ UDFArgs
 -->
 <a name="UDFArgs"></a>
 
-## UDFArgs 
+## UDFArgs
 
 Arguments to execute a UDF in the database.
 
@@ -118,8 +118,8 @@ error
 ## Error
 
 Error is an object which is populated with the status of client operations. The
-`code` attribute is set for all operations. On success, it will be 
-`AEROSPIKE_OK`. On failure, the `code` will not be `AEROSPIKE_OK` and the other 
+`code` attribute is set for all operations. On success, it will be
+`AEROSPIKE_OK`. On failure, the `code` will not be `AEROSPIKE_OK` and the other
 attributes will be populated.
 
 Attributes:

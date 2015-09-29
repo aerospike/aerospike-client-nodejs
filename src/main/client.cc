@@ -102,7 +102,7 @@ NAN_METHOD(AerospikeClient::New)
     // Assume by default log is not set
     if(info[0]->IsObject()) {
         int default_log_set = 0;
-        if (info[0]->ToObject()->Has(Nan::New<String>("log").ToLocalChecked()))  
+        if (info[0]->ToObject()->Has(Nan::New<String>("log").ToLocalChecked()))
         {
             Local<Value> log_val = info[0]->ToObject()->Get(Nan::New<String>("log").ToLocalChecked()) ;
             if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
@@ -110,7 +110,7 @@ NAN_METHOD(AerospikeClient::New)
             } else {
                 //log info is set to default level
             }
-        } 
+        }
         if ( default_log_set == 0 ) {
 			LogInfo * log = client->log;
 			log->fd = 2;
@@ -118,7 +118,7 @@ NAN_METHOD(AerospikeClient::New)
 
     }
     if (info[0]->IsObject() ) {
-        int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);   
+        int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);
 		if( result != AS_NODE_PARAM_OK)
 		{
 			// Throw an exception if an error happens in parsing the config object.
@@ -155,7 +155,7 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> info)
 }
 
 /**
- *  Initialize a client object. 
+ *  Initialize a client object.
  *  This creates a constructor function, and sets up the prototype.
  */
 void AerospikeClient::Init()
@@ -164,9 +164,9 @@ void AerospikeClient::Init()
     Local<FunctionTemplate> cons = Nan::New<FunctionTemplate>(AerospikeClient::New);
     cons->SetClassName(Nan::New<String>("AerospikeClient").ToLocalChecked());
 
-    // A client object created in node.js, holds reference to the wrapped c++ 
+    // A client object created in node.js, holds reference to the wrapped c++
     // object using an internal field.
-    // InternalFieldCount signifies the number of c++ objects the node.js object 
+    // InternalFieldCount signifies the number of c++ objects the node.js object
     // will refer to when it is intiatiated in node.js
     cons->InstanceTemplate()->SetInternalFieldCount(1);
 

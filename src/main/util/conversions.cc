@@ -1,21 +1,21 @@
 /*******************************************************************************
  * Copyright 2013 Aerospike Inc.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
+ *
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  ******************************************************************************/
@@ -35,8 +35,8 @@ extern "C" {
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_record_iterator.h>
-#include <aerospike/aerospike_batch.h>  
-#include <aerospike/aerospike_scan.h>  
+#include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike_scan.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_arraylist_iterator.h>
 #include <aerospike/as_boolean.h>
@@ -84,8 +84,8 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
                 return AS_NODE_PARAM_ERR;
             }
 
-            if ( port->IsNumber() ) {   
-                config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);        
+            if ( port->IsNumber() ) {
+                config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);
                 as_v8_detail(log,"host[%d].port = %d", i, config->hosts[i].port);
             }
             else {
@@ -218,23 +218,23 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         }
     }
 
-    // Modlua system and user path is not passed in a config object. 
+    // Modlua system and user path is not passed in a config object.
     // Set them to default values here.
     if(!syspath_set) {
 #ifdef __linux
         char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 #elif __APPLE__
         char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif	
+#endif  
         int rc = access(syspath, R_OK);
         if(rc == 0) {
             strcpy(config->lua.system_path, syspath);
         }
         else {
-#ifdef __linux	
+#ifdef __linux  
             char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 #elif __APPLE__
-            char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";	
+            char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";  
 #endif
             rc = access(syspath, R_OK);
             if ( rc== 0) {
@@ -277,20 +277,30 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
             as_v8_error(log, "Password must be passed with username for connecting to secure cluster");
             return AS_NODE_PARAM_ERR;
         }
+
         Local<Value> v8usr = obj->Get(Nan::New<String>("user").ToLocalChecked());
         Local<Value> v8pwd = obj->Get(Nan::New<String>("password").ToLocalChecked());
-        if(!(v8usr->IsString())) {
-            as_v8_error(log, "Username passed must be string");
-            return AS_NODE_PARAM_ERR;
-        }
-        if(!(v8pwd->IsString())) {
-            as_v8_error(log, "Password passed must be a string");
-            return AS_NODE_PARAM_ERR;
-        }
-        bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
-        if(!setConfig) {
-            as_v8_error(log, "Setting config failed");
-            return AS_NODE_PARAM_ERR;
+
+        if ( !v8usr->IsUndefined() && !v8usr->IsNull() ) {
+            if(!(v8usr->IsString())) {
+                as_v8_error(log, "Username passed must be string");
+                return AS_NODE_PARAM_ERR;
+            } else {
+                if ( !v8pwd->IsUndefined() && !v8pwd->IsNull() ) {
+                    if(!(v8pwd->IsString())) {
+                        as_v8_error(log, "Password passed must be a string");
+                        return AS_NODE_PARAM_ERR;
+                    } else {
+
+                        bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
+
+                        if(!setConfig) {
+                            as_v8_error(log, "Setting config failed");
+                            return AS_NODE_PARAM_ERR;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -443,7 +453,7 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             {
                 as_v8_error(log, "cloning a boolean value failed");
             }
-            clone_val			 = as_boolean_toval(clone_bool);
+            clone_val            = as_boolean_toval(clone_bool);
             break;
         }
         case AS_INTEGER: {
@@ -451,11 +461,11 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             int64_t ival        = as_integer_get( int_val);
             as_v8_detail(log, "Cloning Integer value %d", ival);
             as_integer* clone_int = as_integer_new(ival);
-            if(clone_int == NULL) 
+            if(clone_int == NULL)
             {
                 as_v8_error(log, "Cloning integer failed");
             }
-            clone_val = as_integer_toval(clone_int); 
+            clone_val = as_integer_toval(clone_int);
             break;
         }
         case AS_STRING: {
@@ -481,11 +491,11 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             uint8_t *bytes      = (uint8_t*) cf_malloc(size);
             memcpy(bytes, as_bytes_get(bytes_val), size);
             as_v8_detail(log, "Cloning Blob value %u ", bytes);
-            clone_val = as_bytes_toval(as_bytes_new_wrap( bytes, size, true));    
+            clone_val = as_bytes_toval(as_bytes_new_wrap( bytes, size, true));
             break;
         }
         case AS_LIST: {
-            as_arraylist* list      = (as_arraylist*) as_list_fromval( val); 
+            as_arraylist* list      = (as_arraylist*) as_list_fromval( val);
             clone_val =  as_list_toval( (as_list*)as_arraylist_new(as_arraylist_size(list), list->block_size));
             as_arraylist_iterator it;
             as_arraylist_iterator_init( &it, list);
@@ -506,7 +516,7 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             as_hashmap_iterator_init( &it, map);
             while( as_hashmap_iterator_has_next( &it )) {
                 as_pair* pair   = (as_pair*) as_hashmap_iterator_next( &it);
-                as_val* orig_key     = as_pair_1(pair); 
+                as_val* orig_key     = as_pair_1(pair);
                 as_val* orig_val     = as_pair_2(pair);
                 as_val* clone_key    = asval_clone( orig_key, log);
                 as_val* clone_mapval = asval_clone( orig_val, log);
@@ -533,7 +543,7 @@ bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
     as_key_value* val   = src->valuep;
     if(val != NULL) {
         as_key_value* clone_val = (as_key_value*) asval_clone( (as_val*) val, log);
-        if( alloc_key) 
+        if( alloc_key)
         {
             *dest   = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
         }
@@ -557,7 +567,7 @@ bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
     return true;
 }
 
-bool record_clone(const as_record* src, as_record** dest, LogInfo * log) 
+bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
 {
     if(src == NULL || dest == NULL) {
         return false;
@@ -574,7 +584,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
         as_bin_value* clone_val = (as_bin_value*) asval_clone( (as_val*) val, log);
         as_v8_detail(log, "Bin Name: %s", as_bin_get_name(bin));
         as_record_set( *dest, as_bin_get_name(bin), clone_val);
-    } 
+    }
 
     as_key* src_key  = (as_key*) &src->key;
     as_key* dest_key = (as_key*) &(*dest)->key;
@@ -597,11 +607,11 @@ Local<Object> error_to_jsobject(as_error * error, LogInfo * log)
     }
 
     // LDT error codes are populated as a string message.
-    // Parse the string and populate the error object appropriately 
+    // Parse the string and populate the error object appropriately
     // so that application can look up the error codes and doesn't have
     // to look at strings.
     // Check if it's an UDF ERROR and message has string LDT in it
-    // then it implies it is an LDT error, so parse the error 
+    // then it implies it is an LDT error, so parse the error
     // and populate the error object.
     if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL) {
         char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
@@ -644,7 +654,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
     if ( val == NULL) {
-        as_v8_debug(log, "value = NULL"); 
+        as_v8_debug(log, "value = NULL");
         return scope.Escape(Nan::Null());
     }
 
@@ -676,8 +686,8 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                 uint8_t * data = as_bytes_getorelse(bval, NULL);
                 uint32_t size  = as_bytes_size(bval);
 
-                as_v8_detail(log, 
-                        "value = <%x %x %x%s>", 
+                as_v8_detail(log,
+                        "value = <%x %x %x%s>",
                         size > 0 ? data[0] : 0,
                         size > 1 ? data[1] : 0,
                         size > 2 ? data[2] : 0,
@@ -687,7 +697,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
                 Local<Object> buff = Nan::CopyBuffer((char*) data, size).ToLocalChecked();
 
                 return scope.Escape(buff);
-            } 
+            }
         }
         case AS_LIST : {
             as_arraylist* listval = (as_arraylist*) as_list_fromval(val);
@@ -704,7 +714,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
         case AS_MAP : {
             Local<Object> jsobj = Nan::New<Object>();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
-            as_hashmap_iterator  it; 
+            as_hashmap_iterator  it;
             as_hashmap_iterator_init(&it, map);
 
             while ( as_hashmap_iterator_has_next(&it) ) {
@@ -729,7 +739,7 @@ Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
 
     Local<Object> bins ;
     if (record == NULL) {
-        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object");
         return scope.Escape(bins);
     }
 
@@ -755,7 +765,7 @@ Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     Local<Object> meta;
 
     if(record == NULL) {
-        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object"); 
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js metadata object");
         return scope.Escape(meta);
     }
 
@@ -774,7 +784,7 @@ Local<Object> record_to_jsobject(const as_record * record, const as_key * key, L
     Local<Object> okey;
 
     if ( record == NULL ) {
-        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object"); 
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js record object");
         return scope.Escape(okey);
     }
 
@@ -830,7 +840,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_bytes *bytes = as_bytes_new_wrap( data, size, true);
         return (as_val*) bytes;
 
-    } 
+    }
     else if(obj->IsArray()) {
         Local<Array> js_list = Local<Array>::Cast(obj);
         as_arraylist *list = as_arraylist_new( js_list->Length(), 0);
@@ -968,7 +978,7 @@ int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
 int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
 {
 
-    if ( obj->Has(Nan::New<String>("timeout").ToLocalChecked()) ) { 
+    if ( obj->Has(Nan::New<String>("timeout").ToLocalChecked()) ) {
         Local<Value> v8timeout = obj->Get(Nan::New<String>("timeout").ToLocalChecked()) ;
         if ( v8timeout->IsNumber() ) {
             (*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
@@ -1002,7 +1012,7 @@ int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
     return AS_NODE_PARAM_OK;
 }
 
-int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log ) 
+int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log )
 {
 
     if ( obj->Has(Nan::New<String>(policyname).ToLocalChecked()) ) {
@@ -1012,7 +1022,7 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
         if (policy->IsNumber()) {
             *policyEnumValue = V8INTEGER_TO_CINTEGER(policy);
         }
-        else {    
+        else {
             as_v8_error(log, "value for %s policy must be an integer", policyname);
             //Something other than expected type which is Number
             return AS_NODE_PARAM_ERR;
@@ -1047,7 +1057,7 @@ int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int setRetryPolicy( Local<Object> obj, uint32_t* retrypolicy, LogInfo * log) 
+int setRetryPolicy( Local<Object> obj, uint32_t* retrypolicy, LogInfo * log)
 {
     if (setPolicyGeneric(obj, "retry", (int *) retrypolicy, log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_OK;
@@ -1105,7 +1115,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     as_policy_info_init(policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    if ( obj->Has(Nan::New<String>("send_as_is").ToLocalChecked()) ) {  
+    if ( obj->Has(Nan::New<String>("send_as_is").ToLocalChecked()) ) {
         Local<Value> v8send_as_is = obj->Get(Nan::New<String>("send_as_is").ToLocalChecked());
         if ( v8send_as_is->IsBoolean() ) {
             policy->send_as_is = (bool) v8send_as_is->ToBoolean()->Value();
@@ -1116,7 +1126,7 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
             return AS_NODE_PARAM_ERR;
         }
     }
-    if ( obj->Has(Nan::New<String>("check_bounds").ToLocalChecked()) ) {    
+    if ( obj->Has(Nan::New<String>("check_bounds").ToLocalChecked()) ) {
         Local<Value> v8check_bounds = obj->Get(Nan::New<String>("check_bounds").ToLocalChecked());
         if ( v8check_bounds->IsBoolean() ) {
             policy->check_bounds = (bool) v8check_bounds->ToBoolean()->Value();
@@ -1170,7 +1180,7 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     as_policy_remove_init(policy);
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    // only remove policy object has generation field, so directly look up 
+    // only remove policy object has generation field, so directly look up
     // the generation field in "obj" argument and set the generation value in policy structure.
     if ( obj->Has(Nan::New<String>("generation").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New<String>("generation").ToLocalChecked());
@@ -1213,7 +1223,7 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
 int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogInfo * log)
 {
 
-    as_policy_write_init( policy ); 
+    as_policy_write_init( policy );
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -1255,7 +1265,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     as_policy_scan_init( policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    if ( obj->Has(Nan::New<String>("failOnClusterChange").ToLocalChecked()) ) {  
+    if ( obj->Has(Nan::New<String>("failOnClusterChange").ToLocalChecked()) ) {
         Local<Value> failOnClusterChange = obj->Get(Nan::New<String>("failOnClusterChange").ToLocalChecked());
         if ( failOnClusterChange->IsBoolean() ) {
             policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
@@ -1334,7 +1344,7 @@ Local<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
     Local<Object> scaninfo;
 
     if(info == NULL) {
-        as_v8_debug( log, "Scan Info ( C structure) is NULL, cannot form node.js scanInfo object"); 
+        as_v8_debug( log, "Scan Info ( C structure) is NULL, cannot form node.js scanInfo object");
         return scaninfo;
     }
 
@@ -1357,11 +1367,11 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // All the v8 local variables have to declared before any of the goto
     // statements. V8 demands that.
 
-    if(obj->IsNull()) 
+    if(obj->IsNull())
     {
         as_v8_error(log, "The key object passed is Null");
         goto ReturnError;
-    }	
+    }   
 
     // get the namespace
     if ( obj->Has(Nan::New<String>("ns").ToLocalChecked()) ) {
@@ -1395,7 +1405,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
                 as_v8_debug(log, "Set passed is empty string");
             }
         }
-        // null value for set is valid in a key. Any value other than null and string is not 
+        // null value for set is valid in a key. Any value other than null and string is not
         // acceptable for set
         else if( !set_obj->IsNull()){
             as_v8_error(log, "The set in the key must be a key");
@@ -1406,7 +1416,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // get the value
     if ( obj->Has(Nan::New<String>("key").ToLocalChecked()) ) {
         Local<Value> val_obj = obj->Get(Nan::New<String>("key").ToLocalChecked());
-        if(val_obj->IsNull()) 
+        if(val_obj->IsNull())
         {
             as_v8_error(log, "The key entry must not be null");
             goto ReturnError;
@@ -1439,8 +1449,8 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             }
             as_key_init_rawp(key, ns, set, data, size, true);
 
-            as_v8_detail(log, 
-                    "key.key = <%x %x %x%s>", 
+            as_v8_detail(log,
+                    "key.key = <%x %x %x%s>",
                     size > 0 ? data[0] : 0,
                     size > 1 ? data[1] : 0,
                     size > 2 ? data[2] : 0,
@@ -1610,7 +1620,7 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     }
 
     // Extract UDF function name
-    if( obj->Has(Nan::New<String>("funcname").ToLocalChecked())) { 
+    if( obj->Has(Nan::New<String>("funcname").ToLocalChecked())) {
         Local<Value> v8_funcname = obj->Get( Nan::New<String>("funcname").ToLocalChecked());
         if ( v8_funcname->IsString()) {
             if( *funcname == NULL) {
@@ -1658,7 +1668,7 @@ int GetBinName( char** binName, Local<Object> obj, LogInfo * log) {
     if ( obj->Has(Nan::New<String>("bin").ToLocalChecked())) {
         Local<Value> val = obj->Get(Nan::New<String>("bin").ToLocalChecked());
         if ( !val->IsString()) {
-            as_v8_error(log, "Type error in bin_name(bin should be string"); 
+            as_v8_error(log, "Type error in bin_name(bin should be string");
             return AS_NODE_PARAM_ERR;
         }
         (*binName) = strdup(*String::Utf8Value(val));
@@ -1673,11 +1683,11 @@ Local<Value> GetBinValue( Local<Object> obj, LogInfo * log) {
     return val;
 }
 
-int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log) 
+int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
 {
-    if ( op == NULL ) { 
+    if ( op == NULL ) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the V8 object");
-        return AS_NODE_PARAM_ERR; 
+        return AS_NODE_PARAM_ERR;
     }
     char* binName;
     if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK) {
@@ -1694,7 +1704,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_OK;
     }
     else if ( v8val->IsString() ) {
-        char* binVal = strdup(*String::Utf8Value(v8val));   
+        char* binVal = strdup(*String::Utf8Value(v8val));
         as_v8_detail(log, "String value to be written %s", binVal);
         as_operations_add_write_str(op, binName, binVal);
         if ( binName != NULL) free(binName);
@@ -1704,7 +1714,7 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
         Local<Object> binObj = v8val->ToObject();
         int len ;
         uint8_t* data ;
-        if ( extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {   
+        if ( extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
         as_v8_detail(log, "Blob value to be written %u ", data);
@@ -1718,11 +1728,11 @@ int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
     }
 }
 
-int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log) 
+int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log)
 {
-    if ( ops == NULL ) { 
+    if ( ops == NULL ) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR; 
+        return AS_NODE_PARAM_ERR;
     }
     char* binName;
     if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK) {
@@ -1734,12 +1744,12 @@ int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log) 
+int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
 {
 
-    if ( ops == NULL ) { 
+    if ( ops == NULL ) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR; 
+        return AS_NODE_PARAM_ERR;
     }
     char* binName;
     if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK) {
@@ -1764,9 +1774,9 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
 int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
 {
 
-    if ( ops == NULL ) { 
+    if ( ops == NULL ) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR; 
+        return AS_NODE_PARAM_ERR;
     }
     char* binName;
     if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK) {
@@ -1777,7 +1787,7 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
 
     Local<Value> v8val = GetBinValue(obj, log);
     if ( v8val->IsString() ) {
-        char* binVal = strdup(*String::Utf8Value(v8val));   
+        char* binVal = strdup(*String::Utf8Value(v8val));
         as_v8_detail(log, "prepending string %s", binVal);
         as_operations_add_prepend_strp(ops, binName, binVal, true);
         if ( binName != NULL) free(binName);
@@ -1804,9 +1814,9 @@ int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
 
 int populate_append_op( as_operations * ops, Local<Object> obj, LogInfo * log)
 {
-    if ( ops == NULL ) { 
+    if ( ops == NULL ) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR; 
+        return AS_NODE_PARAM_ERR;
     }
     char* binName;
     if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK) {
@@ -1852,7 +1862,7 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log) 
+int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log)
 {
 
     uint32_t capacity = arr->Length();

@@ -17,15 +17,16 @@
 /*******************************************************************************
  *
  * Write a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
-var client    = aerospike.client;
+var client = aerospike.client;
 var yargs = require('yargs');
 var events = require('events');
 var util = require('util');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -33,7 +34,7 @@ var filter = aerospike.filter;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -81,17 +82,17 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }  
+        }
     });
 
 var argv = argp.argv;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     return;
 }
@@ -99,16 +100,17 @@ if ( argv.help === true ) {
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -119,62 +121,64 @@ config = {
     policies: {
         timeout: argv.timeout
     },
-	modlua: {
-		userPath: __dirname
-	}
+
+    modlua: {
+        userPath: __dirname
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if( argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if( argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
  * Establish a connection to the cluster.
- * 
+ *
  ******************************************************************************/
 
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
+function run(client) {
 
     var count = 0;
 
-	var options = { aggregationUDF : {module: 'query', funcname: 'sum_test_bin'},
-					filters : [filter.equal('s', 'abc')],
-					select : ['s', 'i'] }
+    var options = {
+        aggregationUDF: {
+            module: 'query',
+            funcname: 'sum_test_bin'
+        },
+        filters: [filter.range('i', 0, 10000)],
+        select: ['s', 'i'],
+    };
 
-    var query = client.query(argv.namespace, argv.set, options);
+    var stream = client.query(argv.namespace, argv.set, options).execute();
 
-	var queryStream = query.execute();
-    queryStream.on('data', function(rec) {
-        console.log(count++, rec);
+    stream.on('data', function(rec) {
+        console.log(JSON.stringify(rec, null, '    '));
     });
 
-    queryStream.on('error', function(err){
-        console.log(err);
+    stream.on('error', function(err) {
+        console.error(err);
+        process.exit(1);
     });
 
-    queryStream.on('end', function() {
-        console.log('TOTAL QUERIED:', count++);
-        process.exit(0)
+    stream.on('end', function() {
+        iteration.next(run, client);
     });
+}
 
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        console.error("Error: " + err.message);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+aerospike.client(config).connect(function(err, client) {
+    if (isError(err)) {
+        process.exit(1);
+    } else {
+        run(client)
+    }
 });
-/*******************************************************************************
- *
- * Perform the operation
- * 
- ******************************************************************************/

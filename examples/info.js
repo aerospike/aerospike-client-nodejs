@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Get state information from the cluster or a single host.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -30,7 +31,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -78,18 +79,18 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }  
+        }
     });
 
 var argv = argp.argv;
 var request = argv._.length !== 0 ? argv._.shift() : "statistics";
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     return;
 }
@@ -97,16 +98,17 @@ if ( argv.help === true ) {
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -116,65 +118,48 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
+function run(client) {
+    client.info(request, function(err, response, host) {
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            var res = {
+                host: host,
+                response: response
+            };
+            console.log(JSON.stringify(res, null, '    '));
+            iteration.next(run, client);
+        }
+    });
 }
 
-aerospike.client(config).connect(function (err, client) {
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        console.error("Error: " + err.message);
+        return true;
+    } else {
+        return false;
+    }
+}
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
+aerospike.client(config).connect(function(err, client) {
+    if (isError(err)) {
         process.exit(1);
+    } else {
+        run(client)
     }
-
-    //
-    // Perform the operation
-    //
-
-    if ( argv.profile ) {
-        console.time("info");
-    }
-
-    client.info(request, function(err, response, host) {
-
-        var exitCode = 0;
-
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                res = {
-                    host: host,
-                    response: response
-                };
-                console.log(format(res));
-                break;
-            default:
-                console.error("Error: ", err.message);
-                exitCode = 1;
-        }
-        
-        if ( argv.profile ) {
-            console.log("---");
-            console.timeEnd("info");
-        }
-
-        process.exit(exitCode);
-    });
 });

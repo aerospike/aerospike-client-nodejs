@@ -4,7 +4,7 @@ Benchmark is a collection of example programs which can be used to benchmark the
 
 ## Setup
 
-To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory. 
+To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory.
 
 From the `benchmarks` directory, run the following to install the dependencies:
 
@@ -15,12 +15,12 @@ From the `benchmarks` directory, run the following to install the dependencies:
 
 The following are the programs in this directory:
 
-- `main.js` – The main benchmark program, which runs multiple batches of operations 
+- `main.js` – The main benchmark program, which runs multiple batches of operations
 against an Aerospike cluster. The program can run for a specified number of iterations
 or time frame.
-- `inspect.js` – Runs `main.js` with multiple configurations to find a combination 
+- `inspect.js` – Runs `main.js` with multiple configurations to find a combination
 of parameters which appear to perform best.
-- `memory.js` – Is a program which is used to process the memory usage output from `main.js`, 
+- `memory.js` – Is a program which is used to process the memory usage output from `main.js`,
 to give more insight into memory utilization.
 
 These programs optionally take a hostname, port, and namespace of the
@@ -31,7 +31,7 @@ Each of the programs will provide usage information when `--help` option is prov
 
 ## main.js
 
-The primary benchmark program, which will run multiple iterations of a batch of operations against an Aerospike database cluster. 
+The primary benchmark program, which will run multiple iterations of a batch of operations against an Aerospike database cluster.
 
 The standard options for the program are:
 
@@ -47,7 +47,7 @@ Use `--help` to list all options for the program.
 
 ### Iteration Reports
 
-After each iteration, a one-line report is generated. This provides a quick summary of the iteration. 
+After each iteration, a one-line report is generated. This provides a quick summary of the iteration.
 
 To disable this reporting, use the `--silent` option.
 
@@ -62,9 +62,9 @@ If you do not want a summary report, then use the `--no-summary` option.
 
 ### Memory Usage Reports
 
-The program can display memory use per iteration, which helps give an understanding of details of memory use. 
+The program can display memory use per iteration, which helps give an understanding of details of memory use.
 
-You can obtain a chart display of memory use with the summary report by specifying `--chart-memory`. 
+You can obtain a chart display of memory use with the summary report by specifying `--chart-memory`.
 
 If you do not want a summary report, but would like memory use, then you can use `--no-summary` and `--chart-memory`, which will display memory use for each iteration.
 
@@ -81,4 +81,4 @@ You can have the program generate a report based on a slice of the data collecte
 
 ## inspect.js
 
-This program runs `main.js` with different combinations of options to find a set of options that produce optimal results for the `main.js` to run for longer periods. 
+This program runs `main.js` with different combinations of options to find a set of options that produce optimal results for the `main.js` to run for longer periods.

@@ -42,17 +42,16 @@ using namespace v8;
  */
 NAN_METHOD(AerospikeClient::Connect)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
-    
+
     Local<Function> callback;
-    
+
     if (info.Length() > 0 && info[0]->IsFunction()) {
         callback = Local<Function>::Cast(info[0]);
     }
     else {
         as_v8_error(client->log, " Callback not provided, Parameter error");
-        //NanReturnNull();
         info.GetReturnValue().Set(info.Holder());
     }
 
@@ -69,14 +68,12 @@ NAN_METHOD(AerospikeClient::Connect)
         argv[1] = (info.Holder());
         as_v8_error(client->log, "Connecting to Cluster Failed");
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
-        //NanReturnNull();
         info.GetReturnValue().Set(info.Holder());
     }
     else {
         argv[1] = (info.Holder());
         as_v8_debug(client->log, "Connecting to Cluster: Success");
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
-        //NanReturnValue(info.Holder());
         info.GetReturnValue().Set(info.Holder());
     }
 }
