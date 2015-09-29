@@ -14,8 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <node.h>
-#include <nan.h>
 #include "client.h"
 #include "enums.h"
 using namespace v8;
@@ -26,9 +24,9 @@ using namespace v8;
 
 NAN_METHOD(client)
 {
-	NanScope();
-	Local<Object> config = args[0].As<Object>();
-    NanReturnValue(AerospikeClient::NewInstance(config));
+    Nan::HandleScope();
+	Local<Object> config = info[0].As<Object>();
+    info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
 }
 
 /**
@@ -39,17 +37,16 @@ NAN_METHOD(client)
  */
 NAN_METHOD(key)
 {
-	NanScope();
+    Nan::HandleScope();
 
-    if ( args.Length() == 3 ) {
-        Local<Object> key = NanNew<Object>();
-        key->Set(NanNew("ns"), args[0]);
-        key->Set(NanNew("set"), args[1]);
-        key->Set(NanNew("key"), args[2]);
-        NanReturnValue((key));
+    if ( info.Length() == 3 ) {
+        Local<Object> key = Nan::New<Object>();
+        key->Set(Nan::New("ns").ToLocalChecked(), info[0]);
+        key->Set(Nan::New("set").ToLocalChecked(), info[1]);
+        key->Set(Nan::New("key").ToLocalChecked(), info[2]);
+        info.GetReturnValue().Set(key);
     }
 
-    NanReturnUndefined();
 }
 
 /**
@@ -58,19 +55,18 @@ NAN_METHOD(key)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-    
-    exports->Set(NanNew("client"),   NanNew<FunctionTemplate>(client)->GetFunction());
-    exports->Set(NanNew("key"),      NanNew<FunctionTemplate>(key)->GetFunction());
-    exports->Set(NanNew("status"),   status());
-    exports->Set(NanNew("policy"),   policy());
-    exports->Set(NanNew("operations"), operations());
-	exports->Set(NanNew("language"), languages()); 
-    exports->Set(NanNew("log"),      log());
-	exports->Set(NanNew("scanPriority"), scanPriority());
-	exports->Set(NanNew("scanStatus"), scanStatus());
-	exports->Set(NanNew("predicates"),	predicates());
-	exports->Set(NanNew("indexType"),indexType());
-	exports->Set(NanNew("queryType"),queryType());
+    AerospikeQuery::Init(); 
+    exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
+    exports->Set(Nan::New("key").ToLocalChecked(),      Nan::New<FunctionTemplate>(key)->GetFunction());
+    exports->Set(Nan::New("status").ToLocalChecked(),   status());
+    exports->Set(Nan::New("policy").ToLocalChecked(),   policy());
+    exports->Set(Nan::New("operations").ToLocalChecked(), operations());
+	exports->Set(Nan::New("language").ToLocalChecked(), languages()); 
+    exports->Set(Nan::New("log").ToLocalChecked(),      log());
+	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());
+	exports->Set(Nan::New("scanStatus").ToLocalChecked(), scanStatus());
+	exports->Set(Nan::New("predicates").ToLocalChecked(),	predicates());
+	exports->Set(Nan::New("indexType").ToLocalChecked(),indexType());
 }
 
 NODE_MODULE(aerospike, Aerospike)

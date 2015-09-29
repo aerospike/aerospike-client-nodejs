@@ -16,12 +16,17 @@
 
 #pragma once
 
+#include <node.h>
+#include <nan.h>
+#include "log.h"
+#include "query.h"
+
 #if NODE_MODULE_VERSION > 0x000B
-#  define ResolveArgs(args) const v8::FunctionCallbackInfo<v8::Value>& args
+#  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle
 #  define V8_RETURN     
 #else
-#  define ResolveArgs(args) const Arguments& args
+#  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle, int status 
 #  define V8_RETURN return
 #endif
@@ -30,12 +35,9 @@ extern "C" {
 	#include <aerospike/aerospike.h>
 }
 
-#include <node.h>
-#include <nan.h>
-#include "log.h"
+
 using namespace node;
 using namespace v8;
-
 
 /*******************************************************************************
  *  CLASS
@@ -49,7 +51,7 @@ class AerospikeClient : public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> args);
+        static Local<Value> NewInstance(Local<Object> args);
 
         aerospike *as;
         LogInfo *log;
@@ -63,7 +65,7 @@ class AerospikeClient : public ObjectWrap {
         AerospikeClient();
         ~AerospikeClient();
 
-        static Persistent<FunctionTemplate> constructor;
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
         /***********************************************************************

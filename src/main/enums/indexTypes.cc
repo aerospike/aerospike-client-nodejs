@@ -20,13 +20,13 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> indexType() 
+Local<Object> indexType() 
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "STRING",    AS_INDEX_STRING);
     set(obj, "NUMERIC",  AS_INDEX_NUMERIC);
-    return NanEscapeScope(obj);
+    return scope.Escape(obj);
 }

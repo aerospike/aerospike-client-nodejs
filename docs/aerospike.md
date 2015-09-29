@@ -40,7 +40,7 @@ Policies
 Policies contains the allowed values for policies for each of the [client](client.md) operations.
 
 ```js
-aerospike.policies
+aerospike.policy
 ```
 
 For details, see [Policies Object](policies.md)
@@ -58,7 +58,7 @@ operators
 operators is a collection of functions that simplify the construction of operations for the [client](client.md) [`operate()`](client.md#operate) function.
 
 ```js
-aerospike.operators
+aerospike.operator
 ```
 
 For details, see [operators Object](operators.md)

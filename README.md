@@ -39,7 +39,7 @@ function connect_cb( err, client) {
     }
 }
 
-client.connect(connect_cb)
+client.connect(connect_cb);  // connect is synchronous
 
 // The key of the record we are reading.
 var key = aerospike.key('test','demo','foo');
@@ -343,7 +343,7 @@ The `<PATH>` must be a path to a directory containing files `aerospike.lua` and 
 
 The following is an example of specifying `AEROSPIKE_LUA_PATH` and then installing.
 
-	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/sys/udf/lua/
+	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/client/sys/udf/lua/
 	$ npm install
 
 <a name="Tests"></a>

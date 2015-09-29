@@ -20,15 +20,15 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> scanStatus() 
+Local<Object> scanStatus() 
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "UNDEF",    AS_SCAN_STATUS_UNDEF);
     set(obj, "INPROGRESS",     AS_SCAN_STATUS_INPROGRESS);
     set(obj, "ABORTED",  AS_SCAN_STATUS_ABORTED);
     set(obj, "COMPLETED",    AS_SCAN_STATUS_COMPLETED);
-    return NanEscapeScope(obj);
+    return scope.Escape(obj);
 }

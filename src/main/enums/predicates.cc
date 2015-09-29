@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
 #include <node.h>
 #include "enums.h"
 #include <aerospike/as_query.h>
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> predicates()
+Local<Object> predicates()
 {
-	NanEscapableScope();
-	Handle<Object> obj = NanNew<Object>();
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
 	set(obj, "EQUAL", AS_PREDICATE_EQUAL);
 	set(obj, "RANGE", AS_PREDICATE_RANGE);
-	return NanEscapeScope(obj);
+	return scope.Escape(obj);
 }

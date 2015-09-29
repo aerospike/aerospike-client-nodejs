@@ -26,7 +26,8 @@ extern "C" {
 }
 
 #include <node.h>
-#include "client.h"
+#include <nan.h>
+#include "log.h"
 using namespace node;
 using namespace v8;
 
@@ -39,11 +40,22 @@ enum asQueryType {
 	SCANAGGREGATION
 };
 
+union QueryScan {
+    as_query* query;
+    as_scan* scan;
+};
+
 #define isQuery(type) (type == QUERY || type == QUERYUDF || type == QUERYAGGREGATION) ? true:false
 /*******************************************************************************
  *  CLASS
  ******************************************************************************/
 
+/*
+ * Query and Scan share the common interface in node.js layer.
+ * Implementation for parsing scan and query parameters from node.js
+ * is same. Only one(either scan or query) of them will be initialized,
+ * and executed for a given request.
+ */
 class AerospikeQuery: public ObjectWrap {
 
     /***************************************************************************
@@ -52,10 +64,10 @@ class AerospikeQuery: public ObjectWrap {
 
     public:
         static void Init();
-        static Handle<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> client);
+        static Local<Value> NewInstance(Local<Object> ns, Local<Object> set, Local<Object> config, Local<Object> client);
 
-		// C structure to store all the scan properties.
-		as_query query;
+		// C structure to store all the scan or query properties.
+		QueryScan query_scan;
 
 		// Size of queue that's used in the scan_callback, it's user adjustable.
 		int q_size;
@@ -72,20 +84,6 @@ class AerospikeQuery: public ObjectWrap {
 		asQueryType type;
 
 
-
-		// If query is scan, the properties related to only scan.
-		// For now, these are individual fields in AerospikeQuery Class.
-		// Once the C API/structure is unified for scan and query these fields 
-		// will become part of the unified query/scan structure.
-		int scan_priority;
-
-		uint8_t percent;
-
-		bool nobins;
-
-		bool concurrent;
-
-
         /***************************************************************************
          *  PRIVATE
          **************************************************************************/
@@ -95,67 +93,35 @@ class AerospikeQuery: public ObjectWrap {
         AerospikeQuery();
         ~AerospikeQuery();
 
-        static Persistent<FunctionTemplate> constructor;
+        bool isQuery_;
+        bool hasUDF_;
+        bool hasAggregation_;
+
+        static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
-        /***********************************************************************
-         *  SCAN OPERATIONS
-         **********************************************************************/
+        void SetQueryType(Local<Value> config); 
+        /*
+         * Define Getter Accessors to properties
+         */ 
+        static NAN_GETTER(GetIsQuery);
+        static NAN_GETTER(GetHasAggregation);
+        static NAN_GETTER(GetHasUDF);
 
-        /**
-         * undefined query.apply(udf_arg_list)
-         */
-		static NAN_METHOD(apply);
+        /*
+         * Define Setter Accessors to properties
+         */ 
+        static NAN_SETTER(SetIsQuery);
+        static NAN_SETTER(SetHasAggregation);
+        static NAN_SETTER(SetHasUDF);
 
         /**
          *  undefined query.foreach(callback())
          */
 		static NAN_METHOD(foreach);
-		
-		/**
-         *  undefined query.select(String[])
-         */
-		static NAN_METHOD(select);
-
-		/**
-         *  undefined query.where(@TO-DO)
-         */
-		static NAN_METHOD(where);
-		
-		/**
-         *  undefined query.setRecordQsize(integer)
-         */
-		static NAN_METHOD(setRecordQsize);
 
 		/**
          *  undefined query.queryInfo(queryId, policy, callback)
          */
 		static NAN_METHOD(queryInfo);
-
-		// Functions related to SCAN api calls.
-		//
-		/** 
-		 *  undefined scan.setPriority(SCAN_PRIORITY)
-		 */
-		static NAN_METHOD(setPriority);
-
-		/** 
-		 *  undefined scan.setNobins(Boolean)
-		 */
-		static NAN_METHOD(setNobins);
-
-		/** 
-		 *  undefined scan.setPercent(integer)
-		 */
-		static NAN_METHOD(setPercent);
-
-		/** 
-		 *  undefined scan.setConcurrent(Boolean)
-		 */
-		static NAN_METHOD(setConcurrent);
-
-		/** 
-		 *  undefined scan.setConcurrent(scanQueryAPI)
-		 */
-		static NAN_METHOD(setQueryType);
 };

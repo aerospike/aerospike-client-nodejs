@@ -1,0 +1,71 @@
+{
+    "host"        : "127.0.0.1",
+    "port"        : 3000,
+    "timeout"     : 0,
+    "ttl"         : 10000,
+    "log"         : "INFO",
+    "namespace"   : "test",
+    "set"         : "demo",
+    "user"        : null,
+    "password"    : null,
+    "json"        : false,
+    "silent"      : false,
+    "longevity"   : false,
+    "alert"       : "CONSOLE",
+    "filename"    : null,
+    "operations"  : 100,
+    "iterations"  : null,
+    "processes"   : 4,
+    "time"        : "24h",
+    "reads"       : 1,
+    "writes"      : 1,
+    "keyRange"     : { 
+        "min" : 0, 
+        "max" : 100000
+    },
+    "binSpec"    : [
+        {
+            "name" : "bin1", 
+            "type" : "STRING", 
+            "size" : 1024
+        },
+        {
+            "name" : "bin2", 
+            "type" : "BYTES",  
+            "size" : 1024
+        },
+        {
+            "name" : "bin3", 
+            "type" : "INTEGER"
+        }
+    ],
+    "indexSpec"  : [ 
+        {
+            "name":"ind1", 
+            "bin":"bin1", 
+            "type": "NUMERIC"
+        }
+    ],
+    "querySpec"  : [
+        { 
+            "bin":"bin1", 
+            "btype":"NUMERIC", 
+            "qtype":"Range",
+            "min"  : 0,
+            "max"  : 100000
+        } 
+    ],
+    "scanSpec"   : [
+        {
+            "select": [
+                "bin1",
+                "bin3"
+            ], 
+            "concurrent":true
+        }
+    ],
+    "summary"     : true,
+    "help"        : "Please follow the README.md to specify configurations to run this benchmark"
+}
+
+

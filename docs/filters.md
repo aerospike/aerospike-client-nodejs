@@ -8,10 +8,11 @@ Example:
 ```js
 var filter = aerospike.filters
 
-var queryArgs = { filters = [
-					filter.equal('a', 'hello')
-				  ]
-}
+var queryArgs = {
+  filters: [
+    filter.equal('a', 'hello')
+  ]
+};
 
 client.query(ns, set, queryArgs)
 ```

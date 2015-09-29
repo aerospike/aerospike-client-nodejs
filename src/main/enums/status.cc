@@ -20,12 +20,12 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(NanNew(__name), NanNew(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Handle<Object> status() 
+Local<Object> status() 
 {
-    NanEscapableScope();
-    Handle<Object> obj = NanNew<Object>();
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
     set(obj, "AEROSPIKE_OK",                        AEROSPIKE_OK);
     set(obj, "AEROSPIKE_ERR",                       AEROSPIKE_ERR);
     set(obj, "AEROSPIKE_ERR_CLIENT",                AEROSPIKE_ERR_CLIENT);
@@ -98,5 +98,5 @@ Handle<Object> status()
 	set(obj, "AEROSPIKE_ERR_LDT_USER_MODULE_BAD",     AEROSPIKE_ERR_LDT_USER_MODULE_BAD    );
 	set(obj, "AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND", AEROSPIKE_ERR_LDT_USER_MODULE_NOT_FOUND);
 
-    return NanEscapeScope(obj);
+    return scope.Escape(obj);
 }

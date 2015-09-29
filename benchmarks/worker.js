@@ -22,18 +22,36 @@
 
 var aerospike = require('aerospike');
 var cluster = require('cluster');
+var fs  = require('fs');
 var yargs = require('yargs');
 var path = require('path');
 var util = require('util');
 var winston = require('winston');
 var stats = require('./stats');
+var status = aerospike.status;
+var alerts   = require('./alerts.js');
+var argv     = require("./config.json");
+/**********************************************************************
+ *
+ *  MACROS
+ *
+ *********************************************************************/
 
+var OP_TYPES = 2; // READ and WRITE
+var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
+var READ = 0;
+var WRITE = 1;
+var QUERY = 2;
+var TPS = 0;
+var TIMEOUT = 1; 
+var ERROR   = 2;
+var QPS     = 0;
 /***********************************************************************
  *
  * Options Parsing
  *
  ***********************************************************************/
-var argp = yargs
+/*var argp = yargs
     .usage("$0 [options]")
     .options({
         help: {
@@ -52,8 +70,12 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 0,
             describe: "Timeout in milliseconds."
+        },
+        ttl:{
+            default: 10000,
+            describe: "Time to live for the record (seconds). Units may be used: 1h, 30m, 30s"
         },
         log: {
             alias: "l",
@@ -79,20 +101,84 @@ var argp = yargs
             alias: "P",
             default: null,
             describe: "Password to connect to a secure cluster"
-        } 
+        },
+        json: {
+            alias: "j",
+            default: false,
+            describe: "Display report in JSON format."
+        },
+        silent: {
+            default: false,
+            describe: "Supress the tps statistics printed every second."
+        },
+        longevity: {
+            default: false,
+            describe: "Print intermediate output from workers."
+        },
+        operations: {
+            alias: "O",
+            default: 100,
+            describe: "Total number of operations to perform per iteration per process."
+        },
+        iterations: {
+            alias: "I",
+            default: undefined,
+            describe: "Total number of iterations to perform per process."
+        },
+        time: {
+            alias: "T",
+            default: undefined,
+            describe: "Total amount of time to run the benchmark (seconds). Units may be used: 1h, 30m, 30s"
+        },
+        reads: {
+            alias: "R",
+            default: 1,
+            describe: "The read in the read/write ratio."
+        },
+        writes: {
+            alias: "W",
+            default: 1,
+            describe: "The write in the read/write ratio."
+        },
+        keyrange: {
+            alias: "K",
+            default: 100000,
+            describe: "The number of keys to use."
+        },
+        datatype: {
+            default: "INTEGER",
+            describe: "The datatype of the record."
+        },
+        datasize: {
+            default: 1024,
+            describe: "Size of the record."
+        },
+        'chart-memory': {
+            boolean: false,
+            default: false,
+            describe: "Chart the memory used before printing the summary."
+        },
+        'summary': {
+            boolean: true,
+            default: true,
+            describe: "Produces a summary report (tables, charts, etc) at the end."
+        }
+
     });
 
 var argv = argp.argv;
 
 if ( argv.help === true) {
-    argp.showHelp()
+    argp.showHelp();
     return;
-}
+}*/
 
 if ( !cluster.isWorker ) {
     console.error('worker.js must only be run as a child process of main.js.');
     return;
 }
+
+argv.ttl = stats.parse_time_to_secs(argv.ttl);
 
 /***********************************************************************
  *
@@ -109,8 +195,7 @@ var logger = new (winston.Logger)({
         new (winston.transports.Console)({
             level: 'info',
             silent: false,
-            colorize: true,
-            timestamp: logger_timestamp
+            colorize: true
         })
 	]
 });
@@ -135,7 +220,8 @@ var config = {
 		maxNamespaces: 8,
 		takeoverThresholdSeconds : 30
 	}
-}
+};
+
 
 if(argv.user !== null)
 {
@@ -161,60 +247,177 @@ client.connect(function(err) {
  * Operations
  *
  ***********************************************************************/
+/**
+* key are in range [min ... max]
+*/
+function keygen(min, max) {
+    var rand = Math.floor(Math.random() * 0x100000000) % (max-min+1) + min;
+    return rand < 1 ? 1 : rand;
+}
 
-function get(command, done) {
-    var time_start = process.hrtime();
+var STRING_DATA = "This the test data to be written to the server";
+/**
+* Generate a record with string and blob in it if run for longevity.
+* Size of strings and blob is argv.datasize ( default 1K).
+*
+* 
+*/ 
+function recordgen( key, binSpec ) {
 
-    client.get({ns: argv.namespace, set: argv.set, key: command[1]}, function(_error, _record, _metadata, _key) {
+    var data = {};
+    var i = 0;
+    do {
+        var bin= binSpec[i];
+        switch (bin.type) {
+            case "INTEGER" : {   
+                data[bin.name] = key;            
+                break;
+            }   
+            case "STRING"  : {   
+                data[bin.name] =  STRING_DATA;
+                while ( data[bin.name].length < bin.size ) {   
+                    data[bin.name] += STRING_DATA;
+                }   
+                data[bin.name] += key;
+                break;
+            }   
+            case "BYTES" : {
+                var buf_data = STRING_DATA;
+                while( buf_data.length < bin.size ) {
+                    buf_data += STRING_DATA;
+                }
+                data[bin.name] = new Buffer(buf_data);
+                break;
+            }   
+            default :
+                data.num = key;
+                break;
+        }
+        i++;
+    } while(i < binSpec.length);  
+    return data;
+}
+
+function get(options, done) {
+    var k = keygen(options.keyRange.min,options.keyRange.max);
+    var time_start = process.hrtime()
+    client.get( {ns: options.namespace, set: options.set, key: k}, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done(_error.code, time_start, time_end);
+        done(_error.code, time_start, time_end, READ);
     });
 }
 
-function put(command, done) {
+// set the ttl for the write
+var metadata = {
+    ttl: argv.ttl
+};
+
+function put(options, done) {
+
+    var k = keygen(options.keyRange.min,options.keyRange.max);
+    var record  = recordgen(k, options.binSpec)
     var time_start = process.hrtime();
-    
-    client.put({ns: argv.namespace, set: argv.set, key: command[1]}, command[2], function(_error, _record, _metadata, _key) {
+    client.put({ns:options.namespace, set: options.set, key: k}, record, metadata, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
-        done(_error.code, time_start, time_end);
+        done(_error.code, time_start, time_end, WRITE);
     });
 }
 
+// Structure to store per second statistics.
+var interval_data = new Array(OP_TYPES);
+reset_interval_data();
 
-function run(commands) {
+function run(options) {
 
-    var expected = commands.length;
+    var expected = options.rops + options.wops;
     var completed = 0;
 
-    var operations = Array(expected);
-    var mem_start = process.memoryUsage();
-    var time_start = process.hrtime();
-
-    function done(op_status, op_time_start, op_time_end) {
+    // @ TO-DO optimization. 
+    // Currently stats of all the operations is collected and sent to
+    // master at the end of an iteration. 
+    // Master puts the stats in appropriate histogram.
+    // Consider having histogram for each worker Vs sending the 
+    // results in an array - Which one is more memory efficient.
+    var operations  = Array(expected);
+    var read_ops    = options.rops;
+    var write_ops   = options.wops;
+   
+    function done(op_status, op_time_start, op_time_end, op_type) {
 
         operations[completed] = [op_status, op_time_start, op_time_end];
+        interval_data[op_type][TPS]++;
+        if(op_status === status.AEROSPIKE_ERR_TIMEOUT){
+            interval_data[op_type][TIMEOUT]++;
+        }
+	    else if(op_status !== status.AEROSPIKE_OK && op_status !== status.AEROSPIKE_ERR_TIMEOUT){
+            interval_data[op_type][ERROR]++;
+        }
+
         completed++;
 
         if ( completed >= expected ) {
-            var time_end = process.hrtime();
-            var mem_end = process.memoryUsage();
-
-            process.send(stats.iteration(
-                operations,
-                time_start,
-                time_end,
-                mem_start,
-                mem_end
-            ));
+            process.send(['stats',operations]);
         }
     }
 
-    commands.forEach(function(command) {
-        switch(command[0]) {
-            case 'get': return get(command, done);
-            case 'put': return put(command, done);
+    while( write_ops > 0) {
+        if( write_ops > 0) {
+            write_ops--;
+            put(options, done);
+        }
+    }
+    while( read_ops > 0) {
+        if( read_ops > 0) {
+            read_ops--;
+            get(options, done);
+        };
+    }
+}
+
+/*
+ * Sends the populated interval_data to the parent and resets it for the next second
+ */
+function respond(){
+    process.send(['trans',interval_data]);
+    reset_interval_data();
+}
+
+/*
+ * Reset interval_data 
+ */
+function reset_interval_data(){
+    interval_data[READ] =  [0, 0, 0];  // [reads_performed, reads_timeout, reads_error]
+    interval_data[WRITE] = [0, 0, 0];  // [writes_performed, writes_timeout, writes_error]   
+    interval_data[QUERY] = [0, 0, 0];  // [QueryRecords, query_timeout, query_error]
+}
+
+/*
+ * Execute the long running job.
+ */ 
+
+function executeJob(options, callback) {
+
+    var job     = client.query(options.namespace, options.set, options.statement);
+    var stream  = job.execute();
+    stream.on('data', function(record) {
+       // count the records returned 
+       interval_data[QUERY][TPS]++;
+    });
+    stream.on('error', function(error) {
+        interval_data[QUERY][ERROR]++;
+        if(error.code == status.AEROSPIKE_ERR_TIMEOUT){
+            interval_data[QUERY][TIMEOUT]++;
         }
     });
+    stream.on('end', function(){
+        // update a stat for number of jobs completed.
+        callback(options);
+
+    });
+}
+
+var runLongRunningJob = function(options) {
+    executeJob(options, runLongRunningJob);
 }
 
 /***********************************************************************
@@ -258,7 +461,20 @@ process.on('SIGTERM', function() {
 process.on('message', function(msg) {
     logger.debug('command: ', util.inspect(msg[0]));
     switch( msg[0] ) {
-        case 'run': return run(msg[1]);
+        case 'run'   : return run(msg[1]); break;
+        case 'query' : return runLongRunningJob(msg[1]);
+        case 'trans' : return respond(); break;	 // Listening on trans event. (this event occurs every second) 
         default: return process.exit(0);
     }
 });
+
+// log the memory footprint of the process every 10 minutes.
+setTimeout(function(){
+    //write the memory usage to a file
+    var mem = process.memoryUsage();
+    fs.writeFile("longevityMemory", JSON.stringify(mem), function(err) {
+        if(err) {
+            console.log(err);
+        }
+    })
+}, 600000);

@@ -73,8 +73,8 @@ typedef struct AsyncData {
     int num_nodes;
     node_info_result info_result_list[MAX_CLUSTER_SIZE];
     LogInfo * log;
-    Persistent<Function> callback;
-    Persistent<Function> done;
+    Nan::Persistent<Function> callback;
+    Nan::Persistent<Function> done;
 } AsyncData;
 
 
@@ -127,12 +127,12 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
  *  This should only keep references to V8 or V8 structures for use in 
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
-	NanScope();
+	Nan::HandleScope scope;
 
     // Unwrap 'this'
-    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+    AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData;
@@ -146,32 +146,33 @@ static void * prepare(ResolveArgs(args))
 	data->policy				= NULL;
     
     // Local variables
-    int argc        = args.Length();
+    int argc        = info.Length();
     int arg_request = 0;
     int arg_host    = 1;
     int arg_policy  = -1;
 
     // empty function, used when callback not provided
-    Local<FunctionTemplate> emptyFunction = NanNew<FunctionTemplate>();
+    Local<FunctionTemplate> emptyFunction = Nan::New<FunctionTemplate>();
 
     // The first argument should be the request string.
-    if ( args[arg_request]->IsString()) {
+    if ( info[arg_request]->IsString()) {
         data->req = (char*) malloc(INFO_REQUEST_LEN);
-        strcpy( data->req, *String::Utf8Value(args[arg_request]->ToString()));
+        strcpy( data->req, *String::Utf8Value(info[arg_request]->ToString()));
     }
 
     // The following arguments can be: host?, policy?
     // In both cases, they are objects, not functions, so we need to be sure.
     // We start by assuming the first argument is the host.
 
-    if ( arg_host < argc && args[arg_host]->IsObject() && ! args[arg_host]->IsFunction() ) {
+    if ( arg_host < argc && info[arg_host]->IsObject() && ! info[arg_host]->IsFunction() ) {
 
-        Local<Object> arg1 = args[arg_host]->ToObject();
+        Local<Object> arg1 = info[arg_host]->ToObject();
 
         // We check the parameter to see if it a host or policy object.
         // Host objects should always have "addr" and "port" attributes.
 
-        if ( arg1->Has(NanNew("addr")) && arg1->Has(NanNew("port")) ) {
+        if ( arg1->Has(Nan::New("addr").ToLocalChecked()) && 
+                arg1->Has(Nan::New("port").ToLocalChecked()) ) {
             // Ok, we have a host object
             int rc = host_from_jsobject(arg1, &data->addr, &data->port, log);
             if ( rc != AS_NODE_PARAM_OK ) {
@@ -185,7 +186,7 @@ static void * prepare(ResolveArgs(args))
             data->num_nodes = 1;
         
             // Next, it may be the policy (or not)
-            if ( args[arg_host]->IsObject() && ! args[arg_host]->IsFunction() ) {
+            if ( info[arg_host]->IsObject() && ! info[arg_host]->IsFunction() ) {
                 arg_policy = arg_host + 1;
             }
         }
@@ -197,39 +198,42 @@ static void * prepare(ResolveArgs(args))
 
         if ( arg_policy < argc && arg_policy != -1 ) {
 			data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-            int rc = infopolicy_from_jsobject(data->policy, args[arg_policy]->ToObject(), log);
+            int rc = infopolicy_from_jsobject(data->policy, info[arg_policy]->ToObject(), log);
             if ( rc != AS_NODE_PARAM_OK ) {
                 as_v8_debug(log, "policy parameter is invalid");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
                 data->param_err = 1;
-                // goto Err_Return;
             }
         }
     }
 
-    // It is possible the last 2 args are callbacks. Neither are required.
+    // It is possible the last 2 info are callbacks. Neither are required.
     // If either are not provided, then they become empty functions.
 
-    if ( args[argc-1]->IsFunction() ) {
-        if ( args[argc-2]->IsFunction() ) {
-			NanAssignPersistent(data->callback, args[argc-2].As<Function>());
-			NanAssignPersistent(data->done, args[argc-1].As<Function>());
+    if ( info[argc-1]->IsFunction() ) {
+        if ( info[argc-2]->IsFunction() ) {
+            data->callback.Reset(info[argc-2].As<Function>());
+            data->done.Reset(info[argc-1].As<Function>());
+			 
+			 
         }
         else {
-			NanAssignPersistent(data->callback, args[argc-1].As<Function>());
-			NanAssignPersistent(data->done, emptyFunction->GetFunction());
+            data->callback.Reset(info[argc-1].As<Function>());
+            data->done.Reset(emptyFunction->GetFunction());
+			 
+			 
         }
     }
     else {
 
-		NanAssignPersistent(data->callback,emptyFunction->GetFunction());
-		NanAssignPersistent(data->done, emptyFunction->GetFunction());
+        data->callback.Reset(emptyFunction->GetFunction());
+        data->done.Reset(emptyFunction->GetFunction());
+		 
+		 
     }
 
     return data;
 
-// Err_Return:
-    // return data;
 }
 
 /**
@@ -283,10 +287,10 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	NanScope();
+	Nan::HandleScope scope;
 
     // callback arguments
-    Handle<Value> argv[3];
+    Local<Value> argv[3];
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -314,66 +318,67 @@ static void respond(uv_work_t * req, int status)
             // response string parameter
             if ( response != NULL && strlen(response) > 0 ) {
                 as_v8_debug(log, "Response is %s", response);
-                argv[1] = NanNew((const char*)response);
+                argv[1] = Nan::New((const char*)response).ToLocalChecked();
             }
             else {
-                argv[1] = NanNull();
+                argv[1] = Nan::Null();
             }
             
             // host object parameter
             if ( data->addr != NULL && data->port != 0) {
-                Handle<Object> host = NanNew<Object>();
-                host->Set(NanNew("addr"), NanNew(data->addr));
-                host->Set(NanNew("port"), NanNew(data->port));
-                argv[2] = host;
+                Local<Object> host = Nan::New<Object>();
+                host->Set(Nan::New("addr").ToLocalChecked(), Nan::New(data->addr).ToLocalChecked());
+                host->Set(Nan::New("port").ToLocalChecked(), Nan::New(data->port));
+                argv[2] = (host);
             }
             else if( node_name != NULL && strlen(node_name) > 0 ) {
-                Handle<Object> host = NanNew<Object>();
+                Local<Object> host = Nan::New<Object>();
                 as_v8_debug(log, "The host is %s", node_name);
-                host->Set(NanNew("node_id"), NanNew(node_name));
-                argv[2] = host;
+                host->Set(Nan::New("node_id").ToLocalChecked(), Nan::New(node_name).ToLocalChecked());
+                argv[2] = (host);
             }
             else {
-                argv[2] = NanNull();
+                argv[2] = Nan::Null();
             }
         }
         else {
             err->func = NULL;
             argv[0] = error_to_jsobject(err, log);
-            argv[1] = NanNull();
-            argv[2] = NanNull();
+            argv[1] = Nan::Null();
+            argv[2] = Nan::Null();
         }   
 
         // Surround the callback in a try/catch for safety
-        TryCatch try_catch;
+        Nan::TryCatch try_catch;
 
         // Execute the callback.
-		Local<Function> cb = NanNew<Function>(data->callback);
-		NanMakeCallback(NanGetCurrentContext()->Global(), cb, 3, argv);
+		Local<Function> cb = Nan::New<Function>(data->callback);
+		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 3, argv);
 
         // Process the exception, if any
         if ( try_catch.HasCaught() ) {
-            node::FatalException(try_catch);
+            Nan::FatalException(try_catch);
         }
     }
 
     // Surround the callback in a try/catch for safety
     // Execute the callback.
-	TryCatch try_catch;
+	Nan::TryCatch try_catch;
 
-	Handle<Value> done_argv[0];
-	Local<Function> done_cb = NanNew<Function>(data->done);
-	NanMakeCallback(NanGetCurrentContext()->Global(), done_cb, 0, done_argv);
+	Local<Value> done_argv[0];
+	Local<Function> done_cb = Nan::New<Function>(data->done);
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, done_argv);
 
 	// Process the exception, if any
 	if ( try_catch.HasCaught() ) {
-		node::FatalException(try_catch);
+		Nan::FatalException(try_catch);
 	}
-	NanDisposePersistent(data->done);
+	 
+    data->done.Reset();
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	NanDisposePersistent(data->callback);
+	data->callback.Reset();
 
 
     for ( int i = 0; i < num; i++ ) {
@@ -400,5 +405,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Info)
 {
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    (async_invoke(info, prepare, execute, respond));
 }

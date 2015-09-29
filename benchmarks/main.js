@@ -27,7 +27,9 @@ var os = require('os');
 var path = require('path');
 var util = require('util');
 var winston = require('winston');
-var stats = require('./stats');
+var stats  = require('./stats');
+var alerts = require('./alerts');
+var argv   = require('./config.json');
 
 /***********************************************************************
  *
@@ -35,20 +37,30 @@ var stats = require('./stats');
  *
  ***********************************************************************/
 
+var cpus = os.cpus();
 var kB = 1024;
 var MB = kB * 1024;
 var GB = MB * 1024;
 
-var MEMCHART_MAX_MB = 400;
-var MEMCHART_BUCKETS = 100;
-var MEMCHART_BAR = new Buffer(MEMCHART_BUCKETS+1);
+var OP_TYPES = 3; // READ, WRITE and QUERY
+var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
 
-var cpus = os.cpus();
-var online = 0;
-var exited = 0;
+var queryWorkers= 0;
+var scanWorkers = 0;
+var online      = 0;
+var exited      = 0;
+var rwOnline    = 0;
+var queryOnline = 0;
+var scanOnline  = 0;
 var timerId;
 
 var iterations_results = [];
+
+/**
+ * Number of completed operations(READ & WRITE), timed out operations and operations that ran into error per second
+ */
+var interval_stats = new Array(OP_TYPES);
+reset_interval_stats();
 
 /***********************************************************************
  *
@@ -56,7 +68,7 @@ var iterations_results = [];
  *
  ***********************************************************************/
 
-var argp = yargs
+/*var argp = yargs
     .usage("$0 [options]")
     .options({
         help: {
@@ -75,8 +87,12 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 0,
             describe: "Timeout in milliseconds."
+        },
+	    ttl:{
+            default: 10000,
+            describe: "Time to live for the record (seconds). Units may be used: 1h, 30m, 30s"
         },
         log: {
             alias: "l",
@@ -110,7 +126,20 @@ var argp = yargs
         },
         silent: {
             default: false,
-            describe: "Suppress intermediate output from workers."
+            describe: "Supress the tps statistics printed every second."
+        },
+        longevity: {
+            default: false,
+            describe: "Print intermediate output from workers."
+        },
+        alerts: {
+            default: 'CONSOLE',
+            describe: "alerts generated can be redirected to FILE, CONSOLE, EMAIL" +
+                      "for directing alerts to files, filename must be specified"
+        },
+        filename: {
+            default: undefined,
+            describe: "Filename to which the alerts must be written to"
         },
         operations: {
             alias: "O",
@@ -119,7 +148,7 @@ var argp = yargs
         },
         iterations: {
             alias: "I",
-            default: 1,
+            default: undefined,
             describe: "Total number of iterations to perform per process."
         },
         processes: {
@@ -144,7 +173,7 @@ var argp = yargs
         },
         keyrange: {
             alias: "K",
-            default: 1000,
+            default: 100000,
             describe: "The number of keys to use."
         },
         datatype: {
@@ -152,13 +181,8 @@ var argp = yargs
             describe: "The datatype of the record."
         },
         datasize: {
-            default: 8,
+            default: 1024,
             describe: "Size of the record."
-        },
-        'chart-memory': {
-            boolean: false,
-            default: false,
-            describe: "Chart the memory used before printing the summary."
         },
         'summary': {
             boolean: true,
@@ -167,12 +191,17 @@ var argp = yargs
         }
     });
 
-var argv = argp.argv;
+var argv = argp.argv;*/
 
-if ( argv.help === true) {
-    argp.showHelp()
-    return;
+if( argv.querySpec !== undefined) {
+    queryWorkers = argv.querySpec.length;
+} 
+
+if( argv.scanSpec !== undefined) {
+    scanWorkers  = argv.scanSpec.length;
 }
+
+var rwWorkers    = argv.processes - queryWorkers - scanWorkers;
 
 if ( !cluster.isMaster ) {
     console.error('main.js must not run as a child process.');
@@ -182,30 +211,22 @@ if ( !cluster.isMaster ) {
 var FOPS = (argv.operations / (argv.reads + argv.writes));
 var ROPS = FOPS * argv.reads;
 var WOPS = FOPS * argv.writes;
+var ROPSPCT = ROPS / argv.operations * 100;
+var WOPSPCT = WOPS / argv.operations * 100;
+
 
 if ( (ROPS + WOPS) < argv.operations ) {
     DOPS = argv.operations - (ROPS + WOPS);
     ROPS += DOPS;
 }
 
-if ( argv.time !== undefined ) {
-    var time_match = argv.time.toString().match(/(\d+)([smh])?/)
-    if ( time_match !== null ) {
-        if ( time_match[2] !== null ) {
-            argv.time = parseInt(time_match[1],10);
-            var time_unit = time_match[2];
-            switch( time_unit ) {
-                case 'm':
-                    argv.time = argv.time * 60;
-                    break;
-                case 'h':
-                    argv.time = argv.time * 60 * 60;
-                    break;
-            }
-            argv.iterations = undefined;
-        }
-    }
+if(argv.time !== undefined){
+    argv.time = stats.parse_time_to_secs(argv.time);
+    argv.iterations = undefined;
 }
+
+var alert = { mode: argv.alerts, filename: argv.filename}
+alerts.setupAlertSystem(alert);
 
 /***********************************************************************
  *
@@ -213,22 +234,15 @@ if ( argv.time !== undefined ) {
  *
  ***********************************************************************/
 
-function logger_timestamp() {
-    var hrtime = process.hrtime()
-    return util.format('[master: %d] [%s]', process.pid, hrtime);
-}
-
 var logger = new (winston.Logger)({
     transports: [
         new (winston.transports.Console)({
             level: 'info',
             silent: false,
-            colorize: true,
-            timestamp: logger_timestamp
+            colorize: true
         })
     ]
 });
-
 
 /***********************************************************************
  *
@@ -237,8 +251,8 @@ var logger = new (winston.Logger)({
  ***********************************************************************/
 
 function finalize() {
-    if ( argv['summary'] === true ) {
-        return stats.report_final(iterations_results, argv, console.log);
+    if ( argv.summary === true && rwWorkers > 0) {
+        return stats.report_final(argv, console.log);
     }
 }
 
@@ -246,7 +260,7 @@ function worker_spawn() {
     var worker = cluster.fork();
     worker.iteration = 0;
     worker.on('message', worker_results(worker));
-}
+}	      
 
 function worker_exit(worker) {
     worker.send(['end']);
@@ -259,119 +273,94 @@ function worker_shutdown() {
 }
 
 /**
- * Data to be written for the record type string.
+ * Signal all workers asking for data on transactions
  */
-var STRING_DATA = "This the test data to be written to the server"
-var CHAR_DATA = "DATAS";
-
-/**
- * key are in range [1 ... argv.keyrange]
- */
-function keygen() {
-    var rand = Math.floor(Math.random() * 0x100000000) % argv.keyrange + 1;
-    return rand < 1 ? 1 : rand;
+function worker_probe() {
+    Object.keys(cluster.workers).forEach(function(id) {
+        cluster.workers[id].send(['trans']);
+    });
 }
 
-/**
- * Generate data of size argv.datasize with a gven datatype argv.datatype
- * Currently string datatype from size 5 to argv.datatype.
- * And 8 byte size integers are supported
- */
 
-function datagen ( key ) {
-    var data; 
-    switch (argv.datatype) {
-        case "INTEGER" :
-        {
-            return key;
-        }
-        case "STRING"  :
-        {
-            data =  CHAR_DATA;
-            while ( data.length < argv.datasize )
-            {
-                data += STRING_DATA;
-            }
-            data += key;
-            return data;
-        }   
-		case "BYTES" :
-		{
-			data = new Buffer(argv.datasize);
-			var i = 0;
-			while( i < argv.datasize)
-			{
-				data.writeUInt8(i,i++);
-			}
-			return data;
-		}
-        default :
-            return key;
-    }
-    
-}
-function putgen(commands) {
-    var key = keygen();
-    var data = datagen( key);
-    commands.push(['put', key, {k: data}]);
-}
+function rwWorkerJob(worker) {
 
-function getgen(commands) {
-    var key = keygen();
-    commands.push(['get', key]);
-}
-
-function opgen(ops, commands) {
-
-    var rand = Math.floor(Math.random() * 0x100000000) % 2;
-
-    if ( ops[rand][0] >= 0 ) {
-        ops[rand][1](commands);
-        ops[rand][0]--;
-    }
-}
-
-function worker_run(worker) {
-
-    var commands = [];
-
-    var ops = [
-        [ROPS, getgen],
-        [WOPS, putgen]
-    ];
-
-    worker.iteration++;
-
-    for (; commands.length < argv.operations;) {
-        opgen(ops, commands);
-    }
-
-    worker.send(['run', commands]);
-}
-
-function worker_results_iteration(worker, iteration_stats) {
-
-    var result = {
-        worker: worker.id,
-        pid: worker.process.pid,
-        iteration: worker.iteration,
-        stats: iteration_stats
+    var option = {
+        namespace   : argv.namespace,
+        set         : argv.set,
+        keyRange    : argv.keyRange,
+        rops        : ROPS, 
+        wops        : WOPS,
+        binSpec     : argv.binSpec
     };
+    worker.iteration++;
+    worker.send(['run', option]);
+}
 
-    if ( argv['summary'] === true ) {
-        iterations_results.push(result);
+// @to-do this worker has to create index and then issue a query request
+// once the index is created. After implementing the task completed API 
+// this can be enhanced for that.
+function queryWorkerJob(worker, id) {
+    var stmt = {};
+    var queryConfig = argv.querySpec[id];
+    if(queryConfig.qtype === "Range") {
+        stmt.filters = [aerospike.filter.range(queryConfig.bin,queryConfig.min, queryConfig.max)];
+    }
+    else if(queryConfig.qtype === "Equal") {
+        stmt.filters = [aerospike.filter.equal(queryConfig.bin, queryConfig.value)];
     }
 
-    if ( argv['summary'] === false && argv['chart-memory'] === true && worker.id == 1 ) {
-        stats.chart_iteration_memory(worker.iteration, 1, result, MEMCHART_BAR, MEMCHART_MAX_MB, MEMCHART_BUCKETS, logger.info)
+    var options = {
+        namespace   : argv.namespace,
+        set         : argv.set,
+        statement   : stmt
     }
+    console.log(stmt);
+    worker.send(['query', options]);
 
-    if ( !argv.silent ) {
-        stats.report_iteration(result, argv, logger.info);
+}
+
+function scanWorkerJob(worker) {
+    var options = {
+        namespace : argv.namespace,
+        set       : argv.set,
+        statement : argv.scanSpec
     }
+    worker.send(['query', options]);
+}
 
-    if ( worker.iteration < argv.iterations || argv.time !== undefined ) {
-        worker_run(worker);
+/**
+ * Collects the data related to transactions and prints it once the data is recieved from all workers.
+ * (called per second)
+ */
+var counter = 0; // Number of times worker_results_interval is called
+function worker_results_interval(worker, interval_worker_stats){
+    for ( i = 0; i < OP_TYPES; i++ ) {
+	for (j = 0; j < STATS; j++)
+        interval_stats[i][j] = interval_stats[i][j] + interval_worker_stats[i][j];
+    }
+    if (++counter % argv.processes === 0){
+	    print_interval_stats();
+    }
+}
+
+function print_interval_stats(){
+    if( rwWorkers > 0) {
+        logger.info("%s read(tps=%d timeouts=%d errors=%d) write(tps=%d timeouts=%d errors=%d) ",
+                new Date().toString(), interval_stats[0][0],interval_stats[0][1],interval_stats[0][2],
+                interval_stats[1][0], interval_stats[1][1],interval_stats[1][2])
+    }
+    if( queryWorkers || scanWorkers) {
+        logger.info("%s query(records returned = %d timeouts = %d errors = %d)", 
+               new Date().toString(), interval_stats[2][0], interval_stats[2][1], interval_stats[2][2]);
+    }
+}
+
+
+function worker_results_iteration(worker, op_stats) {
+
+    stats.iteration(op_stats);
+    if ( argv.iterations === undefined || worker.iteration < argv.iterations || argv.time !== undefined ) {
+        rwWorkerJob(worker);
     }
     else {
         worker_exit(worker);
@@ -380,9 +369,42 @@ function worker_results_iteration(worker, iteration_stats) {
 
 function worker_results(worker) {
     return function(message) {
-        worker_results_iteration(worker, message);
-    }
+        if ( message[0] === 'stats' ) {
+            worker_results_iteration(worker, message[1]);
+        } else if( message[0] === 'alert') {
+            alerts.handleAlert(message[1].alert, message[1].severity);
+        } else{
+            worker_results_interval(worker,message[1]);
+        }	 
+     };
 }
+
+/**
+*  * Print config information
+*   */
+var keyrange = argv.keyRange.max - argv.keyRange.min;
+
+logger.info("host: "+argv.host+" port:"+argv.port+", namespace: "+argv.namespace+", set: " + argv.set + ", worker processes: " +argv.processes+ 
+            ", keys: " +keyrange + ", read: "+ ROPSPCT + "%, write: "+ WOPSPCT+"%");
+
+
+/**
+ * Flush out the current interval_stats and probe the worker every second.
+ */
+if(!argv.silent){
+    setInterval(function(){
+        reset_interval_stats();
+        worker_probe(cluster); 
+    },1000); 
+}
+
+/**
+ * Reset the value of internal_stats.
+ */
+function reset_interval_stats(){
+    interval_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+}
+
 
 /***********************************************************************
  *
@@ -407,7 +429,18 @@ process.on('SIGTERM', function() {
 
 cluster.on('online', function(worker) {
     online++;
-    worker_run(worker);
+    if(rwOnline < rwWorkers) {
+        rwOnline++;
+        rwWorkerJob(worker);
+    }
+    else if( queryOnline < queryWorkers) {
+        queryWorkerJob(worker, queryOnline);
+        queryOnline++;
+    }
+    else if( scanOnline < scanWorkers) {
+        scanOnline++;
+        scanWorkerJob(worker);
+    }
 });
 
 cluster.on('disconnect', function(worker, code, signal) {
@@ -428,22 +461,24 @@ cluster.on('exit', function(worker, code, signal) {
         process.exit(0);
     }
 });
+
 /***********************************************************************
  *
  * Setup Workers
  *
  ***********************************************************************/
 
-cluster.setupMaster({
-    exec : "worker.js",
-    silent : false
-});
 
 if ( argv.time !== undefined ) {
     timerId = setTimeout(function(){
         worker_shutdown(cluster);
      }, argv.time*1000);
 }
+
+cluster.setupMaster({
+    exec : "worker.js",
+    silent : false
+});
 
 for ( p = 0; p < argv.processes; p++ ) {
     worker_spawn();

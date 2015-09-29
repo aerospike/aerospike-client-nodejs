@@ -58,7 +58,7 @@ typedef struct AsyncData {
     as_batch_read  *results;// Results from a aerospike_batch_get operation
     LogInfo * log;
     uint32_t n;
-    Persistent<Function> callback;
+    Nan::Persistent<Function> callback;
 } AsyncData;
 
 
@@ -105,10 +105,10 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
  *      This should only keep references to V8 or V8 structures for use in 
  *      `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(args))
+static void * prepare(ResolveArgs(info))
 {
-	NanScope();
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(args.This());
+	Nan::HandleScope scope;
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData *     data = new AsyncData;
@@ -122,10 +122,10 @@ static void * prepare(ResolveArgs(args))
     as_batch * batch = &data->batch;
     data->policy = NULL;
 
-    int arglength = args.Length();
+    int arglength = info.Length();
 
-    if ( args[arglength-1]->IsFunction()) {
-		NanAssignPersistent(data->callback, args[arglength-1].As<Function>());
+    if ( info[arglength-1]->IsFunction()) {
+        data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "batch_exists callback registered");
     }
     else {
@@ -134,8 +134,8 @@ static void * prepare(ResolveArgs(args))
         goto Err_Return;
     }
 
-    if ( args[BGET_ARG_POS_KEY]->IsArray() ) {
-        Local<Array> keys = Local<Array>::Cast(args[BGET_ARG_POS_KEY]);
+    if ( info[BGET_ARG_POS_KEY]->IsArray() ) {
+        Local<Array> keys = Local<Array>::Cast(info[BGET_ARG_POS_KEY]);
         if( batch_from_jsarray(batch, keys, log) != AS_NODE_PARAM_OK) {
             as_v8_debug(log, "parsing batch keys failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
@@ -150,9 +150,9 @@ static void * prepare(ResolveArgs(args))
     }
 
     if (arglength > 2 ) {
-        if ( args[BGET_ARG_POS_BPOLICY]->IsObject() ) {
+        if ( info[BGET_ARG_POS_BPOLICY]->IsObject() ) {
 			data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
-            if (batchpolicy_from_jsobject(data->policy, args[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+            if (batchpolicy_from_jsobject(data->policy, info[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing batch policy failed");
                 COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
                 goto Err_Return;
@@ -200,7 +200,6 @@ static void execute(uv_work_t * req)
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_exists(as, err, policy, batch, batch_exists_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            // AS_DEBUG(log, ERROR, err);
             data->results = NULL;
             data->n = 0;
         }
@@ -220,7 +219,7 @@ static void execute(uv_work_t * req)
  */
 static void respond(uv_work_t * req, int status)
 {
-	NanScope();
+	Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -234,7 +233,7 @@ static void respond(uv_work_t * req, int status)
     // to avoid memory leak.
 
     // Build the arguments array for the callback
-    Handle<Value> argv[2];
+    Local<Value> argv[2];
 
     if ( data->node_err == 1 ) {
         // Sets the err->code and err->message in the 'err' variable
@@ -242,18 +241,18 @@ static void respond(uv_work_t * req, int status)
         err->line = 0;
         err->file = NULL;
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = NanNull();
+        argv[1] = Nan::Null();
     }
     else if ( num_rec == 0 || batch_results == NULL ) {
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = NanNull();
+        argv[1] = Nan::Null();
     }
     else {
 
         int rec_found = 0;
 
         // the result is an array of batch results
-        Handle<Array> results = NanNew<Array>(num_rec);
+        Local<Array> results = Nan::New<Array>(num_rec);
 
         for ( uint32_t i = 0; i< num_rec; i++) {
 
@@ -265,18 +264,18 @@ static void respond(uv_work_t * req, int status)
             //   - status 
             //   - key
             //   - metadata
-            Handle<Object> result = NanNew<Object>();
+            Local<Object> result = Nan::New<Object>();
 
             // status attribute
-            result->Set(NanNew("status"), NanNew(status));
+            result->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
 
             // key attribute - should always be sent
-            result->Set(NanNew("key"), key_to_jsobject(key, log));
+            result->Set(Nan::New("key").ToLocalChecked(), key_to_jsobject(key, log));
 
             if(batch_results[i].result == AEROSPIKE_OK) {
                 
                 // metadata attribute
-                result->Set(NanNew("metadata"), recordmeta_to_jsobject(record, log));
+                result->Set(Nan::New("metadata").ToLocalChecked(), recordmeta_to_jsobject(record, log));
 
                 rec_found++;
             }
@@ -294,27 +293,27 @@ static void respond(uv_work_t * req, int status)
 
         as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
         argv[0] = error_to_jsobject(err, log);
-        argv[1] = results;  
+        argv[1] = (results);  
     }
 
     // Surround the callback in a try/catch for safety`
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = NanNew<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(data->callback);
 
-	NanMakeCallback(NanGetCurrentContext()->Global(), cb, 2, argv);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
 
     as_v8_debug(log,"Invoked the callback");
 
     // Process the exception, if any
     if ( try_catch.HasCaught() ) {
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
     }
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    NanDisposePersistent(data->callback);
+    data->callback.Reset();
 
     // clean up any memory we allocated
     if ( data->node_err == 1) {
@@ -343,7 +342,6 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::BatchExists)
 {
-	
-    V8_RETURN(async_invoke(args, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }
 
