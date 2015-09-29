@@ -89,7 +89,7 @@ static void * prepare(ResolveArgs(info))
 
 	// The last argument should be a callback function.
     if ( info[argc-1]->IsFunction()) {
-		//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
+		 
         data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
@@ -178,13 +178,13 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
     }   
 
     // Surround the callback in a try/catch for safety
@@ -229,5 +229,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::UDFRemove)
 {
-    (async_invoke(info, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }

@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <node.h>
+#include <nan.h>
+#include "log.h"
+#include "query.h"
+
 #if NODE_MODULE_VERSION > 0x000B
 #  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
 #  define ResolveAsyncCallbackArgs uv_async_t* handle
@@ -30,10 +35,6 @@ extern "C" {
 	#include <aerospike/aerospike.h>
 }
 
-#include <node.h>
-#include <nan.h>
-#include "log.h"
-#include "query.h"
 
 using namespace node;
 using namespace v8;
