@@ -49,7 +49,7 @@ get: build
 .PHONY: query-valgrind
 query-valgrind: build
 	mkdir -p valgrind
-	node examples/indexCreate.js s idx_s string
+	node examples/index_create.js s idx_s string
 	# valgrind $(VALGRIND_OPTS) node examples/query.js -I 1 1>valgrind/query-1.out 2>valgrind/query-1.valgrind
 	valgrind $(VALGRIND_OPTS) node --expose-gc examples/query.js -q -I 100 1>valgrind/query-100.out 2>valgrind/query-100.valgrind
 	# valgrind $(VALGRIND_OPTS) node examples/query.js -I 1000 1>valgrind/query-1000.out 2>valgrind/query-1000.valgrind
@@ -57,7 +57,7 @@ query-valgrind: build
 
 .PHONY: query
 query: build
-	node examples/indexCreate.js s idx_s string
+	node examples/index_create.js s idx_s string
 	# node --expose-gc examples/query.js -I 1
 	# node --expose-gc examples/query.js -I 100
 	node --expose-gc examples/query.js -q -I 1000
