@@ -20,7 +20,7 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New<String>(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> key_policy_values()
 {
@@ -94,13 +94,13 @@ Local<Object> policy()
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
     
-    obj->Set(Nan::New<String>("key").ToLocalChecked(), key_policy_values());
-    obj->Set(Nan::New<String>("retry").ToLocalChecked(), retry_policy_values());
-    obj->Set(Nan::New<String>("gen").ToLocalChecked(), generation_policy_values());
-    obj->Set(Nan::New<String>("exists").ToLocalChecked(), exists_policy_values());
-	obj->Set(Nan::New<String>("replica").ToLocalChecked(), replica_policy_values());
-	obj->Set(Nan::New<String>("consistencyLevel").ToLocalChecked(), consistency_level_policy_values());
-	obj->Set(Nan::New<String>("commitLevel").ToLocalChecked(), commit_level_policy_values());
+    obj->Set(Nan::New("key").ToLocalChecked(), key_policy_values());
+    obj->Set(Nan::New("retry").ToLocalChecked(), retry_policy_values());
+    obj->Set(Nan::New("gen").ToLocalChecked(), generation_policy_values());
+    obj->Set(Nan::New("exists").ToLocalChecked(), exists_policy_values());
+	obj->Set(Nan::New("replica").ToLocalChecked(), replica_policy_values());
+	obj->Set(Nan::New("consistencyLevel").ToLocalChecked(), consistency_level_policy_values());
+	obj->Set(Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
 
     return scope.Escape(obj);
 }

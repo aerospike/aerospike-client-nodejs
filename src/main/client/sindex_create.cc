@@ -95,7 +95,7 @@ static void * prepare(ResolveArgs(info))
 
 	// The last argument should be a callback function.
     if ( info[argc-1]->IsFunction()) {
-		//NanAssignPersistent(data->callback, info[argc-1].As<Function>());
+		 
         data->callback.Reset(info[argc-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
@@ -214,12 +214,6 @@ static void execute(uv_work_t * req)
     as_error *  err          = &data->err;
     as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
-	//const as_namespace ns	 = data->ns;
-	//const as_set set		 = data->set;
-	//const as_bin_name bin	 = data->bin;
-	//const char* index		 = data->index;
-	//as_index_type type		 = data->type;
-
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -257,13 +251,12 @@ static void respond(uv_work_t * req, int status)
     Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
-        argv[0] = (error_to_jsobject(err, log));
-        // AS_DEBUG(log, _KEY,  key);
+        argv[0] = error_to_jsobject(err, log);
     }
     else {
         err->func = NULL;
         as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
     }   
 
     // Surround the callback in a try/catch for safety
@@ -308,5 +301,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::sindexCreate)
 {
-    (async_invoke(info, prepare, execute, respond));
+    async_invoke(info, prepare, execute, respond);
 }

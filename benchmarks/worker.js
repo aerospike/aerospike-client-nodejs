@@ -29,7 +29,6 @@ var util = require('util');
 var winston = require('winston');
 var stats = require('./stats');
 var status = aerospike.status;
-//var memwatch = require('memwatch');
 var alerts   = require('./alerts.js');
 var argv     = require("./config.json");
 /**********************************************************************
@@ -427,12 +426,6 @@ var runLongRunningJob = function(options) {
  *
  ***********************************************************************/
 
-/*memwatch.on('leak', function(info) {
-    //generate alert.
-    var msg = { alert : info, severity: alerts.severity.HIGH};
-    process.send(['alert', msg]);
-   
-});*/
 /**
  * Listen for exit signal from parent. Hopefully we can do a clean 
  * shutdown and emit results.

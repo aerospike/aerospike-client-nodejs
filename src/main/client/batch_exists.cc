@@ -125,7 +125,6 @@ static void * prepare(ResolveArgs(info))
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction()) {
-		//NanAssignPersistent(data->callback, info[arglength-1].As<Function>());
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "batch_exists callback registered");
     }
@@ -201,7 +200,6 @@ static void execute(uv_work_t * req)
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_exists(as, err, policy, batch, batch_exists_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            // AS_DEBUG(log, ERROR, err);
             data->results = NULL;
             data->n = 0;
         }
@@ -242,11 +240,11 @@ static void respond(uv_work_t * req, int status)
         err->func = NULL;
         err->line = 0;
         err->file = NULL;
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
     }
     else if ( num_rec == 0 || batch_results == NULL ) {
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
     }
     else {
@@ -294,7 +292,7 @@ static void respond(uv_work_t * req, int status)
         }
 
         as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
-        argv[0] = (error_to_jsobject(err, log));
+        argv[0] = error_to_jsobject(err, log);
         argv[1] = (results);  
     }
 
@@ -315,7 +313,6 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    //data->callback.Reset();
     data->callback.Reset();
 
     // clean up any memory we allocated
@@ -345,7 +342,6 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::BatchExists)
 {
-	
     async_invoke(info, prepare, execute, respond);
 }
 

@@ -270,7 +270,7 @@ static void * prepare(ResolveArgs(info))
         query_cbdata->signal_interval	= 0;
         query_cbdata->result_q			= cf_queue_create(sizeof(as_val*), true);
         query_cbdata->max_q_size		= query->q_size ? query->q_size : QUEUE_SZ;
-        //NanAssignPersistent(query_cbdata->data_cb, info[curr_arg_pos].As<Function>());
+         
         query_cbdata->data_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
 
@@ -284,7 +284,7 @@ static void * prepare(ResolveArgs(info))
     // check for error callback 
     if(info[curr_arg_pos]->IsFunction())
     {
-        //NanAssignPersistent(query_cbdata->error_cb, info[curr_arg_pos].As<Function>());
+         
         query_cbdata->error_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
@@ -298,7 +298,7 @@ static void * prepare(ResolveArgs(info))
     // check for termination callback
     if(info[curr_arg_pos]->IsFunction())
     {
-        //NanAssignPersistent(query_cbdata->end_cb, info[curr_arg_pos].As<Function>());
+         
         query_cbdata->end_cb.Reset(info[curr_arg_pos].As<Function>());
         curr_arg_pos++;
     }
@@ -465,7 +465,7 @@ static void respond(uv_work_t * req, int status)
 
     if(data->param_err == 1)
     {
-        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { error_to_jsobject( &data->err, log)};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -475,7 +475,7 @@ static void respond(uv_work_t * req, int status)
     if( data->res != AEROSPIKE_OK)
     {
         as_v8_debug(log,"An error occured in C API invocation");
-        Local<Value> err_info[1] = { (error_to_jsobject( &data->err, log))};
+        Local<Value> err_info[1] = { error_to_jsobject( &data->err, log)};
         if(  !error_cb->IsUndefined() && !error_cb->IsNull())
         {
             Nan::MakeCallback(Nan::GetCurrentContext()->Global(), error_cb, 1, err_info);
@@ -509,7 +509,7 @@ static void respond(uv_work_t * req, int status)
     else
     {
         as_v8_debug(log, "Invoking query callback");
-        argv[0] = Nan::New<String>("Finished query!!!").ToLocalChecked();
+        argv[0] = Nan::New("Finished query!!!").ToLocalChecked();
     }
 
     // Execute the callback
@@ -526,9 +526,9 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    //NanDisposePersistent(query_data->error_cb);
+     
     query_data->error_cb.Reset();
-    //NanDisposePersistent(query_data->end_cb);
+     
     query_data->end_cb.Reset();
     if( data->type == SCANUDF)
     {
@@ -537,7 +537,7 @@ static void respond(uv_work_t * req, int status)
     }
     else 
     {
-        //NanDisposePersistent(query_data->data_cb);
+         
         query_data->data_cb.Reset();
         if(query_data->result_q != NULL) 
         {
