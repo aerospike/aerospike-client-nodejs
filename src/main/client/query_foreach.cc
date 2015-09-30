@@ -549,7 +549,7 @@ static void respond(uv_work_t * req, int status)
     else
     {
         as_predicate* p  = data->query_scan->query->where.entries;
-        if(p->dtype == AS_INDEX_STRING && p->type == AS_PREDICATE_EQUAL) {
+        if( p != NULL && p->dtype == AS_INDEX_STRING && p->type == AS_PREDICATE_EQUAL) {
             if(p->value.string != NULL) {
                 cf_free(p->value.string);
             }
