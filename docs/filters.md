@@ -57,10 +57,10 @@ and the value must be of the same type.
 Parameters:
 
 - `bin`         – The name of the bin to apply the filter to.
-- `min`         – The minimum value of the bin, the records with bin value greater than
-				  min will be returned as part of query result.
-- `max`			- The maximum value of the bin, the records with bin value less than max
-				  will be returned as part of query result.
+- `min`         – The minimum value of the bin, the records with bin value equal to or greater than
+				  min will be returned as part of query result (min value is inclusive).
+- `max`			- The maximum value of the bin, the records with bin value equal to or less than max
+				  will be returned as part of query result ( max value is inclusive).
 ```js
 filter.range('b', 1, 1000)
 ```
