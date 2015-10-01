@@ -6,7 +6,7 @@ function
 Example:
 
 ```js
-var filter = aerospike.filters
+var filter = aerospike.filter
 
 var queryArgs = {
   filters: [
