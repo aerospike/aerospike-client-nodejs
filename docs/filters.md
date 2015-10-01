@@ -6,7 +6,7 @@ function
 Example:
 
 ```js
-var filter = aerospike.filters
+var filter = aerospike.filter
 
 var queryArgs = {
   filters: [
@@ -29,13 +29,13 @@ equal()
 
 ### equal(bin, value)
 
-Apply an equality filter criteria on a bin that is indexed. The bin must contain either String or Integer, 
+Apply an equality filter criteria on a bin that is indexed. The bin must contain either String or Integer,
 and the value must be of the same type.
 
 Parameters:
 
 - `bin`         – The name of the bin to apply the filter to.
-- `value`       – The equality of this value will be checked for the given bin. 
+- `value`       – The equality of this value will be checked for the given bin.
 
 ```js
 filter.equal('a', 'hello')
@@ -51,16 +51,16 @@ range()
 
 ### range(bin, min, max)
 
-Apply a range filter criteria on a bin that is indexed. The bin must contain an Integer, 
+Apply a range filter criteria on a bin that is indexed. The bin must contain an Integer,
 and the value must be of the same type.
 
 Parameters:
 
 - `bin`         – The name of the bin to apply the filter to.
-- `min`         – The minimum value of the bin, the records with bin value greater than 
-				  min will be returned as part of query result.
-- `max`			- The maximum value of the bin, the records with bin value less than max
-				  will be returned as part of query result.
+- `min`         – The minimum value of the bin, the records with bin value equal to or greater than
+				  min will be returned as part of query result (min value is inclusive).
+- `max`			- The maximum value of the bin, the records with bin value equal to or less than max
+				  will be returned as part of query result ( max value is inclusive).
 ```js
 filter.range('b', 1, 1000)
 ```

@@ -1,21 +1,21 @@
 /*******************************************************************************
  * Copyright 2013 Aerospike Inc.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
+ *
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  ******************************************************************************/
@@ -41,7 +41,7 @@ extern "C" {
 
 #define SELECT_ARG_POS_KEY     0
 #define SELECT_ARG_POS_BINS    1
-#define SELECT_ARG_POS_RPOLICY 2 // Read policy position and callback position is not same 
+#define SELECT_ARG_POS_RPOLICY 2 // Read policy position and callback position is not same
 #define SELECT_ARG_POS_CB      3 // for every invoke of select. If readpolicy is not passed from node
 // application, argument position for callback changes.
 
@@ -74,30 +74,29 @@ typedef struct AsyncData {
 
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
 
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data = new AsyncData;
     data->as = client->as;
-    LogInfo* log = data->log = client->log; 
+    LogInfo* log = data->log = client->log;
     // Local variables
     as_key *    key = &data->key;
     as_record * rec = &data->rec;
-	data->policy					= NULL;
+    data->policy                    = NULL;
     data->param_err = 0;
 
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction()) {
-		 
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js callback registered");
     }
@@ -122,14 +121,14 @@ static void * prepare(ResolveArgs(info))
     as_record_init(rec, 0);
     // To select the values of given bin, not complete record.
     if ( info[SELECT_ARG_POS_BINS]->IsArray() ) {
-		Local<Array> v8bins = Local<Array>::Cast(info[SELECT_ARG_POS_BINS]);
-		int res = bins_from_jsarray(&data->bins, &data->num_bins, v8bins, log);
-		if ( res != AS_NODE_PARAM_OK) 
-		{
-			as_v8_error(log,"Parsing bins failed in select ");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
+        Local<Array> v8bins = Local<Array>::Cast(info[SELECT_ARG_POS_BINS]);
+        int res = bins_from_jsarray(&data->bins, &data->num_bins, v8bins, log);
+        if ( res != AS_NODE_PARAM_OK)
+        {
+            as_v8_error(log,"Parsing bins failed in select ");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
     }
     else {
         as_v8_error(log, "Bin names should be an array of string");
@@ -139,7 +138,7 @@ static void * prepare(ResolveArgs(info))
 
     if ( arglength > 3) {
         if ( info[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
-			data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+            data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
             if (readpolicy_from_jsobject( data->policy, info[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Parsing of readpolicy from object failed");
                 COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -152,20 +151,20 @@ static void * prepare(ResolveArgs(info))
             goto Err_Return;
         }
     }
-    
+
     return data;
 
 Err_Return:
     data->param_err = 1;
     return data;
 }
+
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
-
 static void execute(uv_work_t * req)
 {
     // Fetch the AsyncData structure
@@ -178,7 +177,7 @@ static void execute(uv_work_t * req)
     as_record * rec = &data->rec;
     as_policy_read * policy = data->policy;
     LogInfo * log   = data->log;
-    
+
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
@@ -195,20 +194,19 @@ static void execute(uv_work_t * req)
         }
         cf_free(data->bins);
     }
-
 }
 
 /**
  *  respond() — Function to be called after `execute()`. Used to send response
  *  to the callback.
- *  
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -242,8 +240,8 @@ static void respond(uv_work_t * req, int status)
     Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = Nan::New<Function>(data->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
+    Local<Function> cb = Nan::New<Function>(data->callback);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 4, argv);
 
     as_v8_debug(log, "Invoked Exists callback");
     // Process the exception, if any
@@ -253,16 +251,16 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	data->callback.Reset();
+    data->callback.Reset();
 
     // clean up any memory we allocated
     if ( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
-		if( data->policy != NULL)
-		{
-			cf_free(data->policy);
-		}
+        if( data->policy != NULL)
+        {
+            cf_free(data->policy);
+        }
         as_v8_debug(log, "Cleaned up the structures");
     }
 

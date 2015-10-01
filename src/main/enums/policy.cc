@@ -57,50 +57,50 @@ Local<Object> exists_policy_values()
     set(obj, "IGNORE",  AS_POLICY_EXISTS_IGNORE);
     set(obj, "CREATE",  AS_POLICY_EXISTS_CREATE);
     set(obj, "UPDATE",  AS_POLICY_EXISTS_UPDATE);
-	set(obj, "REPLACE", AS_POLICY_EXISTS_REPLACE);
-	set(obj, "CREATE_OR_REPLACE", AS_POLICY_EXISTS_CREATE_OR_REPLACE);
+    set(obj, "REPLACE", AS_POLICY_EXISTS_REPLACE);
+    set(obj, "CREATE_OR_REPLACE", AS_POLICY_EXISTS_CREATE_OR_REPLACE);
     return scope.Escape(obj);
 }
 
 Local<Object> replica_policy_values()
 {
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set(obj, "MASTER", AS_POLICY_REPLICA_MASTER); // read only from partition master replica node
-	set(obj, "ANY", AS_POLICY_REPLICA_ANY);    // read from an unspecified replica node
-	return scope.Escape(obj);
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set(obj, "MASTER", AS_POLICY_REPLICA_MASTER); // read only from partition master replica node
+    set(obj, "ANY", AS_POLICY_REPLICA_ANY);    // read from an unspecified replica node
+    return scope.Escape(obj);
 }
 
 Local<Object> consistency_level_policy_values()
 {
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set(obj, "ONE", AS_POLICY_CONSISTENCY_LEVEL_ONE); // Involve a single replica in the operation.
-	set(obj, "ALL", AS_POLICY_CONSISTENCY_LEVEL_ALL); // Involve all replicas in the operation
-	return scope.Escape(obj);
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set(obj, "ONE", AS_POLICY_CONSISTENCY_LEVEL_ONE); // Involve a single replica in the operation.
+    set(obj, "ALL", AS_POLICY_CONSISTENCY_LEVEL_ALL); // Involve all replicas in the operation
+    return scope.Escape(obj);
 }
 
 Local<Object> commit_level_policy_values()
 {
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set(obj, "ALL", AS_POLICY_COMMIT_LEVEL_ALL); // Return succcess only after successfully committing all replicas
-	set(obj, "MASTER", AS_POLICY_COMMIT_LEVEL_MASTER); // Return succcess after successfully committing the master replica
-	return scope.Escape(obj);
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set(obj, "ALL", AS_POLICY_COMMIT_LEVEL_ALL); // Return succcess only after successfully committing all replicas
+    set(obj, "MASTER", AS_POLICY_COMMIT_LEVEL_MASTER); // Return succcess after successfully committing the master replica
+    return scope.Escape(obj);
 }
 
 Local<Object> policy()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
-    
+
     obj->Set(Nan::New("key").ToLocalChecked(), key_policy_values());
     obj->Set(Nan::New("retry").ToLocalChecked(), retry_policy_values());
     obj->Set(Nan::New("gen").ToLocalChecked(), generation_policy_values());
     obj->Set(Nan::New("exists").ToLocalChecked(), exists_policy_values());
-	obj->Set(Nan::New("replica").ToLocalChecked(), replica_policy_values());
-	obj->Set(Nan::New("consistencyLevel").ToLocalChecked(), consistency_level_policy_values());
-	obj->Set(Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
+    obj->Set(Nan::New("replica").ToLocalChecked(), replica_policy_values());
+    obj->Set(Nan::New("consistencyLevel").ToLocalChecked(), consistency_level_policy_values());
+    obj->Set(Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
 
     return scope.Escape(obj);
 }

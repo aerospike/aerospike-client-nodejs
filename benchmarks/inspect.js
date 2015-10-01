@@ -16,7 +16,7 @@
 
 /***********************************************************************
  *
- * node inspect.js -h 
+ * node inspect.js -h
  *
  ***********************************************************************/
 
@@ -253,7 +253,7 @@ function report_final() {
 }
 
 function exec(p, i, o) {
-    
+
     var stdout = new Buffer("");
     var stderr = new Buffer("");
 
@@ -272,7 +272,7 @@ function exec(p, i, o) {
     proc.stdout.on('data', function(data) {
         stdout = Buffer.concat([stdout,data])
     });
-    
+
     proc.stderr.on('data', function(data) {
         stderr = Buffer.concat([stderr,data])
     });
@@ -285,12 +285,12 @@ function exec(p, i, o) {
 
 function step(p, i, o) {
     o += O_STEP;
-    
+
     if ( o > O_MAX ) {
         i += I_STEP;
         o = O_MIN;
     }
-    
+
     if ( i > I_MAX ) {
         p += P_STEP;
         i = I_MIN;

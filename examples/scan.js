@@ -17,24 +17,25 @@
 /*******************************************************************************
  *
  * Write a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
-var client    = aerospike.client;
+var client = aerospike.client;
 var yargs = require('yargs');
 var events = require('events');
 var util = require('util');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
-var scanPriority  = aerospike.scanPriority;
+var scanPriority = aerospike.scanPriority;
 
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -43,6 +44,11 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        quiet: {
+            alias: "q",
+            boolean: true,
+            describe: "Do not display content."
         },
         host: {
             alias: "h",
@@ -82,34 +88,42 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }  
+        },
+        iterations: {
+            alias: "I",
+            default: 1,
+            describe: "Number of iterations"
+        },
     });
 
 var argv = argp.argv;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     return;
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -119,56 +133,55 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
- * Establish a connection to the cluster.
- * 
+ * Perform the operation
+ *
  ******************************************************************************/
 
-aerospike.client(config).connect(function (err, client) {
+function run(client) {
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
+    var options = {
+        nobins: false,
+        concurrent: true,
+    };
 
-    //
-    // Perform the operation
-    //
-
-    var count = 0;
-
-	var options = { nobins:false, concurrent: true }
-    var query = client.query(argv.namespace, argv.set, options );
-
-	var stream = query.execute();
+    var stream = client.query(argv.namespace, argv.set, options).execute();
 
     stream.on('data', function(rec) {
-		// process the scanned record here
-		count++;
-
-		console.log(rec);
+        !argv.quiet && console.log(JSON.stringify(rec, null, '    '));
     });
 
-    stream.on('error', function(err){
-        console.log(err);
+    stream.on('error', function(err) {
+        console.error(err);
+        process.exit(1);
     });
 
     stream.on('end', function() {
-        console.log('TOTAL SCANNED:', count++);
-        process.exit(0)
+        iteration.next(run, client);
     });
+}
 
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        console.error("Error: " + err.message);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+aerospike.client(config).connect(function(err, client) {
+    if (isError(err)) {
+        process.exit(1);
+    } else {
+        run(client);
+    }
 });

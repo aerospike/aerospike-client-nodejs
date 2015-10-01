@@ -1,6 +1,6 @@
 # Status
 
-Error codes returned by the aerospike server for all the database operations. 
+Error codes returned by the aerospike server for all the database operations.
 
 An enumeration of the status codes are available in `aerospike.status` object, which can be accessed as follows:
 
@@ -69,7 +69,7 @@ Record does not exist in database. May be returned by read, or write with policy
 
 #### 603 - AEROSPIKE_ERR_RECORD_EXISTS
 
-Record already exists. May be returned by write with policy `Exists.CREATE`. 
+Record already exists. May be returned by write with policy `Exists.CREATE`.
 
 #### 604 - AEROSPIKE_ERR_RECORD_GENERATION
 

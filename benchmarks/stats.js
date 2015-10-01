@@ -30,7 +30,7 @@ WORKER_MEMORY               = 2;
 WORKER_NFIELDS              = 3;
 
 
-// histograms 
+// histograms
 // 1. For status code of each operation.
 // 2. Latency histogram.
 var hist = {};
@@ -113,7 +113,7 @@ function parse_time_to_secs(time){
                         time = time * 60;	
                     break;
                     case 'h':
-                        time = time * 60 * 60;  
+                        time = time * 60 * 60;
                     break;
                 }
             }
@@ -125,7 +125,7 @@ function parse_time_to_secs(time){
 
 function time_histogram(operations) {
 
-    
+
     operations.map(function(op) {
         return duration(op[OPERATION_TIME_START],op[OPERATION_TIME_END]);
     }).forEach(function(dur){
@@ -272,7 +272,7 @@ function report_final(argv, print) {
             configTable.push({'iterations': argv.iterations === undefined ? 'undefined' : argv.iterations});
             configTable.push({'processes': argv.processes});
             configTable.push({'time': argv.time === undefined ? 'undefined' : time_units(argv.time)});
-            
+
             print();
             print("SUMMARY");
             print();

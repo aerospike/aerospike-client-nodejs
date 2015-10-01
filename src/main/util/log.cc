@@ -52,14 +52,14 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
         return;
     }
 
-	/* sometimes this part gets executed after the client object is closed.
-	 * This is due to the asynchronous execution nature of node.js
-	 * So check the validity of FD before forming the log message
-	 */ 
-	 if( fcntl(log->fd, F_GETFD) == -1 || errno == EBADF)
-	 {
-		 return;
-	 }
+    /* sometimes this part gets executed after the client object is closed.
+     * This is due to the asynchronous execution nature of node.js
+     * So check the validity of FD before forming the log message
+     */
+     if( fcntl(log->fd, F_GETFD) == -1 || errno == EBADF)
+     {
+         return;
+     }
     /* Make sure there's always enough space for the \n\0. */
     char msg[1024] = {0};
 
@@ -75,7 +75,7 @@ void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, co
     gmtime_r(&now, &nowtm);
     pos += strftime(msg, limit, "%b %d %Y %T %Z: ", &nowtm);
     pos += snprintf(msg+pos, limit-pos, "%-5s(%d) [%s:%d] [%s] - ", log_severity_strings[level+1], getpid(), basename((char*) file), line, func);
-    
+
     va_list ap;
     va_start(ap, fmt);
     pos += vsnprintf(msg+pos, limit-pos, fmt, ap);
@@ -106,17 +106,17 @@ void stringify(char * res_str, const as_record * rec, const char * data_type)
     if (strcmp(data_type, BINS) == 0) {
         int pos = 0;
         pos += sprintf(res_str+pos, "[");
-        as_record_iterator it; 
+        as_record_iterator it;
         as_record_iterator_init(&it, rec);
-        while ( as_record_iterator_has_next(&it) ) { 
+        while ( as_record_iterator_has_next(&it) ) {
             as_bin * bin = as_record_iterator_next(&it);
             char * name = as_bin_get_name(bin);
             pos += sprintf(res_str+pos, "%s :", name );
             as_val * val = (as_val *) as_bin_get_value(bin);
             char * str = as_val_tostring(val);
-            pos += sprintf(res_str+pos, " %s, ", str); 
+            pos += sprintf(res_str+pos, " %s, ", str);
             free(str);
-        }   
+        }
         pos += sprintf( res_str+pos, "]");
         return;
     }

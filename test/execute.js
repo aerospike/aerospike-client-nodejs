@@ -31,7 +31,7 @@ var language = aerospike.language;
 
 describe('client.Execute()', function(done) {
 
-    var config = options.getConfig(); 
+    var config = options.getConfig();
     var client = aerospike.client(config);
 
     before(function(done) {
@@ -60,7 +60,7 @@ describe('client.Execute()', function(done) {
             client.remove(key, function(err, key){
                 done();
             });
-        }); 
+        });
     });
     it('should invoke an UDF with arguments', function(done) {
         var udfArgs = { module: "udf_test", funcname: "rec_update", args: [123, "str"] }

@@ -9,7 +9,7 @@ record
 
 ## Record
 
-A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Integer, String, Array,  Buffer or an Object itself.
+A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Number, String, Array,  Buffer or an Object itself. Aerospike supports Integer, double, string, bytes, array and map datatypes. All the decimal values with valid fractions `(123.45, 123.4)` will be stored as double in aerospike. To store decimal values with 0 fraction as double, [`aerospike.Double()`](aerospike.md#Double).
 
 Note: Array can contain an array or an object as a value in it. Similarly the object can contain an array or an object as a value in it. Essentially nesting of arrays in an object, and nesting of objects in an array is allowed.
 
@@ -90,7 +90,7 @@ UDFArgs
 -->
 <a name="UDFArgs"></a>
 
-## UDFArgs 
+## UDFArgs
 
 Arguments to execute a UDF in the database.
 
@@ -118,8 +118,8 @@ error
 ## Error
 
 Error is an object which is populated with the status of client operations. The
-`code` attribute is set for all operations. On success, it will be 
-`AEROSPIKE_OK`. On failure, the `code` will not be `AEROSPIKE_OK` and the other 
+`code` attribute is set for all operations. On success, it will be
+`AEROSPIKE_OK`. On failure, the `code` will not be `AEROSPIKE_OK` and the other
 attributes will be populated.
 
 Attributes:

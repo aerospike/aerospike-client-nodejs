@@ -2,7 +2,7 @@
 
 ## Installation
 
-We also recommend installing Aerospike dependencies by running the following 
+We also recommend installing Aerospike dependencies by running the following
 from the module's root directory:
 
     $ npm update
@@ -15,17 +15,17 @@ To run the test cases:
 
     $ npm test
 
-The tests are written and run using [`mocha`](http://visionmedia.github.io/mocha). 
+The tests are written and run using [`mocha`](http://visionmedia.github.io/mocha).
 You can choose to use `mocha` directly, but you must first install `mocha`:
 
     $ npm install -g mocha
 
 Note: some users may need to run this as sudo.
 
-Then to run the tests via mocha, you will want to run it from the modules' root 
+Then to run the tests via mocha, you will want to run it from the modules' root
 directory:
 
-    $ mocha -R spec 
+    $ mocha -R spec
 
 ## Options
 

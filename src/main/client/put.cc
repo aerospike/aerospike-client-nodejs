@@ -35,7 +35,7 @@ extern "C" {
 #define PUT_ARG_POS_KEY 0
 #define PUT_ARG_POS_REC 1
 #define PUT_ARG_POS_META 2
-#define PUT_ARG_POS_WPOLICY 3 // Write policy position and callback position is not same 
+#define PUT_ARG_POS_WPOLICY 3 // Write policy position and callback position is not same
 #define PUT_ARG_POS_CB 4  // for every invoke of put. If writepolicy is not passed from node
 // application, argument position for callback changes.
 
@@ -49,7 +49,7 @@ using namespace v8;
  *  AsyncData — Data to be used in async calls.
  *
  *  libuv allows us to pass around a pointer to an arbitraty object when
- *  running asynchronous functions. We create a data structure to hold the 
+ *  running asynchronous functions. We create a data structure to hold the
  *  data we need during and after async work.
  */
 
@@ -71,13 +71,13 @@ typedef struct AsyncData {
 
 /**
  *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *  This should only keep references to V8 or V8 structures for use in 
+ *
+ *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
@@ -87,13 +87,12 @@ static void * prepare(ResolveArgs(info))
     // Local variables
     as_key *    key             = &data->key;
     as_record * rec             = &data->rec;
-	data->policy						= NULL;
+    data->policy                        = NULL;
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
     int arglength = info.Length();
 
     if ( info[arglength-1]->IsFunction()) {
-		 
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
@@ -115,50 +114,50 @@ static void * prepare(ResolveArgs(info))
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-    
+
     if ( info[PUT_ARG_POS_REC]->IsObject() ) {
-        if (recordbins_from_jsobject(rec, info[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) { 
+        if (recordbins_from_jsobject(rec, info[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing as_record(C structure) from record object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
     }
     else {
-        as_v8_error(log, "Record should be an object"); 
+        as_v8_error(log, "Record should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-	if( arglength > 3) {
-		if( info[PUT_ARG_POS_META]->IsNull() || info[PUT_ARG_POS_META]->IsUndefined())
-		{
-			as_v8_debug(log, "Metadata passed is null or undefined");
-		}
-		else if ( info[PUT_ARG_POS_META]->IsObject() ) {
-			if (recordmeta_from_jsobject(rec, info[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) { 
-				as_v8_error(log, "Parsing metadata structure from metadata object failed"); 
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-				goto Err_Return;
-			}
-		}
-		else {
-			as_v8_error(log, "Metadata should be an object");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}
-	}
+    if( arglength > 3) {
+        if( info[PUT_ARG_POS_META]->IsNull() || info[PUT_ARG_POS_META]->IsUndefined())
+        {
+            as_v8_debug(log, "Metadata passed is null or undefined");
+        }
+        else if ( info[PUT_ARG_POS_META]->IsObject() ) {
+            if (recordmeta_from_jsobject(rec, info[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) {
+                as_v8_error(log, "Parsing metadata structure from metadata object failed");
+                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+                goto Err_Return;
+            }
+        }
+        else {
+            as_v8_error(log, "Metadata should be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    }
 
     if ( arglength > 4 ) {
         int wpolicy_pos = PUT_ARG_POS_WPOLICY;
         if ( info[wpolicy_pos]->IsObject()){
-			data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
+            data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
             if(writepolicy_from_jsobject(data->policy, info[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-				as_v8_error(log, "writepolicy shoule be an object");
-				COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-				goto Err_Return;
-			}
-        } 
+                as_v8_error(log, "writepolicy shoule be an object");
+                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+                goto Err_Return;
+            }
+        }
     }
-    
+
     as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 
@@ -169,7 +168,7 @@ Err_Return:
 
 /**
  *  execute() — Function to execute inside the worker-thread.
- *  
+ *
  *  It is not safe to access V8 or V8 data structures here, so everything
  *  we need for input and output should be in the AsyncData structure.
  */
@@ -202,13 +201,13 @@ static void execute(uv_work_t * req)
 /**
  *  AfterWork — Function to execute when the Work is complete
  *
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
@@ -229,14 +228,14 @@ static void respond(uv_work_t * req, int status)
         as_v8_debug(log, "Parameter error for put operation");
         argv[0] = error_to_jsobject(err, log);
         argv[1] = Nan::Null();
-    }   
+    }
 
     // Surround the callback in a try/catch for safety
     Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = Nan::New<Function>(data->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
+    Local<Function> cb = Nan::New<Function>(data->callback);
+    Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
     as_v8_debug(log, "Invoked Put callback");
 
     // Process the exception, if any
@@ -246,17 +245,17 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-	data->callback.Reset();
+    data->callback.Reset();
 
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
         as_key_destroy(key);
         as_record_destroy(rec);
-		if(data->policy != NULL)
-		{
-			cf_free(data->policy);
-		}
+        if(data->policy != NULL)
+        {
+            cf_free(data->policy);
+        }
         as_v8_debug(log, "Cleaned up record and key structures");
     }
 
@@ -274,5 +273,5 @@ static void respond(uv_work_t * req, int status)
  */
 NAN_METHOD(AerospikeClient::Put)
 {
-     async_invoke(info, prepare, execute, respond);
+    async_invoke(info, prepare, execute, respond);
 }

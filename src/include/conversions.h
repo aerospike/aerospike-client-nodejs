@@ -40,7 +40,7 @@ using namespace v8;
 
 /****************************************************************************
  * MACROS
- ****************************************************************************/ 
+ ****************************************************************************/
 
 #define COPY_ERR_MESSAGE(__err,__message) \
     strcpy(__err.message, #__message); \
@@ -64,7 +64,7 @@ __err.func = __func__;
 // Functions to convert C client structure to v8 object(map)
 Local<Object> error_to_jsobject(as_error * error, LogInfo *log);
 Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );
-Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );  
+Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
 Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
@@ -81,7 +81,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log );
 int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
 int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo * log);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
-int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log ); 
+int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log );
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log);
 
 //clone functions for record and key

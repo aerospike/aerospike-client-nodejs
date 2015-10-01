@@ -177,14 +177,14 @@ describe('client.operate()', function() {
         // 2.Read the record, to get the ttl and calculate
         //   the difference in the ttl written and the ttl returned by server.
         // 3.Touch the record with a definite ttl.
-        // 4.Read the record and calculate the difference in the ttl between the 
+        // 4.Read the record and calculate the difference in the ttl between the
         //  touch ttl value and read ttl value.
         // 5.Compare the difference with the earlier difference calculated.
-        // 6.This is to account for the clock asynchronicity between 
+        // 6.This is to account for the clock asynchronicity between
         //   the client and the server machines.
         // 7.Server returns a number, at which the record expires according the server clock.
-        // 8.The client calculates the time in seconds, and gives back ttl. In the case , where 
-        //   clocks are not synchronous between server and client, the ttl client calculates may not 
+        // 8.The client calculates the time in seconds, and gives back ttl. In the case , where
+        //   clocks are not synchronous between server and client, the ttl client calculates may not
         //   be accurate to the user. Nevertheless server expires the record in the correct time.
 
         // write the record then check

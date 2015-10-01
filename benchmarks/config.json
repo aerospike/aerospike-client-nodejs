@@ -19,23 +19,23 @@
     "time"        : "24h",
     "reads"       : 1,
     "writes"      : 1,
-    "keyRange"     : { 
-        "min" : 0, 
+    "keyRange"     : {
+        "min" : 0,
         "max" : 100000
     },
     "binSpec"    : [
         {
-            "name" : "bin1", 
-            "type" : "STRING", 
+            "name" : "bin1",
+            "type" : "STRING",
             "size" : 1024
         },
         {
-            "name" : "bin2", 
-            "type" : "BYTES",  
+            "name" : "bin2",
+            "type" : "BYTES",
             "size" : 1024
         },
         {
-            "name" : "bin3", 
+            "name" : "bin3",
             "type" : "INTEGER"
         }
     ],

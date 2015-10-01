@@ -21,7 +21,7 @@ var fs    = require('fs');
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var parser = yargs
@@ -86,7 +86,7 @@ var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim(
 
 options.getConfig = function() {
 	var config = {};
-	config = { 
+	config = {
 		hosts: [ {addr:options.host, port: options.port} ],
 		log: { level: options.log, file: options.log_file},
 		policies: { timeout: options.timeout}

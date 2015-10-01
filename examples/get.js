@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Read a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
-var aerospike = require('aerospike');
+var aerospike = require('../');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -30,7 +31,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -40,9 +41,10 @@ var argp = yargs
             boolean: true,
             describe: "Display this message."
         },
-        profile: {
+        quiet: {
+            alias: "q",
             boolean: true,
-            describe: "Profile the operation."
+            describe: "Do not display content."
         },
         host: {
             alias: "h",
@@ -97,42 +99,50 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }  
+        },
+        iterations: {
+            alias: "I",
+            default: 1,
+            describe: "Number of iterations"
+        },
     });
 
 var argv = argp.argv;
 var keyv = argv._.shift();
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
-if ( ! keyv ) {
+if (!keyv) {
     console.error("Error: Please provide a key for the operation");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -142,90 +152,71 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
  * Establish a connection and execute the opetation.
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
-}
-
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
+function run(client) {
 
     var key = {
-        ns:  argv.namespace,
+        ns: argv.namespace,
         set: argv.set,
-        key: keyv
+        key: keyv + iteration.current
     };
 
-    if ( argv.profile ) {
-        console.time("get");
-    }
+    client.get(key, function(err, bins, metadata, key) {
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            var record = {};
 
-    function callback( err, bins, metadata, key) {
-        
-        var exitCode = 0;
+            if (argv['key']) {
+                record.key = key;
+            }
 
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                var record = {};
+            if (argv['metadata']) {
+                record.metadata = metadata;
+            }
 
-                if ( argv['key'] ) {
-                    record.key = key;
-                }
-                
-                if ( argv['metadata'] ) {
-                    record.metadata = metadata;
-                }
-                
-                if ( argv['bins'] ) {
-                    record.bins = bins;
-                }
+            if (argv['bins']) {
+                record.bins = bins;
+            }
 
-                console.log(format(record));
+            !argv.quiet && console.log(JSON.stringify(record, null, '    '));
 
-                break;
+            iteration.next(run, client);
+        }
+    });
+}
 
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        switch (err.code) {
             case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
                 console.error("Error: Not Found.");
-                exitCode = 1;
-                break;
-            
+                return true;
             default:
                 console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
+                return true;
         }
-
-        if ( argv.profile ) {
-            console.log("---");
-            console.timeEnd("get");
-        }
-
-        process.exit(exitCode);
+    } else {
+        return false;
     }
-	client.get(key, callback);
-});
+}
+
+aerospike.client(config).connect(function(err, client) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        process.exit(1);
+    } else {
+        run(client);
+    }
+})

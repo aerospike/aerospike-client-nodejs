@@ -23,14 +23,14 @@ using namespace v8;
 
 Local<Object> operations()
 {
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set_op(obj, "READ", AS_OPERATOR_READ);
-	set_op(obj, "WRITE", AS_OPERATOR_WRITE);
-	set_op(obj, "INCR", AS_OPERATOR_INCR);
-	set_op(obj, "APPEND", AS_OPERATOR_APPEND);
-	set_op(obj, "PREPEND", AS_OPERATOR_PREPEND);
-	set_op(obj, "TOUCH", AS_OPERATOR_TOUCH);
-	return scope.Escape(obj);
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set_op(obj, "READ", AS_OPERATOR_READ);
+    set_op(obj, "WRITE", AS_OPERATOR_WRITE);
+    set_op(obj, "INCR", AS_OPERATOR_INCR);
+    set_op(obj, "APPEND", AS_OPERATOR_APPEND);
+    set_op(obj, "PREPEND", AS_OPERATOR_PREPEND);
+    set_op(obj, "TOUCH", AS_OPERATOR_TOUCH);
+    return scope.Escape(obj);
 }
 

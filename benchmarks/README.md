@@ -4,7 +4,7 @@ Benchmark is a collection of example programs which can be used to benchmark the
 
 ## Setup
 
-To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory. 
+To use the benchmarks, you will need to install the `aerospike` module into the `benchmarks` directory.
 
 From the `benchmarks` directory, run the following to install the dependencies:
 
@@ -13,7 +13,7 @@ From the `benchmarks` directory, run the following to install the dependencies:
 
 ## Running the main benchmark.
 
-- `main.js` – The main benchmark program, which runs multiple batches of operations 
+- `main.js` – The main benchmark program, which runs multiple batches of operations
 against an Aerospike cluster. The program can run for a specified number of iterations
 or time frame. To run the benchmark 
 
@@ -77,8 +77,5 @@ Status Codes
 Durations - Prints the latency histogram of read/write operations.
 
 Status Codes - Prints the histogram for return values of read/write operations. 
-
-
-
 
 

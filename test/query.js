@@ -69,10 +69,10 @@ describe('client.query()', function() {
             client.udfRegister(filename, function(err) {
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
-            }); 
+            });
 
 
-            // load objects - to be queried in test case. 
+            // load objects - to be queried in test case.
             var total = 100;
             var count = 0;
 

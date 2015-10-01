@@ -42,11 +42,11 @@ using namespace v8;
  */
 NAN_METHOD(AerospikeClient::Connect)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
-    
+
     Local<Function> callback;
-    
+
     if (info.Length() > 0 && info[0]->IsFunction()) {
         callback = Local<Function>::Cast(info[0]);
     }

@@ -16,7 +16,7 @@ var llist	  = client.LargeList(key, binName, policy);
 Parameters:
 
 - `key`         - A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `binName`     - Name of the LDT bin. 
+- `binName`     - Name of the LDT bin.
 - `policy`      - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
 - `createModule`- (optional) Lua function name that initializes list configuration parameters, pass null for default list.
 
@@ -51,8 +51,8 @@ add(value)
 <a name="add"></a>
 
 ###add(value, callback)
-Add value to list. Fail if value's key exists and list is configured for unique keys. If value is a map, 
-the key is identified by "key" entry. Otherwise, the value is the key. If large list does not exist, 
+Add value to list. Fail if value's key exists and list is configured for unique keys. If value is a map,
+the key is identified by "key" entry. Otherwise, the value is the key. If large list does not exist,
 create it using specified userModule configuration.
 
 Parameters:
@@ -70,7 +70,7 @@ Example:
 ```js
 llist.add({"key":"ldt_key", "value":"ldtvalue"}, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -85,8 +85,8 @@ add([values])
 <a name="addArray"></a>
 
 ###add([values], callback)
-Add an array of values to list. Fail if value's key exists and list is configured for unique keys. If value is a map, 
-the key is identified by "key" entry. Otherwise, the value is the key. If large list does not exist, 
+Add an array of values to list. Fail if value's key exists and list is configured for unique keys. If value is a map,
+the key is identified by "key" entry. Otherwise, the value is the key. If large list does not exist,
 create it using specified userModule configuration.
 
 Parameters:
@@ -105,7 +105,7 @@ Example:
 var valArray = [ {"key":"ldt_key", "value":"ldtvalue"}, {"key":"ldt_array", "value":"ldtarrayvalue"}]
 llist.add(valArray, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -120,7 +120,7 @@ update(value)
 <a name="update"></a>
 
 ###update(value, callback)
-Update/Add each value in array depending if key exists or not. If value is a map, the key is identified by "key" entry. 
+Update/Add each value in array depending if key exists or not. If value is a map, the key is identified by "key" entry.
 Otherwise, the value is the key. If large list does not exist, create it using specified userModule configuration.
 
 Parameters:
@@ -138,7 +138,7 @@ Example:
 ```js
 llist.update({"key":"ldt_key", "value":"ldtupdatedvalue"}, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -150,8 +150,8 @@ update([values])
 -->
 
 <a name="updateArray"></a>
-Update/Add each value in values in the list depending if key exists or not. If value is a map, the key is 
-identified by "key" entry. Otherwise, the value is the key. If large list does not exist, create it using 
+Update/Add each value in values in the list depending if key exists or not. If value is a map, the key is
+identified by "key" entry. Otherwise, the value is the key. If large list does not exist, create it using
 specified userModule configuration.
 
 ###update([values], callback)
@@ -172,7 +172,7 @@ Example:
 var valArray = [ {"key":"ldt_key", "value":"ldtupdatevalue"}, {"key":"ldt_array", "value":"ldtarrayupdatedvalue"}]
 llist.update(valArray, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -202,7 +202,7 @@ Example:
 ```js
 llist.delete({"key":"ldt_key"}, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -234,7 +234,7 @@ Example:
 var valArray = [ {"key":"ldt_key"},{"key":"ldt_array"}]
 llist.remove(valArray, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -267,7 +267,7 @@ Example:
 ```js
 llist.remove("begin", "end", function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -298,7 +298,7 @@ Example:
 ```js
 llist.find("search_key", function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -318,7 +318,7 @@ Select values from list and apply  specified Lua filter.
 
 Parameters:
 - `value`   - value to select.
-- `filter` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying LUA file, function 
+- `filter` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying LUA file, function
 	          and arguments to Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
@@ -333,7 +333,7 @@ Example:
 var filter =  { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
 llist.find("search_key", filter, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -366,7 +366,7 @@ Example:
 ```js
 llist.range("begin", "end", function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -403,7 +403,7 @@ Example:
 var filter = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
 llist.range("begin", "end", filter, function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -434,7 +434,7 @@ Example:
 ```js
 llist.scan(function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -468,7 +468,7 @@ Example:
 var udfargs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
 llist.filter(function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -499,7 +499,7 @@ Example:
 ```js
 llist.destroy(function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -530,7 +530,7 @@ Example:
 ```js
 llist.size(function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 
@@ -560,7 +560,7 @@ Example:
 ```js
 llist.getConfig(function(err, res){
 	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK) 
+	if(err.code != aerospike.status.AEROSPIKE_OK)
 		//signals error.
 });
 

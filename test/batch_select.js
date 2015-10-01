@@ -104,7 +104,7 @@ describe('client.batchSelect()', function() {
 
         // values
         var keys = keygen.range(kgen, 10);
-        
+
 		var bins = ['i', 's'];
 		// writer using generators
         // callback provides an object of written records, where the
@@ -113,18 +113,18 @@ describe('client.batchSelect()', function() {
 
             var result;
             var j;
-            
+
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
             expect(results.length).to.equal(10);
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
-				if(result.status != 602) 
+				if(result.status != 602)
 				{
 	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
 				}
-				else 
+				else
 				{
 	                expect(result.status).to.equal(602);
 				}
@@ -146,12 +146,12 @@ describe('client.batchSelect()', function() {
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/1000/", random: false});
         var mgen = metagen.constant({ttl: 1000});
         var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
-        
+
         // writer using generators
         // callback provides an object of written records, where the
         // keys of the object are the record's keys.
         putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
-            
+
             var keys = Object.keys(written).map(function(key){
                 return written[key].key;
             });
@@ -164,7 +164,7 @@ describe('client.batchSelect()', function() {
 
                 var result;
                 var j;
-                
+
                 expect(err).to.be.ok();
                 expect(err.code).to.equal(status.AEROSPIKE_OK);
                 expect(results.length).to.equal(len);

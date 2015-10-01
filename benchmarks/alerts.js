@@ -9,8 +9,8 @@ var severity = {
 };
 
 var action = {
-    SENDEMAIL:0, 
-    PRINTCONSOLE:1, 
+    SENDEMAIL:0,
+    PRINTCONSOLE:1,
     PRINTFILE:2
 };
 
@@ -18,7 +18,7 @@ var mediumSevCount  = 0;
 var lowSevCount     = 0;
 
 // setup winston logger to log it to file or console
-// Setup node mailers to generate email alerts to 
+// Setup node mailers to generate email alerts to
 // send emails in case of errors.
 var alertMode;
 function setupAlertSystem(alert) {
@@ -64,7 +64,7 @@ function handleAlert(alertInfo, sev) {
             }
             break;
         }
-        default: 
+        default:
             // do nothing
             break;
     }

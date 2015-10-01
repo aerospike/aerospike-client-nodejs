@@ -22,7 +22,7 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Local<Object> indexType() 
+Local<Object> indexType()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();

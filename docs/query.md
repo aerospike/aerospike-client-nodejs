@@ -1,6 +1,6 @@
 # Query Class
 
-The `Query` class provides an interface to perform all query operations on 
+The `Query` class provides an interface to perform all query operations on
 an Aerospike database cluster. The `Query` class can be instantiated as follows:
 
 
@@ -28,12 +28,12 @@ Statement
 <a name="Statement"></a>
 
 Statement is used to specify the attributes of query object, during the object creation.
-The statement should be well formed for creating a query object, in case of error during the 
+The statement should be well formed for creating a query object, in case of error during the
 query creation, an exception is thrown with appropriate error messages.
 
 ###Statement Attributes
 
-#### `select` 
+#### `select`
 
 `select` is an array of bins to be projected in a given query resultset.
 
@@ -41,29 +41,29 @@ query creation, an exception is thrown with appropriate error messages.
 
  `filters` is an array of [filter](filters.md) in a given query.
 
-#### `aggregationUDF` 
+#### `aggregationUDF`
 
   `aggregationUDF` is an instance [udfArgs](datamodel.md#UDFArgs). It is the aggregation UDF to be
    be run on a query resultset.
 
-#### `UDF` 
+#### `UDF`
 
   `UDF` is an instance of [udfArgs](datamodel.md#UDFArgs). It is the UDF to be run on all the records
    in the Aerospike database through a background job.
 
-#### `priority` 
+#### `priority`
 
-  `priority` is an instance of [scanPriority](scanproperties.md#scanPriority). 
+  `priority` is an instance of [scanPriority](scanproperties.md#scanPriority).
 
-#### `percent` 
+#### `percent`
 
   `percent` is the percentage of data to be scanned in each partitiion.
 
-#### `nobins` 
+#### `nobins`
 
   `nobins` is a bool value, setting to true results in projection of zero bins.
 
-#### `concurrent` 
+#### `concurrent`
 
   `concurrent` is a bool value, setting to true results in parallel scanning of data in
 	all nodes in Aerospike cluster.
@@ -83,7 +83,7 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 'errror' is emitted in an event of error.
 'end' marks the end of recordset returned by query.
 ```js
-	var statement = { filters:[filter.equal('a', 'abc')]} 
+	var statement = { filters:[filter.equal('a', 'abc')]}
 
 	// NOTE bin a has to be indexed for it to be queried.
 	//To projects bins 'a' and 'b' alone
@@ -91,13 +91,13 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 
 	var query = client.query(ns, set, statement); // returns a query object.
 
-	var dataCallback = function(record) { 
+	var dataCallback = function(record) {
 		// process the scanned record
 	}
-	var errorCallback = function(error) { 
+	var errorCallback = function(error) {
 		// process the error
 	}
-	var endCallback = function() { 
+	var endCallback = function() {
 		//process the end of query results.
 	}
 	var stream = query.execute(); // returns a stream object.
@@ -118,7 +118,7 @@ QueryAggregate()
 Query Aggregation executes a Map-Reduce job on all the records returned by a given query.
 The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
 job must be registered prior to using the given UDF in aggregation.
-To do an aggregation on data by a  query, the `Query` object has to be instantiated. 
+To do an aggregation on data by a  query, the `Query` object has to be instantiated.
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
 'data' event is emitted for every result returned by query aggregation.
 'errror' is emitted in an event of error.
@@ -127,7 +127,7 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 ```js
 	var statement = { filters:[filter.equal['a', 'abc'],
 					  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
-					} 
+					}
 
 	// NOTE bin a has to be indexed for it to be queried.
 	//To projects bins 'a' and 'b' alone
@@ -135,13 +135,13 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 
 	var query = client.query(ns, set, statement); // returns a query object.
 
-	var dataCallback = function(result) { 
+	var dataCallback = function(result) {
 		//process the result of aggregation
 	}
-	var errorCallback = function(error) { 
+	var errorCallback = function(error) {
 		//process the error
 	}
-	var endCallback = function() { 
+	var endCallback = function() {
 		//process the end of aggregation
 	}
 	var stream = query.execute(); // returns a stream object.
@@ -158,7 +158,7 @@ ScanForeground()
 <a name="ScanForeground"></a>
 ###ScanForeground
 
-To do full scan of Aerospike database which returns all the records,  the `Query` object has to be instantiated. 
+To do full scan of Aerospike database which returns all the records,  the `Query` object has to be instantiated.
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
 'data' event is emitted for every record that returned by scan.
 'errror' is emitted in an event of error.
@@ -171,13 +171,13 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 	var statement = { nobins: false, concurrent: true, select: ['a', 'b']}
 	var query = client.query(ns, set ); // returns a query object.
 
-	var dataCallback = function(record) { 
+	var dataCallback = function(record) {
 		//process the record
 	}
-	var errorCallback = function(error) { 
+	var errorCallback = function(error) {
 		//do something
 	}
-	var endCallback = function() { 
+	var endCallback = function() {
 		//process the end of scan
 	}
 	var stream = query.execute(); // returns a stream object.
@@ -198,7 +198,7 @@ Scan Aggregation executes a Map-Reduce job on all the records in the Aerospike d
 Scan Aggregation is supported by Aerospike server on versions later than 3.4.1
 The Map-Reduce job is in written in LUA using UDF. The UDF used by the aggregation
 job must be registered prior to using the given UDF in aggregation.
-To do an aggregation on data , the `Query` object has to be instantiated. 
+To do an aggregation on data , the `Query` object has to be instantiated.
 Query on execution returns a stream object, which emits 'data', 'error' and 'end' events.
 'data' event is emitted for every result returned by scan aggregation.
 'errror' is emitted in an event of error.
@@ -209,18 +209,18 @@ NOTE: Query aggregation without any filter becomes scan aggregation.
 ```js
 	var statement = {
 					  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
-					} 
+					}
 
 
 	var query = client.query(ns, set, statement ); // returns a query object.
 
-	var dataCallback = function(result) { 
+	var dataCallback = function(result) {
 		//process the result of aggregation
 	}
-	var errorCallback = function(error) { 
+	var errorCallback = function(error) {
 		//process the error
 	}
-	var endCallback = function() { 
+	var endCallback = function() {
 		//process the end of aggregation
 	}
 	var stream = query.execute(); // returns a stream object.
@@ -240,7 +240,7 @@ ScanBackground()
 ##ScanBackground
 
 To do full scan of Aerospike database and apply an UDF on each record in Aerospike database
-through a background job,the `Query` object has to be instantiated. The background scan 
+through a background job,the `Query` object has to be instantiated. The background scan
 does not return any data.
 Query on execution returns a stream object, which emits 'error' and 'end' events.
 The UDF used by scan background job must already be registered in the system.
@@ -252,18 +252,18 @@ The UDF used by scan background job must already be registered in the system.
 	// no filters should be applied during query instantiation.
 	// however 0 or more bins can be projected.
 	// And scanUDF argument must be present.
-	var statement = { concurrent: true, 
+	var statement = { concurrent: true,
 					  UDF: {module:'scanUdf', funcname: 'scanFunc'}
 					}
 	var query = client.query(ns, set, statement); // returns a query object.
 	
 	// callback to handle the error event emitted by query stream.
-	var errorCallback = function(error) { 
-		//process the error 
+	var errorCallback = function(error) {
+		//process the error
 	}
 	
 	// callback to handle the end event emitted by query stream.
-	var endCallback = function() { 
+	var endCallback = function() {
 		//signals that the scan background job has been successfully fired.
 	}
 
@@ -281,7 +281,7 @@ ScanInfo()
 
 ##Info(scanid, callback)
 
-To get the information of the background scan fired using `Query` object. The result contains information 
+To get the information of the background scan fired using `Query` object. The result contains information
 about the percentage of scan completed in Aeropsike database, number of records scanned so far and the status of the scan(aborted, in-progress and completed).
 
 Parameters:
@@ -293,7 +293,7 @@ The parameters for the `callback` argument:
 Returns an object with the following entries.
 - `progressPct`   - Percentage of records in Aerospike database on which scan UDF has been applied.
 - `recordScanned` - Total number of records in Aerospike database on which scan UDF has been applied.
-- `status`		  - An instance [Scan Status](scanproperties.md#scanStatus) object and it contains status 
+- `status`		  - An instance [Scan Status](scanproperties.md#scanStatus) object and it contains status
 					of scan(in-progress, completed, aborted).
 ```js
  var query = client.query(namespace, set);
@@ -302,7 +302,7 @@ Returns an object with the following entries.
 	 {
 		 // implies scan completed.
 	 }
- }); 
+ });
 
 ```
 

@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Get state information from the cluster or a single host.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -31,7 +32,7 @@ var Language = aerospike.language;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -41,9 +42,10 @@ var argp = yargs
             boolean: true,
             describe: "Display this message."
         },
-        profile: {
+        quiet: {
+            alias: "q",
             boolean: true,
-            describe: "Profile the operation."
+            describe: "Do not display content."
         },
         host: {
             alias: "h",
@@ -83,42 +85,50 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }  
+        },
+        iterations: {
+            alias: "I",
+            default: 1,
+            describe: "Number of iterations"
+        },
     });
 
 var argv = argp.argv;
 var module = argv._.shift();
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
-if ( ! module ) {
+if (!module) {
     console.error("Error: Please provide a UDF module name to remove.");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -128,52 +138,47 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    //modlua userpath
+    modlua: {
+        userPath: __dirname
+    },
+
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
+/*******************************************************************************
+ *
+ * Perform the operation
+ *
+ ******************************************************************************/
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
-
-aerospike.client(config).connect(function (err, client) {
-
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
-        process.exit(1);
-    }
-
-    //
-    // Perform the operation
-    //
-
-    if ( argv.profile ) {
-        console.time("udfRemove");
-    }
-
+function run(client) {
     client.udfRemove(module, function(err) {
-
-        var exitCode = 0;
-
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                break;
-            default:
-                console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            !argv.quiet && console.log("OK.");
+            iteration.next(run, client);
         }
-        
-        if ( argv.profile ) {
-            console.log("---");
-            console.timeEnd("udfRemove");
-        }
-
-        process.exit(exitCode);
     });
+}
+
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        console.error("Error: " + err.message);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+aerospike.client(config).connect(function(err, client) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        process.exit(1);
+    } else {
+        run(client)
+    }
 });

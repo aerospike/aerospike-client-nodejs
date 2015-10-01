@@ -46,8 +46,8 @@ describe('client.index()', function() {
     });
 
     it('should create an integer index', function(done) {
-        var args = { ns: options.namespace, 
-                     set: options.set, 
+        var args = { ns: options.namespace,
+                     set: options.set,
                      bin : "integer_bin",
                      index: "integer_index" }
         client.createIntegerIndex(args, function(err) {

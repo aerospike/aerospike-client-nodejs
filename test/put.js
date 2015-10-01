@@ -28,6 +28,7 @@ var valgen = require('./generators/value');
 
 var status = aerospike.status;
 var policy = aerospike.policy;
+var Double = aerospike.Double;
 
 describe('client.put()', function() {
 
@@ -179,6 +180,32 @@ describe('client.put()', function() {
             });
         });
     });
+    it('shoule write a bin with double value', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/put/"});
+        var mgen = metagen.constant({ttl: 1000});
+
+        //values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = {
+            val : 123.45,
+            dval: Double(456.00)
+        }
+        //write the record and then check
+        client.put(key, record, meta, function(err, key) {
+            client.get(key, function(err, record1, metadata, key){
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                expect(record1.val).to.equal(record.val);
+                expect(record1.dval).to.equal(record.dval.Double);
+                client.remove(key, function(err, key){
+                    done();
+                });
+            });
+        });
+    });
 
     it('should write an array of map and array, map of array and map, then read', function(done){
 
@@ -258,7 +285,7 @@ describe('client.put()', function() {
                         client.remove(key5, function(err, key){
                             done();
                         });
-                    }); 
+                    });
                 });
             });
         });
@@ -324,9 +351,9 @@ describe('client.put()', function() {
                                 client.remove(key6, function(err, key){
                                     done();
                                 });
-                            }); 
+                            });
                         });
-                    }); 
+                    });
                 });
             });
         });
@@ -481,7 +508,7 @@ describe('client.put()', function() {
         var kgen = keygen.string(options.namespace, options.set, undefined);
         var mgen = metagen.constant({ttl: 1000});
         // values
-        var key     = aerospike.key(options.namespace, options.set, undefined); 
+        var key     = aerospike.key(options.namespace, options.set, undefined);
         var meta    = mgen(key);
         var record  = { }
         // write the record then check

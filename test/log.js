@@ -31,7 +31,7 @@ var policy = aerospike.policy;
 describe('client.updateLogging()', function() {
 
     var fd = null;
-    
+
     beforeEach(function(done) {
         done();
     });
@@ -63,5 +63,5 @@ describe('client.updateLogging()', function() {
             });
         });
     });
-    
+
 });

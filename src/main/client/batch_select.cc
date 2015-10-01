@@ -35,10 +35,10 @@ extern "C" {
 #include "log.h"
 
 #define BSELECT_ARG_POS_KEY     0
-#define BSELECT_ARG_POS_BINS	 1
-#define BSELECT_ARG_POS_BPOLICY 2 // Batch policy position and callback position is not same 
-#define BSELECT_ARG_POS_CB      3 // in the argument list for every invoke of batch_get. If 
-// writepolicy is not passed from node application, argument 
+#define BSELECT_ARG_POS_BINS     1
+#define BSELECT_ARG_POS_BPOLICY 2 // Batch policy position and callback position is not same
+#define BSELECT_ARG_POS_CB      3 // in the argument list for every invoke of batch_get. If
+// writepolicy is not passed from node application, argument
 // position for callback changes.
 
 using namespace v8;
@@ -52,19 +52,17 @@ using namespace v8;
  */
 typedef struct AsyncData {
     aerospike * as;
-    int node_err;            // To Keep track of the parameter errors from Nodejs 
+    int node_err;            // To Keep track of the parameter errors from Nodejs
     as_error err;
     as_policy_batch policy;
     as_batch batch;          // Passed as input to aerospike_batch_get
     as_batch_read  *results; // Results from a aerospike_batch_get operation
     uint32_t n;
-	uint32_t numbins;
-	char** bins;
+    uint32_t numbins;
+    char** bins;
     LogInfo * log;
     Nan::Persistent<Function> callback;
 } AsyncData;
-
-
 
 /*******************************************************************************
  *      FUNCTIONS
@@ -82,10 +80,10 @@ bool batch_select_callback(const as_batch_read * results, uint32_t n, void * uda
         data->n = n;
         data->results = (as_batch_read *)cf_calloc(n, sizeof(as_batch_read));
         for ( uint32_t i = 0; i < n; i++ ) {
-            data->results[i].result = results[i].result; 
+            data->results[i].result = results[i].result;
             as_v8_debug(log, "batch result for the key");
-            key_clone(results[i].key, (as_key**) &data->results[i].key, log); 
-            if (results[i].result == AEROSPIKE_OK) {            
+            key_clone(results[i].key, (as_key**) &data->results[i].key, log);
+            if (results[i].result == AEROSPIKE_OK) {
                 as_record * rec = NULL ;
                 rec = &data->results[i].record;
 
@@ -93,7 +91,7 @@ bool batch_select_callback(const as_batch_read * results, uint32_t n, void * uda
 
                 as_record_init(rec, results[i].record.bins.size);
                 record_clone(&results[i].record, &rec, log);
-            } 
+            }
         }
         return true;
     }
@@ -104,15 +102,16 @@ bool batch_select_callback(const as_batch_read * results, uint32_t n, void * uda
     }
     return false;
 }
+
 /**
  *      prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
- *  
- *      This should only keep references to V8 or V8 structures for use in 
+ *
+ *      This should only keep references to V8 or V8 structures for use in
  *      `respond()`, because it is unsafe for use in `execute()`.
  */
 static void * prepare(ResolveArgs(info))
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
@@ -130,8 +129,7 @@ static void * prepare(ResolveArgs(info))
 
     LogInfo * log = data->log = client->log;
 
-    if ( info[arglength-1]->IsFunction()) { 
-		 
+    if ( info[arglength-1]->IsFunction()) {
         data->callback.Reset(info[arglength-1].As<Function>());
         as_v8_detail(log, "batch_get callback registered");
     }
@@ -155,24 +153,24 @@ static void * prepare(ResolveArgs(info))
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-	// To select the values of given bin, not complete record.
-	if ( info[BSELECT_ARG_POS_BINS]->IsArray() ) { 
-		Local<Array> v8bins = Local<Array>::Cast(info[BSELECT_ARG_POS_BINS]);
-		int res = bins_from_jsarray(&data->bins, &data->numbins, v8bins, log);
-		if ( res != AS_NODE_PARAM_OK) 
-		{   
-			as_v8_error(log,"Parsing bins failed in select ");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			goto Err_Return;
-		}   
-	}   
-	else
-	{
-		as_v8_error(log, "Bin names should be an array of string");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
+    // To select the values of given bin, not complete record.
+    if ( info[BSELECT_ARG_POS_BINS]->IsArray() ) {
+        Local<Array> v8bins = Local<Array>::Cast(info[BSELECT_ARG_POS_BINS]);
+        int res = bins_from_jsarray(&data->bins, &data->numbins, v8bins, log);
+        if ( res != AS_NODE_PARAM_OK)
+        {
+            as_v8_error(log,"Parsing bins failed in select ");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
+        }
+    }
+    else
+    {
+        as_v8_error(log, "Bin names should be an array of string");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
 
-	}
+    }
 
     if (arglength > 2 ) {
         if ( info[BSELECT_ARG_POS_BPOLICY]->IsObject() ) {
@@ -199,9 +197,10 @@ Err_Return:
     data->node_err = 1;
     return data;
 }
+
 /**
  *      execute() — Function to execute inside the worker-thread.
- *  
+ *
  *      It is not safe to access V8 or V8 data structures here, so everything
  *      we need for input and output should be in the AsyncData structure.
  */
@@ -216,17 +215,17 @@ static void execute(uv_work_t * req)
     as_batch  *     batch   = &data->batch;
     as_policy_batch * policy= &data->policy;
     LogInfo * log           = data->log;
-	const char** bins		= (const char**) data->bins;
-	uint32_t numbins		= data->numbins;
+    const char** bins       = (const char**) data->bins;
+    uint32_t numbins        = data->numbins;
 
     if( as->cluster == NULL) {
         as_v8_error(log, "Cluster Object is NULL, can't perform the operation");
         data->node_err = 1;
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
     }
-    
+
     // Invoke the blocking call.
-    // Check for no parameter errors from Nodejs 
+    // Check for no parameter errors from Nodejs
     if( data->node_err == 0) {
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_get_bins(as, err, policy, batch, bins, numbins, batch_select_callback, (void*) req->data);
@@ -243,14 +242,14 @@ static void execute(uv_work_t * req)
 /**
  *  respond() — Function to be called after `execute()`. Used to send response
  *  to the callback.
- *  
- *  This function will be run inside the main event loop so it is safe to use 
- *  V8 again. This is where you will convert the results into V8 types, and 
+ *
+ *  This function will be run inside the main event loop so it is safe to use
+ *  V8 again. This is where you will convert the results into V8 types, and
  *  call the callback function with those results.
  */
 static void respond(uv_work_t * req, int status)
 {
-	Nan::HandleScope scope;
+    Nan::HandleScope scope;
     // Fetch the AsyncData structure
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
@@ -282,13 +281,13 @@ static void respond(uv_work_t * req, int status)
         Local<Array> results = Nan::New<Array>(num_rec);
 
         for ( uint32_t i = 0; i< num_rec; i++) {
-            
+
             as_status status = batch_results[i].result;
             as_record * record = &batch_results[i].record;
             const as_key * key = batch_results[i].key;
 
             // a batch result object attributes:
-            //   - status 
+            //   - status
             //   - key
             //   - metadata
             //   - record
@@ -307,7 +306,7 @@ static void respond(uv_work_t * req, int status)
 
                 // record attribute
                 result->Set(Nan::New("record").ToLocalChecked(), recordbins_to_jsobject(record, log));
-                
+
                 rec_found++;
             }
             else {
@@ -331,7 +330,7 @@ static void respond(uv_work_t * req, int status)
     Nan::TryCatch try_catch;
 
     // Execute the callback.
-	Local<Function> cb = Nan::New<Function>(data->callback);
+    Local<Function> cb = Nan::New<Function>(data->callback);
     Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
 
     // Process the exception, if any
@@ -345,14 +344,14 @@ static void respond(uv_work_t * req, int status)
     data->callback.Reset();
 
     // clean up any memory we allocated
-	
-	 for ( uint32_t i = 0; i < data->numbins; i++) {
-		 cf_free(data->bins[i]);
-	 }
-	 cf_free(data->bins);
+    
+     for ( uint32_t i = 0; i < data->numbins; i++) {
+         cf_free(data->bins[i]);
+     }
+     cf_free(data->bins);
 
     if ( data->node_err == 1) {
-        cf_free(data->results);    
+        cf_free(data->results);
     }
     if (batch_results != NULL) {
         cf_free(batch_results);

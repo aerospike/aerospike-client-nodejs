@@ -66,7 +66,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 
 Example:
@@ -99,7 +99,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
 - `metadata`    – The [Metadata object](datamodel.md#record) for the `record`.Only generation is returned.
@@ -130,14 +130,14 @@ Parameters:
 
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
 - `policy`    – (optional) The [Batch Policy object](policies.md#BatchPolicy) to use for this operation.
-- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+- `callback`  – The function to call when the operation completes, with the results of the batch operation.
 
 The parameters for the `callback` argument:
 
-- `error`   – The [Error object](datamodel.md#error) representing the status of 
+- `error`   – The [Error object](datamodel.md#error) representing the status of
               the operation.
 - `results` – An array of objects, where each object contains the following attributes:
-  - `status`     - status of the record. [Status code](status.md). 
+  - `status`     - status of the record. [Status code](status.md).
   - `key`        - key of the record. [Metadata object](datamodel.md#key).
   - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
 
@@ -184,14 +184,14 @@ Parameters:
 
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
 - `policy`    – (optional) The [Batch Policy object](policies.md#WritePolicy) to use for this operation.
-- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+- `callback`  – The function to call when the operation completes, with the results of the batch operation.
 
 The parameters for the `callback` argument:
 
-- `error`   – The [Error object](datamodel.md#error) representing the status of 
+- `error`   – The [Error object](datamodel.md#error) representing the status of
               the operation.
 - `results` – An array of objects, where each object contains the following attributes:
-  - `status`     - status of the record. [Status code](status.md). 
+  - `status`     - status of the record. [Status code](status.md).
   - `key`        - key of the record. [Key object](datamodel.md#key).
   - `record`     - the record read from the cluster. [Record object](datamodel.md#record).
   - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
@@ -239,14 +239,14 @@ Parameters:
 - `keys`      – An array of [Key objects](datamodel.md#key), used to locate the records in the cluster.
 - `bins`      – An array of bin names for the bins to be returned for the given keys.
 - `policy`    – (optional) The [Batch Policy object](policies.md#WritePolicy) to use for this operation.
-- `callback`  – The function to call when the operation completes, with the results of the batch operation. 
+- `callback`  – The function to call when the operation completes, with the results of the batch operation.
 
 The parameters for the `callback` argument:
 
-- `error`   – The [Error object](datamodel.md#error) representing the status of 
+- `error`   – The [Error object](datamodel.md#error) representing the status of
               the operation.
 - `results` – An array of objects, where each object contains the following attributes:
-  - `status`     - status of the record. [Status code](status.md). 
+  - `status`     - status of the record. [Status code](status.md).
   - `key`        - key of the record. [Key object](datamodel.md#key).
   - `record`     - the record read from the cluster containing only the selected bins. [Record object](datamodel.md#record).
   - `metadata`   - metadata of the record. [Metadata object](datamodel.md#metadata).
@@ -316,7 +316,7 @@ Returns the client object which was used to connect to the cluster.
 
 The parameters for the `callback` argument:
 
-- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call. 
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call.
 
 Example:
 ```js
@@ -351,7 +351,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call. 
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call.
 
 Example:
 ```js
@@ -387,7 +387,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call. 
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call.
 
 Example:
 ```js
@@ -411,7 +411,7 @@ execute()
 
 ### execute(key, udfArgs, policy=null, callback)
 
-Executes an UDF on a record in the database. 
+Executes an UDF on a record in the database.
 
 Parameters:
 
@@ -422,7 +422,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `response`	- The value returned from the udf function.
 
@@ -456,7 +456,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
 - `key`         – The [Key object](datamodel.md#key) for the `record`.
@@ -491,7 +491,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
 - `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
@@ -527,7 +527,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 
 
@@ -566,7 +566,7 @@ The callback will be called for each host queried, with their response to the re
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `response`    – The response string.
 - `host`        - The host that sent the response represented as an object containing:
@@ -604,7 +604,7 @@ Parameters:
 - `key`			- A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `binName`     - Name of the Large Data Type Bin.
 - `applyPolicy` - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
-- `createModule`- (optional) Lua function name that initialized list configuration parameters, pass null for 
+- `createModule`- (optional) Lua function name that initialized list configuration parameters, pass null for
                   default list.
 				
 Example:
@@ -627,7 +627,7 @@ operate()
 
 ### operate(key, operations, metadata=null, policy=null, callback)
 
-Performs multiple operations on a single record. 
+Performs multiple operations on a single record.
 
 Parameters:
 
@@ -639,7 +639,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
 - `metadata`    – The [Metadata object](datamodel.md#record) for the `record`.
@@ -681,7 +681,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
 - `metadata`    – The [Metadata object](datamodel.md#record) for the `record`. Only generation is returned.
@@ -706,7 +706,7 @@ put()
 
 ### put(key, record, metadata=null, policy=null, callback)
 
-Writes a record to the database cluster. If the record exists, it modifies the record with bins provided. 
+Writes a record to the database cluster. If the record exists, it modifies the record with bins provided.
 To remove a bin, set its value to `null`.
 
 Parameters:
@@ -719,7 +719,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `key`         – A [Key object](datamodel.md#key) for the record that was written.
 
@@ -751,7 +751,7 @@ creates a new [query](query.md) object, which is used to define query in the dat
 Parameters:
 - `namespace`	- Namespace to be queried.
 - `set`         - Set on which the query has to be executed.
-- `statement`   - an Instance of [Statement](query.md#Statement), which specifies the properties of 
+- `statement`   - an Instance of [Statement](query.md#Statement), which specifies the properties of
 				  a given query.
 Example:
 
@@ -780,7 +780,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `key`         – A [Key object](datamodel.md#key) for the record that was removed.
 
@@ -813,7 +813,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 - `record`      – The [Record object](datamodel.md#record), containing the fields of the record.
 - `metadata`    – The [Metadata object](datamodel.md#metadata) for the `record`.
@@ -846,7 +846,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 
 Example:
@@ -875,7 +875,7 @@ Parameters:
 
 The parameters for the `callback` argument:
 
-- `error`       – The [Error object](datamodel.md#error) representing the status of 
+- `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
 
 Example:

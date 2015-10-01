@@ -17,12 +17,13 @@
 /*******************************************************************************
  *
  * Read a batch of records.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
 var yargs = require('yargs');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -30,7 +31,7 @@ var Status = aerospike.status;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -39,6 +40,11 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        quiet: {
+            alias: "q",
+            boolean: true,
+            describe: "Do not display content."
         },
         host: {
             alias: "h",
@@ -83,39 +89,51 @@ var argp = yargs
             alias: "P",
             default: null,
             describe: "Password to connectt to secured cluster"
-        }
+        },
+        iterations: {
+            alias: "I",
+            default: 1,
+            describe: "Number of iterations"
+        },
     });
 
 var argv = argp.argv;
 var keys = argv._.map(function(key) {
-    return { ns: argv.namespace, set: argv.set, key: key };
+    return {
+        ns: argv.namespace,
+        set: argv.set,
+        key: key
+    };
 });
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     process.exit(0);
 }
 
-if ( keys.length === 0 ) {
+if (keys.length === 0) {
     console.error("Error: Please provide one or more keys for the operation");
     console.error();
     argp.showHelp();
     process.exit(1);
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -125,64 +143,43 @@ config = {
     // default policies
     policies: {
         timeout: argv.timeout
-    }
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
-
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
 /*******************************************************************************
  *
  * Perform the operation
- * 
+ *
  ******************************************************************************/
 
-function format(o) {
-    return JSON.stringify(o, null, '    ');
+function run(client) {
+    client.batchExists(keys, function(err, results) {
+        if (isError(err)) {
+            process.exit(1);
+        } else {
+            !argv.quiet && console.log(JSON.stringify(results, null, '    '));
+            iteration.next(run, client);
+        }
+    });
 }
 
-aerospike.client(config).connect(function (err, client) {
+function isError(err) {
+    if (err && err.code != Status.AEROSPIKE_OK) {
+        console.error("Error: " + err.message);
+        return true;
+    } else {
+        return false;
+    }
+}
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
-        console.error("Error: Aerospike server connection error. ", err.message);
+aerospike.client(config).connect(function(err, client) {
+    if (isError(err)) {
         process.exit(1);
+    } else {
+        run(client);
     }
-
-    //
-    // Perform the operation
-    //
-
-    if ( argv.profile ) {
-        console.time("batch_get");
-    }
-
-    client.batchExists(keys, function (err, results) {
-        
-        var exitCode = 0;
-
-        switch ( err.code ) {
-            case Status.AEROSPIKE_OK:
-                console.log(format(results));
-                break;
-
-            default:
-                console.error("Error: " + err.message);
-                exitCode = 1;
-                break;
-        }
-
-
-        if ( argv.profile ) {
-            console.log("---");
-            console.timeEnd("batch_get");
-        }
-        
-        process.exit(exitCode);
-    });
 });

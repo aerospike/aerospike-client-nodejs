@@ -17,16 +17,17 @@
 /*******************************************************************************
  *
  * Write a record.
- * 
+ *
  ******************************************************************************/
 
 var fs = require('fs');
 var aerospike = require('aerospike');
-var client    = aerospike.client;
+var client = aerospike.client;
 var yargs = require('yargs');
 var events = require('events');
 var util = require('util');
 var sleep = require('sleep');
+var iteration = require('./iteration');
 
 var Policy = aerospike.policy;
 var Status = aerospike.status;
@@ -36,7 +37,7 @@ var scanStatus = aerospike.scanStatus;
 /*******************************************************************************
  *
  * Options parsing
- * 
+ *
  ******************************************************************************/
 
 var argp = yargs
@@ -45,6 +46,11 @@ var argp = yargs
         help: {
             boolean: true,
             describe: "Display this message."
+        },
+        quiet: {
+            alias: "q",
+            boolean: true,
+            describe: "Do not display content."
         },
         host: {
             alias: "h",
@@ -84,34 +90,37 @@ var argp = yargs
             alias: "U",
             default: null,
             describe: "Username to connect to secured cluster"
-        },  
+        },
         password: {
             alias: "P",
             default: null,
             describe: "Password to connect to secured cluster"
-        }  
+        }
     });
 
 var argv = argp.argv;
 
-if ( argv.help === true ) {
+if (argv.help === true) {
     argp.showHelp();
     return;
 }
 
+iteration.setLimit(argv.iterations);
+
 /*******************************************************************************
  *
  * Configure the client.
- * 
+ *
  ******************************************************************************/
 
 config = {
 
     // the hosts to attempt to connect with.
-    hosts: [
-        { addr: argv.host, port: argv.port }
-    ],
-    
+    hosts: [{
+        addr: argv.host,
+        port: argv.port
+    }],
+
     // log configuration
     log: {
         level: argv['log-level'],
@@ -122,84 +131,73 @@ config = {
     policies: {
         timeout: argv.timeout
     },
-	modllua: {
-		userPath: __dirname
-	}
+
+    modllua: {
+        userPath: __dirname
+    },
+
+    // authentication
+    user: argv.user,
+    password: argv.password,
 };
 
-if(argv.user !== null)
-{
-	config.user = argv.user;
-}
 
-if(argv.password !== null)
-{
-	config.password = argv.password;
-}
+
 /*******************************************************************************
  *
  * Establish a connection to the cluster.
- * 
+ *
  ******************************************************************************/
 
-aerospike.client(config).connect(function (err, client) {
+aerospike.client(config).connect(function(err, client) {
 
-    if ( err.code != Status.AEROSPIKE_OK ) {
+    if (err.code != Status.AEROSPIKE_OK) {
         console.error("Error: Aerospike server connection error. ", err.message);
         process.exit(1);
     }
 
     //
     // Perform the operation
-	// Fire up a background scan command and check the status of the scan
-	// every 1 second
+    // Fire up a background scan command and check the status of the scan
+    // every 1 second
     //
 
     var count = 0;
 
-	var options = { 
-					UDF : {module: 'scan', funcname: 'updateRecord'}
-				  }
+    var options = {
+        UDF: {
+            module: 'scan',
+            funcname: 'updateRecord'
+        }
+    }
 
-    var scanBackground = client.query(argv.namespace, argv.set, options );
+    var scanBackground = client.query(argv.namespace, argv.set, options);
 
     var scanStream = scanBackground.execute();
 
-    scanStream.on('error', function(err){
+    scanStream.on('error', function(err) {
         console.log(err);
     });
 
-	var checkStatus = function(scanJobStats)
-	{
-		console.log(scanJobStats);
-		if(scanJobStats.status != scanStatus.COMPLETED)
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
+    var checkStatus = function(scanJobStats) {
+        console.log(scanJobStats);
+        if (scanJobStats.status != scanStatus.COMPLETED) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-	var infoCallback = function(scanJobStats, scanId)
-	{
-		if(!checkStatus(scanJobStats))
-		{
-			sleep.sleep(1)
-			scanBackground.Info(scanId, infoCallback);
-		}
-	}
+    var infoCallback = function(scanJobStats, scanId) {
+        if (!checkStatus(scanJobStats)) {
+            sleep.sleep(1)
+            scanBackground.Info(scanId, infoCallback);
+        }
+    }
 
-	var info = function(scanId)
-	{
-		scanBackground.Info(scanId, infoCallback);
-	}
+    var info = function(scanId) {
+        scanBackground.Info(scanId, infoCallback);
+    }
     scanStream.on('end', info);
 
 });
-/*******************************************************************************
- *
- * Perform the operation
- * 
- ******************************************************************************/

@@ -28,5 +28,3 @@ Local<Object> languages()
     set(obj, "LUA",   0);
     return scope.Escape(obj);
 }
-
-

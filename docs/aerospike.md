@@ -11,6 +11,7 @@
 	- [scanPriority](#scanPriority)
 - [Functions](#functions)
 	- [client()](#client)
+    - [Double()](#Double)
 	- [key()](#key)
 
 
@@ -159,6 +160,33 @@ var client = aerospike.client(config)
 ```
 
 For detals, see [Client Class](client.md).
+
+
+<!--
+################################################################################
+Double
+################################################################################
+-->
+<a name="Double"></a>
+
+### Double(num) 
+
+Returns a Number object, which will be stored as double in Aerospike server.
+Node.js supports only Number datatype, which includes int32, int64(precision is lost for values greater than 2^53-1), 
+float and double. `123.00` is interpreted as int32 in node.js. If the application want to enforce `123.00` be stored 
+as double in Aerospike, `aerospike.Double(123.00)` interface should be used. This is useful when writing data using node.js 
+application and reading data in a language(C, JAVA, PYTHON)  which supports double datatype. 
+
+Parameters:
+
+- `num` – data of type Number.
+
+
+Example:
+
+```js
+var doubleNumber = aerospike.Double(123.00)
+```
 
 <!--
 ################################################################################

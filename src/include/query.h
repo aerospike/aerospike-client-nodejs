@@ -72,7 +72,7 @@ class AerospikeQuery: public ObjectWrap {
 		// Size of queue that's used in the scan_callback, it's user adjustable.
 		int q_size;
 
-		// stores all aerospike related information. One common structure for 
+		// stores all aerospike related information. One common structure for
 		// a client instance.
 		aerospike* as;
 
@@ -100,17 +100,17 @@ class AerospikeQuery: public ObjectWrap {
         static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
-        void SetQueryType(Local<Value> config); 
+        void SetQueryType(Local<Value> config);
         /*
          * Define Getter Accessors to properties
-         */ 
+         */
         static NAN_GETTER(GetIsQuery);
         static NAN_GETTER(GetHasAggregation);
         static NAN_GETTER(GetHasUDF);
 
         /*
          * Define Setter Accessors to properties
-         */ 
+         */
         static NAN_SETTER(SetIsQuery);
         static NAN_SETTER(SetHasAggregation);
         static NAN_SETTER(SetHasUDF);
