@@ -11,74 +11,74 @@ From the `benchmarks` directory, run the following to install the dependencies:
 	$ npm install ../
 	$ npm update
 
-## Programs
-
-The following are the programs in this directory:
+## Running the main benchmark.
 
 - `main.js` – The main benchmark program, which runs multiple batches of operations 
 against an Aerospike cluster. The program can run for a specified number of iterations
-or time frame.
-- `inspect.js` – Runs `main.js` with multiple configurations to find a combination 
-of parameters which appear to perform best.
-- `memory.js` – Is a program which is used to process the memory usage output from `main.js`, 
-to give more insight into memory utilization.
+or time frame. To run the benchmark 
 
-These programs optionally take a hostname, port, and namespace of the
-cluster. The default server is on 127.0.0.1 at port 3000
-(a local server installation).
+    $`node main.js`
 
-Each of the programs will provide usage information when `--help` option is provided.
+The configuration parameters to run benchmark are specified through `config.json` file. A sample `config.json` 
+is available in the benchmark folder. This can be modified to run the desired configuration.
 
-## main.js
+## Configuration details.
 
-The primary benchmark program, which will run multiple iterations of a batch of operations against an Aerospike database cluster. 
+ -  host        : Aerospike host node.(default `localhost`)
+ -  port        : The port to connect to Aerospike Server. (default `3000`).
+ -  namespace   : All the operations for benchmark are done on this namespace.(default `test`).
+ -  set         : The set name on which all the benchmark operations are performed.(default `demo`).
+ -  user        : Username to connect to secured cluster. (default `null`).
+ -  password    : Password to connect to secured cluster. (default `null`).
+ -  timeout     : Global timeout for all read/write operations performed in benchmark. (default `0` - infinite timeout).
+ -  ttl         : Time to live for the objects written during benchmark run. (default `10000` seconds).
+ -  log         : Log level of the client module (default INFO). 
+ -  operations  : Number of operations for a single batch of operations. (default `100`).
+ -  iterations  : Number of iterations the benchmark should run. (default `null` - runs indefinitely).
+ -  processes   : Number of worker process. These are work horses for the benchmark, that does actual read/write or scan/query operations                  in a aerospike cluster. (default  `4` - Recommened value Number of CPUs/cores in the machine).
+ -  time        : Time to run the benchmark. This can be specified in the units of seconds/minutes/hours. 
+                  Sample data - 30s/30m/30h. This runs for the benchmark for 30 seconds/30 minutes/ 30 hours respectively.
+                  (default `24h` - runs for 24 hours).
+ -  reads       : The read proportion in the read/write ratio. (default `1`).
+ -  writes      : The write proportion in the read/write ratio. (default `1`).
+ -  keyrange    : Range of key values to be used in benchmark for read/write operations. (default `0-100000`).
+ -  binSpec     : Bin specification for write operations in benchmark. This is specified using,
+                  - name : name of the bin.
+                  - type : type of the bin. should be STRING, BYTES or INTEGER.
+                  - size : size of data to be written in each bin. For integer type bins size is 8.
 
-The standard options for the program are:
+## Benchmark output.
 
-- `-P <n>` – The number of child processes to spawn.
-- `-I <n>` – The number of iterations to execute in each child process.
-- `-O <n>` – The number of operations to execute per iteration.
+The benchmark prints the read/write tps in the following format.
 
-Alternatively, you can have the program run for a specified period of time. This will supercede the `-I` option, so the number iterations will depend on the number of iterations that can be executed in the time period.
+info: Fri Oct 02 2015 00:03:55 GMT+0530 (IST) read(tps=14434 timeouts=0 errors=0) write(tps=14350 timeouts=0 errors=0) 
+info: Fri Oct 02 2015 00:03:56 GMT+0530 (IST) read(tps=14009 timeouts=0 errors=0) write(tps=14119 timeouts=0 errors=0) 
+info: Fri Oct 02 2015 00:03:57 GMT+0530 (IST) read(tps=14691 timeouts=0 errors=0) write(tps=14581 timeouts=0 errors=0) 
+info: Fri Oct 02 2015 00:03:58 GMT+0530 (IST) read(tps=14200 timeouts=0 errors=0) write(tps=14200 timeouts=0 errors=0)
 
-- `-T <n>[s|m|h]` – The amount of time to run the program. The value will be the amount of time followed by the unit of time. The units are: `s` (seconds), `m` (minutes) and `h` (hours).
+In the end it prints the summary of benchmark run in the following format.
 
-Use `--help` to list all options for the program.
+SUMMARY
 
-### Iteration Reports
+Configuration
+operations    100        
+iterations    undefined  
+processes     4          
+time          30 seconds
 
-After each iteration, a one-line report is generated. This provides a quick summary of the iteration. 
+Durations
+<= 1    > 1      > 2      > 4      > 8      > 16     > 32
+8.4%    11.9%    21.7%    27.0%    18.4%    10.6%    1.9%
 
-To disable this reporting, use the `--silent` option.
+Status Codes
+0     
+100.0%
 
-### Summary Reports
+Durations - Prints the latency histogram of read/write operations.
 
-The program will generate a report of the test after it has completed. The report will contain several kinds of data, including transactions per second, memory use, and status codes.
-
-This will requires the main program to store the information for the summary report in memory.
-
-If you do not want a summary report, then use the `--no-summary` option.
-
-
-### Memory Usage Reports
-
-The program can display memory use per iteration, which helps give an understanding of details of memory use. 
-
-You can obtain a chart display of memory use with the summary report by specifying `--chart-memory`. 
-
-If you do not want a summary report, but would like memory use, then you can use `--no-summary` and `--chart-memory`, which will display memory use for each iteration.
+Status Codes - Prints the histogram for return values of read/write operations. 
 
 
-## memory.js
 
-This program generates a report on memory use based on output generated by `main.js`. It groups iterations based on what it believes to be cycles between garbage collections, which will give you an idea of when or how often GC is executed and the amount of memory is cleaned up by each GC.
 
-To generate output understood by `memory.js`, then you will want to use the following combination of options:
 
-	--no-summary --chart-memory --silent
-
-You can have the program generate a report based on a slice of the data collected via the `-s <n>` (start) and `-e <n>` (end) options. You can also use `-f <n>` to skip every _n_ cycles.
-
-## inspect.js
-
-This program runs `main.js` with different combinations of options to find a set of options that produce optimal results for the `main.js` to run for longer periods. 

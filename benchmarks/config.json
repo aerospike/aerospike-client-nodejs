@@ -39,31 +39,6 @@
             "type" : "INTEGER"
         }
     ],
-    "indexSpec"  : [ 
-        {
-            "name":"ind1", 
-            "bin":"bin1", 
-            "type": "NUMERIC"
-        }
-    ],
-    "querySpec"  : [
-        { 
-            "bin":"bin1", 
-            "btype":"NUMERIC", 
-            "qtype":"Range",
-            "min"  : 0,
-            "max"  : 100000
-        } 
-    ],
-    "scanSpec"   : [
-        {
-            "select": [
-                "bin1",
-                "bin3"
-            ], 
-            "concurrent":true
-        }
-    ],
     "summary"     : true,
     "help"        : "Please follow the README.md to specify configurations to run this benchmark"
 }
