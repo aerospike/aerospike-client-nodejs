@@ -170,7 +170,7 @@ function run(client) {
     var key = {
         ns: argv.namespace,
         set: argv.set,
-        key: keyv
+        key: keyv + iteration.current
     };
 
     client.get(key, function(err, bins, metadata, key) {

@@ -29,7 +29,6 @@ var Policy = aerospike.policy;
 var Status = aerospike.status;
 var Double = aerospike.Double;
 
-console.log(Double);
 /*******************************************************************************
  *
  * Options parsing
@@ -155,7 +154,7 @@ function run(client) {
     var key = {
         ns: argv.namespace,
         set: argv.set,
-        key: keyv + iteration
+        key: keyv + iteration.current
     };
 
     var bins = {
@@ -173,7 +172,6 @@ function run(client) {
         b2: new Uint8Array([0xa, 0xb, 0xc])
     };
 
-    console.log(bins.x);
     var metadata = {
         ttl: 10000,
         gen: 0

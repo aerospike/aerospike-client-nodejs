@@ -26,4 +26,5 @@ module.exports = {
     reset: reset,
     setLimit: setLimit,
     next: next,
+    current: current
 };

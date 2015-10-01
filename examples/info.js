@@ -58,7 +58,7 @@ var argp = yargs
         },
         timeout: {
             alias: "t",
-            default: 10,
+            default: 1000,
             describe: "Timeout in milliseconds."
         },
         'log-level': {
@@ -160,7 +160,7 @@ function run(client) {
 }
 
 function isError(err) {
-    if (err && err.code != Status.AEROSPIKE_OK) {
+    if (err && err.code !== Status.AEROSPIKE_OK) {
         console.error("Error: " + err.message);
         return true;
     } else {
