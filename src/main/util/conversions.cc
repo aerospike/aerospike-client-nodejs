@@ -1001,7 +1001,12 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
         }
         as_val* val = asval_from_jsobject( value, log);
 
-        if( val == NULL) {
+        if( val == NULL ) {
+            return AS_NODE_PARAM_ERR;
+        }
+        else if( as_val_type(val) == AS_BOOLEAN) {
+            as_val_destroy(val);
+            as_v8_error(log,"Boolean datatype not supported");
             return AS_NODE_PARAM_ERR;
         }
 
