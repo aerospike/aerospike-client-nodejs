@@ -42,6 +42,7 @@
         'src/main/client/remove.cc',
         'src/main/client/select.cc',
         'src/main/client/sindex_create.cc',
+        'src/main/client/sindex_create_wait.cc',
         'src/main/client/sindex_remove.cc',
         'src/main/client/udf_register.cc',
         'src/main/client/udf_remove.cc',

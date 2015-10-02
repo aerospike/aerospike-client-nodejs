@@ -184,6 +184,10 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(sindexCreate);
 
 		/*
+		 * undefined client.indexCreateWait(ns, indexName)
+		 */
+		static NAN_METHOD(sindexCreateWait);
+		/*
 		 * undefined client.indexRemove(ns, indexName )
 		 */
 		static NAN_METHOD(sindexRemove);

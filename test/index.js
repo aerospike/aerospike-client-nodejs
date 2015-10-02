@@ -81,6 +81,35 @@ describe('client.index()', function() {
             done();
         });
     });
-
+    it('should create an integer index and wait until index creation is done', function(done) {
+        var args = { ns: options.namespace,
+                     set: options.set,
+                     bin : "integer_done",
+                     index: "integer_index_done" }
+        client.createIntegerIndex(args, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            client.indexCreateWait(options.namespace, "integer_index_done", 1000, function(err) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                done();
+            });
+        });
+    });
+    it('should create a string index and wait until index creation is done', function(done) {
+        var args = { ns: options.namespace,
+                     set: options.set,
+                     bin : "string_done",
+                     index: "string_index_done" }
+        client.createStringIndex(args, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            client.indexCreateWait(options.namespace, "string_index_done", 1000, function(err) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                done();
+            });
+        });
+    });
 
 });

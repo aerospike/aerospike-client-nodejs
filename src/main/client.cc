@@ -177,6 +177,7 @@ void AerospikeClient::Init()
     Nan::SetPrototypeMethod(cons, "get", Get);
     Nan::SetPrototypeMethod(cons, "info", Info);
     Nan::SetPrototypeMethod(cons, "indexCreate", sindexCreate);
+    Nan::SetPrototypeMethod(cons, "indexCreateWait", sindexCreateWait);
     Nan::SetPrototypeMethod(cons, "indexRemove", sindexRemove);
     Nan::SetPrototypeMethod(cons, "operate", Operate);
     Nan::SetPrototypeMethod(cons, "put", Put);

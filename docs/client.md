@@ -29,6 +29,7 @@ With a new client, you can use any of the methods specified below:
   - [exists()](#exists)
   - [get()](#get)
   - [info()](#info)
+  - [indexCreateWait()](#indexCreateWait)
   - [indexRemove()](#indexRemove)
   - [LargeList()](#largeList)
   - [operate()](#operate)
@@ -338,7 +339,9 @@ createIntegerIndex()
 
 ### createIntegerIndex(args, callback)
 
-Creates an integer index.
+Creates an integer index. It's an asynchronous API that issues the index create command
+to aerospike cluster. To verify that index has been created and populated with all the 
+data use [indexCreateWait()](#indexCreateWait) API.
 
 Parameters:
 - `args`      - An object with these entries. ns, set, bin, index, policy.
@@ -374,7 +377,9 @@ createStringIndex()
 
 ### createStringIndex(args, callback)
 
-Creates a string index.
+Creates a string index. It's an asynchronous API that issues the index create command 
+to aerospike cluster. To verify that index has been created and populated with all the 
+data use [indexCreateWait()](#indexCreateWait) API.
 
 Parameters:
 - `args`      - An object with these entries. ns, set, bin, index, policy.
@@ -588,6 +593,51 @@ client.info("statistics", {addr: "127.0.0.1", port: 3000}, function(error, respo
   // do something
 });
 ```
+
+<!--
+################################################################################
+indexCreateWait()
+################################################################################
+-->
+<a name="indexCreateWait"></a>
+
+### indexCreateWait(namespace, index, pollInterval, callback)
+
+Wait until an issued index create command succeeds in aerospike cluster. This waits
+until index is ready to be queried.
+
+Parameters:
+
+- `namespace`   – The namespace on which the index is created.
+- `index`		– The name of the index created.
+- `pollInterval`- The poll interval in milliseconds to check the index creation status.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of
+                  the operation.
+
+
+Example:
+
+```js
+var args = { ns: "test", set: "demo", bin: "bin1", index:"index_name"}
+client.createIntegerIndex(args, function (error) {
+  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
+    client.indexCreateWait('test', 'index', 1000, function(error) {
+        if(error.code !== aerospike.status.AEROSPIKE_OK) {
+            // index creation failed.
+        }
+    });
+  }
+  else {
+    // Index create request failed.
+  }
+})
+
+```
+
 <!--
 ################################################################################
 LargeList()

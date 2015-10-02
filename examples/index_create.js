@@ -196,7 +196,7 @@ function run(client) {
                 if (isError(err)) {
                     process.exit(1);
                 } else {
-                    !argv.quiet && console.log("OK.");
+                    isIndexCreated(client, argv.namespace, index, 1000);
                 }
             });
             break;
@@ -204,8 +204,9 @@ function run(client) {
             client.createStringIndex(options, function(err) {
                 if (isError(err)) {
                     process.exit(1);
-                } else {
-                    !argv.quiet && console.log("OK.");
+                } 
+                else {
+                    isIndexCreated(client, argv.namespace, index, 1000);
                 }
             });
             break;
@@ -222,12 +223,24 @@ function isError(err) {
                 console.error("Error: Not Found.");
                 return true;
             default:
+                console.log(err);
                 console.error("Error: " + err.message);
                 return true;
         }
     } else {
         return false;
     }
+}
+
+function isIndexCreated(client, namespace, index, pollInterval) {
+    client.indexCreateWait(namespace, index, pollInterval, function(err) {
+        if (isError(err)) {
+            process.exit(1);
+        } 
+        else {
+            !argv.quiet && console.log("Index Created - %s", index);
+        }
+    });
 }
 
 aerospike.client(config).connect(function(err, client) {
