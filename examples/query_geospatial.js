@@ -30,6 +30,7 @@ var util = require('util');
 var Policy = aerospike.policy;
 var Status = aerospike.status;
 var filter = aerospike.filter;
+var GeoJSON = aerospike.GeoJSON;
 
 /*******************************************************************************
  *
@@ -75,7 +76,7 @@ var argp = yargs
 		},
 		set: {
 			alias: "s",
-			default: "yelp",
+			default: "demo",
 			describe: "Set for the keys."
 		},
 		user: {
@@ -138,50 +139,118 @@ if(argv.password !== null)
 	config.password = argv.password;
 }
 
-/*******************************************************************************
- *
- * Establish a connection to the cluster.
- * 
- ******************************************************************************/
+var g_nkeys = 20;
+var g_bin = "loc";
+var g_index = "points-loc-index";
 
-aerospike.client(config).connect(function (err, client) {
-
-	if ( err.code != Status.AEROSPIKE_OK ) {
-		console.error("Error: Aerospike server connection error. ", err.message);
-		process.exit(1);
-	}
-
-	//
-	// Perform the operation
-	//
+function execute_query(client) {
 
 	var count = 0;
-
 	var region = {
-		type: "Circle",
-		coordinates: [[-80.0024, 40.4484], 200.0]
+		type: "Polygon",
+		coordinates: [
+			[[-122.500000, 37.000000],[-121.000000, 37.000000],
+			 [-121.000000, 38.080000],[-122.500000, 38.080000],
+			 [-122.500000, 37.000000]]
+		]
 	}
 	
-	var options = { filters: [ filter.geoWithin("loc", JSON.stringify(region))] }
+	var options = { filters: [filter.geoWithin("loc", JSON.stringify(region))] }
 
 	var q = client.query(argv.namespace, argv.set, options);
 
 	var stream = q.execute();
 
 	stream.on('data', function(rec) {
-		//process the record here
+		console.log(rec);
 		count++;
 	});
 
 	stream.on('error', function(err){
 		console.log("at error");
 		console.log(err);
+		// FIXME - when we can wait after index creation / deletion, do this.
+		// cleanup(client, process.exit);
 	});
 
 	stream.on('end', function() {
-		console.log('TOTAL QUERIED:', count++);
-		process.exit(0)
+		console.log('TOTAL QUERIED:', count);
+		// FIXME - when we can wait after index creation / deletion, do this.
+		// cleanup(client, process.exit);
 	});
+}
 
+function insert_records(client, ndx, end) {
+	if (ndx >= end)
+		return execute_query(client);
+
+	var key = { ns: argv.namespace, set: argv.set, key: ndx }
+
+	var lng = -122 + (0.1 * ndx);
+	var lat = 37.5 + (0.1 * ndx);
+
+	loc = { type: "Point", coordinates: [lng, lat] }
+	bins = {}
+	bins[g_bin] = GeoJSON(JSON.stringify(loc));
+	client.put(key, bins, function(err, key) {
+		if (err.code != Status.AEROSPIKE_OK) {
+			console.error("insert_records: put failed: ", err.message);
+			process.exit(1);
+		}
+		insert_records(client, ndx + 1, end);
+	});
+}
+
+function create_index(client) {
+    var options = {
+        ns:  argv.namespace,
+        set: argv.set,
+        bin : g_bin,
+		index: g_index
+    };
+	client.createGeo2DSphereIndex(options, function(err) {
+		if (err.code == Status.AEROSPIKE_OK) {
+			insert_records(client, 0, g_nkeys);
+		}
+		else {
+			console.log("index create failed: ", err);
+			process.exit(1)
+		}
+	});
+}
+
+function remove_index(client, complete) {
+	client.indexRemove(argv.namespace, g_index, function(err) {
+		// Ignore errors since the index may not exist.
+		complete(client);
+	});
+}
+
+function remove_records(client, ndx, end, complete) {
+	if (ndx >= end)
+		return remove_index(client, complete);
+
+	var key = { ns: argv.namespace, set: argv.set, key: ndx }
+	
+	client.remove(key, function(err, key) {
+		// Ignore errors since the records may not exist.
+		remove_records(client, ndx + 1, end, complete);
+	});
+}
+
+function cleanup(client, complete) {
+	remove_records(client, 0, g_nkeys, complete);
+}
+
+aerospike.client(config).connect(function(err, client) {
+	if (err.code == Status.AEROSPIKE_OK) {
+		// Remove any pre-existing state.
+		// FIXME - when we can wait after index creation / deletion, do this.
+		// cleanup(client, create_index);
+		create_index(client);
+	}
+	else {	
+		console.error("Error: Aerospike server connection error. ", err.message);
+		process.exit(1);
+	}
 });
-

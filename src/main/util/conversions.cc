@@ -40,6 +40,7 @@ extern "C" {
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_arraylist_iterator.h>
 #include <aerospike/as_boolean.h>
+#include <aerospike/as_geojson.h>
 #include <aerospike/as_hashmap.h>
 #include <aerospike/as_hashmap_iterator.h>
 #include <aerospike/as_pair.h>
@@ -746,6 +747,14 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 
             return scope.Escape(jsobj);
         }
+        case AS_GEOJSON : {
+            as_geojson * gval = as_geojson_fromval(val);
+            if ( gval ) {
+                char * data = as_geojson_getorelse(gval, NULL);
+                as_v8_detail(log, "geojson = \"%s\"", data);
+                return scope.Escape(Nan::New<String>(data).ToLocalChecked());
+            }
+        }
         default:
             break;
     }
@@ -877,21 +886,34 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 
     }
     else {
-        const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
-        const uint32_t count = props->Length();
-        as_hashmap *map = as_hashmap_new(count);
-        if( map == NULL) {
-            as_v8_error(log, "Map allocation failed");
-            return NULL;
-        }
-        for ( uint32_t i = 0; i < count; i++) {
-            const Local<Value> name = props->Get(i);
-            const Local<Value> value = obj->ToObject()->Get(name);
-            String::Utf8Value n(name);
-            as_val* val = asval_from_jsobject(value, log);
-            as_stringmap_set((as_map*) map, *n, val);
-        }
-        return (as_val*) map;
+		// Are we GeoJSON?
+		Local<String> ctor_name = obj->ToObject()->GetConstructorName();
+		String::Utf8Value cn(ctor_name);
+		if (strncmp(*cn, "GeoJSON", 7) == 0) {
+			const Local<Value> strval =
+				obj->ToObject()->Get(Nan::New<String>("str").ToLocalChecked());
+	        String::Utf8Value v(strval);
+			as_geojson *geojson = as_geojson_new(strdup(*v), true);
+			return (as_val*) geojson;
+		}
+		else {
+			// Not GeoJSON, must be an Object.
+			const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
+			const uint32_t count = props->Length();
+			as_hashmap *map = as_hashmap_new(count);
+			if( map == NULL) {
+				as_v8_error(log, "Map allocation failed");
+				return NULL;
+			}
+			for ( uint32_t i = 0; i < count; i++) {
+				const Local<Value> name = props->Get(i);
+				const Local<Value> value = obj->ToObject()->Get(name);
+				String::Utf8Value n(name);
+				as_val* val = asval_from_jsobject(value, log);
+				as_stringmap_set((as_map*) map, *n, val);
+			}
+			return (as_val*) map;
+		}
 
     }
     return NULL;
@@ -942,6 +964,9 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
                 break;
             case AS_MAP:
                 as_record_set_map(rec, *n, (as_map*) val);
+                break;
+            case AS_GEOJSON:
+                as_record_set_geojson(rec, *n, (as_geojson*) val);
                 break;
             case AS_NIL:
                 as_record_set_nil(rec, *n);
