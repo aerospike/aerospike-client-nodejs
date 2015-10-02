@@ -39,6 +39,7 @@ With a new client, you can use any of the methods specified below:
   - [remove()](#remove)
   - [select()](#select)
   - [udfRegister()](#udfRegister)
+  - [udfRegisterWait()](#udfRegisterWait)
   - [udfRemove()](#udfRemove)
   - [updateLogging()](#updateLogging)
 
@@ -603,8 +604,8 @@ indexCreateWait()
 
 ### indexCreateWait(namespace, index, pollInterval, callback)
 
-Wait until an issued index create command succeeds in aerospike cluster. This waits
-until index is ready to be queried.
+Wait until an index create command succeeds in aerospike cluster. This function returns 
+only when index is ready to be queried.
 
 Parameters:
 
@@ -886,7 +887,8 @@ udfRegister()
 
 ### udfRegister(udfModule, policy=null, callback)
 
-Registers an UDF to the database cluster.
+Registers an UDF to the database cluster. To verify that UDF is present in all the nodes 
+refer [udfRegisterWait()](#udfREgisterWait)
 
 Parameters:
 
@@ -906,6 +908,45 @@ client.udfRegister("path/to/file/filename", function(error) {
   // do something
 });
 ```
+
+<!--
+################################################################################
+udfRegisterWait()
+################################################################################
+-->
+<a name="udfRegisterWait"></a>
+
+### udfRegisterWait(udfFilename, pollInterval, policy=null, callback)
+
+Wait until the UDF registration succeeds in aerospike cluster. This function returns only when the 
+UDF registered is available with all the nodes in aerospike cluster.
+
+Parameters:
+
+- `udfFilename` – UDF filename for which the status has to be checked.
+- `pollInterval`- The status of UDF registration checked regularly with this Interval. Specified in milliseconds.
+- `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`    – The function to call when the operation completes with the results of the operation.
+
+The parameters for the `callback` argument:
+
+- `error`       – The [Error object](datamodel.md#error) representing the status of
+                  the operation.
+
+Example:
+```js
+
+client.udfRegister("path/to/file/filename", function(error) {
+    if(error.code === aerospike.status.AEROSPIKE_OK) {
+        client.udfRegisterWait( filename, 1000, function(err) {
+            if(err.code !== aerospike.status.AEROSPIKE_OK) {
+                // error in registration.
+            }
+        });
+    }
+});
+```
+
 <!--
 ################################################################################
 udfRemove()

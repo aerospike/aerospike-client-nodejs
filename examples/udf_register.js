@@ -160,8 +160,13 @@ function run(client) {
         if (isError(err)) {
             process.exit(1);
         } else {
-            !argv.quiet && console.log("OK.");
-            iteration.next(run, client);
+            client.udfRegisterWait(file, 1000, function(err) {
+                if(isError(err)) {
+                    process.exit(1);
+                } else {
+                    !argv.quiet && console.log("UDF Registration Successful - %s", file);
+                }
+            });
         }
     });
 }

@@ -45,6 +45,7 @@
         'src/main/client/sindex_create_wait.cc',
         'src/main/client/sindex_remove.cc',
         'src/main/client/udf_register.cc',
+        'src/main/client/udf_register_wait.cc',
         'src/main/client/udf_remove.cc',
         'src/main/enums/predicates.cc',
         'src/main/enums/log.cc',

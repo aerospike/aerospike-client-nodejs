@@ -185,6 +185,7 @@ void AerospikeClient::Init()
     Nan::SetPrototypeMethod(cons, "remove", Remove);
     Nan::SetPrototypeMethod(cons, "select", Select);
     Nan::SetPrototypeMethod(cons, "udfRegister", Register);
+    Nan::SetPrototypeMethod(cons, "udfRegisterWait", RegisterWait);
     Nan::SetPrototypeMethod(cons, "execute", Execute);
     Nan::SetPrototypeMethod(cons, "udfRemove", UDFRemove);
     Nan::SetPrototypeMethod(cons, "updateLogging", SetLogLevel);

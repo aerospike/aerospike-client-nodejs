@@ -100,4 +100,18 @@ describe('client.udfRegister()', function(done) {
             done();
         });
     });
+  it('should register an UDF file to aerospike cluster and wait until all registration is done across all nodes in Aerospike cluster', function(done) {
+        var dir = __dirname;
+        var filename = dir + "/udf_test.lua"
+        client.udfRegister(filename, function(err) {
+            expect(err).to.be.ok();
+            expect(err.code).to.equal(status.AEROSPIKE_OK);
+            client.udfRegisterWait("udf_test.lua", 1000, function(err) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_OK);
+                done();
+            });
+        });
+    });
+
 });

@@ -148,6 +148,10 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(Register);
 
         /*
+         *undefined client.udfRegisterWait(udf_filename, poll_interval, function( Error))
+         */
+		static NAN_METHOD(RegisterWait);
+        /*
          *undefined client.udf_execute(Key, udf_args, function( Error, Response))
          */
 		static NAN_METHOD(Execute);
