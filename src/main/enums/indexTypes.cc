@@ -28,5 +28,6 @@ Local<Object> indexType()
     Local<Object> obj = Nan::New<Object>();
     set(obj, "STRING",    AS_INDEX_STRING);
     set(obj, "NUMERIC",  AS_INDEX_NUMERIC);
+    set(obj, "GEO2DSPHERE",  AS_INDEX_GEO2DSPHERE);
     return scope.Escape(obj);
 }
