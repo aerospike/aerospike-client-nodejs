@@ -51,31 +51,37 @@ is available in the benchmark folder. This can be modified to run the desired co
 
 The benchmark prints the read/write tps in the following format.
 
-info: Fri Oct 02 2015 00:03:55 GMT+0530 (IST) read(tps=14434 timeouts=0 errors=0) write(tps=14350 timeouts=0 errors=0) 
+info: Fri Oct 02 2015 00:03:55 GMT+0530 (IST) read(tps=14434 timeouts=0 errors=0) write(tps=14350 timeouts=0 errors=0)
+
 info: Fri Oct 02 2015 00:03:56 GMT+0530 (IST) read(tps=14009 timeouts=0 errors=0) write(tps=14119 timeouts=0 errors=0) 
-info: Fri Oct 02 2015 00:03:57 GMT+0530 (IST) read(tps=14691 timeouts=0 errors=0) write(tps=14581 timeouts=0 errors=0) 
+
+info: Fri Oct 02 2015 00:03:57 GMT+0530 (IST) read(tps=14691 timeouts=0 errors=0) write(tps=14581 timeouts=0 errors=0)
+
 info: Fri Oct 02 2015 00:03:58 GMT+0530 (IST) read(tps=14200 timeouts=0 errors=0) write(tps=14200 timeouts=0 errors=0)
 
 In the end it prints the summary of benchmark run in the following format.
 
 SUMMARY
 
-Configuration
-operations    100        
-iterations    undefined  
-processes     4          
-time          30 seconds
+- Configuration
+- operations  : 100        
+- iterations  :  undefined  
+- processes   : 4          
+- time        :  30 seconds
 
-Durations
-<= 1    > 1      > 2      > 4      > 8      > 16     > 32
-8.4%    11.9%    21.7%    27.0%    18.4%    10.6%    1.9%
+- Durations :  latency histogram of read/write operations.
+   
+   | <=1  | >1  | >2  | >4  | >8  |  >16 | >32  |
+|---|---|---|---|---|---|---|
+| 8.4%  |11.9%   | 21.7%  |27.0%   |18.4%   |10.6%   |1.9%   |
 
-Status Codes
-0     
-100.0%
 
-Durations - Prints the latency histogram of read/write operations.
+- Status Codes : histogram for return values of read/write operations.
 
-Status Codes - Prints the histogram for return values of read/write operations. 
+   | 0  |
+|---|
+|100.0%   |
+
+
 
 
