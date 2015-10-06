@@ -169,14 +169,12 @@ function execute_query(client) {
 	stream.on('error', function(err){
 		console.log("at error");
 		console.log(err);
-		// FIXME - when we can wait after index creation / deletion, do this.
-		// cleanup(client, process.exit);
+		cleanup(client, process.exit);
 	});
 
 	stream.on('end', function() {
-		console.log('TOTAL QUERIED:', count);
-		// FIXME - when we can wait after index creation / deletion, do this.
-		// cleanup(client, process.exit);
+		console.log('RECORDS FOUND:', count);
+		cleanup(client, process.exit);
 	});
 }
 
@@ -209,13 +207,17 @@ function create_index(client) {
 		index: g_index
     };
 	client.createGeo2DSphereIndex(options, function(err) {
-		if (err.code == Status.AEROSPIKE_OK) {
-			insert_records(client, 0, g_nkeys);
-		}
-		else {
+		if (err.code != Status.AEROSPIKE_OK) {
 			console.log("index create failed: ", err);
 			process.exit(1)
 		}
+		client.indexCreateWait(options.ns, g_index, 100, function(err) {
+			if (err.code != aerospike.status.AEROSPIKE_OK) {
+				console.log("index create failed: ", err);
+				process.exit(1)
+			}
+			insert_records(client, 0, g_nkeys);
+		});
 	});
 }
 
@@ -244,8 +246,7 @@ function cleanup(client, complete) {
 
 aerospike.client(config).connect(function(err, client) {
 	if (err.code == Status.AEROSPIKE_OK) {
-		// Remove any pre-existing state.
-		// FIXME - when we can wait after index creation / deletion, do this.
+		// FIXME - when we can wait after index deletion do this instead.
 		// cleanup(client, create_index);
 		create_index(client);
 	}
