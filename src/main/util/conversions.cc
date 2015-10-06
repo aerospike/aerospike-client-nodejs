@@ -846,8 +846,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         return (as_val*) &as_nil;
     }
     else if(obj->IsBoolean()) {
-        as_v8_error(log, "Boolean datatype is not supported");
-        return NULL;
+        return (as_val*) as_boolean_new(obj->BooleanValue());
     }
     else if(obj->IsString()){
         String::Utf8Value v(obj);
