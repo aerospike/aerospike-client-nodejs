@@ -525,7 +525,7 @@ static void respond(uv_work_t * req, int status)
     if( data->type == SCANUDF)
     {
         as_v8_debug(log,"scan background no need to clean up the queue structure");
-        //delete query_data;
+        delete query_data;
     }
     else
     {
@@ -544,7 +544,7 @@ static void respond(uv_work_t * req, int status)
 
     if( data->type == SCAN || data->type == SCANUDF)
     {
-        //cf_free(data->query_scan->scan);
+        cf_free(data->query_scan->scan);
     }
     else
     {
@@ -556,19 +556,19 @@ static void respond(uv_work_t * req, int status)
         }
         as_query_destroy(data->query_scan->query);
 
-        //cf_free(data->query_scan->query);
+        cf_free(data->query_scan->query);
     }
     if(data->policy.scan != NULL)
     {
-        //cf_free(data->policy.scan);
+        cf_free(data->policy.scan);
     }
     else if( data->policy.query != NULL)
     {
-        //cf_free(data->policy.query);
+        cf_free(data->policy.query);
     }
 
-    //delete data;
-    //delete req;
+    delete data;
+    delete req;
 
     as_v8_debug(log, "Query operation done");
     return;
