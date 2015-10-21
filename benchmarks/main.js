@@ -42,7 +42,7 @@ var kB = 1024;
 var MB = kB * 1024;
 var GB = MB * 1024;
 
-var OP_TYPES = 3; // READ, WRITE and QUERY
+var OP_TYPES = 4; // READ, WRITE, SCAN and QUERY
 var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
 
 var queryWorkers= 0;
@@ -225,7 +225,7 @@ if(argv.time !== undefined){
     argv.iterations = undefined;
 }
 
-var alert = { mode: argv.alerts, filename: argv.filename}
+var alert = { mode: argv.alert, filename: argv.filename}
 alerts.setupAlertSystem(alert);
 
 /***********************************************************************
@@ -314,7 +314,6 @@ function queryWorkerJob(worker, id) {
         set         : argv.set,
         statement   : stmt
     }
-    console.log(stmt);
     worker.send(['query', options]);
 
 }
@@ -349,9 +348,13 @@ function print_interval_stats(){
                 new Date().toString(), interval_stats[0][0],interval_stats[0][1],interval_stats[0][2],
                 interval_stats[1][0], interval_stats[1][1],interval_stats[1][2])
     }
-    if( queryWorkers || scanWorkers) {
-        logger.info("%s query(records returned = %d timeouts = %d errors = %d)",
+    if( queryWorkers ) {
+        logger.info("%s query(records = %d timeouts = %d errors = %d)",
                new Date().toString(), interval_stats[2][0], interval_stats[2][1], interval_stats[2][2]);
+    }
+    if( scanWorkers ) {
+        logger.info("%s scan(records = %d timeouts = %d errors = %d)",
+               new Date().toString(), interval_stats[3][0], interval_stats[3][1], interval_stats[3][2]);
     }
 }
 
@@ -402,7 +405,7 @@ if(!argv.silent){
  * Reset the value of internal_stats.
  */
 function reset_interval_stats(){
-    interval_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    interval_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
 }
 
 

@@ -238,7 +238,7 @@ void ParseUDFArgs(QueryScan* queryScan, Local<Object> udf, LogInfo* log, bool is
 }
 
 
-void ParseScanPriority(as_scan* scan, Local<Object> obj, LogInfo* log)
+void ParseScanPriority(as_scan* scan, Local<Value> obj, LogInfo* log)
 {
     //Nan::HandleScope scope;
     //Set the scan_priority of the scan.
@@ -255,7 +255,7 @@ void ParseScanPriority(as_scan* scan, Local<Object> obj, LogInfo* log)
     }
 }
 
-void ParseScanPercent(as_scan* scan, Local<Object> obj, LogInfo* log)
+void ParseScanPercent(as_scan* scan, Local<Value> obj, LogInfo* log)
 {
     Nan::HandleScope scope;
     //Set the percentage to be scanned in each partition.
@@ -393,10 +393,10 @@ void ParseConfig( AerospikeQuery* query, Local<Object> config)
     if( query->type == SCAN || query->type == SCANUDF) {
         as_scan* scan = query->query_scan.scan;
         if(config->Has(Nan::New("priority").ToLocalChecked())) {
-            ParseScanPriority(scan, config->Get(Nan::New("priority").ToLocalChecked())->ToObject(), log);
+            ParseScanPriority(scan, config->Get(Nan::New("priority").ToLocalChecked()), log);
         }
         if(config->Has(Nan::New("percent").ToLocalChecked())) {
-            ParseScanPercent(scan, config->Get(Nan::New("percent").ToLocalChecked())->ToObject(), log);
+            ParseScanPercent(scan, config->Get(Nan::New("percent").ToLocalChecked()), log);
         }
         if(config->Has(Nan::New("nobins").ToLocalChecked())) {
             ParseScanNobins(scan, config->Get(Nan::New("nobins").ToLocalChecked()), log);

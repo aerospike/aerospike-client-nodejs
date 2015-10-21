@@ -87,7 +87,7 @@ static void * prepare(ResolveArgs(info))
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
-    AsyncData * data            = new AsyncData;
+    AsyncData * data            = new AsyncData();
     data->as                    = client->as;
 
     // Initialize default values in async data

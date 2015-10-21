@@ -21,7 +21,7 @@
  ******************************************************************************/
 
 var fs = require('fs');
-var aerospike = require('../');
+var aerospike = require('aerospike');
 var yargs = require('yargs');
 var iteration = require('./iteration');
 

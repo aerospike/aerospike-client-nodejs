@@ -37,15 +37,15 @@ var argv     = require("./config.json");
  *
  *********************************************************************/
 
-var OP_TYPES = 2; // READ and WRITE
-var STATS = 3; // OPERATIONS, TIMEOUTS and ERRORS
-var READ = 0;
-var WRITE = 1;
-var QUERY = 2;
-var TPS = 0;
-var TIMEOUT = 1;
-var ERROR   = 2;
-var QPS     = 0;
+var OP_TYPES    = 4; // READ, WRITE, QUERY and SCAN
+var STATS       = 3; // OPERATIONS, TIMEOUTS and ERRORS
+var READ        = 0;
+var WRITE       = 1;
+var QUERY       = 2;
+var SCAN        = 3;
+var TPS         = 0;
+var TIMEOUT     = 1;
+var ERROR       = 2;
 /***********************************************************************
  *
  * Options Parsing
@@ -180,6 +180,11 @@ if ( !cluster.isWorker ) {
 
 argv.ttl = stats.parse_time_to_secs(argv.ttl);
 
+// variables to track memory growth(RSS) of worker process.
+var heapMemory       = 0;       
+var initialFlux     = true;
+var memGrowth       = 0;
+var FLUX_PERIOD     = 5;
 /***********************************************************************
  *
  * Logging
@@ -242,6 +247,7 @@ client.connect(function(err) {
     }
 });
 
+
 /***********************************************************************
  *
  * Operations
@@ -298,10 +304,9 @@ function recordgen( key, binSpec ) {
     return data;
 }
 
-function get(options, done) {
-    var k = keygen(options.keyRange.min,options.keyRange.max);
+function get(key, done) {
     var time_start = process.hrtime()
-    client.get( {ns: options.namespace, set: options.set, key: k}, function(_error, _record, _metadata, _key) {
+    client.get( key, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
         done(_error.code, time_start, time_end, READ);
     });
@@ -314,10 +319,8 @@ var metadata = {
 
 function put(options, done) {
 
-    var k = keygen(options.keyRange.min,options.keyRange.max);
-    var record  = recordgen(k, options.binSpec)
     var time_start = process.hrtime();
-    client.put({ns:options.namespace, set: options.set, key: k}, record, metadata, function(_error, _record, _metadata, _key) {
+    client.put(options.key, options.record, metadata, function(_error, _record, _metadata, _key) {
         var time_end = process.hrtime();
         done(_error.code, time_start, time_end, WRITE);
     });
@@ -360,16 +363,19 @@ function run(options) {
         }
     }
 
-    while( write_ops > 0) {
+    while( write_ops > 0 || read_ops > 0) {
+
+        var k = keygen(options.keyRange.min,options.keyRange.max);
+        var key = { ns: options.namespace, set: options.set, key: k}
+        var record  = recordgen(k, options.binSpec)
+        var ops = { key : key, record : record};
         if( write_ops > 0) {
             write_ops--;
-            put(options, done);
+            put(ops, done);
         }
-    }
-    while( read_ops > 0) {
         if( read_ops > 0) {
             read_ops--;
-            get(options, done);
+            get(key, done);
         };
     }
 }
@@ -389,24 +395,25 @@ function reset_interval_data(){
     interval_data[READ] =  [0, 0, 0];  // [reads_performed, reads_timeout, reads_error]
     interval_data[WRITE] = [0, 0, 0];  // [writes_performed, writes_timeout, writes_error]
     interval_data[QUERY] = [0, 0, 0];  // [QueryRecords, query_timeout, query_error]
+    interval_data[SCAN]  = [0, 0, 0];
 }
 
 /*
  * Execute the long running job.
  */
 
-function executeJob(options, callback) {
+function executeJob(options, opType, callback) {
 
     var job     = client.query(options.namespace, options.set, options.statement);
     var stream  = job.execute();
     stream.on('data', function(record) {
        // count the records returned
-       interval_data[QUERY][TPS]++;
+        interval_data[opType][TPS]++;
     });
     stream.on('error', function(error) {
-        interval_data[QUERY][ERROR]++;
+        interval_data[opType][ERROR]++;
         if(error.code == status.AEROSPIKE_ERR_TIMEOUT){
-            interval_data[QUERY][TIMEOUT]++;
+            interval_data[opType][TIMEOUT]++;
         }
     });
     stream.on('end', function(){
@@ -417,9 +424,40 @@ function executeJob(options, callback) {
 }
 
 var runLongRunningJob = function(options) {
-    executeJob(options, runLongRunningJob);
+    if( options.statement.filters === undefined) {
+        executeJob(options, SCAN, runLongRunningJob);
+    }
+    else {
+        executeJob(options, QUERY, runLongRunningJob);
+    }
 }
 
+var monitorMemory = function() {
+    var currentMemory = process.memoryUsage();
+    currentMemory.pid = process.pid;
+    if( heapMemory < currentMemory.heapUsed) {
+        memGrowth++;
+        if(!initialFlux && memGrowth >= FLUX_PERIOD) {
+            var alertData =  
+                {
+                    alert: currentMemory, 
+                    severity: alerts.severity.HIGH
+            };
+            memGrowth = 0;
+            process.send(['alert',alertData]);
+        }
+        else if(initialFlux && memGrowth >= FLUX_PERIOD) {
+            initialFlux = false;
+            memGrowth = 0;
+        }
+    }
+    heapMemory = currentMemory.heapUsed;
+}
+// log the memory footprint of the process every 10 minutes.
+// when it is run in longevity mode.
+if(argv.longevity) {
+    setInterval(monitorMemory, 6000);
+}
 /***********************************************************************
  *
  * Event Listeners
@@ -468,13 +506,4 @@ process.on('message', function(msg) {
     }
 });
 
-// log the memory footprint of the process every 10 minutes.
-setTimeout(function(){
-    //write the memory usage to a file
-    var mem = process.memoryUsage();
-    fs.writeFile("longevityMemory", JSON.stringify(mem), function(err) {
-        if(err) {
-            console.log(err);
-        }
-    })
-}, 600000);
+
