@@ -2,7 +2,7 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js v0.10.x, v0.12.x, Iojs, v4.* and supports the following operating systems: 
+This module is compatible with Node.js v0.10.x, v0.12.x, Iojs, v4.*, v5.x and supports the following operating systems: 
 CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora20, Fedora21, Fedora 22, Linuxmint and Mac OS X.
 
 - [Usage](#Usage)
