@@ -95,7 +95,7 @@ var argv = argp.argv;
 
 if ( argv.help === true ) {
 	argp.showHelp();
-	return;
+	process.exit(0);
 }
 
 /*******************************************************************************

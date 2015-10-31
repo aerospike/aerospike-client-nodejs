@@ -174,7 +174,7 @@ function run(client) {
             !argv.quiet && console.log("OK.");
         }
     });
-});
+};
 
 
 function isError(err) {

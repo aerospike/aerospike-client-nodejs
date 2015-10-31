@@ -102,7 +102,7 @@ var request = argv._.length !== 0 ? argv._.shift() : "statistics";
 
 if (argv.help === true) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
 iteration.setLimit(argv.iterations);
