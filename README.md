@@ -281,12 +281,12 @@ Aerospike nodejs client does not include LUA by default during installation. App
 an environment variable `USELUA` to inclue LUA library, and can use the Aggregation feature in
 Aerospike. To install with Aggregation enabled:
 	
-	$USELUA=1 npm install
+	$ USELUA=1 npm install
 
 If application includes `aerospike` as a dependency in `package.json` the variable `USELUA`
 can be exported as a environment variable as follows:
 
-	$export USELUA=1
+	$ export USELUA=1
 
 <a name="C-Client-Resolution"></a>
 ### C Client Resolution
