@@ -195,7 +195,7 @@ void ParseWhereClause(as_query* query, Local<Object> filter, LogInfo* log)
     }
 }
 
-void ParseRecordQSize( int* q_size, Local<Object> qSize, LogInfo* log)
+void ParseRecordQSize( int* q_size, Local<Value> qSize, LogInfo* log)
 {
     //Set the queue size here.
     //This is the temporary queue where objects returned by query callback is stored.
@@ -372,7 +372,7 @@ void ParseConfig( AerospikeQuery* query, Local<Object> config)
     }
 
     if( config->Has(Nan::New("recordQSize").ToLocalChecked())) {
-        ParseRecordQSize(&query->q_size, config->Get(Nan::New("recordQSize").ToLocalChecked())->ToObject(), log);
+        ParseRecordQSize(&query->q_size, config->Get(Nan::New("recordQSize").ToLocalChecked()), log);
     }
 
     if( config->Has(Nan::New("aggregationUDF").ToLocalChecked())) {

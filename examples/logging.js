@@ -98,14 +98,14 @@ var logfile = argv._.length === 1 ? argv._[0] : null;
 
 if (argv.help === true) {
     argp.showHelp();
-    return;
+    process.exit(0);
 }
 
 if (logfile === null) {
     console.error("Error: Please provide a logfile for the operation");
     console.error();
     argp.showHelp();
-    return;
+    process.exit(1);
 }
 
 

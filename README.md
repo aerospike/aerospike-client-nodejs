@@ -2,7 +2,8 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js v0.10.x and v0.12.x, and supports the following operating systems: CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04, Ubuntu 14.04, Mac OS X.
+This module is compatible with Node.js v0.10.x, v0.12.x, Iojs, v4.*, v5.x and supports the following operating systems: 
+CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora20, Fedora21, Fedora 22, Linuxmint and Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -280,12 +281,12 @@ Aerospike nodejs client does not include LUA by default during installation. App
 an environment variable `USELUA` to inclue LUA library, and can use the Aggregation feature in
 Aerospike. To install with Aggregation enabled:
 	
-	$USELUA=1 npm install
+	$ USELUA=1 npm install
 
 If application includes `aerospike` as a dependency in `package.json` the variable `USELUA`
 can be exported as a environment variable as follows:
 
-	$export USELUA=1
+	$ export USELUA=1
 
 <a name="C-Client-Resolution"></a>
 ### C Client Resolution

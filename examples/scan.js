@@ -150,7 +150,7 @@ function run(client) {
 
     var options = {
         nobins: false,
-        concurrent: true,
+        concurrent: true
     };
 
     var stream = client.query(argv.namespace, argv.set, options).execute();
