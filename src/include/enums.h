@@ -34,6 +34,8 @@ Local<Object> policy();
 
 Local<Object> operations();
 
+Local<Object> cdt_operations();
+
 Local<Object> log();
 
 Local<Object> languages();

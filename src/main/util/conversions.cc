@@ -1971,6 +1971,32 @@ int populate_touch_op( as_operations* ops, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
+int populate_list_get_op( as_operations* ops, Local<Object> obj, LogInfo * log)
+{
+    if ( ops == NULL ) {
+        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
+        return AS_NODE_PARAM_ERR;
+    }
+
+    char* binName;
+    if ( GetBinName(&binName, obj, log) != AS_NODE_PARAM_OK ) {
+        return AS_NODE_PARAM_ERR;
+    }
+
+    Local<Value> index_val = obj->Get(Nan::New("index").ToLocalChecked());
+    if ( index_val->IsNumber() ) {
+        int64_t index = index_val->NumberValue();
+        as_v8_detail(log, "index to be retrieved %d", index);
+        as_operations_list_get(ops, binName, index);
+        if (binName != NULL) free(binName);
+        return AS_NODE_PARAM_OK;
+    }
+    else {
+        as_v8_error(log, "Type error: index should be integer");
+        return AS_NODE_PARAM_ERR;
+    }
+}
+
 int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log)
 {
 
@@ -2016,6 +2042,25 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
                 default :
                     as_v8_info(log, "Operation Type not supported by the API");
                     return AS_NODE_PARAM_ERR;
+            }
+        }
+        else if ( v8op->IsUndefined() ) {
+            v8op = obj->Get(Nan::New("cdt_operation").ToLocalChecked());
+            if ( v8op->IsNumber() ) {
+                as_cdt_optype op = (as_cdt_optype) v8op->ToInteger()->Value();
+                switch ( op ) {
+                    case AS_CDT_OP_LIST_GET: {
+                        populate_list_get_op(ops, obj, log);
+                        break;
+                    }
+                    default:
+                        as_v8_info(log, "CDT Operation Type not supported by the API");
+                        return AS_NODE_PARAM_ERR;
+                }
+            }
+            else {
+                as_v8_info(log, "CDT Operation Type not supported by the API");
+                return AS_NODE_PARAM_ERR;
             }
         }
     }

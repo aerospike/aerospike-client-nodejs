@@ -34,3 +34,11 @@ Local<Object> operations()
     return scope.Escape(obj);
 }
 
+Local<Object> cdt_operations()
+{
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set_op(obj, "LIST_GET", AS_CDT_OP_LIST_GET);
+    return scope.Escape(obj);
+}
+
