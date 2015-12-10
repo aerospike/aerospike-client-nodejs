@@ -154,7 +154,7 @@ function run(client) {
     var key = {
         ns: argv.namespace,
         set: argv.set,
-        key: keyv + iteration.current
+        key: keyv + iteration.current()
     };
 
     var bins = {
