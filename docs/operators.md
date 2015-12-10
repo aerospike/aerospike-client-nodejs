@@ -5,12 +5,12 @@ The Operators object provides functions to easily define operations to be perfor
 Example:
 
 ```js
-var filter = aerospike.filter
+var op = aerospike.operator
 
-var filters = [
+var ops = [
   op.append('a', 'hello'),
   op.append('a', 'world'),
-  op.incr('b',10),
+  op.incr('b', 10),
   op.read('a'),
   op.read('b')
 ]
