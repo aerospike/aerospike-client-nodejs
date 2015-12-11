@@ -96,13 +96,8 @@ describe('client.batchExists()', function() {
 
         // generators
         var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_exists/fail/", random: false});
+        var keys = keygen.range(kgen, nrecords);
 
-        // values
-        var keys = keygen.range(kgen, 10);
-
-        // writer using generators
-        // callback provides an object of written records, where the
-        // keys of the object are the record's keys.
         client.batchExists(keys, function(err, results) {
 
             var result;
@@ -110,7 +105,7 @@ describe('client.batchExists()', function() {
 
             expect(err).to.be.ok();
             expect(err.code).to.equal(status.AEROSPIKE_OK);
-            expect(results.length).to.equal(10);
+            expect(results.length).to.equal(nrecords);
 
             for ( j = 0; j < results.length; j++) {
                 result = results[j];
@@ -121,7 +116,7 @@ describe('client.batchExists()', function() {
                     expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
                 } else {
                     expect(result.status).to.equal(602);
-                }					
+                }
             }
 
             done();
@@ -163,14 +158,11 @@ describe('client.batchExists()', function() {
                 for ( j = 0; j < results.length; j++) {
                     result = results[j];
                     expect(result.status).to.equal(status.AEROSPIKE_OK);
-                    if( j == results.length-1) {
-                        done();
-                    }
                 }
 
+                done();
             });
         });
     });
 
 });
-

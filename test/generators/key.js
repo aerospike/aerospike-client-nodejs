@@ -50,9 +50,8 @@ function integer(namespace, set, options) {
 function range(keygen, end, start) {
     start = start ? start : 0;
     end = end ? end : start + 1;
-    var i = 0;
     var a = []
-    for ( ; i < end; i++ ) {
+    for (var i = 0; i < end; i++) {
         a.push(keygen());
     }
     return a;
