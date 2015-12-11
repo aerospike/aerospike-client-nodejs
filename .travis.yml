@@ -4,6 +4,14 @@ node_js:
 - '0.12'
 - '0.10'
 - 'iojs'
+env:
+- CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
 install:
 - sudo apt-get install autoconf libssl-dev liblua5.1 liblua5.1-dev
 - sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
