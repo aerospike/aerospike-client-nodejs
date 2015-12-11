@@ -2360,66 +2360,71 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
             v8op = obj->Get(Nan::New("cdt_operation").ToLocalChecked());
             if ( v8op->IsNumber() ) {
                 as_cdt_optype op = (as_cdt_optype) v8op->ToInteger()->Value();
+                int result = 0;
                 switch ( op ) {
                     case AS_CDT_OP_LIST_APPEND: {
-                        populate_list_append_op(ops, obj, log);
+                        result = populate_list_append_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_APPEND_ITEMS: {
-                        populate_list_append_items_op(ops, obj, log);
+                        result = populate_list_append_items_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_INSERT: {
-                        populate_list_insert_op(ops, obj, log);
+                        result = populate_list_insert_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_INSERT_ITEMS: {
-                        populate_list_insert_items_op(ops, obj, log);
+                        result = populate_list_insert_items_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_POP: {
-                        populate_list_pop_op(ops, obj, log);
+                        result = populate_list_pop_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_POP_RANGE: {
-                        populate_list_pop_range_op(ops, obj, log);
+                        result = populate_list_pop_range_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_REMOVE: {
-                        populate_list_remove_op(ops, obj, log);
+                        result = populate_list_remove_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_REMOVE_RANGE: {
-                        populate_list_remove_range_op(ops, obj, log);
+                        result = populate_list_remove_range_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_CLEAR: {
-                        populate_list_clear_op(ops, obj, log);
+                        result = populate_list_clear_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_SET: {
-                        populate_list_set_op(ops, obj, log);
+                        result = populate_list_set_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_TRIM: {
-                        populate_list_trim_op(ops, obj, log);
+                        result = populate_list_trim_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_GET: {
-                        populate_list_get_op(ops, obj, log);
+                        result = populate_list_get_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_GET_RANGE: {
-                        populate_list_get_range_op(ops, obj, log);
+                        result = populate_list_get_range_op(ops, obj, log);
                         break;
                     }
                     case AS_CDT_OP_LIST_SIZE: {
-                        populate_list_size_op(ops, obj, log);
+                        result = populate_list_size_op(ops, obj, log);
                         break;
                     }
                     default:
                         as_v8_info(log, "CDT Operation Type not supported by the API");
                         return AS_NODE_PARAM_ERR;
+                }
+                if (result != AS_NODE_PARAM_OK) {
+                    as_v8_info(log, "invalid CDT operation [%i] - result: %i", op, result);
+                    return result;
                 }
             }
             else {
