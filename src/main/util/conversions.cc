@@ -1988,34 +1988,39 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
         Local<Value> v8op = obj->Get(Nan::New("operation").ToLocalChecked());
         if ( v8op->IsNumber() ) {
             as_operator op = (as_operator) v8op->ToInteger()->Value();
+            int result = 0;
             switch ( op ) {
                 case AS_OPERATOR_WRITE: {
-                    populate_write_op(ops, obj, log);
+                    result = populate_write_op(ops, obj, log);
                     break;
                 }
                 case AS_OPERATOR_READ: {
-                    populate_read_op(ops, obj, log);
+                    result = populate_read_op(ops, obj, log);
                     break;
                 }
                 case AS_OPERATOR_INCR:  {
-                    populate_incr_op(ops, obj, log);
+                    result = populate_incr_op(ops, obj, log);
                     break;
                 }
                 case AS_OPERATOR_PREPEND: {
-                    populate_prepend_op(ops, obj, log);
+                    result = populate_prepend_op(ops, obj, log);
                     break;
                 }
                 case AS_OPERATOR_APPEND: {
-                    populate_append_op(ops, obj, log);
+                    result = populate_append_op(ops, obj, log);
                     break;
                 }
                 case AS_OPERATOR_TOUCH: {
-                    populate_touch_op(ops, log);
+                    result = populate_touch_op(ops, log);
                     break;
                 }
                 default :
                     as_v8_info(log, "Operation Type not supported by the API");
                     return AS_NODE_PARAM_ERR;
+            }
+            if (result != AS_NODE_PARAM_OK) {
+                as_v8_info(log, "invalid operation [%i] - result: %i", op, result);
+                return result;
             }
         }
     }

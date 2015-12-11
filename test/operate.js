@@ -433,12 +433,13 @@ describe('client.operate()', function() {
             var bin = { i : "str"}
             client.add(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
                 done();
 
             });
         });
     });
+
     it('should append a bin of type integer using append API and expected to fail', function(done) {
 
         // generators
@@ -456,12 +457,13 @@ describe('client.operate()', function() {
             var bin = { s: 123};
             client.append(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
                 done();
 
             });
         });
     });
+
     it('should prepend an integer using prepend API and expect to fail', function(done) {
 
         // generators
@@ -481,8 +483,46 @@ describe('client.operate()', function() {
 
             client.prepend(key, bin, meta, function(err, record1, metadata1, key1) {
                 expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID);
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
                 done();
+            });
+        });
+    });
+
+    it('should return a client error if any of the operations are invalid', function(done) {
+
+        // generators
+        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/get/"});
+        var mgen = metagen.constant({ttl: 1000});
+        var rgen = recgen.constant({i: 123, s: "abc"});
+
+        // values
+        var key     = kgen();
+        var meta    = mgen(key);
+        var record  = rgen(key, meta);
+
+        // write the record then check
+        client.put(key, record, meta, function(err, key) {
+
+            var ops = [
+                op.incr('i', 432),
+                op.incr('i', "str")  // invalid increment with string value
+            ];
+
+            client.operate(key, ops, function(err, record1, metadata1, key1) {
+                expect(err).to.be.ok();
+                expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM);
+
+                client.get(key, function(err, record2, metadata2, key2) {
+                    expect(err).to.be.ok();
+                    expect(err.code).to.equal(status.AEROSPIKE_OK);
+                    expect(record2['i']).to.equal(123);
+                    expect(record2['s']).to.equal('abc');
+                    client.remove(key2, function(err, key){
+                        done();
+                    });
+                });
+
             });
         });
     });
