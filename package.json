@@ -8,6 +8,7 @@
     "nosql"
   ],
   "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
+  "license": "Apache-2.0",
   "main": "lib/aerospike",
   "engines": {
     "node": ">=0.10"
