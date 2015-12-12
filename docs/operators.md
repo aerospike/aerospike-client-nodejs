@@ -354,7 +354,7 @@ Example:
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
 op.list_trim('tags', 1, 1)
-// => record = {tags: ['green']}
+// => record = {tags: ['yellow']}
 ```
 
 <a name="list_get"></a>
