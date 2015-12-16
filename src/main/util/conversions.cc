@@ -1996,7 +1996,7 @@ int populate_list_append_op( as_operations* ops, Local<Object> obj, LogInfo * lo
     Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
     as_val* val = asval_from_jsobject(v8val, log);
 
-    as_operations_list_append(ops, binName, val);
+    as_operations_add_list_append(ops, binName, val);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2016,7 +2016,7 @@ int populate_list_append_items_op( as_operations* ops, Local<Object> obj, LogInf
     Local<Value> v8val = obj->Get(Nan::New("list").ToLocalChecked());
     as_list* list = (as_list*) asval_from_jsobject(v8val, log);
 
-    as_operations_list_append_items(ops, binName, list);
+    as_operations_add_list_append_items(ops, binName, list);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2041,7 +2041,7 @@ int populate_list_insert_op( as_operations* ops, Local<Object> obj, LogInfo * lo
     Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
     as_val* val = asval_from_jsobject(v8val, log);
 
-    as_operations_list_insert(ops, binName, index, val);
+    as_operations_add_list_insert(ops, binName, index, val);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2066,7 +2066,7 @@ int populate_list_insert_items_op( as_operations* ops, Local<Object> obj, LogInf
     Local<Value> v8list = obj->Get(Nan::New("list").ToLocalChecked());
     as_list* list = (as_list*) asval_from_jsobject(v8list, log);
 
-    as_operations_list_insert_items(ops, binName, index, list);
+    as_operations_add_list_insert_items(ops, binName, index, list);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2088,7 +2088,7 @@ int populate_list_pop_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_pop(ops, binName, index);
+    as_operations_add_list_pop(ops, binName, index);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2115,7 +2115,7 @@ int populate_list_pop_range_op( as_operations* ops, Local<Object> obj, LogInfo *
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_pop_range(ops, binName, index, count);
+    as_operations_add_list_pop_range(ops, binName, index, count);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2137,7 +2137,7 @@ int populate_list_remove_op( as_operations* ops, Local<Object> obj, LogInfo * lo
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_remove(ops, binName, index);
+    as_operations_add_list_remove(ops, binName, index);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2164,7 +2164,7 @@ int populate_list_remove_range_op( as_operations* ops, Local<Object> obj, LogInf
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_remove_range(ops, binName, index, count);
+    as_operations_add_list_remove_range(ops, binName, index, count);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2181,7 +2181,7 @@ int populate_list_clear_op( as_operations* ops, Local<Object> obj, LogInfo * log
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_clear(ops, binName);
+    as_operations_add_list_clear(ops, binName);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2206,7 +2206,7 @@ int populate_list_set_op( as_operations* ops, Local<Object> obj, LogInfo * log)
     Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
     as_val* val = asval_from_jsobject(v8val, log);
 
-    as_operations_list_set(ops, binName, index, val);
+    as_operations_add_list_set(ops, binName, index, val);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2233,7 +2233,7 @@ int populate_list_trim_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_trim(ops, binName, index, count);
+    as_operations_add_list_trim(ops, binName, index, count);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2255,7 +2255,7 @@ int populate_list_get_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_get(ops, binName, index);
+    as_operations_add_list_get(ops, binName, index);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2282,7 +2282,7 @@ int populate_list_get_range_op( as_operations* ops, Local<Object> obj, LogInfo *
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_get_range(ops, binName, index, count);
+    as_operations_add_list_get_range(ops, binName, index, count);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2299,7 +2299,7 @@ int populate_list_size_op( as_operations* ops, Local<Object> obj, LogInfo * log)
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_list_size(ops, binName);
+    as_operations_add_list_size(ops, binName);
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
