@@ -150,10 +150,10 @@ op.write('e','hello world')
 <a name="CDTListFunctions"></a>
 ## List (CDT) Functions
 
-Additional operations are supported on the List [Complex Data Type](http://www.aerospike.com/docs/guide/data-types.html#complex-data-types).
+Additional operations are supported on the [List](http://www.aerospike.com/docs/guide/cdt-list.html) data type.
 
-<a name="list_append"></a>
-### `list_append(bin, value)`
+<a name="listAppend"></a>
+### `listAppend(bin, value)`
 
 Adds an element to the end of the list.
 
@@ -166,12 +166,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_append('tags', 'orange')
+op.listAppend('tags', 'orange')
 // => record = {tags: ['blue', 'yellow', 'pink', 'orange']}
 ```
 
-<a name="list_append_items"></a>
-### `list_append_items(bin, list)`
+<a name="listAppendItems"></a>
+### `listAppendItems(bin, list)`
 
 Adds a list of elements to the end of the list.
 
@@ -184,12 +184,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_append_items('tags', ['orange', 'green'])
+op.listAppendItems('tags', ['orange', 'green'])
 // => record = {tags: ['blue', 'yellow', 'pink', 'orange', 'green']}
 ```
 
-<a name="list_insert"></a>
-### `list_insert(bin, index, value)`
+<a name="listInsert"></a>
+### `listInsert(bin, index, value)`
 
 Inserts an element at the specified index.
 
@@ -203,12 +203,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_insert('tags', 2, 'orange')
+op.listInsert('tags', 2, 'orange')
 // => record = {tags: ['blue', 'yellow', 'orange', 'pink']}
 ```
 
-<a name="list_insert_items"></a>
-### `list_insert_items(bin, index, list)`
+<a name="listInsertItems"></a>
+### `listInsertItems(bin, index, list)`
 
 Inserts a list of elements at the specified index.
 
@@ -222,12 +222,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_insert_items('tags', 2, ['orange', 'green'])
+op.listInsertItems('tags', 2, ['orange', 'green'])
 // => record = {tags: ['blue', 'yellow', 'orange', 'green', 'pink']}
 ```
 
-<a name="list_pop"></a>
-### `list_pop(bin, index)`
+<a name="listPop"></a>
+### `listPop(bin, index)`
 
 Removes and returns the list element at the specified index.
 
@@ -240,13 +240,13 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_pop('tags', 1)
+op.listPop('tags', 1)
 // returns: 'yellow'
 // => record = {tags: ['blue', 'pink']}
 ```
 
-<a name="list_pop_range"></a>
-### `list_pop_range(bin, index)`
+<a name="listPopRange"></a>
+### `listPopRange(bin, index)`
 
 Removes and returns the list elements at the specified range.
 
@@ -260,13 +260,13 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_pop_range('tags', 0, 2)
+op.listPopRange('tags', 0, 2)
 // returns: ['blue', 'yellow']
 // => record = {tags: ['pink']}
 ```
 
-<a name="list_remove"></a>
-### `list_remove(bin, index)`
+<a name="listRemove"></a>
+### `listRemove(bin, index)`
 
 Removes the list element at the specified index.
 
@@ -279,12 +279,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_remove('tags', 1)
+op.listRemove('tags', 1)
 // => record = {tags: ['blue', 'pink']}
 ```
 
-<a name="list_remove_range"></a>
-### `list_remove_range(bin, index)`
+<a name="listRemoveRange"></a>
+### `listRemoveRange(bin, index)`
 
 Removes the list elements at the specified range.
 
@@ -298,12 +298,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_remove_range('tags', 1, 2)
+op.listRemoveRange('tags', 1, 2)
 // => record = {tags: ['blue']}
 ```
 
-<a name="list_clear"></a>
-### `list_clear(bin)`
+<a name="listClear"></a>
+### `listClear(bin)`
 
 Removes all elements from the list.
 
@@ -315,12 +315,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_clear('tags')
+op.listClear('tags')
 // => record = {tags: []}
 ```
 
-<a name="list_set"></a>
-### `list_set(bin, index, value)`
+<a name="listSet"></a>
+### `listSet(bin, index, value)`
 
 Sets a list element at the specified index to a new value.
 
@@ -334,12 +334,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_set('tags', 1, 'green')
+op.listSet('tags', 1, 'green')
 // => record = {tags: ['blue', 'green', 'pink']}
 ```
 
-<a name="list_trim"></a>
-### `list_trim(bin, index, count)`
+<a name="listTrim"></a>
+### `listTrim(bin, index, count)`
 
 Removes all list elements not within the specified range.
 
@@ -353,12 +353,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_trim('tags', 1, 1)
+op.listTrim('tags', 1, 1)
 // => record = {tags: ['yellow']}
 ```
 
-<a name="list_get"></a>
-### `list_get(bin, index)`
+<a name="listGet"></a>
+### `listGet(bin, index)`
 
 Returns the list element at the specified index.
 
@@ -371,12 +371,12 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_get('tags', 0)
+op.listGet('tags', 0)
 // returns: 'blue'
 ```
 
-<a name="list_get_range"></a>
-### `list_get_range(bin, index, count)`
+<a name="listGetRange"></a>
+### `listGetRange(bin, index, count)`
 
 Returns a list of element at the specified range.
 
@@ -390,15 +390,15 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_get_range('tags', 0, 2)
+op.listGetRange('tags', 0, 2)
 // returns: ['blue', 'yellow']
 
-op.list_get_range('tags', 1)
+op.listGetRange('tags', 1)
 // returns: ['yellow', 'pink']
 ```
 
-<a name="list_size"></a>
-### `list_size(bin)`
+<a name="listSize"></a>
+### `listSize(bin)`
 
 Returns the element count of the list.
 
@@ -410,6 +410,6 @@ Example:
 
 ```js
 // record = {tags: ['blue', 'yellow', 'pink']}
-op.list_size('tags')
+op.listSize('tags')
 // returns: 3
 ```

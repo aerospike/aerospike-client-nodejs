@@ -45,7 +45,7 @@ describe('client.operate()', function() {
         done();
     });
 
-    describe('operator.list_append', function() {
+    describe('operator.listAppend', function() {
 
         it('should append the given item at the end of the list', function(done) {
 
@@ -63,7 +63,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_append('list', 99)
+                    op.listAppend('list', 99)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -86,7 +86,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_append_items', function() {
+    describe('operator.listAppendItems', function() {
 
         it('should append the given items at the end of the list', function(done) {
 
@@ -104,7 +104,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_append_items('list', [99, 100])
+                    op.listAppendItems('list', [99, 100])
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -127,7 +127,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_insert', function() {
+    describe('operator.listInsert', function() {
 
         it('should insert the given item at the specified index of the list', function(done) {
 
@@ -145,7 +145,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_insert('list', 2, 99)
+                    op.listInsert('list', 2, 99)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -168,7 +168,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_insert_items', function() {
+    describe('operator.listInsertItems', function() {
 
         it('should insert the given items at the specified index of the list', function(done) {
 
@@ -186,7 +186,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_insert_items('list', 2, [99, 100])
+                    op.listInsertItems('list', 2, [99, 100])
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -209,7 +209,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_pop', function() {
+    describe('operator.listPop', function() {
 
         it('should remove the item at the specified index and return it', function(done) {
 
@@ -227,7 +227,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_pop('list', 2)
+                    op.listPop('list', 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -252,7 +252,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_pop_range', function() {
+    describe('operator.listPopRange', function() {
 
         it('should remove the items at the specified range and return them', function(done) {
 
@@ -270,7 +270,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_pop_range('list', 2, 2)
+                    op.listPopRange('list', 2, 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -309,7 +309,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_pop_range('list', 2)
+                    op.listPopRange('list', 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -334,7 +334,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_remove', function() {
+    describe('operator.listRemove', function() {
 
         it('should remove the item at the specified index', function(done) {
 
@@ -352,7 +352,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_remove('list', 2)
+                    op.listRemove('list', 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -375,7 +375,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_remove_range', function() {
+    describe('operator.listRemoveRange', function() {
 
         it('should remove the items at the specified range', function(done) {
 
@@ -393,7 +393,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_remove_range('list', 2, 2)
+                    op.listRemoveRange('list', 2, 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -430,7 +430,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_remove_range('list', 2)
+                    op.listRemoveRange('list', 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -453,7 +453,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_clear', function() {
+    describe('operator.listClear', function() {
 
         it('should remove all elements from the list', function(done) {
 
@@ -471,7 +471,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_clear('list')
+                    op.listClear('list')
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -494,7 +494,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_set', function() {
+    describe('operator.listSet', function() {
 
         it('should set the item at the specified index', function(done) {
 
@@ -512,7 +512,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_set('list', 2, 99)
+                    op.listSet('list', 2, 99)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -535,7 +535,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_trim', function() {
+    describe('operator.listTrim', function() {
 
         it('should remove all elements not within the specified range', function(done) {
 
@@ -553,7 +553,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_trim('list', 1, 3)
+                    op.listTrim('list', 1, 3)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -576,7 +576,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_get', function() {
+    describe('operator.listGet', function() {
 
         it('should get the item at the specified index', function(done) {
 
@@ -594,7 +594,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_get('list', 2)
+                    op.listGet('list', 2)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -625,7 +625,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_get('list', 99)
+                    op.listGet('list', 99)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -641,7 +641,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_get_range', function() {
+    describe('operator.listGetRange', function() {
 
         it('should get the items at the specified range', function(done) {
 
@@ -659,7 +659,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_get_range('list', 1, 3)
+                    op.listGetRange('list', 1, 3)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -690,7 +690,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_get_range('list', 1)
+                    op.listGetRange('list', 1)
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
@@ -707,7 +707,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_size', function() {
+    describe('operator.listSize', function() {
 
         it('should get the lement count of the list', function(done) {
 
@@ -725,7 +725,7 @@ describe('client.operate()', function() {
             client.put(key, record, meta, function(err, key) {
 
                 var ops = [
-                    op.list_size('list')
+                    op.listSize('list')
                 ];
 
                 client.operate(key, ops, function(err, record1, metadata1, key1) {
