@@ -254,7 +254,7 @@ Parameters:
 
 - `bin`         - The name of the bin containing the List.
 - `index`       - Index of the first element in the range of elements to be removed.
-- `count`       - Number of elements to be removed.
+- `count`       - [optional] Number of elements to be removed; if not specified, remove and return all elements until the end of the list.
 
 Example:
 
@@ -292,7 +292,7 @@ Parameters:
 
 - `bin`         - The name of the bin containing the List.
 - `index`       - Index of the first element in the range of elements to be removed.
-- `count`       - Number of elements to be removed.
+- `count`       - [optional] Number of elements to be removed; if not specified, remove all elements until the end of the list.
 
 Example:
 
@@ -384,7 +384,7 @@ Parameters:
 
 - `bin`         - The name of the bin containing the List.
 - `index`       - The start index of the range of elements to return.
-- `number`      - The number of elements to return.
+- `number`      - [optional] The number of elements to return; if not specified, return all elements until the end of the list.
 
 Example:
 
@@ -392,6 +392,9 @@ Example:
 // record = {tags: ['blue', 'yellow', 'pink']}
 op.list_get_range('tags', 0, 2)
 // returns: ['blue', 'yellow']
+
+op.list_get_range('tags', 1)
+// returns: ['yellow', 'pink']
 ```
 
 <a name="list_size"></a>

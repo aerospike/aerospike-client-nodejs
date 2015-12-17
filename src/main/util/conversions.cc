@@ -1802,6 +1802,29 @@ int GetIntegerProperty(int64_t* intp, Local<Object> obj, char const* prop, LogIn
     }
 }
 
+int GetIntegerOrUndefinedProperty(int64_t* intp, bool* defined, Local<Object> obj, char const* prop, LogInfo* log) {
+
+    if ( obj->Has(Nan::New(prop).ToLocalChecked()) ) {
+        Local<Value> val = obj->Get(Nan::New(prop).ToLocalChecked());
+        if ( val->IsNumber() ) {
+          (*defined) = true;
+          (*intp) = val->NumberValue();
+          return AS_NODE_PARAM_OK;
+        }
+        else if ( val->IsUndefined() ) {
+          (*defined) = false;
+          return AS_NODE_PARAM_OK;
+        }
+        else {
+          as_v8_error(log, "Type error: %s property should be integer", prop);
+          return AS_NODE_PARAM_ERR;
+        }
+    } else {
+      (*defined) = false;
+      return AS_NODE_PARAM_OK;
+    }
+}
+
 int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
 {
     if ( op == NULL ) {
@@ -2110,12 +2133,17 @@ int populate_list_pop_range_op( as_operations* ops, Local<Object> obj, LogInfo *
         return AS_NODE_PARAM_ERR;
     }
 
+    bool count_defined;
     int64_t count;
-    if ( GetIntegerProperty(&count, obj, "count", log) != AS_NODE_PARAM_OK ) {
+    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_add_list_pop_range(ops, binName, index, count);
+    if (count_defined) {
+      as_operations_add_list_pop_range(ops, binName, index, count);
+    } else {
+      as_operations_add_list_pop_range_from(ops, binName, index);
+    }
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2159,12 +2187,17 @@ int populate_list_remove_range_op( as_operations* ops, Local<Object> obj, LogInf
         return AS_NODE_PARAM_ERR;
     }
 
+    bool count_defined;
     int64_t count;
-    if ( GetIntegerProperty(&count, obj, "count", log) != AS_NODE_PARAM_OK ) {
+    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_add_list_remove_range(ops, binName, index, count);
+    if (count_defined) {
+      as_operations_add_list_remove_range(ops, binName, index, count);
+    } else {
+      as_operations_add_list_remove_range_from(ops, binName, index);
+    }
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }
@@ -2277,12 +2310,17 @@ int populate_list_get_range_op( as_operations* ops, Local<Object> obj, LogInfo *
         return AS_NODE_PARAM_ERR;
     }
 
+    bool count_defined;
     int64_t count;
-    if ( GetIntegerProperty(&count, obj, "count", log) != AS_NODE_PARAM_OK ) {
+    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_ERR;
     }
 
-    as_operations_add_list_get_range(ops, binName, index, count);
+    if (count_defined) {
+      as_operations_add_list_get_range(ops, binName, index, count);
+    } else {
+      as_operations_add_list_get_range_from(ops, binName, index);
+    }
     if (binName != NULL) free(binName);
     return AS_NODE_PARAM_OK;
 }

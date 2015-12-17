@@ -252,7 +252,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_pop_items', function() {
+    describe('operator.list_pop_range', function() {
 
         it('should remove the items at the specified range and return them', function(done) {
 
@@ -284,6 +284,45 @@ describe('client.operate()', function() {
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
 
                         expect(record2.list).to.eql([1, 2, 5]);
+
+                        client.remove(key1, function(err, key){
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('should remove and return all items from the specified index if count is not specified', function(done) {
+
+            // generators
+            var kgen = keygen.string(options.namespace, options.set, {prefix: "test/cdt/pop_range_from/"});
+            var mgen = metagen.constant({ttl: 1000});
+            var rgen = recgen.constant({list: [1, 2, 3, 4, 5]});
+
+            // values
+            var key     = kgen();
+            var meta    = mgen(key);
+            var record  = rgen(key, meta);
+
+            // write the record then check
+            client.put(key, record, meta, function(err, key) {
+
+                var ops = [
+                    op.list_pop_range('list', 2)
+                ];
+
+                client.operate(key, ops, function(err, record1, metadata1, key1) {
+                    expect(err).to.be.ok();
+                    expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                    expect(record1.list).to.eql([3, 4, 5]);
+
+                    client.get(key, function(err, record2, metadata2, key2) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                        expect(record2.list).to.eql([1, 2]);
 
                         client.remove(key1, function(err, key){
                             done();
@@ -336,7 +375,7 @@ describe('client.operate()', function() {
 
     });
 
-    describe('operator.list_remove_items', function() {
+    describe('operator.list_remove_range', function() {
 
         it('should remove the items at the specified range', function(done) {
 
@@ -366,6 +405,43 @@ describe('client.operate()', function() {
                         expect(err.code).to.equal(status.AEROSPIKE_OK);
 
                         expect(record2.list).to.eql([1, 2, 5]);
+
+                        client.remove(key1, function(err, key){
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('should remove all items from the specified index if count is not specified', function(done) {
+
+            // generators
+            var kgen = keygen.string(options.namespace, options.set, {prefix: "test/cdt/remove_range_from/"});
+            var mgen = metagen.constant({ttl: 1000});
+            var rgen = recgen.constant({list: [1, 2, 3, 4, 5]});
+
+            // values
+            var key     = kgen();
+            var meta    = mgen(key);
+            var record  = rgen(key, meta);
+
+            // write the record then check
+            client.put(key, record, meta, function(err, key) {
+
+                var ops = [
+                    op.list_remove_range('list', 2)
+                ];
+
+                client.operate(key, ops, function(err, record1, metadata1, key1) {
+                    expect(err).to.be.ok();
+                    expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                    client.get(key, function(err, record2, metadata2, key2) {
+                        expect(err).to.be.ok();
+                        expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                        expect(record2.list).to.eql([1, 2]);
 
                         client.remove(key1, function(err, key){
                             done();
@@ -591,6 +667,37 @@ describe('client.operate()', function() {
                     expect(err.code).to.equal(status.AEROSPIKE_OK);
 
                     expect(record1.list).to.eql([2, 3, 4]);
+                    client.remove(key1, function(err, key){
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('should get all the items from the specified index if count is not specified', function(done) {
+
+            // generators
+            var kgen = keygen.string(options.namespace, options.set, {prefix: "test/cdt/get_range_from/"});
+            var mgen = metagen.constant({ttl: 1000});
+            var rgen = recgen.constant({list: [1, 2, 3, 4, 5]});
+
+            // values
+            var key     = kgen();
+            var meta    = mgen(key);
+            var record  = rgen(key, meta);
+
+            // write the record then check
+            client.put(key, record, meta, function(err, key) {
+
+                var ops = [
+                    op.list_get_range('list', 1)
+                ];
+
+                client.operate(key, ops, function(err, record1, metadata1, key1) {
+                    expect(err).to.be.ok();
+                    expect(err.code).to.equal(status.AEROSPIKE_OK);
+
+                    expect(record1.list).to.eql([2, 3, 4, 5]);
                     client.remove(key1, function(err, key){
                         done();
                     });
