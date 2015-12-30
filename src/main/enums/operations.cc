@@ -34,3 +34,24 @@ Local<Object> operations()
     return scope.Escape(obj);
 }
 
+Local<Object> cdt_operations()
+{
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set_op(obj, "LIST_APPEND", AS_CDT_OP_LIST_APPEND);
+    set_op(obj, "LIST_APPEND_ITEMS", AS_CDT_OP_LIST_APPEND_ITEMS);
+    set_op(obj, "LIST_INSERT", AS_CDT_OP_LIST_INSERT);
+    set_op(obj, "LIST_INSERT_ITEMS", AS_CDT_OP_LIST_INSERT_ITEMS);
+    set_op(obj, "LIST_POP", AS_CDT_OP_LIST_POP);
+    set_op(obj, "LIST_POP_RANGE", AS_CDT_OP_LIST_POP_RANGE);
+    set_op(obj, "LIST_REMOVE", AS_CDT_OP_LIST_REMOVE);
+    set_op(obj, "LIST_REMOVE_RANGE", AS_CDT_OP_LIST_REMOVE_RANGE);
+    set_op(obj, "LIST_CLEAR", AS_CDT_OP_LIST_CLEAR);
+    set_op(obj, "LIST_SET", AS_CDT_OP_LIST_SET);
+    set_op(obj, "LIST_TRIM", AS_CDT_OP_LIST_TRIM);
+    set_op(obj, "LIST_GET", AS_CDT_OP_LIST_GET);
+    set_op(obj, "LIST_GET_RANGE", AS_CDT_OP_LIST_GET_RANGE);
+    set_op(obj, "LIST_SIZE", AS_CDT_OP_LIST_SIZE);
+    return scope.Escape(obj);
+}
+
