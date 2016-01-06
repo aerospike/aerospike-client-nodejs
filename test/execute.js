@@ -25,7 +25,7 @@ var keygen = require('./generators/key')
 
 var status = aerospike.status
 
-describe('client.Execute()', function (done) {
+describe('client.execute()', function (done) {
   var config = options.getConfig()
   var client = aerospike.client(config)
 
