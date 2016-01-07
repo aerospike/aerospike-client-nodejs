@@ -139,47 +139,37 @@ var client = aerospike.client(config).connect(function (err, client) {
 // Perform the operation
 // *****************************************************************************
 
-Function.prototype.curry = function () {
-  var fn = this
-  var args = Array.prototype.slice.call(arguments)
-  return function () {
-    return fn.apply(this, args.concat(Array.prototype.slice.call(arguments)))
-  }
-}
-
-function header (message, callback) {
-  return function () {
+function header (message) {
+  return function (callback) {
     console.log('')
     console.log('********************************************************************************')
     console.log('* ', message)
     console.log('********************************************************************************')
     console.log('')
-    if (callback) callback()
+    callback()
   }
 }
 
-function get (key, callback) {
-  return function () {
+function get (key) {
+  return function (callback) {
     console.log('*** get')
     client.get(key, function (err, record, metadata, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      if (callback) callback()
+      callback(err)
     })
   }
 }
 
-function put (key, rec, callback) {
-  return function () {
+function put (key, rec) {
+  return function (callback) {
     console.log('*** put')
     client.put(key, rec, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      if (callback) callback()
+      callback(err)
     })
   }
 }
 
-function log (level, file, callback) {
-  return function () {
+function log (level, file) {
+  return function (callback) {
     var fd
     if (file) {
       if (!isNaN(parseInt(file, 10)) && isFinite(file)) {
@@ -194,7 +184,7 @@ function log (level, file, callback) {
       level: level,
       file: fd
     })
-    if (callback) callback()
+    callback()
   }
 }
 
@@ -205,35 +195,29 @@ var key = {
 }
 
 var operations = [
+  header('Log: default settings'),
+  put(key, { a: 1 }),
+  get(key),
 
-  header.curry('Log: default settings'),
-  put.curry(key, {
-    a: 1
-  }),
-  get.curry(key),
+  header('Log: level=4(TRACE)'),
+  log(5, null),
+  put(key, { a: 2 }),
+  get(key),
 
-  header.curry('Log: level=4(TRACE)'),
-  log.curry(5, null),
-  put.curry(key, {
-    a: 2
-  }),
-  get.curry(key),
+  header('Log: file=' + logfile),
+  log(null, logfile),
+  put(key, { a: 3 }),
+  get(key),
 
-  header.curry('Log: file=' + logfile),
-  log.curry(null, logfile),
-  put.curry(key, {
-    a: 3
-  }),
-  get.curry(key),
-
-  header.curry('Log: level=3(DEBUG) file=STDERR'),
-  log.curry(3, 2),
-  put.curry(key, {
-    a: 4
-  }),
-  get.curry(key)
+  header('Log: level=3(DEBUG) file=STDERR'),
+  log(3, 2),
+  put(key, { a: 4 }),
+  get(key)
 ]
 
 operations.reduceRight(function (r, l) {
-  return l(r)
-})()
+  return function (err) {
+    if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    l(r)
+  }
+}, function () {})()
