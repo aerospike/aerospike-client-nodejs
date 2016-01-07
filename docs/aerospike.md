@@ -2,17 +2,17 @@
 
 - [Usage](#usage)
 - [Fields](#fields)
-	- [filter](#filter)
+    - [filter](#filter)
     - [log](#log)
-	- [operators](#operators)
-	- [policies](#Policies)
-	- [status](#status)
-	- [scanStatus](#scanStatus)
-	- [scanPriority](#scanPriority)
+    - [operators](#operators)
+    - [policies](#Policies)
+    - [status](#status)
+    - [scanStatus](#scanStatus)
+    - [scanPriority](#scanPriority)
 - [Functions](#functions)
-	- [client()](#client)
+    - [client()](#client)
     - [Double()](#Double)
-	- [key()](#key)
+    - [key()](#key)
 
 
 <a name="usage"></a>
@@ -211,7 +211,7 @@ Returns a new key.
 Example:
 
 ```js
-var key = aerospike.key("test", "demo", 123)
+var key = aerospike.key('test', 'demo', 123)
 ```
 
 For details, see [Key Object](datamodel.md#key).

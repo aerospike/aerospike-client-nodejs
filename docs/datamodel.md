@@ -13,16 +13,15 @@ A record is how the data is represented and stored in the database. A record rep
 
 Note: Array can contain an array or an object as a value in it. Similarly the object can contain an array or an object as a value in it. Essentially nesting of arrays in an object, and nesting of objects in an array is allowed.
 
-
 Example of a record with 5 fields:
 
 ```js
 var record = {
-  int_bin  : 123,
-  str_bin  : "xyz",
-  buff_bin : new Buffer("hello world!"),
-  arr_bin  : [1, 2, 3],
-  obj_bin  : { num: 123, str : "abc", buff: new Buffer([0xa, 0xb, 0xc])}
+  int_bin: 123,
+  str_bin: 'xyz',
+  buff_bin: new Buffer('hello world!'),
+  arr_bin: [1, 2, 3],
+  obj_bin: {num: 123, str: 'abc', buff: new Buffer([0xa, 0xb, 0xc])}
 }
 ```
 
@@ -72,8 +71,8 @@ Example:
 
 ```js
 var key = {
-  ns: "test",
-  set: "demo",
+  ns: 'test',
+  set: 'demo',
   key: 123
 }
 ```
@@ -81,7 +80,7 @@ var key = {
 Alternatively:
 
 ```js
-aerospike.key("test", "demo", 123)
+aerospike.key('test', 'demo', 123)
 ```
 <!--
 ################################################################################
@@ -96,14 +95,14 @@ Arguments to execute a UDF in the database.
 
 - `module`   – The UDF module name to be invoked in the database.
 - `funcname` – The UDF function to be invoked in the database.
-- `args`	 - (optional) The arguments to be passed to the UDF function.
+- `args`     - (optional) The arguments to be passed to the UDF function.
 Example:
 
 ```js
 var udfArgs = {
   module: udf_module,
   funcname: udf_funcname,
-  args: [123, "str"]
+  args: [123, 'str']
 }
 ```
 
@@ -128,4 +127,3 @@ Attributes:
 - `file`    – The file in which the error occured.
 - `func`    – The function in which the error occured.
 - `line`    – The line number in which the error occured.
-

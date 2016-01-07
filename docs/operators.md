@@ -15,7 +15,13 @@ var ops = [
   op.read('b')
 ]
 
-client.operate(key, ops, callback)
+client.operate(key, ops, function (error, record, meta, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <a name="Functions"></a>
@@ -412,4 +418,3 @@ Example:
 // record = {tags: ['blue', 'yellow', 'pink']}
 op.listSize('tags')
 // returns: 3
-```

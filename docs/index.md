@@ -22,7 +22,7 @@ $ node-gyp rebuild
 The aerospike module is the main entry point to the client API.
 
 ```node
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 ```
 
 Before connecting to a cluster, you must first define the client configuration to use while connected to the cluster.
@@ -32,7 +32,7 @@ Example:
 ```node
 var config = {
   hosts: [
-    { addr: "localhost", port: 3000 }
+    { addr: 'localhost', port: 3000 }
   ]
 }
 ```
@@ -40,7 +40,7 @@ var config = {
 With the client configuration, you can call `connect()` on the aerospike object, to establish a connection with the cluster.
 
 ```node
-var client = aerospike.connect(config);
+var client = aerospike.connect(config)
 ```
 
 The application uses this object to perform database operations such as writing and reading records.

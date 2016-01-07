@@ -8,7 +8,6 @@ operations and the allowed values for some of the policies.
 - [`Policy Objects`](#Objects)
 - [`Policy Values`](#Values)
 
-
 <a name="Objects"></a>
 ## Objects
 
@@ -17,7 +16,13 @@ Policy objects are objects which define the behavior of associated operations.
 When invoking an operation, you can choose to provide a policy:
 
 ```js
-client.get(key, {timeout: 1000}, callback);
+client.get(key, {timeout: 1000}, function (error, record, meta, key) { 
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 <!--
 ################################################################################
@@ -33,13 +38,13 @@ A policy effecting the behavior of UDF execution.
 Attributes:
 
 - `key`             – Specifies the behavior for the key.
-                       For values, see [Key Policy Values](policies.md#key).
+                      For values, see [Key Policy Values](policies.md#key).
 - `timeout`         – Maximum time in milliseconds to wait for the operation to
                       complete. If 0 (zero), then the value will default to
                       global default timeout value
-- `commitLevel`		- Commit Level of the operation. Specifies whether to be commited
-					  only in Master replica copy or all the replica copies.
-					   For values, see [Commit Level Policy Values](policies.md#commitLevel).
+- `commitLevel`     - Commit Level of the operation. Specifies whether to be commited
+                      only in Master replica copy or all the replica copies.
+                      For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
 <!--
 ################################################################################
@@ -77,7 +82,6 @@ Attributes:
                       complete. If 0 (zero), then the value will default to
                       global default timeout value
 
-
 <!--
 ################################################################################
 OperatePolicy
@@ -101,14 +105,13 @@ Attributes:
                        complete. If 0 (zero), then the value will default to
                        global default timeout value
 - `commitLevel`      - Commit Level of the operation. Specifies whether to be commited
-					   only in Master replica copy or all the replica copies.
-					   For values, see [Commit Level Policy Values](policies.md#commitLevel).
-- `replica`			 - Specifies which partition replica to read from.
-					   For values, see [Replica Policy](policies.md#replica).
+                       only in Master replica copy or all the replica copies.
+                       For values, see [Commit Level Policy Values](policies.md#commitLevel).
+- `replica`          - Specifies which partition replica to read from.
+                       For values, see [Replica Policy](policies.md#replica).
 - `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation
-					   to provide the desired consistency guarantee.
-					   For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
-
+                       to provide the desired consistency guarantee.
+                       For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
 
 <!--
 ################################################################################
@@ -128,12 +131,11 @@ Attributes:
 - `timeout`          – Integer datatype. Maximum time in milliseconds to wait for
                        the operation to complete. If 0 (zero), then the value
                        will default to global default timeout value.
-- `replica`			 - Specifies which partition replica to read from.
-					   For values, see [Replica Policy](policies.md#replica).
+- `replica`          - Specifies which partition replica to read from.
+                       For values, see [Replica Policy](policies.md#replica).
 - `consistencyLevel` - Specifies the number of replicas to be consulted in a read operation
-					   to provide the desired consistency guarantee.
-					   For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
-
+                       to provide the desired consistency guarantee.
+                       For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
 
 <!--
 ################################################################################
@@ -156,8 +158,8 @@ Attributes:
 - `retry`           – Specifies the retry behavior of failed operations.
                       For values, see [Retry Policy Values](policies.md#retry).
 - `commitLevel`     - Commit Level of the operation. Specifies whether to be commited
-					  only in Master replica copy or all the replica copies.
-					  For values, see [Commit Level Policy Values](policies.md#commitLevel).
+                      only in Master replica copy or all the replica copies.
+                      For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
 <!--
 ################################################################################
@@ -184,20 +186,18 @@ Attributes:
                       complete. If 0 (zero), then the value will default to
                       global default values.
 - `commitLevel`     - Commit Level of the operation. Specifies whether to be commited
-					  only in Master replica copy or all the replica copies.
-					  For values, see [Commit Level Policy Values](policies.md#commitLevel).
-
+                      only in Master replica copy or all the replica copies.
+                      For values, see [Commit Level Policy Values](policies.md#commitLevel).
 
 <a name="Values"></a>
 ## Values
 
 The following are values allowed for various policies.
 
-
 An enumeration of the values are available in `aerospike.policy` object, which can be accessed similarly to:
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 aerospike.policy.gen.GT
 ```
@@ -391,4 +391,3 @@ Return succcess after successfully committing the master replica
 ```js
 aerospike.policy.commitLevel.MASTER
 ```
-
