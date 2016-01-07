@@ -210,7 +210,7 @@ describe('client.LargeList()', function (done) {
     var intval = {'key': 'intvalue', 'value': listval}
     LList.add(intval, undefined, function (err, retVal) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('add ')
+      expect(err.func).to.equal('add')
       done()
     })
   })
@@ -276,7 +276,7 @@ describe('client.LargeList()', function (done) {
     var intval = {'key': 'intvalue', 'value': listval}
     LList.update(intval, undefined, function (err, retVal) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('update ')
+      expect(err.func).to.equal('update')
       done()
     })
   })
@@ -336,7 +336,7 @@ describe('client.LargeList()', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.size(2, function (err, val) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('size ')
+      expect(err.func).to.equal('size')
       done()
     })
   })
@@ -355,7 +355,7 @@ describe('client.LargeList()', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.scan('scan', function (err, val) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('scan ')
+      expect(err.func).to.equal('scan')
       done()
     })
   })
@@ -407,7 +407,7 @@ describe('client.LargeList()', function (done) {
     // remove an array of elements from the list.
     LList.remove('list', 123, function (err, retVal) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('remove ')
+      expect(err.func).to.equal('remove')
       done()
     })
   })
@@ -435,7 +435,7 @@ describe('client.LargeList()', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.removeRange('list', 123, 345, function (err, retVal) {
       expect(err).to.be.ok()
-      expect(err.func).to.equal('removeRange ')
+      expect(err.func).to.equal('removeRange')
       done()
     })
   })
