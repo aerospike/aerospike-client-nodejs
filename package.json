@@ -25,15 +25,16 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
-    "test": "node_modules/mocha/bin/mocha -R spec"
+    "test": "standard && mocha"
   },
   "dependencies": {
     "nan": "~2.0.8"
   },
   "devDependencies": {
-    "mocha": ">0",
     "expect.js": "0.2.x",
+    "mocha": ">0",
     "superagent": "0.15.x",
-    "yargs": "1.2.1"
+    "yargs": "1.2.1",
+    "standard": "^5.4.1"
   }
 }

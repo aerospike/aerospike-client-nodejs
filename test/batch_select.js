@@ -1,189 +1,176 @@
-/*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+// *****************************************************************************
+// Copyright 2013-2016 Aerospike, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License")
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// *****************************************************************************
+
+/* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike');
-var options = require('./util/options');
-var assert = require('assert');
-var expect = require('expect.js');
+var aerospike = require('../build/Release/aerospike')
+var options = require('./util/options')
+var expect = require('expect.js')
 
-var keygen = require('./generators/key');
-var metagen = require('./generators/metadata');
-var recgen = require('./generators/record');
-var putgen = require('./generators/put');
-var valgen = require('./generators/value');
+var keygen = require('./generators/key')
+var metagen = require('./generators/metadata')
+var recgen = require('./generators/record')
+var putgen = require('./generators/put')
+var valgen = require('./generators/value')
 
-var status = aerospike.status;
-var policy = aerospike.policy;
+var status = aerospike.status
 
-describe('client.batchSelect()', function() {
+describe('client.batchSelect()', function () {
+  var config = options.getConfig()
+  var client = aerospike.client(config)
 
-	var config = options.getConfig();
-    var client = aerospike.client(config);
+  before(function (done) {
+    client.connect(function (err) {
+      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      done()
+    })
+  })
 
-    before(function(done) {
-        client.connect(function(err){
-            done();
-        });
-    });
+  after(function (done) {
+    client.close()
+    client = null
+    done()
+  })
 
-    after(function(done) {
-        client.close();
-        client = null;
-        done();
-    });
+  it('should successfully read bins from 10 records', function (done) {
+    // number of records
+    var nrecords = 10
 
-    it('should successfully read bins from 10 records', function(done) {
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/10/', random: false})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-        // number of records
-        var nrecords = 10;
+    // writer using generators
+    // callback provides an object of written records, where the
+    // keys of the object are the record's keys.
+    putgen.put(client, 10, kgen, rgen, mgen, function (written) {
+      var keys = Object.keys(written).map(function (key) {
+        return written[key].key
+      })
 
-        // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/10/", random: false});
-        var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
+      var bins = ['i', 's']
+      var len = keys.length
+      expect(len).to.equal(nrecords)
 
-        // writer using generators
-        // callback provides an object of written records, where the
-        // keys of the object are the record's keys.
-        putgen.put(client, 10, kgen, rgen, mgen, function(written) {
+      client.batchSelect(keys, bins, function (err, results) {
+        var result
+        var j
 
-            var keys = Object.keys(written).map(function(key){
-                return written[key].key;
-            });
-			
-			var bins = [ 'i' , 's'];
-            var len = keys.length;
-            expect(len).to.equal(nrecords);
+        expect(err).to.be.ok()
+        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(results.length).to.equal(len)
 
-            client.batchSelect(keys, bins, function(err, results) {
+        for (j = 0; j < results.length; j++) {
+          result = results[j]
 
-                var result;
-                var j;
+          expect(result.status).to.equal(status.AEROSPIKE_OK)
 
-                expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(len);
+          var record = result.record
+          var _record = written[result.key.key].record
+          expect(record.i).to.eql(_record.i)
+          expect(record.s).to.eql(_record.s)
+        }
 
-                for ( j = 0; j < results.length; j++) {
-                    result = results[j];
+        done()
+      })
+    })
+  })
 
-                    expect(result.status).to.equal(status.AEROSPIKE_OK);
+  it('should fail reading bins from non-existent records', function (done) {
+    // number of records
+    var nrecords = 10
 
-                    var record = result.record;
-                    var _record = written[result.key.key].record;
-                    expect(record.i).to.eql(_record.i);
-                    expect(record.s).to.eql(_record.s);
-                }
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/fail/', random: false})
 
-                done();
-            });
-        });
-    });
+    // values
+    var keys = keygen.range(kgen, nrecords)
 
-    it('should fail reading bins from non-existent records', function(done) {
+    var bins = ['i', 's']
+    // writer using generators
+    // callback provides an object of written records, where the
+    // keys of the object are the record's keys.
+    client.batchSelect(keys, bins, function (err, results) {
+      var result
+      var j
 
-        // number of records
-        var nrecords = 10;
+      expect(err).to.be.ok()
+      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(results.length).to.equal(nrecords)
 
-        // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/fail/", random: false});
+      for (j = 0; j < results.length; j++) {
+        result = results[j]
+        if (result.status !== 602) {
+          expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+        } else {
+          expect(result.status).to.equal(602)
+        }
+      }
 
-        // values
-        var keys = keygen.range(kgen, 10);
+      done()
+    })
+  })
 
-		var bins = ['i', 's'];
-		// writer using generators
-        // callback provides an object of written records, where the
-        // keys of the object are the record's keys.
-        client.batchSelect(keys, bins, function(err, results) {
+  it('should successfully read bins of 1000 records', function (done) {
+    // this high for low-end hosts
+    this.timeout(6000)
 
-            var result;
-            var j;
+    // number of records
+    var nrecords = 1000
 
-            expect(err).to.be.ok();
-            expect(err.code).to.equal(status.AEROSPIKE_OK);
-            expect(results.length).to.equal(10);
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/1000/', random: false})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-            for ( j = 0; j < results.length; j++) {
-                result = results[j];
-				if(result.status != 602)
-				{
-	                expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND);
-				}
-				else
-				{
-	                expect(result.status).to.equal(602);
-				}
-            }
+    // writer using generators
+    // callback provides an object of written records, where the
+    // keys of the object are the record's keys.
+    putgen.put(client, nrecords, kgen, rgen, mgen, function (written) {
+      var keys = Object.keys(written).map(function (key) {
+        return written[key].key
+      })
 
-            done();
-        });
-    });
+      var bins = ['i', 's']
+      var len = keys.length
+      expect(len).to.equal(nrecords)
 
-    it('should successfully read bins of 1000 records', function(done) {
+      client.batchSelect(keys, bins, function (err, results) {
+        var result
+        var j
 
-        // this high for low-end hosts
-        this.timeout(6000);
+        expect(err).to.be.ok()
+        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(results.length).to.equal(len)
 
-        // number of records
-        var nrecords = 1000;
+        for (j = 0; j < results.length; j++) {
+          result = results[j]
+          expect(result.status).to.equal(status.AEROSPIKE_OK)
 
-        // generators
-        var kgen = keygen.string(options.namespace, options.set, {prefix: "test/batch_get/1000/", random: false});
-        var mgen = metagen.constant({ttl: 1000});
-        var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()});
+          var record = result.record
+          var _record = written[result.key.key].record
 
-        // writer using generators
-        // callback provides an object of written records, where the
-        // keys of the object are the record's keys.
-        putgen.put(client, nrecords, kgen, rgen, mgen, function(written) {
+          expect(record.i).to.eql(_record.i)
+          expect(record.s).to.eql(_record.s)
+        }
 
-            var keys = Object.keys(written).map(function(key){
-                return written[key].key;
-            });
-
-			var bins = ['i', 's'];
-            var len = keys.length;
-            expect(len).to.equal(nrecords);
-
-            client.batchSelect(keys, bins, function(err, results) {
-
-                var result;
-                var j;
-
-                expect(err).to.be.ok();
-                expect(err.code).to.equal(status.AEROSPIKE_OK);
-                expect(results.length).to.equal(len);
-
-                for ( j = 0; j < results.length; j++) {
-                    result = results[j];
-                    expect(result.status).to.equal(status.AEROSPIKE_OK);
-
-                    var record = result.record;
-                    var _record = written[result.key.key].record;
-
-                    expect(record.i).to.eql(_record.i);
-                    expect(record.s).to.eql(_record.s);
-                }
-
-                done();
-            });
-        });
-    });
-
-});
-
+        done()
+      })
+    })
+  })
+})

@@ -5,7 +5,7 @@ Error codes returned by the aerospike server for all the database operations.
 An enumeration of the status codes are available in `aerospike.status` object, which can be accessed as follows:
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 aerospike.status.AEROSPIKE_OK
 ```
@@ -82,5 +82,3 @@ Record being written can't fit in a storage write block
 #### 606 - AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE
 
 Bin modification operation can't be done on an existing bin due to its value type
-
-
