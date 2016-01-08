@@ -1,0 +1,18 @@
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+
+[{lib,test,examples,benchmarks}/**.js]
+indent_style = space
+indent_size = 2
+
+[src/**.{h,cc}]
+indent_style = tab
+indent_size = tab
+
+[Makefile]
+indent_style = tab
+indent_size = tab
