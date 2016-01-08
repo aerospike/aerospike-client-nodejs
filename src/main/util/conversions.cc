@@ -2395,7 +2395,7 @@ int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * lo
             }
         }
         else if ( v8op->IsUndefined() ) {
-            v8op = obj->Get(Nan::New("cdt_operation").ToLocalChecked());
+            v8op = obj->Get(Nan::New("cdtOperation").ToLocalChecked());
             if ( v8op->IsNumber() ) {
                 as_cdt_optype op = (as_cdt_optype) v8op->ToInteger()->Value();
                 int result = 0;

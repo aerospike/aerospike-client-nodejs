@@ -1,3 +1,5 @@
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
 # Aerospike Node.js Client
 
 An Aerospike add-on module for Node.js.
