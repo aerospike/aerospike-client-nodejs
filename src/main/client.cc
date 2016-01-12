@@ -20,6 +20,7 @@ extern "C" {
     #include <aerospike/as_config.h>
     #include <aerospike/as_key.h>
     #include <aerospike/as_record.h>
+    #include <aerospike/as_log.h>
 }
 
 #include <unistd.h>
@@ -27,6 +28,7 @@ extern "C" {
 #include "client.h"
 #include "conversions.h"
 #include "query.h"
+#include "log.h"
 
 /*******************************************************************************
  *  Fields
@@ -100,11 +102,11 @@ NAN_METHOD(AerospikeClient::New)
     // Assume by default log is not set
     if(info[0]->IsObject()) {
         int default_log_set = 0;
-        if (info[0]->ToObject()->Has(Nan::New("log").ToLocalChecked()))  
+        if (info[0]->ToObject()->Has(Nan::New("log").ToLocalChecked()))
         {
             Local<Value> log_val = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
             if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
-                default_log_set = 1; // Log is passed as an argument. set the default value	
+                default_log_set = 1; // Log is passed as an argument. set the default value
             } else {
                 //log info is set to default level
             }
@@ -113,8 +115,12 @@ NAN_METHOD(AerospikeClient::New)
 			LogInfo * log = client->log;
 			log->fd = 2;
         }
-
     }
+
+	// enable C client logs
+	// as_log_set_level(log->severity);
+	// as_log_set_callback(v8_logging_callback);
+
     if (info[0]->IsObject() ) {
         int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);
 		if( result != AS_NODE_PARAM_OK)
@@ -191,5 +197,3 @@ void AerospikeClient::Init()
     Nan::SetPrototypeMethod(cons, "updateLogging", SetLogLevel);
     constructor.Reset(cons);
 }
-
-

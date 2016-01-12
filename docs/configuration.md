@@ -22,6 +22,8 @@ var config = {
     // default timeout for all operations is 100ms
     timeout: 100
   },
+  connTimeoutMs: 1000, // initial connection timeout
+  tenderInterval: 1000, // tender interval
   log : {
      level: aerospike.log.INFO,
      file: fd  // fd opened by the application using fs.open()
@@ -38,12 +40,13 @@ var client = aerospike.client(config)
 The attributes of the configuration are enumerated below.
 
 ## Configuration Attributes
-### `username` attribute
-User authentication to cluster.  Leave empty for clusters running without restricted access.
 
-### `password` Attribute
-Password authentication to cluster.  The hashed value of the password will be stored by the client
-and sent to server in same format.  Leave empty for clusters running without restricted access.
+### `username` attribute
+User authentication to cluster. Leave empty for clusters running without restricted access.
+
+### `password` attribute
+Password authentication to cluster. The hashed value of the password will be stored by the client
+and sent to server in same format. Leave empty for clusters running without restricted access.
 
 ### `hosts` attribute
 
@@ -53,6 +56,14 @@ Each entry in the list is a Object containing the following attributes:
 
 - `addr` - The IP address or domain name of the host.
 - `port` - The listening port of the host. If not specified, the default is 3000.
+
+### `connTimeoutMs` attribute
+
+Intial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time. Default is 1000 ms.
+
+### `tenderInterval` attribute
+
+Polling interval in milliseconds for cluster tender. Default is 1000 ms.
 
 ### `policies` attribute
 
@@ -77,6 +88,7 @@ The attributes of `log` object.
 
 - `level` - logging severity, defined using [aerospike.log object](log.md).
 - `file`  - file descriptor which is obtained using fs.open().
+
 
 ### `modlua` attribute
 

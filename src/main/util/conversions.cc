@@ -226,16 +226,16 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
         char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 #elif __APPLE__
         char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif  
+#endif
         int rc = access(syspath, R_OK);
         if(rc == 0) {
             strcpy(config->lua.system_path, syspath);
         }
         else {
-#ifdef __linux  
+#ifdef __linux
             char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
 #elif __APPLE__
-            char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";  
+            char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
 #endif
             rc = access(syspath, R_OK);
             if ( rc== 0) {
@@ -352,6 +352,19 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
                 return AS_NODE_PARAM_ERR;
             }
         }
+
+    }
+
+    if (obj->Has(Nan::New("connTimeoutMs").ToLocalChecked())) {
+        Local<Value> v8connTimeoutMs = obj->Get(Nan::New("connTimeoutMs").ToLocalChecked());
+        config->conn_timeout_ms = V8INTEGER_TO_CINTEGER(v8connTimeoutMs);
+        as_v8_debug(log, "Initial connection timeout set to %d ms", config->conn_timeout_ms);
+    }
+
+    if (obj->Has(Nan::New("tenderInterval").ToLocalChecked())) {
+        Local<Value> v8tenderInterval = obj->Get(Nan::New("tenderInterval").ToLocalChecked());
+        config->tender_interval = V8INTEGER_TO_CINTEGER(v8tenderInterval);
+        as_v8_debug(log, "Tender interval set to %d ms", config->tender_interval);
     }
 
     return AS_NODE_PARAM_OK;
@@ -531,11 +544,11 @@ as_val* asval_clone( as_val* val, LogInfo* log)
 			double dval = as_double_get(dbl_val);
 			as_v8_detail(log, "Cloning double value %g", dval);
 			as_double * clone_dbl = as_double_new(dval);
-			if(clone_dbl == NULL) 
+			if(clone_dbl == NULL)
 			{
 				as_v8_error(log, "Cloning double failed");
 			}
-			clone_val = as_double_toval(clone_dbl); 
+			clone_val = as_double_toval(clone_dbl);
 			break;
 		}
 		case AS_GEOJSON: {
@@ -886,8 +899,8 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         // nodejs stores all number values > 2^31 in the class Number.
         // and values < 2^31 are stored in the class SMI (Small Integers).
         // Where as Aerospike server has int64_t and double. To distinguish
-        // between a double and int64_t value in nodejs, retrieve the 
-        // value as double and also as int64_t. If the values are same, then store 
+        // between a double and int64_t value in nodejs, retrieve the
+        // value as double and also as int64_t. If the values are same, then store
         // it as int64_t. Else store it as double.
         // The problem with this implementation is var 123.00 will be treated as int64_t.
         // Application can enforce Aerospike to use this as double using the api
@@ -905,7 +918,7 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
             as_v8_detail(log, "The double value %lf ", d->value);
             return (as_val*) d;
         }
-        
+
     }
     else if( obj->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
         // Any value passed using `aerospike.AsDouble()` will be stored as
@@ -1374,7 +1387,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     as_policy_scan_init( policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
-    if ( obj->Has(Nan::New("failOnClusterChange").ToLocalChecked()) ) {  
+    if ( obj->Has(Nan::New("failOnClusterChange").ToLocalChecked()) ) {
         Local<Value> failOnClusterChange = obj->Get(Nan::New("failOnClusterChange").ToLocalChecked());
         if ( failOnClusterChange->IsBoolean() ) {
             policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
@@ -1480,7 +1493,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     {
         as_v8_error(log, "The key object passed is Null");
         goto ReturnError;
-    }   
+    }
 
     // get the namespace
     if ( obj->Has(Nan::New("ns").ToLocalChecked()) ) {
@@ -1525,7 +1538,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
     // get the value
     if ( obj->Has(Nan::New("key").ToLocalChecked()) ) {
         Local<Value> val_obj = obj->Get(Nan::New("key").ToLocalChecked());
-        if(val_obj->IsNull()) 
+        if(val_obj->IsNull())
         {
             as_v8_error(log, "The key entry must not be null");
             goto ReturnError;
@@ -1729,7 +1742,7 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     }
 
     // Extract UDF function name
-    if( obj->Has(Nan::New("funcname").ToLocalChecked())) { 
+    if( obj->Has(Nan::New("funcname").ToLocalChecked())) {
         Local<Value> v8_funcname = obj->Get( Nan::New("funcname").ToLocalChecked());
         if ( v8_funcname->IsString()) {
             if( *funcname == NULL) {

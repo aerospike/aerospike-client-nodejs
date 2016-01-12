@@ -66,7 +66,7 @@ NAN_METHOD(AerospikeClient::Connect)
     if (err.code != AEROSPIKE_OK) {
         client->as->cluster = NULL;
         argv[1] = (info.Holder());
-        as_v8_error(client->log, "Connecting to Cluster Failed");
+        as_v8_error(client->log, "Connecting to Cluster Failed: %s", err.message);
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
         info.GetReturnValue().Set(Nan::Null());
     }
