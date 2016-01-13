@@ -37,7 +37,7 @@ metadata
 Some operations allow you to provide metadata with a record, including:
 
 - `gen` – (optional) The generation (version) of the record. Must be an Integer.
-- `ttl` – (optional) The time-to-live (expiration) of the record. Must be an Integer.
+- `ttl` – (optional) The time-to-live in seconds (expiration) of the record. Must be an Integer.
 
 Example:
 
