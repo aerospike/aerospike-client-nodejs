@@ -1,30 +1,30 @@
-var count = 0;
-var limit = 1;
+var count = 0
+var limit = 1
 
-function reset() {
-    count = 0;
-};
+function reset () {
+  count = 0
+}
 
-function setLimit(i) {
-    limit = i;
-};
+function setLimit (i) {
+  limit = i
+}
 
-function current() {
-    return count;
-};
+function current () {
+  return count
+}
 
-function next(fn, arg) {
-    count++;
-    if (count >= limit) {
-        process.exit(0);
-    } else {
-        fn(arg);
-    }
-};
+function next (fn, arg) {
+  count++
+  if (count >= limit) {
+    process.exit(0)
+  } else {
+    fn(arg)
+  }
+}
 
 module.exports = {
-    reset: reset,
-    setLimit: setLimit,
-    next: next,
-    current: current
-};
+  reset: reset,
+  setLimit: setLimit,
+  next: next,
+  current: current
+}

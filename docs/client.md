@@ -25,6 +25,7 @@ With a new client, you can use any of the methods specified below:
   - [connect()](#connect)
   - [createIntegerIndex()](#createIntegerIndex)
   - [createStringIndex()](#createStringIndex)
+  - [createGeo2DSphereIndex()](#createGeo2DSphereIndex)
   - [execute()](#execute)
   - [exists()](#exists)
   - [get()](#get)
@@ -61,7 +62,7 @@ Adds integer values to existing record bin values. This call only works for inte
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `bins`        – A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
 - `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
 - `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
@@ -76,9 +77,13 @@ Example:
 ```js
 var bins = {itemsShopped: 5}
 
-client.add(key, bins, function(error, record, metadata, key) {
-  // do something
-});
+client.add(key, bins, function (error, record, metadata, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 <!--
 ################################################################################
@@ -94,7 +99,7 @@ Appends bin string values to existing record bin values. This call only works fo
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `bins`        – A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
 - `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
 - `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
@@ -110,11 +115,15 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var bins = {LastMovieSeen: "Imitation Game"}
+var bins = {LastMovieSeen: 'Imitation Game'}
 
-client.append(key, bins, function(error, record, metadata, key) {
-  // do something
-});
+client.append(key, bins, function (error, record, metadata, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -153,22 +162,26 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batchExists(keys, function(error, results) {
-  for ( var i = 0; i<results.length; i++) {
-    var result = results[i];
-    switch ( result.status ) {
-      case status.AEROSPIKE_OK:
-      	// record found
-      	break;
-      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-      	// record not found
-      	break;
-      default:
-      	// error while reading record
-        break;
+client.batchExists(keys, function (error, results) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    for (var i = 0; i < results.length; i++) {
+      var result = results[i]
+      switch (result.status) {
+        case status.AEROSPIKE_OK:
+          // record found
+          break
+        case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+          // record not found
+          break
+        default:
+          // error while reading record
+          break
+      }
     }
   }
-});
+})
 ```
 
 <!--
@@ -208,23 +221,28 @@ var keys = [
   key('test', 'demo', 'key3')
 ]
 
-client.batchGet(keys, function(error, results) {
-  for ( var i = 0; i<results.length; i++) {
-    var result = results[i];
-    switch ( result.status ) {
-      case status.AEROSPIKE_OK:
-      	// record found
-      	break;
-      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-      	// record not found
-      	break;
-      default:
-      	// error while reading record
-        break;
+client.batchGet(keys, function (error, results) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    for (var i = 0; i < results.length; i++) {
+      var result = results[i]
+      switch (result.status) {
+        case status.AEROSPIKE_OK:
+          // record found
+          break
+        case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+          // record not found
+          break
+        default:
+          // error while reading record
+          break
+      }
     }
   }
-});
+})
 ```
+
 <!--
 ################################################################################
 batchSelect()
@@ -234,7 +252,7 @@ batchSelect()
 
 ### batchSelect(keys, policy=null, callback)
 
-Reads a batch of records from the database cluster.
+Reads a subset of bins for a batch of records from the database cluster.
 
 Parameters:
 
@@ -262,25 +280,28 @@ var keys = [
   key('test', 'demo', 'key2'),
   key('test', 'demo', 'key3')
 ]
+var bins = ['s', 'i']
 
-var bins = ['name', 'age'];
-
-client.batchSelect(keys, bins, function(error, results) {
-  for ( var i = 0; i<results.length; i++) {
-    var result = results[i];
-    switch ( result.status ) {
-      case status.AEROSPIKE_OK:
-      	// record found
-      	break;
-      case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-      	// record not found
-      	break;
-      default:
-      	// error while reading record
-        break;
+client.batchSelect(keys, bins, function (error, results) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    for (var i = 0; i < results.length; i++) {
+      var result = results[i]
+      switch (result.status) {
+        case status.AEROSPIKE_OK:
+          // record found
+          break
+        case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+          // record not found
+          break
+        default:
+          // error while reading record
+          break
+      }
     }
   }
-});
+})
 ```
 
 <!--
@@ -323,11 +344,10 @@ The parameters for the `callback` argument:
 Example:
 ```js
 client.connect(function (error) {
-  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
-    // handle success
-  }
-  else {
+  if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
+  } else {
+    // handle success
   }
 })
 ```
@@ -341,14 +361,14 @@ createIntegerIndex()
 ### createIntegerIndex(args, callback)
 
 Creates an integer index. It's an asynchronous API that issues the index create command
-to aerospike cluster. To verify that index has been created and populated with all the 
-data use [indexCreateWait()](#indexCreateWait) API.
+to the aerospike cluster. To verify that the index has been created and populated with all the
+data use the [indexCreateWait()](#indexCreateWait) API.
 
 Parameters:
 - `args`      - An object with these entries. ns, set, bin, index, policy.
-- `ns`		  - namespace on which index is to be created
+- `ns`        - namespace on which index is to be created
 - `set`       - set on which index is to be created
-- `bin`		  - bin to be indexed
+- `bin`       - bin to be indexed
 - `index`     - name of the index to be created
 - `policy`    - (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
 - `callback`  – The function to call when the operation completes.
@@ -359,16 +379,16 @@ The parameters for the `callback` argument:
 
 Example:
 ```js
-var args = { ns: "test", set: "demo", bin: "bin1", index:"index_name"}
+var args = {ns: 'test', set: 'demo', bin: 'bin1', index: 'index_name'}
 client.createIntegerIndex(args, function (error) {
-  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
-    // handle success
-  }
-  else {
+  if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
+  } else {
+    // handle success
   }
 })
 ```
+
 <!--
 ################################################################################
 createStringIndex()
@@ -378,15 +398,15 @@ createStringIndex()
 
 ### createStringIndex(args, callback)
 
-Creates a string index. It's an asynchronous API that issues the index create command 
-to aerospike cluster. To verify that index has been created and populated with all the 
-data use [indexCreateWait()](#indexCreateWait) API.
+Creates a string index. It's an asynchronous API that issues the index create command
+to the aerospike cluster. To verify that the index has been created and populated with all the
+data use the [indexCreateWait()](#indexCreateWait) API.
 
 Parameters:
 - `args`      - An object with these entries. ns, set, bin, index, policy.
-- `ns`		  - namespace on which index is to be created
+- `ns`        - namespace on which index is to be created
 - `set`       - set on which index is to be created
-- `bin`		  - bin to be indexed
+- `bin`       - bin to be indexed
 - `index`     - name of the index to be created
 - `policy`    - (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
 - `callback`  – The function to call when the operation completes.
@@ -397,13 +417,50 @@ The parameters for the `callback` argument:
 
 Example:
 ```js
-var args = { ns: "test", set: "demo", bin: "bin1", index: "index_name"}
+var args = {ns: 'test', set: 'demo', bin: 'bin1', index: 'index_name'}
 client.createStringIndex(args, function (error) {
-  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
     // handle success
   }
-  else {
+})
+```
+
+<!--
+################################################################################
+createGeo2DSphereIndex()
+################################################################################
+-->
+<a name="createGeo2DSphereIndex"></a>
+
+### createGeo2DSphereIndex(args, callback)
+
+Creates a geospatial index. It's an asynchronous API that issues the index create command
+to the aerospike cluster. To verify that the index has been created and populated with all the
+data use the [indexCreateWait()](#indexCreateWait) API.
+
+Parameters:
+- `args`      - An object with these entries. ns, set, bin, index, policy.
+- `ns`        - namespace on which index is to be created
+- `set`       - set on which index is to be created
+- `bin`       - bin to be indexed
+- `index`     - name of the index to be created
+- `policy`    - (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
+- `callback`  – The function to call when the operation completes.
+
+The parameters for the `callback` argument:
+
+- `error` – An [Error object](datamodel.md#error), which contains the status of the connect call.
+
+Example:
+```js
+var args = {ns: 'test', set: 'demo', bin: 'bin1', index: 'index_name'}
+client.createStringIndex(args, function (error) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
+  } else {
+    // handle success
   }
 })
 ```
@@ -430,18 +487,21 @@ The parameters for the `callback` argument:
 
 - `error`       – The [Error object](datamodel.md#error) representing the status of
                   the operation.
-- `response`	- The value returned from the udf function.
+- `response`    - The value returned from the udf function.
 
 Example:
 ```js
 var key = aerospike.key
-var udfArgs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
+var udfArgs = {module: 'udf_module', funcname: 'udf_function', args: ['abc', 123, 4.5]}
 
-client.execute(key('test','demo','key1'), udfArgs, function(error, res, key) {
-  // do something
-});
+client.execute(key('test', 'demo', 'key1'), udfArgs, function (error, res, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
-
 
 <!--
 ################################################################################
@@ -473,9 +533,19 @@ Example:
 ```js
 var key = aerospike.key
 
-client.exists(key('test','demo','key1'), function(error, metadata, key) {
-  // do something
-});
+client.exists(key('test', 'demo', 'key1'), function (error, metadata, key) {
+  switch (error.code) {
+    case status.AEROSPIKE_OK:
+      // record exists
+      break
+    case status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      // record does not exist
+      break
+    default:
+      // handle error
+      break
+  }
+})
 ```
 
 <!--
@@ -509,10 +579,15 @@ Example:
 ```js
 var key = aerospike.key
 
-client.get(key('test','demo','key1'), function(error, record, metadata) {
-  // do something
-});
+client.get(key('test', 'demo', 'key1'), function (error, record, metadata) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 indexRemove()
@@ -527,7 +602,7 @@ Remove the index provided.
 Parameters:
 
 - `namespace`   – The namespace on which the index is present.
-- `index`		– The name of the index to be created.
+- `index`       – The name of the index to be created.
 - `policy`      – (optional) The [Info Policy object](policies.md#InfoPolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -541,8 +616,12 @@ Example:
 
 ```js
 
-client.indexRemove('test', 'index', function(error) {
-  // do something
+client.indexRemove('test', 'index', function (error) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
 });
 ```
 
@@ -582,17 +661,25 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-client.info("statistics", function(err, response, host) {
-  // do something
-});
+client.info('statistics', function (error, response, host) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 Example of sending the request to a single host:
 
 ```js
-client.info("statistics", {addr: "127.0.0.1", port: 3000}, function(error, response, host) {
-  // do something
-});
+client.info('statistics', {addr: '127.0.0.1', port: 3000}, function (error, response, host) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -610,7 +697,7 @@ only when index is ready to be queried.
 Parameters:
 
 - `namespace`   – The namespace on which the index is created.
-- `index`		– The name of the index created.
+- `index`       – The name of the index created.
 - `pollInterval`- The poll interval in milliseconds to check the index creation status.
 - `callback`    – The function to call when the operation completes with the results of the operation.
 
@@ -623,17 +710,18 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var args = { ns: "test", set: "demo", bin: "bin1", index:"index_name"}
+var args = {ns: 'test', set: 'demo', bin: 'bin1', index: 'index_name'}
 client.createIntegerIndex(args, function (error) {
-  if ( error.status == aerospike.Status.AEROSPIKE_OK ) {
-    client.indexCreateWait('test', 'index', 1000, function(error) {
-        if(error.code !== aerospike.status.AEROSPIKE_OK) {
-            // index creation failed.
-        }
-    });
-  }
-  else {
-    // Index create request failed.
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    client.indexCreateWait('test', 'index_name', 1000, function (error) {
+      if (error && error.code !== status.AEROSPIKE_OK) {
+        // handle failure
+      } else {
+        // handle success
+      }
+    })
   }
 })
 
@@ -648,22 +736,21 @@ LargeList()
 
 ### LargeList(key, binName, writePolicy, createModule):LargeList
 
-creates a new [LargeList](largelist.md) object, which is used to perform all LDT operations in the database.
-
+Creates a new [LargeList](largelist.md) object, which is used to perform all LDT operations in the database.
 
 Parameters:
-- `key`			- A [Key object](datamodel.md#key), used to locate the record in the cluster.
+- `key`         - A [Key object](datamodel.md#key), used to locate the record in the cluster.
 - `binName`     - Name of the Large Data Type Bin.
 - `applyPolicy` - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
 - `createModule`- (optional) Lua function name that initialized list configuration parameters, pass null for
                   default list.
-				
+                
 Example:
 
 ```js
-var key     = { ns: "test", set: "demo", key: "ldt_key"}
-var binName = "ldtBinName";
-var policy  = { timeout: 1000 }
+var key     = {ns: 'test', set: 'demo', key: 'ldt_key'}
+var binName = 'ldtBinName';
+var policy  = {timeout: 1000}
 var llist = client.LargeList(key, binName, policy);
 ```
 
@@ -707,9 +794,13 @@ var ops = [
   op.read('b')
 ]
 
-client.operate(key, ops, function(error, record, metadata, key) {
-  // do something
-});
+client.operate(key, ops, function (error, record, metadata, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 <!--
 ################################################################################
@@ -725,7 +816,7 @@ Prepends bin string values to existing record bin values. This call only works f
 Parameters:
 
 - `key`         – A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `bins`		– A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
+- `bins`        – A [Record Object](datamodel.md#record), used to specify the bins to be added with integer values.
 - `metadata`    – (optional) A [Metadata object](datamodel.md#metadata).
 - `policy`      – (optional) A [Operate Policy object](policies.md#OperatePolicy) to use for this operation.
 - `callback`    – The function to call when the operation completes with the results of the operation.
@@ -741,11 +832,15 @@ The parameters for the `callback` argument:
 Example:
 
 ```js
-var bins = {FirstMovieSeen: "12 Angry Man"}
+var bins = {FirstMovieSeen: '12 Angry Man'}
 
-client.prepend(key, bins, function(error, record, metadata, key) {
-  // do something
-});
+client.prepend(key, bins, function (error, record, metadata, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -783,9 +878,13 @@ var rec = {
   b: 123
 }
 
-client.put(key('test','demo','key1'), rec, function(error, key) {
-  // do something
-});
+client.put(key('test', 'demo', 'key1'), rec, function (error, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 <!--
 ################################################################################
@@ -796,18 +895,17 @@ query()
 
 ### query(namespace, set, statement):query
 
-creates a new [query](query.md) object, which is used to define query in the database.
-
+Creates a new [query](query.md) object, which is used to define query in the database.
 
 Parameters:
-- `namespace`	- Namespace to be queried.
+- `namespace`   - Namespace to be queried.
 - `set`         - Set on which the query has to be executed.
 - `statement`   - an Instance of [Statement](query.md#Statement), which specifies the properties of
-				  a given query.
+                  a given query.
 Example:
 
 ```js
-var query = client.query(ns, set);
+var query = client.query(ns, set)
 ```
 
 For details, see [Query Class](query.md)
@@ -839,9 +937,13 @@ Example:
 ```js
 var key = aerospike.key
 
-client.remove(key('test','demo','key1'), function(error, key) {
-  // do something
-});
+client.remove(key('test', 'demo', 'key1'), function (error, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -874,10 +976,15 @@ Example:
 ```js
 var key = aerospike.key
 
-client.select(key('test','demo','key1'), ["name","age"] function(error, record, metadata, key) {
-  // do something
-});
+client.select(key('test', 'demo', 'key1'), ['name', 'age'], function (error, record, metadata, key) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 udfRegister()
@@ -887,7 +994,7 @@ udfRegister()
 
 ### udfRegister(udfModule, policy=null, callback)
 
-Registers an UDF to the database cluster. To verify that UDF is present in all the nodes 
+Registers an UDF to the database cluster. To verify that UDF is present in all the nodes
 refer [udfRegisterWait()](#udfREgisterWait)
 
 Parameters:
@@ -904,9 +1011,13 @@ The parameters for the `callback` argument:
 Example:
 ```js
 
-client.udfRegister("path/to/file/filename", function(error) {
-  // do something
-});
+client.udfRegister('path/to/file/filename', function (error) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -918,7 +1029,7 @@ udfRegisterWait()
 
 ### udfRegisterWait(udfFilename, pollInterval, policy=null, callback)
 
-Wait until the UDF registration succeeds in aerospike cluster. This function returns only when the 
+Wait until the UDF registration succeeds in aerospike cluster. This function returns only when the
 UDF registered is available with all the nodes in aerospike cluster.
 
 Parameters:
@@ -936,15 +1047,19 @@ The parameters for the `callback` argument:
 Example:
 ```js
 
-client.udfRegister("path/to/file/filename", function(error) {
-    if(error.code === aerospike.status.AEROSPIKE_OK) {
-        client.udfRegisterWait( filename, 1000, function(err) {
-            if(err.code !== aerospike.status.AEROSPIKE_OK) {
-                // error in registration.
-            }
-        });
-    }
-});
+client.udfRegister('path/to/file/filename', function (error) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    client.udfRegisterWait(filename, 1000, function (error) {
+      if (error && error.code !== status.AEROSPIKE_OK) {
+        // handle failure
+      } else {
+        // handle success
+      }
+    })
+  }
+})
 ```
 
 <!--
@@ -971,10 +1086,13 @@ The parameters for the `callback` argument:
 
 Example:
 ```js
-
-client.udfRemove("udfModuleName", function(error) {
-  // do something
-});
+client.udfRemove('udfModuleName', function (error) {
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--

@@ -3,14 +3,14 @@
 Create and Manage a list within a single bin.
 
 ```js
-var aerospike = require('aerospike');
-var config    = { hosts: [ addr: localhost, port: 3000]}
-var client    = aerospike.client(config);
-var key		  = { ns:"test", set:"demo", key:"llistKey"}
-var policy    = { timeout: 1000}
-var binName   = "LDTbin"
-var createModule = "ListInitializer"
-var llist	  = client.LargeList(key, binName, policy);
+var aerospike = require('aerospike')
+var config    = {hosts: [ addr: localhost, port: 3000]}
+var client    = aerospike.client(config)
+var key       = {ns: 'test', set: 'demo', key: 'llistKey'}
+var policy    = {timeout: 1000}
+var binName   = 'LDTbin'
+var createModule = 'ListInitializer'
+var llist     = client.LargeList(key, binName, policy);
 
 ```
 Parameters:
@@ -63,16 +63,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`  - The value returned from by the LDT function `add`.
 
 Example:
 ```js
-llist.add({"key":"ldt_key", "value":"ldtvalue"}, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
+llist.add({'key': 'ldt_key', 'value': 'ldtvalue'}, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 
 ```
 
@@ -92,23 +94,24 @@ create it using specified userModule configuration.
 Parameters:
 
 - `[value]`   - Values to add
-- `callback`- The function to call when the operation completes with the results of the operation.
+- `callback`  - The function to call when the operation completes with the results of the operation.
 
 The parameters for `callback` argument:
 
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+- `error`     - The [Error object](datamodel.md#error) representing the status of
+                the operation.
 - `response`  - The value returned from by the LDT function `add`.
 
 Example:
 ```js
-var valArray = [ {"key":"ldt_key", "value":"ldtvalue"}, {"key":"ldt_array", "value":"ldtarrayvalue"}]
-llist.add(valArray, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var valArray = [{'key': 'ldt_key', 'value': 'ldtvalue'}, {'key': 'ldt_array', 'value': 'ldtarrayvalue'}]
+llist.add(valArray, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -125,24 +128,26 @@ Otherwise, the value is the key. If large list does not exist, create it using s
 
 Parameters:
 
-- `value`   - Value to update
-- `callback`- The function to call when the operation completes with the results of the operation.
+- `value`    - Value to update
+- `callback` - The function to call when the operation completes with the results of the operation.
 
 The parameters for `callback` argument:
 
-- `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
-- `response`  - The value returned from by the LDT function `add`.
+- `error`    - The [Error object](datamodel.md#error) representing the status of
+               the operation.
+- `response` - The value returned from by the LDT function `add`.
 
 Example:
 ```js
-llist.update({"key":"ldt_key", "value":"ldtupdatedvalue"}, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.update({'key': 'ldt_key', 'value': 'ldtupdatedvalue'}, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 update([values])
@@ -164,19 +169,21 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- The value returned from by the LDT function `add`.
 
 Example:
 ```js
-var valArray = [ {"key":"ldt_key", "value":"ldtupdatevalue"}, {"key":"ldt_array", "value":"ldtarrayupdatedvalue"}]
-llist.update(valArray, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var valArray = [{'key': 'ldt_key', 'value': 'ldtupdatevalue'}, {'key': 'ldt_array', 'value': 'ldtarrayupdatedvalue'}]
+llist.update(valArray, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 remove(value)
@@ -195,18 +202,20 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`  - The value returned from by the LDT function `add`.
 
 Example:
 ```js
-llist.delete({"key":"ldt_key"}, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.delete({'key': 'ldt_key'}, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 remove([values])
@@ -226,18 +235,19 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- The value returned from by the LDT function `add`.
 
 Example:
 ```js
-var valArray = [ {"key":"ldt_key"},{"key":"ldt_array"}]
-llist.remove(valArray, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var valArray = [{'key': 'ldt_key'}, {'key': 'ldt_array'}]
+llist.remove(valArray, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -260,18 +270,20 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`  - The count of entries removed.
 
 Example:
 ```js
-llist.remove("begin", "end", function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.remove('begin', 'end', function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
+
 <!--
 ################################################################################
 find()
@@ -291,17 +303,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- List of entries selected.
 
 Example:
 ```js
-llist.find("search_key", function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.find('search_key', function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -319,24 +332,25 @@ Select values from list and apply  specified Lua filter.
 Parameters:
 - `value`   - value to select.
 - `filter` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying LUA file, function
-	          and arguments to Lua function.
+              and arguments to Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- List of entries selected.
 
 Example:
 ```js
-var filter =  { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
-llist.find("search_key", filter, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var filter = {module: 'udf_module', funcname: 'udf_function', args: ['abc', 123, 4.5]}
+llist.find('search_key', filter, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -359,17 +373,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`  - The list of entries selected.
 
 Example:
 ```js
-llist.range("begin", "end", function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.range('begin', 'end', function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -388,25 +403,26 @@ Parameters:
 - `begin` - low value of the range (inclusive).
 - `end`   - high value of the range (inclusive).
 - `filter`- A [UDFArgs object](datamodel.md#UDFArgs) used for specifying the Lua file, function
-			 and arguments to the Lua function.
+             and arguments to the Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`  - The list of entries selected.
 
 Example:
 ```js
 
-var filter = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
-llist.range("begin", "end", filter, function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var filter = {module: 'udf_module', funcname: 'udf_function', args: ['abc', 123, 4.5]}
+llist.range('begin', 'end', filter, function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -427,17 +443,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- All the entries in the list.
 
 Example:
 ```js
-llist.scan(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.scan(function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -454,24 +471,25 @@ Select values from the list and apply specified Lua filter.
 
 Parameters:
 - `udfArgs` - A [UDFArgs object](datamodel.md#UDFArgs) used for specifying for specifying the Lua file, function
-			  and arguments to the Lua function.
+              and arguments to the Lua function.
 - `callback`- The function to call when the operation completes with the results of the operation.
 
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`-list of entries selected.
 
 Example:
 ```js
-var udfargs = { module : "udf_module", funcname: "udf_function", args:[args, to, udf, function] }
-llist.filter(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+var udfargs = {module: 'udf_module', funcname: 'udf_function', args: ['abc', 123, 4.5]}
+llist.filter(function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -492,17 +510,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- `undefined`
 
 Example:
 ```js
-llist.destroy(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.destroy(function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 
 <!--
@@ -523,17 +542,18 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- Size of the list.
 
 Example:
 ```js
-llist.size(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.size(function (error, respone){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
 <!--
 ################################################################################
@@ -553,16 +573,16 @@ Parameters:
 The parameters for `callback` argument:
 
 - `error`   - The [Error object](datamodel.md#error) representing the status of
-				  the operation.
+                  the operation.
 - `response`- Map of list configuration parameters.
 
 Example:
 ```js
-llist.getConfig(function(err, res){
-	//check for err.code
-	if(err.code != aerospike.status.AEROSPIKE_OK)
-		//signals error.
-});
-
+llist.getConfig(function (error, response){
+  if (error && error.code !== status.AEROSPIKE_OK) {
+    // handle failure
+  } else {
+    // handle success
+  }
+})
 ```
-

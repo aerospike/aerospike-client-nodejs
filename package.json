@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "1.0.53",
+  "version": "1.0.54",
   "description": "Aerospike Client Library",
   "tags": [
     "aerospike",
@@ -8,6 +8,7 @@
     "nosql"
   ],
   "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
+  "license": "Apache-2.0",
   "main": "lib/aerospike",
   "engines": {
     "node": ">=0.10"
@@ -24,15 +25,16 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
-    "test": "node_modules/mocha/bin/mocha -R spec"
+    "test": "standard && mocha"
   },
   "dependencies": {
     "nan": "~2.0.8"
   },
   "devDependencies": {
-    "mocha": ">0",
     "expect.js": "0.2.x",
+    "mocha": ">0",
     "superagent": "0.15.x",
-    "yargs": "1.2.1"
+    "yargs": "1.2.1",
+    "standard": "^5.4.1"
   }
 }

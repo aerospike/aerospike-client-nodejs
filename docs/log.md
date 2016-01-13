@@ -3,7 +3,7 @@
 Various log levels available to log from the Aerospike API.
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 aerospike.log.INFO
 ```

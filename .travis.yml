@@ -1,25 +1,44 @@
 language: node_js
 node_js:
+- 'stable'
+- '4.2'
+- '0.12'
 - '0.10'
+- 'iojs'
+env:
+- CXX=g++-4.8
+sudo: false
+os:
+- linux
+dist: trusty
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+      - autoconf
+      - libssl-dev
 install:
-- sudo apt-get install autoconf libssl-dev liblua5.1 liblua5.1-dev
-- sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-- sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
 - wget -O aerospike-server.tgz http://aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
+- sed -i -e 's/\${me}/"root"/' share/libexec/aerospike-start
+- sed -i -e 's/set_shmmax$/#set_shmmax/' share/libexec/aerospike-start
+- sed -i -e 's/set_shmall$/#set_shmall/' share/libexec/aerospike-start
 - mkdir instance1
 - mkdir instance2
 - ./bin/aerospike init --home instance1 --instance 1 --service-port 3000
 - ./bin/aerospike init --home instance2 --instance 2 --service-port 3010
 - cd instance1
-- sudo ./bin/aerospike start
+- ./bin/aerospike start
+- ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ..
 - cd instance2
-- sudo ./bin/aerospike start
+- ./bin/aerospike start
+- ../../scripts/wait-for-node.sh var/log/aerospike.log
 - cd ../..
-- sleep 3
 script:
 - npm install
 - OPTIONS="--run_aggregation=true" npm test

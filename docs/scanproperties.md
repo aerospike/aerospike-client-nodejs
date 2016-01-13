@@ -7,7 +7,7 @@ Status of a particular background scan.
 An enumeration of the scan status codes are available in `aerospike.scanStatus` object, which can be accessed as follows:
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 aerospike.scanStatus.INPROGESS
 ```
@@ -28,7 +28,7 @@ Priority levels for a given scan operation.
 An enumeration of the scan priority available in `aerospike.scanPriority` object, which can be accessed as follows:
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 aerospike.scanPriority.HIGH
 ```

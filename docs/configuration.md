@@ -5,34 +5,34 @@ The Aerospike client can be configured using a JavaScript object.
 The following is a configuration example and some guidlines on how to configure a client.
 
 ```js
-var aerospike = require('aerospike');
+var aerospike = require('aerospike')
 
 var config = {
   // username and password must be passed only to cluster with security feature enabled.
   // security feature is available only in Enterprise edition of Aerospike.
-  user: "username",
-  password: "password",
+  user: 'username',
+  password: 'password',
   hosts: [
     // add three nodes in the cluster.
-    { addr: "192.168.0.1", port: 3000 },
-    { addr: "192.168.0.2", port: 3000 },
-    { addr: "192.168.0.3", port: 3000 }
+    { addr: '192.168.0.1', port: 3000 },
+    { addr: '192.168.0.2', port: 3000 },
+    { addr: '192.168.0.3', port: 3000 }
   ],
   policies = {
     // default timeout for all operations is 100ms
     timeout: 100
-  }
+  },
   log : {
      level: aerospike.log.INFO,
-     file : fd  // fd  opened by the application using fs.open()
+     file: fd  // fd opened by the application using fs.open()
   },
   modlua: {
-	  systemPath: 'path to system UDF files',
-	  userPath: 'path to user UDF files'
+    systemPath: 'path to system UDF files',
+    userPath: 'path to user UDF files'
   }
-};
+}
 
-var client = aerospike.client(config);
+var client = aerospike.client(config)
 ```
 
 The attributes of the configuration are enumerated below.
@@ -66,8 +66,10 @@ The attributes of the `policies` Object:
 - `operate` – The global policy for info operations, defined using an [Operate Policy Object](policies.md#OperatePolicy)
 - `query` – The global policy for query operations, defined using a [Query Policy Object](policies.md#QueryPolicy)
 - `read` – The global policy for read operations, defined using a [Read Policy Object](policies.md#ReadPolicy)
+- `remove` – The global policy for write operations, defined using a [Remove Policy Object](policies.md#RemovePolicy)
 - `scan` – The global policy for scan operations, defined using a [Scan Policy Object](policies.md#ScanPolicy)
 - `write` – The global policy for write operations, defined using a [Write Policy Object](policies.md#WritePolicy)
+
 
 ### `log` attribute
 

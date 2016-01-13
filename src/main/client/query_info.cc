@@ -58,7 +58,7 @@ static void * prepare(ResolveArgs(info))
 
     AerospikeQuery* query           = ObjectWrap::Unwrap<AerospikeQuery>(info.This());
     // Build the async data
-    AsyncData * data                = new AsyncData;
+    AsyncData * data                = new AsyncData();
     data->as                        = query->as;
     LogInfo * log                   = data->log = query->log;
 

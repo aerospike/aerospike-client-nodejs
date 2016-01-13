@@ -5,9 +5,9 @@ an Aerospike database cluster. The `Query` class can be instantiated as follows:
 
 
 ```js
-var aerospike = require('aerospike');
-var client = aerospike.client(config);
-var query = client.query(ns, set, stmt);
+var aerospike = require('aerospike')
+var client = aerospike.client(config)
+var query = client.query(ns, set, stmt)
 
 ```
 `stmt` is an instance of [Statement](#Statement)
@@ -66,7 +66,7 @@ query creation, an exception is thrown with appropriate error messages.
 #### `concurrent`
 
   `concurrent` is a bool value, setting to true results in parallel scanning of data in
-	all nodes in Aerospike cluster.
+    all nodes in Aerospike cluster.
 
 
 <!--
@@ -83,28 +83,27 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 'errror' is emitted in an event of error.
 'end' marks the end of recordset returned by query.
 ```js
-	var statement = { filters:[filter.equal('a', 'abc')]}
+var statement = {filters: [filter.equal('a', 'abc')]}
 
-	// NOTE bin a has to be indexed for it to be queried.
-	//To projects bins 'a' and 'b' alone
-	statement.select = ['a', 'b']
+// NOTE bin a has to be indexed for it to be queried.
+//To projects bins 'a' and 'b' alone
+statement.select = ['a', 'b']
 
-	var query = client.query(ns, set, statement); // returns a query object.
+var query = client.query(ns, set, statement) // returns a query object.
 
-	var dataCallback = function(record) {
-		// process the scanned record
-	}
-	var errorCallback = function(error) {
-		// process the error
-	}
-	var endCallback = function() {
-		//process the end of query results.
-	}
-	var stream = query.execute(); // returns a stream object.
-	stream.on('data', dataCallback);
-	stream.on('error', errorCallback);
-	stream.on('end', endCallback);
-
+var dataCallback = function (record) {
+  // process the scanned record
+}
+var errorCallback = function (error) {
+  // process the error
+}
+var endCallback = function () {
+  //process the end of query results
+}
+var stream = query.execute() // returns a stream object.
+stream.on('data', dataCallback)
+stream.on('error', errorCallback)
+stream.on('end', endCallback)
 ```
 
 <!--
@@ -125,31 +124,32 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 'end' marks the end of resultset returned by query.
 
 ```js
-	var statement = { filters:[filter.equal['a', 'abc'],
-					  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
-					}
+var statement = {
+  filters: [filter.equal['a', 'abc'],
+  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
+}
 
-	// NOTE bin a has to be indexed for it to be queried.
-	//To projects bins 'a' and 'b' alone
-	statement.select = ['a', 'b']
+// NOTE bin a has to be indexed for it to be queried.
+//To projects bins 'a' and 'b' alone
+statement.select = ['a', 'b']
 
-	var query = client.query(ns, set, statement); // returns a query object.
+var query = client.query(ns, set, statement) // returns a query object
 
-	var dataCallback = function(result) {
-		//process the result of aggregation
-	}
-	var errorCallback = function(error) {
-		//process the error
-	}
-	var endCallback = function() {
-		//process the end of aggregation
-	}
-	var stream = query.execute(); // returns a stream object.
-	stream.on('data', dataCallback);
-	stream.on('error', errorCallback);
-	stream.on('end', endCallback);
-
+var dataCallback = function (result) {
+  //process the result of aggregation
+}
+var errorCallback = function (error) {
+  //process the error
+}
+var endCallback = function( ) {
+  //process the end of aggregation
+}
+var stream = query.execute() // returns a stream object
+stream.on('data', dataCallback)
+stream.on('error', errorCallback)
+stream.on('end', endCallback)
 ```
+
 <!--
 ################################################################################
 ScanForeground()
@@ -165,27 +165,26 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 'end' marks the end of recordset returned by query.
 
 ```js
+// no filters should be applied during query instantiation.
+// however 0 or more bins can be projected.
+var statement = {nobins: false, concurrent: true, select: ['a', 'b']}
+var query = client.query(ns, set ) // returns a query object.
 
-	// no filters should be applied during query instantiation.
-	// however 0 or more bins can be projected.
-	var statement = { nobins: false, concurrent: true, select: ['a', 'b']}
-	var query = client.query(ns, set ); // returns a query object.
-
-	var dataCallback = function(record) {
-		//process the record
-	}
-	var errorCallback = function(error) {
-		//do something
-	}
-	var endCallback = function() {
-		//process the end of scan
-	}
-	var stream = query.execute(); // returns a stream object.
-	stream.on('data', dataCallback);
-	stream.on('error', errorCallback);
-	stream.on('end', endCallback);
-
+var dataCallback = function (record) {
+  //process the record
+}
+var errorCallback = function (error) {
+  //do something
+}
+var endCallback = function () {
+  //process the end of scan
+}
+var stream = query.execute() // returns a stream object
+stream.on('data', dataCallback)
+stream.on('error', errorCallback)
+stream.on('end', endCallback)
 ```
+
 <!--
 ################################################################################
 ScanAggregate()
@@ -207,27 +206,25 @@ Query on execution returns a stream object, which emits 'data', 'error' and 'end
 NOTE: Query aggregation without any filter becomes scan aggregation.
 
 ```js
-	var statement = {
-					  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
-					}
+var statement = {
+  aggregationUDF: {module: 'agg_module', funcname: 'agg_func'}
+}
 
+var query = client.query(ns, set, statement ) // returns a query object
 
-	var query = client.query(ns, set, statement ); // returns a query object.
-
-	var dataCallback = function(result) {
-		//process the result of aggregation
-	}
-	var errorCallback = function(error) {
-		//process the error
-	}
-	var endCallback = function() {
-		//process the end of aggregation
-	}
-	var stream = query.execute(); // returns a stream object.
-	stream.on('data', dataCallback);
-	stream.on('error', errorCallback);
-	stream.on('end', endCallback);
-
+var dataCallback = function (result) {
+  //process the result of aggregation
+}
+var errorCallback = function (error) {
+  //process the error
+}
+var endCallback = function () {
+  //process the end of aggregation
+}
+var stream = query.execute() // returns a stream object
+stream.on('data', dataCallback)
+stream.on('error', errorCallback)
+stream.on('end', endCallback)
 ```
 
 <!--
@@ -248,30 +245,30 @@ The UDF used by scan background job must already be registered in the system.
 'end'  signifies that a scan background job has been fired successfully..
 
 ```js
+// no filters should be applied during query instantiation.
+// however 0 or more bins can be projected.
+// And scanUDF argument must be present.
+var statement = {
+  concurrent: true,
+  UDF: {module:'scanUdf', funcname: 'scanFunc'}
+}
+var query = client.query(ns, set, statement) // returns a query object
 
-	// no filters should be applied during query instantiation.
-	// however 0 or more bins can be projected.
-	// And scanUDF argument must be present.
-	var statement = { concurrent: true,
-					  UDF: {module:'scanUdf', funcname: 'scanFunc'}
-					}
-	var query = client.query(ns, set, statement); // returns a query object.
-	
-	// callback to handle the error event emitted by query stream.
-	var errorCallback = function(error) {
-		//process the error
-	}
-	
-	// callback to handle the end event emitted by query stream.
-	var endCallback = function() {
-		//signals that the scan background job has been successfully fired.
-	}
+// callback to handle the error event emitted by query stream
+var errorCallback = function (error) {
+  //process the error
+}
 
-	var stream = query.execute(); // returns a stream object.
-	stream.on('error', errorCallback);
-	stream.on('end', endCallback);
+// callback to handle the end event emitted by query stream
+var endCallback = function () {
+  //signals that the scan background job has been successfully fired
+}
 
+var stream = query.execute() // returns a stream object
+stream.on('error', errorCallback)
+stream.on('end', endCallback)
 ```
+
 <!--
 ################################################################################
 ScanInfo()
@@ -293,20 +290,13 @@ The parameters for the `callback` argument:
 Returns an object with the following entries.
 - `progressPct`   - Percentage of records in Aerospike database on which scan UDF has been applied.
 - `recordScanned` - Total number of records in Aerospike database on which scan UDF has been applied.
-- `status`		  - An instance [Scan Status](scanproperties.md#scanStatus) object and it contains status
-					of scan(in-progress, completed, aborted).
+- `status`        - An instance [Scan Status](scanproperties.md#scanStatus) object and it contains status
+                    of scan(in-progress, completed, aborted).
 ```js
- var query = client.query(namespace, set);
- query.Info( scanId, function(scanInfo) {
-	 if (scanInfo.status == scanStatus.COMPLETED)
-	 {
-		 // implies scan completed.
-	 }
- });
-
+var query = client.query(namespace, set)
+query.Info(scanId, function (scanInfo) {
+  if (scanInfo.status == scanStatus.COMPLETED) {
+    // implies scan completed
+  }
+})
 ```
-
-
-
-
-
