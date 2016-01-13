@@ -11,7 +11,7 @@ CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora20, Fedora21, Fedora 22, Linuxm
 - [Prerequisites](#Prerequisites)
 - [Installation](#Installation)
   - [Primer on Node.js Modules](#Primer-on-Node.js-Modules)
-  - [Installing via NPM Registry](#Installing-via-NPM-Registry)
+  - [Installing via npm Registry](#Installing-via-npm-Registry)
   - [Installing via Git Repository](#Installing-via-Git-Repository)
   - [C Client Resolution](#C-Client-Resolution)
     - [Force Download](#Force-Download)
@@ -201,10 +201,10 @@ library with LUA enabled, an environment variable `USELUA` must be set. For more
 $ export USELUA=1
 ```
 
-<a name="Installing-via-NPM-Registry"></a>
-### Installing via NPM Registry
+<a name="Installing-via-npm-Registry"></a>
+### Installing via npm Registry
 
-Installing via NPM Registry is pretty simple and most common install method, as
+Installing via npm Registry is pretty simple and most common install method, as
 it only involves a single step.
 
 Although the module may be installed globally or locally, we recommend performing
@@ -228,7 +228,7 @@ Once installed, the module can be required in the application:
 The following is relevant for users who have cloned the repository, and want
 to install it as a dependency of their application.
 
-Installing via Git Repository is slightly different from installing via NPM
+Installing via Git Repository is slightly different from installing via npm
 registry, in that you will be referencing the module by path, rather than name.
 
 Although the module may be installed globally or locally, we recommend performing
