@@ -33,7 +33,7 @@ ApplyPolicy
 
 ### Apply Policy Object
 
-A policy effecting the behavior of UDF execution.
+A policy affecting the behavior of UDF execution.
 
 Attributes:
 
@@ -55,7 +55,7 @@ BatchPolicy
 
 ### Batch Policy Object
 
-A policy effecting the behavior of batch operations.
+A policy affecting the behavior of batch operations.
 
 Attributes:
 
@@ -72,7 +72,7 @@ InfoPolicy
 
 ### Info Policy Object
 
-A policy effecting the behavior of info operations.
+A policy affecting the behavior of info operations.
 
 Attributes:
 
@@ -91,7 +91,7 @@ OperatePolicy
 
 ### Operate Policy Object
 
-A policy effecting the behavior of operate operations.
+A policy affecting the behavior of operate operations.
 
 Attributes:
 
@@ -113,6 +113,24 @@ Attributes:
                        to provide the desired consistency guarantee.
                        For values, see [Consistency Level Policy Values](policies.md#consistencyLevel).
 
+
+<!--
+################################################################################
+QueryPolicy
+################################################################################
+-->
+<a name="QueryPolicy"></a>
+
+### Query Policy Object
+
+A policy affecting the behaviour of query operations.
+
+Attributes:
+
+- `timeout`          – Integer datatype. Maximum time in milliseconds to wait for
+                       the operation to complete. If 0 (zero), then the value
+                       will default to global default timeout value.
+
 <!--
 ################################################################################
 ReadPolicy
@@ -122,7 +140,7 @@ ReadPolicy
 
 ### Read Policy Object
 
-A policy effecting the behaviour of read operations.
+A policy affecting the behaviour of read operations.
 
 Attributes:
 
@@ -146,10 +164,13 @@ RemovePolicy
 
 ### Remove Policy Object
 
-A policy effecting the behaviour of remove operations.
+A policy affecting the behaviour of remove operations.
 
 Attributes:
 
+- `timeout`          – Integer datatype. Maximum time in milliseconds to wait for
+                       the operation to complete. If 0 (zero), then the value
+                       will default to global default timeout value.
 - `gen`             – Specifies the behavior for the generation value.
                       For values, see [Generation Policy Values](policies.md#gen).
 - `generation`      – The generation of the record to be removed.
@@ -163,6 +184,24 @@ Attributes:
 
 <!--
 ################################################################################
+ScanPolicy
+################################################################################
+-->
+<a name="ScanPolicy"></a>
+
+### Scan Policy Object
+
+A policy affecting the behaviour of scan operations.
+
+Attributes:
+
+- `timeout`          – Integer datatype. Maximum time in milliseconds to wait for
+                       the operation to complete. If 0 (zero), then the value
+                       will default to global default timeout value.
+- `failOnClusterChange` – Boolean datatype. Abort the scan if the cluster is not in a stable state.
+
+<!--
+################################################################################
 WritePolicy
 ################################################################################
 -->
@@ -170,7 +209,7 @@ WritePolicy
 
 ### Write Policy Object
 
-A policy effecting the behaviour of write operations.
+A policy affecting the behaviour of write operations.
 
 Attributes:
 

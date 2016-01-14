@@ -77,8 +77,10 @@ The attributes of the `policies` Object:
 - `operate` – The global policy for info operations, defined using an [Operate Policy Object](policies.md#OperatePolicy)
 - `query` – The global policy for query operations, defined using a [Query Policy Object](policies.md#QueryPolicy)
 - `read` – The global policy for read operations, defined using a [Read Policy Object](policies.md#ReadPolicy)
+- `remove` – The global policy for write operations, defined using a [Remove Policy Object](policies.md#RemovePolicy)
 - `scan` – The global policy for scan operations, defined using a [Scan Policy Object](policies.md#ScanPolicy)
 - `write` – The global policy for write operations, defined using a [Write Policy Object](policies.md#WritePolicy)
+
 
 ### `log` attribute
 
