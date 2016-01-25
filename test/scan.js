@@ -53,8 +53,10 @@ describe('client.query() - without where clause(Scan)', function () {
         var dir = __dirname
         var filename = dir + '/scan.lua'
         client.udfRegister(filename, function (err) {
-          expect(err).to.be.ok()
           expect(err.code).to.equal(status.AEROSPIKE_OK)
+          client.udfRegisterWait('scan.lua', 10, function (err) {
+            expect(err.code).to.equal(status.AEROSPIKE_OK)
+          })
         })
 
         // write the record then check
@@ -79,6 +81,7 @@ describe('client.query() - without where clause(Scan)', function () {
   })
 
   after(function (done) {
+    client.udfRemove('scan.lua', function () {})
     client.close()
     client = null
     done()

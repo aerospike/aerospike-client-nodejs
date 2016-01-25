@@ -34,12 +34,16 @@ describe('client.execute()', function (done) {
       if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
       client.udfRegister(__dirname + '/udf_test.lua', function (err) {
         expect(err.code).to.equal(status.AEROSPIKE_OK)
-        done()
+        client.udfRegisterWait('udf_test.lua', 10, function (err) {
+          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          done()
+        })
       })
     })
   })
 
   after(function (done) {
+    client.udfRemove('udf_test.lua', function () {})
     client.close()
     client = null
     done()
