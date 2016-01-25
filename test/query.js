@@ -52,11 +52,13 @@ describe('Aerospike.query()', function () {
       Aerospike.createStringIndex(indexObj, indexCreationCallback)
 
       // Register the UDFs to be used in aggregation.
-
       var dir = __dirname
       var filename = dir + '/aggregate.lua'
       Aerospike.udfRegister(filename, function (err) {
         expect(err).not.to.be.ok()
+        Aerospike.udfRegisterWait('aggregate.lua', 10, function (err) {
+          expect(err).not.to.be.ok()
+        })
       })
 
       // load objects - to be queried in test case.
@@ -90,6 +92,7 @@ describe('Aerospike.query()', function () {
   })
 
   after(function (done) {
+    Aerospike.udfRemove('aggregate.lua', function () {})
     Aerospike.close()
     done()
   })

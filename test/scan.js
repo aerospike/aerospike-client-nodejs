@@ -51,8 +51,12 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
         // register the UDF used in scan background.
         var dir = __dirname
         var filename = dir + '/scan.lua'
+
         Aerospike.udfRegister(filename, function (err) {
           expect(err).not.to.be.ok()
+          Aerospike.udfRegisterWait('scan.lua', 10, function (err) {
+            expect(err).not.to.be.ok()
+          })
         })
 
         // write the record then check
@@ -76,6 +80,7 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
   })
 
   after(function (done) {
+    Aerospike.udfRemove('scan.lua', function () {})
     Aerospike.close()
     client = null
     done()

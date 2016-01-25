@@ -29,17 +29,34 @@ describe('Aerospike.execute()', function (done) {
   var config = options.getConfig()
 
   before(function (done) {
+<<<<<<< 288175ce2cfc75fb826e6a73cad91c62b99aafc1
     Aerospike.connect(config, function (err) {
       if (err) { throw new Error(err.message) }
       Aerospike.udfRegister(__dirname + '/udf_test.lua', function (err) {
         expect(err).not.to.be.ok()
         done()
+=======
+    client.connect(function (err) {
+      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      client.udfRegister(__dirname + '/udf_test.lua', function (err) {
+        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        client.udfRegisterWait('udf_test.lua', 10, function (err) {
+          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          done()
+        })
+>>>>>>> wait for UDF registration to be completed on all cluster nodes
       })
     })
   })
 
   after(function (done) {
+<<<<<<< 288175ce2cfc75fb826e6a73cad91c62b99aafc1
     Aerospike.close()
+=======
+    client.udfRemove('udf_test.lua', function () {})
+    client.close()
+    client = null
+>>>>>>> wait for UDF registration to be completed on all cluster nodes
     done()
   })
 
