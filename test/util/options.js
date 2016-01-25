@@ -41,7 +41,7 @@ var parser = yargs
     },
     timeout: {
       alias: 't',
-      default: 100,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     log: {
