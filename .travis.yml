@@ -41,7 +41,7 @@ install:
 - cd ../..
 script:
 - npm install
-- OPTIONS="--run_aggregation=true" npm test
+- OPTIONS="--run_aggregation=true --timeout 2000" npm test
 notifications:
   email:
   - qe-notices@aerospike.com
