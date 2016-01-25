@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "enums.h"
+
 using namespace v8;
 
 /*******************************************************************************
@@ -64,14 +65,14 @@ NAN_METHOD(Double)
         info.GetReturnValue().Set(val);
     }
 }
-        
+
 /**
  *  aerospike object.
  */
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-    AerospikeQuery::Init(); 
+    AerospikeQuery::Init();
     exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
     exports->Set(Nan::New("key").ToLocalChecked(),      Nan::New<FunctionTemplate>(key)->GetFunction());
     exports->Set(Nan::New("Double").ToLocalChecked(), Nan::New<FunctionTemplate>(Double)->GetFunction());
@@ -79,12 +80,12 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     exports->Set(Nan::New("policy").ToLocalChecked(),   policy());
     exports->Set(Nan::New("operations").ToLocalChecked(), operations());
     exports->Set(Nan::New("cdt_operations").ToLocalChecked(), cdt_operations());
-	exports->Set(Nan::New("language").ToLocalChecked(), languages()); 
+	exports->Set(Nan::New("language").ToLocalChecked(), languages());
     exports->Set(Nan::New("log").ToLocalChecked(),      log());
 	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());
 	exports->Set(Nan::New("scanStatus").ToLocalChecked(), scanStatus());
-	exports->Set(Nan::New("predicates").ToLocalChecked(),	predicates());
-	exports->Set(Nan::New("indexType").ToLocalChecked(),indexType());
+	exports->Set(Nan::New("predicates").ToLocalChecked(), predicates());
+	exports->Set(Nan::New("indexType").ToLocalChecked(), indexType());
 }
 
 NODE_MODULE(aerospike, Aerospike)
