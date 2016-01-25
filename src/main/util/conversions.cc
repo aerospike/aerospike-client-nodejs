@@ -1408,6 +1408,7 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     Nan::EscapableHandleScope scope;
     Local<Object> obj;
     if (key == NULL) {
+        as_v8_debug(log, "Key (C structure) is NULL, cannot form node.js key object");
         return scope.Escape(obj);
     }
 
@@ -1415,11 +1416,15 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     if ( key->ns && strlen(key->ns) > 0 ) {
         as_v8_debug(log, "key.ns = \"%s\"", key->ns);
         obj->Set(Nan::New("ns").ToLocalChecked(), Nan::New(key->ns).ToLocalChecked());
+    } else {
+        as_v8_debug(log, "Key namespace is NULL");
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
         as_v8_debug(log, "key.set = \"%s\"", key->set);
         obj->Set(Nan::New("set").ToLocalChecked(), Nan::New(key->set).ToLocalChecked());
+    } else {
+        as_v8_debug(log, "Key set is NULL");
     }
 
     if ( key->valuep ) {
@@ -1451,6 +1456,8 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
             default:
                 break;
         }
+    } else {
+        as_v8_debug(log, "Key value is NULL");
     }
 
     if(key->digest.init == true) {
