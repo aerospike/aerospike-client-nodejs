@@ -886,6 +886,9 @@ client.put(key('test', 'demo', 'key1'), rec, function (error, key) {
   }
 })
 ```
+
+Note: The client does not perform any automatic data type conversions. Attempting to write an unsupported data type (e.g. boolean) into a record bin will cause an error to be returned. Setting an `undefined` value will also cause an error.
+
 <!--
 ################################################################################
 query()

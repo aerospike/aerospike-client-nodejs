@@ -9,7 +9,7 @@ record
 
 ## Record
 
-A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Number, String, Array,  Buffer or an Object itself. Aerospike supports Integer, double, string, bytes, array and map datatypes. All the decimal values with valid fractions `(123.45, 123.4)` will be stored as double in aerospike. To store decimal values with 0 fraction as double, [`aerospike.Double()`](aerospike.md#Double).
+A record is how the data is represented and stored in the database. A record represented as an object. The keys of the object are the names of the fields (bins) of a record. The values for each field can either be Number, String, Array, Buffer or an Object itself. Aerospike supports integer, double, string, bytes, array and map datatypes. All the decimal values with valid fractions `(123.45, 123.4)` will be stored as double in aerospike. To store decimal values with 0 fraction as double, [`aerospike.Double()`](aerospike.md#Double).
 
 Note: Array can contain an array or an object as a value in it. Similarly the object can contain an array or an object as a value in it. Essentially nesting of arrays in an object, and nesting of objects in an array is allowed.
 
@@ -24,6 +24,10 @@ var record = {
   obj_bin: {num: 123, str: 'abc', buff: new Buffer([0xa, 0xb, 0xc])}
 }
 ```
+
+### Unsupported Data Types
+
+Aerospike does currently not support a boolean data type. To store boolean values in the database the application needs to convert them to a supported data type as the client does not do any automatica data type conversions. Attempting to store a boolean value in a record bin will lead to a parameter error being returned by the client.
 
 <!--
 ################################################################################
