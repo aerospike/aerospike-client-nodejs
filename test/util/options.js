@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-var aerospike = require('../../build/Release/aerospike')
+var Aerospike = require('../../lib/aerospike')
 var yargs = require('yargs')
 var fs = require('fs')
 
@@ -46,7 +46,7 @@ var parser = yargs
     },
     log: {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     log_file: {
