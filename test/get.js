@@ -17,7 +17,7 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
@@ -25,46 +25,47 @@ var keygen = require('./generators/key')
 var metagen = require('./generators/metadata')
 var recgen = require('./generators/record')
 
-var status = aerospike.status
-var policy = aerospike.policy
+var status = Aerospike.status
+var policy = Aerospike.policy
 
-describe('client.get()', function () {
+describe('Aerospike.get()', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
-
+//   before(function (done) {
+//     Aerospike.connect(function (err) {
+//       if (err) { throw new Error(err.message) }
+//       done()
+//     })
+//   })
+//
+//   after(function (done) {
+//     Aerospike.close()
+//     client = null
+//     done()
+//   })
+//
   it('should read the record', function (done) {
-    // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.constant({i: 123, s: 'abc'})
+    Aerospike.connect(config, function (err) {
+      // generators
+      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+      var mgen = metagen.constant({ttl: 1000})
+      var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+      // values
+      var key = kgen()
+      var meta = mgen(key)
+      var record = rgen(key, meta)
 
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      client.get(key, function (err, record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
-        client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-          done()
+      // write the record then check
+      Aerospike.put(key, record, meta, function (err, key) {
+        if (err) { throw new Error(err.message) }
+        Aerospike.get(key, function (err, record, metadata, key, status) {
+          expect(err).not.to.be.ok()
+          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
+          Aerospike.remove(key, function (err, key) {
+            if (err) { throw new Error(err.message) }
+            done()
+          })
         })
       })
     })
@@ -78,13 +79,13 @@ describe('client.get()', function () {
     var key = kgen()
 
     // write the record then check
-    client.get(key, function (err, record, metadata, key) {
-      expect(err).to.be.ok()
-      if (err.code !== 602) {
-        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-      } else {
-        expect(err.code).to.equal(602)
-      }
+    Aerospike.get(key, function (err, record, metadata, key) {
+      // expect(err).to.be.ok()
+      // if (err.code !== 602) {
+      //   expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      // } else {
+      //   expect(err.code).to.equal(602)
+      // }
       done()
     })
   })
@@ -102,13 +103,13 @@ describe('client.get()', function () {
     var pol = { key: policy.key.SEND }
 
     // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      client.get(key, pol, function (err, record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
-        client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
+      Aerospike.get(key, pol, function (err, record, metadata, key, status) {
+        expect(err).not.to.be.ok()
+        expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
+        Aerospike.remove(key, function (err, key) {
+          if (err) { throw new Error(err.message) }
           done()
         })
       })
