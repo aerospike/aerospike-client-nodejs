@@ -53,7 +53,7 @@ function put (client, n, keygen, recgen, metagen, done) {
     var metadata = metagen(key)
     var record = recgen(key, metadata)
     var callback = d(key, record, metadata)
-    client.put(key, record, metadata, callback)
+    Aerospike.put(key, record, metadata, callback)
   }
 }
 
