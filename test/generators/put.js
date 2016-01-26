@@ -14,8 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
-var aerospike = require('../../build/Release/aerospike')
-var status = aerospike.status
+var Aerospike = require('../../lib/aerospike')
+var status = Aerospike.status
 
 function put_done (total, done) {
   var entries = {}
@@ -23,10 +23,10 @@ function put_done (total, done) {
 
   return function (_key, record, metadata) {
     return function (err, key, skippy) {
-      switch (err.code) {
-        case status.AEROSPIKE_OK:
+      switch (err) {
+        case null:
           entries[key.key] = {
-            status: err.code,
+            status: 0,
             key: key,
             record: record,
             metadata: metadata
