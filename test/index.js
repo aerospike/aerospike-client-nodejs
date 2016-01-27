@@ -17,62 +17,57 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../lib/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
-var status = aerospike.status
-
 describe('client.index()', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  // before(function (done) {
+  //   client.connect(function (err) {
+  //     if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+  //     done()
+  //   })
+  // })
+  //
+  // after(function (done) {
+  //   client.close()
+  //   client = null
+  //   done()
+  // })
 
   it('should create an integer index', function (done) {
-    var args = { ns: options.namespace,
-      set: options.set,
-      bin: 'integer_bin',
-    index: 'integer_index' }
-    client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      done()
+    Aerospike.connect(config, function(err) {
+      var args = { ns: options.namespace,
+        set: options.set,
+        bin: 'integer_bin',
+      index: 'integer_index' }
+      Aerospike.createIntegerIndex(args, function (err) {
+        expect(err).not.to.be.ok()
+        done()
+      })
     })
   })
   it('should create an string index', function (done) {
     var args = { ns: options.namespace, set: options.set, bin: 'string_bin',
     index: 'string_index' }
-    client.createStringIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.createStringIndex(args, function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
   it('should create an integer index with info policy', function (done) {
     var args = { ns: options.namespace, set: options.set, bin: 'policy_bin',
     index: 'policy_index', policy: { timeout: 1000, send_as_is: true, check_bounds: false }}
-    client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.createIntegerIndex(args, function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
   it('should drop an index', function (done) {
-    client.indexRemove(options.namespace, 'string_integer', function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.indexRemove(options.namespace, 'string_integer', function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -81,12 +76,10 @@ describe('client.index()', function () {
       set: options.set,
       bin: 'integer_done',
     index: 'integer_index_done' }
-    client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      client.indexCreateWait(options.namespace, 'integer_index_done', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.createIntegerIndex(args, function (err) {
+      expect(err).not.to.be.ok()
+      Aerospike.indexCreateWait(options.namespace, 'integer_index_done', 1000, function (err) {
+        expect(err).not.to.be.ok()
         done()
       })
     })
@@ -96,12 +89,10 @@ describe('client.index()', function () {
       set: options.set,
       bin: 'string_done',
     index: 'string_index_done' }
-    client.createStringIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      client.indexCreateWait(options.namespace, 'string_index_done', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.createStringIndex(args, function (err) {
+      expect(err).not.to.be.ok()
+      Aerospike.indexCreateWait(options.namespace, 'string_index_done', 1000, function (err) {
+        expect(err).not.to.be.ok()
         done()
       })
     })
