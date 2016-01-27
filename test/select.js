@@ -64,7 +64,6 @@ describe('Aerospike.select()', function () {
 
         Aerospike.select(key, bins, function (err, _record, metadata, key, status) {
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
           expect(_record).to.only.have.keys(bins)
 
           for (var bin in _record) {
@@ -148,7 +147,6 @@ describe('Aerospike.select()', function () {
 
       Aerospike.select(key, bins, pol, function (err, _record, metadata, key, status) {
         expect(err).not.to.be.ok()
-        expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
         expect(_record).to.only.have.keys(bins)
 
         for (var bin in _record) {

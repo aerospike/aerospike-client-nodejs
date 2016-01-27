@@ -74,14 +74,12 @@ describe('Aerospike.batchExists()', function () {
           var j
 
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
           console.log(results.length);
           console.log('res');
           expect(results.length).to.equal(len)
 
           for (j = 0; j < results.length; j++) {
             result = results[j]
-            expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
             if (j === nrecords - 1) {
               done()
             }
@@ -106,7 +104,6 @@ describe('Aerospike.batchExists()', function () {
         var j
 
         expect(err).not.to.be.ok()
-        expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
         expect(results.length).to.equal(nrecords)
 
         for (j = 0; j < results.length; j++) {
@@ -153,7 +150,6 @@ describe('Aerospike.batchExists()', function () {
           var j
 
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
           expect(results.length).to.equal(len)
 
           for (j = 0; j < results.length; j++) {

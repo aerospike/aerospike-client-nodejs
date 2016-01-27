@@ -64,7 +64,6 @@ describe('Aerospike.remove()', function () {
           if (err) { throw new Error(err.message) }
 
           Aerospike.remove(key, function (err, key, status) {
-            expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
             Aerospike.get(key, function (err, record, metadata, key) {
               // expect(err).to.be.ok()
@@ -97,7 +96,6 @@ describe('Aerospike.remove()', function () {
 
         Aerospike.remove(key, function (err, key, status) {
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
           Aerospike.get(key, function (err, record, metadata, key) {
             // expect(err).to.be.ok()

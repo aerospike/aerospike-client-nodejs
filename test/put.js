@@ -67,7 +67,6 @@ describe('client.put()', function () {
         // write the record then check
         Aerospike.put(key, record, meta, function (err, key, status) {
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
           Aerospike.get(key, function (err, _record, _metadata, _key) {
             if (err) { throw new Error(err.message) }
@@ -102,7 +101,6 @@ describe('client.put()', function () {
       // write the record then check
       Aerospike.put(key, record, meta, function (err, key, status) {
         expect(err).not.to.be.ok()
-        expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
         Aerospike.get(key, function (err, record, metadata, key) {
           if (err) { throw new Error(err.message) }
@@ -129,7 +127,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key, function (err, record, metadata, key) {
         if (err) { throw new Error(err.message) }
@@ -154,7 +151,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key, function (err, record, metadata, key) {
         if (err) { throw new Error(err.message) }
@@ -181,7 +177,6 @@ describe('client.put()', function () {
     // write the record and then check
     Aerospike.put(key, record, meta, function (err, key, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key, function (err, record1, metadata, key) {
         if (err) { throw new Error(err.message) }
@@ -210,7 +205,6 @@ describe('client.put()', function () {
   //   // write the record and then check
   //   Aerospike.put(key, record, meta, function (err, key) {
   //     expect(err).not.to.be.ok()
-  //     expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
   //
   //     Aerospike.get(key, function (err, record1, metadata, key) {
   //       if (err) { throw new Error(err.message) }
@@ -239,7 +233,6 @@ describe('client.put()', function () {
     // write the record and then check
     Aerospike.put(key, record, meta, function (err, key, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key, function (err, record1, metadata, key) {
         if (err) { throw new Error(err.message) }
@@ -267,7 +260,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key1, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
       expect(key1).to.have.property('ns', key.ns)
       expect(key1).to.have.property('set', key.set)
       expect(key1).to.have.property('key', key.key)
@@ -286,7 +278,6 @@ describe('client.put()', function () {
 
         Aerospike.put(key3, record3, meta, function (err, key4, status) {
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
           expect(key4).to.have.property('ns', key.ns)
           expect(key4).to.have.property('set', key.set)
           expect(key4).to.have.property('key', key.key)
@@ -324,7 +315,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key1, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
       expect(key1).to.have.property('ns', key.ns)
       expect(key1).to.have.property('set', key.set)
       expect(key1).to.have.property('key', key.key)
@@ -348,7 +338,6 @@ describe('client.put()', function () {
 
             Aerospike.put(key, record, meta, function (err, key5, status) {
               expect(err).not.to.be.ok()
-              expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
               expect(key5).to.have.property('ns', key.ns)
               expect(key5).to.have.property('set', key.set)
               expect(key5).to.have.property('key', key.key)
@@ -392,7 +381,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key1) {
       // expect(err).not.to.be.ok()
-      // expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
       expect(key1).to.have.property('ns', key.ns)
       expect(key1).to.have.property('set', key.set)
       expect(key1).to.have.property('key', key.key)
@@ -459,7 +447,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key1, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key1, function (err, bins, meta, key2) {
         if (err) { throw new Error(err.message) }
@@ -490,7 +477,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key1, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       Aerospike.get(key1, function (err, bins, meta, key2) {
         if (err) { throw new Error(err.message) }
@@ -554,7 +540,6 @@ describe('client.put()', function () {
     // write the record then check
     Aerospike.put(key, record, meta, function (err, key, status) {
       expect(err).not.to.be.ok()
-      expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
       // check the content of the record
       Aerospike.get(key, function (err, record, metadata, key) {
@@ -565,7 +550,6 @@ describe('client.put()', function () {
 
         Aerospike.put(key, record, meta, writePolicy, function (err, key, status) {
           expect(err).not.to.be.ok()
-          expect(status.code).to.equal(Aerospike.status.AEROSPIKE_OK)
 
           Aerospike.get(key, function (err, record, metadata, key) {
             if (err) { throw new Error(err.message) }
