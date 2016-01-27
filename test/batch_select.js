@@ -17,7 +17,7 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
@@ -27,24 +27,21 @@ var recgen = require('./generators/record')
 var putgen = require('./generators/put')
 var valgen = require('./generators/value')
 
-var status = aerospike.status
-
-describe('client.batchSelect()', function () {
+describe('Aerospike.batchSelect()', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
       done()
     })
   })
 
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  // after(function (done) {
+  //   Aerospike.close()
+  //   client = null
+  //   done()
+  // })
 
   it('should successfully read bins from 10 records', function (done) {
     // number of records
@@ -58,7 +55,7 @@ describe('client.batchSelect()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(client, 10, kgen, rgen, mgen, function (written) {
+    putgen.put(Aerospike._currentClient, 10, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -67,18 +64,17 @@ describe('client.batchSelect()', function () {
       var len = keys.length
       expect(len).to.equal(nrecords)
 
-      client.batchSelect(keys, bins, function (err, results) {
+      Aerospike.batchSelect(keys, bins, function (err, results) {
         var result
         var j
 
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
         for (j = 0; j < results.length; j++) {
           result = results[j]
 
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
+          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
 
           var record = result.record
           var _record = written[result.key.key].record
@@ -105,18 +101,17 @@ describe('client.batchSelect()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    client.batchSelect(keys, bins, function (err, results) {
+    Aerospike.batchSelect(keys, bins, function (err, results) {
       var result
       var j
 
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(results.length).to.equal(nrecords)
 
       for (j = 0; j < results.length; j++) {
         result = results[j]
         if (result.status !== 602) {
-          expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
         } else {
           expect(result.status).to.equal(602)
         }
@@ -141,7 +136,7 @@ describe('client.batchSelect()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(client, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -150,17 +145,16 @@ describe('client.batchSelect()', function () {
       var len = keys.length
       expect(len).to.equal(nrecords)
 
-      client.batchSelect(keys, bins, function (err, results) {
+      Aerospike.batchSelect(keys, bins, function (err, results) {
         var result
         var j
 
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
         for (j = 0; j < results.length; j++) {
           result = results[j]
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
+          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
 
           var record = result.record
           var _record = written[result.key.key].record
