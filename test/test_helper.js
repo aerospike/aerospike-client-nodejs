@@ -59,6 +59,28 @@ function ServerInfoHelper () {
   this.nsconfig = {}
 }
 
+function IndexHelper () { }
+
+IndexHelper.prototype.create = function (index_name, bin_name, index_type) {
+  var index = {
+    ns: options.namespace,
+    set: options.set,
+    bin: bin_name,
+    index: index_name
+  }
+  var builder
+  switch (index_type.toLowerCase()) {
+    case 'string': builder = client.createStringIndex; break
+    case 'integer': builder = client.createIntegerIndex; break
+  }
+  builder.call(client, index, function (err) {
+    check(err)
+    client.indexCreateWait(index.ns, index.index, 100, function (err) {
+      check(err)
+    })
+  })
+}
+
 ServerInfoHelper.prototype.supports_feature = function (feature) {
   return this.features.indexOf(feature) >= 0
 }
@@ -89,9 +111,11 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (addr, ns) {
 }
 
 var udf_helper = new UDFHelper()
+var index_helper = new IndexHelper()
 var server_info_helper = new ServerInfoHelper()
 
 exports.udf = udf_helper
+exports.index = index_helper
 exports.cluster = server_info_helper
 
 /* global before */
