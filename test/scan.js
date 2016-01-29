@@ -17,72 +17,57 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var valgen = require('./generators/value')
+const metagen = helper.metagen
+const recgen = helper.recgen
+const valgen = helper.valgen
 
-var status = Aerospike.status
+const status = aerospike.status
 
-describe('Aerospike.query() - without where clause(Scan)', function () {
-  var config = options.getConfig()
+describe('client.query() - without where clause(Scan)', function () {
+  const client = helper.client
 
   before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
+    helper.udf.register('scan.lua')
 
-      // counters
-      var total = 100
-      var count = 0
+    // counters
+    var total = 100
+    var count = 0
 
-      // generators
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    // generators
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-      function iteration (i) {
-        // values
-        var key = {ns: options.namespace, set: options.set, key: 'test/query' + i.toString()}
-        var meta = mgen(key)
-        var record = rgen(key, meta)
+    function iteration (i) {
+      // values
+      var key = {ns: helper.namespace, set: helper.set, key: 'test/scan/' + i.toString()}
+      var meta = mgen(key)
+      var record = rgen(key, meta)
 
-        // register the UDF used in scan background.
-        var dir = __dirname
-        var filename = dir + '/scan.lua'
+      // write the record then check
+      client.put(key, record, meta, function (err, key) {
+        if (err) { throw new Error(err.message) }
 
-        Aerospike.udfRegister(filename, function (err) {
+        client.get(key, function (err, _record, _metadata, _key) {
           expect(err).not.to.be.ok()
-          Aerospike.udfRegisterWait('scan.lua', 10, function (err) {
-            expect(err).not.to.be.ok()
-          })
+          count++
+          if (count >= total) {
+            done()
+          }
         })
+      })
+    }
 
-        // write the record then check
-        Aerospike.put(key, record, meta, function (err, key) {
-          if (err) { throw new Error(err.message) }
-
-          Aerospike.get(key, function (err, _record, _metadata, _key) {
-            expect(err).not.to.be.ok()
-            count++
-            if (count >= total) {
-              done()
-            }
-          })
-        })
-      }
-
-      for (var i = 0; i < total; i++) {
-        iteration(i)
-      }
-    })
+    for (var i = 0; i < total; i++) {
+      iteration(i)
+    }
   })
 
   after(function (done) {
-    Aerospike.udfRemove('scan.lua', function () {})
-    Aerospike.close()
-    client = null
+    helper.udf.remove('scan.lua')
     done()
   })
 
@@ -92,7 +77,7 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
     var count = 0
     var err = 0
 
-    var query = Aerospike.query(options.namespace, options.set)
+    var query = client.query(helper.namespace, helper.set)
 
     var stream = query.execute()
 
@@ -118,7 +103,7 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
     var err = 0
 
     var args = {nobins: true}
-    var query = Aerospike.query(options.namespace, options.set, args)
+    var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
 
@@ -142,7 +127,7 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
     var err = 0
 
     var args = {select: ['i', 's']}
-    var query = Aerospike.query(options.namespace, options.set, args)
+    var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
 
@@ -161,7 +146,7 @@ describe('Aerospike.query() - without where clause(Scan)', function () {
 
   it('should do a scan background and check for the status of scan job ', function (done) {
     var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
-    var scanBackground = Aerospike.query(options.namespace, options.set, args)
+    var scanBackground = client.query(helper.namespace, helper.set, args)
 
     var err = 0
     var stream = scanBackground.execute()

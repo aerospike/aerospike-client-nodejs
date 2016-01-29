@@ -14,41 +14,27 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
 
-var status = aerospike.status
-var op = aerospike.operator
+const status = aerospike.status
+const op = aerospike.operator
 
 describe('client.operate()', function () {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   describe('operator.listAppend', function () {
     it('should append the given item at the end of the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/append/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/append/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -85,7 +71,7 @@ describe('client.operate()', function () {
   describe('operator.listAppendItems', function () {
     it('should append the given items at the end of the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/append_items/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/append_items/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -122,7 +108,7 @@ describe('client.operate()', function () {
   describe('operator.listInsert', function () {
     it('should insert the given item at the specified index of the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/insert/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/insert/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -159,7 +145,7 @@ describe('client.operate()', function () {
   describe('operator.listInsertItems', function () {
     it('should insert the given items at the specified index of the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/insert_items/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/insert_items/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -196,7 +182,7 @@ describe('client.operate()', function () {
   describe('operator.listPop', function () {
     it('should remove the item at the specified index and return it', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/pop/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/pop/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -234,7 +220,7 @@ describe('client.operate()', function () {
   describe('operator.listPopRange', function () {
     it('should remove the items at the specified range and return them', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/pop_range/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/pop_range/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -270,7 +256,7 @@ describe('client.operate()', function () {
 
     it('should remove and return all items from the specified index if count is not specified', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/pop_range_from/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/pop_range_from/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -308,7 +294,7 @@ describe('client.operate()', function () {
   describe('operator.listRemove', function () {
     it('should remove the item at the specified index', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/remove/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/remove/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -345,7 +331,7 @@ describe('client.operate()', function () {
   describe('operator.listRemoveRange', function () {
     it('should remove the items at the specified range', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/remove_range/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/remove_range/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -380,7 +366,7 @@ describe('client.operate()', function () {
 
     it('should remove all items from the specified index if count is not specified', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/remove_range_from/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/remove_range_from/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -417,7 +403,7 @@ describe('client.operate()', function () {
   describe('operator.listClear', function () {
     it('should remove all elements from the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/clear/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/clear/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -454,7 +440,7 @@ describe('client.operate()', function () {
   describe('operator.listSet', function () {
     it('should set the item at the specified index', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/set/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/set/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -491,7 +477,7 @@ describe('client.operate()', function () {
   describe('operator.listTrim', function () {
     it('should remove all elements not within the specified range', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/trim/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/trim/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -528,7 +514,7 @@ describe('client.operate()', function () {
   describe('operator.listGet', function () {
     it('should get the item at the specified index', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/get/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/get/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -559,7 +545,7 @@ describe('client.operate()', function () {
 
     it('should return an error if the index is out of bounds', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/get/oob/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/get/oob/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -591,7 +577,7 @@ describe('client.operate()', function () {
   describe('operator.listGetRange', function () {
     it('should get the items at the specified range', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/get_range/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/get_range/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -622,7 +608,7 @@ describe('client.operate()', function () {
 
     it('should get all the items from the specified index if count is not specified', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/get_range_from/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/get_range_from/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 
@@ -655,7 +641,7 @@ describe('client.operate()', function () {
   describe('operator.listSize', function () {
     it('should get the lement count of the list', function (done) {
       // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/cdt/size/'})
+      var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/cdt/size/'})
       var mgen = metagen.constant({ttl: 1000})
       var rgen = recgen.constant({list: [1, 2, 3, 4, 5]})
 

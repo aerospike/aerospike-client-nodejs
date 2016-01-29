@@ -14,32 +14,25 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../build/Release/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var status = Aerospike.status
+const status = aerospike.status
 
-describe('Aerospike.udfRemove()', function (done) {
-  var config = options.getConfig()
-
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
+describe('client.udfRemove()', function (done) {
+  var client = helper.client
 
   it('should remove an UDF module with a info policy from aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
-    Aerospike.udfRegister(filename, infopolicy, function (err) {
+    client.udfRegister(filename, infopolicy, function (err) {
       expect(err).not.to.be.ok()
-      Aerospike.udfRemove('udf_test.lua', infopolicy, function (err) {
+      client.udfRemove('udf_test.lua', infopolicy, function (err) {
         expect(err).not.to.be.ok()
         done()
       })
@@ -48,7 +41,7 @@ describe('Aerospike.udfRemove()', function (done) {
 
   it('remove non-existent UDF module from aerospike cluster - should fail', function (done) {
     var filename = 'noudf.lua'
-    Aerospike.udfRemove(filename, function (err) {
+    client.udfRemove(filename, function (err) {
       expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF)
       done()

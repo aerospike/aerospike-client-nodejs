@@ -14,38 +14,26 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const valgen = helper.valgen
 
-var status = Aerospike.status
+const status = aerospike.status
 
-describe('Aerospike.remove()', function () {
-  var config = options.getConfig()
-
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    Aerospike.close()
-    done()
-  })
+describe('client.remove()', function () {
+  var client = helper.client
 
   it('should remove a record w/ string key', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -55,15 +43,15 @@ describe('Aerospike.remove()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
 
-      Aerospike.get(key, function (err, record, metadata, key) {
+      client.get(key, function (err, record, metadata, key) {
         if (err) { throw new Error(err.message) }
 
-        Aerospike.remove(key, function (err, key, status) {
+        client.remove(key, function (err, key, status) {
 
-          Aerospike.get(key, function (err, record, metadata, key) {
+          client.get(key, function (err, record, metadata, key) {
             // expect(err).to.be.ok()
             // expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
@@ -75,7 +63,7 @@ describe('Aerospike.remove()', function () {
 
   it('should remove a record w/ integer key', function (done) {
     // generators
-    var kgen = keygen.integer(options.namespace, options.set)
+    var kgen = keygen.integer(helper.namespace, helper.set)
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -85,16 +73,16 @@ describe('Aerospike.remove()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
 
-      Aerospike.get(key, function (err, record, metadata, key) {
+      client.get(key, function (err, record, metadata, key) {
         if (err) { throw new Error(err.message) }
 
-        Aerospike.remove(key, function (err, key, status) {
+        client.remove(key, function (err, key, status) {
           expect(err).not.to.be.ok()
 
-          Aerospike.get(key, function (err, record, metadata, key) {
+          client.get(key, function (err, record, metadata, key) {
             // expect(err).to.be.ok()
             // expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
@@ -106,12 +94,12 @@ describe('Aerospike.remove()', function () {
 
   it('should not remove a non-existent key', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/not_found/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})
 
     // values
     var key = kgen()
 
-    Aerospike.remove(key, function (err, key) {
+    client.remove(key, function (err, key) {
       // expect(err).to.be.ok()
       // expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
       done()

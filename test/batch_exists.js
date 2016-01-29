@@ -14,35 +14,24 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var putgen = require('./generators/put')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const putgen = helper.putgen
+const valgen = helper.valgen
 
-var status = Aerospike.status
+const status = aerospike.status
 
-describe('Aerospike.batchExists()', function () {
-  var config = options.getConfig()
+describe('client.batchExists()', function () {
+  var client = helper.client
 
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    Aerospike.close()
-    done()
-  })
 
   it('should successfully find 10 records', function (done) {
     // this.timeout(3000)
@@ -50,13 +39,13 @@ describe('Aerospike.batchExists()', function () {
     var nrecords = 10
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_exists/10/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/10/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
     // writer using generators
     // callback provides an array of written keys
-    putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -64,7 +53,7 @@ describe('Aerospike.batchExists()', function () {
       var len = keys.length
       expect(len).to.equal(nrecords)
 
-      Aerospike.batchExists(keys, function (err, results, status) {
+      client.batchExists(keys, function (err, results, status) {
         var result
         var j
 
@@ -84,41 +73,73 @@ describe('Aerospike.batchExists()', function () {
   })
 
   it('should fail finding 10 records', function (done) {
-    Aerospike.connect(config, function (err) {
-      // this.timeout(3000)
-      // number of records
-      var nrecords = 10
+    this.timeout(3000)
+    // number of records
+    var nrecords = 10
 
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_exists/fail/', random: false})
-      var keys = keygen.range(kgen, nrecords)
+    // generators
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/fail/', random: false})
+    var keys = keygen.range(kgen, nrecords)
 
-      Aerospike.batchExists(keys, function (err, results, status) {
-        var result
-        var j
+    client.batchExists(keys, function (err, results) {
+      var result
+      var j
 
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(nrecords)
+      expect(err).to.be.ok()
+      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(results.length).to.equal(nrecords)
 
-        for (j = 0; j < results.length; j++) {
-          result = results[j]
-          // This if-else check is introduced to handle test failures
-          // in backward compatibility issues. Should be removed when an official release
-          // of C client is done, with error code changes.
-          if (result.status !== 602) {
-            // expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-          } else {
-            expect(result.status).to.equal(602)
-          }
+      for (j = 0; j < results.length; j++) {
+        result = results[j]
+        // This if-else check is introduced to handle test failures
+        // in backward compatibility issues. Should be removed when an official release
+        // of C client is done, with error code changes.
+        if (result.status !== 602) {
+          expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+        } else {
+          expect(result.status).to.equal(602)
         }
+      }
 
-        done()
-      })
+      done()
     })
   })
 
   it('should successfully find 1000 records', function (done) {
-    Aerospike.connect(config, function (err) {
+    this.timeout(5000)
+    // number of records
+    var nrecords = 1000
+
+
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_exists/fail/', random: false})
+    var keys = keygen.range(kgen, nrecords)
+
+    client.batchExists(keys, function (err, results, status) {
+      var result
+      var j
+
+      expect(err).not.to.be.ok()
+      expect(results.length).to.equal(nrecords)
+
+      for (j = 0; j < results.length; j++) {
+        result = results[j]
+        // This if-else check is introduced to handle test failures
+        // in backward compatibility issues. Should be removed when an official release
+        // of C client is done, with error code changes.
+        if (result.status !== 602) {
+          // expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+        } else {
+          expect(result.status).to.equal(602)
+        }
+      }
+
+      done()
+    })
+  })
+
+  it('should successfully find 1000 records', function (done) {
+    client.connect(config, function (err) {
       // this.timeout(5000)
       // number of records
       var nrecords = 1000
@@ -131,7 +152,7 @@ describe('Aerospike.batchExists()', function () {
       // writer using generators
       // callback provides an object of written records, where the
       // keys of the object are the record's keys.
-      putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+      putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
         var keys = Object.keys(written).map(function (key) {
           return written[key].key
         })
@@ -139,7 +160,7 @@ describe('Aerospike.batchExists()', function () {
         var len = keys.length
         expect(len).to.equal(nrecords)
 
-        Aerospike.batchExists(keys, function (err, results, status) {
+        client.batchExists(keys, function (err, results, status) {
           var result
           var j
 
@@ -148,7 +169,7 @@ describe('Aerospike.batchExists()', function () {
 
           for (j = 0; j < results.length; j++) {
             result = results[j]
-            expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+            expect(result.status).to.equal(client.status.AEROSPIKE_OK)
           }
 
           done()

@@ -14,38 +14,26 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
 
-var status = Aerospike.status
-var op = Aerospike.operator
+const status = aerospike.status
+const op = aerospike.operator
 
-describe('Aerospike.operate()', function () {
-  var config = options.getConfig()
-
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    Aerospike.close()
-    done()
-  })
+describe('client.operate()', function () {
+  var client = helper.client
 
   it('should increment a bin', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -55,21 +43,21 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var ops = [
         op.incr('i', 432)
       ]
 
-      Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+      client.operate(key, ops, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i'] + 432).to.equal(record2['i'])
           expect(record['s']).to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -80,7 +68,7 @@ describe('Aerospike.operate()', function () {
 
   it('should append a bin', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -90,21 +78,21 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var ops = [
         op.append('s', 'def')
       ]
 
-      Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+      client.operate(key, ops, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -115,7 +103,7 @@ describe('Aerospike.operate()', function () {
 
   // it('should prepend and read a bin', function (done) {
   //   // generators
-  //   var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+  //   var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
   //   var mgen = metagen.constant({ttl: 1000})
   //   var rgen = recgen.constant({i: 123, s: 'abc'})
   //
@@ -125,24 +113,24 @@ describe('Aerospike.operate()', function () {
   //   var record = rgen(key, meta)
   //
   //   // write the record then check
-  //   Aerospike.put(key, record, meta, function (err, key) {
+  //   client.put(key, record, meta, function (err, key) {
   //     if (err) { throw new Error(err.message) }
   //     var ops = [
   //       op.prepend('s', 'def'),
   //       op.read('s')
   //     ]
   //
-  //     Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+  //     client.operate(key, ops, function (err, record1, metadata1, key1) {
   //       expect(err).not.to.be.ok()
   //       expect(record1['i']).to.equal(undefined)
   //       expect('def' + record['s']).to.equal(record1['s'])
   //
-  //       Aerospike.get(key, function (err, record2, metadata2, key2) {
+  //       client.get(key, function (err, record2, metadata2, key2) {
   //         if (err) { throw new Error(err.message) }
   //         expect(record['i']).to.equal(record2['i'])
   //         expect('def' + record['s']).to.equal(record2['s'])
   //
-  //         Aerospike.remove(key2, function (err, key) {
+  //         client.remove(key2, function (err, key) {
   //           if (err) { throw new Error(err.message) }
   //           done()
   //         })
@@ -153,7 +141,7 @@ describe('Aerospike.operate()', function () {
 
   it('should touch a record(refresh ttl) ', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -178,27 +166,27 @@ describe('Aerospike.operate()', function () {
     //   be accurate to the user. Nevertheless server expires the record in the correct time.
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var ops = [
         op.touch(2592000)
       ]
 
-      Aerospike.get(key, function (err, record3, metadata3, key3) {
+      client.get(key, function (err, record3, metadata3, key3) {
         if (err) { throw new Error(err.message) }
         var ttl_diff = metadata3.ttl - meta.ttl
 
-        Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+        client.operate(key, ops, function (err, record1, metadata1, key1) {
           expect(err).not.to.be.ok()
 
-          Aerospike.get(key1, function (err, record2, metadata2, key2) {
+          client.get(key1, function (err, record2, metadata2, key2) {
             if (err) { throw new Error(err.message) }
             expect(record['i']).to.equal(record2['i'])
             expect(record['s']).to.equal(record2['s'])
             expect(2592000 + ttl_diff + 10).to.be.above(metadata2.ttl)
             expect(2592000 + ttl_diff - 10).to.be.below(metadata2.ttl)
 
-            Aerospike.remove(key2, function (err, key) {
+            client.remove(key2, function (err, key) {
               if (err) { throw new Error(err.message) }
               done()
             })
@@ -210,7 +198,7 @@ describe('Aerospike.operate()', function () {
 
   it('should prepend using prepend API and verify the bin', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -220,19 +208,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 'def'}
 
-      Aerospike.prepend(key, bin, function (err, record1, metadata1, key1) {
+      client.prepend(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i']).to.equal(record2['i'])
           expect('def' + record['s']).to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -243,7 +231,7 @@ describe('Aerospike.operate()', function () {
 
   it('should prepend using prepend API and verify the bin with metadata', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -253,19 +241,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 'def'}
 
-      Aerospike.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           expect(err).not.to.be.ok()
           expect(record['i']).to.equal(record2['i'])
           expect('def' + record['s']).to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -276,7 +264,7 @@ describe('Aerospike.operate()', function () {
 
   it('should append a bin using append API and verify the bin', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -286,19 +274,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 'def'}
 
-      Aerospike.append(key, bin, function (err, record1, metadata1, key1) {
+      client.append(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -309,7 +297,7 @@ describe('Aerospike.operate()', function () {
 
   it('should append a bin using append API and verify the bin with metadata', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -319,19 +307,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 'def'}
 
-      Aerospike.append(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.append(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -342,7 +330,7 @@ describe('Aerospike.operate()', function () {
 
   it('should add a value to a bin and verify', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -352,19 +340,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {i: 432}
 
-      Aerospike.add(key, bin, function (err, record1, metadata1, key1) {
+      client.add(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i'] + 432).to.equal(record2['i'])
           expect(record['s']).to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -375,7 +363,7 @@ describe('Aerospike.operate()', function () {
 
   it('should add a value to a bin with metadata and verify', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -385,19 +373,19 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {i: 432}
 
-      Aerospike.add(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.add(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record['i'] + 432).to.equal(record2['i'])
           expect(record['s']).to.equal(record2['s'])
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })
@@ -408,7 +396,7 @@ describe('Aerospike.operate()', function () {
 
   it('should add a string value to a bin and expected fail', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -418,11 +406,11 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {i: 'str'}
 
-      Aerospike.add(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.add(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
@@ -432,7 +420,7 @@ describe('Aerospike.operate()', function () {
 
   it('should append a bin of type integer using append API and expected to fail', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -442,11 +430,11 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 123}
 
-      Aerospike.append(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.append(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
@@ -456,7 +444,7 @@ describe('Aerospike.operate()', function () {
 
   it('should prepend an integer using prepend API and expect to fail', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -466,11 +454,11 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var bin = {s: 123}
 
-      Aerospike.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
+      client.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
@@ -480,7 +468,7 @@ describe('Aerospike.operate()', function () {
 
   it('should return a client error if any of the operations are invalid', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
@@ -490,23 +478,23 @@ describe('Aerospike.operate()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    Aerospike.put(key, record, meta, function (err, key) {
+    client.put(key, record, meta, function (err, key) {
       if (err) { throw new Error(err.message) }
       var ops = [
         op.incr('i', 432),
         op.incr('i', 'str') // invalid increment with string value
       ]
 
-      Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+      client.operate(key, ops, function (err, record1, metadata1, key1) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
-        Aerospike.get(key, function (err, record2, metadata2, key2) {
+        client.get(key, function (err, record2, metadata2, key2) {
           if (err) { throw new Error(err.message) }
           expect(record2['i']).to.equal(123)
           expect(record2['s']).to.equal('abc')
 
-          Aerospike.remove(key2, function (err, key) {
+          client.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
             done()
           })

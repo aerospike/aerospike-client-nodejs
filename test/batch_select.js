@@ -14,47 +14,37 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var putgen = require('./generators/put')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const putgen = helper.putgen
+const valgen = helper.valgen
 
-describe('Aerospike.batchSelect()', function () {
-  var config = options.getConfig()
+const status = aerospike.status
 
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
+describe('client.batchSelect()', function () {
+  var client = helper.client
 
-  after(function (done) {
-    Aerospike.close()
-    done()
-  })
-  
   it('should successfully read bins from 10 records', function (done) {
     // number of records
     var nrecords = 10
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/10/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/10/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(Aerospike._currentClient, 10, kgen, rgen, mgen, function (written) {
+    putgen.put(client._currentClient, 10, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -63,7 +53,7 @@ describe('Aerospike.batchSelect()', function () {
       var len = keys.length
       expect(len).to.equal(nrecords)
 
-      Aerospike.batchSelect(keys, bins, function (err, results) {
+      client.batchSelect(keys, bins, function (err, results) {
         var result
         var j
 
@@ -73,7 +63,7 @@ describe('Aerospike.batchSelect()', function () {
         for (j = 0; j < results.length; j++) {
           result = results[j]
 
-          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+          expect(result.status).to.equal(client.status.AEROSPIKE_OK)
 
           var record = result.record
           var _record = written[result.key.key].record
@@ -91,7 +81,7 @@ describe('Aerospike.batchSelect()', function () {
     var nrecords = 10
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/fail/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/fail/', random: false})
 
     // values
     var keys = keygen.range(kgen, nrecords)
@@ -100,7 +90,7 @@ describe('Aerospike.batchSelect()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    Aerospike.batchSelect(keys, bins, function (err, results) {
+    client.batchSelect(keys, bins, function (err, results) {
       var result
       var j
 
@@ -110,7 +100,7 @@ describe('Aerospike.batchSelect()', function () {
       for (j = 0; j < results.length; j++) {
         result = results[j]
         if (result.status !== 602) {
-          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+          expect(result.status).to.equal(client.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
         } else {
           expect(result.status).to.equal(602)
         }
@@ -128,14 +118,14 @@ describe('Aerospike.batchSelect()', function () {
     var nrecords = 1000
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/1000/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/1000/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -144,7 +134,7 @@ describe('Aerospike.batchSelect()', function () {
       var len = keys.length
       expect(len).to.equal(nrecords)
 
-      Aerospike.batchSelect(keys, bins, function (err, results) {
+      client.batchSelect(keys, bins, function (err, results) {
         var result
         var j
 
@@ -153,7 +143,7 @@ describe('Aerospike.batchSelect()', function () {
 
         for (j = 0; j < results.length; j++) {
           result = results[j]
-          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+          expect(result.status).to.equal(client.status.AEROSPIKE_OK)
 
           var record = result.record
           var _record = written[result.key.key].record

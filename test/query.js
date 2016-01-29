@@ -17,83 +17,76 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var filter = Aerospike.filter
+const status = aerospike.status
+const filter = aerospike.filter
 
-describe('Aerospike.query()', function () {
-  var config = options.getConfig()
-  config.modlua = {}
-  config.modlua.userPath = __dirname
+describe('client.query()', function () {
+  var client = helper.client
 
   before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      var indexCreationCallback = function (err) {
-        expect(err).not.to.be.ok()
-      }
-      // create integer and string index.
-      var indexObj = {
-        ns: options.namespace,
-        set: options.set,
-        bin: 'queryBinInt',
-        index: 'queryIndexInt'
-      }
-      Aerospike.createIntegerIndex(indexObj, indexCreationCallback)
+    if (helper.options.run_aggregation) {
+      helper.udf.register('aggregate.lua')
+    }
 
-      indexObj = {
-        ns: options.namespace,
-        set: options.set,
-        bin: 'queryBinString',
-        index: 'queryIndexString'
-      }
-      Aerospike.createStringIndex(indexObj, indexCreationCallback)
+    // create integer and string index.
+    var indexObj = {
+      ns: helper.namespace,
+      set: helper.set,
+      bin: 'queryBinInt',
+      index: 'queryIndexInt'
+    }
+    client.createIntegerIndex(indexObj, function (err) {
+      if (err && err.code !== 0) throw new Error(err.message)
+    })
 
-      // Register the UDFs to be used in aggregation.
-      var dir = __dirname
-      var filename = dir + '/aggregate.lua'
-      Aerospike.udfRegister(filename, function (err) {
-        expect(err).not.to.be.ok()
-        Aerospike.udfRegisterWait('aggregate.lua', 10, function (err) {
-          expect(err).not.to.be.ok()
+    indexObj = {
+      ns: helper.namespace,
+      set: helper.set,
+      bin: 'queryBinString',
+      index: 'queryIndexString'
+    }
+    client.createStringIndex(indexObj, function (err) {
+      if (err && err.code !== 0) throw new Error(err.message)
+    })
+
+    // load objects - to be queried in test case.
+    var total = 100
+    var count = 0
+
+    function iteration (i) {
+      // values
+      var key = {ns: helper.namespace, set: helper.set, key: 'test/query' + i.toString()}
+      var meta = {ttl: 10000, gen: 1}
+      var record = {queryBinInt: i, queryBinString: 'querystringvalue'}
+
+      // write the record then check
+      client.put(key, record, meta, function (err, key) {
+        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+
+        client.get(key, function (err, _record, _metadata, _key) {
+          expect(err).to.be.ok()
+          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          count++
+          if (count >= total) {
+            done()
+          }
         })
       })
+    }
 
-      // load objects - to be queried in test case.
-      var total = 100
-      var count = 0
-
-      function iteration (i) {
-        // values
-        var key = {ns: options.namespace, set: options.set, key: 'test/query' + i.toString()}
-        var meta = {ttl: 10000, gen: 1}
-        var record = {queryBinInt: i, queryBinString: 'querystringvalue'}
-
-        // write the record then check
-        Aerospike.put(key, record, meta, function (err, key) {
-          if (err) { throw new Error(err.message) }
-
-          Aerospike.get(key, function (err, _record, _metadata, _key) {
-            expect(err).not.to.be.ok()
-            count++
-            if (count >= total) {
-              done()
-            }
-          })
-        })
-      }
-
-      for (var i = 1; i <= total; i++) {
-        iteration(i)
-      }
-    })
+    for (var i = 1; i <= total; i++) {
+      iteration(i)
+    }
   })
 
   after(function (done) {
-    Aerospike.udfRemove('aggregate.lua', function () {})
-    Aerospike.close()
+    if (helper.options.run_aggregation) {
+      helper.udf.remove('aggregate.lua')
+    }
     done()
   })
 
@@ -103,7 +96,7 @@ describe('Aerospike.query()', function () {
     var err = 0
 
     var args = { filters: [filter.equal('queryBinInt', 100)] }
-    var query = Aerospike.query(options.namespace, options.set, args)
+    var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -129,7 +122,7 @@ describe('Aerospike.query()', function () {
     var err = 0
 
     var args = { filters: [filter.range('queryBinInt', 1, 100)] }
-    var query = Aerospike.query(options.namespace, options.set, args)
+    var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -155,7 +148,7 @@ describe('Aerospike.query()', function () {
     var err = 0
 
     var args = { filters: [filter.equal('queryBinString', 'querystringvalue')] }
-    var query = Aerospike.query(options.namespace, options.set, args)
+    var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -176,7 +169,7 @@ describe('Aerospike.query()', function () {
   })
 
   it('should query on an index and apply aggregation user defined function', function (done) {
-    if (!options.run_aggregation) {
+    if (!helper.options.run_aggregation) {
       done()
     } else {
       // counters
@@ -185,7 +178,7 @@ describe('Aerospike.query()', function () {
 
       var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
       aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-      var query = Aerospike.query(options.namespace, options.set, args)
+      var query = client.query(helper.namespace, helper.set, args)
 
       var stream = query.execute()
       stream.on('data', function (result) {
@@ -205,7 +198,7 @@ describe('Aerospike.query()', function () {
   })
 
   it('should scan aerospike database and apply aggregation user defined function', function (done) {
-    if (!options.run_aggregation) {
+    if (!helper.options.run_aggregation) {
       done()
     } else {
       // counters
@@ -213,7 +206,7 @@ describe('Aerospike.query()', function () {
       var err = 0
 
       var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-      var query = Aerospike.query(options.namespace, options.set, args)
+      var query = client.query(helper.namespace, helper.set, args)
 
       var stream = query.execute()
       stream.on('data', function (result) {

@@ -13,10 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
-var Aerospike = require('../../lib/aerospike')
-var yargs = require('yargs')
-var fs = require('fs')
+const aerospike = require('../../lib/aerospike')
+const yargs = require('yargs')
+const fs = require('fs')
 
 // *****************************************************************************
 //  Options parsing
@@ -83,11 +82,12 @@ var parser = yargs
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv
 
 options.getConfig = function () {
-  var config = {}
-  config = {
+  var test_dir = __dirname.split('/').slice(0, -1).join('/')
+  var config = {
     hosts: [{addr: options.host, port: options.port}],
     log: {level: options.log, file: options.log_file},
-    policies: {timeout: options.timeout}
+    policies: {timeout: options.timeout},
+    modlua: {userPath: test_dir}
   }
   if (options.user !== null) {
     config.user = options.user

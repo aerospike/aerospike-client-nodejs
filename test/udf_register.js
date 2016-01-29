@@ -14,35 +14,23 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var status = Aerospike.status
-var language = Aerospike.language
+const status = aerospike.status
+const language = aerospike.language
 
-describe('Aerospike.udfRegister()', function (done) {
-  var config = options.getConfig()
-
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    Aerospike.close()
-    done()
-  })
+describe('client.udfRegister()', function (done) {
+  var client = helper.client
 
   it('should register an UDF file to aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    Aerospike.udfRegister(filename, function (err) {
+    client.udfRegister(filename, function (err) {
       expect(err).not.to.be.ok()
       done()
     })
@@ -51,7 +39,7 @@ describe('Aerospike.udfRegister()', function (done) {
   it('should register an UDF file with a LUA type to aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    Aerospike.udfRegister(filename, language.LUA, function (err) {
+    client.udfRegister(filename, language.LUA, function (err) {
       expect(err).not.to.be.ok()
       done()
     })
@@ -61,7 +49,7 @@ describe('Aerospike.udfRegister()', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
-    Aerospike.udfRegister(filename, infopolicy, function (err) {
+    client.udfRegister(filename, infopolicy, function (err) {
       expect(err).not.to.be.ok()
       done()
     })
@@ -71,7 +59,7 @@ describe('Aerospike.udfRegister()', function (done) {
   //   var dir = __dirname
   //   var filename = dir + '/udf_test.lua'
   //   var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
-  //   Aerospike.udfRegister(filename, language.LUA, infopolicy, function (err) {
+  //   client.udfRegister(filename, language.LUA, infopolicy, function (err) {
   //     expect(err).not.to.be.ok()
   //     done()
   //   })
@@ -79,7 +67,7 @@ describe('Aerospike.udfRegister()', function (done) {
 
   it('registering a non-existent UDF file to aerospike cluster - should fail', function (done) {
     var filename = 'test.lua'
-    Aerospike.udfRegister(filename, function (err) {
+    client.udfRegister(filename, function (err) {
       expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_ERR)
       done()
@@ -89,9 +77,9 @@ describe('Aerospike.udfRegister()', function (done) {
   it('should register an UDF file to aerospike cluster and wait until all registration is done across all nodes in Aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    Aerospike.udfRegister(filename, function (err) {
+    client.udfRegister(filename, function (err) {
       expect(err).not.to.be.ok()
-      Aerospike.udfRegisterWait('udf_test.lua', 1000, function (err) {
+      client.udfRegisterWait('udf_test.lua', 1000, function (err) {
         expect(err).not.to.be.ok()
         done()
       })

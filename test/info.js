@@ -14,33 +14,24 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var Aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-describe('Aerospike.info()', function () {
-  var config = options.getConfig()
+const status = aerospike.status
 
-  before(function (done) {
-    Aerospike.connect(config, function (err) {
-      if (err) { throw new Error(err.message) }
-      done()
-    })
-  })
+describe('client.info()', function () {
+  var client = helper.client
 
-  after(function (done) {
-    Aerospike.close()
-    client = null
-    done()
-  })
-
-  it('should get "objects" from entire cluster', function (done) {
+  it('should get "objects" from specific host in cluster', function (done) {
+    var options = helper.options
     var host = {addr: options.host, port: options.port}
-    Aerospike.info('objects', host, function (err, response, host) {
+    client.info('objects', host, function (err, response, host) {
       expect(err).not.to.be.ok()
+      expect(response.indexOf('objects\t')).to.eql(0)
       done()
     })
   })
