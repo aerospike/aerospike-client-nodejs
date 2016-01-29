@@ -14,44 +14,30 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var putgen = require('./generators/put')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const putgen = helper.putgen
+const valgen = helper.valgen
 
-var status = aerospike.status
+const status = aerospike.status
 
 describe('client.batchGet()', function () {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   it('should successfully read 10 records', function (done) {
     // number of records
     var nrecords = 10
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/' + nrecords + '/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/' + nrecords + '/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -95,7 +81,7 @@ describe('client.batchGet()', function () {
     var nrecords = 10
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/fail/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/fail/', random: false})
 
     // values
     var keys = keygen.range(kgen, nrecords)
@@ -131,7 +117,7 @@ describe('client.batchGet()', function () {
     var nrecords = 1000
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_get/1000/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/1000/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 

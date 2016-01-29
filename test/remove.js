@@ -14,40 +14,26 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const valgen = helper.valgen
 
-var status = aerospike.status
+const status = aerospike.status
 
 describe('client.remove()', function () {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   it('should remove a record w/ string key', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -79,7 +65,7 @@ describe('client.remove()', function () {
 
   it('should remove a record w/ integer key', function (done) {
     // generators
-    var kgen = keygen.integer(options.namespace, options.set)
+    var kgen = keygen.integer(helper.namespace, helper.set)
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -111,7 +97,7 @@ describe('client.remove()', function () {
 
   it('should not remove a non-existent key', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/not_found/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})
 
     // values
     var key = kgen()

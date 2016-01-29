@@ -17,59 +17,42 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../lib/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var valgen = require('./generators/value')
+const valgen = helper.valgen
 
-var status = aerospike.status
-var policy = aerospike.policy
+const status = aerospike.status
+const policy = aerospike.policy
 
 describe('client.LargeList()', function (done) {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
+  var client = helper.client
 
   // A single LList is created. All LList operations are done in this single list to demonstrate the
   // usage of LList API.
   // The operations include adding an element, udpating an element, searching for an element
   // and removing an element.
   // Get a largelist object from client.
-  var listkey = {ns: options.namespace, set: options.set, key: 'ldt_list_key'}
+  var listkey = {ns: helper.namespace, set: helper.set, key: 'ldt_list_key'}
   var writepolicy = {timeout: 1000, key: policy.key.SEND, commitLevel: policy.commitLevel.ALL}
   var LList = client.LargeList(listkey, 'ldt_list_bin', writepolicy)
   var ldtEnabled = true
 
   before(function (done) {
-    client.connect(function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      var ns = 'namespace/' + options.namespace.toString()
-      client.info(ns, {addr: options.host, port: options.port},
-        function (err, response, host) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-          var nsConfig = response.split(';')
-          for (var i = 0; i < nsConfig.length; i++) {
-            if (nsConfig[i].search('ldt-enabled=false') >= 0) {
-              ldtEnabled = false
-              console.log('Skipping LDT test cases')
-              break
-            }
-          }
-          done()
-        })
-    })
+    ldtEnabled = helper.cluster.ldt_enabled()
+    done()
   })
 
   after(function (done) {
-    LList.destroy(function (err, val) {
-      if (ldtEnabled) {
+    if (ldtEnabled) {
+      LList.destroy(function (err) {
         if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-        client.close()
-        client = null
-      }
+        done()
+      })
+    } else {
       done()
-    })
+    }
   })
 
   it('should add an element of type integer to the LList ', function (done) {

@@ -14,32 +14,18 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var status = aerospike.status
-var language = aerospike.language
+const status = aerospike.status
+const language = aerospike.language
 
 describe('client.udfRegister()', function (done) {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   it('should register an UDF file to aerospike cluster', function (done) {
     var dir = __dirname
