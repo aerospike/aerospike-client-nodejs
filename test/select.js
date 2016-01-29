@@ -14,41 +14,27 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../build/Release/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const valgen = helper.valgen
 
-var status = aerospike.status
-var policy = aerospike.policy
+const status = aerospike.status
+const policy = aerospike.policy
 
 describe('client.select()', function () {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   it('should read the record', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/select/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -81,7 +67,7 @@ describe('client.select()', function () {
 
   it('should fail - when a select is called without key ', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/select/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -94,7 +80,7 @@ describe('client.select()', function () {
     // write the record then check
     client.put(key, record, meta, function (err, key1) {
       if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      var select_key = {ns: options.namespace, set: options.set}
+      var select_key = {ns: helper.namespace, set: helper.set}
 
       client.select(select_key, bins, function (err, _record, metadata, key1) {
         expect(err).to.be.ok()
@@ -110,7 +96,7 @@ describe('client.select()', function () {
 
   it('should not find the record', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/not_found/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -130,7 +116,7 @@ describe('client.select()', function () {
 
   it('should read the record w/ a key send policy', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 

@@ -14,25 +14,17 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../build/Release/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var status = aerospike.status
+const status = aerospike.status
 
 describe('client.udfRemove()', function (done) {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
+  var client = helper.client
 
   it('should remove an UDF module with a info policy from aerospike cluster', function (done) {
     var dir = __dirname

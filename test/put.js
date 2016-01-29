@@ -14,37 +14,23 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
-var options = require('./util/options')
-var expect = require('expect.js')
+const aerospike = require('../lib/aerospike')
+const helper = require('./test_helper')
+const expect = require('expect.js')
 
-var keygen = require('./generators/key')
-var metagen = require('./generators/metadata')
-var recgen = require('./generators/record')
-var valgen = require('./generators/value')
+const keygen = helper.keygen
+const metagen = helper.metagen
+const recgen = helper.recgen
+const valgen = helper.valgen
 
 var status = aerospike.status
 var Double = aerospike.Double
 
 describe('client.put()', function () {
-  var config = options.getConfig()
-  var client = aerospike.client(config)
-
-  before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      done()
-    })
-  })
-
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  var client = helper.client
 
   it('should write and validate 100 records', function (done) {
     // counters
@@ -52,7 +38,7 @@ describe('client.put()', function () {
     var count = 0
 
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
@@ -85,7 +71,7 @@ describe('client.put()', function () {
 
   it('should write the record w/ string key', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
@@ -112,7 +98,7 @@ describe('client.put()', function () {
 
   it('should write the record w/ int key', function (done) {
     // generators
-    var kgen = keygen.integer(options.namespace, options.set)
+    var kgen = keygen.integer(helper.namespace, helper.set)
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
@@ -139,7 +125,7 @@ describe('client.put()', function () {
 
   it('should write the record w/ bytes key', function (done) {
     // generators
-    var kgen = keygen.bytes(options.namespace, options.set)
+    var kgen = keygen.bytes(helper.namespace, helper.set)
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
     // values
@@ -164,7 +150,7 @@ describe('client.put()', function () {
 
   it('shoule write an array, map type of bin and read', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({list: valgen.array(), map: valgen.map()})
 
@@ -192,7 +178,7 @@ describe('client.put()', function () {
 
   it('shoule write a bin with double value', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
 
     // values
@@ -222,7 +208,7 @@ describe('client.put()', function () {
 
   it('should write an array of map and array, map of array and map, then read', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({list_of_list: valgen.array_of_array(), map_of_list: valgen.map_of_map()})
 
@@ -250,7 +236,7 @@ describe('client.put()', function () {
 
   it('should write, read, write, and check gen', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
@@ -307,7 +293,7 @@ describe('client.put()', function () {
 
   it('should write, read, remove, read, write, and check gen', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
@@ -370,7 +356,7 @@ describe('client.put()', function () {
 
   it('should write null for bins with empty list and map', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({
       l: valgen.constant([1, 2, 3]),
@@ -413,7 +399,7 @@ describe('client.put()', function () {
 
   it('should write a bin of type undefined and write should not fail', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({
       l: valgen.constant([1, 2, 3]),
@@ -440,7 +426,7 @@ describe('client.put()', function () {
 
   it('should write a set with empty string and write should pass', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, '', {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, '', {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({
       l: valgen.constant([1, 2, 3]),
@@ -471,7 +457,7 @@ describe('client.put()', function () {
 
   it('should write a map with undefined entry and verify the record', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({
       l: valgen.constant([1, 2, 3, undefined]),
@@ -502,7 +488,7 @@ describe('client.put()', function () {
 
   it('should write an object with boolean value and should fail', function (done) {
     // generators
-    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
 
     // values
@@ -523,7 +509,7 @@ describe('client.put()', function () {
     var mgen = metagen.constant({ttl: 1000})
 
     // values
-    var key = aerospike.key(options.namespace, options.set, undefined)
+    var key = aerospike.key(helper.namespace, helper.set, undefined)
     var meta = mgen(key)
     var record = { }
 
@@ -537,7 +523,7 @@ describe('client.put()', function () {
 
   it('should check generation and then update record only if generation is equal (CAS)', function (done) {
     // generators
-    var kgen = keygen.integer(options.namespace, options.set)
+    var kgen = keygen.integer(helper.namespace, helper.set)
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
