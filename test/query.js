@@ -32,26 +32,8 @@ describe('client.query()', function () {
       helper.udf.register('aggregate.lua')
     }
 
-    // create integer and string index.
-    var indexObj = {
-      ns: helper.namespace,
-      set: helper.set,
-      bin: 'queryBinInt',
-      index: 'queryIndexInt'
-    }
-    client.createIntegerIndex(indexObj, function (err) {
-      if (err && err.code !== 0) throw new Error(err.message)
-    })
-
-    indexObj = {
-      ns: helper.namespace,
-      set: helper.set,
-      bin: 'queryBinString',
-      index: 'queryIndexString'
-    }
-    client.createStringIndex(indexObj, function (err) {
-      if (err && err.code !== 0) throw new Error(err.message)
-    })
+    helper.index.create('queryIndexInt', 'queryBinInt', 'integer')
+    helper.index.create('queryIndexString', 'queryBinString', 'string')
 
     // load objects - to be queried in test case.
     var total = 100
@@ -169,60 +151,57 @@ describe('client.query()', function () {
   })
 
   it('should query on an index and apply aggregation user defined function', function (done) {
-    if (!helper.options.run_aggregation) {
+    if (!helper.options.run_aggregation) { this.skip() }
+
+    // counters
+    var count = 0
+    var err = 0
+
+    var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
+    aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
+    var query = client.query(helper.namespace, helper.set, args)
+
+    var stream = query.execute()
+    stream.on('data', function (result) {
+      expect(result).to.be.ok()
+      count++
+    })
+    stream.on('error', function (error) {
+      expect(error).to.be.ok()
+      expect(error.code).to.equal(status.AEROSPIKE_OK)
+      err++
+    })
+    stream.on('end', function (end) {
+      expect(count).to.be.equal(1)
+      expect(err).to.equal(0)
       done()
-    } else {
-      // counters
-      var count = 0
-      var err = 0
-
-      var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
-      aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-      var query = client.query(helper.namespace, helper.set, args)
-
-      var stream = query.execute()
-      stream.on('data', function (result) {
-        expect(result).to.be.ok()
-        count++
-      })
-      stream.on('error', function (error) {
-        expect(error).not.to.be.ok()
-        err++
-      })
-      stream.on('end', function (end) {
-        expect(count).to.be.equal(1)
-        // expect(err).to.equal(0)
-        done()
-      })
-    }
+    })
   })
 
   it('should scan aerospike database and apply aggregation user defined function', function (done) {
-    if (!helper.options.run_aggregation) {
+    if (!helper.options.run_aggregation) { this.skip() }
+
+    // counters
+    var count = 0
+    var err = 0
+
+    var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
+    var query = client.query(helper.namespace, helper.set, args)
+
+    var stream = query.execute()
+    stream.on('data', function (result) {
+      expect(result).to.be.ok()
+      count++
+    })
+    stream.on('error', function (error) {
+      expect(error).to.be.ok()
+      console.log(error)
+      err++
+    })
+    stream.on('end', function (end) {
+      expect(count).to.be.equal(1)
+      expect(err).to.equal(0)
       done()
-    } else {
-      // counters
-      var count = 0
-      var err = 0
-
-      var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-      var query = client.query(helper.namespace, helper.set, args)
-
-      var stream = query.execute()
-      stream.on('data', function (result) {
-        expect(result).to.be.ok()
-        count++
-      })
-      stream.on('error', function (error) {
-        expect(error).to.be.ok()
-        expect(error.code).to.equal(status.AEROSPIKE_OK)
-        err++
-      })
-      stream.on('end', function (end) {
-        expect(count).to.be.equal(1)
-        expect(err).to.equal(0)
-        done()
-      })
-    }
+    })
   })
 })
