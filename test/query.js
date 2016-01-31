@@ -56,8 +56,7 @@ describe('Aerospike.query()', function () {
       var dir = __dirname
       var filename = dir + '/aggregate.lua'
       Aerospike.udfRegister(filename, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
       })
 
       // load objects - to be queried in test case.
@@ -90,11 +89,10 @@ describe('Aerospike.query()', function () {
     })
   })
 
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should query on an integer index - filter by equality of bin value', function (done) {
     // counters
@@ -168,7 +166,7 @@ describe('Aerospike.query()', function () {
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total - 1)
-      // expect(err).to.equal(0)
+      expect(err).to.equal(0)
 
       done()
     })
