@@ -17,36 +17,33 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
-var status = aerospike.status
-var language = aerospike.language
+var status = Aerospike.status
+var language = Aerospike.language
 
-describe('client.udfRegister()', function (done) {
+describe('Aerospike.udfRegister()', function (done) {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
       done()
     })
   })
 
   after(function (done) {
-    client.close()
-    client = null
+    Aerospike.close()
     done()
   })
 
   it('should register an UDF file to aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    client.udfRegister(filename, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.udfRegister(filename, function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -54,9 +51,8 @@ describe('client.udfRegister()', function (done) {
   it('should register an UDF file with a LUA type to aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    client.udfRegister(filename, language.LUA, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.udfRegister(filename, language.LUA, function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -65,27 +61,25 @@ describe('client.udfRegister()', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
-    client.udfRegister(filename, infopolicy, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.udfRegister(filename, infopolicy, function (err) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
 
-  it('should register an UDF file with a info policy and LUA type to aerospike cluster', function (done) {
-    var dir = __dirname
-    var filename = dir + '/udf_test.lua'
-    var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
-    client.udfRegister(filename, language.LUA, infopolicy, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      done()
-    })
-  })
+  // it('should register an UDF file with a info policy and LUA type to aerospike cluster', function (done) {
+  //   var dir = __dirname
+  //   var filename = dir + '/udf_test.lua'
+  //   var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
+  //   Aerospike.udfRegister(filename, language.LUA, infopolicy, function (err) {
+  //     expect(err).not.to.be.ok()
+  //     done()
+  //   })
+  // })
 
   it('registering a non-existent UDF file to aerospike cluster - should fail', function (done) {
     var filename = 'test.lua'
-    client.udfRegister(filename, function (err) {
+    Aerospike.udfRegister(filename, function (err) {
       expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_ERR)
       done()
@@ -95,12 +89,10 @@ describe('client.udfRegister()', function (done) {
   it('should register an UDF file to aerospike cluster and wait until all registration is done across all nodes in Aerospike cluster', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
-    client.udfRegister(filename, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
-      client.udfRegisterWait('udf_test.lua', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.udfRegister(filename, function (err) {
+      expect(err).not.to.be.ok()
+      Aerospike.udfRegisterWait('udf_test.lua', 1000, function (err) {
+        expect(err).not.to.be.ok()
         done()
       })
     })
