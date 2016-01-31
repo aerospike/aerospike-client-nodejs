@@ -17,34 +17,31 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
-var status = aerospike.status
-
 describe('client.info()', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
+  // var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
       done()
     })
   })
 
-  after(function (done) {
-    client.close()
-    client = null
-    done()
-  })
+  // after(function (done) {
+  //   client.close()
+  //   client = null
+  //   done()
+  // })
 
   it('should get "objects" from entire cluster', function (done) {
     var host = {addr: options.host, port: options.port}
-    client.info('objects', host, function (err, response, host) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.info('objects', host, function (err, response, host) {
+      expect(err).not.to.be.ok()
       done()
     })
   })
