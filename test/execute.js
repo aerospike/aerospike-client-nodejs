@@ -17,31 +17,29 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
 var keygen = require('./generators/key')
 
-var status = aerospike.status
+var status = Aerospike.status
 
-describe('client.execute()', function (done) {
+describe('Aerospike.execute()', function (done) {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      client.udfRegister(__dirname + '/udf_test.lua', function (err) {
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      Aerospike.udfRegister(__dirname + '/udf_test.lua', function (err) {
+        expect(err).not.to.be.ok()
         done()
       })
     })
   })
 
   after(function (done) {
-    client.close()
-    client = null
+    Aerospike.close()
     done()
   })
 
@@ -49,12 +47,11 @@ describe('client.execute()', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_create' }
     var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.execute(key, udfArgs, function (err, res) {
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
-      client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      Aerospike.remove(key, function (err, key) {
+        if (err) { throw new Error(err.message) }
         done()
       })
     })
@@ -64,12 +61,11 @@ describe('client.execute()', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_update', args: [123, 'str'] }
     var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.execute(key, udfArgs, function (err, res) {
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
-      client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      Aerospike.remove(key, function (err, key) {
+        if (err) { throw new Error(err.message) }
         done()
       })
     })
@@ -80,12 +76,11 @@ describe('client.execute()', function (done) {
     var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
     var applypolicy = {timeout: 1500}
-    client.execute(key, udfArgs, applypolicy, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+    Aerospike.execute(key, udfArgs, applypolicy, function (err, res) {
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
-      client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      Aerospike.remove(key, function (err, key) {
+        if (err) { throw new Error(err.message) }
         done()
       })
     })
@@ -95,7 +90,7 @@ describe('client.execute()', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_nofunc' }
     var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res, key) {
+    Aerospike.execute(key, udfArgs, function (err, res, key) {
       expect(err).to.be.ok()
       if (err.code !== 1300) {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF)
