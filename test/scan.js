@@ -17,7 +17,7 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../lib/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
@@ -25,15 +25,14 @@ var metagen = require('./generators/metadata')
 var recgen = require('./generators/record')
 var valgen = require('./generators/value')
 
-var status = aerospike.status
+var status = Aerospike.status
 
-describe('client.query() - without where clause(Scan)', function () {
+describe('Aerospike.query() - without where clause(Scan)', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
 
       // counters
       var total = 100
@@ -52,18 +51,16 @@ describe('client.query() - without where clause(Scan)', function () {
         // register the UDF used in scan background.
         var dir = __dirname
         var filename = dir + '/scan.lua'
-        client.udfRegister(filename, function (err) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+        Aerospike.udfRegister(filename, function (err) {
+          expect(err).not.to.be.ok()
         })
 
         // write the record then check
-        client.put(key, record, meta, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        Aerospike.put(key, record, meta, function (err, key) {
+          if (err) { throw new Error(err.message) }
 
-          client.get(key, function (err, _record, _metadata, _key) {
-            expect(err).to.be.ok()
-            expect(err.code).to.equal(status.AEROSPIKE_OK)
+          Aerospike.get(key, function (err, _record, _metadata, _key) {
+            expect(err).not.to.be.ok()
             count++
             if (count >= total) {
               done()
@@ -79,7 +76,7 @@ describe('client.query() - without where clause(Scan)', function () {
   })
 
   after(function (done) {
-    client.close()
+    Aerospike.close()
     client = null
     done()
   })
@@ -90,7 +87,7 @@ describe('client.query() - without where clause(Scan)', function () {
     var count = 0
     var err = 0
 
-    var query = client.query(options.namespace, options.set)
+    var query = Aerospike.query(options.namespace, options.set)
 
     var stream = query.execute()
 
@@ -116,7 +113,7 @@ describe('client.query() - without where clause(Scan)', function () {
     var err = 0
 
     var args = {nobins: true}
-    var query = client.query(options.namespace, options.set, args)
+    var query = Aerospike.query(options.namespace, options.set, args)
 
     var stream = query.execute()
 
@@ -128,7 +125,7 @@ describe('client.query() - without where clause(Scan)', function () {
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total)
-      expect(err).to.equal(0)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -140,7 +137,7 @@ describe('client.query() - without where clause(Scan)', function () {
     var err = 0
 
     var args = {select: ['i', 's']}
-    var query = client.query(options.namespace, options.set, args)
+    var query = Aerospike.query(options.namespace, options.set, args)
 
     var stream = query.execute()
 
@@ -152,14 +149,14 @@ describe('client.query() - without where clause(Scan)', function () {
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total)
-      expect(err).to.equal(0)
+      expect(err).not.to.be.ok()
       done()
     })
   })
 
   it('should do a scan background and check for the status of scan job ', function (done) {
     var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
-    var scanBackground = client.query(options.namespace, options.set, args)
+    var scanBackground = Aerospike.query(options.namespace, options.set, args)
 
     var err = 0
     var stream = scanBackground.execute()
