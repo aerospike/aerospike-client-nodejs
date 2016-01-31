@@ -31,50 +31,47 @@ var op = Aerospike.operator
 describe('Aerospike.operate()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   Aerospike.connect(function (err) {
-  //     if (err) { throw new Error(err.message) }
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  before(function (done) {
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should increment a bin', function (done) {
-    Aerospike.connect(config, function(err) {
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.constant({i: 123, s: 'abc'})
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.constant({i: 123, s: 'abc'})
 
-      // values
-      var key = kgen()
-      var meta = mgen(key)
-      var record = rgen(key, meta)
+    // values
+    var key = kgen()
+    var meta = mgen(key)
+    var record = rgen(key, meta)
 
-      // write the record then check
-      Aerospike.put(key, record, meta, function (err, key) {
-        if (err) { throw new Error(err.message) }
-        var ops = [
-          op.incr('i', 432)
-        ]
+    // write the record then check
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
+      var ops = [
+        op.incr('i', 432)
+      ]
 
-        Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).not.to.be.ok()
+      Aerospike.operate(key, ops, function (err, record1, metadata1, key1) {
+        expect(err).not.to.be.ok()
 
-          Aerospike.get(key, function (err, record2, metadata2, key2) {
+        Aerospike.get(key, function (err, record2, metadata2, key2) {
+          if (err) { throw new Error(err.message) }
+          expect(record['i'] + 432).to.equal(record2['i'])
+          expect(record['s']).to.equal(record2['s'])
+
+          Aerospike.remove(key2, function (err, key) {
             if (err) { throw new Error(err.message) }
-            expect(record['i'] + 432).to.equal(record2['i'])
-            expect(record['s']).to.equal(record2['s'])
-
-            Aerospike.remove(key2, function (err, key) {
-              if (err) { throw new Error(err.message) }
-              done()
-            })
+            done()
           })
         })
       })

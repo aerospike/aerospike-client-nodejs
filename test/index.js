@@ -24,29 +24,26 @@ var expect = require('expect.js')
 describe('client.index()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   client.connect(function (err) {
-  //     if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   client.close()
-  //   client = null
-  //   done()
-  // })
+  before(function (done) {
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should create an integer index', function (done) {
-    Aerospike.connect(config, function(err) {
-      var args = { ns: options.namespace,
-        set: options.set,
-        bin: 'integer_bin',
-      index: 'integer_index' }
-      Aerospike.createIntegerIndex(args, function (err) {
-        expect(err).not.to.be.ok()
-        done()
-      })
+    var args = { ns: options.namespace,
+      set: options.set,
+      bin: 'integer_bin',
+    index: 'integer_index' }
+    Aerospike.createIntegerIndex(args, function (err) {
+      expect(err).not.to.be.ok()
+      done()
     })
   })
   it('should create an string index', function (done) {

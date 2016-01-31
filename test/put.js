@@ -32,62 +32,56 @@ var Double = Aerospike.Double
 describe('client.put()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   Aerospike.connect(config, function (err) {
-  //     if (err) { throw new Error(err.message) }
-  //
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
-
-  it('should write and validate 100 records', function (done) {
+  before(function (done) {
     Aerospike.connect(config, function (err) {
       if (err) { throw new Error(err.message) }
-      // counters
-      var total = 100
-      var count = 0
-
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
-
-      function iteration () {
-        // values
-        var key = kgen()
-        var meta = mgen(key)
-        var record = rgen(key, meta)
-
-        // write the record then check
-        Aerospike.put(key, record, meta, function (err, key, status) {
-          expect(err).not.to.be.ok()
-
-          Aerospike.get(key, function (err, _record, _metadata, _key) {
-            if (err) { throw new Error(err.message) }
-            expect(_record).to.eql(record)
-            count++
-            if (count >= total) {
-              done()
-            }
-          })
-        })
-      }
-
-      for (var i = 0; i < total; i++) {
-        iteration()
-      }
+      done()
     })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
+
+  it('should write and validate 100 records', function (done) {
+    // counters
+    var total = 100
+    var count = 0
+
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+
+    function iteration () {
+      // values
+      var key = kgen()
+      var meta = mgen(key)
+      var record = rgen(key, meta)
+
+      // write the record then check
+      Aerospike.put(key, record, meta, function (err, key, status) {
+        expect(err).not.to.be.ok()
+
+        Aerospike.get(key, function (err, _record, _metadata, _key) {
+          if (err) { throw new Error(err.message) }
+          expect(_record).to.eql(record)
+          count++
+          if (count >= total) {
+            done()
+          }
+        })
+      })
+    }
+
+    for (var i = 0; i < total; i++) {
+      iteration()
+    }
   })
 
 
   it('should write the record w/ string key', function (done) {
-    Aerospike.connect(config, function (err) {
       // generators
       var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/put/'})
       var mgen = metagen.constant({ttl: 1000})
@@ -110,9 +104,8 @@ describe('client.put()', function () {
           })
         })
       })
-    })
   })
-  //
+
   it('should write the record w/ int key', function (done) {
     // generators
     var kgen = keygen.integer(options.namespace, options.set)

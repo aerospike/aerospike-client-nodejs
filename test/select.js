@@ -32,48 +32,45 @@ var policy = Aerospike.policy
 describe('Aerospike.select()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   Aerospike.connect(function (err) {
-  //     if (err) { throw new Error(err.message) }
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  before(function (done) {
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should read the record', function (done) {
-    Aerospike.connect(config, function (err) {
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/select/'})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/select/'})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-      // values
-      var key = kgen()
-      var meta = mgen(key)
-      var record = rgen(key, meta)
-      var bins = Object.keys(record).slice(0, 1)
+    // values
+    var key = kgen()
+    var meta = mgen(key)
+    var record = rgen(key, meta)
+    var bins = Object.keys(record).slice(0, 1)
 
-      // write the record then check
-      Aerospike.put(key, record, meta, function (err, key) {
-        if (err) { throw new Error(err.message) }
+    // write the record then check
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
 
-        Aerospike.select(key, bins, function (err, _record, metadata, key, status) {
-          expect(err).not.to.be.ok()
-          expect(_record).to.only.have.keys(bins)
+      Aerospike.select(key, bins, function (err, _record, metadata, key, status) {
+        expect(err).not.to.be.ok()
+        expect(_record).to.only.have.keys(bins)
 
-          for (var bin in _record) {
-            expect(_record[bin]).to.be(record[bin])
-          }
+        for (var bin in _record) {
+          expect(_record[bin]).to.be(record[bin])
+        }
 
-          Aerospike.remove(key, function (err, key) {
-            if (err) { throw new Error(err.message) }
-            done()
-          })
+        Aerospike.remove(key, function (err, key) {
+          if (err) { throw new Error(err.message) }
+          done()
         })
       })
     })

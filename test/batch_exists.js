@@ -32,59 +32,53 @@ var status = Aerospike.status
 describe('Aerospike.batchExists()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   var client = {}
-  //   Aerospike.connect(config, function (err) {
-  //     if (err) { throw new Error(err.message) }
-  //     console.log(err);
-  //     client = cl
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  before(function (done) {
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should successfully find 10 records', function (done) {
-    Aerospike.connect(config, function (err) {
-      // this.timeout(3000)
-      // number of records
-      var nrecords = 10
+    // this.timeout(3000)
+    // number of records
+    var nrecords = 10
 
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_exists/10/', random: false})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/batch_exists/10/', random: false})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-      // writer using generators
-      // callback provides an array of written keys
-      putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
-        var keys = Object.keys(written).map(function (key) {
-          return written[key].key
-        })
+    // writer using generators
+    // callback provides an array of written keys
+    putgen.put(Aerospike._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+      var keys = Object.keys(written).map(function (key) {
+        return written[key].key
+      })
 
-        var len = keys.length
-        expect(len).to.equal(nrecords)
+      var len = keys.length
+      expect(len).to.equal(nrecords)
 
-        Aerospike.batchExists(keys, function (err, results, status) {
-          var result
-          var j
+      Aerospike.batchExists(keys, function (err, results, status) {
+        var result
+        var j
 
-          expect(err).not.to.be.ok()
-          console.log(results.length);
-          console.log('res');
-          expect(results.length).to.equal(len)
+        expect(err).not.to.be.ok()
+        console.log(results.length);
+        console.log('res');
+        expect(results.length).to.equal(len)
 
-          for (j = 0; j < results.length; j++) {
-            result = results[j]
-            if (j === nrecords - 1) {
-              done()
-            }
+        for (j = 0; j < results.length; j++) {
+          result = results[j]
+          if (j === nrecords - 1) {
+            done()
           }
-        })
+        }
       })
     })
   })

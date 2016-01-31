@@ -37,12 +37,11 @@ describe('Aerospike.batchSelect()', function () {
     })
   })
 
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
-
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
+  
   it('should successfully read bins from 10 records', function (done) {
     // number of records
     var nrecords = 10

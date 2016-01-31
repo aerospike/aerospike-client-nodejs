@@ -33,16 +33,15 @@ describe('Aerospike.batchGet()', function () {
 
   before(function (done) {
     Aerospike.connect(config, function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       done()
     })
   })
 
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should successfully read 10 records', function (done) {
     // number of records

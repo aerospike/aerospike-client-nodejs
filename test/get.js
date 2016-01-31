@@ -31,40 +31,37 @@ var policy = Aerospike.policy
 describe('Aerospike.get()', function () {
   var config = options.getConfig()
 
-//   before(function (done) {
-//     Aerospike.connect(function (err) {
-//       if (err) { throw new Error(err.message) }
-//       done()
-//     })
-//   })
-//
-//   after(function (done) {
-//     Aerospike.close()
-//     client = null
-//     done()
-//   })
-//
-  it('should read the record', function (done) {
+  before(function (done) {
     Aerospike.connect(config, function (err) {
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.constant({i: 123, s: 'abc'})
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
 
-      // values
-      var key = kgen()
-      var meta = mgen(key)
-      var record = rgen(key, meta)
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
-      // write the record then check
-      Aerospike.put(key, record, meta, function (err, key) {
-        if (err) { throw new Error(err.message) }
-        Aerospike.get(key, function (err, record, metadata, key, status) {
-          expect(err).not.to.be.ok()
-          Aerospike.remove(key, function (err, key) {
-            if (err) { throw new Error(err.message) }
-            done()
-          })
+  it('should read the record', function (done) {
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.constant({i: 123, s: 'abc'})
+
+    // values
+    var key = kgen()
+    var meta = mgen(key)
+    var record = rgen(key, meta)
+
+    // write the record then check
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
+      Aerospike.get(key, function (err, record, metadata, key, status) {
+        expect(err).not.to.be.ok()
+        Aerospike.remove(key, function (err, key) {
+          if (err) { throw new Error(err.message) }
+          done()
         })
       })
     })

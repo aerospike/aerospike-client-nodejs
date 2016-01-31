@@ -31,45 +31,42 @@ var status = Aerospike.status
 describe('Aerospike.remove()', function () {
   var config = options.getConfig()
 
-  // before(function (done) {
-  //   Aerospike.connect(function (err) {
-  //     if (err) { throw new Error(err.message) }
-  //     done()
-  //   })
-  // })
-  //
-  // after(function (done) {
-  //   Aerospike.close()
-  //   client = null
-  //   done()
-  // })
+  before(function (done) {
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
+      done()
+    })
+  })
+
+  after(function (done) {
+    Aerospike.close()
+    done()
+  })
 
   it('should remove a record w/ string key', function (done) {
-    Aerospike.connect(config, function (err) {
-      // generators
-      var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
-      var mgen = metagen.constant({ttl: 1000})
-      var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    // generators
+    var kgen = keygen.string(options.namespace, options.set, {prefix: 'test/get/'})
+    var mgen = metagen.constant({ttl: 1000})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-      // values
-      var key = kgen()
-      var meta = mgen(key)
-      var record = rgen(key, meta)
+    // values
+    var key = kgen()
+    var meta = mgen(key)
+    var record = rgen(key, meta)
 
-      // write the record then check
-      Aerospike.put(key, record, meta, function (err, key) {
+    // write the record then check
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
+
+      Aerospike.get(key, function (err, record, metadata, key) {
         if (err) { throw new Error(err.message) }
 
-        Aerospike.get(key, function (err, record, metadata, key) {
-          if (err) { throw new Error(err.message) }
+        Aerospike.remove(key, function (err, key, status) {
 
-          Aerospike.remove(key, function (err, key, status) {
-
-            Aerospike.get(key, function (err, record, metadata, key) {
-              // expect(err).to.be.ok()
-              // expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-              done()
-            })
+          Aerospike.get(key, function (err, record, metadata, key) {
+            // expect(err).to.be.ok()
+            // expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            done()
           })
         })
       })
