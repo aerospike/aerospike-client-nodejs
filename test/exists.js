@@ -17,7 +17,7 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
@@ -26,22 +26,20 @@ var metagen = require('./generators/metadata')
 var recgen = require('./generators/record')
 var valgen = require('./generators/value')
 
-var status = aerospike.status
+var status = Aerospike.status
 
-describe('client.exists()', function () {
+describe('Aerospike.exists()', function () {
   var config = options.getConfig()
-  var client = aerospike.client(config)
 
   before(function (done) {
-    client.connect(function (err) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.connect(config, function (err) {
+      if (err) { throw new Error(err.message) }
       done()
     })
   })
 
   after(function (done) {
-    client.close()
-    client = null
+    Aerospike.close()
     done()
   })
 
@@ -57,13 +55,12 @@ describe('client.exists()', function () {
     var record = rgen(key, meta)
 
     // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      client.exists(key, function (err, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
-        client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+    Aerospike.put(key, record, meta, function (err, key) {
+      if (err) { throw new Error(err.message) }
+      Aerospike.exists(key, function (err, metadata, key) {
+        expect(err).not.to.be.ok()
+        Aerospike.remove(key, function (err, key) {
+          if (err) { throw new Error(err.message) }
           done()
         })
       })
@@ -78,7 +75,7 @@ describe('client.exists()', function () {
     var key = kgen()
 
     // write the record then check
-    client.exists(key, function (err, metadata, key) {
+    Aerospike.exists(key, function (err, metadata, key) {
       expect(err).to.be.ok()
       if (err.code !== 602) {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
