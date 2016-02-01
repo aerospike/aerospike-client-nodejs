@@ -90,7 +90,6 @@ options.getConfig = function () {
     policies: {timeout: options.timeout},
     modlua: {userPath: test_dir}
   }
-  console.log(config)
   if (options.user !== null) {
     config.user = options.user
   }
