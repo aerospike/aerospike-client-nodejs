@@ -5,7 +5,7 @@
 An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js v0.10.x, v0.12.x, io.js, v4.x, v5.x and supports the following operating systems:
-CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora20, Fedora21, Fedora 22, Linuxmint and Mac OS X.
+CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora 20/21/22, Linuxmint and Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -77,17 +77,21 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-[Node.js](http://nodejs.org) v0.10.x, v0.12.x, io.js, v4.x or v5.x is required.
+The aerospike package supports Node.js v0.10.x,
+v0.12.x, v4.2.x (LTS) and v5.x as well as io.js. To download and install the
+latest stable version of Node.js, visit [nodejs.org](http://nodejs.org/) or use
+the version that comes bundled with your operating system.
 
-Aerospike is an addon module written using V8. To compile V8 g++ must be installed in
-the system.
+The Aerospike package includes a native addon. `gcc`/`g++` v4.8 or newer or
+`clang`/`clang++` v3.4 or newer are required to build the addon with Node.js
+v4.x/v5.x.
 
-To install the latest stable version of Node.js, visit
-[http://nodejs.org/download/](http://nodejs.org/download/)
+The Aerospike addon depends on the Aerospike C client library, which gets
+downloaded during package installation. Either the cURL or Wget command line tool
+is required for this. See ["C Client Resolution"](#C-Client-Resolution) below for
+further information.
 
-Aerospike Node.js has a dependency on Aerospike C client, which is
-downloaded during the installation.  To Download Aerospike C client, curl is required.
-The client library requires the following libraries to be present on the machine for building and running.
+The package has the following compile time/run time dependencies:
 
 | Library Name | .rpm Package | Description |
 | --- | --- | --- |
@@ -97,7 +101,7 @@ The client library requires the following libraries to be present on the machine
 
 Note: Lua is used for query aggregation. If the application is not using the aggregation feature, lua installation can be skipped.
 
-- CentOS/RHEL 6.x
+### CentOS/RHEL 6.x
 
 To install library prerequisites via `yum`:
 
@@ -105,12 +109,12 @@ To install library prerequisites via `yum`:
 sudo yum install openssl-devel lua-devel
 ```
 
-Some CentOS installation paths do not include necessary C development tools. You may need the following packages:
+Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. To build the
+Aerospike addon using Node.js v4/v5, gcc-4.8 or later is required. To update
+the gcc tool chain you may have to install a recent version of the [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
+or a compatible devtoolset version for CentOS.
 
-```bash
-sudo yum install gcc gcc-c++
-```
-- Debian 6+
+### Debian 6+
 
 To install library prerequisites via `apt-get`:
 
@@ -124,7 +128,8 @@ The following symlinks need to be created for Aerospike's packaged examples to c
 sudo ln -s /usr/lib/liblua5.1.so /usr/lib/liblua.so
 sudo ln -s /usr/lib/liblua5.1.a /usr/lib/liblua.a
 ```
-- Ubuntu 12.04+
+
+### Ubuntu 12.04+
 
 To install library prerequisites via `apt-get`:
 
@@ -139,21 +144,22 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
 sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
 ```
 
-- Mac OS X
+### Mac OS X
 
 Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
+
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
 - Lua 5.1.5 library.  Required when running queries with user defined aggregations.
 
-####Openssl library installation in Mac OS X.
+#### Openssl library installation in Mac OS X.
 
 ```bash
 $ brew install openssl
 $ brew link openssl --force
 ```
 
-#####Lua Installation in Mac OS X
+#### Lua Installation in Mac OS X
 
 Lua is required for performing aggregations on results returned from the database. The following are instruction for installing Lua 5.1:
 
@@ -277,8 +283,9 @@ Once installed, the module can be required in the application:
 
 	var aerospike = require('aerospike')
 
-<a name="Aerospike with Aggregation">
+<a name="Aerospike with Aggregation"></a>
 ### Aerospike with Aggregation
+
 Aerospike nodejs client does not include LUA by default during installation. Application can set
 an environment variable `USELUA` to inclue LUA library, and can use the Aggregation feature in
 Aerospike. To install with Aggregation enabled:
