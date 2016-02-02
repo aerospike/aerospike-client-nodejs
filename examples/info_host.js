@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -116,30 +116,23 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
-  client.info(request, {
-    addr: argv.host,
-    port: argv.port
-  }, function (err, response, host) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
-      var res = {
-        host: host,
-        response: response
-      }
-      !argv.quiet && console.log(JSON.stringify(res, null, '    '))
-      iteration.next(run, client)
+function run (client, done) {
+  var host = client.config.hosts[0]
+  client.info(request, host, function (err, response, host) {
+    if (err) throw err
+    var res = {
+      host: host,
+      response: response
     }
+    !argv.quiet && console.log(JSON.stringify(res, null, '    '))
+  }, function () {
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

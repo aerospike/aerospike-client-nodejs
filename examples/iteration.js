@@ -13,12 +13,12 @@ function current () {
   return count
 }
 
-function next (fn, arg) {
+function next (fn, arg, done) {
   count++
-  if (count >= limit) {
-    process.exit(0)
+  if (count < limit) {
+    fn(arg, done)
   } else {
-    fn(arg)
+    done()
   }
 }
 

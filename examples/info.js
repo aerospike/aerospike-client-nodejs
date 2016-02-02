@@ -116,27 +116,22 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
+function run (client, done) {
   client.info(request, function (err, response, host) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
-      var res = {
-        host: host,
-        response: response
-      }
-      !argv.quiet && console.log(JSON.stringify(res, null, '    '))
-      iteration.next(run, client)
+    if (err) throw err
+    var res = {
+      host: host,
+      response: response
     }
+    !argv.quiet && console.log(JSON.stringify(res, null, '    '))
+  }, function () {
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

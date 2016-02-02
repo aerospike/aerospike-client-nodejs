@@ -38,6 +38,7 @@
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
+const deasync = require('deasync')
 
 const Status = Aerospike.status
 
@@ -59,7 +60,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -134,14 +135,14 @@ var config = {
 // *****************************************************************************
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: Aerospike server connection error. ', err.message)
-    process.exit(1)
-  }
+  if (err) throw err
 
   //
   // Perform the operation
   //
+
+  const max_concurrent = 200
+  var in_flight = 0
 
   function exists_done (client, start, end, skip) {
     var total = end - start + 1
@@ -155,6 +156,7 @@ Aerospike.connect(config, function (err, client) {
     console.time(timeLabel)
 
     return function (err, metadata, key, skippy) {
+      in_flight--
       if (skippy === true) {
         console.log('SKIP - ', key)
         skipped++
@@ -191,11 +193,7 @@ Aerospike.connect(config, function (err, client) {
     var s = 0
 
     for (; i <= end; i++) {
-      var key = {
-        ns: argv.namespace,
-        set: argv.set,
-        key: i
-      }
+      var key = new Aerospike.Key(argv.namespace, argv.set, i)
 
       if (skip !== 0 && ++s >= skip) {
         s = 0
@@ -203,6 +201,8 @@ Aerospike.connect(config, function (err, client) {
         continue
       }
 
+      in_flight++
+      deasync.loopWhile(function () { return in_flight > max_concurrent })
       client.exists(key, done)
     }
   }

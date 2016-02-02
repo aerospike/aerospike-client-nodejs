@@ -44,7 +44,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -108,7 +108,7 @@ var config = {
 var g_nkeys = 20
 var g_index = 'points-loc-index'
 
-function execute_query (client) {
+function execute_query (client, done) {
   var count = 0
   var region = {
     type: 'Polygon',
@@ -133,21 +133,21 @@ function execute_query (client) {
   stream.on('error', function (err) {
     console.log('at error')
     console.log(err)
-    cleanup(client, process.exit)
+    cleanup(client, done)
   })
 
   stream.on('end', function () {
     console.log('RECORDS FOUND:', count)
-    cleanup(client, process.exit)
+    cleanup(client, done)
   })
 }
 
-function insert_records (client, ndx, end) {
+function insert_records (client, ndx, end, done) {
   if (ndx >= end) {
-    return execute_query(client)
+    return execute_query(client, done)
   }
 
-  var key = { ns: argv.namespace, set: argv.set, key: ndx }
+  var key = new Aerospike.Key(argv.namespace, argv.set, ndx)
 
   var lng = -122 + (0.1 * ndx)
   var lat = 37.5 + (0.1 * ndx)
@@ -157,15 +157,12 @@ function insert_records (client, ndx, end) {
     loc: new GeoJSON(loc)
   }
   client.put(key, bins, function (err, key) {
-    if (err) {
-      console.error('insert_records: put failed: ', err.message)
-      process.exit(1)
-    }
-    insert_records(client, ndx + 1, end)
+    if (err) throw err
+    insert_records(client, ndx + 1, end, done)
   })
 }
 
-function create_index (client) {
+function create_index (client, done) {
   var options = {
     ns: argv.namespace,
     set: argv.set,
@@ -173,53 +170,41 @@ function create_index (client) {
     index: g_index
   }
   client.createGeo2DSphereIndex(options, function (err) {
-    if (err) {
-      console.log('index create failed: ', err)
-      process.exit(1)
-    }
+    if (err) throw err
     client.indexCreateWait(options.ns, g_index, 100, function (err) {
-      if (err) {
-        console.log('index create failed: ', err)
-        process.exit(1)
-      }
-      insert_records(client, 0, g_nkeys)
+      if (err) throw err
+      insert_records(client, 0, g_nkeys, done)
     })
   })
 }
 
-function remove_index (client, complete) {
+function remove_index (client, done) {
   client.indexRemove(argv.namespace, g_index, function (err) {
-    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
-      throw new Error(err.message)
-    }
-    complete(client)
+    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
+    done(client)
   })
 }
 
-function remove_records (client, ndx, end, complete) {
+function remove_records (client, ndx, end, done) {
   if (ndx >= end) {
-    return remove_index(client, complete)
+    return remove_index(client, done)
   }
 
-  var key = { ns: argv.namespace, set: argv.set, key: ndx }
+  var key = new Aerospike.Key(argv.namespace, argv.set, ndx)
 
   client.remove(key, function (err, key) {
-    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
-      throw new Error(err.message)
-    }
-    remove_records(client, ndx + 1, end, complete)
+    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
+    remove_records(client, ndx + 1, end, done)
   })
 }
 
-function cleanup (client, complete) {
-  remove_records(client, 0, g_nkeys, complete)
+function cleanup (client, done) {
+  remove_records(client, 0, g_nkeys, done)
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: Aerospike server connection error. ', err.message)
-    process.exit(1)
-  } else {
-    create_index(client)
-  }
+  if (err) throw err
+  create_index(client, function () {
+    client.close()
+  })
 })

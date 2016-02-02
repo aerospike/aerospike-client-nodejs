@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -123,29 +123,24 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
-  var key = {
-    ns: argv.namespace,
-    set: argv.set,
-    key: keyv + iteration.current()
-  }
+function run (client, done) {
+  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
   client.remove(key, function (err) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
+    if (!err) {
       !argv.quiet && console.log('OK.')
-      iteration.next(run, client)
+    } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+      !argv.quiet && console.log('Key ' + key.key + ' not found.')
+    } else {
+      throw err
     }
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

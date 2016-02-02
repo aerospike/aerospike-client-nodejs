@@ -41,7 +41,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -114,17 +114,16 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
+function run (client, done) {
   client.query(argv.namespace, argv.set).info(scanId, function (res) {
     !argv.quiet && console.log(JSON.stringify(res, null, '    '))
+    done()
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

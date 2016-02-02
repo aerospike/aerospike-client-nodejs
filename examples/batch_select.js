@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -92,11 +92,7 @@ var argp = yargs
 
 var argv = argp.argv
 var keys = argv._.map(function (key) {
-  return {
-    ns: argv.namespace,
-    set: argv.set,
-    key: key
-  }
+  return new Aerospike.Key(argv.namespace, argv.set, key)
 })
 
 if (argv.help === true) {
@@ -134,24 +130,19 @@ var config = {
 // Perform the operation.
 // *****************************************************************************
 
-function run (client) {
+function run (client, done) {
   var bins = argv.bins.split(',')
 
   client.batchSelect(keys, bins, function (err, results) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    }
+    if (err) throw err
     !argv.quiet && console.log(JSON.stringify(results, null, '    '))
-    iteration.next(run, client)
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

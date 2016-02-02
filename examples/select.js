@@ -45,7 +45,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -145,44 +145,35 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
-  var key = {
-    ns: argv.namespace,
-    set: argv.set,
-    key: keyv
-  }
+function run (client, done) {
+  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
-  client.select(key, bins, function (err, bins, metadata, key) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
+  client.select(key, bins, function (err, bins, metadata) {
+    if (!err) {
       var record = {}
-
       if (argv['key']) {
         record.key = key
       }
-
       if (argv['metadata']) {
         record.metadata = metadata
       }
-
       if (argv['bins']) {
         record.bins = bins
       }
-
+      !argv.quiet && console.log('Found key ' + key.key + '.')
       !argv.quiet && console.log(JSON.stringify(record, null, '    '))
-
-      iteration.next(run, client)
+    } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+      !argv.quiet && console.log('Key ' + key.key + ' does not exist.')
+    } else {
+      throw err
     }
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })
