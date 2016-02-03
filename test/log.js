@@ -17,14 +17,14 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-var aerospike = require('../build/Release/aerospike')
+var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 var fs = require('fs')
 
-var status = aerospike.status
+var status = Aerospike.status
 
-describe('client.updateLogging()', function () {
+describe('Aerospike.updateLogging()', function () {
   var config = options.getConfig()
   config.log.file = null
 
@@ -32,16 +32,15 @@ describe('client.updateLogging()', function () {
     var host = {addr: options.host, port: options.port}
     var count = 0
     fs.open('test.log', 'a', function (err, fd) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       config.log.file = fd
-      aerospike.client(config).connect(function (err, client) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-        client.info('objects', host, function (err, response, host) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+      Aerospike.connect(config, function (err) {
+        if (err) { throw new Error(err.message) }
+        Aerospike.info('objects', host, function (err, response, host) {
+          expect(err).not.to.be.ok()
           count++
           fs.readFile('test.log', function (err, data) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(data).to.be.ok()
             done()
           })
