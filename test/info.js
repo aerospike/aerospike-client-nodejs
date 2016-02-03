@@ -21,9 +21,8 @@ var Aerospike = require('../lib/aerospike')
 var options = require('./util/options')
 var expect = require('expect.js')
 
-describe('client.info()', function () {
+describe('Aerospike.info()', function () {
   var config = options.getConfig()
-  // var client = aerospike.client(config)
 
   before(function (done) {
     Aerospike.connect(config, function (err) {
@@ -32,11 +31,11 @@ describe('client.info()', function () {
     })
   })
 
-  // after(function (done) {
-  //   client.close()
-  //   client = null
-  //   done()
-  // })
+  after(function (done) {
+    Aerospike.close()
+    client = null
+    done()
+  })
 
   it('should get "objects" from entire cluster', function (done) {
     var host = {addr: options.host, port: options.port}
