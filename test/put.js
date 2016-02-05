@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -26,8 +26,8 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-const status = aerospike.status
-var Double = aerospike.Double
+const status = Aerospike.status
+var Double = Aerospike.Double
 
 describe('client.put()', function () {
   var client = helper.client
@@ -494,7 +494,7 @@ describe('client.put()', function () {
     var mgen = metagen.constant({ttl: 1000})
 
     // values
-    var key = aerospike.key(helper.namespace, helper.set, undefined)
+    var key = client.key(helper.namespace, helper.set, undefined)
     var meta = mgen(key)
     var record = { }
 

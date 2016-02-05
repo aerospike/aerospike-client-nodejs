@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../build/Release/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -26,8 +26,8 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-const status = aerospike.status
-const policy = aerospike.policy
+const status = Aerospike.status
+const policy = Aerospike.policy
 
 describe('client.select()', function () {
   var client = helper.client

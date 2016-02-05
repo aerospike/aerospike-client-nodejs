@@ -17,12 +17,12 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
-const status = aerospike.status
-const language = aerospike.language
+const status = Aerospike.status
+const language = Aerospike.language
 
 describe('client.udfRegister()', function (done) {
   var client = helper.client

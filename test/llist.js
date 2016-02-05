@@ -17,14 +17,14 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
 const valgen = helper.valgen
 
-const status = aerospike.status
-const policy = aerospike.policy
+const status = Aerospike.status
+const policy = Aerospike.policy
 
 describe('client.LargeList()', function (done) {
   var client = helper.client

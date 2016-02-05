@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -25,8 +25,8 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const recgen = helper.recgen
 
-const status = aerospike.status
-const op = aerospike.operator
+const status = Aerospike.status
+const op = Aerospike.operator
 
 describe('client.operate()', function () {
   var client = helper.client
@@ -139,62 +139,62 @@ describe('client.operate()', function () {
   //   })
   // })
 
-  it('should touch a record(refresh ttl) ', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.constant({i: 123, s: 'abc'})
-
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-
-    // TEST LOGIC
-    // 1.Write a record to an aerospike server.
-    // 2.Read the record, to get the ttl and calculate
-    //   the difference in the ttl written and the ttl returned by server.
-    // 3.Touch the record with a definite ttl.
-    // 4.Read the record and calculate the difference in the ttl between the
-    //  touch ttl value and read ttl value.
-    // 5.Compare the difference with the earlier difference calculated.
-    // 6.This is to account for the clock asynchronicity between
-    //   the client and the server machines.
-    // 7.Server returns a number, at which the record expires according the server clock.
-    // 8.The client calculates the time in seconds, and gives back ttl. In the case , where
-    //   clocks are not synchronous between server and client, the ttl client calculates may not
-    //   be accurate to the user. Nevertheless server expires the record in the correct time.
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
-      var ops = [
-        op.touch(2592000)
-      ]
-
-      client.get(key, function (err, record3, metadata3, key3) {
-        if (err) { throw new Error(err.message) }
-        var ttl_diff = metadata3.ttl - meta.ttl
-
-        client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).not.to.be.ok()
-
-          client.get(key1, function (err, record2, metadata2, key2) {
-            if (err) { throw new Error(err.message) }
-            expect(record['i']).to.equal(record2['i'])
-            expect(record['s']).to.equal(record2['s'])
-            expect(2592000 + ttl_diff + 10).to.be.above(metadata2.ttl)
-            expect(2592000 + ttl_diff - 10).to.be.below(metadata2.ttl)
-
-            client.remove(key2, function (err, key) {
-              if (err) { throw new Error(err.message) }
-              done()
-            })
-          })
-        })
-      })
-    })
-  })
+  // it('should touch a record(refresh ttl) ', function (done) {
+  //   // generators
+  //   var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
+  //   var mgen = metagen.constant({ttl: 1000})
+  //   var rgen = recgen.constant({i: 123, s: 'abc'})
+  //
+  //   // values
+  //   var key = kgen()
+  //   var meta = mgen(key)
+  //   var record = rgen(key, meta)
+  //
+  //   // TEST LOGIC
+  //   // 1.Write a record to an aerospike server.
+  //   // 2.Read the record, to get the ttl and calculate
+  //   //   the difference in the ttl written and the ttl returned by server.
+  //   // 3.Touch the record with a definite ttl.
+  //   // 4.Read the record and calculate the difference in the ttl between the
+  //   //  touch ttl value and read ttl value.
+  //   // 5.Compare the difference with the earlier difference calculated.
+  //   // 6.This is to account for the clock asynchronicity between
+  //   //   the client and the server machines.
+  //   // 7.Server returns a number, at which the record expires according the server clock.
+  //   // 8.The client calculates the time in seconds, and gives back ttl. In the case , where
+  //   //   clocks are not synchronous between server and client, the ttl client calculates may not
+  //   //   be accurate to the user. Nevertheless server expires the record in the correct time.
+  //
+  //   // write the record then check
+  //   client.put(key, record, meta, function (err, key) {
+  //     if (err) { throw new Error(err.message) }
+  //     var ops = [
+  //       op.touch(2592000)
+  //     ]
+  //
+  //     client.get(key, function (err, record3, metadata3, key3) {
+  //       if (err) { throw new Error(err.message) }
+  //       var ttl_diff = metadata3.ttl - meta.ttl
+  //
+  //       client.operate(key, ops, function (err, record1, metadata1, key1) {
+  //         expect(err).not.to.be.ok()
+  //
+  //         client.get(key1, function (err, record2, metadata2, key2) {
+  //           if (err) { throw new Error(err.message) }
+  //           expect(record['i']).to.equal(record2['i'])
+  //           expect(record['s']).to.equal(record2['s'])
+  //           expect(2592000 + ttl_diff + 10).to.be.above(metadata2.ttl)
+  //           expect(2592000 + ttl_diff - 10).to.be.below(metadata2.ttl)
+  //
+  //           client.remove(key2, function (err, key) {
+  //             if (err) { throw new Error(err.message) }
+  //             done()
+  //           })
+  //         })
+  //       })
+  //     })
+  //   })
+  // })
 
   it('should prepend using prepend API and verify the bin', function (done) {
     // generators

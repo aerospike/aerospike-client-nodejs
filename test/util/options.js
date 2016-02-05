@@ -45,7 +45,7 @@ var parser = yargs
     },
     log: {
       alias: 'l',
-      default: Aerospike.log.INFO,
+      default: aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     log_file: {
