@@ -47,12 +47,32 @@ and sent to server in same format.  Leave empty for clusters running without res
 
 ### `hosts` attribute
 
-The `hosts` attribute should contain an Array of hosts with which the client should attempt to connect. On `client.connect()`, the client iterates through the list of hosts until it successfully connects with one.
+The `hosts` attribute should contain an Array or a connection string of hosts with which the client should attempt to connect. On `client.connect()`, the client iterates through the list of hosts until it successfully connects with one.
 
 Each entry in the list is a Object containing the following attributes:
 
 - `addr` - The IP address or domain name of the host.
 - `port` - The listening port of the host. If not specified, the default is 3000.
+
+###### using array
+```javascript
+  var config = {
+    hosts: [
+      { addr: '192.168.0.1', port: 3000 },
+      { addr: '192.168.0.2', port: 3000 }
+    ]
+  }
+```
+
+###### using connection string
+```javascript
+  var config = {
+    hosts: 'aerospike://192.168.0.1:3000,192.168.0.2'
+ // hosts: 'as://node1,node2'
+ // hosts: '192.168.0.1,node1:3030'
+ // hosts: process.env.AEROSPIKE_HOSTS || 'localhost'
+  }
+```
 
 ### `policies` attribute
 
