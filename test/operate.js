@@ -31,36 +31,77 @@ const op = aerospike.operator
 describe('client.operate()', function () {
   var client = helper.client
 
-  it('should increment a bin', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.constant({i: 123, s: 'abc'})
+  describe('INCR operation', function () {
+    it('should increment bin with integer value', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+      client.put(key, {i: 123}, function (err) {
+        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        var ops = [
+          op.incr('i', 432)
+        ]
 
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-      var ops = [
-        op.incr('i', 432)
-      ]
-
-      client.operate(key, ops, function (err, record1, metadata1, key1) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
-
-        client.get(key, function (err, record2, metadata2, key2) {
+        client.operate(key, ops, function (err) {
           if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-          expect(record['i'] + 432).to.equal(record2['i'])
-          expect(record['s']).to.equal(record2['s'])
 
-          client.remove(key2, function (err, key) {
+          client.get(key, function (err, record2) {
             if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-            done()
+            expect(record2['i']).to.equal(555)
+
+            client.remove(key, function (err) {
+              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              done()
+            })
+          })
+        })
+      })
+    })
+
+    it('should increment bin with double value', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/double'})()
+
+      client.put(key, {f: 3.14159}, function (err) {
+        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        var ops = [
+          op.incr('f', 2.71828)
+        ]
+
+        client.operate(key, ops, function (err) {
+          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+
+          client.get(key, function (err, record2) {
+            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            expect(record2['f']).to.equal(5.85987)
+
+            client.remove(key, function (err) {
+              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              done()
+            })
+          })
+        })
+      })
+    })
+
+    it('should increment bin with aerospike.Double() value', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/Double'})()
+
+      client.put(key, {f: 3.14159}, function (err) {
+        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        var ops = [
+          op.incr('f', aerospike.Double(1.0))
+        ]
+
+        client.operate(key, ops, function (err) {
+          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+
+          client.get(key, function (err, record2) {
+            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            expect(record2['f']).to.equal(4.14159)
+
+            client.remove(key, function (err) {
+              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              done()
+            })
           })
         })
       })

@@ -862,6 +862,40 @@ Local<Object> record_to_jsobject(const as_record * record, const as_key * key, L
 //Forward references;
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log );
 
+
+/**
+ * Node.js stores all number values > 2^31 in the class Number and
+ * values < 2^31 are stored in the class SMI (Small Integers). To distinguish
+ * between a double and int64_t value in Node.js, retrieve the value as double
+ * and also as int64_t. If the values are same, then store it as int64_t. Else
+ * store it as double.
+ * The problem with this implementation is var 123.00 will be treated as int64_t.
+ * Applications can enforce double type by using the `aerospike.Double` API,
+ * e.g.
+ *
+ *     var f = aerospike.Double(123)
+ **/
+bool is_double_value(Local<Value> value)
+{
+    if (value->IsNumber()) {
+        int64_t i = value->ToInteger()->Value();
+        double d = value->ToNumber()->Value();
+        return d != (double)i;
+    } else if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+double double_value(Local<Value> value)
+{
+    if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+        value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
+    }
+    return (double) value->ToNumber()->Value();
+}
+
 as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 {
     if(obj->IsNull()){
@@ -895,38 +929,15 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_v8_detail(log, "The uint32 value %d ", obj->ToUint32()->Value());
         return (as_val*) num;
     }
-    else if( obj->IsNumber()) {
-        // nodejs stores all number values > 2^31 in the class Number.
-        // and values < 2^31 are stored in the class SMI (Small Integers).
-        // Where as Aerospike server has int64_t and double. To distinguish
-        // between a double and int64_t value in nodejs, retrieve the
-        // value as double and also as int64_t. If the values are same, then store
-        // it as int64_t. Else store it as double.
-        // The problem with this implementation is var 123.00 will be treated as int64_t.
-        // Application can enforce Aerospike to use this as double using the api
-        // `aerospike.AsDouble(123.00)`. Any value passed through this API, will be stored
-        // as double in Aerospike server.
-        int64_t num = obj->ToInteger()->Value();
-        double d = obj->ToNumber()->Value();
-        if( (double)num == d) {
-            as_integer *num = as_integer_new(obj->ToInteger()->Value());
-            as_v8_detail(log, "The integer value %lld ", obj->ToInteger()->Value());
-            return (as_val*) num;
-        }
-        else {
-            as_double * d = as_double_new(obj->ToNumber()->Value());
-            as_v8_detail(log, "The double value %lf ", d->value);
-            return (as_val*) d;
-        }
-
-    }
-    else if( obj->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
-        // Any value passed using `aerospike.AsDouble()` will be stored as
-        // double in Aerospike server.
-        Local<Value> v8num = obj->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
-        as_double* d  = as_double_new(v8num->ToNumber()->Value());
+    else if (is_double_value(obj)) {
+        as_double * d = as_double_new(double_value(obj));
         as_v8_detail(log, "The double value %lf ", d->value);
         return (as_val*) d;
+    }
+    else if (obj->IsNumber()) {
+        as_integer *num = as_integer_new(obj->ToInteger()->Value());
+        as_v8_detail(log, "The integer value %lld ", obj->ToInteger()->Value());
+        return (as_val*) num;
     }
     else if(node::Buffer::HasInstance(obj)) {
         int size ;
@@ -1728,10 +1739,9 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     // Extract UDF module name
     if( obj->Has(Nan::New("module").ToLocalChecked())) {
         Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
-        int size = 0;
 
         if( module->IsString()) {
-            size = module->ToString()->Length()+1;
+            int size = module->ToString()->Length()+1;
             if( *filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
@@ -1906,28 +1916,32 @@ int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
+int populate_incr_op (as_operations * ops, Local<Object> obj, LogInfo * log)
 {
-
-    if ( ops == NULL ) {
+    if (ops == NULL) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
         return AS_NODE_PARAM_ERR;
     }
     char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+    if (GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
     }
 
     as_v8_detail(log, "Incr operation on bin :%s", binName);
     Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if ( v8val->IsNumber()) {
+    if (is_double_value(v8val)) {
+        double binValue = double_value(v8val);
+        as_v8_detail(log, "value to be incremented %lf", binValue);
+        as_operations_add_incr_double(ops, binName, binValue);
+        if (binName != NULL) free (binName);
+        return AS_NODE_PARAM_OK;
+    } else if (v8val->IsNumber()) {
         int64_t binValue = v8val->NumberValue();
-        as_v8_detail(log, "value to be incremented %d", binValue);
+        as_v8_detail(log, "value to be incremented %lld", binValue);
         as_operations_add_incr( ops, binName, binValue);
         if (binName != NULL) free (binName);
         return AS_NODE_PARAM_OK;
-    }
-    else {
+    } else {
         as_v8_debug(log, "Type error in incr operation");
         return AS_NODE_PARAM_ERR;
     }
