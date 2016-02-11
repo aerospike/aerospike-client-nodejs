@@ -875,15 +875,25 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
  *
  *     var f = aerospike.Double(123)
  **/
-bool IsDouble(Local<Value> obj, LogInfo * log)
+bool is_double_value(Local<Value> value)
 {
-    if (obj->IsNumber()) {
-        int64_t i = obj->ToInteger()->Value();
-        double d = obj->ToNumber()->Value();
+    if (value->IsNumber()) {
+        int64_t i = value->ToInteger()->Value();
+        double d = value->ToNumber()->Value();
         return d != (double)i;
+    } else if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+        return true;
     } else {
         return false;
     }
+}
+
+double double_value(Local<Value> value)
+{
+    if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+        value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
+    }
+    return (double) value->ToNumber()->Value();
 }
 
 as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
@@ -919,8 +929,8 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_v8_detail(log, "The uint32 value %d ", obj->ToUint32()->Value());
         return (as_val*) num;
     }
-    else if (IsDouble(obj, log)) {
-        as_double * d = as_double_new(obj->ToNumber()->Value());
+    else if (is_double_value(obj)) {
+        as_double * d = as_double_new(double_value(obj));
         as_v8_detail(log, "The double value %lf ", d->value);
         return (as_val*) d;
     }
@@ -928,14 +938,6 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
         as_integer *num = as_integer_new(obj->ToInteger()->Value());
         as_v8_detail(log, "The integer value %lld ", obj->ToInteger()->Value());
         return (as_val*) num;
-    }
-    else if( obj->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
-        // Any value passed using `aerospike.AsDouble()` will be stored as
-        // double in Aerospike server.
-        Local<Value> v8num = obj->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
-        as_double* d  = as_double_new(v8num->ToNumber()->Value());
-        as_v8_detail(log, "The double value %lf ", d->value);
-        return (as_val*) d;
     }
     else if(node::Buffer::HasInstance(obj)) {
         int size ;
@@ -1737,10 +1739,9 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     // Extract UDF module name
     if( obj->Has(Nan::New("module").ToLocalChecked())) {
         Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
-        int size = 0;
 
         if( module->IsString()) {
-            size = module->ToString()->Length()+1;
+            int size = module->ToString()->Length()+1;
             if( *filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
@@ -1915,22 +1916,21 @@ int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
+int populate_incr_op (as_operations * ops, Local<Object> obj, LogInfo * log)
 {
-
-    if ( ops == NULL ) {
+    if (ops == NULL) {
         as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
         return AS_NODE_PARAM_ERR;
     }
     char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+    if (GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
     }
 
     as_v8_detail(log, "Incr operation on bin :%s", binName);
     Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if (IsDouble(v8val, log)) {
-        double binValue = v8val->NumberValue();
+    if (is_double_value(v8val)) {
+        double binValue = double_value(v8val);
         as_v8_detail(log, "value to be incremented %lf", binValue);
         as_operations_add_incr_double(ops, binName, binValue);
         if (binName != NULL) free (binName);
@@ -1939,13 +1939,6 @@ int populate_incr_op ( as_operations * ops, Local<Object> obj, LogInfo * log)
         int64_t binValue = v8val->NumberValue();
         as_v8_detail(log, "value to be incremented %lld", binValue);
         as_operations_add_incr( ops, binName, binValue);
-        if (binName != NULL) free (binName);
-        return AS_NODE_PARAM_OK;
-    } else if (v8val->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
-        Local<Value> v8num = v8val->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
-        double binValue = v8num->NumberValue();
-        as_v8_detail(log, "value to be incremented %lf", binValue);
-        as_operations_add_incr_double(ops, binName, binValue);
         if (binName != NULL) free (binName);
         return AS_NODE_PARAM_OK;
     } else {
