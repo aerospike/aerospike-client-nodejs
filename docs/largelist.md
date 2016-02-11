@@ -207,7 +207,7 @@ The parameters for `callback` argument:
 
 Example:
 ```js
-llist.delete({'key': 'ldt_key'}, function (error, response){
+llist.remove({'key': 'ldt_key'}, function (error, response){
   if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
   } else {
