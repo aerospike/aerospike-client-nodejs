@@ -1,5 +1,5 @@
 1.0.56 / 2016-02-11
-======-============
+===================
 
 * **Improvements**
   * Support `operator.incr()` operation on double values.
