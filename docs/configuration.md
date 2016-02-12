@@ -77,7 +77,8 @@ Example:
 ```
 
 #### Setting `hosts` using String
-The hosts string should contain a comma separated list of host names and/or IP addresses, with optional port numbers. The exact format is:
+The hosts string should contain a comma separated list of host names and/or IP
+addresses, with optional port numbers. The exact format is:
 
     host [ ":" port ] *( "," host [ ":" port ] )
 
