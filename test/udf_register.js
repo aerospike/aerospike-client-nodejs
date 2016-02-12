@@ -17,12 +17,12 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
-const status = aerospike.status
-const language = aerospike.language
+const status = Aerospike.status
+const language = Aerospike.language
 
 describe('client.udfRegister()', function (done) {
   var client = helper.client
@@ -31,8 +31,7 @@ describe('client.udfRegister()', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     client.udfRegister(filename, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -41,8 +40,7 @@ describe('client.udfRegister()', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     client.udfRegister(filename, language.LUA, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -52,8 +50,7 @@ describe('client.udfRegister()', function (done) {
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
     client.udfRegister(filename, infopolicy, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -63,8 +60,7 @@ describe('client.udfRegister()', function (done) {
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
     client.udfRegister(filename, language.LUA, infopolicy, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -82,11 +78,9 @@ describe('client.udfRegister()', function (done) {
     var dir = __dirname
     var filename = dir + '/udf_test.lua'
     client.udfRegister(filename, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       client.udfRegisterWait('udf_test.lua', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         done()
       })
     })

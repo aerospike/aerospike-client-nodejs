@@ -14,7 +14,7 @@
 // limitations under the License.
 // ****************************************************************************
 
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const options = require('./util/options')
 
 exports.options = options
@@ -27,7 +27,7 @@ exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
 
-const client = aerospike.client(options.getConfig())
+const client = Aerospike.client(options.getConfig())
 exports.client = client
 
 const check = function (err) {
@@ -121,7 +121,7 @@ exports.cluster = server_info_helper
 /* global before */
 before(function (done) {
   client.connect(function (err) {
-    if (err && err.code !== aerospike.status.AEROSPIKE_OK) {
+    if (err) {
       throw new Error(err.message)
     }
     var host = {addr: options.host, port: options.port}

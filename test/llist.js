@@ -17,14 +17,14 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
 const valgen = helper.valgen
 
-const status = aerospike.status
-const policy = aerospike.policy
+const status = Aerospike.status
+const policy = Aerospike.policy
 
 describe('client.LargeList()', function (done) {
   var client = helper.client
@@ -47,7 +47,7 @@ describe('client.LargeList()', function (done) {
   after(function (done) {
     if (ldtEnabled) {
       LList.destroy(function (err) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         done()
       })
     } else {
@@ -62,12 +62,10 @@ describe('client.LargeList()', function (done) {
     var intval = {'key': 'intvalue', 'value': listval}
     // insert an integer value into the list.
     LList.add(intval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.find({'key': 'intvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
       })
@@ -81,12 +79,10 @@ describe('client.LargeList()', function (done) {
     var strval = {'key': 'stringvalue', 'value': listval}
     // insert an string value into the list.
     LList.add(strval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.find({'key': 'stringvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
       })
@@ -100,12 +96,10 @@ describe('client.LargeList()', function (done) {
     var bytesval = {'key': 'bytesvalue', 'value': listval}
     // insert a byte value into the list.
     LList.add(bytesval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.find({'key': 'bytesvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
       })
@@ -119,12 +113,10 @@ describe('client.LargeList()', function (done) {
     var bytesval = {'key': 'arrayvalue', 'value': listval}
     // insert an array element into the list.
     LList.add(bytesval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.find({'key': 'arrayvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
       })
@@ -138,12 +130,10 @@ describe('client.LargeList()', function (done) {
     var mapval = {'key': 'mapvalue', 'value': listval}
     // insert a map element into the list.
     LList.add(mapval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.find({'key': 'mapvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
       })
@@ -170,12 +160,10 @@ describe('client.LargeList()', function (done) {
     // array of values with key to be inserted into the LList.
     var arrayList = [mapval, arrayval, bytesval, stringval, integerval]
     LList.add(arrayList, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the inserted element in the list.
       LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(valList[0])
         expect(val[1].value).to.equal(valList[1])
         expect(val[2].value).to.eql(valList[2])
@@ -205,12 +193,10 @@ describe('client.LargeList()', function (done) {
     var intval = {'key': 'intvalue', 'value': listval}
     // update an integer value in the list.
     LList.update(intval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the updated element in the list.
       LList.find({'key': 'intvalue'}, function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
       })
@@ -236,12 +222,10 @@ describe('client.LargeList()', function (done) {
 
     // update an array of elements in the list.
     LList.update(arrayList, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the updated elements in the list.
       LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(valList[0])
         expect(val[1].value).to.equal(valList[1])
         expect(val[2].value).to.eql(valList[2])
@@ -268,8 +252,7 @@ describe('client.LargeList()', function (done) {
     if (!ldtEnabled) { this.skip() }
     // find an element in the list.
     LList.find({'key': 'intvalue'}, function (err, val) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(val[0]).to.have.property('value')
       done()
     })
@@ -288,8 +271,7 @@ describe('client.LargeList()', function (done) {
   it('should verify the range API of LList- expected to find existing elements', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(val.length).to.equal(5)
       done()
     })
@@ -298,8 +280,7 @@ describe('client.LargeList()', function (done) {
   it('should verify the range API of LList- expected to not find any elements', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.findRange('zbytesvalue', 'zstrvalue', function (err, val) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(val.length).to.eql(0)
       done()
     })
@@ -308,8 +289,7 @@ describe('client.LargeList()', function (done) {
   it('should verify the size API of LList ', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.size(function (err, val) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(val).to.equal(10)
       done()
     })
@@ -327,8 +307,7 @@ describe('client.LargeList()', function (done) {
   it('should verify the scan API of LList ', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.scan(function (err, val) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(val.length).to.equal(10)
       done()
     })
@@ -348,15 +327,13 @@ describe('client.LargeList()', function (done) {
     var intval = {'key': 'intvalue'}
     // remove the integer value into the list.
     LList.remove(intval, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       // verify the removed element in the list.
       LList.find({'key': 'intvalue'}, function (err, val) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND)
         LList.size(function (err, val) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(val).to.equal(9)
           done()
         })
@@ -374,11 +351,9 @@ describe('client.LargeList()', function (done) {
     // remove an array of elements from the list.
     var arrayList = [ mapval, arrayval, bytesval, stringval ]
     LList.remove(arrayList, function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       LList.size(function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val).to.equal(5)
         done()
       })
@@ -398,15 +373,12 @@ describe('client.LargeList()', function (done) {
   it('should verify removing a range of values in LList ', function (done) {
     if (!ldtEnabled) { this.skip() }
     LList.removeRange('arraybytesvalue', 'arraystrvalue', function (err, retVal) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(val.length).to.equal(0)
         LList.size(function (err, val) {
-          expect(err).to.be.ok()
-          expect(err.code).to.be.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(val).to.equal(0)
           done()
         })

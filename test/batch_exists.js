@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -27,13 +27,13 @@ const recgen = helper.recgen
 const putgen = helper.putgen
 const valgen = helper.valgen
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.batchExists()', function () {
   var client = helper.client
 
   it('should successfully find 10 records', function (done) {
-    this.timeout(3000)
+    // this.timeout(3000)
     // number of records
     var nrecords = 10
 
@@ -44,7 +44,7 @@ describe('client.batchExists()', function () {
 
     // writer using generators
     // callback provides an array of written keys
-    putgen.put(client, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -56,13 +56,11 @@ describe('client.batchExists()', function () {
         var result
         var j
 
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
         for (j = 0; j < results.length; j++) {
           result = results[j]
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
           if (j === nrecords - 1) {
             done()
           }
@@ -84,8 +82,7 @@ describe('client.batchExists()', function () {
       var result
       var j
 
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(results.length).to.equal(nrecords)
 
       for (j = 0; j < results.length; j++) {
@@ -117,7 +114,7 @@ describe('client.batchExists()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(client, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -129,8 +126,7 @@ describe('client.batchExists()', function () {
         var result
         var j
 
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
         for (j = 0; j < results.length; j++) {

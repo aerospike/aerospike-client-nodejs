@@ -47,11 +47,10 @@ describe('client.query()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
 
         client.get(key, function (err, _record, _metadata, _key) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           count++
           if (count >= total) {
             done()
@@ -167,8 +166,7 @@ describe('client.query()', function () {
       count++
     })
     stream.on('error', function (error) {
-      expect(error).to.be.ok()
-      expect(error.code).to.equal(status.AEROSPIKE_OK)
+      expect(error).not.to.be.ok()
       err++
     })
     stream.on('end', function (end) {

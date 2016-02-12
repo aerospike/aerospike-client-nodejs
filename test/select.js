@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../build/Release/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -26,8 +26,8 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-const status = aerospike.status
-const policy = aerospike.policy
+const status = Aerospike.status
+const policy = Aerospike.policy
 
 describe('client.select()', function () {
   var client = helper.client
@@ -46,11 +46,10 @@ describe('client.select()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
 
       client.select(key, bins, function (err, _record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(_record).to.only.have.keys(bins)
 
         for (var bin in _record) {
@@ -58,7 +57,7 @@ describe('client.select()', function () {
         }
 
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })
@@ -87,7 +86,7 @@ describe('client.select()', function () {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })
@@ -129,11 +128,10 @@ describe('client.select()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
 
       client.select(key, bins, pol, function (err, _record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         expect(_record).to.only.have.keys(bins)
 
         for (var bin in _record) {
@@ -141,7 +139,7 @@ describe('client.select()', function () {
         }
 
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })

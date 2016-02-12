@@ -17,11 +17,11 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.info()', function () {
   var client = helper.client
@@ -30,8 +30,7 @@ describe('client.info()', function () {
     var options = helper.options
     var host = {addr: options.host, port: options.port}
     client.info('objects', host, function (err, response, host) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(response.indexOf('objects\t')).to.eql(0)
       done()
     })

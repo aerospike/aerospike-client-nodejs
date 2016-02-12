@@ -17,13 +17,13 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
 const keygen = helper.keygen
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.execute()', function (done) {
   var client = helper.client
@@ -41,11 +41,10 @@ describe('client.execute()', function (done) {
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
     client.execute(key, udfArgs, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
       client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         done()
       })
     })
@@ -56,11 +55,10 @@ describe('client.execute()', function (done) {
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
     var key = kgen()
     client.execute(key, udfArgs, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
       client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         done()
       })
     })
@@ -72,11 +70,10 @@ describe('client.execute()', function (done) {
     var key = kgen()
     var applypolicy = {timeout: 1500}
     client.execute(key, udfArgs, applypolicy, function (err, res) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       expect(res).to.equal(0)
       client.remove(key, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         done()
       })
     })

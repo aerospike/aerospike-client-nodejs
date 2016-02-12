@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -26,7 +26,7 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.exists()', function () {
   var client = helper.client
@@ -44,12 +44,11 @@ describe('client.exists()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       client.exists(key, function (err, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })

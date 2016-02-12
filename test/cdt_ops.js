@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -25,8 +25,8 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const recgen = helper.recgen
 
-const status = aerospike.status
-const op = aerospike.operator
+const status = Aerospike.status
+const op = Aerospike.operator
 
 describe('client.operate()', function () {
   var client = helper.client
@@ -45,21 +45,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listAppend('list', 99)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 3, 4, 5, 99])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -82,21 +81,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listAppendItems('list', [99, 100])
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 3, 4, 5, 99, 100])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -119,21 +117,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listInsert('list', 2, 99)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 99, 3, 4, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -156,21 +153,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listInsertItems('list', 2, [99, 100])
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 99, 100, 3, 4, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -193,22 +189,21 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listPop('list', 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.eql(3)
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 4, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -231,22 +226,21 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listPopRange('list', 2, 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.eql([3, 4])
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -267,22 +261,21 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listPopRange('list', 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.eql([3, 4, 5])
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -305,21 +298,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listRemove('list', 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 4, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -342,21 +334,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listRemoveRange('list', 2, 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -377,21 +368,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listRemoveRange('list', 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -414,21 +404,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listClear('list')
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -451,21 +440,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listSet('list', 2, 99)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([1, 2, 99, 4, 5])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -488,21 +476,20 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listTrim('list', 1, 3)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
 
           client.get(key, function (err, record2, metadata2, key2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             expect(record2.list).to.eql([2, 3, 4])
 
             client.remove(key1, function (err, key) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) { throw new Error(err.message) }
               done()
             })
           })
@@ -525,18 +512,17 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listGet('list', 2)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.equal(3)
 
           client.remove(key1, function (err, key) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             done()
           })
         })
@@ -556,7 +542,7 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listGet('list', 99)
         ]
@@ -565,8 +551,8 @@ describe('client.operate()', function () {
           expect(err).to.be.ok()
           expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID)
 
-          client.remove(key1, function (err, key) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          client.remove(key, function (err, key) {
+            if (err) { throw new Error(err.message) }
             done()
           })
         })
@@ -588,18 +574,17 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listGetRange('list', 1, 3)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.eql([2, 3, 4])
 
           client.remove(key1, function (err, key) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             done()
           })
         })
@@ -619,18 +604,17 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listGetRange('list', 1)
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.eql([2, 3, 4, 5])
 
           client.remove(key1, function (err, key) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             done()
           })
         })
@@ -652,18 +636,17 @@ describe('client.operate()', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
         var ops = [
           op.listSize('list')
         ]
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           expect(record1.list).to.equal(5)
 
           client.remove(key1, function (err, key) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) { throw new Error(err.message) }
             done()
           })
         })

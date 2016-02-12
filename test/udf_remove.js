@@ -17,11 +17,11 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../build/Release/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.udfRemove()', function (done) {
   var client = helper.client
@@ -31,11 +31,9 @@ describe('client.udfRemove()', function (done) {
     var filename = dir + '/udf_test.lua'
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
     client.udfRegister(filename, infopolicy, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       client.udfRemove('udf_test.lua', infopolicy, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         done()
       })
     })

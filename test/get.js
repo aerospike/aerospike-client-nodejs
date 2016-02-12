@@ -17,7 +17,7 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -25,8 +25,8 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const recgen = helper.recgen
 
-const status = aerospike.status
-const policy = aerospike.policy
+const status = Aerospike.status
+const policy = Aerospike.policy
 
 describe('client.get()', function () {
   var client = helper.client
@@ -44,12 +44,11 @@ describe('client.get()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       client.get(key, function (err, record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })
@@ -89,12 +88,11 @@ describe('client.get()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       client.get(key, pol, function (err, record, metadata, key) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         client.remove(key, function (err, key) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          if (err) { throw new Error(err.message) }
           done()
         })
       })

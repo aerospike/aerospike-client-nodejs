@@ -17,11 +17,11 @@
 /* global describe, it */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.index()', function () {
   var client = helper.client
@@ -32,8 +32,7 @@ describe('client.index()', function () {
       bin: 'integer_bin',
     index: 'integer_index' }
     client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -42,8 +41,7 @@ describe('client.index()', function () {
     var args = { ns: helper.namespace, set: helper.set, bin: 'string_bin',
     index: 'string_index' }
     client.createStringIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -52,16 +50,14 @@ describe('client.index()', function () {
     var args = { ns: helper.namespace, set: helper.set, bin: 'policy_bin',
     index: 'policy_index', policy: { timeout: 1000, send_as_is: true, check_bounds: false }}
     client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
 
   it('should drop an index', function (done) {
     client.indexRemove(helper.namespace, 'string_integer', function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -72,11 +68,9 @@ describe('client.index()', function () {
       bin: 'integer_done',
     index: 'integer_index_done' }
     client.createIntegerIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       client.indexCreateWait(helper.namespace, 'integer_index_done', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         done()
       })
     })
@@ -88,11 +82,9 @@ describe('client.index()', function () {
       bin: 'string_done',
     index: 'string_index_done' }
     client.createStringIndex(args, function (err) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(err).not.to.be.ok()
       client.indexCreateWait(helper.namespace, 'string_index_done', 1000, function (err) {
-        expect(err).to.be.ok()
-        expect(err.code).to.equal(status.AEROSPIKE_OK)
+        expect(err).not.to.be.ok()
         done()
       })
     })

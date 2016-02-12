@@ -17,7 +17,7 @@
 /* global describe, it, before, after */
 
 // we want to test the built aerospike module
-const aerospike = require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -25,7 +25,7 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-const status = aerospike.status
+const status = Aerospike.status
 
 describe('client.query() - without where clause(Scan)', function () {
   const client = helper.client
@@ -49,11 +49,10 @@ describe('client.query() - without where clause(Scan)', function () {
 
       // write the record then check
       client.put(key, record, meta, function (err, key) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) { throw new Error(err.message) }
 
         client.get(key, function (err, _record, _metadata, _key) {
-          expect(err).to.be.ok()
-          expect(err.code).to.equal(status.AEROSPIKE_OK)
+          expect(err).not.to.be.ok()
           count++
           if (count >= total) {
             done()
@@ -116,7 +115,7 @@ describe('client.query() - without where clause(Scan)', function () {
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total)
-      expect(err).to.equal(0)
+      expect(err).not.to.be.ok()
       done()
     })
   })
@@ -140,7 +139,7 @@ describe('client.query() - without where clause(Scan)', function () {
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total)
-      expect(err).to.equal(0)
+      expect(err).not.to.be.ok()
       done()
     })
   })
