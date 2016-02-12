@@ -44,6 +44,19 @@ describe('client.index()', function () {
     })
   })
 
+  it('should create a geospatial index', function (done) {
+    var args = {
+      ns: helper.namespace,
+      set: helper.set,
+      bin: 'geo_bin',
+      index: 'geo_index'
+    }
+    client.createGeo2DSphereIndex(args, function (err) {
+      expect(err).not.to.be.ok()
+      done()
+    })
+  })
+
   it('should create an integer index with info policy', function (done) {
     var args = { ns: helper.namespace, set: helper.set, bin: 'policy_bin',
     index: 'policy_index', policy: { timeout: 1000, send_as_is: true, check_bounds: false }}
