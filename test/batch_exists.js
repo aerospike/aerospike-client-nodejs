@@ -43,7 +43,7 @@ describe('client.batchExists()', function () {
 
     // writer using generators
     // callback provides an array of written keys
-    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })
@@ -94,7 +94,7 @@ describe('client.batchExists()', function () {
     // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
-    putgen.put(client._currentClient, nrecords, kgen, rgen, mgen, function (written) {
+    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
       })

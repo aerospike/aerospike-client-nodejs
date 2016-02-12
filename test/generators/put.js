@@ -14,8 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
-var Aerospike = require('../../lib/aerospike')
-var status = Aerospike.status
+require('../../lib/aerospike')
+const helper = require('../test_helper')
 
 function put_done (total, done) {
   var entries = {}
@@ -44,7 +44,7 @@ function put_done (total, done) {
   }
 }
 
-function put (client, n, keygen, recgen, metagen, done) {
+function put (n, keygen, recgen, metagen, done) {
   var d = put_done(n, done)
   var i
 
@@ -53,7 +53,7 @@ function put (client, n, keygen, recgen, metagen, done) {
     var metadata = metagen(key)
     var record = recgen(key, metadata)
     var callback = d(key, record, metadata)
-    Aerospike.put(key, record, metadata, callback)
+    helper.client.put(key, record, metadata, callback)
   }
 }
 
