@@ -33,7 +33,6 @@ describe('client.batchExists()', function () {
   var client = helper.client
 
   it('should successfully find 10 records', function (done) {
-    // this.timeout(3000)
     // number of records
     var nrecords = 10
 
@@ -53,24 +52,18 @@ describe('client.batchExists()', function () {
       expect(len).to.equal(nrecords)
 
       client.batchExists(keys, function (err, results) {
-        var result
-        var j
-
         expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
-        for (j = 0; j < results.length; j++) {
-          result = results[j]
-          if (j === nrecords - 1) {
-            done()
-          }
+        for (var i = 0; i < results.length; i++) {
+          expect(results[i].status).to.equal(status.AEROSPIKE_OK)
         }
+        done()
       })
     })
   })
 
   it('should fail finding 10 records', function (done) {
-    this.timeout(3000)
     // number of records
     var nrecords = 10
 
@@ -79,30 +72,17 @@ describe('client.batchExists()', function () {
     var keys = keygen.range(kgen, nrecords)
 
     client.batchExists(keys, function (err, results) {
-      var result
-      var j
-
       expect(err).not.to.be.ok()
       expect(results.length).to.equal(nrecords)
 
-      for (j = 0; j < results.length; j++) {
-        result = results[j]
-        // This if-else check is introduced to handle test failures
-        // in backward compatibility issues. Should be removed when an official release
-        // of C client is done, with error code changes.
-        if (result.status !== 602) {
-          expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-        } else {
-          expect(result.status).to.equal(602)
-        }
+      for (var i = 0; i < results.length; i++) {
+        expect(results[i].status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
       }
-
       done()
     })
   })
 
   it('should successfully find 1000 records', function (done) {
-    this.timeout(5000)
     // number of records
     var nrecords = 1000
 
@@ -123,17 +103,12 @@ describe('client.batchExists()', function () {
       expect(len).to.equal(nrecords)
 
       client.batchExists(keys, function (err, results) {
-        var result
-        var j
-
         expect(err).not.to.be.ok()
         expect(results.length).to.equal(len)
 
-        for (j = 0; j < results.length; j++) {
-          result = results[j]
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
+        for (var i = 0; i < results.length; i++) {
+          expect(results[i].status).to.equal(status.AEROSPIKE_OK)
         }
-
         done()
       })
     })
