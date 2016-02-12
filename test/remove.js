@@ -50,9 +50,9 @@ describe('client.remove()', function () {
         if (err) { throw new Error(err.message) }
 
         client.remove(key, function (err, key) {
+          if (err) { throw new Error(err.message) }
 
           client.get(key, function (err, record, metadata, key) {
-            expect(err).to.be.ok()
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
           })
@@ -83,7 +83,6 @@ describe('client.remove()', function () {
           expect(err).not.to.be.ok()
 
           client.get(key, function (err, record, metadata, key) {
-            expect(err).to.be.ok()
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
           })
@@ -100,7 +99,6 @@ describe('client.remove()', function () {
     var key = kgen()
 
     client.remove(key, function (err, key) {
-      expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
       done()
     })
