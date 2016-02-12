@@ -87,14 +87,12 @@ static void * prepare(ResolveArgs(info))
     LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
     char* filepath              = NULL;
-    int argc                    = info.Length();
-    int argpos                  = 0;
     char* fname                 = data->filename;
     memset(fname, 0, FILESIZE);
-    
+
     // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+    if ( info[UDF_ARG_CB]->IsFunction()) {
+        data->callback.Reset(info[UDF_ARG_CB].As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
     }
     else {
@@ -110,7 +108,6 @@ static void * prepare(ResolveArgs(info))
         filepath = (char*) cf_malloc( sizeof(char) * length);
         strcpy( filepath, *String::Utf8Value(info[UDF_ARG_FILE]->ToString()) );
         filepath[length-1] = '\0';
-        argpos++;
     }
     else {
         as_v8_error(log, "UDF file name should be string");
@@ -209,23 +206,21 @@ static void * prepare(ResolveArgs(info))
     data->filename[filesize+1] = '\0';
     //Wrap the local buffer as an as_bytes object.
     as_bytes_init_wrap(&data->content, file_content, size, true);
-    
-    
+
+
     // The second argument should specify the type of the UDF.
     // Currently only type LUA is supported.
     if( info[UDF_ARG_TYPE]->IsNumber()) {
         data->type = (as_udf_type) V8INTEGER_TO_CINTEGER( info[UDF_ARG_TYPE]);
-        argpos++;
     }
     else {
         data->type = AS_UDF_TYPE_LUA;
         as_v8_detail(log, "UDF type not an argument using default value(LUA)");
     }
 
-    // policy can be passed after language type argument or without the language type argument.
-    if ( argc > 3 || ( argc > 2 && !info[UDF_ARG_TYPE]->IsNumber())) {
+    if (info[UDF_ARG_IPOLICY]->IsObject()) {
         data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if ( infopolicy_from_jsobject(data->policy, info[argpos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if ( infopolicy_from_jsobject(data->policy, info[UDF_ARG_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             data->param_err = 1;
