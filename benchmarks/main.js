@@ -99,6 +99,7 @@ var logger = new (winston.Logger)({
 // *****************************************************************************
 
 function finalize () {
+  stats.stop()
   if (argv.summary === true && rwWorkers > 0) {
     return stats.report_final(argv, console.log)
   }
@@ -183,6 +184,12 @@ function worker_results_interval (worker, interval_worker_stats) {
     }
   }
   if (++counter % argv.processes === 0) {
+    stats.interval({
+      'read': interval_stats[0],
+      'write': interval_stats[1],
+      'query': interval_stats[2],
+      'scan': interval_stats[3]
+    })
     print_interval_stats()
   }
 }
@@ -306,6 +313,8 @@ cluster.on('exit', function (worker, code, signal) {
 
 if (argv.time !== undefined) {
   setTimeout(function () {
+    reset_interval_stats()
+    worker_probe(cluster)
     worker_shutdown(cluster)
   }, argv.time * 1000)
 }
@@ -315,6 +324,7 @@ cluster.setupMaster({
   silent: false
 })
 
+stats.start()
 for (var p = 0; p < argv.processes; p++) {
   worker_spawn()
 }

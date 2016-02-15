@@ -34,6 +34,11 @@ var time_hist = {
   '> 32': 0
 }
 
+var trans = { total: { count: 0, min: Infinity, max: 0 } }
+
+var start_time
+var total_duration
+
 const TABLE_CHARS = {
   'top': '',
   'top-mid': '',
@@ -152,6 +157,44 @@ function print_table (table, print, prefix) {
   })
 }
 
+function print_transactions (transactions, print, prefix) {
+  var thead = []
+  thead.push('')
+  for (var t in transactions) {
+    thead.push(t)
+  }
+
+  var table = new Table({
+    head: thead,
+    chars: TABLE_CHARS,
+    style: TABLE_STYLE
+  })
+  var columns = Object.keys(transactions)
+
+  var row = columns.map(function (col) {
+    return number_format(transactions[col]['count'], 0)
+  })
+  table.push({'Total': row})
+
+  var seconds = total_duration / 1000
+  row = columns.map(function (col) {
+    return number_format(transactions[col]['count'] / seconds, 0)
+  })
+  table.push({'TPS': row})
+
+  row = columns.map(function (col) {
+    return number_format(transactions[col]['min'], 0)
+  })
+  table.push({'Min TPS': row})
+
+  row = columns.map(function (col) {
+    return number_format(transactions[col]['max'], 0)
+  })
+  table.push({'Max TPS': row})
+
+  print_table(table, print, prefix)
+}
+
 function print_histogram (histogram, print, prefix) {
   var total = Object.keys(histogram).map(function (k) {
     return histogram[k]
@@ -176,9 +219,35 @@ function print_histogram (histogram, print, prefix) {
   print_table(table, print, prefix)
 }
 
+function start() {
+  start_time = process.hrtime()
+}
+
+function stop() {
+  var end_time = process.hrtime()
+  total_duration = duration(start_time, end_time)
+}
+
 function iteration (operations) {
   status_histogram(operations)
   time_histogram(operations)
+}
+
+function aggregate_interval_stats(stat_name, tx) {
+  var stats = trans[stat_name] = trans[stat_name] || { count: 0, max: 0, min: Infinity }
+  stats['count'] += tx
+  if (tx > stats['max']) stats['max'] = tx
+  if (tx < stats['min']) stats['min'] = tx
+}
+
+function interval (interval_stats) {
+  var total_tx = 0
+  for (var stat in interval_stats) {
+    var tx = interval_stats[stat][0]
+    total_tx += tx
+    aggregate_interval_stats(stat, tx)
+  }
+  aggregate_interval_stats('total', total_tx)
 }
 
 function report_final (argv, print) {
@@ -198,6 +267,9 @@ function report_final (argv, print) {
     print()
     print('  Configuration')
     print_table(configTable, print)
+    print()
+    print('  Transactions / TPS')
+    print_transactions(trans, print)
     print()
     print('  Durations')
     print_histogram(time_hist, print)
@@ -222,7 +294,10 @@ function report_final (argv, print) {
 }
 
 module.exports = {
+  start: start,
+  stop: stop,
   iteration: iteration,
+  interval: interval,
   print_histogram: print_histogram,
   report_final: report_final,
   parse_time_to_secs: parse_time_to_secs
