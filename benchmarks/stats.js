@@ -141,6 +141,13 @@ function time_units (v) {
   return number_format(v, 2) + ' ' + u
 }
 
+function calculate_tps (transactions) {
+  var seconds = total_duration / 1000
+  Object.keys(transactions).forEach(function (stat) {
+    transactions[stat]['tps'] = transactions[stat]['count'] / seconds
+  })
+}
+
 function status_histogram (operations) {
   operations.map(function (op) {
     return op[OPERATION_STATUS]
@@ -176,9 +183,8 @@ function print_transactions (transactions, print, prefix) {
   })
   table.push({'Total': row})
 
-  var seconds = total_duration / 1000
   row = columns.map(function (col) {
-    return number_format(transactions[col]['count'] / seconds, 0)
+    return number_format(transactions[col]['tps'], 0)
   })
   table.push({'TPS': row})
 
@@ -219,11 +225,11 @@ function print_histogram (histogram, print, prefix) {
   print_table(table, print, prefix)
 }
 
-function start() {
+function start () {
   start_time = process.hrtime()
 }
 
-function stop() {
+function stop () {
   var end_time = process.hrtime()
   total_duration = duration(start_time, end_time)
 }
@@ -233,7 +239,7 @@ function iteration (operations) {
   time_histogram(operations)
 }
 
-function aggregate_interval_stats(stat_name, tx) {
+function aggregate_interval_stats (stat_name, tx) {
   var stats = trans[stat_name] = trans[stat_name] || { count: 0, max: 0, min: Infinity }
   stats['count'] += tx
   if (tx > stats['max']) stats['max'] = tx
@@ -256,6 +262,8 @@ function report_final (argv, print) {
       chars: TABLE_CHARS,
       style: TABLE_STYLE
     })
+
+    calculate_tps(trans)
 
     configTable.push({'operations': argv.operations})
     configTable.push({'iterations': argv.iterations === undefined ? 'undefined' : argv.iterations})
@@ -284,6 +292,7 @@ function report_final (argv, print) {
         iterations: argv.iterations,
         processes: argv.processes
       },
+      transactions: trans,
       durations: time_hist,
       status_codes: hist
     }

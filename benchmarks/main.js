@@ -190,7 +190,9 @@ function worker_results_interval (worker, interval_worker_stats) {
       'query': interval_stats[2],
       'scan': interval_stats[3]
     })
-    print_interval_stats()
+    if (!argv.silent) {
+      print_interval_stats()
+    }
   }
 }
 
@@ -236,18 +238,18 @@ function worker_results (worker) {
 *   */
 var keyrange = argv.keyRange.max - argv.keyRange.min
 
-logger.info('host: ' + argv.host + ' port:' + argv.port + ', namespace: ' + argv.namespace + ', set: ' + argv.set + ', worker processes: ' + argv.processes +
-  ', keys: ' + keyrange + ', read: ' + ROPSPCT + '%, write: ' + WOPSPCT + '%')
+if (!argv.silent) {
+  logger.info('host: ' + argv.host + ' port: ' + argv.port + ', namespace: ' + argv.namespace + ', set: ' + argv.set + ', worker processes: ' + argv.processes +
+    ', keys: ' + keyrange + ', read: ' + ROPSPCT + '%, write: ' + WOPSPCT + '%')
+}
 
 /**
  * Flush out the current interval_stats and probe the worker every second.
  */
-if (!argv.silent) {
-  setInterval(function () {
-    reset_interval_stats()
-    worker_probe(cluster)
-  }, 1000)
-}
+setInterval(function () {
+  reset_interval_stats()
+  worker_probe(cluster)
+}, 1000)
 
 /**
  * Reset the value of internal_stats.
