@@ -1,3 +1,10 @@
+Head
+==================
+
+* **Improvements**
+  * Collect TPS stats in benchmarks.
+  * Update Travis CI config to test latest Node.js release & add badge. Thanks to @revington!
+
 1.0.56 / 2016-02-11
 ===================
 
