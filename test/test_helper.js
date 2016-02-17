@@ -57,6 +57,7 @@ UDFHelper.prototype.remove = function (filename, cb) {
 function ServerInfoHelper () {
   this.features = []
   this.nsconfig = {}
+  this.cluster = []
 }
 
 function IndexHelper () { }

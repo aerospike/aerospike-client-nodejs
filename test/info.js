@@ -25,13 +25,25 @@ const status = aerospike.status
 
 describe('client.info()', function () {
   var client = helper.client
+  var hosts = client.config.hosts
 
-  it('should get "objects" from specific host in cluster', function (done) {
-    var options = helper.options
-    var host = {addr: options.host, port: options.port}
-    client.info('objects', host, function (err, response, host) {
+  it('should get "objects" from all hosts in cluster', function (done) {
+    var responses = 0
+    client.info('objects', function (err, response, host) {
+      responses++
       expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(response.indexOf('objects')).to.eql(0)
+      if (responses === hosts.length) done()
+    })
+  })
+
+  it('should get "objects" from specific host in cluster', function (done) {
+    var host = hosts[0]
+    client.info('objects', host, function (err, response, responding_host) {
+      expect(err).to.be.ok()
+      expect(err.code).to.equal(status.AEROSPIKE_OK)
+      expect(responding_host).to.eql(host)
       expect(response.indexOf('objects\t')).to.eql(0)
       done()
     })
