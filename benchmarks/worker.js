@@ -72,9 +72,6 @@ var logger = new (winston.Logger)({
 // *****************************************************************************
 
 var config = {
-  hosts: [
-    { addr: argv.host, port: argv.port }
-  ],
   policies: {
     timeout: argv.timeout
   },
@@ -84,6 +81,10 @@ var config = {
     maxNamespaces: 8,
     takeoverThresholdSeconds: 30
   }
+}
+
+if (argv.host) {
+  config.hosts = [{addr: argv.host, port: argv.port || 3000}]
 }
 
 if (argv.user !== null) {

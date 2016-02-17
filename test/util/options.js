@@ -31,12 +31,12 @@ var parser = yargs
     },
     host: {
       alias: 'h',
-      default: '127.0.0.1',
+      default: null,
       describe: 'Aerospike database address.'
     },
     port: {
       alias: 'p',
-      default: 3000,
+      default: null,
       describe: 'Aerospike database port.'
     },
     timeout: {
@@ -85,10 +85,12 @@ var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim(
 options.getConfig = function () {
   var test_dir = __dirname.split('/').slice(0, -1).join('/')
   var config = {
-    hosts: [{addr: options.host, port: options.port}],
     log: {level: options.log, file: options.log_file},
     policies: {timeout: options.timeout},
     modlua: {userPath: test_dir}
+  }
+  if (options.host !== null) {
+    config.hosts = [{addr: options.host, port: options.port || 3000}]
   }
   if (options.user !== null) {
     config.user = options.user
