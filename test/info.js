@@ -23,12 +23,23 @@ const expect = require('expect.js')
 
 describe('client.info()', function () {
   var client = helper.client
+  var hosts = client.config.hosts
+
+  it('should get "objects" from all hosts in cluster', function (done) {
+    var responses = 0
+    client.info('objects', function (err, response, host) {
+      responses++
+      expect(err).not.to.be.ok()
+      expect(response.indexOf('objects')).to.eql(0)
+      if (responses === hosts.length) done()
+    })
+  })
 
   it('should get "objects" from specific host in cluster', function (done) {
-    var options = helper.options
-    var host = {addr: options.host, port: options.port}
-    client.info('objects', host, function (err, response, host) {
+    var host = hosts[0]
+    client.info('objects', host, function (err, response, responding_host) {
       expect(err).not.to.be.ok()
+      expect(responding_host).to.eql(host)
       expect(response.indexOf('objects\t')).to.eql(0)
       done()
     })

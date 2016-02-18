@@ -50,12 +50,47 @@ and sent to server in same format. Leave empty for clusters running without rest
 
 ### `hosts` attribute
 
-The `hosts` attribute should contain an Array of hosts with which the client should attempt to connect. On `client.connect()`, the client iterates through the list of hosts until it successfully connects with one.
+The `hosts` attribute should contain a list of hosts with which the client
+should attempt to connect. On `client.connect()`, the client iterates through
+the list of hosts until it successfully connects with one.
 
+If the hosts attribute is not specified, the client will attempt to read the
+hosts config from the environment variable `AEROSPIKE_HOSTS` instead.
+
+The default is `localhost:3000`.
+
+#### Setting `hosts` using Array
 Each entry in the list is a Object containing the following attributes:
 
-- `addr` - The IP address or domain name of the host.
+- `addr` - The IP address or host name of the host.
 - `port` - The listening port of the host. If not specified, the default is 3000.
+
+Example:
+
+```javascript
+  var config = {
+    hosts: [
+      { addr: '192.168.0.1', port: 3000 },
+      { addr: '192.168.0.2' }
+    ]
+  }
+```
+
+#### Setting `hosts` using String
+The hosts string should contain a comma separated list of host names and/or IP
+addresses, with optional port numbers. The exact format is:
+
+    host [ ":" port ] *( "," host [ ":" port ] )
+
+Example:
+
+```javascript
+  var config = {
+    hosts: '192.168.0.1:3000,192.168.0.2:3000'
+  }
+```
+
+The same format can be used in the `AEROSPIKE_HOSTS` environment variable.
 
 ### `connTimeoutMs` attribute
 

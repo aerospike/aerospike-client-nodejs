@@ -57,6 +57,7 @@ UDFHelper.prototype.remove = function (filename, cb) {
 function ServerInfoHelper () {
   this.features = []
   this.nsconfig = {}
+  this.cluster = []
 }
 
 function IndexHelper () { }
@@ -89,18 +90,18 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
   return this.nsconfig['ldt-enabled'] === 'true'
 }
 
-ServerInfoHelper.prototype.fetch_info = function (addr) {
+ServerInfoHelper.prototype.fetch_info = function () {
   var _this = this
-  client.info('features', addr, function (err, result) {
+  client.info('features', function (err, result) {
     check(err)
     var features = result.split('\n')[0].split('\t')[1]
     _this.features = features.split(';')
   })
 }
 
-ServerInfoHelper.prototype.fetch_namespace_config = function (addr, ns) {
+ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
   var _this = this
-  client.info('namespace/' + ns, addr, function (err, result) {
+  client.info('namespace/' + ns, function (err, result) {
     check(err)
     var config = result.split('\n')[0].split('\t')[1]
     config.split(';').forEach(function (nv) {
@@ -124,9 +125,8 @@ before(function (done) {
     if (err) {
       throw new Error(err.message)
     }
-    var host = {addr: options.host, port: options.port}
-    server_info_helper.fetch_info(host)
-    server_info_helper.fetch_namespace_config(host, options.namespace)
+    server_info_helper.fetch_info()
+    server_info_helper.fetch_namespace_config(options.namespace)
     done()
   })
 })

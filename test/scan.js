@@ -28,17 +28,16 @@ const valgen = helper.valgen
 describe('client.query() - without where clause(Scan)', function () {
   const client = helper.client
 
+  const number_of_records = 100
+
   before(function (done) {
     helper.udf.register('scan.lua')
-
-    // counters
-    var total = 100
-    var count = 0
 
     // generators
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
+    var count = 0
     function iteration (i) {
       // values
       var key = {ns: helper.namespace, set: helper.set, key: 'test/scan/' + i.toString()}
@@ -52,14 +51,14 @@ describe('client.query() - without where clause(Scan)', function () {
         client.get(key, function (err, _record, _metadata, _key) {
           expect(err).not.to.be.ok()
           count++
-          if (count >= total) {
+          if (count >= number_of_records) {
             done()
           }
         })
       })
     }
 
-    for (var i = 0; i < total; i++) {
+    for (var i = 0; i < number_of_records; i++) {
       iteration(i)
     }
   })
@@ -73,7 +72,7 @@ describe('client.query() - without where clause(Scan)', function () {
     this.timeout(5000)
     // counters
     var count = 0
-    var err = 0
+    var errors = 0
 
     var query = client.query(helper.namespace, helper.set)
 
@@ -83,12 +82,12 @@ describe('client.query() - without where clause(Scan)', function () {
       count++
     })
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+      errors++
     })
     stream.on('end', function (end) {
       // derive it as a percentage.
-      expect(count).to.be.greaterThan(99)
-      expect(err).to.equal(0)
+      expect(count).to.not.be.lessThan(number_of_records)
+      expect(errors).to.equal(0)
 
       done()
     })
@@ -96,9 +95,8 @@ describe('client.query() - without where clause(Scan)', function () {
 
   it('should query and select no bins', function (done) {
     this.timeout(5000)
-    var total = 100
     var count = 0
-    var err = 0
+    var errors = 0
 
     var args = {nobins: true}
     var query = client.query(helper.namespace, helper.set, args)
@@ -109,20 +107,19 @@ describe('client.query() - without where clause(Scan)', function () {
       count++
     })
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+      errors++
     })
     stream.on('end', function (end) {
-      expect(count).to.be.greaterThan(total)
-      expect(err).not.to.be.ok()
+      expect(count).to.not.be.lessThan(number_of_records)
+      expect(errors).to.equal(0)
       done()
     })
   })
 
   it('should query and select only few bins in the record', function (done) {
     this.timeout(5000)
-    var total = 99
     var count = 0
-    var err = 0
+    var errors = 0
 
     var args = {select: ['i', 's']}
     var query = client.query(helper.namespace, helper.set, args)
@@ -133,11 +130,11 @@ describe('client.query() - without where clause(Scan)', function () {
       count++
     })
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+      errors++
     })
     stream.on('end', function (end) {
-      expect(count).to.be.greaterThan(total)
-      expect(err).not.to.be.ok()
+      expect(count).to.not.be.lessThan(number_of_records)
+      expect(errors).to.equal(0)
       done()
     })
   })
@@ -146,14 +143,14 @@ describe('client.query() - without where clause(Scan)', function () {
     var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
     var scanBackground = client.query(helper.namespace, helper.set, args)
 
-    var err = 0
+    var errors = 0
     var stream = scanBackground.execute()
 
     var infoCallback = function (scanJobStats, scanId) {
       done()
     }
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+      errors++
     })
     stream.on('end', function (scanId) {
       scanBackground.Info(scanId, infoCallback)
