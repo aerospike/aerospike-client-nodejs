@@ -98,9 +98,11 @@ if (argv.password !== null) {
 var client = aerospike.client(config)
 
 client.connect(function (err) {
-  if (err && err.code !== 0) {
+  if (err) {
     logger.error('Aerospike server connection error: ', err)
     process.exit(1)
+  } else {
+    logger.info('worker connected: ' + client.config.hosts.map(function (host) { return host.addr + ':' + host.port }))
   }
 })
 

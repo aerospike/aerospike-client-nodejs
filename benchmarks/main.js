@@ -239,7 +239,7 @@ function worker_results (worker) {
 var keyrange = argv.keyRange.max - argv.keyRange.min
 
 if (!argv.silent) {
-  logger.info('host: ' + argv.host + ' port: ' + argv.port + ', namespace: ' + argv.namespace + ', set: ' + argv.set + ', worker processes: ' + argv.processes +
+  logger.info('namespace: ' + argv.namespace + ', set: ' + argv.set + ', worker processes: ' + argv.processes +
     ', keys: ' + keyrange + ', read: ' + ROPSPCT + '%, write: ' + WOPSPCT + '%')
 }
 

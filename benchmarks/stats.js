@@ -34,7 +34,7 @@ var time_hist = {
   '> 32': 0
 }
 
-var trans = { total: { count: 0, min: Infinity, max: 0 } }
+var trans = { total: { count: 0, min_tps: Infinity, max_tps: 0 } }
 
 var start_time
 var total_duration
@@ -164,6 +164,32 @@ function print_table (table, print, prefix) {
   })
 }
 
+function print_env_table (print, prefix) {
+  var envTable = new Table({
+    chars: TABLE_CHARS,
+    style: TABLE_STYLE
+  })
+
+  envTable.push({'Node.js Version': process.versions.node})
+  envTable.push({'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || '-'})
+
+  print_table(envTable, print, prefix)
+}
+
+function print_config_table (config, print, prefix) {
+  var configTable = new Table({
+    chars: TABLE_CHARS,
+    style: TABLE_STYLE
+  })
+
+  configTable.push({'operations': config.operations})
+  configTable.push({'iterations': config.iterations === undefined ? 'undefined' : config.iterations})
+  configTable.push({'processes': config.processes})
+  configTable.push({'time': config.time === undefined ? 'undefined' : time_units(config.time)})
+
+  print_table(configTable, print, prefix)
+}
+
 function print_transactions (transactions, print, prefix) {
   var thead = []
   thead.push('')
@@ -189,12 +215,12 @@ function print_transactions (transactions, print, prefix) {
   table.push({'TPS': row})
 
   row = columns.map(function (col) {
-    return number_format(transactions[col]['min'], 0)
+    return number_format(transactions[col]['min_tps'], 0)
   })
   table.push({'Min TPS': row})
 
   row = columns.map(function (col) {
-    return number_format(transactions[col]['max'], 0)
+    return number_format(transactions[col]['max_tps'], 0)
   })
   table.push({'Max TPS': row})
 
@@ -240,10 +266,10 @@ function iteration (operations) {
 }
 
 function aggregate_interval_stats (stat_name, tx) {
-  var stats = trans[stat_name] = trans[stat_name] || { count: 0, max: 0, min: Infinity }
+  var stats = trans[stat_name] = trans[stat_name] || { count: 0, max_tps: 0, min_tps: Infinity }
   stats['count'] += tx
-  if (tx > stats['max']) stats['max'] = tx
-  if (tx < stats['min']) stats['min'] = tx
+  if (tx > stats['max_tps']) stats['max_tps'] = tx
+  if (tx < stats['min_tps']) stats['min_tps'] = tx
 }
 
 function interval (interval_stats) {
@@ -257,26 +283,18 @@ function interval (interval_stats) {
 }
 
 function report_final (argv, print) {
+  calculate_tps(trans)
   if (!argv.json) {
-    var configTable = new Table({
-      chars: TABLE_CHARS,
-      style: TABLE_STYLE
-    })
-
-    calculate_tps(trans)
-
-    configTable.push({'operations': argv.operations})
-    configTable.push({'iterations': argv.iterations === undefined ? 'undefined' : argv.iterations})
-    configTable.push({'processes': argv.processes})
-    configTable.push({'time': argv.time === undefined ? 'undefined' : time_units(argv.time)})
-
     print()
     print('SUMMARY')
     print()
-    print('  Configuration')
-    print_table(configTable, print)
+    print('  Environment')
+    print_env_table(print)
     print()
-    print('  Transactions / TPS')
+    print('  Configuration')
+    print_config_table(argv, print)
+    print()
+    print('  Transactions')
     print_transactions(trans, print)
     print()
     print('  Durations')
@@ -287,11 +305,16 @@ function report_final (argv, print) {
     print()
   } else {
     var output = {
+      env: {
+        nodejs: process.versions.node,
+        'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || null
+      },
       configuration: {
         operations: argv.operations,
         iterations: argv.iterations,
         processes: argv.processes
       },
+      duration: total_duration,
       transactions: trans,
       durations: time_hist,
       status_codes: hist
