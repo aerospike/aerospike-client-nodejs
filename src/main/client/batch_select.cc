@@ -34,13 +34,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define BSELECT_ARG_POS_KEY     0
-#define BSELECT_ARG_POS_BINS     1
-#define BSELECT_ARG_POS_BPOLICY 2 // Batch policy position and callback position is not same
-#define BSELECT_ARG_POS_CB      3 // in the argument list for every invoke of batch_get. If
-// writepolicy is not passed from node application, argument
-// position for callback changes.
-
 using namespace v8;
 
 /*******************************************************************************
@@ -54,7 +47,7 @@ typedef struct AsyncData {
     aerospike * as;
     int node_err;            // To Keep track of the parameter errors from Nodejs
     as_error err;
-    as_policy_batch policy;
+    as_policy_batch* policy;
     as_batch batch;          // Passed as input to aerospike_batch_get
     as_batch_read  *results; // Results from a aerospike_batch_get operation
     uint32_t n;
@@ -121,74 +114,64 @@ static void * prepare(ResolveArgs(info))
     data->node_err = 0;
     data->n = 0;
     data->results = NULL;
-    // Local variables
-    as_batch * batch = &data->batch;
-    as_policy_batch * policy = &data->policy;
-
-    int arglength = info.Length();
-
+    data->policy = NULL;
     LogInfo * log = data->log = client->log;
 
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    Local<Value> maybe_keys = info[0];
+    Local<Value> maybe_bins = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
+
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "batch_get callback registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "Arglist must contain a callback function");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[BSELECT_ARG_POS_KEY]->IsArray() ) {
-        Local<Array> keys = Local<Array>::Cast(info[BSELECT_ARG_POS_KEY]);
-        if( batch_from_jsarray(batch, keys, log) != AS_NODE_PARAM_OK) {
+    if (maybe_keys->IsArray()) {
+        Local<Array> keys = Local<Array>::Cast(maybe_keys);
+        if (batch_from_jsarray(&data->batch, keys, log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "parsing batch keys failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
-        //Parameter passed is not an array of Key Objects "ERROR..!"
+    } else {
         as_v8_error(log, "Batch key must be an array of key objects");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-    // To select the values of given bin, not complete record.
-    if ( info[BSELECT_ARG_POS_BINS]->IsArray() ) {
-        Local<Array> v8bins = Local<Array>::Cast(info[BSELECT_ARG_POS_BINS]);
-        int res = bins_from_jsarray(&data->bins, &data->numbins, v8bins, log);
-        if ( res != AS_NODE_PARAM_OK)
-        {
+
+    if (maybe_bins->IsArray() ) {
+        Local<Array> bins = Local<Array>::Cast(maybe_bins);
+        int res = bins_from_jsarray(&data->bins, &data->numbins, bins, log);
+        if (res != AS_NODE_PARAM_OK) {
             as_v8_error(log,"Parsing bins failed in select ");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else
-    {
+    } else {
         as_v8_error(log, "Bin names should be an array of string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
 
     }
 
-    if (arglength > 2 ) {
-        if ( info[BSELECT_ARG_POS_BPOLICY]->IsObject() ) {
-            if (batchpolicy_from_jsobject(policy, info[BSELECT_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing batch policy failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Batch policy must be an object");
+    if (maybe_policy->IsObject() ) {
+        data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
+        if (batchpolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing batch policy failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
-        as_v8_detail(log, "Arglist does not contain batch policy, using default values");
-        as_policy_batch_init(policy);
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Batch policy must be an object");
+        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
     return data;
@@ -213,7 +196,7 @@ static void execute(uv_work_t * req)
     aerospike *     as      = data->as;
     as_error  *     err     = &data->err;
     as_batch  *     batch   = &data->batch;
-    as_policy_batch * policy= &data->policy;
+    as_policy_batch * policy= data->policy;
     LogInfo * log           = data->log;
     const char** bins       = (const char**) data->bins;
     uint32_t numbins        = data->numbins;
@@ -344,7 +327,6 @@ static void respond(uv_work_t * req, int status)
     data->callback.Reset();
 
     // clean up any memory we allocated
-    
      for ( uint32_t i = 0; i < data->numbins; i++) {
          cf_free(data->bins[i]);
      }
@@ -355,6 +337,9 @@ static void respond(uv_work_t * req, int status)
     }
     if (batch_results != NULL) {
         cf_free(batch_results);
+    }
+    if (data->policy != NULL) {
+        cf_free(data->policy);
     }
 
     as_v8_debug(log, "Cleaned up the resources");

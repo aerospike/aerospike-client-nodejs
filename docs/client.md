@@ -250,7 +250,7 @@ batchSelect()
 -->
 <a name="batchSelect"></a>
 
-### batchSelect(keys, policy=null, callback)
+### batchSelect(keys, bins, policy=null, callback)
 
 Reads a subset of bins for a batch of records from the database cluster.
 
@@ -691,7 +691,7 @@ indexCreateWait()
 
 ### indexCreateWait(namespace, index, pollInterval, callback)
 
-Wait until an index create command succeeds in aerospike cluster. This function returns 
+Wait until an index create command succeeds in aerospike cluster. This function returns
 only when index is ready to be queried.
 
 Parameters:
@@ -744,7 +744,7 @@ Parameters:
 - `applyPolicy` - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
 - `createModule`- (optional) Lua function name that initialized list configuration parameters, pass null for
                   default list.
-                
+
 Example:
 
 ```js

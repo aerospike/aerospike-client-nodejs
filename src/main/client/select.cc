@@ -39,12 +39,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define SELECT_ARG_POS_KEY     0
-#define SELECT_ARG_POS_BINS    1
-#define SELECT_ARG_POS_RPOLICY 2 // Read policy position and callback position is not same
-#define SELECT_ARG_POS_CB      3 // for every invoke of select. If readpolicy is not passed from node
-// application, argument position for callback changes.
-
 using namespace v8;
 
 /*******************************************************************************
@@ -80,77 +74,70 @@ typedef struct AsyncData {
  */
 static void * prepare(ResolveArgs(info))
 {
-
     Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data = new AsyncData();
     data->as = client->as;
-    LogInfo* log = data->log = client->log;
-    // Local variables
-    as_key *    key = &data->key;
-    as_record * rec = &data->rec;
-    data->policy                    = NULL;
     data->param_err = 0;
+    data->policy = NULL;
+    LogInfo* log = data->log = client->log;
 
-    int arglength = info.Length();
+    Local<Value> maybe_key = info[0];
+    Local<Value> maybe_bins = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
 
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js callback registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-    if ( info[SELECT_ARG_POS_KEY]->IsObject() ) {
-        if (key_from_jsobject(key, info[SELECT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+
+    if (maybe_key->IsObject()) {
+        if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Key should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    as_record_init(rec, 0);
-    // To select the values of given bin, not complete record.
-    if ( info[SELECT_ARG_POS_BINS]->IsArray() ) {
-        Local<Array> v8bins = Local<Array>::Cast(info[SELECT_ARG_POS_BINS]);
-        int res = bins_from_jsarray(&data->bins, &data->num_bins, v8bins, log);
-        if ( res != AS_NODE_PARAM_OK)
-        {
-            as_v8_error(log,"Parsing bins failed in select ");
+    if (maybe_bins->IsArray()) {
+        Local<Array> bins = Local<Array>::Cast(maybe_bins);
+        if (bins_from_jsarray(&data->bins, &data->num_bins, bins, log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log,"Parsing bins failed in select");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Bin names should be an array of string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( arglength > 3) {
-        if ( info[SELECT_ARG_POS_RPOLICY]->IsObject() ) {
-            data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
-            if (readpolicy_from_jsobject( data->policy, info[SELECT_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing of readpolicy from object failed");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Readpolicy should be an object");
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+        if (readpolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing of readpolicy from object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Readpolicy should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
+
+    as_record_init(&data->rec, 0);
 
     return data;
 

@@ -19,13 +19,12 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 var sleep = require('sleep')
 var iteration = require('./iteration')
 
-var Status = aerospike.status
-var scanStatus = aerospike.scanStatus
+var scanStatus = Aerospike.scanStatus
 
 // *****************************************************************************
 // Options parsing
@@ -60,7 +59,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -133,8 +132,8 @@ var config = {
 // Establish a connection to the cluster.
 // *****************************************************************************
 
-aerospike.client(config).connect(function (err, client) {
-  if (err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
     console.error('Error: Aerospike server connection error. ', err.message)
     process.exit(1)
   }
@@ -172,12 +171,12 @@ aerospike.client(config).connect(function (err, client) {
   var infoCallback = function (scanJobStats, scanId) {
     if (!checkStatus(scanJobStats)) {
       sleep.sleep(1)
-      scanBackground.Info(scanId, infoCallback)
+      scanBackground.info(scanId, infoCallback)
     }
   }
 
   var info = function (scanId) {
-    scanBackground.Info(scanId, infoCallback)
+    scanBackground.info(scanId, infoCallback)
   }
   scanStream.on('end', info)
 })

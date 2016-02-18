@@ -19,10 +19,8 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
-
-var Status = aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -52,7 +50,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -125,20 +123,15 @@ var config = {
 // *****************************************************************************
 
 var checkError = function (err, msg) {
-  if (err.code !== Status.AEROSPIKE_OK) {
-    console.log(err)
+  if (err) {
+    console.error(err)
   } else {
     console.log(msg)
   }
 }
 
-var client = aerospike.client(config)
-if (client == null) {
-  console.error('Error: Client object not initialized')
-  process.exit(1)
-}
-client.connect(function (err, client) {
-  if (err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
     console.error('Error: Aerospike server connection error. ', err.message)
     process.exit(1)
   }
@@ -154,20 +147,20 @@ client.connect(function (err, client) {
     timeout: 1000
   }
 
-  var list = client.LargeList(listkey, 'ldt_list_bin', policy)
+  var list = Aerospike.LargeList(listkey, 'ldt_list_bin', policy)
 
   // perform all the largelist operations.
 
   // add single value to the list.
   var val = 'listvalsingle'
   list.add(val, function (err, val) {
-    checkError(err, 'Added a single value ')
+    checkError(err, 'Added a single value')
   })
 
   // update single value added to the list.
   var updateVal = 'listvalupdated'
   list.update(updateVal, function (err, val) {
-    checkError(err, 'Updated a single value ')
+    checkError(err, 'Updated a single value')
   })
 
   // find an entry in the list.

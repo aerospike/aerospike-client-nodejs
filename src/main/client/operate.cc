@@ -32,13 +32,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define OP_ARG_POS_KEY     0
-#define OP_ARG_POS_OP      1
-#define OP_ARG_POS_META    2
-#define OP_ARG_POS_OPOLICY 3 // operate policy position and callback position is not same
-#define OP_ARG_POS_CB      4 // for every invoke of operate. If operatepolicy is not passed from node
-// application, argument position for callback changes.
-
 using namespace v8;
 
 /*******************************************************************************
@@ -76,95 +69,80 @@ static void * prepare(ResolveArgs(info))
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data = new AsyncData();
     data->as = client->as;
     data->param_err = 0;
-
+    data->policy = NULL;
     LogInfo * log = data->log = client->log;
-    // Local variables
-    as_key *    key         = &data->key;
-    as_record * rec         = &data->rec;
-    data->policy            = NULL;
-    as_operations* op = &data->op;
 
-    int arglength = info.Length();
+    Local<Value> maybe_key = info[0];
+    Local<Value> maybe_operations = info[1];
+    Local<Value> maybe_metadata = info[2];
+    Local<Value> maybe_policy = info[3];
+    Local<Value> maybe_callback = info[4];
 
-
-    if ( info[arglength-1]->IsFunction() ){
-        data->callback.Reset(info[arglength-1].As<Function>());
+    if (maybe_callback->IsFunction() ){
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js callback registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[OP_ARG_POS_KEY]->IsObject() ) {
-        if (key_from_jsobject(key, info[OP_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if (maybe_key->IsObject()) {
+        if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
             COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Key should be an object");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[OP_ARG_POS_OP]->IsArray() ) {
-        Local<Array> operations = Local<Array>::Cast(info[OP_ARG_POS_OP]);
-        if( operations_from_jsarray( op, operations, log ) != AS_NODE_PARAM_OK ) {
+    if (maybe_operations->IsArray()) {
+        Local<Array> operations = Local<Array>::Cast(maybe_operations);
+        if( operations_from_jsarray(&data->op, operations, log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing of as_operation (C structure) from operation object failed");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "operations should be an array");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if(arglength > 3){
-        if( info[OP_ARG_POS_META]->IsNull() || info[OP_ARG_POS_META]->IsUndefined()){
-            as_v8_debug(log, "metadata object passed is Null or undefined");
-        }
-        else if(info[OP_ARG_POS_META]->IsObject() ) {
-            setTTL(info[OP_ARG_POS_META]->ToObject(), &op->ttl, log);
-            setGeneration(info[OP_ARG_POS_META]->ToObject(), &op->gen, log);
-        }
-        else {
-            as_v8_error(log, "Metadata should be an object");
+    if (maybe_metadata->IsObject() ) {
+        Local<Object> metadata= maybe_metadata->ToObject();
+        setTTL(metadata, &data->op.ttl, log);
+        setGeneration(metadata, &data->op.gen, log);
+    } else if (maybe_metadata->IsNull() || maybe_metadata->IsUndefined()){
+        // meta data is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Metadata should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
+    }
+
+    if (maybe_policy->IsObject() ) {
+        data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
+        if (operatepolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing of operatepolicy from object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
+    } else if (maybe_policy->IsUndefined() || maybe_policy->IsNull()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Operate policy passed must be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    if(arglength > 4 ) {
-        if( info[OP_ARG_POS_OPOLICY]->IsUndefined() || info[OP_ARG_POS_OPOLICY]->IsNull()) {
-            data->policy = NULL;
-            as_v8_debug(log, "Operate policy is not passed, using default values");
-        }
-        else if( info[OP_ARG_POS_OPOLICY]->IsObject() ) {
-            data->policy = (as_policy_operate*) cf_malloc(sizeof(as_policy_operate));
-            if (operatepolicy_from_jsobject( data->policy, info[OP_ARG_POS_OPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing of operatepolicy from object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-                goto Err_Return;
-            }
-        }
-        else
-        {
-            as_v8_error(log, "Operate policy passed must be an object");
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-            goto Err_Return;
-        }
-    }
-
-    as_record_init(rec, 0);
+    as_record_init(&data->rec, 0);
 
     return data;
 
@@ -281,7 +259,7 @@ static void respond(uv_work_t * req, int status)
         }
         as_v8_debug(log, "Cleaned up the structures");
     }
-    
+
     delete data;
     delete req;
 }

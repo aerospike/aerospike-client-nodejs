@@ -34,11 +34,6 @@ extern "C" {
 
 
 #define FILESIZE         255
-#define UDF_ARG_KEY      0
-#define UDF_ARG_UDFARGS  1
-#define UDF_ARG_APOLICY  2 // apply policy position and callback position is not same
-#define UDF_ARG_CB       3 // for every invoke of udf_execute. If applypolicy is not passed from node
-                           // application, argument position for callback changes.
 
 using namespace v8;
 
@@ -83,86 +78,68 @@ static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
 
-    // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-
-    // Initialize default values in async data
     data->param_err             = 0;
     data->result                = NULL;
-
-    // Local variables
-    as_key *    key             = &data->key;
     data->policy                = NULL;
-    LogInfo * log               = data->log = client->log;
-    as_arraylist* udfinfo       = &data->udfinfo;
-    char * filename             = data->filename;
-    char * funcname             = data->funcname;
-    int arglength               = info.Length();
+    LogInfo * log = data->log   = client->log;
 
-    memset(filename, 0, FILESIZE);
-    memset(funcname, 0, FILESIZE);
+    as_arraylist* udfinfo = &data->udfinfo;
+    char * filename = data->filename;
+    char * funcname = data->funcname;
+    memset(data->filename, 0, FILESIZE);
+    memset(data->funcname, 0, FILESIZE);
 
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    Local<Value> maybe_key = info[0];
+    Local<Value> maybe_udf_info = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
+
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[UDF_ARG_KEY]->IsObject()) {
-        if (key_from_jsobject(key, info[UDF_ARG_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if (maybe_key->IsObject()) {
+        if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log,"Parsing as_key(C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Key should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    // filename length should be finalized.
-    if ( info[UDF_ARG_UDFARGS]->IsObject() ) {  
-        if ( udfargs_from_jsobject( &filename, &funcname, &udfinfo, info[UDF_ARG_UDFARGS]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if (maybe_udf_info->IsObject()) {
+        if (udfargs_from_jsobject(&filename, &funcname, &udfinfo, maybe_udf_info->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing UDF arguments failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "UDF info should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-    if ( arglength > 3 ) {
-        // LDT operations are executed through same UDF execute code path.
-        // at times LDT can pass undefined value for apply policy.
-        // So handle the undefined scenario.
-        if( info[UDF_ARG_APOLICY]->IsUndefined())
-        {
-            data->policy = NULL;
-            as_v8_debug(log, "Argument does not contain a vaild apply policy, setting it to default values");
-        }
-        else if ( info[UDF_ARG_APOLICY]->IsObject())
-        {
-            data->policy = (as_policy_apply*) cf_malloc(sizeof(as_policy_apply));
-            if(applypolicy_from_jsobject(data->policy, info[UDF_ARG_APOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "apply policy shoule be an object");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }   
+
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_apply*) cf_malloc(sizeof(as_policy_apply));
+        if(applypolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "apply policy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
         }
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 
 Err_Return:

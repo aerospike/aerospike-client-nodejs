@@ -91,6 +91,33 @@ describe('client.remove()', function () {
     })
   })
 
+  it('should apply the remove policy', function (done) {
+    var kgen = keygen.integer(helper.namespace, helper.set)
+    var mgen = metagen.constant({ttl: 1000, gen: 1})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+
+    var key = kgen()
+    var meta = mgen(key)
+    var record = rgen(key, meta)
+
+    client.put(key, record, meta, function (err) {
+      if (err) { throw new Error(err.message) }
+
+      var remove_policy = {
+        gen: Aerospike.policy.gen.EQ,
+        generation: 2
+      }
+      client.remove(key, remove_policy, function (err) {
+        expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION)
+
+        client.exists(key, function (err) {
+          if (err) { throw new Error(err.message) }
+          done()
+        })
+      })
+    })
+  })
+
   it('should not remove a non-existent key', function (done) {
     // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})

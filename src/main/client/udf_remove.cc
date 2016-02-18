@@ -30,10 +30,8 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define UDF_ARG_FILE 0
-#define UDF_ARG_IPOLICY 1
-#define UDF_ARG_CB 2
 #define FILESIZE 255
+
 using namespace v8;
 
 /*******************************************************************************
@@ -71,50 +69,43 @@ typedef struct AsyncData {
  */
 static void * prepare(ResolveArgs(info))
 {
-
     Nan::HandleScope scope;
-    // Unwrap 'this'
+
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
-    data->policy                        = NULL;
-    LogInfo * log               = data->log = client->log;
+    data->policy                = NULL;
     data->param_err             = 0;
-    char* filename              = data->filename;
-    int argc                    = info.Length();
+    LogInfo * log               = data->log = client->log;
 
+    Local<Value> maybe_filename = info[0];
+    Local<Value> maybe_policy = info[1];
+    Local<Value> maybe_callback = info[2];
 
-    // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the UDF file name.
-    if ( info[UDF_ARG_FILE]->IsString()) {
-        strcpy( filename, *String::Utf8Value(info[UDF_ARG_FILE]->ToString()));
-        as_v8_detail(log, "The udf remove module name %s", filename);
-    }
-    else {
+    if (maybe_filename->IsString()) {
+        strcpy(data->filename, *String::Utf8Value(maybe_filename->ToString()));
+        as_v8_detail(log, "The udf remove module name %s", data->filename);
+    } else {
         as_v8_error(log, "UDF file name should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
-    
-    if ( argc > 2 ) {
-        int ipolicy_pos = UDF_ARG_IPOLICY;
+
+    if (maybe_policy->IsObject()) {
         data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if ( infopolicy_from_jsobject(data->policy, info[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if (infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             data->param_err = 1;
@@ -122,7 +113,6 @@ static void * prepare(ResolveArgs(info))
         }
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
 

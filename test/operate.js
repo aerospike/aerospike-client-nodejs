@@ -31,7 +31,7 @@ const op = Aerospike.operator
 describe('client.operate()', function () {
   var client = helper.client
 
-  describe('INCR operation', function () {
+  describe('operator.incr()', function () {
     it('should increment bin with integer value', function (done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
 

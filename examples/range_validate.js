@@ -35,10 +35,10 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 
-var Status = aerospike.status
+var Status = Aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -68,7 +68,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -143,8 +143,8 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-aerospike.client(config).connect(function (err, client) {
-  if (err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
     console.error('Error: Aerospike server connection error. ', err.message)
     process.exit(1)
   }
@@ -161,12 +161,10 @@ aerospike.client(config).connect(function (err, client) {
     console.time(timeLabel)
 
     return function (err, key) {
-      switch (err.code) {
-        case Status.AEROSPIKE_OK:
-          console.log('OK - ', key)
-          break
-        default:
-          console.log('ERR - ', err, key)
+      if (err) {
+        console.log('ERR - ', err, key)
+      } else {
+        console.log('OK - ', key)
       }
 
       done++
@@ -213,23 +211,21 @@ aerospike.client(config).connect(function (err, client) {
     console.time(timeLabel)
 
     return function (err, record, metadata, key) {
-      switch (err.code) {
-        case Status.AEROSPIKE_OK:
-          if (record.k !== key.key) {
-            console.log('INVALID - ', key, metadata, record)
-            console.log('        - record.k != key.key')
-          } else if (record.i !== record.k * 1000 + 123) {
-            console.log('INVALID - ', key, metadata, record)
-            console.log('        - record.i != record.k * 1000 + 123')
-          } else if (record.b[0] === 0xa && record.b[0] === 0xb && record.b[0] === 0xc) {
-            console.log('INVALID - ', key, metadata, record)
-            console.log('        - record.b != [0xa,0xb,0xc]')
-          } else {
-            console.log('VALID - ', key, metadata, record)
-          }
-          break
-        default:
-          console.log('ERR - ', err, key)
+      if (err) {
+        console.log('ERR - ', err, key)
+      } else {
+        if (record.k !== key.key) {
+          console.log('INVALID - ', key, metadata, record)
+          console.log('        - record.k != key.key')
+        } else if (record.i !== record.k * 1000 + 123) {
+          console.log('INVALID - ', key, metadata, record)
+          console.log('        - record.i != record.k * 1000 + 123')
+        } else if (record.b[0] === 0xa && record.b[0] === 0xb && record.b[0] === 0xc) {
+          console.log('INVALID - ', key, metadata, record)
+          console.log('        - record.b != [0xa,0xb,0xc]')
+        } else {
+          console.log('VALID - ', key, metadata, record)
+        }
       }
 
       done++

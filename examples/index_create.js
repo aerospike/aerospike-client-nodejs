@@ -19,11 +19,9 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 var iteration = require('./iteration')
-
-var Status = aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -58,7 +56,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -182,7 +180,8 @@ function run (client) {
   switch (type) {
     case 'integer':
       client.createIntegerIndex(options, function (err) {
-        if (isError(err)) {
+        if (err) {
+          console.error('Error: ' + err.message)
           process.exit(1)
         } else {
           isIndexCreated(client, argv.namespace, index, 1000)
@@ -191,7 +190,8 @@ function run (client) {
       break
     case 'string':
       client.createStringIndex(options, function (err) {
-        if (isError(err)) {
+        if (err) {
+          console.error('Error: ' + err.message)
           process.exit(1)
         } else {
           isIndexCreated(client, argv.namespace, index, 1000)
@@ -204,25 +204,10 @@ function run (client) {
   }
 }
 
-function isError (err) {
-  if (err && err.code !== Status.AEROSPIKE_OK) {
-    switch (err.code) {
-      case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-        console.error('Error: Not Found.')
-        return true
-      default:
-        console.log(err)
-        console.error('Error: ' + err.message)
-        return true
-    }
-  } else {
-    return false
-  }
-}
-
 function isIndexCreated (client, namespace, index, pollInterval) {
   client.indexCreateWait(namespace, index, pollInterval, function (err) {
-    if (isError(err)) {
+    if (err) {
+      console.error('Error: ' + err.message)
       process.exit(1)
     } else {
       !argv.quiet && console.log('Index Created - %s', index)
@@ -230,8 +215,9 @@ function isIndexCreated (client, namespace, index, pollInterval) {
   })
 }
 
-aerospike.client(config).connect(function (err, client) {
-  if (err && err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
+    console.error('Error: ' + err.message)
     process.exit(1)
   } else {
     run(client)

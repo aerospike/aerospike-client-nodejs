@@ -19,11 +19,9 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 var iteration = require('./iteration')
-
-var Status = aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -58,7 +56,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -135,7 +133,8 @@ var config = {
 
 function run (client) {
   client.info(request, function (err, response, host) {
-    if (isError(err)) {
+    if (err) {
+      console.error('Error: ' + err.message)
       process.exit(1)
     } else {
       var res = {
@@ -148,17 +147,9 @@ function run (client) {
   })
 }
 
-function isError (err) {
-  if (err && err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
     console.error('Error: ' + err.message)
-    return true
-  } else {
-    return false
-  }
-}
-
-aerospike.client(config).connect(function (err, client) {
-  if (isError(err)) {
     process.exit(1)
   } else {
     run(client)

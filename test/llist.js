@@ -26,17 +26,16 @@ const valgen = helper.valgen
 const status = Aerospike.status
 const policy = Aerospike.policy
 
+// A single Large List is created. All Large List operations are done in this single list to demonstrate the
+// usage of LargeList API. The operations include adding an element,
+// udpating an element, searching for an element and removing an element.
+
 describe('client.LargeList()', function (done) {
   var client = helper.client
 
-  // A single LList is created. All LList operations are done in this single list to demonstrate the
-  // usage of LList API.
-  // The operations include adding an element, udpating an element, searching for an element
-  // and removing an element.
-  // Get a largelist object from client.
   var listkey = {ns: helper.namespace, set: helper.set, key: 'ldt_list_key'}
   var writepolicy = {timeout: 1000, key: policy.key.SEND, commitLevel: policy.commitLevel.ALL}
-  var LList = client.LargeList(listkey, 'ldt_list_bin', writepolicy)
+  var llist = client.LargeList(listkey, 'ldt_list_bin', writepolicy)
   var ldtEnabled = true
 
   before(function (done) {
@@ -46,7 +45,7 @@ describe('client.LargeList()', function (done) {
 
   after(function (done) {
     if (ldtEnabled) {
-      LList.destroy(function (err) {
+      llist.destroy(function (err) {
         if (err) { throw new Error(err.message) }
         done()
       })
@@ -55,16 +54,16 @@ describe('client.LargeList()', function (done) {
     }
   })
 
-  it('should add an element of type integer to the LList ', function (done) {
+  it('should add an element of type integer to the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var igen = valgen.integer()
     var listval = igen()
     var intval = {'key': 'intvalue', 'value': listval}
     // insert an integer value into the list.
-    LList.add(intval, function (err, retVal) {
+    llist.add(intval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.find({'key': 'intvalue'}, function (err, val) {
+      llist.find({'key': 'intvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
@@ -72,16 +71,16 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should add an element of type string to the LList ', function (done) {
+  it('should add an element of type string to the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var sgen = valgen.string()
     var listval = sgen()
     var strval = {'key': 'stringvalue', 'value': listval}
     // insert an string value into the list.
-    LList.add(strval, function (err, retVal) {
+    llist.add(strval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.find({'key': 'stringvalue'}, function (err, val) {
+      llist.find({'key': 'stringvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
@@ -89,16 +88,16 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should add an element of type bytes to the LList ', function (done) {
+  it('should add an element of type bytes to the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var bgen = valgen.bytes()
     var listval = bgen()
     var bytesval = {'key': 'bytesvalue', 'value': listval}
     // insert a byte value into the list.
-    LList.add(bytesval, function (err, retVal) {
+    llist.add(bytesval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.find({'key': 'bytesvalue'}, function (err, val) {
+      llist.find({'key': 'bytesvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
@@ -106,16 +105,16 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should add an element of type array to the LList ', function (done) {
+  it('should add an element of type array to the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var agen = valgen.array()
     var listval = agen()
     var bytesval = {'key': 'arrayvalue', 'value': listval}
     // insert an array element into the list.
-    LList.add(bytesval, function (err, retVal) {
+    llist.add(bytesval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.find({'key': 'arrayvalue'}, function (err, val) {
+      llist.find({'key': 'arrayvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
@@ -123,16 +122,16 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should add an element of type map to the LList ', function (done) {
+  it('should add an element of type map to the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var mgen = valgen.map()
     var listval = mgen()
     var mapval = {'key': 'mapvalue', 'value': listval}
     // insert a map element into the list.
-    LList.add(mapval, function (err, retVal) {
+    llist.add(mapval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.find({'key': 'mapvalue'}, function (err, val) {
+      llist.find({'key': 'mapvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(listval)
         done()
@@ -140,7 +139,7 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should add an array of values to LList ', function (done) {
+  it('should add an array of values to llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var mgen = valgen.map()
     var agen = valgen.array()
@@ -148,7 +147,7 @@ describe('client.LargeList()', function (done) {
     var sgen = valgen.string()
     var bgen = valgen.bytes()
 
-    // array of values to be inserted into the LList.
+    // array of values to be inserted into the llist.
     var valList = [bgen(), igen(), agen(), mgen(), sgen()]
 
     var bytesval = {key: 'arraybytesvalue', value: valList[0]}
@@ -157,12 +156,12 @@ describe('client.LargeList()', function (done) {
     var mapval = {key: 'arraymapvalue', value: valList[3]}
     var stringval = {key: 'arraystrvalue', value: valList[4]}
 
-    // array of values with key to be inserted into the LList.
+    // array of values with key to be inserted into the llist.
     var arrayList = [mapval, arrayval, bytesval, stringval, integerval]
-    LList.add(arrayList, function (err, retVal) {
+    llist.add(arrayList, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the inserted element in the list.
-      LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
+      llist.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(valList[0])
         expect(val[1].value).to.equal(valList[1])
@@ -179,23 +178,23 @@ describe('client.LargeList()', function (done) {
     var igen = valgen.integer()
     var listval = igen()
     var intval = {'key': 'intvalue', 'value': listval}
-    LList.add(intval, undefined, function (err, retVal) {
+    llist.add(intval, undefined, function (err, retVal) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('add')
       done()
     })
   })
 
-  it('should update an element in the LList ', function (done) {
+  it('should update an element in the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var igen = valgen.integer()
     var listval = igen()
     var intval = {'key': 'intvalue', 'value': listval}
     // update an integer value in the list.
-    LList.update(intval, function (err, retVal) {
+    llist.update(intval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the updated element in the list.
-      LList.find({'key': 'intvalue'}, function (err, val) {
+      llist.find({'key': 'intvalue'}, function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.equal(listval)
         done()
@@ -203,7 +202,7 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should update an array of values in the LList ', function (done) {
+  it('should update an array of values in the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var mgen = valgen.map()
     var agen = valgen.array()
@@ -221,10 +220,10 @@ describe('client.LargeList()', function (done) {
     var arrayList = [mapval, arrayval, bytesval, stringval, integerval]
 
     // update an array of elements in the list.
-    LList.update(arrayList, function (err, retVal) {
+    llist.update(arrayList, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the updated elements in the list.
-      LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
+      llist.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
         expect(err).not.to.be.ok()
         expect(val[0].value).to.eql(valList[0])
         expect(val[1].value).to.equal(valList[1])
@@ -241,54 +240,54 @@ describe('client.LargeList()', function (done) {
     var igen = valgen.integer()
     var listval = igen()
     var intval = {'key': 'intvalue', 'value': listval}
-    LList.update(intval, undefined, function (err, retVal) {
+    llist.update(intval, undefined, function (err, retVal) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('update')
       done()
     })
   })
 
-  it('should verify the find API of LList -finds an existing element', function (done) {
+  it('should verify the find API of llist -finds an existing element', function (done) {
     if (!ldtEnabled) { this.skip() }
     // find an element in the list.
-    LList.find({'key': 'intvalue'}, function (err, val) {
+    llist.find({'key': 'intvalue'}, function (err, val) {
       expect(err).not.to.be.ok()
       expect(val[0]).to.have.property('value')
       done()
     })
   })
 
-  it('should verify the find API of LList -finds a non-existing element and fails', function (done) {
+  it('should verify the find API of llist -finds a non-existing element and fails', function (done) {
     if (!ldtEnabled) { this.skip() }
     // find an element in the list.
-    LList.find({'key': 'novalue'}, function (err, val) {
+    llist.find({'key': 'novalue'}, function (err, val) {
       expect(err).to.be.ok()
       expect(err.code).to.equal(status.AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND)
       done()
     })
   })
 
-  it('should verify the range API of LList- expected to find existing elements', function (done) {
+  it('should verify the range API of llist- expected to find existing elements', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
+    llist.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
       expect(err).not.to.be.ok()
       expect(val.length).to.equal(5)
       done()
     })
   })
 
-  it('should verify the range API of LList- expected to not find any elements', function (done) {
+  it('should verify the range API of llist- expected to not find any elements', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.findRange('zbytesvalue', 'zstrvalue', function (err, val) {
+    llist.findRange('zbytesvalue', 'zstrvalue', function (err, val) {
       expect(err).not.to.be.ok()
       expect(val.length).to.eql(0)
       done()
     })
   })
 
-  it('should verify the size API of LList ', function (done) {
+  it('should verify the size API of llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.size(function (err, val) {
+    llist.size(function (err, val) {
       expect(err).not.to.be.ok()
       expect(val).to.equal(10)
       done()
@@ -297,16 +296,16 @@ describe('client.LargeList()', function (done) {
 
   it('should verify that size API fails gracefully when passing wrong number of arguments', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.size(2, function (err, val) {
+    llist.size(2, function (err, val) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('size')
       done()
     })
   })
 
-  it('should verify the scan API of LList ', function (done) {
+  it('should verify the scan API of llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.scan(function (err, val) {
+    llist.scan(function (err, val) {
       expect(err).not.to.be.ok()
       expect(val.length).to.equal(10)
       done()
@@ -315,24 +314,24 @@ describe('client.LargeList()', function (done) {
 
   it('should verify the scan API fails gracefully when wrong number of arguments are passed', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.scan('scan', function (err, val) {
+    llist.scan('scan', function (err, val) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('scan')
       done()
     })
   })
 
-  it('should remove an element from the LList ', function (done) {
+  it('should remove an element from the llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var intval = {'key': 'intvalue'}
     // remove the integer value into the list.
-    LList.remove(intval, function (err, retVal) {
+    llist.remove(intval, function (err, retVal) {
       expect(err).not.to.be.ok()
       // verify the removed element in the list.
-      LList.find({'key': 'intvalue'}, function (err, val) {
+      llist.find({'key': 'intvalue'}, function (err, val) {
         expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_LARGE_ITEM_NOT_FOUND)
-        LList.size(function (err, val) {
+        llist.size(function (err, val) {
           expect(err).not.to.be.ok()
           expect(val).to.equal(9)
           done()
@@ -341,7 +340,7 @@ describe('client.LargeList()', function (done) {
     })
   })
 
-  it('should remove an array of elements from LList ', function (done) {
+  it('should remove an array of elements from llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
     var bytesval = {key: 'bytesvalue'}
     var stringval = {key: 'stringvalue'}
@@ -350,9 +349,9 @@ describe('client.LargeList()', function (done) {
 
     // remove an array of elements from the list.
     var arrayList = [ mapval, arrayval, bytesval, stringval ]
-    LList.remove(arrayList, function (err, retVal) {
+    llist.remove(arrayList, function (err, retVal) {
       expect(err).not.to.be.ok()
-      LList.size(function (err, val) {
+      llist.size(function (err, val) {
         expect(err).not.to.be.ok()
         expect(val).to.equal(5)
         done()
@@ -363,21 +362,21 @@ describe('client.LargeList()', function (done) {
   it('should verify remove API fails when invalid number of arguments are passed', function (done) {
     if (!ldtEnabled) { this.skip() }
     // remove an array of elements from the list.
-    LList.remove('list', 123, function (err, retVal) {
+    llist.remove('list', 123, function (err, retVal) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('remove')
       done()
     })
   })
 
-  it('should verify removing a range of values in LList ', function (done) {
+  it('should verify removing a range of values in llist ', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.removeRange('arraybytesvalue', 'arraystrvalue', function (err, retVal) {
+    llist.removeRange('arraybytesvalue', 'arraystrvalue', function (err, retVal) {
       expect(err).not.to.be.ok()
-      LList.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
+      llist.findRange('arraybytesvalue', 'arraystrvalue', function (err, val) {
         expect(err).not.to.be.ok()
         expect(val.length).to.equal(0)
-        LList.size(function (err, val) {
+        llist.size(function (err, val) {
           expect(err).not.to.be.ok()
           expect(val).to.equal(0)
           done()
@@ -388,7 +387,7 @@ describe('client.LargeList()', function (done) {
 
   it('should verify removeRange API fails when invalid number of arguments are passed', function (done) {
     if (!ldtEnabled) { this.skip() }
-    LList.removeRange('list', 123, 345, function (err, retVal) {
+    llist.removeRange('list', 123, 345, function (err, retVal) {
       expect(err).to.be.ok()
       expect(err.func).to.equal('removeRange')
       done()

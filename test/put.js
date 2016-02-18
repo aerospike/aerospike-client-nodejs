@@ -317,7 +317,7 @@ describe('client.put()', function () {
             expect(err).to.be.ok()
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
 
-            Aerospike.put(key, record, meta, function (err, key5) {
+            client.put(key, record, meta, function (err, key5) {
               expect(err).not.to.be.ok()
               expect(key5).to.have.property('ns', key.ns)
               expect(key5).to.have.property('set', key.set)
@@ -402,10 +402,10 @@ describe('client.put()', function () {
 
     // write the record then check
     client.put(key, record, meta, function (err, key1) {
-      expect(err.code).to.equal(client.status.AEROSPIKE_ERR_PARAM)
+      expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
       client.remove(key, function (err, key) {
-        expect(err.code).to.equal(client.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
         done()
       })
     })

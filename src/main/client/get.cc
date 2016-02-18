@@ -33,10 +33,6 @@ extern "C" {
 #include "log.h"
 
 using namespace v8;
-#define GET_ARG_POS_KEY     0
-#define GET_ARG_POS_RPOLICY 1 // Write policy position and callback position is not same
-#define GET_ARG_POS_CB      2 // for every invoke of put. If writepolicy is not passed from node
-// application, argument position for callback changes.
 
 /*******************************************************************************
  *  TYPES
@@ -72,60 +68,53 @@ static void * prepare(ResolveArgs(info))
 
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data = new AsyncData();
     data->as = client->as;
-
+    data->param_err = 0;
+    data->policy = NULL;
     LogInfo * log = data->log = client->log;
 
-    data->param_err = 0;
-    // Local variables
-    as_key *    key         = &data->key;
-    as_record * rec         = &data->rec;
-    data->policy            = NULL;
+    Local<Value> maybe_key = info[0];
+    Local<Value> maybe_policy = info[1];
+    Local<Value> maybe_callback = info[2];
 
-    int arglength = info.Length();
-
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js callback registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[GET_ARG_POS_KEY]->IsObject() ) {
-        if (key_from_jsobject(key, info[GET_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if (maybe_key->IsObject() ) {
+        if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Key should be an object");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( arglength > 2 ) {
-        if ( info[GET_ARG_POS_RPOLICY]->IsObject() ) {
-            data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
-            if (readpolicy_from_jsobject( data->policy, info[GET_ARG_POS_RPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing of readpolicy from object failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Readpolicy should be an object");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM );
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_read*) cf_malloc(sizeof(as_policy_read));
+        if (readpolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing of readpolicy from object failed");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Readpolicy should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    as_record_init(rec, 0);
+    as_record_init(&data->rec, 0);
 
     return data;
 

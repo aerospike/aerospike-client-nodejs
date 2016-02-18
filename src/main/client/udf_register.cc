@@ -31,11 +31,8 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define UDF_ARG_FILE 0
-#define UDF_ARG_TYPE 1
-#define UDF_ARG_IPOLICY 2
-#define UDF_ARG_CB 3
 #define FILESIZE 255
+
 using namespace v8;
 
 /*******************************************************************************
@@ -76,93 +73,90 @@ static void * prepare(ResolveArgs(info))
 {
 
     Nan::HandleScope scope;
-    // Unwrap 'this'
+
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
-    data->policy                        = NULL;
-    LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    char* filepath              = NULL;
-    char* fname                 = data->filename;
-    memset(fname, 0, FILESIZE);
+    data->policy                = NULL;
+    LogInfo * log               = data->log = client->log;
 
-    // The last argument should be a callback function.
-    if ( info[UDF_ARG_CB]->IsFunction()) {
-        data->callback.Reset(info[UDF_ARG_CB].As<Function>());
+    memset(data->filename, 0, FILESIZE);
+
+    char* filepath              = NULL;
+
+    Local<Value> maybe_filename = info[0];
+    Local<Value> maybe_type = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
+
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the UDF file name.
-    if ( info[UDF_ARG_FILE]->IsString()) {
-        int length =  info[UDF_ARG_FILE]->ToString()->Length()+1;
+    if (maybe_filename->IsString()) {
+        int length = maybe_filename->ToString()->Length() + 1;
         filepath = (char*) cf_malloc( sizeof(char) * length);
-        strcpy( filepath, *String::Utf8Value(info[UDF_ARG_FILE]->ToString()) );
+        strcpy(filepath, *String::Utf8Value(maybe_filename->ToString()));
         filepath[length-1] = '\0';
-    }
-    else {
+    } else {
         as_v8_error(log, "UDF file name should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
-    // Function to read the file and populate the bytes with the file content.
-    FILE * file = fopen( filepath, "r");
 
-    if( !file) {
-        as_v8_debug(log, "Cannot open file %s \n", filepath);
+    FILE * file = fopen(filepath, "r");
+    if (!file) {
+        as_v8_debug(log, "Cannot open file %s", filepath);
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR);
         data->param_err = 1;
-        if ( filepath != NULL)
-        {
+        if (filepath != NULL) {
             cf_free(filepath);
         }
         return data;
     }
 
     // Determine the file size.
-    int rv = fseek( file, 0, SEEK_END);
-    if ( rv != 0) {
+    int rv = fseek(file, 0, SEEK_END);
+    if (rv != 0) {
         as_v8_error(log, "file-seek operation failed with error : %d", rv);
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR);
         data->param_err = 1;
-        if(filepath != NULL)
-        {
+        if (filepath != NULL) {
             cf_free(filepath);
         }
+        fclose(file);
         return data;
     }
 
     int file_size = ftell(file);
-
-    if ( file_size == -1L) {
+    if (file_size == -1L) {
         as_v8_error(log, "ftell operation failed with error %d ",file_size);
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR);
         data->param_err = 1;
-        if(filepath != NULL)
-        {
+        if(filepath != NULL) {
             cf_free(filepath);
         }
+        fclose(file);
         return data;
     }
 
-    rewind(file);
     //Read the file's content into local buffer.
+    rewind(file);
     uint8_t * file_content = (uint8_t*)cf_malloc(sizeof(uint8_t) * file_size);
-
-    if ( file_content == NULL) {
+    if (file_content == NULL) {
         as_v8_error(log, "UDF buffer - memory allocation failed ");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR);
         data->param_err = 1;
+        fclose(file);
         return data;
     }
 
@@ -170,7 +164,7 @@ static void * prepare(ResolveArgs(info))
     int read = fread(p_write, 1, 512, file);
     int size = 0;
 
-    while(read) {
+    while (read) {
         size += read;
         p_write += read;
         read = fread( p_write, 1, 512, file);
@@ -180,62 +174,53 @@ static void * prepare(ResolveArgs(info))
     as_string filename;
     as_basename(&filename, filepath);
     size_t filesize = as_string_len(&filename);
-    // char* filename = basename(filepath);
-    if ( as_string_get(&filename) == NULL ) {
+    if (as_string_get(&filename) == NULL) {
         as_v8_error(log, "Filename could not be parsed from path");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
-        if(filepath != NULL)
-        {
+        if(filepath != NULL) {
             cf_free(filepath);
         }
         return data;
-    }
-    else if ( filesize > FILESIZE ) {
+    } else if (filesize > FILESIZE) {
         as_v8_error(log, "Filename length is greater than allowed size(255)");
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
-        if(filepath != NULL)
-        {
+        if (filepath != NULL) {
             cf_free(filepath);
         }
         return data;
     }
 
-    strncpy( data->filename, as_string_get(&filename), filesize);
+    strncpy(data->filename, as_string_get(&filename), filesize);
     data->filename[filesize+1] = '\0';
     //Wrap the local buffer as an as_bytes object.
     as_bytes_init_wrap(&data->content, file_content, size, true);
 
-
-    // The second argument should specify the type of the UDF.
-    // Currently only type LUA is supported.
-    if( info[UDF_ARG_TYPE]->IsNumber()) {
-        data->type = (as_udf_type) V8INTEGER_TO_CINTEGER( info[UDF_ARG_TYPE]);
-    }
-    else {
+    if (maybe_type->IsNumber()) {
+        data->type = (as_udf_type) V8INTEGER_TO_CINTEGER(maybe_type);
+    } else {
         data->type = AS_UDF_TYPE_LUA;
         as_v8_detail(log, "UDF type not an argument using default value(LUA)");
     }
 
-    if (info[UDF_ARG_IPOLICY]->IsObject()) {
+    if (maybe_policy->IsObject()) {
         data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if ( infopolicy_from_jsobject(data->policy, info[UDF_ARG_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if (infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             data->param_err = 1;
-            if ( filepath != NULL) {
+            if (filepath != NULL) {
                 cf_free(filepath);
             }
             return data;
         }
     }
 
-    if( filepath != NULL)
-    {
+    if (filepath != NULL) {
         cf_free(filepath);
     }
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
+
     return data;
 }
 

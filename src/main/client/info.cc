@@ -35,11 +35,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define INFO_ARG_POS_REQ     0
-#define INFO_ARG_POS_HOST    1
-#define INFO_ARG_POS_IPOLICY 2 //Info  policy position and callback position is not same
-#define INFO_ARG_POS_CB      3 // for every invoke of info. If infopolicy is not passed from node
-// application, argument position for callback changes.
 #define INFO_REQUEST_LEN  50
 #define MAX_CLUSTER_SIZE  128
 
@@ -131,102 +126,83 @@ bool aerospike_info_cluster_callback(const as_error * error, const as_node * nod
 static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
-
-    // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    LogInfo * log               = client->log;
-    data->log                   = log;
     data->param_err             = 0;
     data->num_nodes             = 0;
     data->addr                  = NULL;
     data->port                  = 0;
     data->policy                = NULL;
+    LogInfo * log = data->log   = client->log;
 
-    // Local variables
-    int argc        = info.Length();
-    int arg_request = 0;
-    int arg_host    = 1;
-    int arg_policy  = -1;
+    Local<Value> maybe_request = info[0];
+    Local<Value> maybe_host = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_info_callback = info[3];
+    Local<Value> maybe_done_callback = info[4];
 
-    // empty function, used when callback not provided
-    Local<FunctionTemplate> emptyFunction = Nan::New<FunctionTemplate>();
-
-    // The first argument should be the request string.
-    if ( info[arg_request]->IsString()) {
+    if (maybe_request->IsString()) {
         data->req = (char*) malloc(INFO_REQUEST_LEN);
-        strcpy( data->req, *String::Utf8Value(info[arg_request]->ToString()));
+        strcpy(data->req, *String::Utf8Value(maybe_request->ToString()));
+    } else if (maybe_request->IsNull() || maybe_request->IsUndefined()) {
+        // request string is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Request should be a String");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    // The following arguments can be: host?, policy?
-    // In both cases, they are objects, not functions, so we need to be sure.
-    // We start by assuming the first argument is the host.
-
-    if ( arg_host < argc && info[arg_host]->IsObject() && ! info[arg_host]->IsFunction() ) {
-
-        Local<Object> arg1 = info[arg_host]->ToObject();
-
-        // We check the parameter to see if it a host or policy object.
-        // Host objects should always have "addr" and "port" attributes.
-
-        if ( arg1->Has(Nan::New("addr").ToLocalChecked()) &&
-                arg1->Has(Nan::New("port").ToLocalChecked()) ) {
-            // Ok, we have a host object
-            int rc = host_from_jsobject(arg1, &data->addr, &data->port, log);
-            if ( rc != AS_NODE_PARAM_OK ) {
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                as_v8_debug(log, "host parameter is invalid");
-                data->param_err = 1;
-                // goto Err_Return;
-            }
-
-            // [chris] not sure why we need this
-            data->num_nodes = 1;
-
-            // Next, it may be the policy (or not)
-            if ( info[arg_host]->IsObject() && ! info[arg_host]->IsFunction() ) {
-                arg_policy = arg_host + 1;
-            }
+    if (maybe_host->IsObject()) {
+        int rc = host_from_jsobject(maybe_host->ToObject(), &data->addr, &data->port, log);
+        if (rc != AS_NODE_PARAM_OK ) {
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            as_v8_debug(log, "host parameter is invalid");
+            data->param_err = 1;
         }
-        else {
-
-            // So, the arg is not a host object, so we will assume it is a policy.
-            arg_policy = arg_host;
-        }
-
-        if ( arg_policy < argc && arg_policy != -1 ) {
-            data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-            int rc = infopolicy_from_jsobject(data->policy, info[arg_policy]->ToObject(), log);
-            if ( rc != AS_NODE_PARAM_OK ) {
-                as_v8_debug(log, "policy parameter is invalid");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                data->param_err = 1;
-            }
-        }
+        // Why do we need this?
+        data->num_nodes = 1;
+    } else if (maybe_host->IsNull() || maybe_host->IsUndefined()) {
+        // host is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Host should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    // It is possible the last 2 info are callbacks. Neither are required.
-    // If either are not provided, then they become empty functions.
-
-    if ( info[argc-1]->IsFunction() ) {
-        if ( info[argc-2]->IsFunction() ) {
-            data->callback.Reset(info[argc-2].As<Function>());
-            data->done.Reset(info[argc-1].As<Function>());
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        if (infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
+            as_v8_debug(log, "policy parameter is invalid");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            data->param_err = 1;
         }
-        else {
-            data->callback.Reset(info[argc-1].As<Function>());
-            data->done.Reset(emptyFunction->GetFunction());
-        }
-    }
-    else {
-
-        data->callback.Reset(emptyFunction->GetFunction());
-        data->done.Reset(emptyFunction->GetFunction());
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Readpolicy should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
+    if (maybe_info_callback->IsFunction()) {
+        data->callback.Reset(maybe_info_callback.As<Function>());
+    } else {
+        data->callback.Reset(Nan::New<FunctionTemplate>()->GetFunction());
+    }
+
+    if (maybe_done_callback->IsFunction()) {
+        data->done.Reset(maybe_done_callback.As<Function>());
+    } else {
+        data->done.Reset(Nan::New<FunctionTemplate>()->GetFunction());
+    }
+
+    return data;
+
+Err_Return:
+    data->param_err = 1;
     return data;
 }
 
@@ -367,7 +343,7 @@ static void respond(uv_work_t * req, int status)
     if ( try_catch.HasCaught() ) {
         Nan::FatalException(try_catch);
     }
-    
+
     data->done.Reset();
 
     // Dispose the Persistent handle so the callback

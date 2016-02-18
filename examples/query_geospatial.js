@@ -19,12 +19,12 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 
-var Status = aerospike.status
-var filter = aerospike.filter
-var GeoJSON = aerospike.GeoJSON
+var Status = Aerospike.status
+var filter = Aerospike.filter
+var GeoJSON = Aerospike.GeoJSON
 
 // *****************************************************************************
 // Options parsing
@@ -54,7 +54,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -178,7 +178,7 @@ function insert_records (client, ndx, end) {
   var bins = {}
   bins[g_bin] = GeoJSON(JSON.stringify(loc))
   client.put(key, bins, function (err, key) {
-    if (err.code !== Status.AEROSPIKE_OK) {
+    if (err) {
       console.error('insert_records: put failed: ', err.message)
       process.exit(1)
     }
@@ -194,12 +194,12 @@ function create_index (client) {
     index: g_index
   }
   client.createGeo2DSphereIndex(options, function (err) {
-    if (err.code !== Status.AEROSPIKE_OK) {
+    if (err) {
       console.log('index create failed: ', err)
       process.exit(1)
     }
     client.indexCreateWait(options.ns, g_index, 100, function (err) {
-      if (err.code !== Status.AEROSPIKE_OK) {
+      if (err) {
         console.log('index create failed: ', err)
         process.exit(1)
       }
@@ -210,7 +210,7 @@ function create_index (client) {
 
 function remove_index (client, complete) {
   client.indexRemove(argv.namespace, g_index, function (err) {
-    if (err && !(err.code === Status.AEROSPIKE_OK || err.code === Status.AEROSPIKE_ERR_RECORD_NOT_FOUND)) {
+    if (err && err.code !== Status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
       throw new Error(err.message)
     }
     complete(client)
@@ -225,7 +225,7 @@ function remove_records (client, ndx, end, complete) {
   var key = { ns: argv.namespace, set: argv.set, key: ndx }
 
   client.remove(key, function (err, key) {
-    if (err && !(err.code === Status.AEROSPIKE_OK || err.code === Status.AEROSPIKE_ERR_RECORD_NOT_FOUND)) {
+    if (err && err.code !== Status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
       throw new Error(err.message)
     }
     remove_records(client, ndx + 1, end, complete)
@@ -236,13 +236,13 @@ function cleanup (client, complete) {
   remove_records(client, 0, g_nkeys, complete)
 }
 
-aerospike.client(config).connect(function (err, client) {
-  if (err.code === Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
+    console.error('Error: Aerospike server connection error. ', err.message)
+    process.exit(1)
+  } else {
     // FIXME - when we can wait after index deletion do this instead.
     // cleanup(client, create_index)
     create_index(client)
-  } else {
-    console.error('Error: Aerospike server connection error. ', err.message)
-    process.exit(1)
   }
 })

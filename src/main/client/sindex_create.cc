@@ -29,12 +29,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define NS_NAME 0
-#define SET_NAME 1
-#define BIN_NAME 2
-#define INDEX_NAME 3
-#define INDEX_TYPE 4
-#define INFO_POLICY 5
 using namespace v8;
 
 /*******************************************************************************
@@ -78,123 +72,87 @@ static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
 
-    // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
-    data->policy                        = NULL;
-    LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    int argc                    = info.Length();
-    int set_present             = 0;
+    data->policy                = NULL;
+    LogInfo * log = data->log   = client->log;
 
+    Local<Value> maybe_ns = info[0];
+    Local<Value> maybe_set = info[1];
+    Local<Value> maybe_bin = info[2];
+    Local<Value> maybe_index_name = info[3];
+    Local<Value> maybe_index_type = info[4];
+    Local<Value> maybe_policy = info[5];
+    Local<Value> maybe_callback = info[6];
 
-    // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the namespace name.
-    if ( info[NS_NAME]->IsString()) {
-        strcpy( data->ns, *String::Utf8Value(info[NS_NAME]->ToString()));
+    if (maybe_ns->IsString()) {
+        strcpy(data->ns, *String::Utf8Value(maybe_ns->ToString()));
         as_v8_detail(log, "The index creation on namespace %s", data->ns);
-    }
-    else {
+    } else {
         as_v8_error(log, "namespace should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The second argument should be set
-    if ( info[SET_NAME]->IsString()) {
-        strcpy( data->set, *String::Utf8Value(info[SET_NAME]->ToString()));
+    if (maybe_set->IsString()) {
+        strcpy(data->set, *String::Utf8Value(maybe_set->ToString()));
         as_v8_detail(log, "The index creation on set %s", data->set);
-        set_present = 1;
     }
 
-    // Set is an optional argument.
-    // If set is present bin name is a third argument
-    // Otherwise binname is second argument.
-    if ( (set_present && info[BIN_NAME]->IsString()) || (!set_present && info[BIN_NAME-1]->IsString())) {
-        int bin_pos = BIN_NAME;
-        if(!set_present)
-        {
-            bin_pos = BIN_NAME - 1;
-        }
-        strcpy( data->bin, *String::Utf8Value(info[bin_pos]->ToString()));
+    if (maybe_bin->IsString()) {
+        strcpy(data->bin, *String::Utf8Value(maybe_bin->ToString()));
         as_v8_detail(log, "The index creation on bin %s", data->bin);
-    }
-    else
-    {
+    } else {
         as_v8_error(log, "bin name should be passed as a string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    if ( (set_present && info[INDEX_NAME]->IsString()) || (!set_present && info[INDEX_NAME-1]->IsString())) {
-        int index_pos = INDEX_NAME;
-        if(!set_present)
-        {
-            index_pos = INDEX_NAME -1 ;
-        }
-        data->index = strdup(*String::Utf8Value(info[index_pos]->ToString()));
+    if (maybe_index_name->IsString()) {
+        data->index = strdup(*String::Utf8Value(maybe_index_name->ToString()));
         as_v8_detail(log, "The index to be created %s", data->index);
-    }
-    else
-    {
+    } else {
         as_v8_error(log, "index name should be passed as a string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
-    if ( (set_present && info[INDEX_TYPE]->IsNumber()) || (!set_present && info[INDEX_TYPE-1]->IsNumber())) {
-        int type_pos = INDEX_TYPE;
-        if( !set_present)
-        {
-            type_pos = INDEX_TYPE-1;
-        }
-        data->type = (as_index_datatype)info[type_pos]->ToInteger()->Value();
+
+    if (maybe_index_type->IsNumber()) {
+        data->type = (as_index_datatype) maybe_index_type->ToInteger()->Value();
         as_v8_detail(log, "The type of the index %d", data->type);
-    }
-    else
-    {
+    } else {
         as_v8_error(log, "index type should be an integer enumerator");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-
-    if ( (argc > 6 && set_present) || (argc > 5 && !set_present)) {
-        int ipolicy_pos = INFO_POLICY;
-        if( !set_present )
-        {
-            ipolicy_pos = INFO_POLICY-1;
-        }
-        if ( !info[ipolicy_pos]->IsUndefined() && !info[ipolicy_pos]->IsNull()) {
-            data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-            if(infopolicy_from_jsobject(data->policy, info[ipolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "infopolicy shoule be an object");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                data->param_err = 1;
-                return data;
-            }
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        if(infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "infopolicy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            data->param_err = 1;
+            return data;
         }
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
 

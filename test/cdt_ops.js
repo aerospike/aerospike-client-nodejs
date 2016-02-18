@@ -28,7 +28,7 @@ const recgen = helper.recgen
 const status = Aerospike.status
 const op = Aerospike.operator
 
-describe('client.operate()', function () {
+describe('client.operate() - CDT List operations', function () {
   var client = helper.client
 
   describe('operator.listAppend', function () {

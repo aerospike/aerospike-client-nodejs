@@ -29,9 +29,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define NS_NAME 0
-#define INDEX_NAME 1
-#define INTERVAL_MS 2
 using namespace v8;
 
 /*******************************************************************************
@@ -70,66 +67,58 @@ static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
 
-    // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
-    LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
     data->task.as               = client->as;
-    int argc                    = info.Length();
+    LogInfo * log = data->log   = client->log;
 
+    Local<Value> maybe_ns = info[0];
+    Local<Value> maybe_index_name = info[1];
+    Local<Value> maybe_interval = info[2];
+    Local<Value> maybe_callback = info[3];
 
-    // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the namespace name.
-    if ( info[NS_NAME]->IsString()) {
-        strcpy( data->task.ns, *String::Utf8Value(info[NS_NAME]->ToString()));
+    if (maybe_ns->IsString()) {
+        strcpy(data->task.ns, *String::Utf8Value(maybe_ns->ToString()));
         as_v8_detail(log, "The index creation status for namespace %s", data->task.ns);
-    }
-    else {
+    } else {
         as_v8_error(log, "namespace should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    
-    if ( info[INDEX_NAME]->IsString()) {
-        strcpy(data->task.name, *String::Utf8Value(info[INDEX_NAME]->ToString()));
+    if (maybe_index_name->IsString()) {
+        strcpy(data->task.name, *String::Utf8Value(maybe_index_name->ToString()));
         as_v8_detail(log, "The index creation status to be checked for %s", data->task.name);
-    }
-    else {
+    } else {
         as_v8_error(log, "index name should be passed as a string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    if( info[INTERVAL_MS]->IsInt32()) {
-        data->interval_ms = info[INTERVAL_MS]->ToInt32()->Value();
+    if(maybe_interval->IsInt32()) {
+        data->interval_ms = maybe_interval->ToInt32()->Value();
         as_v8_detail(log, "Index creation status - polling interval %u", data->interval_ms);
-    }
-    else {
+    } else {
         as_v8_error(log, "Index creation wait - polling interval should be of type int32");
         data->param_err = 1;
         return data;
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
 

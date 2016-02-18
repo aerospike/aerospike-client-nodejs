@@ -29,9 +29,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define NS_NAME 0
-#define INDEX_NAME 1
-#define INFO_POLICY 2
 using namespace v8;
 
 /*******************************************************************************
@@ -69,71 +66,61 @@ typedef struct AsyncData {
  */
 static void * prepare(ResolveArgs(info))
 {
-
     Nan::HandleScope scope;
-    // Unwrap 'this'
+
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
-    data->policy                        = NULL;
-    LogInfo * log               = data->log = client->log;
     data->param_err             = 0;
-    int argc                    = info.Length();
+    data->policy                = NULL;
+    LogInfo * log = data->log   = client->log;
 
+    Local<Value> maybe_ns = info[0];
+    Local<Value> maybe_index_name = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
 
-    // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the namespace name.
-    if ( info[NS_NAME]->IsString()) {
-        strcpy( data->ns, *String::Utf8Value(info[NS_NAME]->ToString()));
+    if (maybe_ns->IsString()) {
+        strcpy(data->ns, *String::Utf8Value(maybe_ns->ToString()));
         as_v8_detail(log, "The index creation on namespace %s", data->ns);
-    }
-    else {
+    } else {
         as_v8_error(log, "namespace should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    if ( info[INDEX_NAME]->IsString()) {
-        data->index = strdup(*String::Utf8Value(info[INDEX_NAME]->ToString()));
+    if (maybe_index_name->IsString()) {
+        data->index = strdup(*String::Utf8Value(maybe_index_name->ToString()));
         as_v8_detail(log, "The index to be created %s", data->index);
-    }
-    else
-    {
+    } else {
         as_v8_error(log, "index name should be passed as a string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    if ( argc > 3 ) {
-        if ( !info[INFO_POLICY]->IsUndefined() && !info[INFO_POLICY]->IsNull())
-        {
-            data->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
-            if(infopolicy_from_jsobject(data->policy, info[INFO_POLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "infopolicy shoule be an object");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                data->param_err = 1;
-                return data;
-            }
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
+        if(infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "infopolicy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            data->param_err = 1;
+            return data;
         }
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
 
@@ -197,7 +184,7 @@ static void respond(uv_work_t * req, int status)
 
     // Surround the callback in a try/catch for safety
     Nan::TryCatch try_catch;
-    
+
     Local<Function> cb = Nan::New<Function>(data->callback);
     // Execute the callback.
     if ( !cb->IsNull() ) {

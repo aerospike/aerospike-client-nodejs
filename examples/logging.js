@@ -37,10 +37,8 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
-
-var status = aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -106,41 +104,11 @@ if (logfile === null) {
 }
 
 // *****************************************************************************
-// Establish a connection to the cluster.
-// *****************************************************************************
-
-var config = {
-  hosts: [{
-    addr: argv.host,
-    port: argv.port
-  }],
-
-  policies: {
-    timeout: argv.timeout
-  },
-
-  // authentication
-  user: argv.user,
-  password: argv.password
-}
-
-var client = aerospike.client(config).connect(function (err, client) {
-  if (err.code !== status.AEROSPIKE_OK) {
-    console.log('Aerospike server connection Error: %j', err)
-    return
-  }
-  if (client === null) {
-    console.error('Error: Client not initialized.')
-    return
-  }
-})
-
-// *****************************************************************************
 // Perform the operation
 // *****************************************************************************
 
 function header (message) {
-  return function (callback) {
+  return function (client, callback) {
     console.log('')
     console.log('********************************************************************************')
     console.log('* ', message)
@@ -151,7 +119,7 @@ function header (message) {
 }
 
 function get (key) {
-  return function (callback) {
+  return function (client, callback) {
     console.log('*** get')
     client.get(key, function (err, record, metadata, key) {
       callback(err)
@@ -160,7 +128,7 @@ function get (key) {
 }
 
 function put (key, rec) {
-  return function (callback) {
+  return function (client, callback) {
     console.log('*** put')
     client.put(key, rec, function (err, key) {
       callback(err)
@@ -169,7 +137,7 @@ function put (key, rec) {
 }
 
 function log (level, file) {
-  return function (callback) {
+  return function (client, callback) {
     var fd
     if (file) {
       if (!isNaN(parseInt(file, 10)) && isFinite(file)) {
@@ -215,9 +183,37 @@ var operations = [
   get(key)
 ]
 
-operations.reduceRight(function (r, l) {
-  return function (err) {
-    if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
-    l(r)
+function run (client) {
+  operations.reduceRight(function (r, l) {
+    return function (err) {
+      if (err) { throw new Error(err.message) }
+      l(client, r)
+    }
+  }, function () {})()
+}
+
+// *****************************************************************************
+// Establish a connection to the cluster.
+// *****************************************************************************
+
+var config = {
+  hosts: [{
+    addr: argv.host,
+    port: argv.port
+  }],
+
+  policies: {
+    timeout: argv.timeout
+  },
+
+  user: argv.user,
+  password: argv.password
+}
+
+Aerospike.connect(config, function (err, client) {
+  if (err) {
+    console.log('Aerospike server connection Error: %j', err)
+    process.exit(-1)
   }
-}, function () {})()
+  run(client)
+})

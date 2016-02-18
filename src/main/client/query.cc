@@ -34,6 +34,7 @@ extern "C" {
 #include "query.h"
 #include "enums.h"
 #include "async.h"
+
 using namespace v8;
 
 /*******************************************************************************
@@ -124,42 +125,42 @@ void ParseWhereClause(as_query* query, Local<Object> filter, LogInfo* log)
             switch(predicate)
             {
                 case AS_PREDICATE_RANGE:
-					{
-						as_index_datatype type = (as_index_datatype)filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
-						if( type == AS_INDEX_NUMERIC) {
-							Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
-							Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
-							int64_t min = 0, max = 0;
-							if( v8min->IsNumber()) {
-								min = v8min->NumberValue();
-							}
-							else {
-								as_v8_error(log, "The range value passed must be an integer");
-								Nan::ThrowError("The range value passed is not an integer");
-							}
-							if( v8max->IsNumber()){
-								max = v8max->NumberValue();
-							}
-							else {
-								as_v8_error(log, "The range value passed must be an integer");
-								Nan::ThrowError("The range value passed is not an integer");
-							}
-							as_query_where( query, *String::Utf8Value(bin), as_integer_range(min, max));
-							as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
-							break;
-						}
-						else if(type == AS_INDEX_GEO2DSPHERE) {
-							Local<Value> val = filter->Get(Nan::New("val").ToLocalChecked());
-							if( !val->IsString()) {
-								as_v8_error(log, "The region value passed must be a GeoJSON string");
-								Nan::ThrowError("The region value passed is not a GeoJSON string");
-							}
-							bin_val = strdup(*String::Utf8Value(val));
-							as_query_where(query, *String::Utf8Value(bin), as_geo_within(bin_val));
-							as_v8_debug(log, " Geo range predicate %s", bin_val);
-							break;
-						}
-					}
+                    {
+                        as_index_datatype type = (as_index_datatype)filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
+                        if( type == AS_INDEX_NUMERIC) {
+                            Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
+                            Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
+                            int64_t min = 0, max = 0;
+                            if( v8min->IsNumber()) {
+                                min = v8min->NumberValue();
+                            }
+                            else {
+                                as_v8_error(log, "The range value passed must be an integer");
+                                Nan::ThrowError("The range value passed is not an integer");
+                            }
+                            if( v8max->IsNumber()){
+                                max = v8max->NumberValue();
+                            }
+                            else {
+                                as_v8_error(log, "The range value passed must be an integer");
+                                Nan::ThrowError("The range value passed is not an integer");
+                            }
+                            as_query_where( query, *String::Utf8Value(bin), as_integer_range(min, max));
+                            as_v8_debug(log, "Integer range predicate from %d to %d", min, max);
+                            break;
+                        }
+                        else if(type == AS_INDEX_GEO2DSPHERE) {
+                            Local<Value> val = filter->Get(Nan::New("val").ToLocalChecked());
+                            if( !val->IsString()) {
+                                as_v8_error(log, "The region value passed must be a GeoJSON string");
+                                Nan::ThrowError("The region value passed is not a GeoJSON string");
+                            }
+                            bin_val = strdup(*String::Utf8Value(val));
+                            as_query_where(query, *String::Utf8Value(bin), as_geo_within(bin_val));
+                            as_v8_debug(log, " Geo range predicate %s", bin_val);
+                            break;
+                        }
+                    }
                 case AS_PREDICATE_EQUAL:
                     {
                         as_index_datatype type = (as_index_datatype)filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();

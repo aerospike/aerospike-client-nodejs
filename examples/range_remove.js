@@ -35,10 +35,10 @@
 // *****************************************************************************
 
 var fs = require('fs')
-var aerospike = require('aerospike')
+var Aerospike = require('aerospike')
 var yargs = require('yargs')
 
-var Status = aerospike.status
+var Status = Aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -68,7 +68,7 @@ var argp = yargs
     },
     'log-level': {
       alias: 'l',
-      default: aerospike.log.INFO,
+      default: Aerospike.log.INFO,
       describe: 'Log level [0-5]'
     },
     'log-file': {
@@ -147,8 +147,8 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-aerospike.client(config).connect(function (err, client) {
-  if (err.code !== Status.AEROSPIKE_OK) {
+Aerospike.connect(config, function (err, client) {
+  if (err) {
     console.error('Error: Aerospike server connection error. ', err.message)
     process.exit(1)
   }
@@ -172,12 +172,8 @@ aerospike.client(config).connect(function (err, client) {
       if (skippy === true) {
         console.log('SKIP - ', key)
         skipped++
-      } else {
+      } else if (err) {
         switch (err.code) {
-          case Status.AEROSPIKE_OK:
-            console.log('OK - ', key)
-            success++
-            break
           case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
             console.log('NOT_FOUND - ', key)
             notfound++
@@ -186,6 +182,9 @@ aerospike.client(config).connect(function (err, client) {
             console.log('ERR - ', err, key)
             failure++
         }
+      } else {
+        console.log('OK - ', key)
+        success++
       }
 
       done++

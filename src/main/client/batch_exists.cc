@@ -34,12 +34,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define BGET_ARG_POS_KEY     0
-#define BGET_ARG_POS_BPOLICY 1 // Batch policy position and callback position is not same
-#define BGET_ARG_POS_CB      2 // in the argument list for every invoke of batch_get. If
-// writepolicy is not passed from node application, argument
-// position for callback changes.
-
 using namespace v8;
 
 /*******************************************************************************
@@ -111,59 +105,53 @@ static void * prepare(ResolveArgs(info))
     Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
-    AsyncData *     data = new AsyncData();
+    AsyncData * data = new AsyncData();
     data->as = client->as;
     data->node_err = 0;
     data->n = 0;
     data->results = NULL;
+    data->policy = NULL;
     LogInfo * log = data->log = client->log;
 
-    // Local variables
-    as_batch * batch = &data->batch;
-    data->policy = NULL;
+    Local<Value> maybe_keys = info[0];
+    Local<Value> maybe_policy = info[1];
+    Local<Value> maybe_callback = info[2];
 
-    int arglength = info.Length();
-
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "batch_exists callback registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "Arglist must contain a callback function");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[BGET_ARG_POS_KEY]->IsArray() ) {
-        Local<Array> keys = Local<Array>::Cast(info[BGET_ARG_POS_KEY]);
-        if( batch_from_jsarray(batch, keys, log) != AS_NODE_PARAM_OK) {
+    if (maybe_keys->IsArray()) {
+        Local<Array> keys = Local<Array>::Cast(maybe_keys);
+        if( batch_from_jsarray(&data->batch, keys, log) != AS_NODE_PARAM_OK) {
             as_v8_debug(log, "parsing batch keys failed");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_debug(log, "Batch key must be an array of key objects");
-        //Parameter passed is not an array of Key Objects "ERROR..!"
         COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if (arglength > 2 ) {
-        if ( info[BGET_ARG_POS_BPOLICY]->IsObject() ) {
-            data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
-            if (batchpolicy_from_jsobject(data->policy, info[BGET_ARG_POS_BPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing batch policy failed");
-                COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Batch policy must be an object");
-            COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
+        if (batchpolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing batch policy failed");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Batch policy must be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
     return data;
@@ -316,15 +304,13 @@ static void respond(uv_work_t * req, int status)
     data->callback.Reset();
 
     // clean up any memory we allocated
-    if ( data->node_err == 1) {
+    if (data->node_err == 1) {
         free(data->results);
     }
     if (batch_results != NULL) {
         free(batch_results);
     }
-
-    if(data->policy != NULL)
-    {
+    if (data->policy != NULL) {
         cf_free(data->policy);
     }
 

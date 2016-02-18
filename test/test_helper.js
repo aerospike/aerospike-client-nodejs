@@ -27,7 +27,12 @@ exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
 
-const client = Aerospike.client(options.getConfig())
+global.expect = require('expect.js')
+
+const config = options.getConfig()
+exports.config = config
+
+const client = Aerospike.client(config)
 exports.client = client
 
 const check = function (err) {

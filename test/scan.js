@@ -153,7 +153,7 @@ describe('client.query() - without where clause(Scan)', function () {
       errors++
     })
     stream.on('end', function (scanId) {
-      scanBackground.Info(scanId, infoCallback)
+      scanBackground.info(scanId, infoCallback)
     })
   })
 })

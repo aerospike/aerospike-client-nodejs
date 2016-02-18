@@ -32,13 +32,6 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define PUT_ARG_POS_KEY 0
-#define PUT_ARG_POS_REC 1
-#define PUT_ARG_POS_META 2
-#define PUT_ARG_POS_WPOLICY 3 // Write policy position and callback position is not same
-#define PUT_ARG_POS_CB 4  // for every invoke of put. If writepolicy is not passed from node
-// application, argument position for callback changes.
-
 using namespace v8;
 
 /*******************************************************************************
@@ -78,87 +71,82 @@ typedef struct AsyncData {
 static void * prepare(ResolveArgs(info))
 {
     Nan::HandleScope scope;
-    // Unwrap 'this'
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
-    AsyncData * data            = new AsyncData();
-    data->as                    = client->as;
-    // Local variables
-    as_key *    key             = &data->key;
-    as_record * rec             = &data->rec;
-    data->policy                        = NULL;
-    LogInfo * log               = data->log = client->log;
-    data->param_err             = 0;
-    int arglength = info.Length();
+    AsyncData * data = new AsyncData();
+    data->as = client->as;
+    data->param_err = 0;
+    data->policy = NULL;
+    LogInfo * log = data->log = client->log;
 
-    if ( info[arglength-1]->IsFunction()) {
-        data->callback.Reset(info[arglength-1].As<Function>());
+    Local<Value> maybe_key = info[0];
+    Local<Value> maybe_record = info[1];
+    Local<Value> maybe_meta = info[2];
+    Local<Value> maybe_policy = info[3];
+    Local<Value> maybe_callback = info[4];
+
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[PUT_ARG_POS_KEY]->IsObject()) {
-        if (key_from_jsobject(key, info[PUT_ARG_POS_KEY]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+    if (maybe_key->IsObject()) {
+        if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log,"Parsing as_key(C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Key should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    if ( info[PUT_ARG_POS_REC]->IsObject() ) {
-        if (recordbins_from_jsobject(rec, info[PUT_ARG_POS_REC]->ToObject(), log) != AS_NODE_PARAM_OK) {
+    if (maybe_record->IsObject() ) {
+        if (recordbins_from_jsobject(&data->rec, maybe_record->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing as_record(C structure) from record object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "Record should be an object");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
-    if( arglength > 3) {
-        if( info[PUT_ARG_POS_META]->IsNull() || info[PUT_ARG_POS_META]->IsUndefined())
-        {
-            as_v8_debug(log, "Metadata passed is null or undefined");
-        }
-        else if ( info[PUT_ARG_POS_META]->IsObject() ) {
-            if (recordmeta_from_jsobject(rec, info[PUT_ARG_POS_META]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "Parsing metadata structure from metadata object failed");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }
-        }
-        else {
-            as_v8_error(log, "Metadata should be an object");
+
+    if (maybe_meta->IsObject() ) {
+        if (recordmeta_from_jsobject(&data->rec, maybe_meta->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Parsing metadata structure from metadata object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
+    } else if (maybe_meta->IsNull() || maybe_meta->IsUndefined()) {
+        // meta is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Metadata should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    if ( arglength > 4 ) {
-        int wpolicy_pos = PUT_ARG_POS_WPOLICY;
-        if ( info[wpolicy_pos]->IsObject()){
-            data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
-            if(writepolicy_from_jsobject(data->policy, info[wpolicy_pos]->ToObject(), log) != AS_NODE_PARAM_OK) {
-                as_v8_error(log, "writepolicy shoule be an object");
-                COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-                goto Err_Return;
-            }
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
+        if(writepolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "writepolicy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            goto Err_Return;
         }
+    } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
+        // policy is an optional parameter - ignore if missing
+    } else {
+        as_v8_error(log, "Write Policy should be an object");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        goto Err_Return;
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 
 Err_Return:

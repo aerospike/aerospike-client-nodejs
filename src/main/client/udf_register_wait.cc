@@ -31,11 +31,8 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 
-#define UDF_ARG_FILE 0
-#define INTERVAL_MS  1
-#define UDF_ARG_IPOLICY 2
-#define UDF_ARG_CB 3
 #define FILESIZE 255
+
 using namespace v8;
 
 /*******************************************************************************
@@ -73,59 +70,54 @@ typedef struct AsyncData {
  */
 static void * prepare(ResolveArgs(info))
 {
-
     Nan::HandleScope scope;
-    // Unwrap 'this'
+
     AerospikeClient * client    = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    // Build the async data
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
-    // Local variables
+    data->param_err             = 0;
     data->policy                = NULL;
     LogInfo * log               = data->log = client->log;
-    data->param_err             = 0;
-    int argc                    = info.Length();
-    
-    // The last argument should be a callback function.
-    if ( info[argc-1]->IsFunction()) {
-        data->callback.Reset(info[argc-1].As<Function>());
+
+    Local<Value> maybe_filename = info[0];
+    Local<Value> maybe_poll_interval = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
+
+    if (maybe_callback->IsFunction()) {
+        data->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "Node.js Callback Registered");
-    }
-    else {
+    } else {
         as_v8_error(log, "No callback to register");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // The first argument should be the UDF file name.
-    if ( info[UDF_ARG_FILE]->IsString()) {
-        strcpy( data->filename, *String::Utf8Value(info[UDF_ARG_FILE]->ToString()) );
+    if (maybe_filename->IsString()) {
+        strcpy(data->filename, *String::Utf8Value(maybe_filename->ToString()) );
         as_v8_detail(log, "UDF registration status to be checked for %s", data->filename);
-    }
-    else {
+    } else {
         as_v8_error(log, "UDF file name should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    if( info[INTERVAL_MS]->IsInt32()) {
-        data->interval_ms = info[INTERVAL_MS]->ToInt32()->Value();
+    if(maybe_poll_interval->IsInt32()) {
+        data->interval_ms = maybe_poll_interval->ToInt32()->Value();
         as_v8_detail(log, "UDF registration status checking - poll interval %d ", data->interval_ms);
-    }
-    else {
+    } else {
         as_v8_error(log, "Poll interval for udf registration must be int32");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
     }
 
-    // policy can be passed after language type argument or without the language type argument.
-    if ( argc > 3 ) {
+    if (maybe_policy->IsObject()) {
         data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if ( infopolicy_from_jsobject(data->policy, info[UDF_ARG_IPOLICY]->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if (infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
             data->param_err = 1;
@@ -133,7 +125,6 @@ static void * prepare(ResolveArgs(info))
         }
     }
 
-    as_v8_debug(log, "Parsing node.js Data Structures : Success");
     return data;
 }
 

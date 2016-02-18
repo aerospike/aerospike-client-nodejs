@@ -16,7 +16,6 @@
 
 /* global describe, it */
 
-// we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
