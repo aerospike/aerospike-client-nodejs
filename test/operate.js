@@ -18,6 +18,7 @@
 
 // we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
+const Double = Aerospike.Double
 const helper = require('./test_helper')
 const expect = require('expect.js')
 
@@ -82,13 +83,13 @@ describe('client.operate()', function () {
       })
     })
 
-    it('should increment bin with aerospike.Double() value', function (done) {
+    it('should increment bin with Double value', function (done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/Double'})()
 
       client.put(key, {f: 3.14159}, function (err) {
         if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
         var ops = [
-          op.incr('f', Aerospike.Double(1.0))
+          op.incr('f', new Double(1.0))
         ]
 
         client.operate(key, ops, function (err) {

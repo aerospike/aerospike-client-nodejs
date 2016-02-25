@@ -31,42 +31,6 @@ NAN_METHOD(client)
 }
 
 /**
- *  Aerospike key.
- *
- *      aerospike.key(namespace, set, value);
- *
- */
-NAN_METHOD(key)
-{
-    Nan::HandleScope();
-
-    if ( info.Length() == 3 ) {
-        Local<Object> key = Nan::New<Object>();
-        key->Set(Nan::New("ns").ToLocalChecked(), info[0]);
-        key->Set(Nan::New("set").ToLocalChecked(), info[1]);
-        key->Set(Nan::New("key").ToLocalChecked(), info[2]);
-        info.GetReturnValue().Set(key);
-    }
-
-}
-
-NAN_METHOD(Double)
-{
-    Nan::HandleScope();
-
-    if(info.Length() == 1) {
-        Local<Object> val = Nan::New<Object>();
-        if( info[0]->IsNumber()) {
-            val->Set(Nan::New<String>("Double").ToLocalChecked(), info[0]->ToNumber());
-        }
-        else {
-            Nan::ThrowError("The argument is not a number");
-        }
-        info.GetReturnValue().Set(val);
-    }
-}
-
-/**
  *  aerospike object.
  */
 void Aerospike(Handle<Object> exports, Handle<Object> module)
@@ -74,8 +38,6 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     AerospikeClient::Init();
     AerospikeQuery::Init();
     exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
-    exports->Set(Nan::New("key").ToLocalChecked(),      Nan::New<FunctionTemplate>(key)->GetFunction());
-    exports->Set(Nan::New("Double").ToLocalChecked(), Nan::New<FunctionTemplate>(Double)->GetFunction());
     exports->Set(Nan::New("status").ToLocalChecked(),   status());
     exports->Set(Nan::New("policy").ToLocalChecked(),   policy());
     exports->Set(Nan::New("operations").ToLocalChecked(), operations());

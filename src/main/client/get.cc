@@ -87,7 +87,7 @@ static void * prepare(ResolveArgs(info))
         goto Err_Return;
     }
 
-    if (maybe_key->IsObject() ) {
+    if (maybe_key->IsObject()) {
         if (key_from_jsobject(&data->key, maybe_key->ToObject(), log) != AS_NODE_PARAM_OK ) {
             as_v8_error(log, "Parsing of key (C structure) from key object failed");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -142,7 +142,6 @@ static void execute(uv_work_t * req)
     as_policy_read* policy  = data->policy;
 
     LogInfo * log           = data->log;
-
 
     // Invoke the blocking call.
     // The error is handled in the calling JS code.

@@ -17,9 +17,9 @@
 /* global expect, describe, context, it, before, after */
 
 const Aerospike = require('../lib/aerospike')
-require('./test_helper')
-
+const AerospikeError = Aerospike.AerospikeError
 const Client = Aerospike.Client
+require('./test_helper')
 
 describe('Callback Handlers', function () {
   describe('Client.setCallbackHandler', function () {
@@ -66,9 +66,11 @@ describe('Callback Handlers', function () {
     context('error status is not AEROSPIKE_OK', function () {
       var errIn = {code: Aerospike.status.AEROSPIKE_NOT_FOUND, message: 'not found'}
 
-      it('it passes through the error', function (done) {
+      it('it converts the error into a AerospikeError object', function (done) {
         var cb = function (errOut) {
-          expect(errOut).to.eql(errIn)
+          expect(errOut).to.be.a(AerospikeError)
+          expect(errOut.code).to.equal(Aerospike.status.AEROSPIKE_NOT_FOUND)
+          expect(errOut.message).to.equal('not found')
           done()
         }
         callbackHandler(cb, errIn)

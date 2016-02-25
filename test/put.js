@@ -181,8 +181,9 @@ describe('client.put()', function () {
     var meta = mgen(key)
     var record = {
       val: 123.45,
-      dval: Double(456.00)
+      dval: new Double(456.00)
     }
+
     // write the record and then check
     client.put(key, record, meta, function (err, key) {
       expect(err).to.not.be.ok()
@@ -190,7 +191,7 @@ describe('client.put()', function () {
       client.get(key, function (err, record1, metadata, key) {
         if (err) { throw new Error(err.message) }
         expect(record1.val).to.equal(record.val)
-        expect(record1.dval).to.equal(record.dval.Double)
+        expect(record1.dval).to.equal(record.dval.value())
 
         client.remove(key, function (err, key) {
           if (err) { throw new Error(err.message) }

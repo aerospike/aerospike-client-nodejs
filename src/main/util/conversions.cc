@@ -59,6 +59,8 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
+const char * DoubleType = "Double";
+const char * GeoJSONType = "GeoJSON";
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -862,6 +864,12 @@ Local<Object> record_to_jsobject(const as_record * record, const as_key * key, L
 //Forward references;
 int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log );
 
+bool instanceof(Local<Value> value, const char * type)
+{
+    Local<String> ctor_name = value->ToObject()->GetConstructorName();
+    String::Utf8Value cn(ctor_name);
+    return 0 == strncmp(*cn, type, strlen(type));
+}
 
 /**
  * Node.js stores all number values > 2^31 in the class Number and
@@ -870,10 +878,11 @@ int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, Log
  * and also as int64_t. If the values are same, then store it as int64_t. Else
  * store it as double.
  * The problem with this implementation is var 123.00 will be treated as int64_t.
- * Applications can enforce double type by using the `aerospike.Double` API,
+ * Applications can enforce double type by using the `Aerospike.Double` data type,
  * e.g.
  *
- *     var f = aerospike.Double(123)
+ *     const Double = Aerospike.Double
+ *     var f = new Double(123)
  **/
 bool is_double_value(Local<Value> value)
 {
@@ -881,7 +890,7 @@ bool is_double_value(Local<Value> value)
         int64_t i = value->ToInteger()->Value();
         double d = value->ToNumber()->Value();
         return d != (double)i;
-    } else if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+    } else if (instanceof(value, DoubleType)) {
         return true;
     } else {
         return false;
@@ -890,7 +899,7 @@ bool is_double_value(Local<Value> value)
 
 double double_value(Local<Value> value)
 {
-    if (value->ToObject()->Has(Nan::New<String>("Double").ToLocalChecked())) {
+    if (instanceof(value, DoubleType)) {
         value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
     }
     return (double) value->ToNumber()->Value();
@@ -966,35 +975,30 @@ as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
 
     }
     else {
-		// Are we GeoJSON?
-		Local<String> ctor_name = obj->ToObject()->GetConstructorName();
-		String::Utf8Value cn(ctor_name);
-		if (strncmp(*cn, "GeoJSON", 7) == 0) {
-			const Local<Value> strval =
-				obj->ToObject()->Get(Nan::New<String>("str").ToLocalChecked());
-	        String::Utf8Value v(strval);
-			as_geojson *geojson = as_geojson_new(strdup(*v), true);
-			return (as_val*) geojson;
-		}
-		else {
-			// Not GeoJSON, must be an Object.
-			const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
-			const uint32_t count = props->Length();
-			as_hashmap *map = as_hashmap_new(count);
-			if( map == NULL) {
-				as_v8_error(log, "Map allocation failed");
-				return NULL;
-			}
-			for ( uint32_t i = 0; i < count; i++) {
-				const Local<Value> name = props->Get(i);
-				const Local<Value> value = obj->ToObject()->Get(name);
-				String::Utf8Value n(name);
-				as_val* val = asval_from_jsobject(value, log);
-				as_stringmap_set((as_map*) map, *n, val);
-			}
-			return (as_val*) map;
-		}
-
+        // Are we GeoJSON?
+        if (instanceof(obj, GeoJSONType)) {
+            const Local<Value> strval = obj->ToObject()->Get(Nan::New<String>("str").ToLocalChecked());
+            String::Utf8Value v(strval);
+            as_geojson *geojson = as_geojson_new(strdup(*v), true);
+            return (as_val*) geojson;
+        } else {
+            // Not GeoJSON, must be an Object.
+            const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
+            const uint32_t count = props->Length();
+            as_hashmap *map = as_hashmap_new(count);
+            if( map == NULL) {
+                as_v8_error(log, "Map allocation failed");
+                return NULL;
+            }
+            for ( uint32_t i = 0; i < count; i++) {
+                const Local<Value> name = props->Get(i);
+                const Local<Value> value = obj->ToObject()->Get(name);
+                String::Utf8Value n(name);
+                as_val* val = asval_from_jsobject(value, log);
+                as_stringmap_set((as_map*) map, *n, val);
+            }
+            return (as_val*) map;
+        }
     }
     return NULL;
 }
