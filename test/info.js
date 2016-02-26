@@ -16,7 +16,6 @@
 
 /* global describe, it, context */
 
-// we want to test the built aerospike module
 require('../lib/aerospike')
 const helper = require('./test_helper')
 const expect = require('expect.js')
@@ -25,11 +24,20 @@ describe('client.info()', function () {
   var client = helper.client
 
   context('querying a single node', function () {
-    var hosts = client.config.hosts
+    var host = client.config.hosts[0]
 
-    it('should fetch object count from specific cluster node and pass it to the info callback', function (done) {
-      var host = hosts[0]
+    it('should fetch object count from specific cluster node', function (done) {
       client.info('objects', host, function (err, response, responding_host) {
+        expect(err).not.to.be.ok()
+        expect(responding_host).to.eql(host)
+        expect(response.indexOf('objects\t')).to.eql(0)
+        done()
+      })
+    })
+
+    it('should accept a string with the host address', function (done) {
+      var host_str = host.addr + ':' + host.port
+      client.info('objects', host_str, function (err, response, responding_host) {
         expect(err).not.to.be.ok()
         expect(responding_host).to.eql(host)
         expect(response.indexOf('objects\t')).to.eql(0)
@@ -39,16 +47,11 @@ describe('client.info()', function () {
   })
 
   context('querying all the nodes', function () {
-    var nodes_count = client.config.hosts.length
-
     it('should fetch object count from all cluster nodes', function (done) {
-      var responses = 0
       client.info('objects', function (err, response, host) {
-        responses++
         expect(err).not.to.be.ok()
-        expect(response.indexOf('objects')).to.eql(0)
-        if (responses === nodes_count) done()
-      })
+        expect(response.indexOf('objects\t')).to.eql(0)
+      }, done)
     })
   })
 
