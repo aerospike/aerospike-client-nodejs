@@ -26,17 +26,15 @@ describe('client.query()', function () {
 
   before(function (done) {
     helper.udf.register('aggregate.lua')
-    helper.index.create('queryIndexInt', 'queryBinInt', 'integer')
-    helper.index.create('queryIndexString', 'queryBinString', 'string')
+    helper.index.create('queryIndexInt', 'test.query', 'queryBinInt', 'integer')
+    helper.index.create('queryIndexString', 'test.query', 'queryBinString', 'string')
 
-    // load objects - to be queried in test case.
     var total = 100
     var count = 0
 
     function iteration (i) {
-      // values
-      var key = {ns: helper.namespace, set: helper.set, key: 'test/query' + i.toString()}
-      var meta = {ttl: 10000, gen: 1}
+      var key = {ns: helper.namespace, set: 'test.query', key: 'test/query' + i.toString()}
+      var meta = {ttl: 20000}
       var record = {queryBinInt: i, queryBinString: 'querystringvalue'}
 
       // write the record then check
@@ -60,6 +58,8 @@ describe('client.query()', function () {
 
   after(function (done) {
     helper.udf.remove('aggregate.lua')
+    helper.index.remove('queryIndexInt')
+    helper.index.remove('queryIndexString')
     done()
   })
 
@@ -67,7 +67,7 @@ describe('client.query()', function () {
     var count = 0
 
     var args = { filters: [filter.equal('queryBinInt', 100)] }
-    var query = client.query(helper.namespace, helper.set, args)
+    var query = client.query(helper.namespace, 'test.query', args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -90,7 +90,7 @@ describe('client.query()', function () {
     var count = 0
 
     var args = { filters: [filter.range('queryBinInt', 1, 100)] }
-    var query = client.query(helper.namespace, helper.set, args)
+    var query = client.query(helper.namespace, 'test.query', args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -113,7 +113,7 @@ describe('client.query()', function () {
     var count = 0
 
     var args = { filters: [filter.equal('queryBinString', 'querystringvalue')] }
-    var query = client.query(helper.namespace, helper.set, args)
+    var query = client.query(helper.namespace, 'test.query', args)
 
     var stream = query.execute()
     stream.on('data', function (rec) {
@@ -125,50 +125,38 @@ describe('client.query()', function () {
     stream.on('error', function (error) {
       helper.fail(error)
     })
-    stream.on('end', function (end) {
+    stream.on('end', function () {
       expect(count).to.be.greaterThan(total - 1)
       done()
     })
   })
 
   it('should query on an index and apply aggregation user defined function', function (done) {
-    var count = 0
-
     var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
     aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-    var query = client.query(helper.namespace, helper.set, args)
+    var query = client.query(helper.namespace, 'test.query', args)
 
     var stream = query.execute()
     stream.on('data', function (result) {
-      expect(result).to.be.ok()
-      count++
+      expect(result).to.be.equal(5050) // 1 + 2 + ... + 100 = (100 * 101) / 2 = 5050
+      done()
     })
     stream.on('error', function (error) {
       helper.fail(error)
-    })
-    stream.on('end', function () {
-      expect(count).to.be.equal(1)
-      done()
     })
   })
 
   it('should scan aerospike database and apply aggregation user defined function', function (done) {
-    var count = 0
-
     var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
-    var query = client.query(helper.namespace, helper.set, args)
+    var query = client.query(helper.namespace, 'test.query', args)
 
     var stream = query.execute()
     stream.on('data', function (result) {
-      expect(result).to.be.ok()
-      count++
+      expect(result).to.be.equal(5050) // 1 + 2 + ... + 100 = (100 * 101) / 2 = 5050
+      done()
     })
     stream.on('error', function (error) {
       helper.fail(error)
-    })
-    stream.on('end', function () {
-      expect(count).to.be.equal(1)
-      done()
     })
   })
 })

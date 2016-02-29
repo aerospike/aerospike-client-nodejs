@@ -17,6 +17,7 @@
 const Aerospike = require('../lib/aerospike')
 const options = require('./util/options')
 const expect = require('expect.js')
+const deasync = require('deasync')
 const node_util = require('util')
 
 global.expect = expect
@@ -37,56 +38,61 @@ exports.config = config
 const client = Aerospike.client(config)
 exports.client = client
 
-const check = function (err) {
-  if (err && err.code !== 0) throw new Error(err.message)
+function UDFHelper (client) {
+  this.client = client
+  this.udfRegister = deasync(this.client.udfRegister).bind(client)
+  this.udfRegisterWait = deasync(this.client.udfRegisterWait).bind(client)
+  this.udfRemove = deasync(this.client.udfRemove).bind(client)
 }
 
-function UDFHelper () { }
-
-UDFHelper.prototype.register = function (filename, cb) {
+UDFHelper.prototype.register = function (filename, done) {
   var script = __dirname + '/' + filename
-  client.udfRegister(script, function (err) {
-    check(err)
-    client.udfRegisterWait(filename, 50, function (err) {
-      check(err)
-      if (cb) cb()
-    })
-  })
+  this.udfRegister(script)
+  this.udfRegisterWait(filename, 50)
+  if (done) done()
 }
 
-UDFHelper.prototype.remove = function (filename, cb) {
-  client.udfRemove(filename, function (err) {
-    check(err)
-    if (cb) cb()
-  })
+UDFHelper.prototype.remove = function (filename, done) {
+  try {
+    this.udfRemove(filename)
+  } catch (error) {
+    if (error.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw error
+  }
+  if (done) done()
+}
+
+function IndexHelper (client) {
+  this.client = client
+  this.createStringIndex = deasync(client.createStringIndex).bind(client)
+  this.createIntegerIndex = deasync(client.createIntegerIndex).bind(client)
+  this.indexCreateWait = deasync(client.indexCreateWait).bind(client)
+  this.indexRemove = deasync(client.indexRemove).bind(client)
+}
+
+IndexHelper.prototype.create = function (index_name, set_name, bin_name, index_type, done) {
+  var index = {
+    ns: options.namespace,
+    set: set_name,
+    bin: bin_name,
+    index: index_name
+  }
+  switch (index_type.toLowerCase()) {
+    case 'string': this.createStringIndex(index); break
+    case 'integer': this.createIntegerIndex(index); break
+  }
+  this.indexCreateWait(index.ns, index.index, 100)
+  if (done) done()
+}
+
+IndexHelper.prototype.remove = function (index_name, done) {
+  this.indexRemove(options.namespace, index_name, {})
+  if (done) done()
 }
 
 function ServerInfoHelper () {
   this.features = []
   this.nsconfig = {}
   this.cluster = []
-}
-
-function IndexHelper () { }
-
-IndexHelper.prototype.create = function (index_name, bin_name, index_type) {
-  var index = {
-    ns: options.namespace,
-    set: options.set,
-    bin: bin_name,
-    index: index_name
-  }
-  var builder
-  switch (index_type.toLowerCase()) {
-    case 'string': builder = client.createStringIndex; break
-    case 'integer': builder = client.createIntegerIndex; break
-  }
-  builder.call(client, index, function (err) {
-    check(err)
-    client.indexCreateWait(index.ns, index.index, 100, function (err) {
-      check(err)
-    })
-  })
 }
 
 ServerInfoHelper.prototype.supports_feature = function (feature) {
@@ -98,29 +104,33 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
 }
 
 ServerInfoHelper.prototype.fetch_info = function () {
-  var _this = this
+  var self = this
+  var done = false
   client.info('features', function (err, result) {
-    check(err)
+    if (err) throw new Error(err)
     var features = result.split('\n')[0].split('\t')[1]
-    _this.features = features.split(';')
-  })
+    self.features = features.split(';')
+  }, function () { done = true })
+  deasync.loopWhile(function () { return !done })
 }
 
 ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
-  var _this = this
+  var self = this
+  var done = false
   client.info('namespace/' + ns, function (err, result) {
-    check(err)
+    if (err) throw new Error(err)
     var config = result.split('\n')[0].split('\t')[1]
     config.split(';').forEach(function (nv) {
       nv = nv.split('=')
-      _this.nsconfig[nv[0]] = nv[1]
+      self.nsconfig[nv[0]] = nv[1]
     })
-  })
+  }, function () { done = true })
+  deasync.loopWhile(function () { return !done })
 }
 
-var udf_helper = new UDFHelper()
-var index_helper = new IndexHelper()
-var server_info_helper = new ServerInfoHelper()
+var udf_helper = new UDFHelper(client)
+var index_helper = new IndexHelper(client)
+var server_info_helper = new ServerInfoHelper(client)
 
 exports.udf = udf_helper
 exports.index = index_helper
