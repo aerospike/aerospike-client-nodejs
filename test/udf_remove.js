@@ -25,14 +25,16 @@ describe('client.udfRemove()', function (done) {
   var client = helper.client
 
   it('should remove an UDF module with a info policy from aerospike cluster', function (done) {
-    var dir = __dirname
-    var filename = dir + '/udf_test.lua'
+    var script = 'udf_test.lua'
+    var filename = __dirname + '/' + script
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
     client.udfRegister(filename, infopolicy, function (err) {
       expect(err).not.to.be.ok()
-      client.udfRemove('udf_test.lua', infopolicy, function (err) {
-        expect(err).not.to.be.ok()
-        done()
+      client.udfRegisterWait(script, 50, function () {
+        client.udfRemove(script, infopolicy, function (err) {
+          expect(err).not.to.be.ok()
+          done()
+        })
       })
     })
   })
