@@ -31,9 +31,8 @@
     "nan": "~2.0.8"
   },
   "devDependencies": {
-    "expect.js": "0.2.x",
+    "expect.js": "^0.3",
     "mocha": ">0",
-    "superagent": "0.15.x",
     "yargs": "1.2.1",
     "standard": "^5.4.1"
   }

@@ -38,8 +38,6 @@ var fs = require('fs')
 var Aerospike = require('aerospike')
 var yargs = require('yargs')
 
-var Status = Aerospike.status
-
 // *****************************************************************************
 // Options parsing
 // *****************************************************************************

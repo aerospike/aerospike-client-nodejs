@@ -14,12 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global expect, describe, it, before, after */
 
-// we want to test the built aerospike module
-require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const expect = require('expect.js')
 
 const metagen = helper.metagen
 const recgen = helper.recgen
@@ -64,8 +62,7 @@ describe('client.query() - without where clause(Scan)', function () {
   })
 
   after(function (done) {
-    helper.udf.remove('scan.lua')
-    done()
+    helper.udf.remove('scan.lua', done)
   })
 
   it('should query all the records', function (done) {
@@ -102,14 +99,13 @@ describe('client.query() - without where clause(Scan)', function () {
     var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
-
     stream.on('data', function (rec) {
       count++
     })
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
       errors++
     })
-    stream.on('end', function (end) {
+    stream.on('end', function () {
       expect(count).to.not.be.lessThan(number_of_records)
       expect(errors).to.equal(0)
       done()
@@ -125,14 +121,13 @@ describe('client.query() - without where clause(Scan)', function () {
     var query = client.query(helper.namespace, helper.set, args)
 
     var stream = query.execute()
-
     stream.on('data', function (rec) {
       count++
     })
     stream.on('error', function (error) { // eslint-disable-line handle-callback-err
       errors++
     })
-    stream.on('end', function (end) {
+    stream.on('end', function () {
       expect(count).to.not.be.lessThan(number_of_records)
       expect(errors).to.equal(0)
       done()
@@ -143,17 +138,19 @@ describe('client.query() - without where clause(Scan)', function () {
     var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
     var scanBackground = client.query(helper.namespace, helper.set, args)
 
-    var errors = 0
     var stream = scanBackground.execute()
-
-    var infoCallback = function (scanJobStats, scanId) {
-      done()
-    }
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      errors++
+    stream.on('error', function (error) {
+      helper.fail(error)
     })
     stream.on('end', function (scanId) {
-      scanBackground.info(scanId, infoCallback)
+      var interval = setInterval(function () {
+        scanBackground.info(scanId, function (scanJobStats, scanId) {
+          if (scanJobStats.status === Aerospike.scanStatus.COMPLETED) {
+            clearInterval(interval)
+            done()
+          }
+        })
+      }, 100)
     })
   })
 })

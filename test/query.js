@@ -14,12 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global expect, describe, it, before, after */
 
-// we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const expect = require('expect.js')
 
 const filter = Aerospike.filter
 
@@ -27,10 +25,7 @@ describe('client.query()', function () {
   var client = helper.client
 
   before(function (done) {
-    if (helper.options.run_aggregation) {
-      helper.udf.register('aggregate.lua')
-    }
-
+    helper.udf.register('aggregate.lua')
     helper.index.create('queryIndexInt', 'queryBinInt', 'integer')
     helper.index.create('queryIndexString', 'queryBinString', 'string')
 
@@ -64,16 +59,12 @@ describe('client.query()', function () {
   })
 
   after(function (done) {
-    if (helper.options.run_aggregation) {
-      helper.udf.remove('aggregate.lua')
-    }
+    helper.udf.remove('aggregate.lua')
     done()
   })
 
   it('should query on an integer index - filter by equality of bin value', function (done) {
-    // counters
     var count = 0
-    var err = 0
 
     var args = { filters: [filter.equal('queryBinInt', 100)] }
     var query = client.query(helper.namespace, helper.set, args)
@@ -85,21 +76,18 @@ describe('client.query()', function () {
       expect(rec.bins['queryBinInt']).to.equal(100)
       count++
     })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+    stream.on('error', function (error) {
+      helper.fail(error)
     })
     stream.on('end', function (end) {
       expect(count).to.be.equal(1)
-      expect(err).to.equal(0)
       done()
     })
   })
 
   it('should query on an integer index - filter by range of bin values', function (done) {
-    // counters
     var total = 100
     var count = 0
-    var err = 0
 
     var args = { filters: [filter.range('queryBinInt', 1, 100)] }
     var query = client.query(helper.namespace, helper.set, args)
@@ -111,21 +99,18 @@ describe('client.query()', function () {
       expect(rec.bins['queryBinInt']).to.be.lessThan(101)
       count++
     })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+    stream.on('error', function (error) {
+      helper.fail(error)
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total - 1)
-      expect(err).to.equal(0)
       done()
     })
   })
 
   it('should query on a string index - filter by equality of bin value', function (done) {
-    // counters
     var total = 100
     var count = 0
-    var err = 0
 
     var args = { filters: [filter.equal('queryBinString', 'querystringvalue')] }
     var query = client.query(helper.namespace, helper.set, args)
@@ -137,23 +122,17 @@ describe('client.query()', function () {
       expect(rec.bins['queryBinString']).to.equal('querystringvalue')
       count++
     })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      err++
+    stream.on('error', function (error) {
+      helper.fail(error)
     })
     stream.on('end', function (end) {
       expect(count).to.be.greaterThan(total - 1)
-      expect(err).to.equal(0)
-
       done()
     })
   })
 
   it('should query on an index and apply aggregation user defined function', function (done) {
-    if (!helper.options.run_aggregation) { this.skip() }
-
-    // counters
     var count = 0
-    var err = 0
 
     var args = { filters: [filter.equal('queryBinString', 'querystringvalue')],
     aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
@@ -165,22 +144,16 @@ describe('client.query()', function () {
       count++
     })
     stream.on('error', function (error) {
-      expect(error).not.to.be.ok()
-      err++
+      helper.fail(error)
     })
-    stream.on('end', function (end) {
+    stream.on('end', function () {
       expect(count).to.be.equal(1)
-      expect(err).to.equal(0)
       done()
     })
   })
 
   it('should scan aerospike database and apply aggregation user defined function', function (done) {
-    if (!helper.options.run_aggregation) { this.skip() }
-
-    // counters
     var count = 0
-    var err = 0
 
     var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
     var query = client.query(helper.namespace, helper.set, args)
@@ -191,12 +164,10 @@ describe('client.query()', function () {
       count++
     })
     stream.on('error', function (error) {
-      expect(error).to.be.ok()
-      err++
+      helper.fail(error)
     })
-    stream.on('end', function (end) {
+    stream.on('end', function () {
       expect(count).to.be.equal(1)
-      expect(err).to.equal(0)
       done()
     })
   })

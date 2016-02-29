@@ -14,11 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, context */
+/* global expect, describe, it, context */
 
 require('../lib/aerospike')
 const helper = require('./test_helper')
-const expect = require('expect.js')
 
 describe('client.info()', function () {
   var client = helper.client

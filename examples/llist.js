@@ -214,7 +214,7 @@ Aerospike.connect(config, function (err, client) {
     checkError(err, 'Get size is verified')
     console.log('The size of the list is ', val)
     list.getConfig(function (err, val) {
-      if (err && err.code !== Status.AEROSPIKE_OK) { throw new Error(err.message) }
+      if (err) { throw new Error(err.message) }
       console.log(val)
       // destroy the llist completely.
       list.destroy(function (err, val) {

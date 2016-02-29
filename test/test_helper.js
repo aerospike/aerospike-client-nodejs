@@ -16,6 +16,10 @@
 
 const Aerospike = require('../lib/aerospike')
 const options = require('./util/options')
+const expect = require('expect.js')
+const node_util = require('util')
+
+global.expect = expect
 
 exports.options = options
 exports.namespace = options.namespace
@@ -26,8 +30,6 @@ exports.metagen = require('./generators/metadata')
 exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
-
-global.expect = require('expect.js')
 
 const config = options.getConfig()
 exports.config = config
@@ -123,6 +125,13 @@ var server_info_helper = new ServerInfoHelper()
 exports.udf = udf_helper
 exports.index = index_helper
 exports.cluster = server_info_helper
+
+exports.fail = function fail (message) {
+  if (typeof message !== 'string') {
+    message = node_util.inspect(message)
+  }
+  expect().fail(message)
+}
 
 /* global before */
 before(function (done) {

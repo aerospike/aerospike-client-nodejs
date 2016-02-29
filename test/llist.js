@@ -14,12 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it, before, after */
+/* global expect, describe, it, before, after */
 
-// we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const expect = require('expect.js')
 
 const valgen = helper.valgen
 

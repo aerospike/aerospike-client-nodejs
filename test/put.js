@@ -14,12 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global describe, it */
+/* global expect, describe, it */
 
-// we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const expect = require('expect.js')
 
 const keygen = helper.keygen
 const metagen = helper.metagen
@@ -27,7 +25,7 @@ const recgen = helper.recgen
 const valgen = helper.valgen
 
 const status = Aerospike.status
-var Double = Aerospike.Double
+const Double = Aerospike.Double
 
 describe('client.put()', function () {
   var client = helper.client

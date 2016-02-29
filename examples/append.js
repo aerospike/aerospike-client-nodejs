@@ -23,8 +23,6 @@ var Aerospike = require('aerospike')
 var yargs = require('yargs')
 var iteration = require('./iteration')
 
-var Status = Aerospike.status
-
 // *****************************************************************************
 // Options parsing
 // *****************************************************************************
