@@ -25,7 +25,7 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
-    "test": "standard && mocha"
+    "test": "standard && ./scripts/shuffle_tests"
   },
   "dependencies": {
     "nan": "~2.0.8"
