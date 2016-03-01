@@ -16,7 +16,8 @@
 
 /* global expect, describe, it, context */
 
-require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
+const Client = Aerospike.Client
 const helper = require('./test_helper')
 
 describe('client.info()', function () {
@@ -60,6 +61,13 @@ describe('client.info()', function () {
       info_cb_called += 1
     }, function () {
       expect(info_cb_called).to.not.eql(0)
+      done()
+    })
+  })
+
+  it('should return a client error if the client is not connected', function (done) {
+    new Client(helper.config).info(function (err) {
+      expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
       done()
     })
   })
