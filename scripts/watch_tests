@@ -1,0 +1,8 @@
+#!/bin/bash
+# Watch for changes to tests and re-run then.
+if [ ! -x "$(command -v fswatch)" ]; then
+  echo "Please install fswatch to use this script. On Mac OS, you can install it via Homebrew."
+  exit -1
+fi
+echo "Watching test dir for changes..."
+fswatch test/*.js | xargs -n 1 mocha
