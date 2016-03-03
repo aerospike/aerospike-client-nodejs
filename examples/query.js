@@ -18,10 +18,10 @@
 // Write a record.
 // *****************************************************************************
 
-var fs = require('fs')
-var Aerospike = require('aerospike')
-var yargs = require('yargs')
-var iteration = require('./iteration')
+const Aerospike = require('aerospike')
+const fs = require('fs')
+const yargs = require('yargs')
+const iteration = require('./iteration')
 
 var filter = Aerospike.filter
 
@@ -45,11 +45,6 @@ var argp = yargs
       alias: 'h',
       default: '127.0.0.1',
       describe: 'Aerospike database address.'
-    },
-    port: {
-      alias: 'p',
-      default: 3000,
-      describe: 'Aerospike database port.'
     },
     timeout: {
       alias: 't',
@@ -106,28 +101,17 @@ iteration.setLimit(argv.iterations)
 // *****************************************************************************
 
 var config = {
-  // the hosts to attempt to connect with.
-  hosts: [{
-    addr: argv.host,
-    port: argv.port
-  }],
-
-  // log configuration
+  host: argv.host,
   log: {
     level: argv['log-level'],
     file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
   },
-
-  // default policies
   policies: {
     timeout: argv.timeout
   },
-
-  // modlua userpath
   modlua: {
     userPath: __dirname
   },
-
   user: argv.user,
   password: argv.password
 }

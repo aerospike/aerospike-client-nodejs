@@ -98,7 +98,7 @@ if (argv.password !== null) {
 var client = aerospike.client(config)
 
 client.connect(function (err) {
-  if (err.code !== 0) {
+  if (err && err.code !== 0) {
     logger.error('Aerospike server connection error: ', err)
     process.exit(1)
   }
@@ -158,7 +158,8 @@ function get (key, done) {
   var time_start = process.hrtime()
   client.get(key, function (_error, _record, _metadata, _key) {
     var time_end = process.hrtime()
-    done(_error.code, time_start, time_end, READ)
+    var status = (_error && _error.code) || 0
+    done(status, time_start, time_end, READ)
   })
 }
 
@@ -171,7 +172,8 @@ function put (options, done) {
   var time_start = process.hrtime()
   client.put(options.key, options.record, metadata, function (_error, _record, _metadata, _key) {
     var time_end = process.hrtime()
-    done(_error.code, time_start, time_end, WRITE)
+    var status = (_error && _error.code) || 0
+    done(status, time_start, time_end, WRITE)
   })
 }
 

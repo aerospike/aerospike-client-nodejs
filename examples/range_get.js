@@ -34,11 +34,11 @@
 //      node range_put --start 900
 // *****************************************************************************
 
-var fs = require('fs')
-var Aerospike = require('aerospike')
-var yargs = require('yargs')
+const Aerospike = require('aerospike')
+const fs = require('fs')
+const yargs = require('yargs')
 
-var Status = Aerospike.status
+const Status = Aerospike.status
 
 // *****************************************************************************
 // Options parsing
@@ -53,13 +53,8 @@ var argp = yargs
     },
     host: {
       alias: 'h',
-      default: '127.0.0.1',
+      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
       describe: 'Aerospike database address.'
-    },
-    port: {
-      alias: 'p',
-      default: 3000,
-      describe: 'Aerospike database port.'
     },
     timeout: {
       alias: 't',
@@ -121,24 +116,14 @@ if (argv.help === true) {
 // *****************************************************************************
 
 var config = {
-  // the hosts to attempt to connect with.
-  hosts: [{
-    addr: argv.host,
-    port: argv.port
-  }],
-
-  // log configuration
+  host: argv.host,
   log: {
     level: argv['log-level'],
     file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
   },
-
-  // default policies
   policies: {
     timeout: argv.timeout
   },
-
-  // authentication
   user: argv.user,
   password: argv.password
 }

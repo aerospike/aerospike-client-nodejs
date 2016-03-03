@@ -28,46 +28,40 @@ CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora 20/21/22, Linuxmint and Mac OS
 The following is very simple example of how to write and read a record from Aerospike.
 
 ```js
-var aerospike = require('aerospike');
-var status = aerospike.status;
+const Aerospike = require('aerospike')
+const Key = Aerospike.Key
+const GeoJSON = Aerospike.GeoJSON
 
-
-// Connect to the cluster.
-var client = aerospike.client({
-    hosts: [ { addr: '127.0.0.1', port: 3000 } ]
-});
-
-function connect_cb( err, client) {
-    if (err.code == status.AEROSPIKE_OK) {
-        console.log("Aerospike Connection Success")
-    }
+const config = {
+  hosts: '192.168.33.10:3000'
 }
+Aerospike.connect(config, function (err, client) {
+  if (err) throw err
 
-client.connect(connect_cb);  // connect is synchronous
+  var key = new Key('test', 'demo', 'demo')
+  var record = {
+    i: 123,
+    s: 'hello',
+    b: new Buffer('world'),
+    g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+    c: [1, 'a', {x: 'y'}]
+  }
+  var meta = { ttl: 10000 }
+  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
 
-// The key of the record we are reading.
-var key = aerospike.key('test','demo','foo');
+  client.put(key, record, meta, policy, function (err) {
+    if (err) throw new Error(err.message)
 
-var bins = { i: 123, s: "str"}
-var metadata = { ttl: 10000, gen: 1}
-
-// write a record to database.
-client.put(key, bins, metadata, function(err, key){
-
-	// Read the same record from database
-	client.get(key, function(err, rec, meta) {
-
-		// Check for errors
-		if ( err.code == status.AEROSPIKE_OK ) {
-			// The record was successfully read.
-			console.log(rec, meta);
-		}
-		else {
-			// An error occurred
-			console.error('error:', err);
-		}
-	});
-});
+    client.get(key, function (err, record, meta) {
+      if (err) throw new Error(err.message)
+      console.log(record) // => { i: 123,
+                          //      s: 'hello',
+                          //      b: <Buffer 77 6f 72 6c 64>,
+                          //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
+                          //      c: [ 1, 'a', { x: 'y' } ] }
+    })
+  })
+})
 ```
 
 More examples illustrating the use of the API are located in the
@@ -227,7 +221,7 @@ its `package.json`.
 
 Once installed, the module can be required in the application:
 
-	var aerospike = require('aerospike')
+	const Aerospike = require('aerospike')
 
 <a name="Installing-via-Git-Repository"></a>
 ### Installing via Git Repository
@@ -263,7 +257,7 @@ Linking to the module does not require root permission.
 
 Once linked, the module can be required in the application:
 
-	var aerospike = require('aerospike')
+	const Aerospike = require('aerospike')
 
 #### Installing Locally
 
@@ -282,7 +276,7 @@ located.
 
 Once installed, the module can be required in the application:
 
-	var aerospike = require('aerospike')
+	const Aerospike = require('aerospike')
 
 <a name="Aerospike with Aggregation"></a>
 ### Aerospike with Aggregation

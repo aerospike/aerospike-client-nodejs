@@ -18,13 +18,13 @@
 // Write a record
 // *****************************************************************************
 
-var fs = require('fs')
-var Aerospike = require('aerospike')
-var yargs = require('yargs')
+const Aerospike = require('aerospike')
+const fs = require('fs')
+const yargs = require('yargs')
 
-var Status = Aerospike.status
-var filter = Aerospike.filter
-var GeoJSON = Aerospike.GeoJSON
+const status = Aerospike.status
+const filter = Aerospike.filter
+const GeoJSON = Aerospike.GeoJSON
 
 // *****************************************************************************
 // Options parsing
@@ -39,13 +39,8 @@ var argp = yargs
     },
     host: {
       alias: 'h',
-      default: '127.0.0.1',
+      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
       describe: 'Aerospike database address.'
-    },
-    port: {
-      alias: 'p',
-      default: 3000,
-      describe: 'Aerospike database port.'
     },
     timeout: {
       alias: 't',
@@ -95,39 +90,22 @@ if (argv.help === true) {
 // *****************************************************************************
 
 var config = {
-  // the hosts to attempt to connect with.
-  hosts: [
-    { addr: argv.host, port: argv.port }
-  ],
-
-  // log configuration
+  host: argv.host,
   log: {
     level: argv['log-level'],
     file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
   },
-
-  // default policies
   policies: {
     timeout: argv.timeout
   },
-
-  // modlua userpath
   modlua: {
     userPath: __dirname
-  }
-
-}
-
-if (argv.user !== null) {
-  config.user = argv.user
-}
-
-if (argv.password !== null) {
-  config.password = argv.password
+  },
+  user: argv.user,
+  password: argv.password
 }
 
 var g_nkeys = 20
-var g_bin = 'loc'
 var g_index = 'points-loc-index'
 
 function execute_query (client) {
@@ -141,7 +119,7 @@ function execute_query (client) {
     ]
   }
 
-  var options = { filters: [filter.geoWithin('loc', JSON.stringify(region))] }
+  var options = { filters: [filter.geoWithin('loc', new GeoJSON(region))] }
 
   var q = client.query(argv.namespace, argv.set, options)
 
@@ -175,8 +153,9 @@ function insert_records (client, ndx, end) {
   var lat = 37.5 + (0.1 * ndx)
 
   var loc = { type: 'Point', coordinates: [lng, lat] }
-  var bins = {}
-  bins[g_bin] = GeoJSON(JSON.stringify(loc))
+  var bins = {
+    loc: new GeoJSON(loc)
+  }
   client.put(key, bins, function (err, key) {
     if (err) {
       console.error('insert_records: put failed: ', err.message)
@@ -190,7 +169,7 @@ function create_index (client) {
   var options = {
     ns: argv.namespace,
     set: argv.set,
-    bin: g_bin,
+    bin: 'loc',
     index: g_index
   }
   client.createGeo2DSphereIndex(options, function (err) {
@@ -210,7 +189,7 @@ function create_index (client) {
 
 function remove_index (client, complete) {
   client.indexRemove(argv.namespace, g_index, function (err) {
-    if (err && err.code !== Status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
       throw new Error(err.message)
     }
     complete(client)
@@ -225,7 +204,7 @@ function remove_records (client, ndx, end, complete) {
   var key = { ns: argv.namespace, set: argv.set, key: ndx }
 
   client.remove(key, function (err, key) {
-    if (err && err.code !== Status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
       throw new Error(err.message)
     }
     remove_records(client, ndx + 1, end, complete)
@@ -241,8 +220,6 @@ Aerospike.connect(config, function (err, client) {
     console.error('Error: Aerospike server connection error. ', err.message)
     process.exit(1)
   } else {
-    // FIXME - when we can wait after index deletion do this instead.
-    // cleanup(client, create_index)
     create_index(client)
   }
 })

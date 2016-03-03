@@ -36,9 +36,9 @@
 //
 // *****************************************************************************
 
-var fs = require('fs')
-var Aerospike = require('aerospike')
-var yargs = require('yargs')
+const Aerospike = require('aerospike')
+const fs = require('fs')
+const yargs = require('yargs')
 
 // *****************************************************************************
 // Options parsing
@@ -53,13 +53,8 @@ var argp = yargs
     },
     host: {
       alias: 'h',
-      default: '127.0.0.1',
+      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
       describe: 'Aerospike database address.'
-    },
-    port: {
-      alias: 'p',
-      default: 3000,
-      describe: 'Aerospike database port.'
     },
     timeout: {
       alias: 't',
@@ -197,15 +192,10 @@ function run (client) {
 // *****************************************************************************
 
 var config = {
-  hosts: [{
-    addr: argv.host,
-    port: argv.port
-  }],
-
+  host: argv.host,
   policies: {
     timeout: argv.timeout
   },
-
   user: argv.user,
   password: argv.password
 }
