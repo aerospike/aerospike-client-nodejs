@@ -28,7 +28,8 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "scripts": {
-    "test": "standard && ./scripts/shuffle_tests"
+    "test": "standard && ./scripts/shuffle_tests",
+    "apidocs": "jsdoc -c jsdoc.json"
   },
   "dependencies": {
     "nan": "~2.0.8"
@@ -38,6 +39,13 @@
     "mocha": ">0",
     "yargs": "1.2.1",
     "standard": "^5.4.1",
-    "deasync": "^0.1.4"
+    "deasync": "^0.1.4",
+    "jsdoc": "^3.4.0",
+    "ink-docstrap": "^1.1.0"
+  },
+  "standard": {
+    "ignore": [
+      "apidocs"
+    ]
   }
 }
