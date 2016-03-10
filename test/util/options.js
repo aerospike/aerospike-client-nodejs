@@ -78,12 +78,18 @@ var parser = yargs
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv
 
+function baseDir () {
+  return __dirname.split('/').slice(0, -2).join('/')
+}
+
 options.getConfig = function () {
-  var test_dir = __dirname.split('/').slice(0, -1).join('/')
   var config = {
     log: {level: options.log, file: options.log_file},
     policies: {timeout: options.timeout},
-    modlua: {userPath: test_dir}
+    modlua: {
+      userPath: baseDir() + '/test',
+      systemPath: baseDir() + '/aerospike-client-c/lua'
+    }
   }
   if (options.host !== null) {
     config.hosts = [{addr: options.host, port: options.port || 3000}]
