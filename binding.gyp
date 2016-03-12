@@ -79,6 +79,11 @@
         ['OS=="linux"',{
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
         }],
+        ['OS=="mac"',{
+          'xcode_settings': {
+            'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
+          }
+        }],
         ['uselua==1',{
           'libraries': ['-llua']
         }],
