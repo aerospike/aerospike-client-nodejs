@@ -89,19 +89,9 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(Close);
 
         /**
-         *  undefined client.get(Key, function(Error, Record))
-         */
-		static NAN_METHOD(Get);
-
-        /**
          *  undefined client.get_async(Key, Policy, function(Error, Record))
          */
 		static NAN_METHOD(GetAsync);
-
-        /**
-         *  undefined client.exists(Key, function(Error, exists))
-         */
-		static NAN_METHOD(Exists);
 
         /**
          *  undefined client.exists_async(Key, function(Error, exists))
@@ -109,19 +99,9 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(ExistsAsync);
 
         /**
-         *  undefined client.put(Key, Record, function(Error))
-         */
-		static NAN_METHOD(Put);
-
-        /**
          *  undefined client.put_async(Key, Record, Meta, Policy, function(Error))
          */
 		static NAN_METHOD(PutAsync);
-
-        /**
-         *      undefined client.select(Key, String[], function(Error,Record))
-         */
-		static NAN_METHOD(Select);
 
         /**
          *      undefined client.select_async(Key, String[], function(Error,Record))
@@ -129,12 +109,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(SelectAsync);
 
         /**
-         *      undefined client.remove(Key, function(Error,Key))
-         */
-		static NAN_METHOD(Remove);
-
-        /**
-         *      undefined client.remove(Key, function(Error,Key))
+         *      undefined client.remove_async(Key, function(Error,Key))
          */
 		static NAN_METHOD(RemoveAsync);
 
@@ -154,12 +129,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(BatchSelect);
 
         /*
-         *undefined client.operate( Key, Operation, function(Error, Record))
-         */
-		static NAN_METHOD(Operate);
-
-        /*
-         *undefined client.operate( Key, Operation, function(Error, Record))
+         *undefined client.operate_async( Key, Operation, function(Error, Record))
          */
 		static NAN_METHOD(OperateAsync);
 
@@ -189,12 +159,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(RegisterWait);
 
         /*
-         *undefined client.execute(Key, udf_args, function( Error, Response))
-         */
-		static NAN_METHOD(Execute);
-
-        /*
-         *undefined client.apply(Key, udf_args, function( Error, Response))
+         *undefined client.apply_async(Key, udf_args, function( Error, Response))
          */
 		static NAN_METHOD(ApplyAsync);
 
