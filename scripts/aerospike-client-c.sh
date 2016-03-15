@@ -316,7 +316,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     cd ${AEROSPIKE}/package
 
     # Find the `devel` installer package in the client tgz
-    INST_PATH=$(tar -tzf aerospike-client-c.tgz | grep -e ".*devel-.*\.${PKG_TYPE}")
+    INST_PATH=$(tar -tzf aerospike-client-c.tgz | grep -e ".*libuv-devel-.*\.${PKG_TYPE}")
 
     # Extract the `devel` installer package from the client tgz
     printf "info: extracting '${INST_PATH}' from 'aerospike-client-c.tgz'\n"
@@ -330,15 +330,15 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     case ${PKG_TYPE} in
       "rpm" )
         printf "info: extracting files from '${INST_PATH}'\n"
-        rpm2cpio aerospike-client-c-devel-*.rpm | cpio -idm --no-absolute-filenames
+        rpm2cpio aerospike-client-c-libuv-devel-*.rpm | cpio -idm --no-absolute-filenames
         ;;
       "deb" )
         printf "info: extracting files from '${INST_PATH}'\n"
-        dpkg -x aerospike-client-c-devel-*.deb .
+        dpkg -x aerospike-client-c-libuv-devel-*.deb .
         ;;
       "pkg" )
         printf "info: extracting files from '${INST_PATH}'\n"
-        xar -xf aerospike-client-c-devel-*.pkg
+        xar -xf aerospike-client-c-libuv-devel-*.pkg
         cat Payload | gunzip -dc | cpio -i
         rm Bom PackageInfo Payload
         ;;

@@ -35,20 +35,20 @@ describe('client.operate()', function () {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
 
       client.put(key, {i: 123}, function (err) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         var ops = [
           op.incr('i', 432)
         ]
 
         client.operate(key, ops, function (err) {
-          if (err) { throw new Error(err.message) }
+          expect(err).to.not.be.ok()
 
           client.get(key, function (err, record2) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             expect(record2['i']).to.equal(555)
 
             client.remove(key, function (err) {
-              if (err) { throw new Error(err.message) }
+              if (err) throw err
               done()
             })
           })
@@ -60,20 +60,20 @@ describe('client.operate()', function () {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/double'})()
 
       client.put(key, {f: 3.14159}, function (err) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         var ops = [
           op.incr('f', 2.71828)
         ]
 
         client.operate(key, ops, function (err) {
-          if (err) { throw new Error(err.message) }
+          expect(err).to.not.be.ok()
 
           client.get(key, function (err, record2) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             expect(record2['f']).to.equal(5.85987)
 
             client.remove(key, function (err) {
-              if (err) { throw new Error(err.message) }
+              if (err) throw err
               done()
             })
           })
@@ -85,20 +85,20 @@ describe('client.operate()', function () {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/Double'})()
 
       client.put(key, {f: 3.14159}, function (err) {
-        if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+        if (err) throw err
         var ops = [
           op.incr('f', new Double(1.0))
         ]
 
         client.operate(key, ops, function (err) {
-          if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+          expect(err).to.not.be.ok()
 
           client.get(key, function (err, record2) {
-            if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+            if (err) throw err
             expect(record2['f']).to.equal(4.14159)
 
             client.remove(key, function (err) {
-              if (err && err.code !== status.AEROSPIKE_OK) { throw new Error(err.message) }
+              if (err) throw err
               done()
             })
           })
@@ -108,19 +108,16 @@ describe('client.operate()', function () {
   })
 
   it('should append a bin', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var ops = [
         op.append('s', 'def')
       ]
@@ -129,12 +126,12 @@ describe('client.operate()', function () {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -143,19 +140,16 @@ describe('client.operate()', function () {
   })
 
   it('should prepend and read a bin', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var ops = [
         op.prepend('s', 'def'),
         op.read('s')
@@ -167,12 +161,12 @@ describe('client.operate()', function () {
         expect('def' + record['s']).to.equal(record1['s'])
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i']).to.equal(record2['i'])
           expect('def' + record['s']).to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -181,12 +175,10 @@ describe('client.operate()', function () {
   })
 
   it('should touch a record(refresh ttl) ', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
@@ -206,29 +198,28 @@ describe('client.operate()', function () {
     //   clocks are not synchronous between server and client, the ttl client calculates may not
     //   be accurate to the user. Nevertheless server expires the record in the correct time.
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var ops = [
         op.touch(2592000)
       ]
 
       client.get(key, function (err, record3, metadata3, key3) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         var ttl_diff = metadata3.ttl - meta.ttl
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
           expect(err).to.not.be.ok()
 
           client.get(key1, function (err, record2, metadata2, key2) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             expect(record['i']).to.equal(record2['i'])
             expect(record['s']).to.equal(record2['s'])
             expect(2592000 + ttl_diff + 10).to.be.above(metadata2.ttl)
             expect(2592000 + ttl_diff - 10).to.be.below(metadata2.ttl)
 
             client.remove(key2, function (err, key) {
-              if (err) { throw new Error(err.message) }
+              if (err) throw err
               done()
             })
           })
@@ -238,31 +229,28 @@ describe('client.operate()', function () {
   })
 
   it('should prepend using prepend API and verify the bin', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 'def'}
 
       client.prepend(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i']).to.equal(record2['i'])
           expect('def' + record['s']).to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -271,19 +259,16 @@ describe('client.operate()', function () {
   })
 
   it('should prepend using prepend API and verify the bin with metadata', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 'def'}
 
       client.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
@@ -295,7 +280,7 @@ describe('client.operate()', function () {
           expect('def' + record['s']).to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -304,31 +289,28 @@ describe('client.operate()', function () {
   })
 
   it('should append a bin using append API and verify the bin', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 'def'}
 
       client.append(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -337,31 +319,28 @@ describe('client.operate()', function () {
   })
 
   it('should append a bin using append API and verify the bin with metadata', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 'def'}
 
       client.append(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i']).to.equal(record2['i'])
           expect(record['s'] + 'def').to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -370,31 +349,28 @@ describe('client.operate()', function () {
   })
 
   it('should add a value to a bin and verify', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {i: 432}
 
       client.add(key, bin, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i'] + 432).to.equal(record2['i'])
           expect(record['s']).to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -403,31 +379,28 @@ describe('client.operate()', function () {
   })
 
   it('should add a value to a bin with metadata and verify', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {i: 432}
 
       client.add(key, bin, meta, function (err, record1, metadata1, key1) {
         expect(err).not.to.be.ok()
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record['i'] + 432).to.equal(record2['i'])
           expect(record['s']).to.equal(record2['s'])
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })
@@ -436,23 +409,19 @@ describe('client.operate()', function () {
   })
 
   it('should add a string value to a bin and expected fail', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {i: 'str'}
 
       client.add(key, bin, meta, function (err, record1, metadata1, key1) {
-        expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
       })
@@ -460,23 +429,19 @@ describe('client.operate()', function () {
   })
 
   it('should append a bin of type integer using append API and expected to fail', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 123}
 
       client.append(key, bin, meta, function (err, record1, metadata1, key1) {
-        expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
       })
@@ -484,23 +449,19 @@ describe('client.operate()', function () {
   })
 
   it('should prepend an integer using prepend API and expect to fail', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var bin = {s: 123}
 
       client.prepend(key, bin, meta, function (err, record1, metadata1, key1) {
-        expect(err).to.be.ok()
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
         done()
       })
@@ -508,22 +469,19 @@ describe('client.operate()', function () {
   })
 
   it('should return a client error if any of the operations are invalid', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.constant({i: 123, s: 'abc'})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
     var record = rgen(key, meta)
 
-    // write the record then check
     client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       var ops = [
         op.incr('i', 432),
-        op.incr('i', 'str') // invalid increment with string value
+        op.incr('i', 'str')
       ]
 
       client.operate(key, ops, function (err, record1, metadata1, key1) {
@@ -531,12 +489,12 @@ describe('client.operate()', function () {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
         client.get(key, function (err, record2, metadata2, key2) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           expect(record2['i']).to.equal(123)
           expect(record2['s']).to.equal('abc')
 
           client.remove(key2, function (err, key) {
-            if (err) { throw new Error(err.message) }
+            if (err) throw err
             done()
           })
         })

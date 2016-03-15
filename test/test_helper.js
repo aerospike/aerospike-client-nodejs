@@ -146,9 +146,7 @@ exports.fail = function fail (message) {
 /* global before */
 before(function (done) {
   client.connect(function (err) {
-    if (err) {
-      throw new Error(err.message)
-    }
+    if (err) throw err
     server_info_helper.fetch_info()
     server_info_helper.fetch_namespace_config(options.namespace)
     done()

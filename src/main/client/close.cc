@@ -15,11 +15,11 @@
  ******************************************************************************/
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_key.h>
+	#include <aerospike/as_config.h>
+	#include <aerospike/as_key.h>
+	#include <aerospike/as_record.h>
 }
 
 #include <node.h>
@@ -41,15 +41,15 @@ using namespace v8;
  */
 NAN_METHOD(AerospikeClient::Close)
 {
-    //should call aerospike_close and aerospike_destroy
-    Nan::HandleScope scope;
+	//should call aerospike_close and aerospike_destroy
+	Nan::HandleScope scope;
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
-    as_error err;
-    as_v8_debug(client->log, "Closing the connection to aerospike cluster");
-    aerospike_close( client->as, &err);
-    as_v8_debug(client->log, "Destroying aeropsike object");
-    aerospike_destroy( client->as);
-    free(client->as);
-    free(client->log);
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	as_error err;
+	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
+	aerospike_close(client->as, &err);
+	as_v8_debug(client->log, "Destroying aerospike object");
+	aerospike_destroy(client->as);
+	free(client->as);
+	free(client->log);
 }

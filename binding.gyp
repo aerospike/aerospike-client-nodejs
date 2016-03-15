@@ -24,7 +24,9 @@
       ],
       'sources': [
         'src/main/aerospike.cc',
+        'src/main/async_listener.cc',
         'src/main/client.cc',
+        'src/main/client/apply_async.cc',
         'src/main/client/batch_exists.cc',
         'src/main/client/batch_get.cc',
         'src/main/client/batch_select.cc',
@@ -32,15 +34,21 @@
         'src/main/client/connect.cc',
         'src/main/client/execute.cc',
         'src/main/client/exists.cc',
+        'src/main/client/exists_async.cc',
         'src/main/client/get.cc',
+        'src/main/client/get_async.cc',
         'src/main/client/info.cc',
         'src/main/client/operate.cc',
+        'src/main/client/operate_async.cc',
         'src/main/client/put.cc',
+        'src/main/client/put_async.cc',
         'src/main/client/query.cc',
         'src/main/client/query_foreach.cc',
         'src/main/client/query_info.cc',
         'src/main/client/remove.cc',
+        'src/main/client/remove_async.cc',
         'src/main/client/select.cc',
+        'src/main/client/select_async.cc',
         'src/main/client/sindex_create.cc',
         'src/main/client/sindex_create_wait.cc',
         'src/main/client/sindex_remove.cc',
@@ -62,8 +70,7 @@
       ],
       'include_dirs': [
         'aerospike-client-c/include',
-        'aerospike-client-c/include/ck',
-                'src/include'
+        'src/include'
       ],
       'link_settings': {
         'libraries': [
@@ -75,6 +82,9 @@
         'isnode': '<!(which node > /dev/null 2> /dev/null; echo $?)',
         'isnodejs': '<!(which nodejs > /dev/null 2> /dev/null; echo $?)'
       },
+      'defines': [
+        'AS_USE_LIBUV'
+      ],
       'conditions': [
         ['OS=="linux"',{
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
