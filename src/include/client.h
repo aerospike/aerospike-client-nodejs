@@ -128,6 +128,11 @@ class AerospikeClient : public ObjectWrap {
          */
 		static NAN_METHOD(BatchSelect);
 
+        /**
+         *  undefined client.batchRead(Record[], function(Error, Record[]))
+         */
+		static NAN_METHOD(BatchReadAsync);
+
         /*
          *undefined client.operate_async( Key, Operation, function(Error, Record))
          */

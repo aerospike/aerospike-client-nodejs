@@ -48,6 +48,7 @@ extern "C" {
 #include <aerospike/as_map.h>
 #include <aerospike/as_nil.h>
 #include <aerospike/as_stringmap.h>
+#include <aerospike/as_vector.h>
 #include <citrusleaf/alloc.h>
 }
 
@@ -859,6 +860,34 @@ Local<Object> record_to_jsobject(const as_record * record, const as_key * key, L
     rec->Set(Nan::New("bins").ToLocalChecked(), bins);
 
     return scope.Escape(rec);
+}
+
+Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, LogInfo* log)
+{
+    Nan::EscapableHandleScope scope;
+	const as_vector* list = &records->list;
+	Local<Array> results = Nan::New<Array>(list->size);
+
+	for (uint32_t i = 0; i < list->size; i++) {
+		as_batch_read_record* batch_record = (as_batch_read_record*) as_vector_get((as_vector*) list, i);
+		as_status status = batch_record->result;
+		as_record* record = &batch_record->record;
+		as_key* key = &batch_record->key;
+
+		Local<Object> result = Nan::New<Object>();
+		result->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+		result->Set(Nan::New("key").ToLocalChecked(), key_to_jsobject(key ? key : &record->key, log));
+		if (status == AEROSPIKE_OK) {
+			result->Set(Nan::New("meta").ToLocalChecked(), recordmeta_to_jsobject(record, log));
+			result->Set(Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
+		}
+
+		as_key_destroy(key);
+		as_record_destroy(record);
+		results->Set(i, result);
+	}
+
+    return scope.Escape(results);
 }
 
 //Forward references;
@@ -1691,6 +1720,40 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
+int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array> arr, LogInfo* log)
+{
+	uint32_t no_records = arr->Length();
+	*records = as_batch_read_create(no_records);
+	for (uint32_t i = 0; i < no_records; i++) {
+		as_batch_read_record* record = as_batch_read_reserve(*records);
+		Local<Object> obj = arr->Get(i)->ToObject();
+
+		Local<Object> key = obj->Get(Nan::New("key").ToLocalChecked())->ToObject();
+		if (key_from_jsobject(&record->key, key, log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing batch keys failed\n");
+			return AS_NODE_PARAM_ERR;
+		}
+
+		Local<Value> maybe_bins = obj->Get(Nan::New("bins").ToLocalChecked());
+		if (maybe_bins->IsArray()) {
+			char** bin_names;
+			uint32_t n_bin_names;
+			if (bins_from_jsarray(&bin_names, &n_bin_names, Local<Array>::Cast(maybe_bins), log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Parsing batch bin names failed\n");
+				return AS_NODE_PARAM_ERR;
+			}
+			record->bin_names = bin_names;
+			record->n_bin_names = n_bin_names;
+		}
+
+		Local<Value> maybe_read_all_bins = obj->Get(Nan::New("read_all_bins").ToLocalChecked());
+		if (maybe_read_all_bins->IsBoolean()) {
+			record->read_all_bins = maybe_read_all_bins->ToBoolean()->Value();
+		}
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * log)
 {
     uint32_t  capacity = arr->Length();
@@ -1732,6 +1795,7 @@ int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogIn
     *num_bins = (uint32_t) arr_length;
     return AS_NODE_PARAM_OK;
 }
+
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
 {
 

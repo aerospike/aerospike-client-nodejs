@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-require('../../lib/aerospike')
+const Aerospike = require('../../lib/aerospike')
 const helper = require('../test_helper')
 const deasync = require('deasync')
 
@@ -65,12 +65,13 @@ function put (n, keygen, recgen, metagen, done) {
   var d = put_done(n, done)
   var throttled = throttle.call(client, 200, client.put)
 
+  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
   for (var i = 0; i < n; i++) {
     var key = keygen()
     var metadata = metagen(key)
     var record = recgen(key, metadata)
     var callback = d(key, record, metadata)
-    throttled(key, record, metadata, callback)
+    throttled(key, record, metadata, policy, callback)
   }
 }
 

@@ -67,6 +67,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );
 Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
+Local<Array> batch_records_to_jsarray(const as_batch_read_records* record, LogInfo* log );
 Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
 Local<Object> scaninfo_to_jsobject(const as_scan_info * info, LogInfo * log );
 
@@ -81,6 +82,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log );
 int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
 int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo * log);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
+int batch_read_records_from_jsarray(as_batch_read_records** batch, Local<Array> arr, LogInfo* log);
 int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log );
 int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log);
 

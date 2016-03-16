@@ -18,6 +18,7 @@
 
 extern "C" {
 	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_batch.h>
 	#include <aerospike/as_event.h>
 }
 
@@ -39,3 +40,6 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 
 // implements the as_async_value_listener interface
 void async_value_listener(as_error* err, as_val* value, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_batch_listener interface
+void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);

@@ -162,3 +162,39 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 	data->callback.Reset();
 	delete data;
 }
+
+void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop)
+{
+	Nan::HandleScope scope;
+
+	CallbackData * data = reinterpret_cast<CallbackData *>(udata);
+	if (!data) {
+		return Nan::ThrowError("Missing callback data - cannot process record callback");
+	}
+
+	AerospikeClient * client = data->client;
+	LogInfo * log = client->log;
+
+	const int argc = 2;
+	Local<Value> argv[argc];
+	if (err) {
+		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		argv[0] = error_to_jsobject(err, log);
+		argv[1] = Nan::Null();
+	} else {
+		argv[0] = err_ok();
+		argv[1] = batch_records_to_jsarray(records, log);
+	}
+	as_batch_read_destroy(records);
+
+	as_v8_debug(log, "Invoking JS callback function\n");
+	Nan::TryCatch try_catch;
+	Local<Function> cb = Nan::New<Function>(data->callback);
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+	if (try_catch.HasCaught()) {
+		Nan::FatalException(try_catch);
+	}
+
+	data->callback.Reset();
+	delete data;
+}
