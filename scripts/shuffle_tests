@@ -17,4 +17,6 @@ shuffle () {
 echo "Running tests in randomized order. Use RANDOM_SEED=$RANDOM_SEED to reproduce."
 tests=`ls test/*.js | shuffle`
 mocha $tests
+success=$?
 echo "Tests executed in randomized order. Use RANDOM_SEED=$RANDOM_SEED to reproduce."
+exit $success
