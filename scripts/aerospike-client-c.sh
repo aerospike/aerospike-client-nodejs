@@ -51,7 +51,7 @@ detect_linux()
 
     case ${DIST_NAME} in
 
-      "centos6" | "redhatenterpriseserver6" | "centos7" | "fedora20" | "fedora21" | "fedora22")
+      "centos6" | "redhatenterpriseserver6" | "centos7" | "fedora20" | "fedora21" | "fedora22" | "fedora23" | "korora22" | "korora23")
         echo "el6" "rpm"
         return 0
         ;;
@@ -80,12 +80,12 @@ detect_linux()
     esac
   fi
 
-  # no LSB, check for /etc/centos-release
-  if [ -f /etc/centos-release ]; then
+  # no LSB, check for /etc/redhat-release
+  if [ -f /etc/redhat-release ]; then
     dist=$(cat /etc/redhat-release | tr '[:upper:]' '[:lower:]')
     case ${dist} in
 
-      "centos"* | "red hat enterprise linux"* | "fedora"*)
+      "centos"* | "red hat enterprise linux"* | "fedora"* | "korora"*)
 	echo "el6" "rpm"
 	return 0
 	;;
@@ -103,7 +103,7 @@ detect_linux()
     dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
     case ${dist} in
 
-      "centos"* | "red hat enterprise linux"* | "fedora"* )
+      "centos"* | "red hat enterprise linux"* | "fedora"* | "korora"*)
         echo "el6" "rpm"
         return 0
         ;;
