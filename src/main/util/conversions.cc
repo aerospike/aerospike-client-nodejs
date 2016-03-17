@@ -130,7 +130,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
             }
             if (policies->Has(Nan::New("replica").ToLocalChecked())) {
                 Local<Value> v8replica = policies->Get(Nan::New("replica").ToLocalChecked());
-                config->policies.gen = (as_policy_gen) V8INTEGER_TO_CINTEGER(v8replica);
+                config->policies.replica = (as_policy_replica) V8INTEGER_TO_CINTEGER(v8replica);
             }
             if (policies->Has(Nan::New("consistencyLevel").ToLocalChecked())) {
                 Local<Value> v8consistency = policies->Get(Nan::New("consistencyLevel").ToLocalChecked());
