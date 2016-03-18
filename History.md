@@ -1,10 +1,21 @@
-Head
-==================
+1.0.57 / 2016-03-18
+===================
 
 * **Improvements**
-  * Optionally read hosts config from `AEROSPIKE_HOSTS` env variable. Thanks to [@mrbar42](https://github.com/mrbar42)!
+  * Update build script to support Fedora 23 as well as Korora 22/23.
+    [#113](https://github.com/aerospike/aerospike-client-nodejs/issues/113),
+    [#115](https://github.com/aerospike/aerospike-client-nodejs/issues/115)
+  * Update Aerospike C client library to v4.0.3.
+  * Optionally read hosts config from `AEROSPIKE_HOSTS` environment variable.
+    Thanks to [@mrbar42](https://github.com/mrbar42)!
   * Collect TPS stats in benchmarks.
-  * Update Travis CI config to test latest Node.js release & add badge. Thanks to [@revington](https://github.com/revington)!
+  * Update Travis CI config to test latest Node.js release & add badge. Thanks
+    to [@revington](https://github.com/revington)!
+
+* **Fixes**
+  * Fix replica policy value overwriting gen policy [CLIENT-699]
+  * Fix lists being returned as bytes in listGetRange/listPopRange operations
+    (via C client library v4.0.3).
 
 1.0.56 / 2016-02-11
 ===================
