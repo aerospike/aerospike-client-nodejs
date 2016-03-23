@@ -17,6 +17,7 @@
 extern "C" {
 	#include <aerospike/as_event.h>
 	#include <aerospike/as_log.h>
+	#include <aerospike/as_async_proto.h>
 }
 
 #include <uv.h>
@@ -35,15 +36,22 @@ NAN_METHOD(register_as_event_loop)
 {
     Nan::HandleScope();
 	if (!as_event_set_external_loop_capacity(1)) {
-		return Nan::ThrowError("unable to register default event loop");
+		return Nan::ThrowError("Unable to register default event loop");
 	}
 	as_event_set_external_loop(uv_default_loop());
 }
 
-NAN_METHOD(deregister_as_event_loop)
+NAN_METHOD(release_as_event_loop)
 {
     Nan::HandleScope();
 	as_event_close_loops();
+}
+
+NAN_METHOD(get_cluster_count)
+{
+	Nan::HandleScope();
+	uint32_t count = as_async_get_cluster_count();
+	info.GetReturnValue().Set(Nan::New(count));
 }
 
 NAN_METHOD(enable_as_logging)
@@ -68,7 +76,8 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     AerospikeClient::Init();
     AerospikeQuery::Init();
     exports->Set(Nan::New("register_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
-    exports->Set(Nan::New("deregister_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(deregister_as_event_loop)->GetFunction());
+    exports->Set(Nan::New("release_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
+    exports->Set(Nan::New("get_cluster_count").ToLocalChecked(), Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
     exports->Set(Nan::New("enable_as_logging").ToLocalChecked(), Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
     exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
     exports->Set(Nan::New("status").ToLocalChecked(),   status());

@@ -86,6 +86,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(Connect);
 		static NAN_METHOD(ExistsAsync);
 		static NAN_METHOD(GetAsync);
+		static NAN_METHOD(HasPendingAsyncCommands);
 		static NAN_METHOD(Info);
 		static NAN_METHOD(Info_Cluster);
 		static NAN_METHOD(IsConnected);

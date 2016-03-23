@@ -159,6 +159,7 @@ void AerospikeClient::Init()
 	cons->InstanceTemplate()->SetInternalFieldCount(1);
 
 	// Prototype
+	Nan::SetPrototypeMethod(cons, "hasPendingAsyncCommands", HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(cons, "apply_async", ApplyAsync);
 	Nan::SetPrototypeMethod(cons, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(cons, "batchExists", BatchExists);

@@ -15,7 +15,7 @@
 # limitations under the License.
 ################################################################################
 
-AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'4.0.3'}
+AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'4.0.4'}
 
 ################################################################################
 #

@@ -16,6 +16,7 @@
 
 extern "C" {
     #include <aerospike/aerospike.h>
+    #include <aerospike/as_async_proto.h>
 }
 
 #include <node.h>
@@ -84,4 +85,17 @@ NAN_METHOD(AerospikeClient::IsConnected)
     bool connected = aerospike_cluster_is_connected(client->as);
 
 	info.GetReturnValue().Set(Nan::New(connected));
+}
+
+/**
+ * Are there any pending async commands.
+ */
+NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	bool pending = as_async_get_pending(client->as->cluster) > 0;
+
+	info.GetReturnValue().Set(Nan::New(pending));
 }
