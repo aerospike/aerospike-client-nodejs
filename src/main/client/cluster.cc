@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,15 @@
 
 extern "C" {
     #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_key.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_key.h>
-    #include <aerospike/as_record.h>
 }
 
 #include <node.h>
-#include <cstdlib>
-#include <unistd.h>
 
 #include "client.h"
-#include "async.h"
 #include "conversions.h"
 #include "log.h"
 
 using namespace v8;
-
-/*******************************************************************************
- *  OPERATION
- ******************************************************************************/
 
 /**
  * Connect to an Aerospike Cluster
@@ -55,18 +44,44 @@ NAN_METHOD(AerospikeClient::Connect)
 
     as_error err;
     aerospike_connect(client->as, &err);
-
     if (err.code != AEROSPIKE_OK) {
         as_v8_error(client->log, "Connecting to Cluster Failed: %s", err.message);
-        info.GetReturnValue().Set(Nan::Null());
         client->as->cluster = NULL;
     } else {
         as_v8_debug(client->log, "Connecting to Cluster: Success");
-        info.GetReturnValue().Set(info.Holder());
     }
 
     Local<Value> argv[2];
     argv[0] = error_to_jsobject(&err, client->log);
     argv[1] = (info.Holder());
     Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, 2, argv);
+}
+
+/**
+ *  Close the connections to the Aeropsike cluster.
+ */
+NAN_METHOD(AerospikeClient::Close)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
+	as_error err;
+	aerospike_close(client->as, &err);
+	aerospike_destroy(client->as);
+	free(client->as);
+	free(client->log);
+}
+
+/**
+ * Is cluster connected to any server nodes.
+ */
+NAN_METHOD(AerospikeClient::IsConnected)
+{
+    Nan::HandleScope scope;
+    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+    bool connected = aerospike_cluster_is_connected(client->as);
+
+	info.GetReturnValue().Set(Nan::New(connected));
 }
