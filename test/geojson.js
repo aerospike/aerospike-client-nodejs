@@ -17,8 +17,9 @@
 /* global expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
+const Key = Aerospike.Key
 const GeoJSON = Aerospike.GeoJSON
-require('./test_helper.js')
+const helper = require('./test_helper')
 
 describe('Aerospike.GeoJSON', function () {
   var subject = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
@@ -52,6 +53,54 @@ describe('Aerospike.GeoJSON', function () {
   describe('#toString()', function () {
     it('returns a string representation of the GeoJSON value', function () {
       expect(subject.toString()).to.equal('{"type":"Point","coordinates":[103.913,1.308]}')
+    })
+  })
+
+  describe('putting and getting GeoJSON values', function () {
+    const client = helper.client
+    const point = JSON.stringify({ type: 'Point', coordinates: [103.9139, 1.3030] })
+    const geojson = GeoJSON(point)
+    const key = new Key(helper.namespace, helper.set, 'test/geojson')
+    const meta = {ttl: 1000}
+    const policy = {exists: Aerospike.policy.exists.CREATE_OR_REPLACE}
+
+    it('can put/get a GeoJSON bin value', function (done) {
+      const record = {location: geojson}
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+
+        client.get(key, function (err, record) {
+          if (err) throw err
+          expect(record.location).to.equal(point)
+          done()
+        })
+      })
+    })
+
+    it('can put/get a GeoJSON value in a list bin', function (done) {
+      const record = {locations: [geojson, geojson]}
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+
+        client.get(key, function (err, record) {
+          if (err) throw err
+          expect(record.locations).to.eql([point, point])
+          done()
+        })
+      })
+    })
+
+    it('can put/get a GeoJSON value in a map bin', function (done) {
+      const record = {map: {location: geojson}}
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+
+        client.get(key, function (err, record) {
+          if (err) throw err
+          expect(record.map.location).to.equal(point)
+          done()
+        })
+      })
     })
   })
 })

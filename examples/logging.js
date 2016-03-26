@@ -58,7 +58,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     namespace: {
@@ -151,11 +151,7 @@ function log (level, file) {
   }
 }
 
-var key = {
-  ns: argv.namespace,
-  set: argv.set,
-  key: 'abc'
-}
+var key = new Aerospike.Key(argv.namespace, argv.set, 'abc')
 
 var operations = [
   header('Log: default settings'),
@@ -178,13 +174,13 @@ var operations = [
   get(key)
 ]
 
-function run (client) {
+function run (client, done) {
   operations.reduceRight(function (r, l) {
     return function (err) {
-      if (err) { throw new Error(err.message) }
+      if (err) err
       l(client, r)
     }
-  }, function () {})()
+  }, done)()
 }
 
 // *****************************************************************************
@@ -201,9 +197,8 @@ var config = {
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.log('Aerospike server connection Error: %j', err)
-    process.exit(-1)
-  }
-  run(client)
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

@@ -22,7 +22,7 @@ const helper = require('./test_helper')
 
 describe('Client', function () {
   describe('Client#isConnected', function () {
-    var client = new Client(helper.config)
+    var client = new Client(Aerospike, helper.config)
 
     it('returns false if the client is not connected', function () {
       expect(client.isConnected()).to.be(false)

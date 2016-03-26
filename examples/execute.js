@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -140,12 +140,8 @@ var config = {
 // Perform the operation.
 // *****************************************************************************
 
-function run (client) {
-  var key = {
-    ns: argv.namespace,
-    set: argv.set,
-    key: keyv
-  }
+function run (client, done) {
+  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
   var udf = {
     module: udf_module,
@@ -160,21 +156,15 @@ function run (client) {
   }
 
   client.execute(key, udf, function (err, value) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
-      !argv.quiet && console.log(JSON.stringify(value, null, '    '))
-      iteration.next(run, client)
-    }
+    if (err) throw err
+    !argv.quiet && console.log(JSON.stringify(value, null, '    '))
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

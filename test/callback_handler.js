@@ -19,7 +19,7 @@
 const Aerospike = require('../lib/aerospike')
 const AerospikeError = Aerospike.AerospikeError
 const Client = Aerospike.Client
-const helper = require('./test_helper')
+require('./test_helper')
 
 describe('Callback Handlers', function () {
   describe('Client.setCallbackHandler', function () {
@@ -34,10 +34,11 @@ describe('Callback Handlers', function () {
         cb(err, result)
       }
       Client.setCallbackHandler(customHandler)
-      new Client(helper.config).connect(function (err, client) {
-        if (err && err.code !== Aerospike.status.AEROSPIKE_OK) throw new Error(err.message)
+      // invalid config to trigger an error callback
+      var config = { hosts: [], log: { level: -1 } }
+      Aerospike.connect(config, function (err) {
+        expect(err).to.be.ok()
         expect(customHandlerCalled).to.be(true)
-        client.close()
         done()
       })
     })

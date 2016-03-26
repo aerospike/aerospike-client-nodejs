@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -154,7 +154,7 @@ var config = {
 // Perform the operation
 // *****************************************************************************
 
-function run (client) {
+function run (client, done) {
   var options = {
     ns: argv.namespace,
     set: argv.set,
@@ -165,22 +165,14 @@ function run (client) {
   switch (type) {
     case 'integer':
       client.createIntegerIndex(options, function (err) {
-        if (err) {
-          console.error('Error: ' + err.message)
-          process.exit(1)
-        } else {
-          isIndexCreated(client, argv.namespace, index, 1000)
-        }
+        if (err) throw err
+        isIndexCreated(client, argv.namespace, index, 1000, done)
       })
       break
     case 'string':
       client.createStringIndex(options, function (err) {
-        if (err) {
-          console.error('Error: ' + err.message)
-          process.exit(1)
-        } else {
-          isIndexCreated(client, argv.namespace, index, 1000)
-        }
+        if (err) throw err
+        isIndexCreated(client, argv.namespace, index, 1000, done)
       })
       break
     default:
@@ -189,22 +181,17 @@ function run (client) {
   }
 }
 
-function isIndexCreated (client, namespace, index, pollInterval) {
+function isIndexCreated (client, namespace, index, pollInterval, done) {
   client.indexCreateWait(namespace, index, pollInterval, function (err) {
-    if (err) {
-      console.error('Error: ' + err.message)
-      process.exit(1)
-    } else {
-      !argv.quiet && console.log('Index Created - %s', index)
-    }
+    if (err) throw err
+    !argv.quiet && console.log('Index Created - %s', index)
+    done()
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

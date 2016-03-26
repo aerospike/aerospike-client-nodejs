@@ -21,9 +21,7 @@ const helper = require('./test_helper')
 
 const keygen = helper.keygen
 
-const status = Aerospike.status
-
-describe('client.execute()', function (done) {
+describe('client.apply()', function (done) {
   var client = helper.client
 
   before(function (done) {
@@ -36,13 +34,15 @@ describe('client.execute()', function (done) {
 
   it('should invoke an UDF to without any args', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_create' }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res) {
+
+    client.apply(key, udfArgs, function (err, res) {
       expect(err).not.to.be.ok()
       expect(res).to.equal(0)
+
       client.remove(key, function (err, key) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         done()
       })
     })
@@ -50,13 +50,15 @@ describe('client.execute()', function (done) {
 
   it('should invoke an UDF with arguments', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_update', args: [123, 'str'] }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res) {
+
+    client.apply(key, udfArgs, function (err, res) {
       expect(err).not.to.be.ok()
       expect(res).to.equal(0)
+
       client.remove(key, function (err, key) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         done()
       })
     })
@@ -64,14 +66,16 @@ describe('client.execute()', function (done) {
 
   it('should invoke an UDF with apply policy', function (done) {
     var udfArgs = {module: 'udf_test', funcname: 'rec_update', args: [345, 'bar']}
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
     var key = kgen()
     var applypolicy = {timeout: 1500}
-    client.execute(key, udfArgs, applypolicy, function (err, res) {
+
+    client.apply(key, udfArgs, applypolicy, function (err, res) {
       expect(err).not.to.be.ok()
       expect(res).to.equal(0)
+
       client.remove(key, function (err, key) {
-        if (err) { throw new Error(err.message) }
+        if (err) throw err
         done()
       })
     })
@@ -79,15 +83,11 @@ describe('client.execute()', function (done) {
 
   it('should invoke an UDF function which does not exist - expected to fail', function (done) {
     var udfArgs = { module: 'udf_test', funcname: 'rec_nofunc' }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/udfExecute/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
     var key = kgen()
-    client.execute(key, udfArgs, function (err, res, key) {
-      expect(err).to.be.ok()
-      if (err.code !== 1300) {
-        expect(err.code).to.equal(status.AEROSPIKE_ERR_UDF)
-      } else {
-        expect(err.code).to.equal(1300)
-      }
+
+    client.apply(key, udfArgs, function (err, res) {
+      expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_UDF)
       done()
     })
   })

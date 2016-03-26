@@ -16,7 +16,6 @@
 
 /* global expect, describe, it */
 
-// we want to test the built aerospike module
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
@@ -32,17 +31,12 @@ describe('client.batchGet()', function () {
   var client = helper.client
 
   it('should successfully read 10 records', function (done) {
-    // number of records
     var nrecords = 10
 
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/' + nrecords + '/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    // writer using generators
-    // callback provides an object of written records, where the
-    // keys of the object are the record's keys.
     putgen.put(nrecords, kgen, rgen, mgen, function (written) {
       var keys = Object.keys(written).map(function (key) {
         return written[key].key
@@ -107,18 +101,12 @@ describe('client.batchGet()', function () {
   })
 
   it('should successfully read 1000 records', function (done) {
-    // this high for low-end hosts
-    this.timeout(5000)
-
-    // number of records
     var nrecords = 1000
 
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/1000/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    // writer using generators
     // callback provides an object of written records, where the
     // keys of the object are the record's keys.
     putgen.put(nrecords, kgen, rgen, mgen, function (written) {

@@ -115,10 +115,6 @@ NAN_METHOD(AerospikeClient::New)
 		}
 	}
 
-	// enable C client logs
-	// as_log_set_level(log->severity);
-	// as_log_set_callback(v8_logging_callback);
-
 	if (info[0]->IsObject()) {
 		int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);
 		if (result != AS_NODE_PARAM_OK) {
@@ -163,25 +159,28 @@ void AerospikeClient::Init()
 	cons->InstanceTemplate()->SetInternalFieldCount(1);
 
 	// Prototype
+	Nan::SetPrototypeMethod(cons, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(cons, "apply_async", ApplyAsync);
 	Nan::SetPrototypeMethod(cons, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(cons, "batchExists", BatchExists);
 	Nan::SetPrototypeMethod(cons, "batchSelect", BatchSelect);
+	Nan::SetPrototypeMethod(cons, "batchRead", BatchReadAsync);
 	Nan::SetPrototypeMethod(cons, "close", Close);
 	Nan::SetPrototypeMethod(cons, "connect", Connect);
-	Nan::SetPrototypeMethod(cons, "exists", Exists);
-	Nan::SetPrototypeMethod(cons, "get", Get);
+	Nan::SetPrototypeMethod(cons, "isConnected", IsConnected);
+	Nan::SetPrototypeMethod(cons, "exists_async", ExistsAsync);
+	Nan::SetPrototypeMethod(cons, "get_async", GetAsync);
 	Nan::SetPrototypeMethod(cons, "info", Info);
 	Nan::SetPrototypeMethod(cons, "indexCreate", sindexCreate);
 	Nan::SetPrototypeMethod(cons, "indexCreateWait", sindexCreateWait);
 	Nan::SetPrototypeMethod(cons, "indexRemove", sindexRemove);
-	Nan::SetPrototypeMethod(cons, "operate", Operate);
-	Nan::SetPrototypeMethod(cons, "put", Put);
+	Nan::SetPrototypeMethod(cons, "operate_async", OperateAsync);
+	Nan::SetPrototypeMethod(cons, "put_async", PutAsync);
 	Nan::SetPrototypeMethod(cons, "query", Query);
-	Nan::SetPrototypeMethod(cons, "remove", Remove);
-	Nan::SetPrototypeMethod(cons, "select", Select);
+	Nan::SetPrototypeMethod(cons, "remove_async", RemoveAsync);
+	Nan::SetPrototypeMethod(cons, "select_async", SelectAsync);
 	Nan::SetPrototypeMethod(cons, "udfRegister", Register);
 	Nan::SetPrototypeMethod(cons, "udfRegisterWait", RegisterWait);
-	Nan::SetPrototypeMethod(cons, "execute", Execute);
 	Nan::SetPrototypeMethod(cons, "udfRemove", UDFRemove);
 	Nan::SetPrototypeMethod(cons, "updateLogging", SetLogLevel);
 	constructor.Reset(cons);

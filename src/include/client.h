@@ -31,10 +31,15 @@
 #  define V8_RETURN return
 #endif
 
+#define TYPE_CHECK_REQ(val, type, msg) if (!val->type()) return Nan::ThrowTypeError(msg)
+#define TYPE_CHECK_OPT(val, type, msg) if (!(val->IsNull() || val->IsUndefined() || val->type())) return Nan::ThrowTypeError(msg)
+
+#define UDF_MAX_MODULE_NAME 255
+#define UDF_MAX_FUNCTION_NAME 255
+
 extern "C" {
 	#include <aerospike/aerospike.h>
 }
-
 
 using namespace node;
 using namespace v8;
@@ -45,154 +50,59 @@ using namespace v8;
 
 class AerospikeClient : public ObjectWrap {
 
-    /***************************************************************************
-     *  PUBLIC
-     **************************************************************************/
+	/***************************************************************************
+	 *  PUBLIC
+	 **************************************************************************/
 
-    public:
-        static void Init();
-        static Local<Value> NewInstance(Local<Object> args);
+	public:
+		static void Init();
+		static Local<Value> NewInstance(Local<Object> args);
 
-        aerospike *as;
-        LogInfo *log;
+		aerospike *as;
+		LogInfo *log;
 
-        /***************************************************************************
-         *  PRIVATE
-         **************************************************************************/
+	/***************************************************************************
+	 *  PRIVATE
+	 **************************************************************************/
 
-    private:
+	private:
 
-        AerospikeClient();
-        ~AerospikeClient();
+		AerospikeClient();
+		~AerospikeClient();
 
-        static Nan::Persistent<FunctionTemplate> constructor;
+		static Nan::Persistent<FunctionTemplate> constructor;
 		static NAN_METHOD(New);
 
-        /***********************************************************************
-         *  CLIENT OPERATIONS
-         **********************************************************************/
+		/***********************************************************************
+		 *  CLIENT OPERATIONS
+		 **********************************************************************/
 
-        /**
-         * undefined client.connect()
-         */
-		 static NAN_METHOD(Connect);
-
-        /**
-         *  undefined client.close()
-         */
-		static NAN_METHOD(Close);
-
-        /**
-         *  undefined client.get(Key, function(Error, Record))
-         */
-		static NAN_METHOD(Get);
-
-        /**
-         *  undefined client.exists(Key, function(Error, exists))
-         */
-		static NAN_METHOD(Exists);
-
-        /**
-         *  undefined client.put(Key, Record, function(Error))
-         */
-		static NAN_METHOD(Put);
-
-        /**
-         *      undefined client.select(Key, String[], function(Error,Record))
-         */
-		static NAN_METHOD(Select);
-
-        /**
-         *      undefined client.delete(Key, function(Error,Key))
-         */
-		static NAN_METHOD(Remove);
-
-        /**
-         *  undefined client.batchGet(Key[], function(Error,Record))
-         */
-		static NAN_METHOD(BatchGet);
-
-        /**
-         *  undefined client.batchGet(Key[], function(Error,Record))
-         */
+		static NAN_METHOD(ApplyAsync);
 		static NAN_METHOD(BatchExists);
-
-        /**
-         *  undefined client.batch_select(Key[],bins,function(Error,Record))
-         */
+		static NAN_METHOD(BatchGet);
+		static NAN_METHOD(BatchReadAsync);
 		static NAN_METHOD(BatchSelect);
-
-        /*
-         *undefined client.operate( Key, Operation, function(Error, Record))
-         */
-		static NAN_METHOD(Operate);
-
-        /*
-         *undefined client.info( host, port, function(Error, Response))
-         */
+		static NAN_METHOD(Close);
+		static NAN_METHOD(Connect);
+		static NAN_METHOD(ExistsAsync);
+		static NAN_METHOD(GetAsync);
+		static NAN_METHOD(HasPendingAsyncCommands);
 		static NAN_METHOD(Info);
-
-        /*
-         *undefined client.info( host, port, function(Error, Response))
-         */
 		static NAN_METHOD(Info_Cluster);
-
-        /*
-         *undefined client.set_log_level(Log log)
-         */
-		static NAN_METHOD(SetLogLevel);
-
-        /*
-         *undefined client.udf_register(udf_filepath, udf_type, function( Error))
-         */
-		static NAN_METHOD(Register);
-
-        /*
-         *undefined client.udfRegisterWait(udf_filename, poll_interval, function( Error))
-         */
-		static NAN_METHOD(RegisterWait);
-        /*
-         *undefined client.udf_execute(Key, udf_args, function( Error, Response))
-         */
-		static NAN_METHOD(Execute);
-
-        /*
-         *undefined client.udf_remove(udf_filename, function( Error ))
-         */
-		static NAN_METHOD(UDFRemove);
-
-        /*
-         *undefined client.udf_remove(udf_filename, function( Error ))
-         */
-		static NAN_METHOD(UDFScan);
-
-        /*
-         *undefined client.udf_remove(udf_filename, function( Error ))
-         */
-		static NAN_METHOD(ScanInfo);
-
-
-		/*
-		 * undefined client.scan(ns, set, options)
-		 */
-		static NAN_METHOD(Scan);
-
-		/*
-		 * undefined client.query(ns, set, options)
-		 */
+		static NAN_METHOD(IsConnected);
+		static NAN_METHOD(OperateAsync);
+		static NAN_METHOD(PutAsync);
 		static NAN_METHOD(Query);
-
-		/*
-		 * undefined client.indexCreate(ns, set, bin, indexName, indexType)
-		 */
+		static NAN_METHOD(Register);
+		static NAN_METHOD(RegisterWait);
+		static NAN_METHOD(RemoveAsync);
+		static NAN_METHOD(Scan);
+		static NAN_METHOD(ScanInfo);
+		static NAN_METHOD(SelectAsync);
+		static NAN_METHOD(SetLogLevel);
+		static NAN_METHOD(UDFRemove);
+		static NAN_METHOD(UDFScan);
 		static NAN_METHOD(sindexCreate);
-
-		/*
-		 * undefined client.indexCreateWait(ns, indexName)
-		 */
 		static NAN_METHOD(sindexCreateWait);
-		/*
-		 * undefined client.indexRemove(ns, indexName )
-		 */
 		static NAN_METHOD(sindexRemove);
 };

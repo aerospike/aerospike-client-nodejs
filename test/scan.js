@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it, before, after */
+/* global expect, describe, it, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -30,6 +30,7 @@ describe('client.query() - without where clause(Scan)', function () {
 
   before(function (done) {
     helper.udf.register('scan.lua')
+    helper.udf.register('aggregate.lua')
 
     // generators
     var mgen = metagen.constant({ttl: 1000})
@@ -38,7 +39,7 @@ describe('client.query() - without where clause(Scan)', function () {
     var count = 0
     function iteration (i) {
       // values
-      var key = {ns: helper.namespace, set: helper.set, key: 'test/scan/' + i.toString()}
+      var key = {ns: helper.namespace, set: 'test.scan', key: 'test/scan/' + i.toString()}
       var meta = mgen(key)
       var record = rgen(key, meta)
 
@@ -62,95 +63,105 @@ describe('client.query() - without where clause(Scan)', function () {
   })
 
   after(function (done) {
-    helper.udf.remove('scan.lua', done)
+    helper.udf.remove('scan.lua')
+    helper.udf.remove('aggregate.lua')
+    done()
   })
 
-  it('should query all the records', function (done) {
-    this.timeout(5000)
-    // counters
-    var count = 0
-    var errors = 0
-
-    var query = client.query(helper.namespace, helper.set)
-
+  it('should scan all the records', function (done) {
+    var query = client.query(helper.namespace, 'test.scan')
     var stream = query.execute()
 
+    var count = 0
     stream.on('data', function (rec) {
       count++
     })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      errors++
+    stream.on('error', function (error) {
+      throw error
     })
     stream.on('end', function (end) {
-      // derive it as a percentage.
       expect(count).to.not.be.lessThan(number_of_records)
-      expect(errors).to.equal(0)
-
       done()
     })
   })
 
-  it('should query and select no bins', function (done) {
-    this.timeout(5000)
-    var count = 0
-    var errors = 0
+  context('with nobins set to true', function () {
+    it('should return only meta data', function (done) {
+      var args = {nobins: true}
+      var query = client.query(helper.namespace, 'test.scan', args)
+      var stream = query.execute()
 
-    var args = {nobins: true}
-    var query = client.query(helper.namespace, helper.set, args)
-
-    var stream = query.execute()
-    stream.on('data', function (rec) {
-      count++
-    })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      errors++
-    })
-    stream.on('end', function () {
-      expect(count).to.not.be.lessThan(number_of_records)
-      expect(errors).to.equal(0)
-      done()
+      var count = 0
+      stream.on('data', function (rec) {
+        count++
+      })
+      stream.on('error', function (error) {
+        throw error
+      })
+      stream.on('end', function () {
+        expect(count).to.not.be.lessThan(number_of_records)
+        done()
+      })
     })
   })
 
-  it('should query and select only few bins in the record', function (done) {
-    this.timeout(5000)
-    var count = 0
-    var errors = 0
+  context('with bin selection', function () {
+    it('should scan and select only few bins in the record', function (done) {
+      var args = {select: ['i', 's']}
+      var query = client.query(helper.namespace, 'test.scan', args)
+      var stream = query.execute()
 
-    var args = {select: ['i', 's']}
-    var query = client.query(helper.namespace, helper.set, args)
-
-    var stream = query.execute()
-    stream.on('data', function (rec) {
-      count++
-    })
-    stream.on('error', function (error) { // eslint-disable-line handle-callback-err
-      errors++
-    })
-    stream.on('end', function () {
-      expect(count).to.not.be.lessThan(number_of_records)
-      expect(errors).to.equal(0)
-      done()
+      var count = 0
+      stream.on('data', function (rec) {
+        count++
+      })
+      stream.on('error', function (error) {
+        throw error
+      })
+      stream.on('end', function () {
+        expect(count).to.not.be.lessThan(number_of_records)
+        done()
+      })
     })
   })
 
-  it('should do a scan background and check for the status of scan job ', function (done) {
-    var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
-    var scanBackground = client.query(helper.namespace, helper.set, args)
+  context('with stream UDF', function () {
+    it('should aggregate the results', function (done) {
+      var args = {aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}}
+      var query = client.query(helper.namespace, 'test.scan', args)
 
-    var stream = scanBackground.execute()
-    stream.on('error', function (error) {
-      helper.fail(error)
+      var stream = query.execute()
+      stream.on('error', function (error) {
+        throw error
+      })
+      stream.on('data', function (result) {
+        expect(result).to.be.equal(5050) // 1 + 2 + ... + 100 = (100 * 101) / 2 = 5050
+      })
+      stream.on('end', function () {
+        done()
+      })
     })
-    stream.on('end', function (scanId) {
-      var interval = setInterval(function () {
-        scanBackground.info(scanId, function (scanJobStats, scanId) {
-          if (scanJobStats.status === Aerospike.scanStatus.COMPLETED) {
-            clearInterval(interval)
-            done()
-          }
-        })
-      }, 100)
+  })
+
+  context('background scans', function () {
+    it('should do a scan background and check for the status of scan job ', function (done) {
+      var args = {UDF: {module: 'scan', funcname: 'updateRecord'}}
+      var scanBackground = client.query(helper.namespace, 'test.scan', args)
+
+      var stream = scanBackground.execute()
+      stream.on('error', function (error) {
+        helper.fail(error)
+      })
+      stream.on('end', function (scanId) {
+        var interval = setInterval(function () {
+          scanBackground.info(scanId, function (scanJobStats, scanId) {
+            if (scanJobStats.status === Aerospike.scanStatus.COMPLETED) {
+              clearInterval(interval)
+              done()
+            }
+          })
+        }, 100)
+      })
     })
   })
 })

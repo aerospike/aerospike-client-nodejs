@@ -40,7 +40,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -114,22 +114,11 @@ var checkError = function (err, msg) {
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: Aerospike server connection error. ', err.message)
-    process.exit(1)
-  }
+  if (err) throw err
 
   // Get a largelist object from client.
-  var listkey = {
-    ns: argv.namespace,
-    set: argv.set,
-    key: 'ldt_list_key'
-  }
-
-  var policy = {
-    timeout: 1000
-  }
-
+  var listkey = new Aerospike.Key(argv.namespace, argv.set, 'ldt_list_key')
+  var policy = { timeout: 1000 }
   var list = client.LargeList(listkey, 'ldt_list_bin', policy)
 
   // perform all the largelist operations.
@@ -197,11 +186,12 @@ Aerospike.connect(config, function (err, client) {
     checkError(err, 'Get size is verified')
     console.log('The size of the list is ', val)
     list.getConfig(function (err, val) {
-      if (err) { throw new Error(err.message) }
+      if (err) throw err
       console.log(val)
       // destroy the llist completely.
       list.destroy(function (err, val) {
         checkError(err, 'The list is destroyed')
+        client.close()
       })
     })
   })

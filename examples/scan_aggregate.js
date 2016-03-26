@@ -46,7 +46,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -118,7 +118,7 @@ var config = {
 // Establish a connection to the cluster.
 // *****************************************************************************
 
-function run (client) {
+function run (client, done) {
   var options = {
     aggregationUDF: {
       module: 'query',
@@ -139,15 +139,13 @@ function run (client) {
   })
 
   stream.on('end', function () {
-    iteration.next(run, client)
+    iteration.next(run, client, done)
   })
 }
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: ' + err.message)
-    process.exit(1)
-  } else {
-    run(client)
-  }
+  if (err) throw err
+  run(client, function () {
+    client.close()
+  })
 })

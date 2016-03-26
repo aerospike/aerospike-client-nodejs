@@ -49,7 +49,7 @@ var argp = yargs
     },
     timeout: {
       alias: 't',
-      default: 10,
+      default: 1000,
       describe: 'Timeout in milliseconds.'
     },
     'log-level': {
@@ -117,10 +117,7 @@ var config = {
 // *****************************************************************************
 
 Aerospike.connect(config, function (err, client) {
-  if (err) {
-    console.error('Error: Aerospike server connection error. ', err.message)
-    process.exit(1)
-  }
+  if (err) throw err
 
   //
   // Perform the operation
@@ -153,14 +150,16 @@ Aerospike.connect(config, function (err, client) {
   }
 
   var infoCallback = function (scanJobStats, scanId) {
-    if (!checkStatus(scanJobStats)) {
-      sleep.sleep(1)
+    if (checkStatus(scanJobStats)) {
+      client.close()
+    } else {
+      sleep.usleep(100 * 1000)
       scanBackground.info(scanId, infoCallback)
     }
   }
 
   var info = function (scanId) {
-    console.log(scanId)
+    console.log('ScanID:', scanId)
     scanBackground.info(scanId, infoCallback)
   }
   scanStream.on('end', info)
