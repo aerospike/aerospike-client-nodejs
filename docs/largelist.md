@@ -378,7 +378,7 @@ The parameters for `callback` argument:
 
 Example:
 ```js
-llist.range('begin', 'end', function (error, response){
+llist.findRange('begin', 'end', function (error, response){
   if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
   } else {
@@ -416,7 +416,7 @@ Example:
 ```js
 
 var filter = {module: 'udf_module', funcname: 'udf_function', args: ['abc', 123, 4.5]}
-llist.range('begin', 'end', filter, function (error, response){
+llist.findRange('begin', 'end', filter, function (error, response){
   if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
   } else {
