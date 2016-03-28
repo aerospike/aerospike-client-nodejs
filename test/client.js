@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it */
+/* global after, afterEach, before, beforeEach, context, expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
