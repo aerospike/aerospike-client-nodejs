@@ -6,7 +6,9 @@ v2.0.0-alpha.1 / 2016-03-28
     version 4.0.
   * Follow Node.js error-first callback conventions: The client now returns
     null as the first parameter (`error`) in most callbacks when the command
-    was executed successfully. [#105](https://github.com/aerospike/aerospike-client-nodejs/issues/105),
+    was executed successfully. See
+    [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md)
+    for more details. [#105](https://github.com/aerospike/aerospike-client-nodejs/issues/105),
     [PR #106](https://github.com/aerospike/aerospike-client-nodejs/pull/106). Thanks to
     [@eljefedelrodeodeljefe](https://github.com/eljefedelrodeodeljefe)!
   * Add support for pluggable callback handler logic for backwards
