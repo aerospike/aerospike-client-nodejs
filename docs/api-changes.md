@@ -1,6 +1,6 @@
 # Backward Incompatible API Changes
 
-## Version 2.0.0
+## Version 2.0.0-alpha.1
 
 ### Error-first callbacks
 
@@ -28,6 +28,74 @@ Aerospike.connect((error, client) => {
   }
 })
 ```
+
+### Releasing of event loop resources
+
+To handle asynchronous client commands send to the Aerospike server cluster,
+the client needs to register an async handle on Node.js event loop. This handle
+needs to be freed explicitly in order for the event loop to exit and the
+Node.js application to terminate.
+
+#### Single Aerospike client instance
+
+When working with a single Aerospike Node.js client instance, you can use the
+client's `close` method to close the connection to the server nodes and release
+all event loop resources. It is important to call the client's `close` method
+as otherwise the application might not terminate.
+
+Example:
+
+```javascript
+const Aerospike = require('aerospike')
+
+Aerospike.connect((error, client) => {
+  if (error) throw error
+  // client instance is ready receive commands
+  client.close()
+})
+```
+
+#### Multiple (concurrent) Aersopike client instances
+
+When the application needs to instantiate more than one Aerospike client, e.g.
+to connect to multiple Aerospike server clusters, then the event loop resources
+should only be released after the last client instance was closed. To prevent
+automatic release of the event loop resources, the client's `close` method
+needs to be called with the `releaseEventLoop` parameter set to false:
+
+    var releaseEventLoop = false
+    client.close(releaseEventLoop)
+
+Then, after the last client instance was close, the `releaseEventLoop` method
+on the `Aerospike` module needs to be called before the program terminates:
+
+    Aerospike.releaseEventLoop()
+
+Example:
+
+````javascript
+const Aerospike = require('aerospike')
+
+// called one or more times to handle a new work request
+function handleRequest (request) {
+  Aerospike.connect((error, client) => {
+    if (error) throw error
+    // handle request
+    client.close(false) // do not release event loop
+  })
+}
+
+// called when application shuts down
+function shutdown () {
+  Aerospike.releaseEventLoop()
+}
+````
+
+### Supported Node.js versions
+
+Node.js v0.10 is no longer supported. Node.js v0.12 or later are required to
+run Aerospike Node.js client v2.0.
+
 ### Deprecations
 
 The following functions have been deprecated and/or replaced:

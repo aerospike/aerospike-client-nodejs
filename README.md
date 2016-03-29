@@ -29,36 +29,52 @@ The following is very simple example of how to write and read a record from Aero
 
 ```js
 const Aerospike = require('aerospike')
+const op = Aerospike.operator
 const Key = Aerospike.Key
+const Double = Aerospike.Double
 const GeoJSON = Aerospike.GeoJSON
 
 const config = {
   hosts: '192.168.33.10:3000'
 }
-Aerospike.connect(config, function (err, client) {
-  if (err) throw err
+Aerospike.connect(config, (error, client) => {
+  if (error) throw error
 
   var key = new Key('test', 'demo', 'demo')
   var record = {
     i: 123,
     s: 'hello',
     b: new Buffer('world'),
+    d: new Double(3.1415),
     g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
     c: [1, 'a', {x: 'y'}]
   }
   var meta = { ttl: 10000 }
   var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
 
-  client.put(key, record, meta, policy, function (err) {
-    if (err) throw new Error(err.message)
+  client.put(key, record, meta, policy, (error) => {
+    if (error) throw error
 
-    client.get(key, function (err, record, meta) {
-      if (err) throw new Error(err.message)
-      console.log(record) // => { i: 123,
-                          //      s: 'hello',
-                          //      b: <Buffer 77 6f 72 6c 64>,
-                          //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
-                          //      c: [ 1, 'a', { x: 'y' } ] }
+    var ops = [
+      op.incr('i', 1),
+      op.listAppend('c', 'z'),
+      op.read('i')
+    ]
+
+    client.operate(key, ops, (error, result) => {
+      if (error) throw error
+      console.log(result)   // => { c: 4, i: 124 }
+
+      client.get(key, (error, record, meta) => {
+        if (error) throw error
+        console.log(record) // => { i: 124,
+                            //      s: 'hello',
+                            //      b: <Buffer 77 6f 72 6c 64>,
+                            //      d: 3.1415,
+                            //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
+                            //      c: [ 1, 'a', { x: 'y' }, 'z' ] }
+        client.close()
+      })
     })
   })
 })
@@ -383,6 +399,20 @@ See the [`benchmarks/README.md`](benchmarks/README.md) for details.
 ## API Documentation
 
 API documentation is provided in the [`docs`](docs/README.md) directory.
+
+<a name="Versioning"></a>
+## API Versioning
+
+The Aerospike Node.js client library follows [semantic versioning](http://semver.org/).
+Changes which break backwards compatibility will be indicated by an increase in
+the major version number. Minor and patch releases, which increment only the
+second and third version number, will always be backwards compatible.
+
+<a name="API-Changes"></a>
+### Backward Incompatible Changes
+
+The documentation contains a list of [backward incompatible changes](docs/api-changes.md)
+to the API by release.
 
 ## License
 
