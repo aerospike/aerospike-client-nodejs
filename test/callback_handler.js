@@ -17,7 +17,7 @@
 /* global expect, describe, context, it, before, after */
 
 const Aerospike = require('../lib/aerospike')
-const AerospikeError = Aerospike.AerospikeError
+const AerospikeError = require('../lib/aerospike_error')
 const Client = Aerospike.Client
 require('./test_helper')
 

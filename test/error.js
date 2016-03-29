@@ -16,11 +16,10 @@
 
 /* global expect, describe, it */
 
-const Aerospike = require('../lib/aerospike')
-const AerospikeError = Aerospike.AerospikeError
+const AerospikeError = require('../lib/aerospike_error')
 require('./test_helper.js')
 
-describe('Aerospike.AerospikeError', function () {
+describe('AerospikeError', function () {
   describe('new AerospikeError()', function () {
     it('creates a new AerospikeError instance', function () {
       expect(new AerospikeError()).to.be.a(AerospikeError)
@@ -39,16 +38,6 @@ describe('Aerospike.AerospikeError', function () {
       expect(subject.line).to.be(101)
     })
 
-    it('copies the info from a AerospikeClient error instance', function () {
-      var error = {code: -1, message: 'client error', func: 'connect', file: 'lib/client.js', line: 101}
-      var subject = new AerospikeError(error)
-      expect(subject.code).to.be(-1)
-      expect(subject.message).to.be('client error')
-      expect(subject.func).to.be('connect')
-      expect(subject.file).to.be('lib/client.js')
-      expect(subject.line).to.be(101)
-    })
-
     it('captures a stack trace', function () {
       var subject = new AerospikeError(-1, 'client error', 'connect', 'lib/client.js', 101)
       var stack = subject.stack.split('\n')
@@ -57,7 +46,19 @@ describe('Aerospike.AerospikeError', function () {
     })
   })
 
-  describe('AerospikeError#toString()', function () {
+  describe('.fromASError', function () {
+    it('copies the info from a AerospikeClient error instance', function () {
+      var error = {code: -1, message: 'client error', func: 'connect', file: 'lib/client.js', line: 101}
+      var subject = AerospikeError.fromASError(error)
+      expect(subject.code).to.be(-1)
+      expect(subject.message).to.be('client error')
+      expect(subject.func).to.be('connect')
+      expect(subject.file).to.be('lib/client.js')
+      expect(subject.line).to.be(101)
+    })
+  })
+
+  describe('#toString()', function () {
     it('sets an informative error message', function () {
       var subject = new AerospikeError(-1, 'client error', 'connect', 'lib/client.js', 101)
       expect(subject.toString()).to.eql('AerospikeError: client error')
