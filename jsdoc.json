@@ -19,8 +19,8 @@
     "inverseNav": true
   },
   "opts": {
-    "destination": "./apidocs",
+    "destination": "./build/apidocs",
     "template": "./node_modules/ink-docstrap/template",
-    "readme": "./README.md"
+    "readme": "README.md"
   }
 }

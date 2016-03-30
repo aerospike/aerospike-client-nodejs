@@ -1,0 +1,8 @@
+#!/bin/sh
+BUILD_DIR=./build
+APIDOCS_DIR=$BUILD_DIR/apidocs
+APIDOCS_ARCHIVE=aerospike-client-nodejs-apidocs.zip
+
+rm -rf $APIDOCS_DIR $BUILD_DIR/$APIDOCS_ARCHIVE
+npm run apidocs
+(cd $APIDOCS_DIR; zip -r ../$APIDOCS_ARCHIVE .)
