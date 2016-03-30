@@ -1161,6 +1161,26 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
     return AS_NODE_PARAM_OK;
 }
 
+int setTtlPolicy( Local<Object> obj, uint32_t *ttl, LogInfo * log )
+{
+
+    if ( obj->Has(Nan::New("ttl").ToLocalChecked()) ) {
+        Local<Value> v8ttl = obj->Get(Nan::New<String>("ttl").ToLocalChecked()) ;
+        if ( v8ttl->IsNumber() ) {
+            (*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
+            as_v8_detail(log, "ttl value %d", *ttl);
+        }
+        else {
+            as_v8_error(log, "ttl should be an integer");
+            return AS_NODE_PARAM_ERR;
+        }
+    }
+    else {
+        as_v8_detail(log, "Object does not have ttl");
+    }
+    return AS_NODE_PARAM_OK;
+}
+
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
 {
     if ( obj->Has(Nan::New("gen").ToLocalChecked()) ) {
@@ -1251,6 +1271,16 @@ int setCommitLevelPolicy( Local<Object> obj, as_policy_commit_level* commitpolic
     }
 
     as_v8_detail(log, "Commit Level policy is set to %d", *commitpolicy);
+    return AS_NODE_PARAM_OK;
+}
+
+int setCompressionThresholdPolicy( Local<Object> obj, uint32_t* compression_threshold, LogInfo * log)
+{
+    if( setPolicyGeneric(obj, "compressionThreshold", (int*) compression_threshold, log) != AS_NODE_PARAM_OK) {
+        return AS_NODE_PARAM_ERR;
+    }
+
+    as_v8_detail(log, "Compression Threshold policy is set to %d", *compression_threshold);
     return AS_NODE_PARAM_OK;
 }
 
@@ -1377,6 +1407,7 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
     as_policy_read_init( policy );
 
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -1394,6 +1425,7 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setCompressionThresholdPolicy( obj, &policy->compression_threshold, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setExistsPolicy( obj, &policy->exists, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -1409,6 +1441,7 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setTtlPolicy( obj, &policy->ttl, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail( log, "Parsing apply policy : success");
 

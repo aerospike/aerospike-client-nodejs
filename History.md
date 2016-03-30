@@ -25,6 +25,9 @@ v2.0.0-alpha.1 / 2016-03-28
   * Added `isConnected` client method to check cluster connection status.
   * Improvements to the client's mocha test suite, incl. performance
     improvements by re-using a single client connection for all tests.
+  * Add missing status codes to `Aerospike.status`.
+  * Added support for set compression threshold policy for write operations,
+    retry policy for read operations, and ttl policy for apply operations.
 
 * **Fixes**
   * Node segfault when trying to query the aerospike client after closing the
