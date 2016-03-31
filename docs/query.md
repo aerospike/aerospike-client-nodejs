@@ -1,3 +1,7 @@
+This document covers the 1.x version of the Aerospike Node.js client. The API
+documentation for the alpha release of the new 2.0 client is
+[available here](http://www.aerospike.com/apidocs/nodejs/).
+
 # Query Class
 
 The `Query` class provides an interface to perform all query operations on

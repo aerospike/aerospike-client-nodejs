@@ -1,3 +1,7 @@
+This document covers the 1.x version of the Aerospike Node.js client. The API
+documentation for the alpha release of the new 2.0 client is
+[available here](http://www.aerospike.com/apidocs/nodejs/).
+
 # Policies
 
 Policies provide the ability to modify the behavior of operations.
@@ -16,7 +20,7 @@ Policy objects are objects which define the behavior of associated operations.
 When invoking an operation, you can choose to provide a policy:
 
 ```js
-client.get(key, {timeout: 1000}, function (error, record, meta, key) { 
+client.get(key, {timeout: 1000}, function (error, record, meta, key) {
   if (error && error.code !== status.AEROSPIKE_OK) {
     // handle failure
   } else {

@@ -22,6 +22,35 @@ CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and
 - [Benchmarks](#Benchmarks)
 - [API Documentaion](#API-Documentation)
 
+<a name="v2_announcement"></a>
+## Version 2.0 Pre-Release
+
+Version 2.0 of the Aerospike Node.js client is now available as an alpha
+release for early adopters. A list of the major new features/changes can be
+found in the [announcement](https://discuss.aerospike.com/t/a-change-is-gonna-come-early-adopter-release-for-aerospike-node-js-client-v2-0/2751)
+on our user forum or in the detailed [changelog](https://github.com/aerospike/aerospike-client-nodejs/blob/master/History.md).
+The new release contains some backward incompatible API changes which are
+listed in the [documentation](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md).
+The v2 client API is documented extensivly using JSDoc tags and the API docs
+are now [available here](http://www.aerospike.com/apidocs/nodejs/).
+(Note that this is work in progress; the API docs will be completed before the
+final 2.0 release.)
+
+To give the v2 Aerospike Node.js client a try, update your `package.json`
+dependency for the `aerospike` package to version `2.0.0-alpha.1`:
+
+    "aerospike": ">2.0.0-alpha.1"
+
+Remember to specify the full version number including the
+[prerelease](https://github.com/npm/node-semver#prerelease-tags) tag!
+
+At this point we do not recommend version 2.0.0-alpha.1 for production usage as we
+might still introduce further backward incompatible changes in future
+2.0.0-alpha releases before the final 2.0 release. But we encurage you to
+try out this new version and to let us know what you think of it by sharing
+feedback on the [user forum](https://discuss.aerospike.com/c/client-libraries/node-js-client)
+ or by filing issues here on Github!
+
 <a name="Usage"></a>
 ## Usage
 
