@@ -102,7 +102,6 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(SetLogLevel);
 		static NAN_METHOD(UDFRemove);
 		static NAN_METHOD(UDFScan);
-		static NAN_METHOD(sindexCreate);
-		static NAN_METHOD(sindexCreateWait);
-		static NAN_METHOD(sindexRemove);
+		static NAN_METHOD(IndexCreate);
+		static NAN_METHOD(IndexRemove);
 };

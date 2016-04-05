@@ -14,27 +14,40 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, context, describe, it */
+/* global expect, beforeEach, afterEach, context, describe, it */
 
 const Aerospike = require('../lib/aerospike')
+const IndexTask = require('../lib/index_task')
 const helper = require('./test_helper')
 
 context('secondary indexes', function () {
   var client = helper.client
 
+  // generate unique index name for each test
+  var testIndex = { name: null, bin: null, counter: 0 }
+  beforeEach(function () {
+    testIndex.counter++
+    testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
+    testIndex.bin = 'bin-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
+  })
+  afterEach(function () {
+    helper.index.remove(testIndex.name)
+  })
+
   describe('client.indexCreate()', function () {
     it('should create a complex index on list', function (done) {
-      var indexName = 'complexIndex'
       var options = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'policy_bin',
-        index: indexName,
+        bin: testIndex.bin,
+        index: testIndex.name,
         type: Aerospike.indexType.LIST,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      client.createIndex(options, function (err) {
+      client.createIndex(options, function (err, task) {
         expect(err).not.to.be.ok()
+        expect(helper.index.exists(testIndex.name)).to.be(true)
+        expect(task).to.be.a(IndexTask)
         done()
       })
     })
@@ -43,13 +56,14 @@ context('secondary indexes', function () {
       var options = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'policy_bin',
-        index: 'policy_index',
+        bin: testIndex.bin,
+        index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }
       var policy = { timeout: 100 }
       client.createIndex(options, policy, function (err) {
         expect(err).not.to.be.ok()
+        expect(helper.index.exists(testIndex.name)).to.be(true)
         done()
       })
     })
@@ -57,14 +71,15 @@ context('secondary indexes', function () {
 
   describe('client.createIntegerIndex()', function () {
     it('should create an integer index', function (done) {
-      var args = {
+      var options = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'integer_bin',
-        index: 'integer_index'
+        bin: testIndex.bin,
+        index: testIndex.name
       }
-      client.createIntegerIndex(args, function (err) {
+      client.createIntegerIndex(options, function (err) {
         expect(err).not.to.be.ok()
+        expect(helper.index.exists(testIndex.name)).to.be(true)
         done()
       })
     })
@@ -75,11 +90,12 @@ context('secondary indexes', function () {
       var args = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'string_bin',
-        index: 'string_index'
+        bin: testIndex.bin,
+        index: testIndex.name
       }
       client.createStringIndex(args, function (err) {
         expect(err).not.to.be.ok()
+        expect(helper.index.exists(testIndex.name)).to.be(true)
         done()
       })
     })
@@ -90,19 +106,24 @@ context('secondary indexes', function () {
       var args = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'geo_bin',
-        index: 'geo_index'
+        bin: testIndex.bin,
+        index: testIndex.name
       }
       client.createGeo2DSphereIndex(args, function (err) {
         expect(err).not.to.be.ok()
+        expect(helper.index.exists(testIndex.name)).to.be(true)
         done()
       })
     })
   })
 
   describe('client.indexRemove()', function () {
+    beforeEach(function () {
+      helper.index.create(testIndex.name, helper.set, testIndex.bin, Aerospike.indexDataType.STRING)
+    })
+
     it('should drop an index', function (done) {
-      client.indexRemove(helper.namespace, 'string_integer', function (err) {
+      client.indexRemove(helper.namespace, testIndex.name, function (err) {
         expect(err).not.to.be.ok()
         done()
       })
@@ -114,14 +135,57 @@ context('secondary indexes', function () {
       var args = {
         ns: helper.namespace,
         set: helper.set,
-        bin: 'integer_done',
-        index: 'integer_index_done'
+        bin: testIndex.bin,
+        index: testIndex.name
       }
       client.createIntegerIndex(args, function (err) {
-        expect(err).not.to.be.ok()
-        client.indexCreateWait(helper.namespace, 'integer_index_done', 100, function (err) {
+        if (err) throw err
+
+        client.indexCreateWait(helper.namespace, testIndex.name, 100, function (err) {
           expect(err).not.to.be.ok()
+          expect(helper.index.exists(testIndex.name)).to.be(true)
           done()
+        })
+      })
+    })
+  })
+
+  describe('IndexTask', function () {
+    describe('IndexTask#waitUntilDone()', function () {
+      it('should wait until the index creation is completed', function (done) {
+        var options = {
+          ns: helper.namespace,
+          set: helper.set,
+          bin: testIndex.bin,
+          index: testIndex.name
+        }
+        client.createIntegerIndex(options, function (err, indexTask) {
+          if (err) throw err
+
+          indexTask.waitUntilDone(10, function (err) {
+            expect(err).to.not.be.ok()
+            done()
+          })
+        })
+      })
+    })
+
+    describe('IndexTask#checkStatus()', function () {
+      it('should return a boolean indicating whether the task is done or not', function (done) {
+        var options = {
+          ns: helper.namespace,
+          set: helper.set,
+          bin: 'integer_bin',
+          index: 'indexTaskCheckStatusIndex'
+        }
+        client.createIntegerIndex(options, function (err, indexTask) {
+          if (err) throw err
+
+          indexTask.checkStatus(function (err, status) {
+            expect(err).to.not.be.ok()
+            expect(status).to.be.a('boolean')
+            done()
+          })
         })
       })
     })

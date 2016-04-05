@@ -171,9 +171,8 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(cons, "exists_async", ExistsAsync);
 	Nan::SetPrototypeMethod(cons, "get_async", GetAsync);
 	Nan::SetPrototypeMethod(cons, "info", Info);
-	Nan::SetPrototypeMethod(cons, "indexCreate", sindexCreate);
-	Nan::SetPrototypeMethod(cons, "indexCreateWait", sindexCreateWait);
-	Nan::SetPrototypeMethod(cons, "indexRemove", sindexRemove);
+	Nan::SetPrototypeMethod(cons, "indexCreate", IndexCreate);
+	Nan::SetPrototypeMethod(cons, "indexRemove", IndexRemove);
 	Nan::SetPrototypeMethod(cons, "operate_async", OperateAsync);
 	Nan::SetPrototypeMethod(cons, "put_async", PutAsync);
 	Nan::SetPrototypeMethod(cons, "query", Query);

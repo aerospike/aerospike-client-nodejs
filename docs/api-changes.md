@@ -4,10 +4,14 @@
 
 ### Deprecations
 
+| Deprecated Function      | Replacement               | Remarks                                     |
+| ------------------------ | ------------------------- | ------------------------------------------- |
+| `Client#createIndexWait` | `IndexTask#waitUntilDone` | -                                           |
+
 When creating new secondary indexes via the `Client#createIndex` method (or
 `Client#createIntegerIndex`, etc. short-hand methods), the optional info policy
 should be passed as a separate function parameter instead of passing it in the
-first `options` parameter.
+first `options` parameter. The `options.policy` parameter is deprecated.
 
 ## Version 2.0.0-alpha.1
 
