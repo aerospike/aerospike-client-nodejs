@@ -15,10 +15,12 @@
 // ****************************************************************************
 
 const Aerospike = require('../lib/aerospike')
+const info = require('../lib/info')
 const options = require('./util/options')
 const expect = require('expect.js')
 const deasync = require('deasync')
-const node_util = require('util')
+const util = require('util')
+const path = require('path')
 
 global.expect = expect
 
@@ -46,7 +48,7 @@ function UDFHelper (client) {
 }
 
 UDFHelper.prototype.register = function (filename, done) {
-  var script = __dirname + '/' + filename
+  var script = path.join(__dirname, filename)
   this.udfRegister(script)
   this.udfRegisterWait(filename, 50)
   if (done) done()
@@ -107,9 +109,8 @@ ServerInfoHelper.prototype.fetch_info = function () {
   var self = this
   var done = false
   client.info('features', function (err, result) {
-    if (err) throw new Error(err)
-    var features = result.split('\n')[0].split('\t')[1]
-    self.features = features.split(';')
+    if (err) throw err
+    self.features = info.parseInfo(result)['features']
   }, function () { done = true })
   deasync.loopWhile(function () { return !done })
 }
@@ -117,13 +118,10 @@ ServerInfoHelper.prototype.fetch_info = function () {
 ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
   var self = this
   var done = false
-  client.info('namespace/' + ns, function (err, result) {
-    if (err) throw new Error(err)
-    var config = result.split('\n')[0].split('\t')[1]
-    config.split(';').forEach(function (nv) {
-      nv = nv.split('=')
-      self.nsconfig[nv[0]] = nv[1]
-    })
+  var nsKey = 'namespace/' + ns
+  client.info(nsKey, function (err, result) {
+    if (err) throw err
+    self.nsconfig = info.parseInfo(result)[nsKey]
   }, function () { done = true })
   deasync.loopWhile(function () { return !done })
 }
@@ -138,7 +136,7 @@ exports.cluster = server_info_helper
 
 exports.fail = function fail (message) {
   if (typeof message !== 'string') {
-    message = node_util.inspect(message)
+    message = util.inspect(message)
   }
   expect().fail(message)
 }
