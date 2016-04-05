@@ -14,87 +14,115 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it */
+/* global expect, context, describe, it */
 
-require('../lib/aerospike')
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
-describe('client.index()', function () {
+context('secondary indexes', function () {
   var client = helper.client
 
-  it('should create an integer index', function (done) {
-    var args = { ns: helper.namespace,
-      set: helper.set,
-      bin: 'integer_bin',
-    index: 'integer_index' }
-    client.createIntegerIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      done()
+  describe('client.indexCreate()', function () {
+    it('should create a complex index on list', function (done) {
+      var indexName = 'complexIndex'
+      var options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'policy_bin',
+        index: indexName,
+        type: Aerospike.indexType.LIST,
+        datatype: Aerospike.indexDataType.NUMERIC
+      }
+      client.createIndex(options, function (err) {
+        expect(err).not.to.be.ok()
+        done()
+      })
     })
-  })
 
-  it('should create an string index', function (done) {
-    var args = { ns: helper.namespace, set: helper.set, bin: 'string_bin',
-    index: 'string_index' }
-    client.createStringIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      done()
-    })
-  })
-
-  it('should create a geospatial index', function (done) {
-    var args = {
-      ns: helper.namespace,
-      set: helper.set,
-      bin: 'geo_bin',
-      index: 'geo_index'
-    }
-    client.createGeo2DSphereIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      done()
-    })
-  })
-
-  it('should create an integer index with info policy', function (done) {
-    var args = { ns: helper.namespace, set: helper.set, bin: 'policy_bin',
-    index: 'policy_index', policy: { timeout: 1000, send_as_is: true, check_bounds: false }}
-    client.createIntegerIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      done()
-    })
-  })
-
-  it('should drop an index', function (done) {
-    client.indexRemove(helper.namespace, 'string_integer', function (err) {
-      expect(err).not.to.be.ok()
-      done()
-    })
-  })
-
-  it('should create an integer index and wait until index creation is done', function (done) {
-    var args = { ns: helper.namespace,
-      set: helper.set,
-      bin: 'integer_done',
-    index: 'integer_index_done' }
-    client.createIntegerIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      client.indexCreateWait(helper.namespace, 'integer_index_done', 1000, function (err) {
+    it('should create an integer index with info policy', function (done) {
+      var options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'policy_bin',
+        index: 'policy_index',
+        datatype: Aerospike.indexDataType.NUMERIC
+      }
+      var policy = { timeout: 100 }
+      client.createIndex(options, policy, function (err) {
         expect(err).not.to.be.ok()
         done()
       })
     })
   })
 
-  it('should create a string index and wait until index creation is done', function (done) {
-    var args = { ns: helper.namespace,
-      set: helper.set,
-      bin: 'string_done',
-    index: 'string_index_done' }
-    client.createStringIndex(args, function (err) {
-      expect(err).not.to.be.ok()
-      client.indexCreateWait(helper.namespace, 'string_index_done', 1000, function (err) {
+  describe('client.createIntegerIndex()', function () {
+    it('should create an integer index', function (done) {
+      var args = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'integer_bin',
+        index: 'integer_index'
+      }
+      client.createIntegerIndex(args, function (err) {
         expect(err).not.to.be.ok()
         done()
+      })
+    })
+  })
+
+  describe('client.createStringIndex()', function () {
+    it('should create an string index', function (done) {
+      var args = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'string_bin',
+        index: 'string_index'
+      }
+      client.createStringIndex(args, function (err) {
+        expect(err).not.to.be.ok()
+        done()
+      })
+    })
+  })
+
+  describe('client.createGeo2DSphereIndex()', function () {
+    it('should create a geospatial index', function (done) {
+      var args = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'geo_bin',
+        index: 'geo_index'
+      }
+      client.createGeo2DSphereIndex(args, function (err) {
+        expect(err).not.to.be.ok()
+        done()
+      })
+    })
+  })
+
+  describe('client.indexRemove()', function () {
+    it('should drop an index', function (done) {
+      client.indexRemove(helper.namespace, 'string_integer', function (err) {
+        expect(err).not.to.be.ok()
+        done()
+      })
+    })
+  })
+
+  describe('client.indexCreateWait()', function (done) {
+    it('should create an index and wait until index creation is done', function (done) {
+      var args = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: 'integer_done',
+        index: 'integer_index_done'
+      }
+      client.createIntegerIndex(args, function (err) {
+        expect(err).not.to.be.ok()
+        client.indexCreateWait(helper.namespace, 'integer_index_done', 100, function (err) {
+          expect(err).not.to.be.ok()
+          done()
+        })
       })
     })
   })

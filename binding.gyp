@@ -50,7 +50,7 @@
         'src/main/client/udf_remove.cc',
         'src/main/enums/predicates.cc',
         'src/main/enums/log.cc',
-        'src/main/enums/indexTypes.cc',
+        'src/main/enums/index.cc',
         'src/main/enums/operations.cc',
         'src/main/enums/policy.cc',
         'src/main/enums/status.cc',

@@ -1,3 +1,10 @@
+v2.0.0-alpha.2 / xxx
+===========================
+
+* **Improvements**
+  * Added support for complex secondary indexes on list and map values;
+    requires Aerospike server version >= 3.8. [CLIENT-684]
+
 v2.0.0-alpha.1 / 2016-03-30
 ===========================
 

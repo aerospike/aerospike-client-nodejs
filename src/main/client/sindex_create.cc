@@ -52,7 +52,8 @@ typedef struct AsyncData {
     as_set set;
     as_bin_name bin;
     char * index;
-    as_index_datatype type;
+	as_index_type itype;
+    as_index_datatype dtype;
     LogInfo * log;
     Nan::Persistent<Function> callback;
 } AsyncData;
@@ -85,8 +86,9 @@ static void * prepare(ResolveArgs(info))
     Local<Value> maybe_bin = info[2];
     Local<Value> maybe_index_name = info[3];
     Local<Value> maybe_index_type = info[4];
-    Local<Value> maybe_policy = info[5];
-    Local<Value> maybe_callback = info[6];
+    Local<Value> maybe_index_datatype = info[5];
+    Local<Value> maybe_policy = info[6];
+    Local<Value> maybe_callback = info[7];
 
     if (maybe_callback->IsFunction()) {
         data->callback.Reset(maybe_callback.As<Function>());
@@ -134,10 +136,20 @@ static void * prepare(ResolveArgs(info))
     }
 
     if (maybe_index_type->IsNumber()) {
-        data->type = (as_index_datatype) maybe_index_type->ToInteger()->Value();
-        as_v8_detail(log, "The type of the index %d", data->type);
+        data->itype = (as_index_type) maybe_index_type->ToInteger()->Value();
+        as_v8_detail(log, "The type of the index %d", data->itype);
     } else {
         as_v8_error(log, "index type should be an integer enumerator");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        data->param_err = 1;
+        return data;
+    }
+
+    if (maybe_index_datatype->IsNumber()) {
+        data->dtype = (as_index_datatype) maybe_index_datatype->ToInteger()->Value();
+        as_v8_detail(log, "The data type of the index %d", data->dtype);
+    } else {
+        as_v8_error(log, "index data type should be an integer enumerator");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
@@ -180,8 +192,8 @@ static void execute(uv_work_t * req)
 
     if ( data->param_err == 0) {
         as_v8_debug(log, "Invoking aerospike index create");
-        aerospike_index_create(as, err, &data->task, policy, data->ns,
-                data->set, data->bin, data->index, data->type);
+        aerospike_index_create_complex(as, err, &data->task, policy, data->ns,
+                data->set, data->bin, data->index, data->itype, data->dtype);
     }
 
 }

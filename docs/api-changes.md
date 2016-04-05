@@ -1,5 +1,14 @@
 # Backward Incompatible API Changes
 
+## Version 2.0.0-alpha.2
+
+### Deprecations
+
+When creating new secondary indexes via the `Client#createIndex` method (or
+`Client#createIntegerIndex`, etc. short-hand methods), the optional info policy
+should be passed as a separate function parameter instead of passing it in the
+first `options` parameter.
+
 ## Version 2.0.0-alpha.1
 
 ### Error-first callbacks
