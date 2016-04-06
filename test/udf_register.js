@@ -77,7 +77,7 @@ describe('client.udfRegister()', function (done) {
     var filename = dir + '/udf_test.lua'
     client.udfRegister(filename, function (err) {
       expect(err).not.to.be.ok()
-      client.udfRegisterWait('udf_test.lua', 1000, function (err) {
+      client.udfRegisterWait('udf_test.lua', 100, function (err) {
         expect(err).not.to.be.ok()
         done()
       })
