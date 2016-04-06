@@ -44,6 +44,8 @@ Local<Object> scanPriority();
 
 Local<Object> predicates();
 
+Local<Object> indexDataType();
+
 Local<Object> indexType();
 
 Local<Object> scanStatus();

@@ -15,10 +15,12 @@
 // ****************************************************************************
 
 const Aerospike = require('../lib/aerospike')
+const Info = require('../lib/info')
 const options = require('./util/options')
 const expect = require('expect.js')
 const deasync = require('deasync')
-const node_util = require('util')
+const util = require('util')
+const path = require('path')
 
 global.expect = expect
 
@@ -46,7 +48,7 @@ function UDFHelper (client) {
 }
 
 UDFHelper.prototype.register = function (filename, done) {
-  var script = __dirname + '/' + filename
+  var script = path.join(__dirname, filename)
   this.udfRegister(script)
   this.udfRegisterWait(filename, 50)
   if (done) done()
@@ -63,30 +65,44 @@ UDFHelper.prototype.remove = function (filename, done) {
 
 function IndexHelper (client) {
   this.client = client
-  this.createStringIndex = deasync(client.createStringIndex).bind(client)
-  this.createIntegerIndex = deasync(client.createIntegerIndex).bind(client)
-  this.indexCreateWait = deasync(client.indexCreateWait).bind(client)
+  this.createIndex = deasync(client.createIndex).bind(client)
   this.indexRemove = deasync(client.indexRemove).bind(client)
+  this.info = deasync(client.info).bind(client)
 }
 
-IndexHelper.prototype.create = function (index_name, set_name, bin_name, index_type, done) {
+IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType) {
   var index = {
     ns: options.namespace,
-    set: set_name,
-    bin: bin_name,
-    index: index_name
+    set: setName,
+    bin: binName,
+    index: indexName,
+    type: indexType || Aerospike.indexType.DEFAULT,
+    datatype: dataType
   }
-  switch (index_type.toLowerCase()) {
-    case 'string': this.createStringIndex(index); break
-    case 'integer': this.createIntegerIndex(index); break
-  }
-  this.indexCreateWait(index.ns, index.index, 100)
-  if (done) done()
+  var task = this.createIndex(index)
+  deasync(task.waitUntilDone).bind(task)(100)
 }
 
-IndexHelper.prototype.remove = function (index_name, done) {
-  this.indexRemove(options.namespace, index_name, {})
-  if (done) done()
+IndexHelper.prototype.remove = function (indexName) {
+  this.indexRemove(options.namespace, indexName, {})
+}
+
+IndexHelper.prototype.exists = function (indexName) {
+  var sindex = 'sindex/' + options.namespace + '/' + indexName
+  var exists = false
+  var attempts = 0
+  while (attempts < 5) {
+    attempts++
+    this.info(sindex, function (err, info) {
+      if (err) throw err
+      var indexStats = Info.parseInfo(info)[sindex]
+      var noIndexErr = (typeof indexStats === 'string') && indexStats.indexOf('FAIL:201:NO INDEX') >= 0
+      exists = exists || !noIndexErr
+    })
+    if (exists) return exists
+    deasync.sleep(5)
+  }
+  return false
 }
 
 function ServerInfoHelper () {
@@ -107,9 +123,8 @@ ServerInfoHelper.prototype.fetch_info = function () {
   var self = this
   var done = false
   client.info('features', function (err, result) {
-    if (err) throw new Error(err)
-    var features = result.split('\n')[0].split('\t')[1]
-    self.features = features.split(';')
+    if (err) throw err
+    self.features = Info.parseInfo(result)['features']
   }, function () { done = true })
   deasync.loopWhile(function () { return !done })
 }
@@ -117,13 +132,10 @@ ServerInfoHelper.prototype.fetch_info = function () {
 ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
   var self = this
   var done = false
-  client.info('namespace/' + ns, function (err, result) {
-    if (err) throw new Error(err)
-    var config = result.split('\n')[0].split('\t')[1]
-    config.split(';').forEach(function (nv) {
-      nv = nv.split('=')
-      self.nsconfig[nv[0]] = nv[1]
-    })
+  var nsKey = 'namespace/' + ns
+  client.info(nsKey, function (err, result) {
+    if (err) throw err
+    self.nsconfig = Info.parseInfo(result)[nsKey]
   }, function () { done = true })
   deasync.loopWhile(function () { return !done })
 }
@@ -138,7 +150,7 @@ exports.cluster = server_info_helper
 
 exports.fail = function fail (message) {
   if (typeof message !== 'string') {
-    message = node_util.inspect(message)
+    message = util.inspect(message)
   }
   expect().fail(message)
 }

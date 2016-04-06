@@ -22,12 +22,27 @@ using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
+Local<Object> indexDataType()
+{
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "STRING", AS_INDEX_STRING);
+	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
+	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);
+	return scope.Escape(obj);
+}
+
 Local<Object> indexType()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "STRING",    AS_INDEX_STRING);
-    set(obj, "NUMERIC",  AS_INDEX_NUMERIC);
-    set(obj, "GEO2DSPHERE",  AS_INDEX_GEO2DSPHERE);
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "DEFAULT", AS_INDEX_TYPE_DEFAULT);
+	set(obj, "LIST", AS_INDEX_TYPE_LIST);
+	set(obj, "MAPKEYS", AS_INDEX_TYPE_MAPKEYS);
+	set(obj, "MAPVALUES", AS_INDEX_TYPE_MAPVALUES);
+	// deprecated - included for backward compatibility
+	set(obj, "STRING", AS_INDEX_STRING);
+	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
+	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);
+	return scope.Escape(obj);
 }

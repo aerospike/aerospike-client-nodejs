@@ -17,6 +17,7 @@
 /* global expect, describe, it, context */
 
 const Aerospike = require('../lib/aerospike')
+const info = require('../lib/info')
 const helper = require('./test_helper')
 
 describe('client.info()', function () {
@@ -29,7 +30,7 @@ describe('client.info()', function () {
       client.info('objects', host, function (err, response, responding_host) {
         expect(err).not.to.be.ok()
         expect(responding_host).to.eql(host)
-        expect(response.indexOf('objects\t')).to.eql(0)
+        expect(info.parseInfo(response)).to.have.property('objects')
         done()
       })
     })
@@ -39,7 +40,7 @@ describe('client.info()', function () {
       client.info('objects', host_str, function (err, response, responding_host) {
         expect(err).not.to.be.ok()
         expect(responding_host).to.eql(host)
-        expect(response.indexOf('objects\t')).to.eql(0)
+        expect(info.parseInfo(response)).to.have.property('objects')
         done()
       })
     })
@@ -49,7 +50,7 @@ describe('client.info()', function () {
     it('should fetch object count from all cluster nodes', function (done) {
       client.info('objects', function (err, response, host) {
         expect(err).not.to.be.ok()
-        expect(response.indexOf('objects\t')).to.eql(0)
+        expect(info.parseInfo(response)).to.have.property('objects')
       }, done)
     })
   })
@@ -69,5 +70,37 @@ describe('client.info()', function () {
       expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
       done()
     })
+  })
+})
+
+describe('info.parseInfo()', function () {
+  it('should parse key-value pairs from an info string', function () {
+    var infoStr = 'version\t1\nedition\tCommunity Edition\n'
+    var infoHash = info.parseInfo(infoStr)
+    expect(infoHash).to.eql({version: 1, edition: 'Community Edition'})
+  })
+
+  it('should parse nested key-value pairs', function () {
+    var infoStr = 'statistics\tmem=10;req=20\n'
+    var infoHash = info.parseInfo(infoStr)
+    expect(infoHash['statistics']).to.eql({mem: 10, req: 20})
+  })
+
+  it('should parse list values', function () {
+    var infoStr = 'features\tgeo;double\n'
+    var infoHash = info.parseInfo(infoStr)
+    expect(infoHash['features']).to.eql(['geo', 'double'])
+  })
+
+  it('should parse numeric strings as numbers', function () {
+    var infoStr = 'version\t1'
+    var infoHash = info.parseInfo(infoStr)
+    expect(infoHash['version']).to.be.a('number')
+  })
+
+  it('should be able to handle an empty string', function () {
+    var infoStr = ''
+    var infoHash = info.parseInfo(infoStr)
+    expect(infoHash).to.eql({})
   })
 })

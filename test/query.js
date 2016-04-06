@@ -26,8 +26,8 @@ describe('client.query()', function () {
 
   before(function (done) {
     helper.udf.register('aggregate.lua')
-    helper.index.create('queryIndexInt', 'test.query', 'queryBinInt', 'integer')
-    helper.index.create('queryIndexString', 'test.query', 'queryBinString', 'string')
+    helper.index.create('queryIndexInt', 'test.query', 'queryBinInt', Aerospike.indexDataType.NUMERIC)
+    helper.index.create('queryIndexString', 'test.query', 'queryBinString', Aerospike.indexDataType.STRING)
 
     var total = 100
     var count = 0

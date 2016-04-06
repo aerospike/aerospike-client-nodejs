@@ -1,3 +1,15 @@
+v2.0.0-alpha.2 / xxx
+===========================
+
+* **Improvements**
+  * Added support for complex secondary indexes on list and map values;
+    requires Aerospike server version >= 3.8. [CLIENT-684]
+  * Added `Aerospike.info` module with `parseInfo` utility method to parse info
+    string returned by Aerospike cluster nodes using `Client#info` method.
+  * Added IndexTask class returned by `Client#createIndex` to replace
+    `Client#createIndexWait`; `IndexTask#waitUntilDone` polls for task
+    completion asynchronously.
+
 v2.0.0-alpha.1 / 2016-03-30
 ===========================
 

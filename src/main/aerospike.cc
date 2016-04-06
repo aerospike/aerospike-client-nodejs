@@ -89,6 +89,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());
 	exports->Set(Nan::New("scanStatus").ToLocalChecked(), scanStatus());
 	exports->Set(Nan::New("predicates").ToLocalChecked(), predicates());
+	exports->Set(Nan::New("indexDataType").ToLocalChecked(), indexDataType());
 	exports->Set(Nan::New("indexType").ToLocalChecked(), indexType());
 }
 

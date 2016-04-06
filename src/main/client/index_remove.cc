@@ -46,13 +46,9 @@ typedef struct AsyncData {
     aerospike * as;
     int param_err;
     as_error err;
-    as_index_task task;
     as_policy_info* policy;
     as_namespace ns;
-    as_set set;
-    as_bin_name bin;
     char * index;
-    as_index_datatype type;
     LogInfo * log;
     Nan::Persistent<Function> callback;
 } AsyncData;
@@ -81,12 +77,9 @@ static void * prepare(ResolveArgs(info))
     LogInfo * log = data->log   = client->log;
 
     Local<Value> maybe_ns = info[0];
-    Local<Value> maybe_set = info[1];
-    Local<Value> maybe_bin = info[2];
-    Local<Value> maybe_index_name = info[3];
-    Local<Value> maybe_index_type = info[4];
-    Local<Value> maybe_policy = info[5];
-    Local<Value> maybe_callback = info[6];
+    Local<Value> maybe_index_name = info[1];
+    Local<Value> maybe_policy = info[2];
+    Local<Value> maybe_callback = info[3];
 
     if (maybe_callback->IsFunction()) {
         data->callback.Reset(maybe_callback.As<Function>());
@@ -108,21 +101,6 @@ static void * prepare(ResolveArgs(info))
         return data;
     }
 
-    if (maybe_set->IsString()) {
-        strcpy(data->set, *String::Utf8Value(maybe_set->ToString()));
-        as_v8_detail(log, "The index creation on set %s", data->set);
-    }
-
-    if (maybe_bin->IsString()) {
-        strcpy(data->bin, *String::Utf8Value(maybe_bin->ToString()));
-        as_v8_detail(log, "The index creation on bin %s", data->bin);
-    } else {
-        as_v8_error(log, "bin name should be passed as a string");
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-        data->param_err = 1;
-        return data;
-    }
-
     if (maybe_index_name->IsString()) {
         data->index = strdup(*String::Utf8Value(maybe_index_name->ToString()));
         as_v8_detail(log, "The index to be created %s", data->index);
@@ -133,18 +111,8 @@ static void * prepare(ResolveArgs(info))
         return data;
     }
 
-    if (maybe_index_type->IsNumber()) {
-        data->type = (as_index_datatype) maybe_index_type->ToInteger()->Value();
-        as_v8_detail(log, "The type of the index %d", data->type);
-    } else {
-        as_v8_error(log, "index type should be an integer enumerator");
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-        data->param_err = 1;
-        return data;
-    }
-
     if (maybe_policy->IsObject()) {
-        data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        data->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
         if(infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "infopolicy shoule be an object");
             COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -170,18 +138,18 @@ static void execute(uv_work_t * req)
     as_error *  err          = &data->err;
     as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
+
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
     if (as->cluster == NULL) {
         data->param_err = 1;
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-        as_v8_error(log, "Not connected to cluster to put record");
+        as_v8_error(log, "Not connected to cluster ");
     }
 
     if ( data->param_err == 0) {
-        as_v8_debug(log, "Invoking aerospike index create");
-        aerospike_index_create(as, err, &data->task, policy, data->ns,
-                data->set, data->bin, data->index, data->type);
+        as_v8_debug(log, "Invoking aerospike index remove");
+        aerospike_index_remove(as, err, policy, data->ns, data->index);
     }
 
 }
@@ -201,8 +169,7 @@ static void respond(uv_work_t * req, int status)
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
     LogInfo * log       = data->log;
-    as_v8_debug(log, "SINDEX creation : response is");
-    // AS_DEBUG(log, ERROR, err);
+    as_v8_debug(log, "SINDEX remove : response is");
 
     Local<Value> argv[1];
     // Build the arguments array for the callback
@@ -211,7 +178,7 @@ static void respond(uv_work_t * req, int status)
     }
     else {
         err->func = NULL;
-        as_v8_debug(log, "Parameter error for put operation");
+        as_v8_debug(log, "Parameter error for sindex remove");
         argv[0] = error_to_jsobject(err, log);
     }
 
@@ -222,7 +189,7 @@ static void respond(uv_work_t * req, int status)
     // Execute the callback.
     if ( !cb->IsNull() ) {
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
-        as_v8_debug(log, "Invoked Put callback");
+        as_v8_debug(log, "Invoked sindex remove callback");
     }
 
     // Process the exception, if any
@@ -237,7 +204,7 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
-        if( data->policy != NULL)
+        if(data->policy != NULL)
         {
             cf_free(data->policy);
         }
@@ -255,7 +222,7 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'put()' Operation
  */
-NAN_METHOD(AerospikeClient::sindexCreate)
+NAN_METHOD(AerospikeClient::IndexRemove)
 {
     async_invoke(info, prepare, execute, respond);
 }

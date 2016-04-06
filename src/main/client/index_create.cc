@@ -47,7 +47,13 @@ typedef struct AsyncData {
     int param_err;
     as_error err;
     as_index_task task;
-    uint32_t interval_ms;
+    as_policy_info* policy;
+    as_namespace ns;
+    as_set set;
+    as_bin_name bin;
+    char * index;
+	as_index_type itype;
+    as_index_datatype dtype;
     LogInfo * log;
     Nan::Persistent<Function> callback;
 } AsyncData;
@@ -72,13 +78,17 @@ static void * prepare(ResolveArgs(info))
     AsyncData * data            = new AsyncData();
     data->as                    = client->as;
     data->param_err             = 0;
-    data->task.as               = client->as;
+    data->policy                = NULL;
     LogInfo * log = data->log   = client->log;
 
     Local<Value> maybe_ns = info[0];
-    Local<Value> maybe_index_name = info[1];
-    Local<Value> maybe_interval = info[2];
-    Local<Value> maybe_callback = info[3];
+    Local<Value> maybe_set = info[1];
+    Local<Value> maybe_bin = info[2];
+    Local<Value> maybe_index_name = info[3];
+    Local<Value> maybe_index_type = info[4];
+    Local<Value> maybe_index_datatype = info[5];
+    Local<Value> maybe_policy = info[6];
+    Local<Value> maybe_callback = info[7];
 
     if (maybe_callback->IsFunction()) {
         data->callback.Reset(maybe_callback.As<Function>());
@@ -91,8 +101,8 @@ static void * prepare(ResolveArgs(info))
     }
 
     if (maybe_ns->IsString()) {
-        strcpy(data->task.ns, *String::Utf8Value(maybe_ns->ToString()));
-        as_v8_detail(log, "The index creation status for namespace %s", data->task.ns);
+        strcpy(data->ns, *String::Utf8Value(maybe_ns->ToString()));
+        as_v8_detail(log, "The index creation on namespace %s", data->ns);
     } else {
         as_v8_error(log, "namespace should be string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -100,9 +110,24 @@ static void * prepare(ResolveArgs(info))
         return data;
     }
 
+    if (maybe_set->IsString()) {
+        strcpy(data->set, *String::Utf8Value(maybe_set->ToString()));
+        as_v8_detail(log, "The index creation on set %s", data->set);
+    }
+
+    if (maybe_bin->IsString()) {
+        strcpy(data->bin, *String::Utf8Value(maybe_bin->ToString()));
+        as_v8_detail(log, "The index creation on bin %s", data->bin);
+    } else {
+        as_v8_error(log, "bin name should be passed as a string");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        data->param_err = 1;
+        return data;
+    }
+
     if (maybe_index_name->IsString()) {
-        strcpy(data->task.name, *String::Utf8Value(maybe_index_name->ToString()));
-        as_v8_detail(log, "The index creation status to be checked for %s", data->task.name);
+        data->index = strdup(*String::Utf8Value(maybe_index_name->ToString()));
+        as_v8_detail(log, "The index to be created %s", data->index);
     } else {
         as_v8_error(log, "index name should be passed as a string");
         COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
@@ -110,13 +135,34 @@ static void * prepare(ResolveArgs(info))
         return data;
     }
 
-    if(maybe_interval->IsInt32()) {
-        data->interval_ms = maybe_interval->ToInt32()->Value();
-        as_v8_detail(log, "Index creation status - polling interval %u", data->interval_ms);
+    if (maybe_index_type->IsNumber()) {
+        data->itype = (as_index_type) maybe_index_type->ToInteger()->Value();
+        as_v8_detail(log, "The type of the index %d", data->itype);
     } else {
-        as_v8_error(log, "Index creation wait - polling interval should be of type int32");
+        as_v8_error(log, "index type should be an integer enumerator");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
         data->param_err = 1;
         return data;
+    }
+
+    if (maybe_index_datatype->IsNumber()) {
+        data->dtype = (as_index_datatype) maybe_index_datatype->ToInteger()->Value();
+        as_v8_detail(log, "The data type of the index %d", data->dtype);
+    } else {
+        as_v8_error(log, "index data type should be an integer enumerator");
+        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        data->param_err = 1;
+        return data;
+    }
+
+    if (maybe_policy->IsObject()) {
+        data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+        if(infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "infopolicy shoule be an object");
+            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            data->param_err = 1;
+            return data;
+        }
     }
 
     return data;
@@ -134,6 +180,7 @@ static void execute(uv_work_t * req)
     AsyncData * data         = reinterpret_cast<AsyncData *>(req->data);
     aerospike * as           = data->as;
     as_error *  err          = &data->err;
+    as_policy_info* policy   = data->policy;
     LogInfo * log            = data->log;
     // Invoke the blocking call.
     // The error is handled in the calling JS code.
@@ -144,9 +191,9 @@ static void execute(uv_work_t * req)
     }
 
     if ( data->param_err == 0) {
-        as_error_init(err);
-        as_v8_debug(log, "Invoking aerospike index create wait");
-        aerospike_index_create_wait( err, &data->task, data->interval_ms);
+        as_v8_debug(log, "Invoking aerospike index create");
+        aerospike_index_create_complex(as, err, &data->task, policy, data->ns,
+                data->set, data->bin, data->index, data->itype, data->dtype);
     }
 
 }
@@ -166,7 +213,8 @@ static void respond(uv_work_t * req, int status)
     AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
     as_error *  err     = &data->err;
     LogInfo * log       = data->log;
-    as_v8_debug(log, "SINDEX creation wait : response ");
+    as_v8_debug(log, "SINDEX creation : response is");
+    // AS_DEBUG(log, ERROR, err);
 
     Local<Value> argv[1];
     // Build the arguments array for the callback
@@ -186,7 +234,7 @@ static void respond(uv_work_t * req, int status)
     // Execute the callback.
     if ( !cb->IsNull() ) {
         Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
-        as_v8_debug(log, "Invoked index create wait callback");
+        as_v8_debug(log, "Invoked Put callback");
     }
 
     // Process the exception, if any
@@ -201,6 +249,10 @@ static void respond(uv_work_t * req, int status)
     // clean up any memory we allocated
 
     if ( data->param_err == 0) {
+        if( data->policy != NULL)
+        {
+            cf_free(data->policy);
+        }
         as_v8_debug(log, "Cleaned up all the structures");
     }
 
@@ -215,7 +267,7 @@ static void respond(uv_work_t * req, int status)
 /**
  *  The 'put()' Operation
  */
-NAN_METHOD(AerospikeClient::sindexCreateWait)
+NAN_METHOD(AerospikeClient::IndexCreate)
 {
     async_invoke(info, prepare, execute, respond);
 }
