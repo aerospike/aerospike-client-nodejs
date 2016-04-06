@@ -96,7 +96,7 @@ IndexHelper.prototype.exists = function (indexName) {
     this.info(sindex, function (err, info) {
       if (err) throw err
       var indexStats = Info.parseInfo(info)[sindex]
-      var noIndexErr = (typeof indexStats === 'string') && indexStats.indexOf('FAIL:201:NO INDEX') >= 0
+      var noIndexErr = (typeof indexStats === 'string') && (indexStats.indexOf('FAIL:201:NO INDEX') >= 0)
       exists = exists || !noIndexErr
     })
     if (exists) return exists
