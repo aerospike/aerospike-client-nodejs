@@ -79,36 +79,4 @@ describe('client.batchExists()', function () {
       done()
     })
   })
-
-  it('should successfully find 1000 records', function (done) {
-    // number of records
-    var nrecords = 1000
-
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/1000/', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
-
-    // writer using generators
-    // callback provides an object of written records, where the
-    // keys of the object are the record's keys.
-    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
-      var keys = Object.keys(written).map(function (key) {
-        return written[key].key
-      })
-
-      var len = keys.length
-      expect(len).to.equal(nrecords)
-
-      client.batchExists(keys, function (err, results) {
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(len)
-
-        for (var i = 0; i < results.length; i++) {
-          expect(results[i].status).to.equal(status.AEROSPIKE_OK)
-        }
-        done()
-      })
-    })
-  })
 })

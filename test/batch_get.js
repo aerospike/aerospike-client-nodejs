@@ -99,42 +99,4 @@ describe('client.batchGet()', function () {
       done()
     })
   })
-
-  it('should successfully read 1000 records', function (done) {
-    var nrecords = 1000
-
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/1000/', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
-
-    // callback provides an object of written records, where the
-    // keys of the object are the record's keys.
-    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
-      var keys = Object.keys(written).map(function (key) {
-        return written[key].key
-      })
-
-      var len = keys.length
-      expect(len).to.equal(nrecords)
-
-      client.batchGet(keys, function (err, results) {
-        var result
-        var j
-
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(len)
-
-        for (j = 0; j < results.length; j++) {
-          result = results[j]
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
-
-          var record = result.record
-          var _record = written[result.key.key].record
-
-          expect(record).to.eql(_record)
-        }
-        done()
-      })
-    })
-  })
 })
