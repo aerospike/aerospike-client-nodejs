@@ -1,4 +1,4 @@
-v2.0.0-alpha.2 / xxx
+v2.0.0-alpha.2 / 2016-04-12
 ===========================
 
 * **Improvements**
@@ -9,6 +9,7 @@ v2.0.0-alpha.2 / xxx
   * Added IndexTask class returned by `Client#createIndex` to replace
     `Client#createIndexWait`; `IndexTask#waitUntilDone` polls for task
     completion asynchronously.
+  * Added new Scan API implementation via `Client#scan`.
 
 v2.0.0-alpha.1 / 2016-03-30
 ===========================

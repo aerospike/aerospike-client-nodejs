@@ -13,6 +13,11 @@ When creating new secondary indexes via the `Client#createIndex` method (or
 should be passed as a separate function parameter instead of passing it in the
 first `options` parameter. The `options.policy` parameter is deprecated.
 
+In the info object returned by `Query#info` the `recordScanned` property has
+been renamed to `recordsScanned`. For now the info object will contain the same
+value under both the new and old name but the `recordScanned` property will be
+removed in some future release.
+
 ## Version 2.0.0-alpha.1
 
 ### Error-first callbacks
