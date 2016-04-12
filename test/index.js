@@ -171,7 +171,7 @@ context('secondary indexes', function () {
       })
     })
 
-    describe.only('IndexTask#checkStatus()', function () {
+    describe('IndexTask#checkStatus()', function () {
       it('should return a boolean indicating whether the task is done or not', function (done) {
         var options = {
           ns: helper.namespace,
@@ -191,7 +191,7 @@ context('secondary indexes', function () {
       })
 
       it('should return false if the index does not exist', function (done) {
-        var task = new IndexTask(client, helper.ns, 'thisIndexDoesNotExist')
+        var task = new IndexTask(client, helper.namespace, 'thisIndexDoesNotExist')
         task.checkStatus(function (err, status) {
           expect(err).to.not.be.ok()
           expect(status).to.be(false)

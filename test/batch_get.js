@@ -25,77 +25,45 @@ const recgen = helper.recgen
 const putgen = helper.putgen
 const valgen = helper.valgen
 
-const status = Aerospike.status
-
 describe('client.batchGet()', function () {
   var client = helper.client
 
   it('should successfully read 10 records', function (done) {
-    var nrecords = 10
-
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/' + nrecords + '/', random: false})
+    var numberOfRecords = 10
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/success', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
-      var keys = Object.keys(written).map(function (key) {
-        return written[key].key
-      })
-
-      var len = keys.length
-      expect(len).to.equal(nrecords)
-
-      client.batchGet(keys, function (err, results) {
-        var result
-        var j
-
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(len)
-
-        for (j = 0; j < results.length; j++) {
-          result = results[j]
-
-          expect(result.status).to.equal(status.AEROSPIKE_OK)
-
-          var record = result.record
-          var _record = written[result.key.key].record
-
-          expect(record).to.eql(_record)
-        }
-
-        done()
-      })
+    var recordsCreated = {}
+    putgen.put(numberOfRecords, kgen, rgen, mgen, function (key, bins) {
+      if (key) {
+        recordsCreated[key.key] = {key: key, bins: bins}
+      } else {
+        var keys = Object.keys(recordsCreated).map(function (key) { return recordsCreated[key]['key'] })
+        client.batchGet(keys, function (err, results) {
+          expect(err).not.to.be.ok()
+          expect(results.length).to.equal(numberOfRecords)
+          results.forEach(function (result) {
+            var key = result.key
+            expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+            expect(result.record).to.eql(recordsCreated[key.key].bins)
+          })
+          done()
+        })
+      }
     })
   })
 
   it('should fail reading 10 records', function (done) {
-    // number of records
-    var nrecords = 10
-
-    // generators
+    var numberOfRecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/fail/', random: false})
-
-    // values
-    var keys = keygen.range(kgen, nrecords)
-
-    // writer using generators
-    // callback provides an object of written records, where the
-    // keys of the object are the record's keys.
+    var keys = keygen.range(kgen, numberOfRecords)
     client.batchGet(keys, function (err, results) {
-      var result
-      var j
-
       expect(err).not.to.be.ok()
-      expect(results.length).to.equal(nrecords)
-
-      for (j = 0; j < results.length; j++) {
-        result = results[j]
-        if (result.status !== 602) {
-          expect(result.status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-        } else {
-          expect(result.status).to.equal(602)
-        }
-      }
+      expect(results.length).to.equal(numberOfRecords)
+      results.forEach(function (result) {
+        expect(result.status).to.equal(Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      })
       done()
     })
   })

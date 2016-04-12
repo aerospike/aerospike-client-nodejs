@@ -25,57 +25,43 @@ const recgen = helper.recgen
 const putgen = helper.putgen
 const valgen = helper.valgen
 
-const status = Aerospike.status
-
 describe('client.batchExists()', function () {
   var client = helper.client
 
   it('should successfully find 10 records', function (done) {
-    // number of records
-    var nrecords = 10
-
-    // generators
+    var numberOfRecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/10/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    // writer using generators
-    // callback provides an array of written keys
-    putgen.put(nrecords, kgen, rgen, mgen, function (written) {
-      var keys = Object.keys(written).map(function (key) {
-        return written[key].key
-      })
-
-      var len = keys.length
-      expect(len).to.equal(nrecords)
-
-      client.batchExists(keys, function (err, results) {
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(len)
-
-        for (var i = 0; i < results.length; i++) {
-          expect(results[i].status).to.equal(status.AEROSPIKE_OK)
-        }
-        done()
-      })
+    var keysCreated = []
+    putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
+      if (key) {
+        keysCreated.push(key)
+      } else {
+        client.batchExists(keysCreated, function (err, results) {
+          expect(err).not.to.be.ok()
+          expect(results.length).to.equal(numberOfRecords)
+          results.forEach(function (result) {
+            expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+          })
+          done()
+        })
+      }
     })
   })
 
   it('should fail finding 10 records', function (done) {
-    // number of records
-    var nrecords = 10
-
-    // generators
+    var numberOfRecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/fail/', random: false})
-    var keys = keygen.range(kgen, nrecords)
+    var keys = keygen.range(kgen, numberOfRecords)
 
     client.batchExists(keys, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.equal(nrecords)
-
-      for (var i = 0; i < results.length; i++) {
-        expect(results[i].status).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-      }
+      expect(results.length).to.equal(numberOfRecords)
+      results.forEach(function (result) {
+        expect(result.status).to.equal(Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      })
       done()
     })
   })

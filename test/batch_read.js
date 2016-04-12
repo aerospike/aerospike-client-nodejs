@@ -36,8 +36,8 @@ describe('client.batchRead()', function () {
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_read/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
-    putgen.put(nrecords, kgen, rgen, mgen, function (records) {
-      done()
+    putgen.put(nrecords, kgen, rgen, mgen, function (key) {
+      if (!key) done()
     })
   })
 

@@ -88,7 +88,6 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(GetAsync);
 		static NAN_METHOD(HasPendingAsyncCommands);
 		static NAN_METHOD(Info);
-		static NAN_METHOD(Info_Cluster);
 		static NAN_METHOD(IsConnected);
 		static NAN_METHOD(OperateAsync);
 		static NAN_METHOD(PutAsync);
@@ -96,7 +95,8 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(Register);
 		static NAN_METHOD(RegisterWait);
 		static NAN_METHOD(RemoveAsync);
-		static NAN_METHOD(Scan);
+		static NAN_METHOD(ScanBackground);
+		static NAN_METHOD(ScanAsync);
 		static NAN_METHOD(ScanInfo);
 		static NAN_METHOD(SelectAsync);
 		static NAN_METHOD(SetLogLevel);

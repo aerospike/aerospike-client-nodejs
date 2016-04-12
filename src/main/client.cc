@@ -160,7 +160,7 @@ void AerospikeClient::Init()
 
 	// Prototype
 	Nan::SetPrototypeMethod(cons, "hasPendingAsyncCommands", HasPendingAsyncCommands);
-	Nan::SetPrototypeMethod(cons, "apply_async", ApplyAsync);
+	Nan::SetPrototypeMethod(cons, "applyAsync", ApplyAsync);
 	Nan::SetPrototypeMethod(cons, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(cons, "batchExists", BatchExists);
 	Nan::SetPrototypeMethod(cons, "batchSelect", BatchSelect);
@@ -168,16 +168,19 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(cons, "close", Close);
 	Nan::SetPrototypeMethod(cons, "connect", Connect);
 	Nan::SetPrototypeMethod(cons, "isConnected", IsConnected);
-	Nan::SetPrototypeMethod(cons, "exists_async", ExistsAsync);
-	Nan::SetPrototypeMethod(cons, "get_async", GetAsync);
+	Nan::SetPrototypeMethod(cons, "existsAsync", ExistsAsync);
+	Nan::SetPrototypeMethod(cons, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(cons, "info", Info);
 	Nan::SetPrototypeMethod(cons, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(cons, "indexRemove", IndexRemove);
-	Nan::SetPrototypeMethod(cons, "operate_async", OperateAsync);
-	Nan::SetPrototypeMethod(cons, "put_async", PutAsync);
+	Nan::SetPrototypeMethod(cons, "operateAsync", OperateAsync);
+	Nan::SetPrototypeMethod(cons, "putAsync", PutAsync);
 	Nan::SetPrototypeMethod(cons, "query", Query);
-	Nan::SetPrototypeMethod(cons, "remove_async", RemoveAsync);
-	Nan::SetPrototypeMethod(cons, "select_async", SelectAsync);
+	Nan::SetPrototypeMethod(cons, "removeAsync", RemoveAsync);
+	Nan::SetPrototypeMethod(cons, "scanBackground", ScanBackground);
+	Nan::SetPrototypeMethod(cons, "scanAsync", ScanAsync);
+	Nan::SetPrototypeMethod(cons, "scanInfo", ScanInfo);
+	Nan::SetPrototypeMethod(cons, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(cons, "udfRegister", Register);
 	Nan::SetPrototypeMethod(cons, "udfRegisterWait", RegisterWait);
 	Nan::SetPrototypeMethod(cons, "udfRemove", UDFRemove);

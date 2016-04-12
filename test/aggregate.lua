@@ -1,6 +1,6 @@
 -- A simple UDF that just returns the value of the bin 'test-bin'.
 local function get_test_bin(rec)
-	return rec['queryBinInt']
+	return rec['i']
 end
 
 -- A simple arithmetic UDF that adds two arguments and returns the result.
@@ -16,7 +16,7 @@ end
 
 -- A UDF that returns the sum of the argument and the bin value of 'test-bin'.
 local function add_test_bin(a, rec)
-	return a + rec['queryBinInt']
+	return a + rec['i']
 end
 
 -- An aggregation UDF that uses local UDFs above to execute an aggregation and
@@ -27,7 +27,7 @@ end
 
 -- A UDF that returns true if the bin value of 'test-bin' is even, false if not.
 local function even_test_bin(rec)
-	return rec['queryBinInt'] % 2 == 0
+	return rec['i'] % 2 == 0
 end
 
 -- An aggregation UDF that uses local UDFs above to execute an aggregation after
@@ -41,7 +41,7 @@ end
 -- inserted (as a key) in supplied map m with initial value 1. If the key
 -- already exists the value is incremented. The resulting map m is returned.
 local function parse_numbers(m, rec)
-	local s = rec['queryBinInt']
+	local s = rec['i']
 	for n in string.gmatch(s, "%d+") do
 		m[n] = (m[n] or 0) + 1
 	end

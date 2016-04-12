@@ -30,6 +30,9 @@ typedef struct CallbackData {
 	Nan::Persistent<Function> callback;
 } CallbackData;
 
+Local<Object> err(int code, const char* message);
+Local<Object> err_ok();
+
 void invoke_error_callback(int code, const char* message, CallbackData* data);
 
 // implements the as_async_record_listener interface
@@ -43,3 +46,6 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 
 // implements the as_async_batch_listener interface
 void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_scan_listener interface
+bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);

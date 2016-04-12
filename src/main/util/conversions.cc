@@ -1557,7 +1557,8 @@ Local<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
     scaninfo = Nan::New<Object>();
     scaninfo->Set(Nan::New("progressPct").ToLocalChecked(), Nan::New(info->progress_pct));
     as_v8_detail(log, "Progress pct of the scan %d", info->progress_pct);
-    scaninfo->Set(Nan::New("recordScanned").ToLocalChecked(), Nan::New((double)info->records_scanned));
+	Local<Value> recordsScanned = Nan::New((double)info->records_scanned);
+    scaninfo->Set(Nan::New("recordsScanned").ToLocalChecked(), recordsScanned);
     as_v8_detail(log, "Number of records scanned so far %d", info->records_scanned);
     scaninfo->Set(Nan::New("status").ToLocalChecked(), Nan::New(info->status));
 

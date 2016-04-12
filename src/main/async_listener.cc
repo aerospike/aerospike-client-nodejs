@@ -198,3 +198,57 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 	data->callback.Reset();
 	delete data;
 }
+
+bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
+{
+	Nan::HandleScope scope;
+
+	CallbackData * data = reinterpret_cast<CallbackData *>(udata);
+	if (!data) {
+		Nan::ThrowError("Missing callback data - cannot process record callback");
+		return false;
+	}
+
+	AerospikeClient * client = data->client;
+	LogInfo * log = client->log;
+
+	const int argc = 3;
+	bool reached_end = false;
+	Local<Value> argv[argc];
+	if (err) {
+		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		argv[0] = error_to_jsobject(err, log);
+		argv[1] = Nan::Null();
+		argv[2] = Nan::Null();
+	} else if (record) {
+		argv[0] = err_ok();
+		argv[1] = recordbins_to_jsobject(record, log);
+		argv[2] = recordmeta_to_jsobject(record, log);
+	} else {
+		reached_end = true;
+		argv[0] = err_ok();
+		argv[1] = Nan::Null();
+		argv[2] = Nan::Null();
+	}
+
+	as_v8_debug(log, "Invoking JS callback function\n");
+	Nan::TryCatch try_catch;
+	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Value> cb_result = Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+	if (try_catch.HasCaught()) {
+		Nan::FatalException(try_catch);
+	}
+
+	if (reached_end) {
+		data->callback.Reset();
+		delete data;
+		return false;
+	} else {
+		bool continue_scan = true;
+		if (cb_result->IsBoolean()) {
+			continue_scan = cb_result->ToBoolean()->Value();
+			as_v8_debug(log, "Async scan callback returned: %s\n", continue_scan ? "true" : "false");
+		}
+		return continue_scan;
+	}
+}

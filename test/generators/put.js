@@ -16,63 +16,47 @@
 
 const Aerospike = require('../../lib/aerospike')
 const helper = require('../test_helper')
-const deasync = require('deasync')
 
-// Throttles the number of concurrent calls to the function fn.
-// fn is assumed to take a callback function as it's last paramter.
-function throttle (max_concurrent, fn) {
-  var current = 0
-  var self = this
-  return function () {
-    current += 1
-    deasync.loopWhile(function () { return current > max_concurrent })
-    var args = Array.prototype.slice.call(arguments)
-    var cb = args.pop()
-    args.push(function () {
-      current -= 1
-      cb.apply(this, arguments)
-    })
-    fn.apply(self, args)
-  }
-}
+function createRecords (client, generator, recordsToCreate, maxConcurrent, callback) {
+  var currentRecordNo = 0
+  var inFlight = 0
 
-function put_done (total, done) {
-  var entries = {}
-  var count = 0
-
-  return function (key, record, metadata) {
-    return function (err) {
-      if (err) {
-        console.error('Error: ', err, key)
-      } else {
-        entries[key.key] = {
-          status: 0,
-          key: key,
-          record: record,
-          metadata: metadata
-        }
+  var creator = function (record, err) {
+    if (err) throw err
+    if (record) {
+      callback(record.key, record. bins, record.meta)
+      inFlight--
+    }
+    currentRecordNo++
+    if (currentRecordNo <= recordsToCreate && inFlight < maxConcurrent) {
+      record = {
+        key: generator.key(),
+        bins: generator.record(),
+        meta: generator.metadata()
       }
-      count++
-      if (count >= total) {
-        done(entries)
-      }
+      var putCb = creator.bind(this, record)
+      var policy = generator.policy()
+      client.put(record.key, record.bins, record.meta, policy, putCb)
+      inFlight++
+    } else if (currentRecordNo > recordsToCreate && inFlight === 0) {
+      callback(null)
     }
   }
+
+  for (var i = 0; i < Math.min(maxConcurrent, recordsToCreate); i++) {
+    creator(null, null)
+  }
 }
 
-function put (n, keygen, recgen, metagen, done) {
-  var client = helper.client
-  var d = put_done(n, done)
-  var throttled = throttle.call(client, 200, client.put)
-
+function put (n, keygen, recgen, metagen, callback) {
   var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
-  for (var i = 0; i < n; i++) {
-    var key = keygen()
-    var metadata = metagen(key)
-    var record = recgen(key, metadata)
-    var callback = d(key, record, metadata)
-    throttled(key, record, metadata, policy, callback)
+  var generator = {
+    key: keygen,
+    record: recgen,
+    metadata: metagen,
+    policy: function () { return policy }
   }
+  createRecords(helper.client, generator, n, 200, callback)
 }
 
 module.exports = {
