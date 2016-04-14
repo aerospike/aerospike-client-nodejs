@@ -56,6 +56,20 @@ describe('Aerospike.GeoJSON', function () {
     })
   })
 
+  describe('GeoJSON.Point()', function () {
+    it('returns the lat, lng as a GeoJSON point value', function () {
+      var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+      expect(GeoJSON.Point(103.913, 1.308)).to.eql(point)
+    })
+  })
+
+  describe('GeoJSON.Polygon()', function () {
+    it('returns the coordinates as a GeoJSON polygon value', function () {
+      var polygon = new GeoJSON({type: 'Polygon', coordinates: [[[103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408]]]})
+      expect(GeoJSON.Polygon([103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408])).to.eql(polygon)
+    })
+  })
+
   describe('putting and getting GeoJSON values', function () {
     const client = helper.client
     const point = JSON.stringify({ type: 'Point', coordinates: [103.9139, 1.3030] })

@@ -61,6 +61,10 @@ __err.func = __func__;
  *  FUNCTIONS
  ******************************************************************************/
 
+// Functions dealing with Double values
+bool is_double_value(Local<Value> value);
+double double_value(Local<Value> value);
+
 // Functions to convert C client structure to v8 object(map)
 Local<Object> error_to_jsobject(as_error * error, LogInfo *log);
 Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );

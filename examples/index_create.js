@@ -164,15 +164,15 @@ function run (client, done) {
 
   switch (type) {
     case 'integer':
-      client.createIntegerIndex(options, function (err) {
+      client.createIntegerIndex(options, function (err, task) {
         if (err) throw err
-        isIndexCreated(client, argv.namespace, index, 1000, done)
+        isIndexCreated(index, task, 1000, done)
       })
       break
     case 'string':
-      client.createStringIndex(options, function (err) {
+      client.createStringIndex(options, function (err, task) {
         if (err) throw err
-        isIndexCreated(client, argv.namespace, index, 1000, done)
+        isIndexCreated(index, task, 1000, done)
       })
       break
     default:
@@ -181,8 +181,8 @@ function run (client, done) {
   }
 }
 
-function isIndexCreated (client, namespace, index, pollInterval, done) {
-  client.indexCreateWait(namespace, index, pollInterval, function (err) {
+function isIndexCreated (index, task, pollInterval, done) {
+  task.waitUntilDone(pollInterval, function (err) {
     if (err) throw err
     !argv.quiet && console.log('Index Created - %s', index)
     done()

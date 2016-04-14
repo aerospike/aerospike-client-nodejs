@@ -1,6 +1,6 @@
 -- A simple UDF that just returns the value of the bin 'test-bin'.
 local function get_test_bin(rec)
-	return rec['i']
+	return rec['value']
 end
 
 -- A simple arithmetic UDF that adds two arguments and returns the result.

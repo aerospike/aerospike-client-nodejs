@@ -1,8 +1,23 @@
+Head
+===========================
+
+* **Improvements**
+  * Added new filter predicates in the `Aerospike.filter` module:
+    - contains() to match on list/map membership for integer & string values
+    - geoWithinRadius() to match on geospatial locations within a given radius
+      from another point (incl. geospatial locations in lists and maps)
+    - geoContainsPoint() to match on geospatial regions that include given
+      lng/lat coordinates (incl. geospatial regions in lists and maps)
+    - geoContains() is deprecated and has been replaced by
+      geoContainsGeoJSONPoint()
+    - geoWithin() is deprecated and has been replaced by
+      geoWithinGeoJSONRegion()
+
 v2.0.0-alpha.2 / 2016-04-12
 ===========================
 
 * **Improvements**
-  * Added support for complex secondary indexes on list and map values;
+  * Added support for creating secondary indexes on list and map values;
     requires Aerospike server version >= 3.8. [CLIENT-684]
   * Added `Aerospike.info` module with `parseInfo` utility method to parse info
     string returned by Aerospike cluster nodes using `Client#info` method.

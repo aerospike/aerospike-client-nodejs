@@ -4,9 +4,11 @@
 
 ### Deprecations
 
-| Deprecated Function      | Replacement               | Remarks                                     |
-| ------------------------ | ------------------------- | ------------------------------------------- |
-| `Client#createIndexWait` | `IndexTask#waitUntilDone` | -                                           |
+| Deprecated Function            | Replacement                                | Remarks                                     |
+| ------------------------------ | ------------------------------------------ | ------------------------------------------- |
+| `Client#createIndexWait`       | `IndexTask#waitUntilDone`                  | -                                           |
+| `Aerospike.filter.geoWithin`   | `Aerospike.filter.geoWithinGeoJSONRegion`  | -                                           |
+| `Aerospike.filter.geoContains` | `Aerospike.filter.geoContainsGeoJSONPoint` | -                                           |
 
 When creating new secondary indexes via the `Client#createIndex` method (or
 `Client#createIntegerIndex`, etc. short-hand methods), the optional info policy

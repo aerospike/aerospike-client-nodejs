@@ -1491,14 +1491,14 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
 
     obj = Nan::New<Object>();
     if ( key->ns && strlen(key->ns) > 0 ) {
-        as_v8_debug(log, "key.ns = \"%s\"", key->ns);
+        as_v8_detail(log, "key.ns = \"%s\"", key->ns);
         obj->Set(Nan::New("ns").ToLocalChecked(), Nan::New(key->ns).ToLocalChecked());
     } else {
         as_v8_debug(log, "Key namespace is NULL");
     }
 
     if ( key->set && strlen(key->set) > 0 ) {
-        as_v8_debug(log, "key.set = \"%s\"", key->set);
+        as_v8_detail(log, "key.set = \"%s\"", key->set);
         obj->Set(Nan::New("set").ToLocalChecked(), Nan::New(key->set).ToLocalChecked());
     } else {
         as_v8_debug(log, "Key set is NULL");
@@ -1510,13 +1510,13 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
         switch(type) {
             case AS_INTEGER: {
                 as_integer * ival = as_integer_fromval(val);
-                as_v8_debug(log, "key.key = %d", as_integer_get(ival));
+                as_v8_detail(log, "key.key = %d", as_integer_get(ival));
                 obj->Set(Nan::New("key").ToLocalChecked(), Nan::New((double)as_integer_get(ival)));
                 break;
             }
             case AS_STRING: {
                 as_string * sval = as_string_fromval(val);
-                as_v8_debug(log, "key.key = \"%s\"", as_string_get(sval));
+                as_v8_detail(log, "key.key = \"%s\"", as_string_get(sval));
                 obj->Set(Nan::New("key").ToLocalChecked(), Nan::New(as_string_get(sval)).ToLocalChecked());
                 break;
             }
@@ -1524,7 +1524,7 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                 as_bytes * bval = as_bytes_fromval(val);
                 if ( bval ) {
                     uint32_t size = as_bytes_size(bval);
-                    as_v8_debug(log,"key.key = \"%u\"", bval->value);
+                    as_v8_detail(log,"key.key = \"%u\"", bval->value);
                     Local<Object> buff = Nan::CopyBuffer((char*)bval->value, size).ToLocalChecked();
                     obj->Set(Nan::New("key").ToLocalChecked(), buff);
                     break;
@@ -1534,7 +1534,7 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
                 break;
         }
     } else {
-        as_v8_debug(log, "Key value is NULL");
+        as_v8_detail(log, "Key value is NULL");
     }
 
     if(key->digest.init == true) {

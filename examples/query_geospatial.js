@@ -25,6 +25,7 @@ const yargs = require('yargs')
 const status = Aerospike.status
 const filter = Aerospike.filter
 const GeoJSON = Aerospike.GeoJSON
+const Key = Aerospike.Key
 
 // *****************************************************************************
 // Options parsing
@@ -147,15 +148,10 @@ function insert_records (client, ndx, end, done) {
     return execute_query(client, done)
   }
 
-  var key = new Aerospike.Key(argv.namespace, argv.set, ndx)
-
-  var lng = -122 + (0.1 * ndx)
+  var key = new Key(argv.namespace, argv.set, ndx)
   var lat = 37.5 + (0.1 * ndx)
-
-  var loc = { type: 'Point', coordinates: [lng, lat] }
-  var bins = {
-    loc: new GeoJSON(loc)
-  }
+  var lng = -122 + (0.1 * ndx)
+  var bins = { loc: GeoJSON.Point(lng, lat) }
   client.put(key, bins, function (err, key) {
     if (err) throw err
     insert_records(client, ndx + 1, end, done)
@@ -169,9 +165,9 @@ function create_index (client, done) {
     bin: 'loc',
     index: g_index
   }
-  client.createGeo2DSphereIndex(options, function (err) {
+  client.createGeo2DSphereIndex(options, function (err, task) {
     if (err) throw err
-    client.indexCreateWait(options.ns, g_index, 100, function (err) {
+    task.waitUntilDone(100, function (err) {
       if (err) throw err
       insert_records(client, 0, g_nkeys, done)
     })
@@ -180,7 +176,7 @@ function create_index (client, done) {
 
 function remove_index (client, done) {
   client.indexRemove(argv.namespace, g_index, function (err) {
-    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
+    if (err) throw err
     done(client)
   })
 }
@@ -190,7 +186,7 @@ function remove_records (client, ndx, end, done) {
     return remove_index(client, done)
   }
 
-  var key = new Aerospike.Key(argv.namespace, argv.set, ndx)
+  var key = new Key(argv.namespace, argv.set, ndx)
 
   client.remove(key, function (err, key) {
     if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
