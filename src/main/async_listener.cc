@@ -14,6 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+extern "C" {
+	#include <aerospike/as_error.h>
+}
+
+#include <uv.h>
+
 #include "async_listener.h"
 #include "conversions.h"
 #include "log.h"
@@ -37,12 +43,22 @@ Local<Object> err_ok()
 	return scope.Escape(err);
 }
 
-// FIXME: callbacks should be invoked asynchronously
-void invoke_error_callback(as_error* error, CallbackData* data)
+void release_uv_timer(uv_handle_t* handle)
+{
+	uv_timer_t* timer = (uv_timer_t*) handle;
+	CallbackData* data = reinterpret_cast<CallbackData*>(timer->data);
+	as_error* error = (as_error*)data->data;
+	cf_free(timer);
+	cf_free(error);
+	delete data;
+}
+
+void async_error_callback(uv_timer_t* timer)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = data->client;
-	LogInfo* log = client->log;
+	CallbackData* data = reinterpret_cast<CallbackData*>(timer->data);
+	LogInfo* log = data->client->log;
+	as_error* error = (as_error*)data->data;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
@@ -57,7 +73,20 @@ void invoke_error_callback(as_error* error, CallbackData* data)
 	}
 
 	data->callback.Reset();
-	delete data;
+	uv_close((uv_handle_t*) timer, release_uv_timer);
+}
+
+void invoke_error_callback(as_error* error, CallbackData* data)
+{
+	Nan::HandleScope scope;
+	as_error* err = (as_error*) cf_malloc(sizeof(as_error));
+	as_error_setall(err, error->code, error->message, error->func,
+			error->file, error->line);
+	data->data = err;
+	uv_timer_t* timer = (uv_timer_t*) cf_malloc(sizeof(uv_timer_t));
+	uv_timer_init(uv_default_loop(), timer);
+	timer->data = data;
+	uv_timer_start(timer, async_error_callback, 0, 0);
 }
 
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
@@ -75,7 +104,7 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 	const int argc = 3;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 		argv[2] = Nan::Null();
@@ -85,7 +114,7 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 		argv[2] = recordmeta_to_jsobject(record, log);
 	}
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -112,13 +141,13 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 	const int argc = 1;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 	} else {
 		argv[0] = err_ok();
 	}
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -145,7 +174,7 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 	const int argc = 2;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 	} else {
@@ -153,7 +182,7 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 		argv[1] = val_to_jsvalue(value, log);
 	}
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -180,7 +209,7 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 	const int argc = 2;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 	} else {
@@ -189,7 +218,7 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 	}
 	as_batch_read_destroy(records);
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -218,7 +247,7 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 	bool reached_end = false;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 		argv[2] = Nan::Null();
@@ -233,7 +262,7 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 		argv[2] = Nan::Null();
 	}
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Local<Value> cb_result = Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -249,7 +278,7 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 		bool continue_scan = true;
 		if (cb_result->IsBoolean()) {
 			continue_scan = cb_result->ToBoolean()->Value();
-			as_v8_debug(log, "Async scan callback returned: %s\n", continue_scan ? "true" : "false");
+			as_v8_debug(log, "Async scan callback returned: %s", continue_scan ? "true" : "false");
 		}
 		return continue_scan;
 	}
@@ -272,7 +301,7 @@ bool async_query_record_listener(as_error* err, as_record* record, void* udata, 
 	bool reached_end = false;
 	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 		argv[2] = Nan::Null();
@@ -287,7 +316,7 @@ bool async_query_record_listener(as_error* err, as_record* record, void* udata, 
 		argv[2] = Nan::Null();
 	}
 
-	as_v8_debug(log, "Invoking JS callback function\n");
+	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Local<Value> cb_result = Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -303,7 +332,7 @@ bool async_query_record_listener(as_error* err, as_record* record, void* udata, 
 		bool continue_query = true;
 		if (cb_result->IsBoolean()) {
 			continue_query = cb_result->ToBoolean()->Value();
-			as_v8_debug(log, "Async query callback returned: %s\n", continue_query ? "true" : "false");
+			as_v8_debug(log, "Async query callback returned: %s", continue_query ? "true" : "false");
 		}
 		return continue_query;
 	}

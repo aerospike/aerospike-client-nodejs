@@ -28,6 +28,7 @@ extern "C" {
 typedef struct CallbackData {
 	AerospikeClient * client;
 	Nan::Persistent<Function> callback;
+	void* data;
 } CallbackData;
 
 Local<Object> err(int code, const char* message);
