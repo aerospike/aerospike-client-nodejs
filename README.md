@@ -38,19 +38,19 @@ are now [available here](http://www.aerospike.com/apidocs/nodejs/).
 final 2.0 release.)
 
 To give the v2 Aerospike Node.js client a try, update your `package.json`
-dependency for the `aerospike` package to version `2.0.0-alpha.1`:
+dependency for the `aerospike` package to version `2.0.0-alpha`:
 
-    "aerospike": ">2.0.0-alpha.1"
+    "aerospike": ">2.0.0-alpha"
 
 Remember to specify the full version number including the
 [prerelease](https://github.com/npm/node-semver#prerelease-tags) tag!
 
-At this point we do not recommend version 2.0.0-alpha.1 for production usage as we
-might still introduce further backward incompatible changes in future
-2.0.0-alpha releases before the final 2.0 release. But we encurage you to
-try out this new version and to let us know what you think of it by sharing
+At this point we do not recommend using the alpha version for production usage.
+Also, further backward incompatible changes might be introduced in future
+2.0.0-alpha releases before the final 2.0 release. But we encurage you to try
+out this new version and to let us know what you think of it by sharing
 feedback on the [user forum](https://discuss.aerospike.com/c/client-libraries/node-js-client)
- or by filing issues here on Github!
+or by filing issues here on Github!
 
 <a name="Usage"></a>
 ## Usage
