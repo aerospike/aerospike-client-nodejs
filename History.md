@@ -23,6 +23,7 @@ v2.0.0-alpha.3 / 2016-04-18
 * **Fixes**
   * Ensure callbacks are always called asynchronously, even for param errors
     raised by the client itself.
+  * Fix possible memory corruption parsing UDF module or function names.
 
 v2.0.0-alpha.2 / 2016-04-12
 ===========================
