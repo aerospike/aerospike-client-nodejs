@@ -16,19 +16,18 @@
 
 #include <node.h>
 #include "enums.h"
-#include <aerospike/as_scan.h>
+#include <aerospike/as_job.h>
 
 using namespace v8;
 
 #define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Local<Object> scanStatus()
+Local<Object> jobStatus()
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj = Nan::New<Object>();
-    set(obj, "UNDEF",    AS_SCAN_STATUS_UNDEF);
-    set(obj, "INPROGRESS",     AS_SCAN_STATUS_INPROGRESS);
-    set(obj, "ABORTED",  AS_SCAN_STATUS_ABORTED);
-    set(obj, "COMPLETED",    AS_SCAN_STATUS_COMPLETED);
+    set(obj, "UNDEF",    AS_JOB_STATUS_UNDEF);
+    set(obj, "INPROGRESS",     AS_JOB_STATUS_INPROGRESS);
+    set(obj, "COMPLETED",    AS_JOB_STATUS_COMPLETED);
     return scope.Escape(obj);
 }

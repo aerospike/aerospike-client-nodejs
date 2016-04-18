@@ -165,9 +165,9 @@ function create_index (client, done) {
     bin: 'loc',
     index: g_index
   }
-  client.createGeo2DSphereIndex(options, function (err, task) {
+  client.createGeo2DSphereIndex(options, function (err, job) {
     if (err) throw err
-    task.waitUntilDone(100, function (err) {
+    job.waitUntilDone(100, function (err) {
       if (err) throw err
       insert_records(client, 0, g_nkeys, done)
     })

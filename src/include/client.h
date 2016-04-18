@@ -19,7 +19,6 @@
 #include <node.h>
 #include <nan.h>
 #include "log.h"
-#include "query.h"
 
 #if NODE_MODULE_VERSION > 0x000B
 #  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
@@ -58,8 +57,9 @@ class AerospikeClient : public ObjectWrap {
 		static void Init();
 		static Local<Value> NewInstance(Local<Object> args);
 
-		aerospike *as;
-		LogInfo *log;
+		aerospike* as;
+		LogInfo* log;
+
 
 	/***************************************************************************
 	 *  PRIVATE
@@ -89,15 +89,17 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(HasPendingAsyncCommands);
 		static NAN_METHOD(Info);
 		static NAN_METHOD(IsConnected);
+		static NAN_METHOD(JobInfo);
 		static NAN_METHOD(OperateAsync);
 		static NAN_METHOD(PutAsync);
-		static NAN_METHOD(Query);
+		static NAN_METHOD(QueryApply);
+		static NAN_METHOD(QueryAsync);
+		static NAN_METHOD(QueryBackground);
 		static NAN_METHOD(Register);
 		static NAN_METHOD(RegisterWait);
 		static NAN_METHOD(RemoveAsync);
 		static NAN_METHOD(ScanBackground);
 		static NAN_METHOD(ScanAsync);
-		static NAN_METHOD(ScanInfo);
 		static NAN_METHOD(SelectAsync);
 		static NAN_METHOD(SetLogLevel);
 		static NAN_METHOD(UDFRemove);

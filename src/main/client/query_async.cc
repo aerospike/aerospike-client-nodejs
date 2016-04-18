@@ -14,44 +14,49 @@
  * limitations under the License.
  ******************************************************************************/
 
+extern "C" {
+	#include <aerospike/aerospike_query.h>
+	#include <aerospike/as_error.h>
+	#include <aerospike/as_policy.h>
+	#include <aerospike/as_query.h>
+	#include <aerospike/as_status.h>
+}
+
 #include <node.h>
 
-#include "client.h"
 #include "async_listener.h"
+#include "client.h"
 #include "conversions.h"
 #include "log.h"
+#include "query.h"
 
 using namespace v8;
 
-NAN_METHOD(AerospikeClient::RemoveAsync)
+NAN_METHOD(AerospikeClient::QueryAsync)
 {
-	TYPE_CHECK_REQ(info[0], IsObject, "key must be an object");
-	TYPE_CHECK_OPT(info[1], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[2], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "options must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "callback must be a function");
 
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
 	CallbackData* data = new CallbackData();
 	data->client = client;
-	data->callback.Reset(info[2].As<Function>());
+	data->callback.Reset(info[4].As<Function>());
 
-	as_key key;
-	bool key_initalized = false;
-	as_policy_remove policy;
-	as_policy_remove* p_policy = NULL;
+	as_query query;
+	as_policy_query policy;
+	as_policy_query* p_policy = NULL;
 	as_error err;
 	as_status status;
 
-	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(&err, data);
-		goto Cleanup;
-	}
-	key_initalized = true;
+	setup_query(&query, info[0], info[1], info[2], log);
 
-	if (info[1]->IsObject()) {
-		if (removepolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (info[3]->IsObject()) {
+		if (querypolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			invoke_error_callback(&err, data);
 			goto Cleanup;
@@ -59,12 +64,12 @@ NAN_METHOD(AerospikeClient::RemoveAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async remove command\n");
-	status = aerospike_key_remove_async(client->as, &err, p_policy, &key, async_write_listener, data, NULL, NULL);
+	as_v8_debug(log, "Sending async query command");
+	status = aerospike_query_async(client->as, &err, p_policy, &query, async_query_record_listener, data, NULL);
 	if (status != AEROSPIKE_OK) {
 		invoke_error_callback(&err, data);
 	}
 
 Cleanup:
-	if (key_initalized) as_key_destroy(&key);
+	as_query_destroy(&query);
 }

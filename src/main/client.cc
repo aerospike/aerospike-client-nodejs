@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ extern "C" {
 #include <node.h>
 #include "client.h"
 #include "conversions.h"
-#include "query.h"
 #include "log.h"
 
 /*******************************************************************************
@@ -65,17 +64,6 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 		}
 	}
 	info.GetReturnValue().Set(info.Holder());
-}
-
-
-NAN_METHOD(AerospikeClient::Query)
-{
-	Nan::HandleScope();
-	Local<Object> ns	 = info[0].As<Object>();
-	Local<Object> set	 = info[1].As<Object>();
-	Local<Object> config = info[2].As<Object>();
-	Local<Object> client = info.This();
-	info.GetReturnValue().Set(AerospikeQuery::NewInstance(ns, set, config, client));
 }
 
 /**
@@ -173,13 +161,15 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(cons, "info", Info);
 	Nan::SetPrototypeMethod(cons, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(cons, "indexRemove", IndexRemove);
+	Nan::SetPrototypeMethod(cons, "jobInfo", JobInfo);
 	Nan::SetPrototypeMethod(cons, "operateAsync", OperateAsync);
 	Nan::SetPrototypeMethod(cons, "putAsync", PutAsync);
-	Nan::SetPrototypeMethod(cons, "query", Query);
+	Nan::SetPrototypeMethod(cons, "queryApply", QueryApply);
+	Nan::SetPrototypeMethod(cons, "queryAsync", QueryAsync);
+	Nan::SetPrototypeMethod(cons, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(cons, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(cons, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(cons, "scanAsync", ScanAsync);
-	Nan::SetPrototypeMethod(cons, "scanInfo", ScanInfo);
 	Nan::SetPrototypeMethod(cons, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(cons, "udfRegister", Register);
 	Nan::SetPrototypeMethod(cons, "udfRegisterWait", RegisterWait);

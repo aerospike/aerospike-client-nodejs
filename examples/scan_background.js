@@ -24,8 +24,6 @@ const yargs = require('yargs')
 const sleep = require('sleep')
 const iteration = require('./iteration')
 
-const scanStatus = Aerospike.scanStatus
-
 // *****************************************************************************
 // Options parsing
 // *****************************************************************************
@@ -142,7 +140,7 @@ Aerospike.connect(config, function (err, client) {
 
   var checkStatus = function (scanJobStats) {
     console.log(scanJobStats)
-    if (scanJobStats.status !== scanStatus.COMPLETED) {
+    if (scanJobStats.status !== Aerospike.jobStatus.COMPLETED) {
       return false
     } else {
       return true

@@ -59,7 +59,8 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 
 	if (info[3]->IsObject()) {
 		if (scanpolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			Nan::ThrowError("Invalid policy object");
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(&err, data);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -73,7 +74,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	as_v8_debug(log, "Sending async scan command");
 	status = aerospike_scan_async(client->as, &err, p_policy, &scan, &scan_id, async_scan_listener, data, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(status, "Failed to queue async scan command", data);
+		invoke_error_callback(&err, data);
 	}
 
 Cleanup:

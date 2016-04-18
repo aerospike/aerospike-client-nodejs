@@ -48,13 +48,15 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Key object invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (operations_from_jsarray(&operations, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Operations array invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Operations array invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	operations_initalized = true;
@@ -67,7 +69,8 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 
 	if (info[3]->IsObject()) {
 		if (operatepolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			invoke_error_callback(AEROSPIKE_ERR_PARAM, "Policy object invalid", data);
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(&err, data);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -76,7 +79,7 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	as_v8_debug(log, "Sending async operate command\n");
 	status = aerospike_key_operate_async(client->as, &err, p_policy, &key, &operations, async_record_listener, data, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(status, "Failed to queue async operate command", data);
+		invoke_error_callback(&err, data);
 	}
 
 Cleanup:

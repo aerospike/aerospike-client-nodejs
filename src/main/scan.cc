@@ -44,7 +44,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	}
 	Local<Object> options = maybe_options->ToObject();
 
-	Local<Value> selected = options->Get(Nan::New("select").ToLocalChecked());
+	Local<Value> selected = options->Get(Nan::New("selected").ToLocalChecked());
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);

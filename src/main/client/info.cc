@@ -146,7 +146,7 @@ static void * prepare(ResolveArgs(info))
 
     if (maybe_request->IsString()) {
         data->req = (char*) malloc(INFO_REQUEST_LEN);
-        strcpy(data->req, *String::Utf8Value(maybe_request->ToString()));
+        strncpy(data->req, *String::Utf8Value(maybe_request->ToString()), INFO_REQUEST_LEN);
     } else if (maybe_request->IsNull() || maybe_request->IsUndefined()) {
         // request string is an optional parameter - ignore if missing
     } else {

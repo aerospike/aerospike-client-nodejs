@@ -74,7 +74,6 @@ NAN_METHOD(client)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
     AerospikeClient::Init();
-    AerospikeQuery::Init();
     exports->Set(Nan::New("register_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
     exports->Set(Nan::New("release_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
     exports->Set(Nan::New("get_cluster_count").ToLocalChecked(), Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
@@ -87,7 +86,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	exports->Set(Nan::New("language").ToLocalChecked(), languages());
     exports->Set(Nan::New("log").ToLocalChecked(),      log());
 	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());
-	exports->Set(Nan::New("scanStatus").ToLocalChecked(), scanStatus());
+	exports->Set(Nan::New("jobStatus").ToLocalChecked(), jobStatus());
 	exports->Set(Nan::New("predicates").ToLocalChecked(), predicates());
 	exports->Set(Nan::New("indexDataType").ToLocalChecked(), indexDataType());
 	exports->Set(Nan::New("indexType").ToLocalChecked(), indexType());

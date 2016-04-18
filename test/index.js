@@ -18,7 +18,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const AerospikeError = require('../lib/aerospike_error')
-const IndexTask = require('../lib/index_task')
+const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 
 context('secondary indexes', function () {
@@ -45,10 +45,10 @@ context('secondary indexes', function () {
         type: Aerospike.indexType.LIST,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      client.createIndex(options, function (err, task) {
+      client.createIndex(options, function (err, job) {
         expect(err).not.to.be.ok()
         expect(helper.index.exists(testIndex.name)).to.be(true)
-        expect(task).to.be.a(IndexTask)
+        expect(job).to.be.a(IndexJob)
         done()
       })
     })
@@ -151,8 +151,8 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('IndexTask', function () {
-    describe('IndexTask#waitUntilDone()', function () {
+  describe('IndexJob', function () {
+    describe('IndexJob#waitUntilDone()', function () {
       it('should wait until the index creation is completed', function (done) {
         var options = {
           ns: helper.namespace,
@@ -160,10 +160,10 @@ context('secondary indexes', function () {
           bin: testIndex.bin,
           index: testIndex.name
         }
-        client.createIntegerIndex(options, function (err, indexTask) {
+        client.createIntegerIndex(options, function (err, job) {
           if (err) throw err
 
-          indexTask.waitUntilDone(10, function (err) {
+          job.waitUntilDone(10, function (err) {
             expect(err).to.not.be.ok()
             done()
           })
@@ -171,18 +171,18 @@ context('secondary indexes', function () {
       })
     })
 
-    describe('IndexTask#checkStatus()', function () {
-      it('should return a boolean indicating whether the task is done or not', function (done) {
+    describe('IndexJob#checkStatus()', function () {
+      it('should return a boolean indicating whether the job is done or not', function (done) {
         var options = {
           ns: helper.namespace,
           set: helper.set,
           bin: testIndex.bin,
           index: testIndex.name
         }
-        client.createIntegerIndex(options, function (err, indexTask) {
+        client.createIntegerIndex(options, function (err, job) {
           if (err) throw err
 
-          indexTask.checkStatus(function (err, status) {
+          job.checkStatus(function (err, status) {
             expect(err).to.not.be.ok()
             expect(status).to.be.a('boolean')
             done()
@@ -191,8 +191,8 @@ context('secondary indexes', function () {
       })
 
       it('should return false if the index does not exist', function (done) {
-        var task = new IndexTask(client, helper.namespace, 'thisIndexDoesNotExist')
-        task.checkStatus(function (err, status) {
+        var job = new IndexJob(client, helper.namespace, 'thisIndexDoesNotExist')
+        job.checkStatus(function (err, status) {
           expect(err).to.not.be.ok()
           expect(status).to.be(false)
           done()
@@ -201,8 +201,8 @@ context('secondary indexes', function () {
 
       it('should return an error if one of the cluster nodes cannot be queried', function (done) {
         var client = Aerospike.client() // not connected, should return error when info command is executed
-        var task = new IndexTask(client, helper.ns, 'thisIndexDoesNotExist')
-        task.checkStatus(function (err, status) {
+        var job = new IndexJob(client, helper.ns, 'thisIndexDoesNotExist')
+        job.checkStatus(function (err, status) {
           expect(err).to.be.a(AerospikeError)
           done()
         })

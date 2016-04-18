@@ -79,8 +79,8 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
     type: indexType || Aerospike.indexType.DEFAULT,
     datatype: dataType
   }
-  var task = this.createIndex(index)
-  deasync(task.waitUntilDone).bind(task)(10)
+  var job = this.createIndex(index)
+  deasync(job.waitUntilDone).bind(job)(10)
 }
 
 IndexHelper.prototype.remove = function (indexName) {

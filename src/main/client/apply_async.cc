@@ -50,20 +50,23 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	bool udf_params_initialized = false;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Key object invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (udfargs_from_jsobject(&udf_module, &udf_function, &udf_args, info[1]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "UDF args object invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "UDF args object invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	udf_params_initialized = true;
 
 	if (info[2]->IsObject()) {
 		if (applypolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			invoke_error_callback(AEROSPIKE_ERR_PARAM, "Policy object invalid", data);
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(&err, data);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -72,7 +75,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	as_v8_debug(log, "Sending async apply command\n");
 	status = aerospike_key_apply_async(client->as, &err, p_policy, &key, udf_module, udf_function, (as_list*) udf_args, async_value_listener, data, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(status, "Failed to queue async apply command", data);
+		invoke_error_callback(&err, data);
 	}
 
 Cleanup:

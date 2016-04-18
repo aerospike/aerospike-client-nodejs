@@ -23,71 +23,58 @@ const keygen = helper.keygen
 
 describe('client.apply()', function (done) {
   var client = helper.client
+  var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
 
   before(function (done) {
-    helper.udf.register('udf_test.lua', done)
+    helper.udf.register('udf.lua')
+    client.put(key, {'foo': 'bar'}, {ttl: 1000}, done)
   })
 
   after(function (done) {
-    helper.udf.remove('udf_test.lua', done)
+    helper.udf.remove('udf.lua')
+    client.remove(key, done)
   })
 
   it('should invoke an UDF to without any args', function (done) {
-    var udfArgs = { module: 'udf_test', funcname: 'rec_create' }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
-    var key = kgen()
-
-    client.apply(key, udfArgs, function (err, res) {
-      expect(err).not.to.be.ok()
-      expect(res).to.equal(0)
-
-      client.remove(key, function (err, key) {
-        if (err) throw err
-        done()
-      })
+    var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
+    client.apply(key, udfArgs, function (error, result) {
+      if (error) throw error
+      expect(result).to.equal(1)
+      done()
     })
   })
 
   it('should invoke an UDF with arguments', function (done) {
-    var udfArgs = { module: 'udf_test', funcname: 'rec_update', args: [123, 'str'] }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
-    var key = kgen()
-
-    client.apply(key, udfArgs, function (err, res) {
-      expect(err).not.to.be.ok()
-      expect(res).to.equal(0)
-
-      client.remove(key, function (err, key) {
-        if (err) throw err
-        done()
-      })
+    var udfArgs = { module: 'udf', funcname: 'withArguments', args: [42] }
+    client.apply(key, udfArgs, function (error, result) {
+      if (error) throw error
+      expect(result).to.equal(42)
+      done()
     })
   })
 
   it('should invoke an UDF with apply policy', function (done) {
-    var udfArgs = {module: 'udf_test', funcname: 'rec_update', args: [345, 'bar']}
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
-    var key = kgen()
     var applypolicy = {timeout: 1500}
-
-    client.apply(key, udfArgs, applypolicy, function (err, res) {
-      expect(err).not.to.be.ok()
-      expect(res).to.equal(0)
-
-      client.remove(key, function (err, key) {
-        if (err) throw err
-        done()
-      })
+    var udfArgs = {module: 'udf', funcname: 'withArguments', args: [[1, 2, 3]]}
+    client.apply(key, udfArgs, applypolicy, function (error, result) {
+      if (error) throw error
+      expect(result).to.eql([1, 2, 3])
+      done()
     })
   })
 
-  it('should invoke an UDF function which does not exist - expected to fail', function (done) {
-    var udfArgs = { module: 'udf_test', funcname: 'rec_nofunc' }
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})
-    var key = kgen()
+  it('should return an error if the user-defined function does not exist', function (done) {
+    var udfArgs = { module: 'udf', funcname: 'not-such-function' }
+    client.apply(key, udfArgs, function (error, result) {
+      expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_UDF)
+      done()
+    })
+  })
 
-    client.apply(key, udfArgs, function (err, res) {
-      expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_UDF)
+  it('should return an error if the UDF arguments are invalid', function (done) {
+    var udfArgs = { module: 'udf', funcname: 'noop', args: 42 } // args should always be an array
+    client.apply(key, udfArgs, function (error, result) {
+      expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
       done()
     })
   })

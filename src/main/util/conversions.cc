@@ -454,7 +454,7 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
     return AS_NODE_PARAM_OK;
 }
 
-as_val* asval_clone( as_val* val, LogInfo* log)
+as_val* asval_clone(const as_val* val, LogInfo* log)
 {
     as_val_t t = as_val_type( (as_val*)val);
     as_val* clone_val = NULL;
@@ -512,7 +512,7 @@ as_val* asval_clone( as_val* val, LogInfo* log)
             break;
         }
         case AS_LIST: {
-            as_arraylist* list      = (as_arraylist*) as_list_fromval( val);
+            as_arraylist* list      = (as_arraylist*) as_list_fromval((as_val*)val);
             clone_val =  as_list_toval( (as_list*)as_arraylist_new(as_arraylist_size(list), list->block_size));
             as_arraylist_iterator it;
             as_arraylist_iterator_init( &it, list);
@@ -755,7 +755,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
             }
         }
         case AS_LIST : {
-            as_arraylist* listval = (as_arraylist*) as_list_fromval(val);
+            as_arraylist* listval = (as_arraylist*) as_list_fromval((as_val*)val);
             int size = as_arraylist_size(listval);
             Local<Array> jsarray = Nan::New<Array>(size);
             for ( int i = 0; i < size; i++ ) {
@@ -1545,24 +1545,24 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     return scope.Escape(obj);
 }
 
-Local<Object> scaninfo_to_jsobject( const as_scan_info * info, LogInfo * log)
+Local<Object> jobinfo_to_jsobject(const as_job_info * info, LogInfo * log)
 {
-    Local<Object> scaninfo;
+    Local<Object> jobinfo;
 
-    if(info == NULL) {
-        as_v8_debug( log, "Scan Info ( C structure) is NULL, cannot form node.js scanInfo object");
-        return scaninfo;
+    if (info == NULL) {
+        as_v8_debug(log, "Job Info ( C structure) is NULL, cannot form node.js jobInfo object");
+        return jobinfo;
     }
 
-    scaninfo = Nan::New<Object>();
-    scaninfo->Set(Nan::New("progressPct").ToLocalChecked(), Nan::New(info->progress_pct));
-    as_v8_detail(log, "Progress pct of the scan %d", info->progress_pct);
-	Local<Value> recordsScanned = Nan::New((double)info->records_scanned);
-    scaninfo->Set(Nan::New("recordsScanned").ToLocalChecked(), recordsScanned);
-    as_v8_detail(log, "Number of records scanned so far %d", info->records_scanned);
-    scaninfo->Set(Nan::New("status").ToLocalChecked(), Nan::New(info->status));
+    jobinfo = Nan::New<Object>();
+    jobinfo->Set(Nan::New("progressPct").ToLocalChecked(), Nan::New(info->progress_pct));
+    as_v8_detail(log, "Progress pct of the job %d", info->progress_pct);
+	Local<Value> recordsRead = Nan::New((double)info->records_read);
+    jobinfo->Set(Nan::New("recordsRead").ToLocalChecked(), recordsRead);
+    as_v8_detail(log, "Number of records read so far %d", info->records_read);
+    jobinfo->Set(Nan::New("status").ToLocalChecked(), Nan::New(info->status));
 
-    return scaninfo;
+    return jobinfo;
 }
 
 int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
@@ -1807,7 +1807,6 @@ int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * lo
         as_arraylist_append(*udfargs, val);
     }
     return AS_NODE_PARAM_OK;
-
 }
 
 int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo* log)
@@ -1839,67 +1838,55 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
     }
 
     // Extract UDF module name
-    if( obj->Has(Nan::New("module").ToLocalChecked())) {
+    if (obj->Has(Nan::New("module").ToLocalChecked())) {
         Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
-
-        if( module->IsString()) {
-            int size = module->ToString()->Length()+1;
-            if( *filename == NULL) {
+        if (module->IsString()) {
+            int size = module->ToString()->Length() + 1;
+            if (*filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
-            strcpy( *filename, *String::Utf8Value(module) );
+            strncpy(*filename, *String::Utf8Value(module), size);
             as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
-        }
-        else {
+        } else {
             as_v8_error(log, "UDF module name should be string");
             return AS_NODE_PARAM_ERR;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "UDF module name should be passed to execute UDF");
         return AS_NODE_PARAM_ERR;
     }
 
     // Extract UDF function name
-    if( obj->Has(Nan::New("funcname").ToLocalChecked())) {
-        Local<Value> v8_funcname = obj->Get( Nan::New("funcname").ToLocalChecked());
-        if ( v8_funcname->IsString()) {
-            if( *funcname == NULL) {
-                int size = v8_funcname->ToString()->Length();
-                *funcname = (char*) cf_malloc( sizeof(char) * size);
+    if (obj->Has(Nan::New("funcname").ToLocalChecked())) {
+        Local<Value> v8_funcname = obj->Get(Nan::New("funcname").ToLocalChecked());
+        if (v8_funcname->IsString()) {
+            int size = v8_funcname->ToString()->Length() + 1;
+            if (*funcname == NULL) {
+                *funcname = (char*) cf_malloc(sizeof(char) * size);
             }
-            strcpy( *funcname, *String::Utf8Value( v8_funcname));
-            as_v8_detail(log, "The function name in the UDF args set to %s ", *funcname);
-        }
-        else {
+            strncpy(*funcname, *String::Utf8Value(v8_funcname), size);
+            as_v8_detail(log, "The function name in the UDF args set to %s", *funcname);
+        } else {
             as_v8_error(log, "UDF function name should be string");
             return AS_NODE_PARAM_ERR;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "UDF function name should be passed to execute UDF");
         return AS_NODE_PARAM_ERR;
     }
 
-    // Is it fair to expect an array always. For a single argument UDF invocation
-    // should we relax.
-    // Extract UDF arglist as_arraylist
-    if( obj->Has( Nan::New("args").ToLocalChecked())) {
-        Local<Value> arglist = obj->Get( Nan::New("args").ToLocalChecked());
-        if ( ! arglist->IsArray()){
-            as_v8_error(log, "UDF args should be an array");
-            return AS_NODE_PARAM_ERR;
-        }
-        asarray_from_jsarray( args, Local<Array>::Cast(arglist), log);
+    Local<Value> arglist = obj->Get(Nan::New("args").ToLocalChecked());
+    if (arglist->IsArray()) {
+        asarray_from_jsarray(args, Local<Array>::Cast(arglist), log);
         as_v8_detail(log, "Parsing UDF args -- done !!!");
-        return AS_NODE_PARAM_OK;
-    }
-    else {
-        // no argument case. Initialize array with 0 elements and invoke UDF.
+    } else if (arglist->IsNull() || arglist->IsUndefined()) {
+        // No argument case: Initialize array with 0 elements.
         if (*args != NULL) {
             as_arraylist_init(*args, 0, 0);
         }
-        return AS_NODE_PARAM_OK;
+    } else {
+        as_v8_error(log, "UDF args should be an array");
+        return AS_NODE_PARAM_ERR;
     }
     return AS_NODE_PARAM_OK;
 }

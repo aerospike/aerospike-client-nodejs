@@ -17,6 +17,7 @@
 /* global expect, describe, it, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
+const Scan = require('../lib/scan')
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
@@ -25,13 +26,13 @@ const putgen = helper.putgen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
-describe('Scans', function () {
+context('Scans', function () {
   var client = helper.client
   var testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
   var numberOfRecords = 100
 
   before(function (done) {
-    helper.udf.register('scan.lua')
+    helper.udf.register('udf.lua')
     var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/scan/'})
     var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
     var mgen = metagen.constant({ ttl: 300 })
@@ -41,7 +42,7 @@ describe('Scans', function () {
   })
 
   after(function (done) {
-    helper.udf.remove('scan.lua')
+    helper.udf.remove('udf.lua')
     done()
   })
 
@@ -53,18 +54,17 @@ describe('Scans', function () {
         concurrent: true,
         select: ['a', 'b', 'c'],
         nobins: false,
-        udf: { module: 'x', funcname: 'y', args: [1, 2, 3] },
         percent: 50,
         priority: Aerospike.scanPriority.HIGH
       }
       var scan = client.scan(namespace, set, options)
 
+      expect(scan).to.be.a(Scan)
       expect(scan.ns).to.equal('test')
       expect(scan.set).to.equal('demo')
       expect(scan.concurrent).to.equal(true)
-      expect(scan.select).to.eql(['a', 'b', 'c'])
+      expect(scan.selected).to.eql(['a', 'b', 'c'])
       expect(scan.nobins).to.equal(false)
-      expect(scan.udf).to.eql({ module: 'x', funcname: 'y', args: [1, 2, 3] })
       expect(scan.percent).to.equal(50)
       expect(scan.priority).to.equal(Aerospike.scanPriority.HIGH)
     })
@@ -72,45 +72,32 @@ describe('Scans', function () {
     it('creates a scan without specifying the set', function () {
       var namespace = 'test'
       var scan = client.scan(namespace, { select: ['i'] })
+      expect(scan).to.be.a(Scan)
       expect(scan.ns).to.equal('test')
       expect(scan.set).to.be(null)
-      expect(scan.select).to.eql(['i'])
+      expect(scan.selected).to.eql(['i'])
     })
   })
 
-  describe('scan.applyEach', function () {
-    it('sets the scan\'s UDF parameters', function () {
-      var scan = client.scan('test', 'test')
-      scan.applyEach('myModule', 'myFunction', 'arg1', 'arg2')
-      expect(scan.udf).to.eql({ module: 'myModule', funcname: 'myFunction', args: ['arg1', 'arg2'] })
-    })
-
-    it('accepts the UDF arguments as an array', function () {
-      var scan = client.scan('test', 'test')
-      scan.applyEach('myModule', 'myFunction', ['arg1', 'arg2'])
-      expect(scan.udf).to.eql({ module: 'myModule', funcname: 'myFunction', args: ['arg1', 'arg2'] })
-    })
-  })
-
-  describe('scan.selectBins', function () {
+  describe('scan.select()', function () {
     it('sets the selected bins from an argument list', function () {
       var scan = client.scan('test', 'test')
-      scan.selectBins('a', 'b', 'c')
-      expect(scan.select).to.eql(['a', 'b', 'c'])
+      scan.select('a', 'b', 'c')
+      expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
 
     it('sets the selected bins from an array', function () {
       var scan = client.scan('test', 'test')
-      scan.selectBins(['a', 'b', 'c'])
-      expect(scan.select).to.eql(['a', 'b', 'c'])
+      scan.select(['a', 'b', 'c'])
+      expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
   })
 
-  describe('scan.execute()', function () {
+  describe('scan.foreach()', function () {
     it('retrieves all records in the set', function (done) {
       var scan = client.scan(helper.namespace, testSet)
       var recordsReceived = 0
-      var stream = scan.execute()
+      var stream = scan.foreach()
       stream.on('error', function (error) { throw error })
       stream.on('data', function (record) { recordsReceived++ })
       stream.on('end', function () {
@@ -124,7 +111,7 @@ describe('Scans', function () {
         var scan = client.scan(helper.namespace, testSet)
         scan.nobins = true
         var received = null
-        var stream = scan.execute()
+        var stream = scan.foreach()
         stream.on('error', function (error) { throw error })
         stream.on('data', function (bins, meta) {
           received = {bins: bins, meta: meta}
@@ -141,9 +128,9 @@ describe('Scans', function () {
     context('with bin selection', function () {
       it('should return only selected bins', function (done) {
         var scan = client.scan(helper.namespace, testSet)
-        scan.selectBins('i')
+        scan.select('i')
         var received = null
-        var stream = scan.execute()
+        var stream = scan.foreach()
         stream.on('error', function (error) { throw error })
         stream.on('data', function (bins, meta) {
           received = {bins: bins, meta: meta}
@@ -164,7 +151,7 @@ describe('Scans', function () {
           nobins: true
         })
         var recordsReceived = 0
-        var stream = scan.execute()
+        var stream = scan.foreach()
         stream.on('error', function (error) { throw error })
         stream.on('data', function () {
           recordsReceived++
@@ -181,7 +168,7 @@ describe('Scans', function () {
       it('executes a scan without set', function (done) {
         var scan = client.scan(helper.namespace)
         var recordsReceived = 0
-        var stream = scan.execute()
+        var stream = scan.foreach()
         stream.on('error', function (error) { throw error })
         stream.on('data', function () {
           recordsReceived++
@@ -196,7 +183,7 @@ describe('Scans', function () {
 
     it('should stop the scan when false is returned from the data handler', function (done) {
       var scan = client.scan(helper.namespace, testSet)
-      var stream = scan.execute()
+      var stream = scan.foreach()
       var recordsReceived = 0
       stream.on('error', function (error) { throw error })
       stream.on('data', function (record) {
@@ -216,31 +203,30 @@ describe('Scans', function () {
     it('applies a UDF to every record', function (done) {
       var token = valgen.string({length: {min: 10, max: 10}})()
       var backgroundScan = client.scan(helper.namespace, testSet)
-      backgroundScan.applyEach('scan', 'createBin', 'x', token)
-      backgroundScan.background(function (err, task) {
+      backgroundScan.background('udf', 'updateRecord', ['x', token], function (err, job) {
         if (err) throw err
-        task.waitUntilDone(10, function (err) {
+        job.waitUntilDone(10, function (err) {
           if (err) throw err
           var validationScan = client.scan(helper.namespace, testSet)
-          var stream = validationScan.execute()
+          var stream = validationScan.foreach()
           stream.on('error', function (error) { throw error })
-          stream.on('data', function (record) { expect(record['x']).to.be(token) })
+          stream.on('data', function (record) { expect(record['x']).to.equal(token) })
           stream.on('end', done)
         })
       })
     })
   })
 
-  describe('scanTask.info()', function () {
+  describe('job.info()', function () {
     it('returns the scan status and progress', function (done) {
       var scan = client.scan(helper.namespace, testSet, {percent: 10})
-      scan.background(function (error, scanTask) {
+      scan.background('udf', 'noop', function (error, job) {
         if (error) throw error
-        scanTask.info(function (error, scanInfo) {
+        job.info(function (error, info) {
           if (error) throw error
-          expect(scanInfo.status).to.be.within(Aerospike.scanStatus.INPROGRESS, Aerospike.scanStatus.COMPLETED)
-          expect(scanInfo.recordsScanned).to.be.within(0, numberOfRecords)
-          expect(scanInfo.progressPct).to.be.within(0, 100)
+          expect(info.status).to.be.within(Aerospike.jobStatus.INPROGRESS, Aerospike.jobStatus.COMPLETED)
+          expect(info.recordsRead).to.be.within(0, numberOfRecords)
+          expect(info.progressPct).to.be.within(0, 100)
           done()
         })
       })

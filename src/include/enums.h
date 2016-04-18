@@ -48,5 +48,5 @@ Local<Object> indexDataType();
 
 Local<Object> indexType();
 
-Local<Object> scanStatus();
+Local<Object> jobStatus();
 

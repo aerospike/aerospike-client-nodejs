@@ -17,10 +17,12 @@
 /* global expect, describe, it, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
+const Query = require('../lib/query')
+const Job = require('../lib/job')
 const helper = require('./test_helper')
 
-const GeoJSON = Aerospike.GeoJSON
 const filter = Aerospike.filter
+const GeoJSON = Aerospike.GeoJSON
 
 const NUMERIC = Aerospike.indexDataType.NUMERIC
 const STRING = Aerospike.indexDataType.STRING
@@ -33,7 +35,7 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const putgen = helper.putgen
 
-describe('client.query()', function () {
+describe('Queries', function () {
   const client = helper.client
 
   const testSet = 'test/query-' + Math.floor(Math.random() * 100000)
@@ -86,10 +88,10 @@ describe('client.query()', function () {
   function verifyQueryResults (queryOptions, matchName, done) {
     var query = client.query(helper.namespace, testSet, queryOptions)
     var matches = 0
-    var stream = query.execute()
+    var stream = query.foreach()
     stream.on('error', function (error) { throw error })
-    stream.on('data', function (rec) {
-      expect(rec.bins).to.have.property('name', matchName)
+    stream.on('data', function (record) {
+      expect(record).to.have.property('name', matchName)
       matches++
     })
     stream.on('end', function () {
@@ -106,8 +108,7 @@ describe('client.query()', function () {
     var mgen = metagen.constant({ ttl: 300 })
     putgen.put(numberOfSamples, kgen, sampleGen, mgen, function (key, record) {
       if (!key) {
-        helper.udf.register('aggregate.lua')
-        helper.udf.register('scan.lua')
+        helper.udf.register('udf.lua')
         indexes.forEach(function (idx) {
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])
         })
@@ -117,15 +118,64 @@ describe('client.query()', function () {
   })
 
   after(function (done) {
-    helper.udf.remove('aggregate.lua')
-    helper.udf.remove('scan.lua')
+    helper.udf.remove('udf.lua')
     indexes.forEach(function (idx) {
       helper.index.remove(idx[0])
     })
     done()
   })
 
-  context('with filter predicate (query)', function () {
+  describe('client.query()', function () {
+    it('creates a new Query instance and sets up it\'s properties', function () {
+      var namespace = 'test'
+      var set = 'demo'
+      var options = {
+        select: ['a', 'b', 'c'],
+        filters: [Aerospike.filter.equal('a', 9)]
+      }
+      var query = client.query(namespace, set, options)
+
+      expect(query).to.be.a(Query)
+      expect(query.ns).to.equal('test')
+      expect(query.set).to.equal('demo')
+      expect(query.selected).to.eql(['a', 'b', 'c'])
+      expect(query.filters).to.be.an(Array)
+      expect(query.filters.length).to.equal(1)
+    })
+
+    it('creates a query without specifying the set', function () {
+      var namespace = 'test'
+      var query = client.query(namespace, { select: ['i'] })
+      expect(query).to.be.a(Query)
+      expect(query.ns).to.equal('test')
+      expect(query.set).to.be(null)
+      expect(query.selected).to.eql(['i'])
+    })
+  })
+
+  describe('query.select()', function () {
+    it('sets the selected bins from an argument list', function () {
+      var query = client.query('test', 'test')
+      query.select('a', 'b', 'c')
+      expect(query.selected).to.eql(['a', 'b', 'c'])
+    })
+
+    it('sets the selected bins from an array', function () {
+      var query = client.query('test', 'test')
+      query.select(['a', 'b', 'c'])
+      expect(query.selected).to.eql(['a', 'b', 'c'])
+    })
+  })
+
+  describe('query.where()', function () {
+    it('adds a filter predicate to the query', function () {
+      var query = client.query('test', 'test')
+      query.where(Aerospike.filter.equal('a', 9))
+      expect(query.filters.length).to.equal(1)
+    })
+  })
+
+  context('filter predicates', function () {
     describe('filter.equal()', function () {
       it('should match equal integer values', function (done) {
         var args = { filters: [filter.equal('i', 5)] }
@@ -255,95 +305,42 @@ describe('client.query()', function () {
         verifyQueryResults(args, 'region map match', done)
       })
     })
+  })
 
-    context('with UDF aggregation', function () {
-      it('should query on an index and apply aggregation user defined function', function (done) {
-        var args = {
-          filters: [filter.equal('name', 'aggregate')],
-          aggregationUDF: {module: 'aggregate', funcname: 'sum_test_bin'}
-        }
-        var query = client.query(helper.namespace, testSet, args)
-
-        var count = 0
-        var stream = query.execute()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function (result) {
-          expect(result).to.equal(60)
-          count++
-        })
-        stream.on('end', function () {
-          expect(count).to.equal(1)
-          done()
-        })
+  describe('query.apply()', function () {
+    it('should apply a user defined function and aggregate the results', function (done) {
+      var args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      var query = client.query(helper.namespace, testSet, args)
+      query.apply('udf', 'count', function (error, result) {
+        if (error) throw error
+        expect(result).to.equal(3)
+        done()
       })
     })
   })
 
-  context('without filter predicate (legacy scan interface)', function () {
-    it('should scan all the records', function (done) {
-      var query = client.query(helper.namespace, testSet)
-
-      var count = 0
-      var stream = query.execute()
-      stream.on('error', function (error) { throw error })
-      stream.on('data', function (rec) {
-        count++
-      })
-      stream.on('end', function (end) {
-        expect(count).to.equal(numberOfSamples)
+  describe('query.background()', function () {
+    it('should run a background query and return a job', function (done) {
+      var args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      var query = client.query(helper.namespace, testSet, args)
+      query.background('udf', 'noop', function (error, job) {
+        if (error) throw error
+        expect(job).to.be.a(Job)
         done()
       })
     })
+  })
 
-    context('with nobins set to true', function () {
-      it('should return only meta data', function (done) {
-        var args = {nobins: true}
-        var query = client.query(helper.namespace, testSet, args)
-
-        var stream = query.execute()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function (rec) {
-          expect(rec.bins).to.be.empty()
-        })
-        stream.on('end', function () {
-          done()
-        })
-      })
-    })
-
-    context('with bin selection', function () {
-      it('should return only selected bins', function (done) {
-        var args = {select: ['name']}
-        var query = client.query(helper.namespace, testSet, args)
-
-        var stream = query.execute()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function (rec) {
-          expect(rec.bins).to.only.have.keys('name')
-        })
-        stream.on('end', function () {
-          done()
-        })
-      })
-    })
-
-    context('background scans', function () {
-      it('should do a scan background and check for the status of scan job ', function (done) {
-        var args = {UDF: {module: 'scan', funcname: 'createBin', args: ['x', 'x']}}
-        var backgroundScan = client.query(helper.namespace, testSet, args)
-
-        var stream = backgroundScan.execute()
-        stream.on('error', function (error) { throw error })
-        stream.on('end', function (scanId) {
-          var interval = setInterval(function () {
-            backgroundScan.info(scanId, function (scanJobStats) {
-              if (scanJobStats.status === Aerospike.scanStatus.COMPLETED) {
-                clearInterval(interval)
-                done()
-              }
-            })
-          }, 100)
-        })
+  context('legacy scan interface', function () {
+    ;['UDF', 'concurrent', 'percentage', 'nobins', 'priority'].forEach(function (key) {
+      it('should throw an exception if the query options contain key "' + key + '"', function () {
+        var args = {}
+        args[key] = 'foo'
+        expect(client.query.bind(client)).withArgs(helper.namespace, testSet, args).to.throwException()
       })
     })
   })

@@ -47,19 +47,22 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Key object invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (bins_from_jsarray(&bins, &num_bins, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Bins array invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins array invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
 		if (readpolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			invoke_error_callback(AEROSPIKE_ERR_PARAM, "Policy object invalid", data);
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(&err, data);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -68,7 +71,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	as_v8_debug(log, "Sending async select command\n");
 	status = aerospike_key_select_async(client->as, &err, p_policy, &key, (const char**)bins, async_record_listener, data, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(status, "Failed to queue async select command", data);
+		invoke_error_callback(&err, data);
 	}
 
 Cleanup:

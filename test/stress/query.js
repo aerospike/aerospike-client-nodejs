@@ -20,11 +20,11 @@ const Aerospike = require('../../lib/aerospike')
 const helper = require('../test_helper')
 const perfdata = require('./perfdata')
 
-describe('client.scan()', function () {
+describe('client.query()', function () {
   this.enableTimeouts(false)
   var client = helper.client
-  var testSet = 'test/scanperf'
-  var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'scanPerfData')
+  var testSet = 'test/queryperf'
+  var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'queryPerfData')
   var numberOfRecords = 1e6 // 1 Mio. records at 1kb ≈ 1 GB total data size
 
   before(function (done) {
@@ -38,7 +38,25 @@ describe('client.scan()', function () {
         perfdata.generate(helper.namespace, testSet, numberOfRecords, function (recordsGenerated) {
           console.timeEnd('generating performance test data')
           numberOfRecords = recordsGenerated // might be slightly less due to duplciate keys
-          client.put(idxKey, {norec: numberOfRecords, set: testSet}, done)
+          var index = {
+            ns: helper.namespace,
+            set: testSet,
+            bin: 'id',
+            index: 'queryPerfIndex',
+            datatype: Aerospike.indexDataType.NUMERIC
+          }
+          console.info('generating secondary index on performance data')
+          console.time('creating secondary index')
+          client.createIndex(index, function (err, job) {
+            if (err) throw err
+            setTimeout(function () {
+              job.waitUntilDone(function () {
+                console.timeEnd('creating secondary index')
+                job.info(function (err, info) { if (!err) console.info(info) })
+                client.put(idxKey, {norec: numberOfRecords, set: testSet}, done)
+              })
+            }, 5000)
+          })
         })
       } else {
         // perf test data already exists
@@ -50,18 +68,17 @@ describe('client.scan()', function () {
     })
   })
 
-  // run scan test both with and without busy loop in data handler
+  // run query test both with and without busy loop in data handler
   ;[false, true].forEach(function (busyLoop) {
-    it('scan a million records - ' + (busyLoop ? 'with' : 'without') + ' busy loop', function (done) {
-      var scan = client.scan(helper.namespace, testSet)
-      scan.priority = Aerospike.scanPriority.HIGH
-      scan.concurrent = true
-      var stream = scan.foreach()
+    it('query a million records - ' + (busyLoop ? 'with' : 'without') + ' busy loop', function (done) {
+      var query = client.query(helper.namespace, testSet)
+      query.where(Aerospike.filter.range('id', 0, numberOfRecords))
+      var stream = query.foreach()
       var received = 0
 
       var timer = perfdata.interval(2000, function (ms) {
         var throughput = Math.round(1000 * received / ms)
-        console.log('%d ms: %d records scanned (%d records / second)', ms, received, throughput)
+        console.log('%d ms: %d records received (%d records / second)', ms, received, throughput)
       })
 
       stream.on('error', function (err) { throw err })

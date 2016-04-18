@@ -37,16 +37,18 @@ Local<Object> err_ok()
 	return scope.Escape(err);
 }
 
-void invoke_error_callback(int code, const char* message, CallbackData* data)
+// FIXME: callbacks should be invoked asynchronously
+void invoke_error_callback(as_error* error, CallbackData* data)
 {
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	Nan::HandleScope scope;
+	AerospikeClient* client = data->client;
+	LogInfo* log = client->log;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
-	argv[0] = err(code, message);
+	argv[0] = error_to_jsobject(error, log);
 
-	as_v8_debug(log, "Invoking JS error callback function: %d %s\n", code, message);
+	as_v8_debug(log, "Invoking JS error callback function: %d %s", error->code, error->message);
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
@@ -250,5 +252,59 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 			as_v8_debug(log, "Async scan callback returned: %s\n", continue_scan ? "true" : "false");
 		}
 		return continue_scan;
+	}
+}
+
+bool async_query_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
+{
+	Nan::HandleScope scope;
+
+	CallbackData * data = reinterpret_cast<CallbackData *>(udata);
+	if (!data) {
+		Nan::ThrowError("Missing callback data - cannot process record callback");
+		return false;
+	}
+
+	AerospikeClient * client = data->client;
+	LogInfo * log = client->log;
+
+	const int argc = 3;
+	bool reached_end = false;
+	Local<Value> argv[argc];
+	if (err) {
+		as_v8_debug(log, "Command failed: %d %s\n", err->code, err->message);
+		argv[0] = error_to_jsobject(err, log);
+		argv[1] = Nan::Null();
+		argv[2] = Nan::Null();
+	} else if (record) {
+		argv[0] = err_ok();
+		argv[1] = recordbins_to_jsobject(record, log);
+		argv[2] = recordmeta_to_jsobject(record, log);
+	} else {
+		reached_end = true;
+		argv[0] = err_ok();
+		argv[1] = Nan::Null();
+		argv[2] = Nan::Null();
+	}
+
+	as_v8_debug(log, "Invoking JS callback function\n");
+	Nan::TryCatch try_catch;
+	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Value> cb_result = Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+	if (try_catch.HasCaught()) {
+		Nan::FatalException(try_catch);
+	}
+
+	if (reached_end) {
+		data->callback.Reset();
+		delete data;
+		return false;
+	} else {
+		bool continue_query = true;
+		if (cb_result->IsBoolean()) {
+			continue_query = cb_result->ToBoolean()->Value();
+			as_v8_debug(log, "Async query callback returned: %s\n", continue_query ? "true" : "false");
+		}
+		return continue_query;
 	}
 }

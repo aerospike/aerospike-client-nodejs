@@ -25,6 +25,7 @@ extern "C" {
 	#include <aerospike/aerospike_key.h>
 	#include <aerospike/aerospike_batch.h>
 	#include <aerospike/as_config.h>
+	#include <aerospike/as_job.h>
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_record.h>
 	#include <aerospike/as_scan.h>
@@ -73,8 +74,7 @@ Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
 Local<Array> batch_records_to_jsarray(const as_batch_read_records* record, LogInfo* log );
 Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
-Local<Object> scaninfo_to_jsobject(const as_scan_info * info, LogInfo * log );
-
+Local<Object> jobinfo_to_jsobject(const as_job_info* info, LogInfo* log);
 
 // Functions to convert v8 objects(maps) to C client structures
 int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log );
@@ -93,7 +93,7 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 //clone functions for record and key
 bool record_clone(const as_record * src, as_record ** dest, LogInfo * log );
 bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key = true );
-as_val* asval_clone( as_val* val, LogInfo * log);
+as_val* asval_clone(const as_val* val, LogInfo * log);
 
 // Functions to convert v8 policies to C structures
 int writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj, LogInfo * log );

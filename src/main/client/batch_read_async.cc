@@ -44,14 +44,16 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	as_status status;
 
 	if (batch_read_records_from_jsarray(&records, Local<Array>::Cast(info[0]), log) != AS_NODE_PARAM_OK) {
-		invoke_error_callback(AEROSPIKE_ERR_PARAM, "Records array invalid", data);
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Records array invalid");
+		invoke_error_callback(&err, data);
 		goto Cleanup;
 	}
 	destroy_batch = true;
 
 	if (info[1]->IsObject()) {
 		if (batchpolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			invoke_error_callback(AEROSPIKE_ERR_PARAM, "Policy object invalid", data);
+			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(&err, data);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -62,7 +64,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	if (status == AEROSPIKE_OK) {
 		destroy_batch = false;
 	} else {
-		invoke_error_callback(status, "Failed to queue async batch read command", data);
+		invoke_error_callback(&err, data);
 	}
 
 Cleanup:
