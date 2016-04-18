@@ -1,4 +1,4 @@
-Head
+v2.0.0-alpha.3 / 2016-04-18
 ===========================
 
 * **Improvements**
@@ -12,6 +12,17 @@ Head
       geoContainsGeoJSONPoint()
     - geoWithin() is deprecated and has been replaced by
       geoWithinGeoJSONRegion()
+  * New async. implementation for Query#foreach (renamed from Query#execute).
+  * Added support for background queries with Record UDF via Query#background.
+  * Support aborting background queries via RecordStream#abort.
+  * Consolidated ScanTask, IndexTask into new Job class with support for
+    querying background queries as well.
+  * Combined Scan#applyEach and Scan#background to reduce chance of mis-use.
+    (Record UDF can only be applied on background scan.)
+
+* **Fixes**
+  * Ensure callbacks are always called asynchronously, even for param errors
+    raised by the client itself.
 
 v2.0.0-alpha.2 / 2016-04-12
 ===========================

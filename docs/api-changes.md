@@ -1,5 +1,201 @@
 # Backward Incompatible API Changes
 
+## Version 2.0.0-alpha.3
+
+### New Query Interface
+
+The Client API for executing Queries was revised in this release and has several backward incompatible changes.
+
+#### Processing Query Results
+
+Prior to v2.0.0-alpha.3 the `data` event on the `RecordStream` interface would
+pass a single record object to the event handler function, with two properties
+`bins` and `meta` containing the bin values and the meta data for the
+record respectively. Starting with v2.0.0-alpha.3, the `data` event instead
+pass the bin values and the meta data as two separate parameters into the event
+handler. (Same as the Scan interface introduced in v2.0.0-alpha.2.)
+
+*Before:*
+
+    # broken code - do not use in v2 client
+    var statement = {
+      'filters': [...]
+    }
+    var query = client.query('ns', 'set', statement)
+    var stream = query.execute()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('data', function (record) {
+      console.log(record.bins)
+      console.log(record.meta)
+    })
+    stream.on('end', function () {
+      // query completed
+    })
+
+*After:*
+
+    var statement = {
+      'filters': [...]
+    }
+    var query = client.query('ns', 'set', statement)
+    var stream = query.foreach()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('data', function (bins, meta) {
+      console.log(bins)
+      console.log(meta)
+    })
+    stream.on('end', function () {
+      // query completed
+    })
+
+#### Separation of Query and Scan APIs
+
+In Aerospike Node.js client v1.x, both queries (with filter predicates) and
+scans (without filter predicates) where handled via the `Client#query` command
+and the `Query#execute` method. In v2.0.0-alpha.2, the new Scan API was
+introduced, and scan operations should now be initiated via `Client#scan`.
+Starting with v2.0.0-alpha.3, the Query API will no longer accept any of the
+properties specific to scans in the query statment when calling `Client#query`.
+Including any of the following five keys will result in an exception being
+raised by the client:
+
+- `UDF`
+- `concurrent`
+- `percentage`
+- `nobins`
+- `priority`
+
+The `concurrent`, `percentage`, `nobins` and `priority` values should be set
+via the Scan API instead and the Lua UDF parameters for applying a Aerospike
+Record UDF on a background scan should be passed directly to `Scan#background`.
+
+*Before: Executing Background Scan*
+
+    # broken code - do not use in v2 client
+    var statement = {
+      'UDF': {
+        module: 'myLuaModule',
+        funcname: 'myLuaFunction',
+        args: ['some', 'function', 'arguments']
+      }
+    }
+    var query = client.query('ns', 'set', statement)
+    var stream = query.execute()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('end', function (scanID) {
+      // retrieve scanID, which can be used to check scan job status
+    })
+
+*After: Executing Background Scan*
+
+    var udfArgs = ['some', 'function', 'arguments']
+    var scan = client.scan('ns', 'set')
+    scan.background('myLuaModule', 'myLuaFunction', udfArgs, function (error, scanJob) {
+      if (error) {
+        // handle error
+      } else {
+        // use scanJob.info() and/or scanJob.waitUntilDone() to check scan job status
+      }
+    })
+
+
+*Before: Setting Scan Priority, Concurrent Execution, etc.*
+
+    # broken code - do not use in v2 client
+    var statement = {
+      concurrent: true,
+      priority: Aerospike.scanPriority.HIGH,
+      nobins: true,
+      percentage: 50
+    }
+    var query = client.query('ns', 'set', statement)
+    var stream = query.execute()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('data', function (record) {
+      // process scan results
+    })
+    stream.on('end', function () {
+      // scan completed
+    })
+
+*After: Setting Scan Priority, Concurrent Execution, etc.*
+
+    var scan = client.scan('ns', 'test')
+    scan.concurrent = true
+    scan.priority = Aerospike.scanPriority.HIGH
+    scan.nobins = true
+    scan.percentage = 50
+    var stream = scan.foreach()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('data', function (bins, meta) {
+      // process scan results
+    })
+    stream.on('end', function () {
+      // scan completed
+    })
+
+
+#### Query Aggregation using Stream UDFs
+
+Applying a Lua user-defined function (UDF) as an Aerospike Stream UDF for query
+aggregation is now done via the new `Query#apply` function, rather than by
+passing the `aggregationUDF` parameter in the query statement and calling
+`Query#execute`. `Query#apply` returns the aggregation result via asynchronous
+callback so it is no longer necessary to extract the single result value from a
+record stream.
+
+*Before:*
+
+    # broken code - do not use in v2 client
+    var statement = {
+      aggregationUDF: {
+        module: 'myLuaModule',
+        funcname: 'myLuaFunction',
+        args: ['some', 'function', 'arguments']
+      }
+    }
+    var query = client.query('ns', 'set', statement)
+    var stream = query.execute()
+    stream.on('error', function (error) {
+      // handle error
+    })
+    stream.on('data', function (result) {
+      // handle result
+    })
+
+*After:*
+
+    var query = client.query('ns', 'set')
+    var udfArgs = ['some', 'function', 'arguments']
+    query.apply('myLuaModule', 'myLuaFunction', udfArgs, function (error, result) {
+      if (error) {
+        // handle error
+      } else {
+        // handle result
+      }
+    })
+
+*Note:* `Client#query` will now throw an exception if the query statement includes an `aggregationUDF` property.
+
+### Deprecations
+
+| Deprecated Function            | Replacement                                | Remarks                                     |
+| ------------------------------ | ------------------------------------------ | ------------------------------------------- |
+| `Aerospike#scanStatus`         | `Aerospike#jobStatus`                      | -                                           |
+| `Query#execute`                | `Query#foreach`                            | -                                           |
+| `Scan#execute`                 | `Scan#foreach`                             | Scan class was introduced in 2.0.0-alpha.2  |
+| `Scan#selectBins`              | `Scan#select`                              | Scan class was introduced in 2.0.0-alpha.2  |
+
 ## Version 2.0.0-alpha.2
 
 ### Deprecations
