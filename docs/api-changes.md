@@ -1,5 +1,9 @@
 # Backward Incompatible API Changes
 
+## Version 2.0.0
+
+None. But see 2.0.0-alpha.1 through 2.0.0-alpha.3 for list of backward incompatible changes since v1.x.
+
 ## Version 2.0.0-alpha.3
 
 ### New Query Interface
