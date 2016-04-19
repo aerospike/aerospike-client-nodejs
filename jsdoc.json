@@ -21,6 +21,6 @@
   "opts": {
     "destination": "./build/apidocs",
     "template": "./node_modules/ink-docstrap/template",
-    "readme": "README.md"
+    "readme": "./docs/overview.md"
   }
 }
