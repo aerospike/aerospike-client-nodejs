@@ -48,6 +48,10 @@ for Aerospike database clusters.
 
 All modules and classes can also be accessed directly through the drop-down menu at the top of each page.
 
+## Tutorials
+
+* {@tutorial getting_started}
+
 ## Further Documentation
 
 For a detailed technical documentation of the Aerospike distributed, NoSQL
