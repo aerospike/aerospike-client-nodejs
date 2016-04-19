@@ -1,15 +1,12 @@
 {
   "name": "aerospike",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0",
   "description": "Aerospike Client Library",
   "tags": [
     "aerospike",
     "database",
     "nosql"
   ],
-  "publishConfig": {
-    "tag": "alpha"
-  },
   "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
   "license": "Apache-2.0",
   "main": "lib/aerospike",

@@ -1,3 +1,11 @@
+v2.0.0 / 2016-04-18
+===================
+
+* **Documentation**
+  * Added overview page for API docs
+  * Added "Getting Started" tutorial to API docs
+  * Updated documentation for aerospike module
+
 v2.0.0-alpha.3 / 2016-04-18
 ===========================
 

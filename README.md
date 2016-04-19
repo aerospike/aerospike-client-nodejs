@@ -23,35 +23,6 @@ CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and
 - [Benchmarks](#Benchmarks)
 - [API Documentaion](#API-Documentation)
 
-<a name="v2_announcement"></a>
-## Version 2.0 Pre-Release
-
-Version 2.0 of the Aerospike Node.js client is now available as an alpha
-release for early adopters. A list of the major new features/changes can be
-found in the [announcement](https://discuss.aerospike.com/t/a-change-is-gonna-come-early-adopter-release-for-aerospike-node-js-client-v2-0/2751)
-on our user forum or in the detailed [changelog](https://github.com/aerospike/aerospike-client-nodejs/blob/master/History.md).
-The new release contains some backward incompatible API changes which are
-listed in the [documentation](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md).
-The v2 client API is documented extensivly using JSDoc tags and the API docs
-are now [available here](http://www.aerospike.com/apidocs/nodejs/).
-(Note that this is work in progress; the API docs will be completed before the
-final 2.0 release.)
-
-To give the v2 Aerospike Node.js client a try, update your `package.json`
-dependency for the `aerospike` package to version `2.0.0-alpha`:
-
-    "aerospike": ">2.0.0-alpha"
-
-Remember to specify the full version number including the
-[prerelease](https://github.com/npm/node-semver#prerelease-tags) tag!
-
-At this point we do not recommend using the alpha version for production usage.
-Also, further backward incompatible changes might be introduced in future
-2.0.0-alpha releases before the final 2.0 release. But we encurage you to try
-out this new version and to let us know what you think of it by sharing
-feedback on the [user forum](https://discuss.aerospike.com/c/client-libraries/node-js-client)
-or by filing issues here on Github!
-
 <a name="Usage"></a>
 ## Usage
 
@@ -118,10 +89,10 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-The aerospike package supports Node.js v0.10.x,
-v0.12.x, v4.2.x (LTS) and v5.x as well as io.js. To download and install the
-latest stable version of Node.js, visit [nodejs.org](http://nodejs.org/) or use
-the version that comes bundled with your operating system.
+The aerospike package supports Node.js v0.12.x, v4.2.x (LTS) and v5.x as well
+as io.js. To download and install the latest stable version of Node.js, visit
+[nodejs.org](http://nodejs.org/) or use the version that comes bundled with
+your operating system.
 
 The Aerospike package includes a native addon. `gcc`/`g++` v4.8 or newer or
 `clang`/`clang++` v3.4 or newer are required to build the addon with Node.js
@@ -428,7 +399,8 @@ See the [`benchmarks/README.md`](benchmarks/README.md) for details.
 <a name="API-Documentation"></a>
 ## API Documentation
 
-API documentation is provided in the [`docs`](docs/README.md) directory.
+API documentation is generated from the JS source code using JSDocs v3 and is
+hosted at [http://www.aerospike.com/apidocs/nodejs](http://www.aerospike.com/apidocs/nodejs).
 
 <a name="Versioning"></a>
 ## API Versioning
