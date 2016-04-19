@@ -111,16 +111,10 @@ var g_index = 'points-loc-index'
 
 function execute_query (client, done) {
   var count = 0
-  var region = {
-    type: 'Polygon',
-    coordinates: [
-      [[-122.500000, 37.000000], [-121.000000, 37.000000],
-        [-121.000000, 38.080000], [-122.500000, 38.080000],
-        [-122.500000, 37.000000]]
-    ]
-  }
+  var region = GeoJSON.Polygon([-122.500000, 37.000000], [-121.000000, 37.000000],
+        [-121.000000, 38.080000], [-122.500000, 38.080000], [-122.500000, 37.000000])
 
-  var options = { filters: [filter.geoWithin('loc', new GeoJSON(region))] }
+  var options = { filters: [filter.geoWithin('loc', region)] }
 
   var q = client.query(argv.namespace, argv.set, options)
 
