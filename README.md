@@ -1,8 +1,11 @@
-[![Build Status](https://travis-ci.org/aerospike/aerospike-client-nodejs.svg?branch=master)](https://travis-ci.org/aerospike/aerospike-client-nodejs)
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
-[![npm](https://img.shields.io/npm/v/aerospike.svg)](https://www.npmjs.com/package/aerospike)
+# Aerospike Node.js Client [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
 
-# Aerospike Node.js Client
+[travis-image]: https://travis-ci.org/aerospike/aerospike-client-nodejs.svg?branch=master
+[travis-url]: https://travis-ci.org/aerospike/aerospike-client-nodejs
+[npm-image]: https://img.shields.io/npm/v/aerospike.svg
+[npm-url]: https://www.npmjs.com/package/aerospike
+[downloads-image]: https://img.shields.io/npm/dm/aerospike.svg
+[downloads-url]: http://npm-stat.com/charts.html?package=aerospike
 
 An Aerospike add-on module for Node.js.
 
