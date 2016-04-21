@@ -33,7 +33,9 @@ The following is very simple example of how to write and read a record from Aero
 
 ```js
 const Aerospike = require('aerospike')
-const op = Aerospike.operator
+const op = Aerospike.operations
+const lists = Aerospike.lists
+const maps = Aerospike.maps
 const Key = Aerospike.Key
 const Double = Aerospike.Double
 const GeoJSON = Aerospike.GeoJSON
@@ -51,7 +53,8 @@ Aerospike.connect(config, (error, client) => {
     b: new Buffer('world'),
     d: new Double(3.1415),
     g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
-    c: [1, 'a', {x: 'y'}]
+    l: [1, 'a', {x: 'y'}],
+    m: {foo: 4, bar: 7}
   }
   var meta = { ttl: 10000 }
   var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
@@ -61,8 +64,9 @@ Aerospike.connect(config, (error, client) => {
 
     var ops = [
       op.incr('i', 1),
-      op.listAppend('c', 'z'),
-      op.read('i')
+      op.read('i'),
+      lists.append('l', 'z'),
+      maps.removeByKey('m', 'bar')
     ]
 
     client.operate(key, ops, (error, result) => {
@@ -76,7 +80,8 @@ Aerospike.connect(config, (error, client) => {
                             //      b: <Buffer 77 6f 72 6c 64>,
                             //      d: 3.1415,
                             //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
-                            //      c: [ 1, 'a', { x: 'y' }, 'z' ] }
+                            //      l: [ 1, 'a', { x: 'y' }, 'z' ] },
+                            //      m: { foo: 4 }
         client.close()
       })
     })

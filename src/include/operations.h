@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,16 @@
 
 #pragma once
 
-#include <nan.h>
+extern "C" {
+	#include <aerospike/as_operations.h>
+}
+
 #include <node.h>
-#include "client.h"
+
+#include "log.h"
 
 using namespace v8;
 
-Local<Object> status();
+int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log);
 
-Local<Object> key_policy_values();
-
-Local<Object> retry_policy_values();
-
-Local<Object> generation_policy_values();
-
-Local<Object> policy();
-
-Local<Object> operations();
-
-Local<Object> log();
-
-Local<Object> languages();
-
-Local<Object> scanPriority();
-
-Local<Object> predicates();
-
-Local<Object> indexDataType();
-
-Local<Object> indexType();
-
-Local<Object> jobStatus();
-
-Local<Object> map_enum_values();
-
+Local<Object> export_ops_table_as_enum();

@@ -31,7 +31,7 @@ extern "C" {
 	#include <aerospike/as_scan.h>
 	#include <aerospike/aerospike_batch.h>
 	#include <aerospike/aerospike_scan.h>
-	#include <aerospike/as_arraylist.h>
+	#include <aerospike/as_list.h>
 	#include <citrusleaf/cf_queue.h>
 }
 
@@ -87,8 +87,11 @@ int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
 int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo * log);
 int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
 int batch_read_records_from_jsarray(as_batch_read_records** batch, Local<Array> arr, LogInfo* log);
-int operations_from_jsarray(as_operations * ops, Local<Array> arr, LogInfo * log );
-int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log);
+int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, LogInfo* log);
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log);
+int list_from_jsarray(as_list** list, Local<Array> array, LogInfo* log);
+int map_from_jsobject(as_map** map, Local<Object> obj, LogInfo* log);
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log);
 
 //clone functions for record and key
 bool record_clone(const as_record * src, as_record ** dest, LogInfo * log );
@@ -111,4 +114,3 @@ int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogI
 // Functions to set metadata of the record.
 int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );
 int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log );
-

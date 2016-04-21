@@ -19,6 +19,7 @@
 #include "async.h"
 #include "client.h"
 #include "conversions.h"
+#include "operations.h"
 #include "log.h"
 
 using namespace v8;

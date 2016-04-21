@@ -891,7 +891,8 @@ Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, LogI
 }
 
 //Forward references;
-int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log );
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log);
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log);
 
 bool instanceof(Local<Value> value, const char * type)
 {
@@ -934,107 +935,101 @@ double double_value(Local<Value> value)
     return (double) value->ToNumber()->Value();
 }
 
-as_val* asval_from_jsobject( Local<Value> obj, LogInfo * log)
+int list_from_jsarray(as_list** list, Local<Array> array, LogInfo* log)
 {
-    if(obj->IsNull()){
-        as_v8_detail(log, "The as_val is NULL");
-        return (as_val*) &as_nil;
+    const uint32_t capacity = array->Length();
+    as_v8_detail(log, "Creating new as_arraylist with capacity %d", capacity);
+    as_arraylist* arraylist = as_arraylist_new(capacity, 0);
+    if (arraylist == NULL) {
+        as_v8_error(log, "List allocation failed");
+        Nan::ThrowError("List allocation failed");
+        return AS_NODE_PARAM_ERR;
     }
-    else if(obj->IsUndefined()) {
-        // asval_from_jsobject is called recursively.
+    *list = (as_list*) arraylist;
+    for (uint32_t i = 0; i < capacity; i++) {
+        as_val* val;
+        if (asval_from_jsvalue(&val, array->Get(i), log) != AS_NODE_PARAM_OK) {
+            return AS_NODE_PARAM_ERR;
+        }
+        as_list_append(*list, val);
+    }
+    return AS_NODE_PARAM_OK;
+}
+
+int map_from_jsobject(as_map** map, Local<Object> obj, LogInfo* log)
+{
+    const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
+    const uint32_t capacity = props->Length();
+    as_v8_detail(log, "Creating new as_hashmap with capacity %d", capacity);
+    as_hashmap* hashmap = as_hashmap_new(capacity);
+    if (hashmap == NULL) {
+        as_v8_error(log, "Map allocation failed");
+        Nan::ThrowError("Map allocation failed");
+        return AS_NODE_PARAM_ERR;
+    }
+    *map = (as_map*) hashmap;
+    for (uint32_t i = 0; i < capacity; i++) {
+        const Local<Value> name = props->Get(i);
+        const Local<Value> value = obj->Get(name);
+        as_val* val = NULL;
+        if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
+            return AS_NODE_PARAM_ERR;
+        }
+        as_stringmap_set(*map, *String::Utf8Value(name), val);
+    }
+    return AS_NODE_PARAM_OK;
+}
+
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log)
+{
+    if (v8value->IsNull()) {
+        as_v8_detail(log, "The as_val is NULL");
+        *value = (as_val*) &as_nil;
+    } else if (v8value->IsUndefined()) {
+        // asval_from_jsvalue is called recursively.
         // If a bin value is undefined, it should be handled by the caller of
         // this function gracefully.
         // If an entry in a map/list is undefined the corresponding entry becomes null.
         as_v8_detail(log, "Object passed is undefined");
-        return (as_val*) &as_nil;
-    }
-    else if(obj->IsBoolean()) {
-        return (as_val*) as_boolean_new(obj->BooleanValue());
-    }
-    else if(obj->IsString()) {
-        String::Utf8Value v(obj);
-        as_string *str = as_string_new(strdup(*v), true);
-        as_v8_detail(log, "The string value in %s ", *v);
-        return (as_val*) str;
-    }
-    else if( obj->IsInt32()) {
-        as_integer *num = as_integer_new(obj->ToInt32()->Value());
-        as_v8_detail(log, "The int32 value %d ", obj->ToInt32()->Value());
-        return (as_val*) num;
-    }
-    else if( obj->IsUint32()) {
-        as_integer *num = as_integer_new(obj->ToUint32()->Value());
-        as_v8_detail(log, "The uint32 value %d ", obj->ToUint32()->Value());
-        return (as_val*) num;
-    }
-    else if (is_double_value(obj)) {
-        as_double * d = as_double_new(double_value(obj));
-        as_v8_detail(log, "The double value %lf ", d->value);
-        return (as_val*) d;
-    }
-    else if (obj->IsNumber()) {
-        as_integer *num = as_integer_new(obj->ToInteger()->Value());
-        as_v8_detail(log, "The integer value %lld ", obj->ToInteger()->Value());
-        return (as_val*) num;
-    }
-    else if(node::Buffer::HasInstance(obj)) {
-        int size ;
-        uint8_t* data ;
-        if (extract_blob_from_jsobject(obj->ToObject(), &data, &size, log) != AS_NODE_PARAM_OK) {
+        *value = (as_val*) &as_nil;
+    } else if (v8value->IsBoolean()) {
+        *value = (as_val*) as_boolean_new(v8value->ToBoolean()->Value());
+    } else if (v8value->IsString()) {
+        *value = (as_val*) as_string_new(strdup(*String::Utf8Value(v8value)), true);
+    } else if (v8value->IsInt32() ) {
+        *value = (as_val*) as_integer_new(v8value->ToInt32()->Value());
+    } else if (v8value->IsUint32()) {
+        *value = (as_val*) as_integer_new(v8value->ToUint32()->Value());
+    } else if (is_double_value(v8value)) {
+        *value = (as_val*) as_double_new(double_value(v8value));
+    } else if (v8value->IsNumber()) {
+        *value = (as_val*) as_integer_new(v8value->ToInteger()->Value());
+    } else if (node::Buffer::HasInstance(v8value)) {
+        int size;
+        uint8_t* data;
+        if (extract_blob_from_jsobject(&data, &size, v8value->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Extractingb blob from a js object failed");
-            return NULL;
+            return AS_NODE_PARAM_ERR;
         }
-        as_bytes *bytes = as_bytes_new_wrap( data, size, true);
-        return (as_val*) bytes;
-
-    }
-    else if(obj->IsArray()) {
-        Local<Array> js_list = Local<Array>::Cast(obj);
-        as_arraylist *list = as_arraylist_new( js_list->Length(), 0);
-        if (list == NULL) {
-            as_v8_error(log, "List allocation failed");
-            return NULL;
+        *value = (as_val*) as_bytes_new_wrap(data, size, true);
+    } else if (v8value->IsArray()) {
+        if (list_from_jsarray((as_list**) value, Local<Array>::Cast(v8value), log) != AS_NODE_PARAM_OK) {
+            return AS_NODE_PARAM_ERR;
         }
-        for ( uint32_t i = 0; i < js_list->Length(); i++ ) {
-            Local<Value> val = js_list->Get(i);
-            as_val* asval = asval_from_jsobject(val, log);
-            as_arraylist_append(list, asval);
-        }
-        return (as_val*) list;
-
-    }
-    else {
-        // Are we GeoJSON?
-        if (instanceof(obj, GeoJSONType)) {
-            const Local<Value> strval = obj->ToObject()->Get(Nan::New<String>("str").ToLocalChecked());
-            String::Utf8Value v(strval);
-            as_geojson *geojson = as_geojson_new(strdup(*v), true);
-            return (as_val*) geojson;
-        } else {
-            // Not GeoJSON, must be an Object.
-            const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
-            const uint32_t count = props->Length();
-            as_hashmap *map = as_hashmap_new(count);
-            if( map == NULL) {
-                as_v8_error(log, "Map allocation failed");
-                return NULL;
-            }
-            for ( uint32_t i = 0; i < count; i++) {
-                const Local<Value> name = props->Get(i);
-                const Local<Value> value = obj->ToObject()->Get(name);
-                String::Utf8Value n(name);
-                as_val* val = asval_from_jsobject(value, log);
-                as_stringmap_set((as_map*) map, *n, val);
-            }
-            return (as_val*) map;
+    } else if (instanceof(v8value, GeoJSONType)) {
+        Local<Value> strval = v8value->ToObject()->Get(Nan::New("str").ToLocalChecked());
+        *value = (as_val*) as_geojson_new(strdup(*String::Utf8Value(strval)), true);
+    } else { // generic object - treat as map
+        if (map_from_jsobject((as_map**) value, v8value->ToObject(), log) != AS_NODE_PARAM_OK) {
+            return AS_NODE_PARAM_ERR;
         }
     }
-    return NULL;
+    as_v8_detail(log, "type: %d, string value: %s", as_val_type(*value), as_val_tostring(*value));
+    return AEROSPIKE_OK;
 }
 
 int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 {
-
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
     as_record_init(rec, count);
@@ -1056,18 +1051,15 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
             as_v8_error(log, "Valid length for a bin name is 14. Bin name length exceeded");
             return AS_NODE_PARAM_ERR;
         }
-        as_val* val = asval_from_jsobject( value, log);
-
-        if( val == NULL ) {
+        as_val* val = NULL;
+        if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
-        else if( as_val_type(val) == AS_BOOLEAN) {
-            as_val_destroy(val);
-            as_v8_error(log,"Boolean datatype not supported");
-            return AS_NODE_PARAM_ERR;
-        }
-
         switch(as_val_type(val)) {
+            case AS_BOOLEAN:
+                as_val_destroy(val);
+                as_v8_error(log,"Boolean datatype not supported");
+                return AS_NODE_PARAM_ERR;
             case AS_INTEGER:
                 as_record_set_integer(rec, *n, (as_integer*)val);
                 break;
@@ -1091,6 +1083,7 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
                 break;
             case AS_NIL:
                 as_record_set_nil(rec, *n);
+                break;
             default:
                 break;
         }
@@ -1111,7 +1104,7 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 
 
 //@TO-DO - GetIndexedProperties is to be checked
-int extract_blob_from_jsobject( Local<Object> obj, uint8_t **data, int *len, LogInfo * log)
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log)
 {
     if (!node::Buffer::HasInstance(obj)) {
         as_v8_error(log, "The binary data is not of the type UnsignedBytes");
@@ -1647,7 +1640,7 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             Local<Object> obj = val_obj->ToObject();
             int size ;
             uint8_t* data ;
-            if (extract_blob_from_jsobject(obj, &data, &size, log) != AS_NODE_PARAM_OK) {
+            if (extract_blob_from_jsobject(&data, &size, obj, log) != AS_NODE_PARAM_OK) {
                 return AS_NODE_PARAM_ERR;
             }
             as_key_init_rawp(key, ns, set, data, size, true);
@@ -1783,27 +1776,6 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 	return AS_NODE_PARAM_OK;
 }
 
-int asarray_from_jsarray( as_arraylist** udfargs, Local<Array> arr, LogInfo * log)
-{
-    uint32_t  capacity = arr->Length();
-
-    if ( capacity <= 0) {
-        capacity = 0;
-    }
-    as_v8_detail(log, "Capacity of the asarray to be initialized %d", capacity);
-    if ( *udfargs != NULL) {
-        as_arraylist_init( *udfargs, capacity, 0);
-    } else {
-        *udfargs = as_arraylist_new( capacity, 0);
-    }
-
-    for ( uint32_t i = 0; i < capacity; i++) {
-        as_val* val = asval_from_jsobject( arr->Get(i), log);
-        as_arraylist_append(*udfargs, val);
-    }
-    return AS_NODE_PARAM_OK;
-}
-
 int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo* log)
 {
     int arr_length = arr->Length();
@@ -1824,9 +1796,8 @@ int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogIn
     return AS_NODE_PARAM_OK;
 }
 
-int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args, Local<Object> obj, LogInfo * log)
+int udfargs_from_jsobject( char** filename, char** funcname, as_list** args, Local<Object> obj, LogInfo * log)
 {
-
     if(obj->IsNull()) {
         as_v8_error(log, "Object passed is NULL");
         return AS_NODE_PARAM_ERR;
@@ -1872,722 +1843,14 @@ int udfargs_from_jsobject( char** filename, char** funcname, as_arraylist** args
 
     Local<Value> arglist = obj->Get(Nan::New("args").ToLocalChecked());
     if (arglist->IsArray()) {
-        asarray_from_jsarray(args, Local<Array>::Cast(arglist), log);
+        list_from_jsarray(args, Local<Array>::Cast(arglist), log);
         as_v8_detail(log, "Parsing UDF args -- done !!!");
     } else if (arglist->IsNull() || arglist->IsUndefined()) {
         // No argument case: Initialize array with 0 elements.
-        if (*args != NULL) {
-            as_arraylist_init(*args, 0, 0);
-        }
+        *args = (as_list*) as_arraylist_new(0, 0);
     } else {
         as_v8_error(log, "UDF args should be an array");
         return AS_NODE_PARAM_ERR;
-    }
-    return AS_NODE_PARAM_OK;
-}
-
-int GetStringProperty(char** strp, Local<Object> obj, char const* prop, LogInfo* log) {
-
-    if ( obj->Has(Nan::New(prop).ToLocalChecked()) ) {
-        Local<Value> val = obj->Get(Nan::New(prop).ToLocalChecked());
-        if ( !val->IsString() ) {
-            as_v8_error(log, "Type error: %s property should be string", prop);
-            return AS_NODE_PARAM_ERR;
-        }
-        (*strp) = strdup(*String::Utf8Value(val));
-        return AS_NODE_PARAM_OK;
-    } else {
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-int GetIntegerProperty(int64_t* intp, Local<Object> obj, char const* prop, LogInfo* log) {
-
-    if ( obj->Has(Nan::New(prop).ToLocalChecked()) ) {
-        Local<Value> val = obj->Get(Nan::New(prop).ToLocalChecked());
-        if ( !val->IsNumber() ) {
-            as_v8_error(log, "Type error: %s property should be integer", prop);
-            return AS_NODE_PARAM_ERR;
-        }
-        (*intp) = val->NumberValue();
-        return AS_NODE_PARAM_OK;
-    } else {
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-int GetIntegerOrUndefinedProperty(int64_t* intp, bool* defined, Local<Object> obj, char const* prop, LogInfo* log) {
-
-    if ( obj->Has(Nan::New(prop).ToLocalChecked()) ) {
-        Local<Value> val = obj->Get(Nan::New(prop).ToLocalChecked());
-        if ( val->IsNumber() ) {
-          (*defined) = true;
-          (*intp) = val->NumberValue();
-          return AS_NODE_PARAM_OK;
-        }
-        else if ( val->IsUndefined() ) {
-          (*defined) = false;
-          return AS_NODE_PARAM_OK;
-        }
-        else {
-          as_v8_error(log, "Type error: %s property should be integer", prop);
-          return AS_NODE_PARAM_ERR;
-        }
-    } else {
-      (*defined) = false;
-      return AS_NODE_PARAM_OK;
-    }
-}
-
-int populate_write_op ( as_operations * op, Local<Object> obj, LogInfo * log)
-{
-    if ( op == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the V8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-    as_v8_detail(log, "write operation on bin : %s", binName);
-
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if ( v8val->IsNumber() ) {
-        int64_t val = v8val->NumberValue();
-        as_v8_detail(log, "integer value to be written %d", val);
-        as_operations_add_write_int64(op, binName, val);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else if ( v8val->IsString() ) {
-        char* binVal = strdup(*String::Utf8Value(v8val));
-        as_v8_detail(log, "String value to be written %s", binVal);
-        as_operations_add_write_str(op, binName, binVal);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else if ( v8val->IsObject() ) {
-        Local<Object> binObj = v8val->ToObject();
-        int len ;
-        uint8_t* data ;
-        if ( extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
-            return AS_NODE_PARAM_ERR;
-        }
-        as_v8_detail(log, "Blob value to be written %u ", data);
-        as_operations_add_write_rawp(op, binName, data, len, true);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else {
-        as_v8_debug(log, "Type error in write operation");
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-int populate_read_op( as_operations * ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-    as_v8_detail(log, "Read operation on bin :%s", binName);
-    as_operations_add_read(ops, binName);
-    if ( binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_incr_op (as_operations * ops, Local<Object> obj, LogInfo * log)
-{
-    if (ops == NULL) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-    char* binName;
-    if (GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Incr operation on bin :%s", binName);
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if (is_double_value(v8val)) {
-        double binValue = double_value(v8val);
-        as_v8_detail(log, "value to be incremented %lf", binValue);
-        as_operations_add_incr_double(ops, binName, binValue);
-        if (binName != NULL) free (binName);
-        return AS_NODE_PARAM_OK;
-    } else if (v8val->IsNumber()) {
-        int64_t binValue = v8val->NumberValue();
-        as_v8_detail(log, "value to be incremented %lld", binValue);
-        as_operations_add_incr( ops, binName, binValue);
-        if (binName != NULL) free (binName);
-        return AS_NODE_PARAM_OK;
-    } else {
-        as_v8_debug(log, "Type error in incr operation");
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-int populate_prepend_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "prepend operation on bin :%s", binName);
-
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if ( v8val->IsString() ) {
-        char* binVal = strdup(*String::Utf8Value(v8val));
-        as_v8_detail(log, "prepending string %s", binVal);
-        as_operations_add_prepend_strp(ops, binName, binVal, true);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else if ( v8val->IsObject() ) {
-        Local<Object> binObj = v8val->ToObject();
-        int len ;
-        uint8_t* data ;
-        if (extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
-            return AS_NODE_PARAM_ERR;
-        }
-        as_v8_detail(log, "prepending raw bytes %u", data);
-        as_operations_add_prepend_rawp(ops, binName, data, len, true);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else {
-        as_v8_debug(log, "Type error in prepend operation");
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-
-int populate_append_op( as_operations * ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "append operation on bin :%s", binName);
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    if ( v8val->IsString() ) {
-        char* binVal = strdup(*String::Utf8Value(v8val));
-        as_v8_detail(log, "appending string %s", binVal);
-        as_operations_add_append_strp(ops, binName, binVal,true);
-        if ( binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else if ( v8val->IsObject() ) {
-        Local<Object> binObj = v8val->ToObject();
-        int len ;
-        uint8_t* data ;
-        if (extract_blob_from_jsobject(binObj, &data, &len, log) != AS_NODE_PARAM_OK) {
-            return AS_NODE_PARAM_ERR;
-        }
-        as_v8_detail(log, "appending raw bytes %u", data);
-        as_operations_add_append_rawp(ops, binName, data, len, true);
-        if (binName != NULL) free(binName);
-        return AS_NODE_PARAM_OK;
-    }
-    else {
-        as_v8_debug(log, "Type error in append operation");
-        return AS_NODE_PARAM_ERR;
-    }
-}
-
-int populate_touch_op( as_operations* ops, LogInfo * log)
-{
-    if ( ops == NULL) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_touch(ops);
-    as_v8_debug(log, "Touch operation is set");
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_append_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    as_val* val = asval_from_jsobject(v8val, log);
-
-    as_operations_add_list_append(ops, binName, val);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_append_items_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    Local<Value> v8val = obj->Get(Nan::New("list").ToLocalChecked());
-    as_list* list = (as_list*) asval_from_jsobject(v8val, log);
-
-    as_operations_add_list_append_items(ops, binName, list);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_insert_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    as_val* val = asval_from_jsobject(v8val, log);
-
-    as_operations_add_list_insert(ops, binName, index, val);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_insert_items_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    Local<Value> v8list = obj->Get(Nan::New("list").ToLocalChecked());
-    as_list* list = (as_list*) asval_from_jsobject(v8list, log);
-
-    as_operations_add_list_insert_items(ops, binName, index, list);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_pop_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_pop(ops, binName, index);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_pop_range_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    bool count_defined;
-    int64_t count;
-    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    if (count_defined) {
-      as_operations_add_list_pop_range(ops, binName, index, count);
-    } else {
-      as_operations_add_list_pop_range_from(ops, binName, index);
-    }
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_remove_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_remove(ops, binName, index);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_remove_range_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    bool count_defined;
-    int64_t count;
-    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    if (count_defined) {
-      as_operations_add_list_remove_range(ops, binName, index, count);
-    } else {
-      as_operations_add_list_remove_range_from(ops, binName, index);
-    }
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_clear_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_clear(ops, binName);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_set_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-    as_val* val = asval_from_jsobject(v8val, log);
-
-    as_operations_add_list_set(ops, binName, index, val);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_trim_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t count;
-    if ( GetIntegerProperty(&count, obj, "count", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_trim(ops, binName, index, count);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_get_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_get(ops, binName, index);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_get_range_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    int64_t index;
-    if ( GetIntegerProperty(&index, obj, "index", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    bool count_defined;
-    int64_t count;
-    if ( GetIntegerOrUndefinedProperty(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    if (count_defined) {
-      as_operations_add_list_get_range(ops, binName, index, count);
-    } else {
-      as_operations_add_list_get_range_from(ops, binName, index);
-    }
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int populate_list_size_op( as_operations* ops, Local<Object> obj, LogInfo * log)
-{
-    if ( ops == NULL ) {
-        as_v8_debug(log, "operation (C structure) passed is NULL, can't parse the v8 object");
-        return AS_NODE_PARAM_ERR;
-    }
-
-    char* binName;
-    if ( GetStringProperty(&binName, obj, "bin", log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_operations_add_list_size(ops, binName);
-    if (binName != NULL) free(binName);
-    return AS_NODE_PARAM_OK;
-}
-
-int operations_from_jsarray( as_operations * ops, Local<Array> arr, LogInfo * log)
-{
-
-    uint32_t capacity = arr->Length();
-    as_v8_detail(log, "number of operations in the array %d", capacity);
-    if ( capacity > 0 ) {
-        as_operations_init( ops, capacity );
-    }
-    else {
-        return AS_NODE_PARAM_ERR;
-    }
-    for ( uint32_t i = 0; i < capacity; i++ ) {
-        Local<Object> obj = arr->Get(i)->ToObject();
-        setTTL(obj, &ops->ttl, log);
-        Local<Value> v8op = obj->Get(Nan::New("operation").ToLocalChecked());
-        if ( v8op->IsNumber() ) {
-            as_operator op = (as_operator) v8op->ToInteger()->Value();
-            int result = 0;
-            switch ( op ) {
-                case AS_OPERATOR_WRITE: {
-                    result = populate_write_op(ops, obj, log);
-                    break;
-                }
-                case AS_OPERATOR_READ: {
-                    result = populate_read_op(ops, obj, log);
-                    break;
-                }
-                case AS_OPERATOR_INCR:  {
-                    result = populate_incr_op(ops, obj, log);
-                    break;
-                }
-                case AS_OPERATOR_PREPEND: {
-                    result = populate_prepend_op(ops, obj, log);
-                    break;
-                }
-                case AS_OPERATOR_APPEND: {
-                    result = populate_append_op(ops, obj, log);
-                    break;
-                }
-                case AS_OPERATOR_TOUCH: {
-                    result = populate_touch_op(ops, log);
-                    break;
-                }
-                default :
-                    as_v8_info(log, "Operation Type not supported by the API");
-                    return AS_NODE_PARAM_ERR;
-            }
-            if (result != AS_NODE_PARAM_OK) {
-                as_v8_info(log, "invalid operation [%i] - result: %i", op, result);
-                return result;
-            }
-        }
-        else if ( v8op->IsUndefined() ) {
-            v8op = obj->Get(Nan::New("cdtOperation").ToLocalChecked());
-            if ( v8op->IsNumber() ) {
-                as_cdt_optype op = (as_cdt_optype) v8op->ToInteger()->Value();
-                int result = 0;
-                switch ( op ) {
-                    case AS_CDT_OP_LIST_APPEND: {
-                        result = populate_list_append_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_APPEND_ITEMS: {
-                        result = populate_list_append_items_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_INSERT: {
-                        result = populate_list_insert_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_INSERT_ITEMS: {
-                        result = populate_list_insert_items_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_POP: {
-                        result = populate_list_pop_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_POP_RANGE: {
-                        result = populate_list_pop_range_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_REMOVE: {
-                        result = populate_list_remove_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_REMOVE_RANGE: {
-                        result = populate_list_remove_range_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_CLEAR: {
-                        result = populate_list_clear_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_SET: {
-                        result = populate_list_set_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_TRIM: {
-                        result = populate_list_trim_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_GET: {
-                        result = populate_list_get_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_GET_RANGE: {
-                        result = populate_list_get_range_op(ops, obj, log);
-                        break;
-                    }
-                    case AS_CDT_OP_LIST_SIZE: {
-                        result = populate_list_size_op(ops, obj, log);
-                        break;
-                    }
-                    default:
-                        as_v8_info(log, "CDT Operation Type not supported by the API");
-                        return AS_NODE_PARAM_ERR;
-                }
-                if (result != AS_NODE_PARAM_OK) {
-                    as_v8_info(log, "invalid CDT operation [%i] - result: %i", op, result);
-                    return result;
-                }
-            }
-            else {
-                as_v8_info(log, "CDT Operation Type not supported by the API");
-                return AS_NODE_PARAM_ERR;
-            }
-        }
     }
     return AS_NODE_PARAM_OK;
 }

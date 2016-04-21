@@ -24,6 +24,7 @@ extern "C" {
 #include <unistd.h>
 #include "client.h"
 #include "enums.h"
+#include "operations.h"
 #include "log.h"
 
 using namespace v8;
@@ -81,8 +82,8 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
     exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
     exports->Set(Nan::New("status").ToLocalChecked(),   status());
     exports->Set(Nan::New("policy").ToLocalChecked(),   policy());
-    exports->Set(Nan::New("operations").ToLocalChecked(), operations());
-    exports->Set(Nan::New("cdt_operations").ToLocalChecked(), cdt_operations());
+    exports->Set(Nan::New("operations").ToLocalChecked(), export_ops_table_as_enum());
+	exports->Set(Nan::New("maps").ToLocalChecked(), map_enum_values());
 	exports->Set(Nan::New("language").ToLocalChecked(), languages());
     exports->Set(Nan::New("log").ToLocalChecked(),      log());
 	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());

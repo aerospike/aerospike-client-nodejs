@@ -1,12 +1,15 @@
 HEAD
 ===================
 
-* **Fixes**
-  * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
+* **New Features**
+  * Support for operations on Sorted Maps. Requires Aerospike server version 3.8.4 or later.
 
 * **Improvements**
   * Key objects returned in callbacks now include the digest
   * Code cleanup to support standard@7.0.0 which adds several new rules
+
+* **Fixes**
+  * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
 
 * **Documentation**
   * Pulled client configuration out into a separate class and expanded the documentation.

@@ -143,12 +143,12 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		char func[255];
 		char* filename = module;
 		char* funcname = func;
-		as_arraylist* arglist = NULL;
+		as_list* arglist = NULL;
 		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf->ToObject(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for query object failed");
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");
 		}
-        as_query_apply(query, filename, funcname, (as_list*) arglist);
+        as_query_apply(query, filename, funcname, arglist);
 	}
 }

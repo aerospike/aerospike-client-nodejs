@@ -23,7 +23,7 @@ const fs = require('fs')
 const yargs = require('yargs')
 const iteration = require('./iteration')
 
-var Operator = Aerospike.operator
+const operations = Aerospike.operations
 
 // *****************************************************************************
 // Options parsing
@@ -129,11 +129,11 @@ function run (client, done) {
   var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
   var ops = [
-    Operator.touch(1000),
-    Operator.incr('i', 1),
-    Operator.write('s', 'some_val'),
-    Operator.read('i'),
-    Operator.read('s')
+    operations.touch(1000),
+    operations.incr('i', 1),
+    operations.write('s', 'some_val'),
+    operations.read('i'),
+    operations.read('s')
   ]
 
   client.operate(key, ops, function (err, bins, metadata) {

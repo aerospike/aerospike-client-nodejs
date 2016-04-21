@@ -25,6 +25,7 @@
       'sources': [
         'src/main/aerospike.cc',
         'src/main/client.cc',
+        'src/main/operations.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/async.cc',
@@ -54,8 +55,8 @@
         'src/main/client/udf_remove.cc',
         'src/main/enums/predicates.cc',
         'src/main/enums/log.cc',
+        'src/main/enums/maps.cc',
         'src/main/enums/index.cc',
-        'src/main/enums/operations.cc',
         'src/main/enums/policy.cc',
         'src/main/enums/status.cc',
         'src/main/enums/scanPriority.cc',
