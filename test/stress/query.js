@@ -25,7 +25,8 @@ describe('client.query()', function () {
   var client = helper.client
   var testSet = 'test/queryperf'
   var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'queryPerfData')
-  var numberOfRecords = 1e6 // 1 Mio. records at 1kb ≈ 1 GB total data size
+  var recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
+  var numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
 
   before(function (done) {
     client.get(idxKey, function (err, record) {
@@ -35,7 +36,7 @@ describe('client.query()', function () {
         // perf test data does not yet exist - generate it
         console.info('generating %d records as performance test data in set %s', numberOfRecords, testSet)
         console.time('generating performance test data')
-        perfdata.generate(helper.namespace, testSet, numberOfRecords, function (recordsGenerated) {
+        perfdata.generate(helper.namespace, testSet, numberOfRecords, recordSize, function (recordsGenerated) {
           console.timeEnd('generating performance test data')
           numberOfRecords = recordsGenerated // might be slightly less due to duplciate keys
           var index = {

@@ -22,7 +22,10 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
   var inFlight = 0
 
   var creator = function (record, err) {
-    if (err) throw err
+    if (err) {
+      console.error('ERROR: %s [%d] in %s at %s:%d\n%s', err.message, err.code, err.func, err.file, err.line, err.stack)
+      throw err
+    }
     if (record) {
       callback(record.key, record. bins, record.meta)
       inFlight--
@@ -49,7 +52,7 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
 }
 
 function put (n, keygen, recgen, metagen, callback) {
-  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
   var generator = {
     key: keygen,
     record: recgen,

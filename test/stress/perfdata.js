@@ -37,12 +37,14 @@ function interval (duration, callback) {
   return obj
 }
 
-// Generates records with ~ 1k record size each
-function generate (ns, set, numberOfRecords, done) {
+// Generates records with specific record size
+function generate (ns, set, numberOfRecords, recordSize, done) {
+  var numBinsPerRecord = recordSize[0]
+  var sizePerBin = recordSize[1]
   var kgen = keygen.string(ns, set, {length: {min: 20, max: 20}})
   var bins = { id: valgen.integer({random: false, min: 0}) }
-  for (var i = 0; i < 8; i++) {
-    bins['b' + i] = valgen.bytes({length: {min: 128, max: 128}}) // 8 x 128 bytes ≈ 1k/record
+  for (var i = 0; i < numBinsPerRecord; i++) {
+    bins['b' + i] = valgen.bytes({length: {min: sizePerBin, max: sizePerBin}})
   }
   var rgen = recgen.record(bins)
   var mgen = metagen.constant({})
