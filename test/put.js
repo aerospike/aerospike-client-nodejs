@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it */
+/* global expect, describe, it, context */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -26,6 +26,7 @@ const valgen = helper.valgen
 
 const status = Aerospike.status
 const Double = Aerospike.Double
+const GeoJSON = Aerospike.GeoJSON
 
 describe('client.put()', function () {
   var client = helper.client
@@ -142,87 +143,78 @@ describe('client.put()', function () {
     })
   })
 
-  it('shoule write an array, map type of bin and read', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({list: valgen.array(), map: valgen.map()})
+  context('bins with various data types', function () {
+    var meta = { ttl: 600 }
+    var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-
-    // write the record and then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
-
-      client.get(key, function (err, record1, metadata, key) {
-        if (err) { throw new Error(err.message) }
-        expect(record1).to.eql(record)
-
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
-          done()
+    function putGetVerify (record, expected, done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+        client.get(key, function (err, record) {
+          if (err) throw err
+          expect(record).to.eql(expected)
+          client.remove(key, done)
         })
       })
-    })
-  })
-
-  it('shoule write a bin with double value', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = {
-      val: 123.45,
-      dval: new Double(456.00)
     }
 
-    // write the record and then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).to.not.be.ok()
-
-      client.get(key, function (err, record1, metadata, key) {
-        if (err) { throw new Error(err.message) }
-        expect(record1.val).to.equal(record.val)
-        expect(record1.dval).to.equal(record.dval.value())
-
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
-          done()
-        })
-      })
+    it('writes bin with string values and reads it back', function (done) {
+      var record = { string: 'hello world' }
+      var expected = { string: 'hello world' }
+      putGetVerify(record, expected, done)
     })
-  })
 
-  it('should write an array of map and array, map of array and map, then read', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({list_of_list: valgen.array_of_array(), map_of_list: valgen.map_of_map()})
+    it('writes bin with integer values and reads it back', function (done) {
+      var record = { low: Number.MIN_SAFE_INTEGER, high: Number.MAX_SAFE_INTEGER }
+      var expected = { low: -9007199254740991, high: 9007199254740991 }
+      putGetVerify(record, expected, done)
+    })
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+    it('writes bin with Buffer value and reads it back', function (done) {
+      var record = { buffer: new Buffer([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      var expected = { buffer: new Buffer([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      putGetVerify(record, expected, done)
+    })
 
-    // write the record and then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
+    it('writes bin with float value as double and reads it back', function (done) {
+      var record = { double: 3.141592653589793 }
+      var expected = { double: 3.141592653589793 }
+      putGetVerify(record, expected, done)
+    })
 
-      client.get(key, function (err, record1, metadata, key) {
-        if (err) { throw new Error(err.message) }
-        expect(record1).to.eql(record)
+    it('writes bin with Double value as double and reads it back', function (done) {
+      var record = { double: new Double(3.141592653589793) }
+      var expected = { double: 3.141592653589793 }
+      putGetVerify(record, expected, done)
+    })
 
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
-          done()
-        })
-      })
+    it('writes bin with GeoJSON value and reads it back as string', function (done) {
+      var record = { geo: new GeoJSON.Point(103.8, 1.283) }
+      var expected = { geo: '{"type":"Point","coordinates":[103.8,1.283]}' }
+      putGetVerify(record, expected, done)
+    })
+
+    it('writes bin with array value as list and reads it back', function (done) {
+      var record = { list: [ 1, 'foo', 1.23, new Double(3.14), new Buffer('bar'),
+        GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 } ]
+      }
+      var expected = { list: [ 1, 'foo', 1.23, 3.14, new Buffer('bar'),
+        '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 } ]
+      }
+      putGetVerify(record, expected, done)
+    })
+
+    it('writes bin with object value as map and reads it back', function (done) {
+      var record = { map: { a: 1, b: 'foo', c: 1.23, d: new Double(3.14),
+        e: new Buffer('bar'), f: GeoJSON.Point(103.8, 1.283), g: [1, 2, 3],
+        h: { a: 1, b: 2 } }
+      }
+      var expected = { map: { a: 1, b: 'foo', c: 1.23, d: 3.14,
+        e: new Buffer('bar'), f: '{"type":"Point","coordinates":[103.8,1.283]}',
+        g: [1, 2, 3], h: { a: 1, b: 2 } }
+      }
+      putGetVerify(record, expected, done)
     })
   })
 
