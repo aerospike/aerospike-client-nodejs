@@ -51,26 +51,3 @@ Local<Value> async_invoke(
     // return an `undefined`.
     return Nan::Undefined();
 }
-
-void async_init( uv_async_t * async, void (*async_callback)(ResolveAsyncCallbackArgs ))
-{
-    uv_async_init( uv_default_loop(), async, async_callback);
-}
-
-void async_send( uv_async_t * async)
-{
-    uv_async_send( async);
-}
-
-void release_handle(uv_handle_t* async_handle)
-{
-    AsyncCallbackData* cbdata = reinterpret_cast<AsyncCallbackData *>(async_handle->data);
-    delete cbdata;
-}
-
-void async_close(uv_async_t * async)
-{
-    uv_close((uv_handle_t*) async, release_handle);
-}
-
-
