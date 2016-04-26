@@ -59,12 +59,13 @@ describe('Callback Handlers', function () {
       })
 
       it('it passes through the non-error callback parameters', function (done) {
-        var resultIn = 'result value'
-        var cb = function (errOut, resultOut) {
-          expect(resultOut).to.eql(resultIn)
+        var cb = function (errOut, arg1, arg2, arg3) {
+          expect(arg1).to.equal('one')
+          expect(arg2).to.equal(2)
+          expect(arg3).to.equal('three')
           done()
         }
-        callbackHandler(cb, errIn, resultIn)
+        callbackHandler(cb, errIn, 'one', 2, 'three')
       })
     })
 
@@ -107,12 +108,13 @@ describe('Callback Handlers', function () {
       })
 
       it('it passes through the non-error callback parameters', function (done) {
-        var resultIn = 'result value'
-        var cb = function (errOut, resultOut) {
-          expect(resultOut).to.eql(resultIn)
+        var cb = function (errOut, arg1, arg2, arg3) {
+          expect(arg1).to.equal('one')
+          expect(arg2).to.equal(2)
+          expect(arg3).to.equal('three')
           done()
         }
-        callbackHandler(cb, errIn, resultIn)
+        callbackHandler(cb, errIn, 'one', 2, 'three')
       })
     })
 
