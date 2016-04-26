@@ -1,3 +1,13 @@
+Head
+===================
+
+* **Improvements**
+  * Optimize callback handler performance. [#119](https://github.com/aerospike/aerospike-client-nodejs/issues/119)
+
+* **Fixes**
+  * Ensure callbacks are always called asynchronously, even for param errors
+    raised by the client itself. [#120](https://github.com/aerospike/aerospike-client-nodejs/issues/120)
+
 v2.0.0 / 2016-04-19
 ===================
 
@@ -29,8 +39,6 @@ v2.0.0-alpha.3 / 2016-04-18
     (Record UDF can only be applied on background scan.)
 
 * **Fixes**
-  * Ensure callbacks are always called asynchronously, even for param errors
-    raised by the client itself.
   * Fix possible memory corruption parsing UDF module or function names.
 
 v2.0.0-alpha.2 / 2016-04-12
