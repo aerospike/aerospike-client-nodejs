@@ -24,10 +24,10 @@
       ],
       'sources': [
         'src/main/aerospike.cc',
-        'src/main/async_listener.cc',
         'src/main/client.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
+        'src/main/async.cc',
         'src/main/client/apply_async.cc',
         'src/main/client/batch_exists.cc',
         'src/main/client/batch_get.cc',
@@ -61,7 +61,6 @@
         'src/main/enums/scanPriority.cc',
         'src/main/enums/job_status.cc',
         'src/main/enums/udf_languages.cc',
-        'src/main/util/async.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
       ],

@@ -16,8 +16,8 @@
 
 #include <node.h>
 
+#include "async.h"
 #include "client.h"
-#include "async_listener.h"
 #include "conversions.h"
 #include "log.h"
 

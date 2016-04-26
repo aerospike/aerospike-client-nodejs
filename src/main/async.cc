@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2016 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,15 @@ extern "C" {
 	#include <aerospike/as_error.h>
 }
 
+#include <node.h>
 #include <uv.h>
 
-#include "async_listener.h"
+#include "async.h"
+#include "client.h"
 #include "conversions.h"
 #include "log.h"
 
 using namespace v8;
-
-Local<Object> err(int code, const char* message)
-{
-	Nan::EscapableHandleScope scope;
-	Local<Object> err = Nan::New<Object>();
-	err->Set(Nan::New("code").ToLocalChecked(), Nan::New(code));
-	err->Set(Nan::New("message").ToLocalChecked(), Nan::New(message).ToLocalChecked());
-	return scope.Escape(err);
-}
 
 Local<Object> err_ok()
 {
@@ -41,6 +34,34 @@ Local<Object> err_ok()
 	Local<Object> err = Nan::New<Object>();
 	err->Set(Nan::New("code").ToLocalChecked(), Nan::New(AEROSPIKE_OK));
 	return scope.Escape(err);
+}
+
+/**
+ *  Setup an asynchronous invocation of a function using uv worker threads.
+ */
+Local<Value> async_invoke(
+    ResolveArgs(args),
+    void *  (* prepare)(ResolveArgs(args)),
+    void    (* execute)(uv_work_t * req),
+    void    (* respond)(uv_work_t * req, int status)
+    )
+{
+    // Create an async work token, and add AsyncData to it.
+    uv_work_t * req = new uv_work_t;
+    req->data = prepare(args);
+
+    // Pass the work token to libuv to be run when a
+    // worker-thread is available to process it.
+    uv_queue_work(
+        uv_default_loop(),  // event loop
+        req,                // work token
+        execute,            // execute work
+        respond             // respond to callback
+    );
+
+    // Return value for the function. Because we are async, we will
+    // return an `undefined`.
+    return Nan::Undefined();
 }
 
 void release_uv_timer(uv_handle_t* handle)

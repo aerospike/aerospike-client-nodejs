@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,30 @@
 
 #pragma once
 
+extern "C" {
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_batch.h>
+	#include <aerospike/as_event.h>
+}
+
 #include <nan.h>
 #include <node.h>
 
+#include "client.h"
+
+typedef struct CallbackData {
+	AerospikeClient * client;
+	Nan::Persistent<Function> callback;
+	void* data;
+} CallbackData;
 
 /**
- *  Setup an asynchronous invocation of a function.
+ * Creates a new as_error struct with status code set to AEROSPIKE_ERR_OK.
+ */
+Local<Object> err_ok();
+
+/**
+ *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
 Local<Value> async_invoke(
     ResolveArgs(args),
@@ -29,3 +47,26 @@ Local<Value> async_invoke(
     void    (* execute)(uv_work_t * req),
     void    (* respond)(uv_work_t * req, int status)
     );
+
+/**
+ * Asynchronously invoke callback function with the given error.
+ */
+void invoke_error_callback(as_error* error, CallbackData* data);
+
+// implements the as_async_record_listener interface
+void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_write_listener interface
+void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_value_listener interface
+void async_value_listener(as_error* err, as_val* value, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_batch_listener interface
+void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_scan_listener interface
+bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
+
+// implements the as_async_query_record_listener interface
+bool async_query_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
