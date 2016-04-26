@@ -16,8 +16,8 @@
 
 #include <node.h>
 
+#include "async.h"
 #include "client.h"
-#include "async_listener.h"
 #include "conversions.h"
 #include "log.h"
 
@@ -59,7 +59,7 @@ NAN_METHOD(AerospikeClient::RemoveAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async remove command\n");
+	as_v8_debug(log, "Sending async remove command");
 	status = aerospike_key_remove_async(client->as, &err, p_policy, &key, async_write_listener, data, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
 		invoke_error_callback(&err, data);

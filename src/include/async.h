@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,30 @@
 
 #pragma once
 
+extern "C" {
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_batch.h>
+	#include <aerospike/as_event.h>
+}
+
 #include <nan.h>
 #include <node.h>
-#include <citrusleaf/cf_queue.h>
 
-/*******************************************************************************
- * STRUCTURES
- ********************************************************************************/
-// This structure is used by query and scan async handles.
-// To process the records from the callback and pass it to nodejs
-typedef struct AsyncCallbackData {
-    Nan::Persistent<Function> data_cb;
-    Nan::Persistent<Function> error_cb;
-    Nan::Persistent<Function> end_cb;
-	cf_queue * result_q;
-	int max_q_size;
-	LogInfo * log;
-	int signal_interval;
-	uv_async_t async_handle;
-}AsyncCallbackData;
+#include "client.h"
 
+typedef struct CallbackData {
+	AerospikeClient * client;
+	Nan::Persistent<Function> callback;
+	void* data;
+} CallbackData;
 
-/*******************************************************************************
- *  FUNCTIONS
- ******************************************************************************/
 /**
- *  Setup an asynchronous invocation of a function.
+ * Creates a new as_error struct with status code set to AEROSPIKE_ERR_OK.
+ */
+Local<Object> err_ok();
+
+/**
+ *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
 Local<Value> async_invoke(
     ResolveArgs(args),
@@ -50,33 +48,25 @@ Local<Value> async_invoke(
     void    (* respond)(uv_work_t * req, int status)
     );
 
-void async_init( uv_async_t * async, void (*async_callback)(ResolveAsyncCallbackArgs));
+/**
+ * Asynchronously invoke callback function with the given error.
+ */
+void invoke_error_callback(as_error* error, CallbackData* data);
 
-void async_send( uv_async_t * async);
+// implements the as_async_record_listener interface
+void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
 
-void async_close(uv_async_t* async);
+// implements the as_async_write_listener interface
+void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop);
 
-void uv_initialize_loop();
+// implements the as_async_value_listener interface
+void async_value_listener(as_error* err, as_val* value, void* udata, as_event_loop* event_loop);
 
-void uv_finish_loop_execution();
+// implements the as_async_batch_listener interface
+void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);
 
+// implements the as_async_scan_listener interface
+bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
 
-// Anyone using async infrastructure have to implement the following three
-// functions.
-// 1. Callback to be called when an async signal is sent.
-// 2. Function to populate the data coming from C, into the queue.
-// 3. Function to populate the data from the queue and send it to nodejs application.
-
-// currently scan and queue uses this infrastructure and has the custom implementation
-// for all the three functions.
-// And here is the example.
-// Callback that's invoked when an async signal is sent.
-//void async_callback( ResolveAsyncCallbackArgs);
-
-// Push the result from C callback into a queue.
-//bool async_queue_populate(const as_val * val, AsyncCallbackData* data);
-
-// Process each element in the queue and call the nodejs callback with the processed data.
-//void async_queue_process( AsyncCallbackData * data);
-
-
+// implements the as_async_query_record_listener interface
+bool async_query_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);

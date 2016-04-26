@@ -20,7 +20,7 @@ extern "C" {
 
 #include <node.h>
 
-#include "async_listener.h"
+#include "async.h"
 #include "client.h"
 #include "conversions.h"
 #include "log.h"

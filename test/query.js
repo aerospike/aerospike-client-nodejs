@@ -175,6 +175,19 @@ describe('Queries', function () {
     })
   })
 
+  describe('query.foreach()', function () {
+    it('should raise client errors asynchronously', function (done) {
+      var query = client.query('test')
+      var invalidPolicy = {timeout: 'not a valid timeout'}
+      var stream = query.foreach(invalidPolicy)
+      // if error is raised synchronously we will never reach here
+      stream.on('error', function (error) {
+        expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
+        done()
+      })
+    })
+  })
+
   context('filter predicates', function () {
     describe('filter.equal()', function () {
       it('should match equal integer values', function (done) {

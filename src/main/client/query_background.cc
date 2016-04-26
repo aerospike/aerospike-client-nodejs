@@ -24,12 +24,11 @@ extern "C" {
 
 #include <node.h>
 
-#include "async_listener.h"
+#include "async.h"
 #include "client.h"
 #include "conversions.h"
 #include "log.h"
 #include "query.h"
-#include "async.h"
 
 using namespace v8;
 
