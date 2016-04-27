@@ -3,11 +3,18 @@ v2.0.1 / 2016-04-27
 
 * **Improvements**
   * Optimize callback handler performance. [#119](https://github.com/aerospike/aerospike-client-nodejs/issues/119)
-  * Extend query/scan performance tests
+  * Removed some unused async C++ helper functions; minor code cleanup
 
 * **Fixes**
   * Ensure callbacks are always called asynchronously, even for param errors
     raised by the client itself. [#120](https://github.com/aerospike/aerospike-client-nodejs/issues/120)
+
+* **Tests**
+  * Complete tests for writing bins with specific data types
+  * Extend query/scan performance tests
+
+* **Documentation**
+  * Minor JSDoc documentation fixes
 
 v2.0.0 / 2016-04-19
 ===================
