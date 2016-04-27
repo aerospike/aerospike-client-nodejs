@@ -30,7 +30,7 @@
     "preversion": "npm test"
   },
   "dependencies": {
-    "nan": "~2.0.8"
+    "nan": "~2.3.0"
   },
   "devDependencies": {
     "expect.js": "^0.3",
