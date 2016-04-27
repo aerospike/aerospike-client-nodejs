@@ -26,7 +26,8 @@
   },
   "scripts": {
     "test": "standard && ./scripts/shuffle_tests",
-    "apidocs": "jsdoc -c jsdoc.json"
+    "apidocs": "jsdoc -c jsdoc.json",
+    "preversion": "npm test"
   },
   "dependencies": {
     "nan": "~2.0.8"
