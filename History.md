@@ -1,8 +1,9 @@
-Head
+v2.0.1 / 2016-04-27
 ===================
 
 * **Improvements**
   * Optimize callback handler performance. [#119](https://github.com/aerospike/aerospike-client-nodejs/issues/119)
+  * Extend query/scan performance tests
 
 * **Fixes**
   * Ensure callbacks are always called asynchronously, even for param errors
