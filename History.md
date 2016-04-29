@@ -1,3 +1,12 @@
+v2.0.2 / 2016-04-29
+===================
+
+* **Improvements**
+  * Add support for node v6 by bumping nan dependency. [PR #122](https://github.com/aerospike/aerospike-client-nodejs/pull/122)
+    Thanks to [@djMax](https://github.com/djMax)!
+  * Add support for Ubuntu 16.04. [PR #123](https://github.com/aerospike/aerospike-client-nodejs/pull/123)
+    Thanks to [@NawarA](https://github.com/NawarA)!
+
 v2.0.1 / 2016-04-27
 ===================
 
