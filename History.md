@@ -1,3 +1,10 @@
+v2.0.3 / 2016-05-03
+===================
+
+* **Fixes**
+  * Event loop does not get released if module gets required but never used to open & close client connection.
+    [#124](https://github.com/aerospike/aerospike-client-nodejs/issues/124)
+
 v2.0.2 / 2016-04-29
 ===================
 
