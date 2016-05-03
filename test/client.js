@@ -24,7 +24,7 @@ describe('Client', function () {
   describe('Client#isConnected', function () {
     var client = null
     beforeEach(function () {
-      client = new Client(Aerospike, helper.config)
+      client = new Client(helper.config)
     })
     afterEach(function () {
       client.close(false)
