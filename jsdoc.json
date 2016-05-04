@@ -6,9 +6,7 @@
   "templates": {
     "cleverLinks": true,
     "monospaceLinks": false,
-    "default": {
-      "outputSourceFiles": true
-    },
+    "outputSourceFiles": true,
     "systemName": "Aerospike",
     "footer": "<div style=\"text-align: center\">High performance NoSQL database delivering speed at scale - <a href=\"http://www.aerospike.com/\">Aerospike.com</a></div>",
     "copyright": "© 2013-2016 Aerospike, Inc.",
@@ -16,7 +14,11 @@
     "theme": "simplex",
     "linenums": true,
     "collapseSymbols": false,
-    "inverseNav": true
+    "inverseNav": true,
+    "analytics": {
+      "ua": "UA-50452230-2",
+      "domain": "aerospike.com"
+    }
   },
   "opts": {
     "destination": "./build/apidocs",
