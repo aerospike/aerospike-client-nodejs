@@ -51,8 +51,12 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
   }
 }
 
-function put (n, keygen, recgen, metagen, callback) {
-  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
+function put (n, keygen, recgen, metagen, policy, callback) {
+  if (typeof policy === 'function') {
+    callback = policy
+    policy = null
+  }
+  policy = policy || { exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
   var generator = {
     key: keygen,
     record: recgen,

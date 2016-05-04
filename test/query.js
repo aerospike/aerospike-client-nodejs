@@ -23,6 +23,7 @@ const helper = require('./test_helper')
 
 const filter = Aerospike.filter
 const GeoJSON = Aerospike.GeoJSON
+const Key = Aerospike.Key
 
 const NUMERIC = Aerospike.indexDataType.NUMERIC
 const STRING = Aerospike.indexDataType.STRING
@@ -176,6 +177,27 @@ describe('Queries', function () {
   })
 
   describe('query.foreach()', function () {
+    it('returns the key if it was stored on the server', function (done) {
+      var unique_key = 'test/query/record_with_stored_key'
+      var key = new Aerospike.Key(helper.namespace, testSet, unique_key)
+      var record = { name: unique_key }
+      var meta = { ttl: 300 }
+      var policy = { key: Aerospike.policy.key.SEND }
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+        var query = client.query(helper.namespace, testSet)
+        query.where(Aerospike.filter.equal('name', unique_key))
+        var stream = query.foreach()
+        var count = 0
+        stream.on('data', function (_bins, _meta, key) {
+          expect(++count).to.equal(1)
+          expect(key).to.be.a(Key)
+          expect(key.key).to.equal(unique_key)
+        })
+        stream.on('end', done)
+      })
+    })
+
     it('should raise client errors asynchronously', function (done) {
       var query = client.query('test')
       var invalidPolicy = {timeout: 'not a valid timeout'}
@@ -186,136 +208,136 @@ describe('Queries', function () {
         done()
       })
     })
-  })
 
-  context('filter predicates', function () {
-    describe('filter.equal()', function () {
-      it('should match equal integer values', function (done) {
-        var args = { filters: [filter.equal('i', 5)] }
-        verifyQueryResults(args, 'int match', done)
+    context('filter predicates', function () {
+      describe('filter.equal()', function () {
+        it('should match equal integer values', function (done) {
+          var args = { filters: [filter.equal('i', 5)] }
+          verifyQueryResults(args, 'int match', done)
+        })
+
+        it('should match equal string values', function (done) {
+          var args = { filters: [filter.equal('s', 'banana')] }
+          verifyQueryResults(args, 'string match', done)
+        })
       })
 
-      it('should match equal string values', function (done) {
-        var args = { filters: [filter.equal('s', 'banana')] }
-        verifyQueryResults(args, 'string match', done)
-      })
-    })
+      describe('filter.range()', function () {
+        it('should match integers within a range', function (done) {
+          var args = { filters: [filter.range('i', 3, 7)] }
+          verifyQueryResults(args, 'int match', done)
+        })
 
-    describe('filter.range()', function () {
-      it('should match integers within a range', function (done) {
-        var args = { filters: [filter.range('i', 3, 7)] }
-        verifyQueryResults(args, 'int match', done)
-      })
+        it('should match integers in a list within a range', function (done) {
+          var args = { filters: [filter.range('li', 3, 7, LIST)] }
+          verifyQueryResults(args, 'int list match', done)
+        })
 
-      it('should match integers in a list within a range', function (done) {
-        var args = { filters: [filter.range('li', 3, 7, LIST)] }
-        verifyQueryResults(args, 'int list match', done)
-      })
-
-      it('should match integers in a map within a range', function (done) {
-        var args = { filters: [filter.range('mi', 3, 7, MAPVALUES)] }
-        verifyQueryResults(args, 'int map match', done)
-      })
-    })
-
-    describe('filter.contains()', function () {
-      it('should match lists containing an integer', function (done) {
-        var args = { filters: [filter.contains('li', 5, LIST)] }
-        verifyQueryResults(args, 'int list match', done)
+        it('should match integers in a map within a range', function (done) {
+          var args = { filters: [filter.range('mi', 3, 7, MAPVALUES)] }
+          verifyQueryResults(args, 'int map match', done)
+        })
       })
 
-      it('should match maps containing an integer value', function (done) {
-        var args = { filters: [filter.contains('mi', 5, MAPVALUES)] }
-        verifyQueryResults(args, 'int map match', done)
+      describe('filter.contains()', function () {
+        it('should match lists containing an integer', function (done) {
+          var args = { filters: [filter.contains('li', 5, LIST)] }
+          verifyQueryResults(args, 'int list match', done)
+        })
+
+        it('should match maps containing an integer value', function (done) {
+          var args = { filters: [filter.contains('mi', 5, MAPVALUES)] }
+          verifyQueryResults(args, 'int map match', done)
+        })
+
+        it('should match lists containing a string', function (done) {
+          var args = { filters: [filter.contains('ls', 'banana', LIST)] }
+          verifyQueryResults(args, 'string list match', done)
+        })
+
+        it('should match maps containing a string value', function (done) {
+          var args = { filters: [filter.contains('ms', 'banana', MAPVALUES)] }
+          verifyQueryResults(args, 'string map match', done)
+        })
+
+        it('should match maps containing a string key', function (done) {
+          var args = { filters: [filter.contains('mks', 'banana', MAPKEYS)] }
+          verifyQueryResults(args, 'string mapkeys match', done)
+        })
       })
 
-      it('should match lists containing a string', function (done) {
-        var args = { filters: [filter.contains('ls', 'banana', LIST)] }
-        verifyQueryResults(args, 'string list match', done)
+      describe('filter.geoWithinGeoJSONRegion()', function () {
+        it('should match locations within a GeoJSON region', function (done) {
+          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+          verifyQueryResults(args, 'point match', done)
+        })
+
+        it('should match locations in a list within a GeoJSON region', function (done) {
+          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
+          verifyQueryResults(args, 'point list match', done)
+        })
+
+        it('should match locations in a map within a GeoJSON region', function (done) {
+          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
+          verifyQueryResults(args, 'point map match', done)
+        })
       })
 
-      it('should match maps containing a string value', function (done) {
-        var args = { filters: [filter.contains('ms', 'banana', MAPVALUES)] }
-        verifyQueryResults(args, 'string map match', done)
+      describe('filter.geoWithinRadius()', function () {
+        it('should match locations within a radius from another location', function (done) {
+          var args = { filters: [filter.geoWithinRadius('g', 103.9135, 1.3085, 15000)] }
+          verifyQueryResults(args, 'point match', done)
+        })
+
+        it('should match locations in a list within a radius from another location', function (done) {
+          var args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST)] }
+          verifyQueryResults(args, 'point list match', done)
+        })
+
+        it('should match locations in a map within a radius from another location', function (done) {
+          var args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES)] }
+          verifyQueryResults(args, 'point map match', done)
+        })
       })
 
-      it('should match maps containing a string key', function (done) {
-        var args = { filters: [filter.contains('mks', 'banana', MAPKEYS)] }
-        verifyQueryResults(args, 'string mapkeys match', done)
-      })
-    })
+      describe('filter.geoContainsGeoJSONPoint()', function () {
+        it('should match regions that contain a GeoJSON point', function (done) {
+          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+          verifyQueryResults(args, 'region match', done)
+        })
 
-    describe('filter.geoWithinGeoJSONRegion()', function () {
-      it('should match locations within a GeoJSON region', function (done) {
-        var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
-        var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
-        verifyQueryResults(args, 'point match', done)
-      })
+        it('should match regions in a list that contain a GeoJSON point', function (done) {
+          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
+          verifyQueryResults(args, 'region list match', done)
+        })
 
-      it('should match locations in a list within a GeoJSON region', function (done) {
-        var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
-        var args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
-        verifyQueryResults(args, 'point list match', done)
-      })
-
-      it('should match locations in a map within a GeoJSON region', function (done) {
-        var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
-        var args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
-        verifyQueryResults(args, 'point map match', done)
-      })
-    })
-
-    describe('filter.geoWithinRadius()', function () {
-      it('should match locations within a radius from another location', function (done) {
-        var args = { filters: [filter.geoWithinRadius('g', 103.9135, 1.3085, 15000)] }
-        verifyQueryResults(args, 'point match', done)
+        it('should match regions in a map that contain a GeoJSON point', function (done) {
+          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
+          verifyQueryResults(args, 'region map match', done)
+        })
       })
 
-      it('should match locations in a list within a radius from another location', function (done) {
-        var args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST)] }
-        verifyQueryResults(args, 'point list match', done)
-      })
+      describe('filter.geoContainsPoint()', function () {
+        it('should match regions that contain a lng/lat coordinate pair', function (done) {
+          var args = { filters: [filter.geoContainsPoint('g', 103.913, 1.308)] }
+          verifyQueryResults(args, 'region match', done)
+        })
 
-      it('should match locations in a map within a radius from another location', function (done) {
-        var args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES)] }
-        verifyQueryResults(args, 'point map match', done)
-      })
-    })
+        it('should match regions in a list that contain a lng/lat coordinate pair', function (done) {
+          var args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST)] }
+          verifyQueryResults(args, 'region list match', done)
+        })
 
-    describe('filter.geoContainsGeoJSONPoint()', function () {
-      it('should match regions that contain a GeoJSON point', function (done) {
-        var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
-        var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
-        verifyQueryResults(args, 'region match', done)
-      })
-
-      it('should match regions in a list that contain a GeoJSON point', function (done) {
-        var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
-        var args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
-        verifyQueryResults(args, 'region list match', done)
-      })
-
-      it('should match regions in a map that contain a GeoJSON point', function (done) {
-        var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
-        var args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
-        verifyQueryResults(args, 'region map match', done)
-      })
-    })
-
-    describe('filter.geoContainsPoint()', function () {
-      it('should match regions that contain a lng/lat coordinate pair', function (done) {
-        var args = { filters: [filter.geoContainsPoint('g', 103.913, 1.308)] }
-        verifyQueryResults(args, 'region match', done)
-      })
-
-      it('should match regions in a list that contain a lng/lat coordinate pair', function (done) {
-        var args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST)] }
-        verifyQueryResults(args, 'region list match', done)
-      })
-
-      it('should match regions in a map that contain a lng/lat coordinate pair', function (done) {
-        var args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES)] }
-        verifyQueryResults(args, 'region map match', done)
+        it('should match regions in a map that contain a lng/lat coordinate pair', function (done) {
+          var args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES)] }
+          verifyQueryResults(args, 'region map match', done)
+        })
       })
     })
   })

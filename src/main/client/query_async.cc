@@ -65,7 +65,7 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 	}
 
 	as_v8_debug(log, "Sending async query command");
-	status = aerospike_query_async(client->as, &err, p_policy, &query, async_query_record_listener, data, NULL);
+	status = aerospike_query_async(client->as, &err, p_policy, &query, async_scan_listener, data, NULL);
 	if (status != AEROSPIKE_OK) {
 		invoke_error_callback(&err, data);
 	}
