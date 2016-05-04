@@ -71,6 +71,7 @@ Local<Object> error_to_jsobject(as_error * error, LogInfo *log);
 Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );
 Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
+Local<Object> recordkey_to_jsobject(const as_record * record, LogInfo * log );
 Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
 Local<Array> batch_records_to_jsarray(const as_batch_read_records* record, LogInfo* log );
 Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
