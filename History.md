@@ -1,3 +1,10 @@
+v2.0.4 / 2016-xx-xx
+===================
+
+* **Fixes**
+  * Query and Scan operations do not return record keys.
+    [#126](https://github.com/aerospike/aerospike-client-nodejs/issues/126)
+
 v2.0.3 / 2016-05-03
 ===================
 
