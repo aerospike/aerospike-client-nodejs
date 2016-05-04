@@ -20,6 +20,8 @@ const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
 const helper = require('./test_helper')
 
+const Key = Aerospike.Key
+
 const keygen = helper.keygen
 const metagen = helper.metagen
 const putgen = helper.putgen
@@ -36,7 +38,8 @@ context('Scans', function () {
     var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/scan/'})
     var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
     var mgen = metagen.constant({ ttl: 300 })
-    putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
+    var policy = { key: Aerospike.policy.key.SEND, exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
+    putgen.put(numberOfRecords, kgen, rgen, mgen, policy, function (key) {
       if (!key) done()
     })
   })
@@ -98,12 +101,23 @@ context('Scans', function () {
       var scan = client.scan(helper.namespace, testSet)
       var recordsReceived = 0
       var stream = scan.foreach()
-      stream.on('error', function (error) { throw error })
-      stream.on('data', function (record) { recordsReceived++ })
+      stream.on('data', function () { recordsReceived++ })
       stream.on('end', function () {
         expect(recordsReceived).to.not.be.lessThan(numberOfRecords)
         done()
       })
+    })
+
+    it('returns the key if it is stored on the server', function (done) {
+      // requires { key: Aerospike.policy.key.SEND } when creating the record
+      var scan = client.scan(helper.namespace, testSet)
+      var stream = scan.foreach()
+      stream.on('data', function (record, meta, key) {
+        expect(key).to.be.a(Key)
+        expect(key.key).to.not.be.empty()
+        stream.abort()
+      })
+      stream.on('end', done)
     })
 
     context('with nobins set to true', function () {

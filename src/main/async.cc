@@ -264,7 +264,7 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 	AerospikeClient * client = data->client;
 	LogInfo * log = client->log;
 
-	const int argc = 3;
+	const int argc = 4;
 	bool reached_end = false;
 	Local<Value> argv[argc];
 	if (err) {
@@ -272,15 +272,18 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 		argv[0] = error_to_jsobject(err, log);
 		argv[1] = Nan::Null();
 		argv[2] = Nan::Null();
+		argv[3] = Nan::Null();
 	} else if (record) {
 		argv[0] = err_ok();
 		argv[1] = recordbins_to_jsobject(record, log);
 		argv[2] = recordmeta_to_jsobject(record, log);
+		argv[3] = key_to_jsobject(&record->key, log);
 	} else {
 		reached_end = true;
 		argv[0] = err_ok();
 		argv[1] = Nan::Null();
 		argv[2] = Nan::Null();
+		argv[3] = Nan::Null();
 	}
 
 	as_v8_debug(log, "Invoking JS callback function");
