@@ -56,4 +56,4 @@ All modules and classes can also be accessed directly through the drop-down menu
 
 For a detailed technical documentation of the Aerospike distributed, NoSQL
 database, including an architecture overview and in-depth feature guides,
-please visit http://www.aerospike.com/docs.
+please visit <a href="http://www.aerospike.com/docs">http://www.aerospike.com/docs</a>.
