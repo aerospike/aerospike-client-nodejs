@@ -65,8 +65,5 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 // implements the as_async_batch_listener interface
 void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);
 
-// implements the as_async_scan_listener interface
+// implements the as_async_scan_listener and as_async_query_record_listener interfaces
 bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
-
-// implements the as_async_query_record_listener interface
-bool async_query_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
