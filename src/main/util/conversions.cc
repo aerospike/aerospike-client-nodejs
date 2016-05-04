@@ -841,6 +841,29 @@ Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     return scope.Escape(meta);
 }
 
+Local<Object> recordkey_to_jsobject(const as_record * record, LogInfo * log)
+{
+    Nan::EscapableHandleScope scope;
+    Local<Object> key;
+
+    if(record == NULL) {
+        as_v8_debug( log, "Record ( C structure) is NULL, cannot form node.js key object");
+        return scope.Escape(key);
+    }
+
+  	if (NULL != record->key.valuep) {
+    		key= Nan::New<Object>();
+        Local<Value> okey = val_to_jsvalue((as_val *)record->key.valuep, log);
+    		key->Set(Nan::New("key").ToLocalChecked(), okey);
+  	  	char* key_val_as_str = as_val_tostring(record->key.valuep);
+    		as_v8_detail(log, "Key of the record %s", key_val_as_str);
+  	  	free(key_val_as_str);
+  	}
+
+
+    return scope.Escape(key);
+}
+
 Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
 {
     Nan::EscapableHandleScope scope;
