@@ -1,3 +1,11 @@
+HEAD
+===================
+
+* **Documentation**
+  * Pulled client configuration out into a separate class and expanded the documentation.
+  * Documented `sharedMemory` configuration.
+  * Added tutorial for using Aerospike client in Node.js cluster setup.
+
 v2.0.4 / 2016-05-09
 ===================
 
