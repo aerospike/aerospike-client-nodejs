@@ -51,6 +51,7 @@ All modules and classes can also be accessed directly through the drop-down menu
 ## Tutorials
 
 * {@tutorial getting_started}
+* {@tutorial node_clusters}
 
 ## Further Documentation
 

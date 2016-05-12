@@ -1,5 +1,8 @@
 {
   "getting_started": {
     "title": "Getting Started - Connecting to an Aerospike database cluster"
+  },
+  "node_clusters": {
+    "title": "Managing Aerospike connections in a Node cluster"
   }
 }
