@@ -1629,25 +1629,21 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
             goto ReturnError;
         }
 
-        if(val_obj->IsUndefined())
-        {
+        if (val_obj->IsUndefined()) {
             as_v8_error(log, "The key value cannot be undefined");
             goto ReturnError;
         }
-        if ( val_obj->IsString() ) {
+
+        if (val_obj->IsString()) {
             char * value = strdup(*String::Utf8Value(val_obj));
             as_key_init(key, ns, set, value);
             as_v8_detail(log, "key.key = \"%s\"", value);
             ((as_string *) key->valuep)->free = true;
-            goto ReturnOk;
-        }
-        else if ( val_obj->IsNumber() ) {
+        } else if (val_obj->IsNumber()) {
             int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
             as_key_init_int64(key, ns, set, value);
             as_v8_detail(log, "key.key = %d", value);
-            goto ReturnOk;
-        }
-        else if ( val_obj->IsObject() ) {
+        } else if (val_obj->IsObject()) {
             Local<Object> obj = val_obj->ToObject();
             int size ;
             uint8_t* data ;
@@ -1664,14 +1660,13 @@ int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
                     size > 3 ? " ..." : ""
                     );
         }
-    }
-    else
-    {
+        Local<Object> buff = Nan::CopyBuffer((char*)as_key_digest(key)->value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
+        obj->Set(Nan::New("digest").ToLocalChecked(), buff);
+    } else {
         as_v8_error(log, "The Key object must have a \" key \" entry ");
         goto ReturnError;
     }
 
-ReturnOk:
     return AS_NODE_PARAM_OK;
 
 ReturnError:
