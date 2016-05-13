@@ -36,7 +36,7 @@
     "expect.js": "^0.3",
     "mocha": ">0",
     "yargs": "1.2.1",
-    "standard": "^5.4.1",
+    "standard": "^7.0",
     "deasync": "^0.1.4",
     "jsdoc": "^3.4.0",
     "ink-docstrap": "^1.1.0"
