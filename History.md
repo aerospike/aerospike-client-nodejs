@@ -1,6 +1,10 @@
 HEAD
 ===================
 
+* **Improvements**
+  * Key objects returned in callbacks now include the digest
+  * Code cleanup to support standard@7.0.0 which adds several new rules
+
 * **Documentation**
   * Pulled client configuration out into a separate class and expanded the documentation.
   * Documented `sharedMemory` configuration.
