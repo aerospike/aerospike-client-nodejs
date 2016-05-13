@@ -71,9 +71,9 @@ describe('client.select()', function () {
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
-      var select_key = {ns: helper.namespace, set: helper.set}
+      var selectKey = {ns: helper.namespace, set: helper.set}
 
-      client.select(select_key, bins, function (err, _record) {
+      client.select(selectKey, bins, function (err, _record) {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
         client.remove(key, function (err) {

@@ -27,19 +27,19 @@ describe('client.info()', function () {
     var host = client.config.hosts[0]
 
     it('should fetch object count from specific cluster node', function (done) {
-      client.info('objects', host, function (err, response, responding_host) {
+      client.info('objects', host, function (err, response, respondingHost) {
         expect(err).not.to.be.ok()
-        expect(responding_host).to.eql(host)
+        expect(respondingHost).to.eql(host)
         expect(info.parseInfo(response)).to.have.property('objects')
         done()
       })
     })
 
     it('should accept a string with the host address', function (done) {
-      var host_str = host.addr + ':' + host.port
-      client.info('objects', host_str, function (err, response, responding_host) {
+      var hostAddress = host.addr + ':' + host.port
+      client.info('objects', hostAddress, function (err, response, respondingHost) {
         expect(err).not.to.be.ok()
-        expect(responding_host).to.eql(host)
+        expect(respondingHost).to.eql(host)
         expect(info.parseInfo(response)).to.have.property('objects')
         done()
       })
@@ -56,11 +56,11 @@ describe('client.info()', function () {
   })
 
   it('should call the done callback after the info callback', function (done) {
-    var info_cb_called = 0
+    var infoCbCalled = 0
     client.info(function () {
-      info_cb_called += 1
+      infoCbCalled += 1
     }, function () {
-      expect(info_cb_called).to.not.eql(0)
+      expect(infoCbCalled).to.not.eql(0)
       done()
     })
   })

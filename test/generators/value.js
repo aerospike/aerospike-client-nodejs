@@ -20,7 +20,6 @@
 //
 const Aerospike = require('../../lib/aerospike')
 const Double = Aerospike.Double
-const GeoJSON = Aerospike.GeoJSON
 
 // Returns a random integer between min (included) and max (excluded)
 function randomInt (min, max) {
@@ -30,19 +29,6 @@ function randomInt (min, max) {
 // Returns a random number between min (included) and max (excluded)
 function randomDouble (min, max) {
   return Math.random() * (max - min) + min
-}
-
-// Returns a random point in a circle of radius r (in meters) around the
-// geographical coordiates lat, lng
-// Source: http://gis.stackexchange.com/a/25883/10736
-function randomPoint (lat, lng, r) {
-  r = r / 111300 // radius in degrees
-  var w = r * Math.sqrt(Math.random())
-  var t = 2 * Math.PI * Math.random()
-  var x = w * Math.cos(t)
-  var y = w * Math.sin(t)
-  x = x / Math.cos(lng) // adjust for shrinking of east-west distances
-  return [lat + x, lng + y]
 }
 
 function merge (o1, o2) {
@@ -157,20 +143,6 @@ double.defaults = {
   step: 0.1
 }
 
-function geojsonPoint (options) {
-  var opt = merge(geojsonPoint.defaults, options)
-  return function () {
-    var coords = (opt.random === true) ? randomPoint(opt.lat, opt.lng, opt.r) : [opt.lat, opt.lng]
-    return new GeoJSON({type: 'Point', coordinates: coords.reverse()})
-  }
-}
-geojsonPoint.defaults = {
-  random: true,
-  lat: 37.4214209,
-  lng: -122.1008744,
-  r: 1000
-}
-
 function array (options) {
   var opt = merge(array.defaults, options)
   return function () {
@@ -191,33 +163,12 @@ function map () {
   }
 }
 
-function array_of_array () {
-  return function () {
-    var arr = array()
-    var obj = map()
-    var list = [ arr(), obj() ]
-    return list
-  }
-}
-
-function map_of_map () {
-  return function () {
-    var arr = array()
-    var obj = map()
-    var map_of_list = {inner_list: arr(), inner_map: obj()}
-    return map_of_list
-  }
-}
-
 module.exports = {
   bytes: bytes,
   constant: constant,
   integer: integer,
   string: string,
   double: double,
-  geojsonPoint: geojsonPoint,
   array: array,
-  map: map,
-  array_of_array: array_of_array,
-  map_of_map: map_of_map
+  map: map
 }

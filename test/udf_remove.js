@@ -18,6 +18,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
+const path = require('path')
 
 const status = Aerospike.status
 
@@ -26,7 +27,7 @@ describe('client.udfRemove()', function (done) {
 
   it('should remove an UDF module with a info policy from aerospike cluster', function (done) {
     var script = 'udf.lua'
-    var filename = __dirname + '/' + script
+    var filename = path.join(__dirname, script)
     var infopolicy = { timeout: 1000, send_as_is: true, check_bounds: false }
     client.udfRegister(filename, infopolicy, function (err) {
       expect(err).not.to.be.ok()

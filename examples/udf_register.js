@@ -21,6 +21,7 @@
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
+const path = require('path')
 const iteration = require('./iteration')
 
 // *****************************************************************************
@@ -129,7 +130,7 @@ var config = {
 function run (client, done) {
   client.udfRegister(file, function (err) {
     if (err) throw err
-    client.udfRegisterWait(file, 1000, function (err) {
+    client.udfRegisterWait(path.basename(file), 1000, function (err) {
       if (err) throw err
       !argv.quiet && console.log('UDF Registration Successful - %s', file)
       done()

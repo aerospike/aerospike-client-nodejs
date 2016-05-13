@@ -118,7 +118,7 @@ var O_STEP = 8
 var results = []
 var errors = []
 
-function report_step (p, i, o, code, stdout, stderr) {
+function reportStep (p, i, o, code, stdout, stderr) {
   console.log('processes: %d, iterations: %d, operations: %d, status: %d', p, i, o, code)
 
   console.log()
@@ -159,7 +159,7 @@ function report_step (p, i, o, code, stdout, stderr) {
   console.log()
 }
 
-function report_final () {
+function reportFinal () {
   console.log()
   console.log('SUMMARY')
   console.log()
@@ -192,19 +192,19 @@ function report_final () {
     stats.print_histogram(res.durations, console.log, '      ')
   })
 
-  var group_ops = {}
+  var groupOps = {}
 
   matched.forEach(function (res) {
     var ops = res.configuration.operations
-    var group = (group_ops[ops] || [])
+    var group = (groupOps[ops] || [])
     group.push(res)
-    group_ops[ops] = group
+    groupOps[ops] = group
   })
 
   console.log()
   console.log()
-  for (var k in group_ops) {
-    var ops = group_ops[k]
+  for (var k in groupOps) {
+    var ops = groupOps[k]
     console.log('operations: %d', k)
     for (var o = 0; o < ops.length; o++) {
       var op = ops[o]
@@ -224,16 +224,16 @@ function report_final () {
   }
   console.log()
 
-  var o_hist = {}
+  var opsHist = {}
 
   matched.forEach(function (res) {
     var ops = res.configuration.operations
-    o_hist[ops] = (o_hist[ops] || 0) + 1
+    opsHist[ops] = (opsHist[ops] || 0) + 1
   })
 
   console.log()
   console.log('Number of Concurrent Transactions:')
-  stats.print_histogram(o_hist, console.log, '    ')
+  stats.print_histogram(opsHist, console.log, '    ')
 
   console.log()
 }
@@ -263,7 +263,7 @@ function exec (p, i, o) {
   })
 
   proc.on('close', function (code) {
-    report_step(p, i, o, code, stdout.toString(), stderr.toString())
+    reportStep(p, i, o, code, stdout.toString(), stderr.toString())
     step(p, i, o)
   })
 }
@@ -283,7 +283,7 @@ function step (p, i, o) {
   }
 
   if (p > P_MAX) {
-    report_final()
+    reportFinal()
     return
   }
 

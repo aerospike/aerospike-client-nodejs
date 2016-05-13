@@ -42,7 +42,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns the status whether each key was found or not', function (done) {
-    var batch_records = [
+    var batchRecords = [
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/1')},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/3')},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/5')},
@@ -50,25 +50,25 @@ describe('client.batchRead()', function () {
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/not_either')}
     ]
 
-    client.batchRead(batch_records, function (err, results) {
+    client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(5)
       var found = results.filter(function (result) { return result.status === status.AEROSPIKE_OK })
       expect(found.length).to.be(3)
-      var not_found = results.filter(function (result) { return result.status === status.AEROSPIKE_ERR_RECORD_NOT_FOUND })
-      expect(not_found.length).to.be(2)
+      var notFound = results.filter(function (result) { return result.status === status.AEROSPIKE_ERR_RECORD_NOT_FOUND })
+      expect(notFound.length).to.be(2)
       done()
     })
   })
 
   it('returns only meta data if no bins are selected', function (done) {
-    var batch_records = [
+    var batchRecords = [
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/1')},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/3')},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/5')}
     ]
 
-    client.batchRead(batch_records, function (err, results) {
+    client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(3)
       results.forEach(function (result) {
@@ -81,13 +81,13 @@ describe('client.batchRead()', function () {
   })
 
   it('returns just the selected bins', function (done) {
-    var batch_records = [
+    var batchRecords = [
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), bins: ['i']},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), bins: ['i']},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), bins: ['i']}
     ]
 
-    client.batchRead(batch_records, function (err, results) {
+    client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(3)
       results.forEach(function (result) {
@@ -100,13 +100,13 @@ describe('client.batchRead()', function () {
   })
 
   it('returns the entire record', function (done) {
-    var batch_records = [
+    var batchRecords = [
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: true},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: true}
     ]
 
-    client.batchRead(batch_records, function (err, results) {
+    client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(3)
       results.forEach(function (result) {
@@ -119,13 +119,13 @@ describe('client.batchRead()', function () {
   })
 
   it('returns selected bins for each key', function (done) {
-    var batch_records = [
+    var batchRecords = [
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: false, bins: ['i']},
       {key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: false}
     ]
 
-    client.batchRead(batch_records, function (err, results) {
+    client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(3)
       results.forEach(function (result) {

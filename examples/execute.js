@@ -87,9 +87,9 @@ var argp = yargs
 
 var argv = argp.argv
 var keyv = argv._.shift()
-var udf_module = argv._.shift()
-var udf_function = argv._.shift()
-var udf_args = argv._
+var udfModule = argv._.shift()
+var udfFunction = argv._.shift()
+var udfArgs = argv._
 
 if (argv.help === true) {
   argp.showHelp()
@@ -103,14 +103,14 @@ if (!keyv) {
   process.exit(1)
 }
 
-if (!udf_module) {
+if (!udfModule) {
   console.error('Error: Please provide a key for the operation')
   console.error()
   argp.showHelp()
   process.exit(1)
 }
 
-if (!udf_function) {
+if (!udfFunction) {
   console.error('Error: Please provide a key for the operation')
   console.error()
   argp.showHelp()
@@ -144,9 +144,9 @@ function run (client, done) {
   var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
   var udf = {
-    module: udf_module,
-    funcname: udf_function,
-    args: udf_args.map(function (v) {
+    module: udfModule,
+    funcname: udfFunction,
+    args: udfArgs.map(function (v) {
       try {
         return JSON.parse(v)
       } catch (exception) {

@@ -24,7 +24,7 @@ const OPERATION_TIME_END = 2
 // 1. For status code of each operation.
 // 2. Latency histogram.
 var hist = {}
-var time_hist = {
+var timeHist = {
   '<= 1': 0,
   '> 1': 0,
   '> 2': 0,
@@ -36,8 +36,8 @@ var time_hist = {
 
 var trans = { total: { count: 0, min_tps: Infinity, max_tps: 0 } }
 
-var start_time
-var total_duration
+var startTime
+var totalDuration
 
 const TABLE_CHARS = {
   'top': '',
@@ -76,14 +76,14 @@ function duration (start, end) {
   return ms
 }
 
-function parse_time_to_secs (time) {
+function parseTimeToSecs (time) {
   if (time !== undefined) {
-    var time_match = time.toString().match(/(\d+)([smh])?/)
-    if (time_match !== null) {
-      if (time_match[2] !== null) {
-        time = parseInt(time_match[1], 10)
-        var time_unit = time_match[2]
-        switch (time_unit) {
+    var timeMatch = time.toString().match(/(\d+)([smh])?/)
+    if (timeMatch !== null) {
+      if (timeMatch[2] !== null) {
+        time = parseInt(timeMatch[1], 10)
+        var timeUnit = timeMatch[2]
+        switch (timeUnit) {
           case 'm':
             time = time * 60
             break
@@ -97,35 +97,35 @@ function parse_time_to_secs (time) {
   return time
 }
 
-function time_histogram (operations) {
+function timeHistogram (operations) {
   operations.map(function (op) {
     return duration(op[OPERATION_TIME_START], op[OPERATION_TIME_END])
   }).forEach(function (dur) {
     var d = Math.floor(dur)
     if (d > 32) {
-      time_hist['> 32']++
+      timeHist['> 32']++
     }
     if (d > 16) {
-      time_hist['> 16']++
+      timeHist['> 16']++
     } else if (d > 8) {
-      time_hist['> 8']++
+      timeHist['> 8']++
     } else if (d > 4) {
-      time_hist['> 4']++
+      timeHist['> 4']++
     } else if (d > 2) {
-      time_hist['> 2']++
+      timeHist['> 2']++
     } else if (d > 1) {
-      time_hist['> 1']++
+      timeHist['> 1']++
     } else {
-      time_hist['<= 1']++
+      timeHist['<= 1']++
     }
   })
 }
 
-function number_format (v, precision) {
+function numberFormat (v, precision) {
   return v.toFixed(precision || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-function time_units (v) {
+function timeUnits (v) {
   var u = v === 1 ? 'second' : 'seconds'
 
   if (Math.abs(v) >= 60) {
@@ -138,17 +138,17 @@ function time_units (v) {
     u = v === 1 ? 'hour' : 'hours'
   }
 
-  return number_format(v, 2) + ' ' + u
+  return numberFormat(v, 2) + ' ' + u
 }
 
-function calculate_tps (transactions) {
-  var seconds = total_duration / 1000
+function calculateTPS (transactions) {
+  var seconds = totalDuration / 1000
   Object.keys(transactions).forEach(function (stat) {
     transactions[stat]['tps'] = transactions[stat]['count'] / seconds
   })
 }
 
-function status_histogram (operations) {
+function statusHistogram (operations) {
   operations.map(function (op) {
     return op[OPERATION_STATUS]
   }).forEach(function (status) {
@@ -156,7 +156,7 @@ function status_histogram (operations) {
   })
 }
 
-function print_table (table, print, prefix) {
+function printTable (table, print, prefix) {
   table.toString().split('\n').forEach(function (l) {
     if (l.length > 0) {
       print((prefix || '') + l)
@@ -164,7 +164,7 @@ function print_table (table, print, prefix) {
   })
 }
 
-function print_env_table (print, prefix) {
+function printEnvTable (print, prefix) {
   var envTable = new Table({
     chars: TABLE_CHARS,
     style: TABLE_STYLE
@@ -173,10 +173,10 @@ function print_env_table (print, prefix) {
   envTable.push({'Node.js Version': process.versions.node})
   envTable.push({'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || '-'})
 
-  print_table(envTable, print, prefix)
+  printTable(envTable, print, prefix)
 }
 
-function print_config_table (config, print, prefix) {
+function printConfigTable (config, print, prefix) {
   var configTable = new Table({
     chars: TABLE_CHARS,
     style: TABLE_STYLE
@@ -185,12 +185,12 @@ function print_config_table (config, print, prefix) {
   configTable.push({'operations': config.operations})
   configTable.push({'iterations': config.iterations === undefined ? 'undefined' : config.iterations})
   configTable.push({'processes': config.processes})
-  configTable.push({'time': config.time === undefined ? 'undefined' : time_units(config.time)})
+  configTable.push({'time': config.time === undefined ? 'undefined' : timeUnits(config.time)})
 
-  print_table(configTable, print, prefix)
+  printTable(configTable, print, prefix)
 }
 
-function print_transactions (transactions, print, prefix) {
+function printTransactions (transactions, print, prefix) {
   var thead = []
   thead.push('')
   for (var t in transactions) {
@@ -205,29 +205,29 @@ function print_transactions (transactions, print, prefix) {
   var columns = Object.keys(transactions)
 
   var row = columns.map(function (col) {
-    return number_format(transactions[col]['count'], 0)
+    return numberFormat(transactions[col]['count'], 0)
   })
   table.push({'Total': row})
 
   row = columns.map(function (col) {
-    return number_format(transactions[col]['tps'], 0)
+    return numberFormat(transactions[col]['tps'], 0)
   })
   table.push({'TPS': row})
 
   row = columns.map(function (col) {
-    return number_format(transactions[col]['min_tps'], 0)
+    return numberFormat(transactions[col]['min_tps'], 0)
   })
   table.push({'Min TPS': row})
 
   row = columns.map(function (col) {
-    return number_format(transactions[col]['max_tps'], 0)
+    return numberFormat(transactions[col]['max_tps'], 0)
   })
   table.push({'Max TPS': row})
 
-  print_table(table, print, prefix)
+  printTable(table, print, prefix)
 }
 
-function print_histogram (histogram, print, prefix) {
+function printHistogram (histogram, print, prefix) {
   var total = Object.keys(histogram).map(function (k) {
     return histogram[k]
   }).reduce(sum)
@@ -237,7 +237,7 @@ function print_histogram (histogram, print, prefix) {
 
   for (var k in histogram) {
     thead.push(k)
-    tbody.push(number_format(histogram[k] / total * 100, 1) + '%')
+    tbody.push(numberFormat(histogram[k] / total * 100, 1) + '%')
   }
 
   var table = new Table({
@@ -248,60 +248,60 @@ function print_histogram (histogram, print, prefix) {
 
   table.push(tbody)
 
-  print_table(table, print, prefix)
+  printTable(table, print, prefix)
 }
 
 function start () {
-  start_time = process.hrtime()
+  startTime = process.hrtime()
 }
 
 function stop () {
-  var end_time = process.hrtime()
-  total_duration = duration(start_time, end_time)
+  var endTime = process.hrtime()
+  totalDuration = duration(startTime, endTime)
 }
 
 function iteration (operations) {
-  status_histogram(operations)
-  time_histogram(operations)
+  statusHistogram(operations)
+  timeHistogram(operations)
 }
 
-function aggregate_interval_stats (stat_name, tx) {
-  var stats = trans[stat_name] = trans[stat_name] || { count: 0, max_tps: 0, min_tps: Infinity }
+function aggregateIntervalStats (statName, tx) {
+  var stats = trans[statName] = trans[statName] || { count: 0, max_tps: 0, min_tps: Infinity }
   stats['count'] += tx
   if (tx > stats['max_tps']) stats['max_tps'] = tx
   if (tx < stats['min_tps']) stats['min_tps'] = tx
 }
 
-function interval (interval_stats) {
-  var total_tx = 0
-  for (var stat in interval_stats) {
-    var tx = interval_stats[stat][0]
-    total_tx += tx
-    aggregate_interval_stats(stat, tx)
+function interval (intervalStats) {
+  var totalTX = 0
+  for (var stat in intervalStats) {
+    var tx = intervalStats[stat][0]
+    totalTX += tx
+    aggregateIntervalStats(stat, tx)
   }
-  aggregate_interval_stats('total', total_tx)
+  aggregateIntervalStats('total', totalTX)
 }
 
-function report_final (argv, print) {
-  calculate_tps(trans)
+function reportFinal (argv, print) {
+  calculateTPS(trans)
   if (!argv.json) {
     print()
     print('SUMMARY')
     print()
     print('  Environment')
-    print_env_table(print)
+    printEnvTable(print)
     print()
     print('  Configuration')
-    print_config_table(argv, print)
+    printConfigTable(argv, print)
     print()
     print('  Transactions')
-    print_transactions(trans, print)
+    printTransactions(trans, print)
     print()
     print('  Durations')
-    print_histogram(time_hist, print)
+    printHistogram(timeHist, print)
     print()
     print('  Status Codes')
-    print_histogram(hist, print)
+    printHistogram(hist, print)
     print()
   } else {
     var output = {
@@ -314,9 +314,9 @@ function report_final (argv, print) {
         iterations: argv.iterations,
         processes: argv.processes
       },
-      duration: total_duration,
+      duration: totalDuration,
       transactions: trans,
-      durations: time_hist,
+      durations: timeHist,
       status_codes: hist
     }
     console.log('%j', output)
@@ -330,7 +330,7 @@ module.exports = {
   stop: stop,
   iteration: iteration,
   interval: interval,
-  print_histogram: print_histogram,
-  report_final: report_final,
-  parse_time_to_secs: parse_time_to_secs
+  printHistogram: printHistogram,
+  reportFinal: reportFinal,
+  parseTimeToSecs: parseTimeToSecs
 }

@@ -106,10 +106,10 @@ var config = {
   password: argv.password
 }
 
-var g_nkeys = 20
-var g_index = 'points-loc-index'
+var numberOfRecords = 20
+var geoIndex = 'points-loc-index'
 
-function execute_query (client, done) {
+function executeQuery (client, done) {
   var count = 0
   var region = GeoJSON.Polygon([-122.500000, 37.000000], [-121.000000, 37.000000],
         [-121.000000, 38.080000], [-122.500000, 38.080000], [-122.500000, 37.000000])
@@ -137,9 +137,9 @@ function execute_query (client, done) {
   })
 }
 
-function insert_records (client, ndx, end, done) {
+function insertRecords (client, ndx, end, done) {
   if (ndx >= end) {
-    return execute_query(client, done)
+    return executeQuery(client, done)
   }
 
   var key = new Key(argv.namespace, argv.set, ndx)
@@ -148,53 +148,53 @@ function insert_records (client, ndx, end, done) {
   var bins = { loc: GeoJSON.Point(lng, lat) }
   client.put(key, bins, function (err, key) {
     if (err) throw err
-    insert_records(client, ndx + 1, end, done)
+    insertRecords(client, ndx + 1, end, done)
   })
 }
 
-function create_index (client, done) {
+function createIndex (client, done) {
   var options = {
     ns: argv.namespace,
     set: argv.set,
     bin: 'loc',
-    index: g_index
+    index: geoIndex
   }
   client.createGeo2DSphereIndex(options, function (err, job) {
     if (err) throw err
     job.waitUntilDone(100, function (err) {
       if (err) throw err
-      insert_records(client, 0, g_nkeys, done)
+      insertRecords(client, 0, numberOfRecords, done)
     })
   })
 }
 
-function remove_index (client, done) {
-  client.indexRemove(argv.namespace, g_index, function (err) {
+function removeIndex (client, done) {
+  client.indexRemove(argv.namespace, geoIndex, function (err) {
     if (err) throw err
     done(client)
   })
 }
 
-function remove_records (client, ndx, end, done) {
+function removeRecords (client, ndx, end, done) {
   if (ndx >= end) {
-    return remove_index(client, done)
+    return removeIndex(client, done)
   }
 
   var key = new Key(argv.namespace, argv.set, ndx)
 
   client.remove(key, function (err, key) {
     if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
-    remove_records(client, ndx + 1, end, done)
+    removeRecords(client, ndx + 1, end, done)
   })
 }
 
 function cleanup (client, done) {
-  remove_records(client, 0, g_nkeys, done)
+  removeRecords(client, 0, numberOfRecords, done)
 }
 
 Aerospike.connect(config, function (err, client) {
   if (err) throw err
-  create_index(client, function () {
+  createIndex(client, function () {
     client.close()
   })
 })

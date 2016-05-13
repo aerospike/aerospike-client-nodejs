@@ -27,7 +27,7 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
       throw err
     }
     if (record) {
-      callback(record.key, record. bins, record.meta)
+      callback(record.key, record.bins, record.meta)
       inFlight--
     }
     currentRecordNo++

@@ -101,11 +101,11 @@ describe('client.remove()', function () {
     client.put(key, record, meta, function (err) {
       if (err) { throw new Error(err.message) }
 
-      var remove_policy = {
+      var removePolicy = {
         gen: Aerospike.policy.gen.EQ,
         generation: 2
       }
-      client.remove(key, remove_policy, function (err) {
+      client.remove(key, removePolicy, function (err) {
         expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION)
 
         client.exists(key, function (err) {

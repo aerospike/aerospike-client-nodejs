@@ -206,7 +206,7 @@ describe('client.operate()', function () {
 
       client.get(key, function (err, record3, metadata3, key3) {
         if (err) throw err
-        var ttl_diff = metadata3.ttl - meta.ttl
+        var ttlDiff = metadata3.ttl - meta.ttl
 
         client.operate(key, ops, function (err, record1, metadata1, key1) {
           expect(err).to.not.be.ok()
@@ -215,8 +215,8 @@ describe('client.operate()', function () {
             if (err) throw err
             expect(record['i']).to.equal(record2['i'])
             expect(record['s']).to.equal(record2['s'])
-            expect(2592000 + ttl_diff + 10).to.be.above(metadata2.ttl)
-            expect(2592000 + ttl_diff - 10).to.be.below(metadata2.ttl)
+            expect(2592000 + ttlDiff + 10).to.be.above(metadata2.ttl)
+            expect(2592000 + ttlDiff - 10).to.be.below(metadata2.ttl)
 
             client.remove(key2, function (err, key) {
               if (err) throw err

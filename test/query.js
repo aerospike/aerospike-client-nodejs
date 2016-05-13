@@ -178,21 +178,21 @@ describe('Queries', function () {
 
   describe('query.foreach()', function () {
     it('returns the key if it was stored on the server', function (done) {
-      var unique_key = 'test/query/record_with_stored_key'
-      var key = new Aerospike.Key(helper.namespace, testSet, unique_key)
-      var record = { name: unique_key }
+      var uniqueKey = 'test/query/record_with_stored_key'
+      var key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
+      var record = { name: uniqueKey }
       var meta = { ttl: 300 }
       var policy = { key: Aerospike.policy.key.SEND }
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
         var query = client.query(helper.namespace, testSet)
-        query.where(Aerospike.filter.equal('name', unique_key))
+        query.where(Aerospike.filter.equal('name', uniqueKey))
         var stream = query.foreach()
         var count = 0
         stream.on('data', function (_bins, _meta, key) {
           expect(++count).to.equal(1)
           expect(key).to.be.a(Key)
-          expect(key.key).to.equal(unique_key)
+          expect(key.key).to.equal(uniqueKey)
         })
         stream.on('end', done)
       })

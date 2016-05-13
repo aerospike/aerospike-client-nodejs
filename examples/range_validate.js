@@ -137,10 +137,10 @@ Aerospike.connect(config, function (err, client) {
   // Perform the operation
   //
 
-  const max_concurrent = 200
-  var in_flight = 0
+  const maxConcurrent = 200
+  var inFlight = 0
 
-  function put_done (client, start, end) {
+  function putDone (client, start, end) {
     var total = end - start + 1
     var done = 0
     var timeLabel = 'range_put @ ' + total
@@ -148,7 +148,7 @@ Aerospike.connect(config, function (err, client) {
     console.time(timeLabel)
 
     return function (err, key) {
-      in_flight--
+      inFlight--
       if (err) {
         console.log('ERR - ', err, key)
       } else {
@@ -159,13 +159,13 @@ Aerospike.connect(config, function (err, client) {
       if (done >= total) {
         console.timeEnd(timeLabel)
         console.log()
-        get_start(client, start, end)
+        getStart(client, start, end)
       }
     }
   }
 
-  function put_start (client, start, end) {
-    var done = put_done(client, start, end)
+  function putStart (client, start, end) {
+    var done = putDone(client, start, end)
     var i = 0
 
     for (i = start; i <= end; i++) {
@@ -181,13 +181,13 @@ Aerospike.connect(config, function (err, client) {
         gen: 0
       }
 
-      in_flight++
-      deasync.loopWhile(function () { return in_flight > max_concurrent })
+      inFlight++
+      deasync.loopWhile(function () { return inFlight > maxConcurrent })
       client.put(key, record, metadata, done)
     }
   }
 
-  function get_done (client, start, end) {
+  function getDone (client, start, end) {
     var total = end - start + 1
     var done = 0
     var timeLabel = 'range_get @ ' + total
@@ -195,7 +195,7 @@ Aerospike.connect(config, function (err, client) {
     console.time(timeLabel)
 
     return function (err, record, metadata, key) {
-      in_flight--
+      inFlight--
       done++
       if (err) {
         console.log('ERR - ', err, key)
@@ -222,17 +222,17 @@ Aerospike.connect(config, function (err, client) {
     }
   }
 
-  function get_start (client, start, end) {
-    var done = get_done(client, start, end)
+  function getStart (client, start, end) {
+    var done = getDone(client, start, end)
     var i = 0
 
     for (i = start; i <= end; i++) {
       var key = new Aerospike.Key(argv.namespace, argv.set, i)
-      in_flight++
-      deasync.loopWhile(function () { return in_flight > max_concurrent })
+      inFlight++
+      deasync.loopWhile(function () { return inFlight > maxConcurrent })
       client.get(key, done)
     }
   }
 
-  put_start(client, argv.start, argv.end)
+  putStart(client, argv.start, argv.end)
 })

@@ -43,8 +43,8 @@ var scanOnline = 0
 //
 // Number of completed operations(READ & WRITE), timed out operations and operations that ran into error per second
 //
-var interval_stats = new Array(OP_TYPES)
-reset_interval_stats()
+var intervalStats = new Array(OP_TYPES)
+resetIntervalStats()
 
 if (argv.querySpec !== undefined) {
   queryWorkers = argv.querySpec.length
@@ -73,7 +73,7 @@ if ((ROPS + WOPS) < argv.operations) {
 }
 
 if (argv.time !== undefined) {
-  argv.time = stats.parse_time_to_secs(argv.time)
+  argv.time = stats.parseTimeToSecs(argv.time)
   argv.iterations = undefined
 }
 
@@ -101,30 +101,30 @@ var logger = new (winston.Logger)({
 function finalize () {
   stats.stop()
   if (argv.summary === true && rwWorkers > 0) {
-    return stats.report_final(argv, console.log)
+    return stats.reportFinal(argv, console.log)
   }
 }
 
-function worker_spawn () {
+function workerSpawn () {
   var worker = cluster.fork()
   worker.iteration = 0
-  worker.on('message', worker_results(worker))
+  worker.on('message', workerResults(worker))
 }
 
-function worker_exit (worker) {
+function workerExit (worker) {
   worker.send(['end'])
 }
 
-function worker_shutdown () {
+function workerShutdown () {
   Object.keys(cluster.workers).forEach(function (id) {
-    worker_exit(cluster.workers[id])
+    workerExit(cluster.workers[id])
   })
 }
 
 /**
  * Signal all workers asking for data on transactions
  */
-function worker_probe () {
+function workerProbe () {
   Object.keys(cluster.workers).forEach(function (id) {
     cluster.workers[id].send(['trans'])
   })
@@ -176,59 +176,59 @@ function scanWorkerJob (worker) {
  * Collects the data related to transactions and prints it once the data is recieved from all workers.
  * (called per second)
  */
-var counter = 0 // Number of times worker_results_interval is called
-function worker_results_interval (worker, interval_worker_stats) {
+var counter = 0 // Number of times workerResultsInterval is called
+function workerResultsInterval (worker, intervalWorkerStats) {
   for (var i = 0; i < OP_TYPES; i++) {
     for (var j = 0; j < STATS; j++) {
-      interval_stats[i][j] = interval_stats[i][j] + interval_worker_stats[i][j]
+      intervalStats[i][j] = intervalStats[i][j] + intervalWorkerStats[i][j]
     }
   }
   if (++counter % argv.processes === 0) {
     stats.interval({
-      'read': interval_stats[0],
-      'write': interval_stats[1],
-      'query': interval_stats[2],
-      'scan': interval_stats[3]
+      'read': intervalStats[0],
+      'write': intervalStats[1],
+      'query': intervalStats[2],
+      'scan': intervalStats[3]
     })
     if (!argv.silent) {
-      print_interval_stats()
+      printIntervalStats()
     }
   }
 }
 
-function print_interval_stats () {
+function printIntervalStats () {
   if (rwWorkers > 0) {
     logger.info('%s read(tps=%d timeouts=%d errors=%d) write(tps=%d timeouts=%d errors=%d) ',
-      new Date().toString(), interval_stats[0][0], interval_stats[0][1], interval_stats[0][2],
-      interval_stats[1][0], interval_stats[1][1], interval_stats[1][2])
+      new Date().toString(), intervalStats[0][0], intervalStats[0][1], intervalStats[0][2],
+      intervalStats[1][0], intervalStats[1][1], intervalStats[1][2])
   }
   if (queryWorkers) {
     logger.info('%s query(records = %d timeouts = %d errors = %d)',
-      new Date().toString(), interval_stats[2][0], interval_stats[2][1], interval_stats[2][2])
+      new Date().toString(), intervalStats[2][0], intervalStats[2][1], intervalStats[2][2])
   }
   if (scanWorkers) {
     logger.info('%s scan(records = %d timeouts = %d errors = %d)',
-      new Date().toString(), interval_stats[3][0], interval_stats[3][1], interval_stats[3][2])
+      new Date().toString(), intervalStats[3][0], intervalStats[3][1], intervalStats[3][2])
   }
 }
 
-function worker_results_iteration (worker, op_stats) {
-  stats.iteration(op_stats)
+function workerResultsIteration (worker, opStats) {
+  stats.iteration(opStats)
   if (argv.iterations === undefined || worker.iteration < argv.iterations || argv.time !== undefined) {
     rwWorkerJob(worker)
   } else {
-    worker_exit(worker)
+    workerExit(worker)
   }
 }
 
-function worker_results (worker) {
+function workerResults (worker) {
   return function (message) {
     if (message[0] === 'stats') {
-      worker_results_iteration(worker, message[1])
+      workerResultsIteration(worker, message[1])
     } else if (message[0] === 'alert') {
       alerts.handleAlert(message[1].alert, message[1].severity)
     } else {
-      worker_results_interval(worker, message[1])
+      workerResultsInterval(worker, message[1])
     }
   }
 }
@@ -244,18 +244,18 @@ if (!argv.silent) {
 }
 
 /**
- * Flush out the current interval_stats and probe the worker every second.
+ * Flush out the current intervalStats and probe the worker every second.
  */
 setInterval(function () {
-  reset_interval_stats()
-  worker_probe(cluster)
+  resetIntervalStats()
+  workerProbe(cluster)
 }, 1000)
 
 /**
  * Reset the value of internal_stats.
  */
-function reset_interval_stats () {
-  interval_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+function resetIntervalStats () {
+  intervalStats = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
 }
 
 // *****************************************************************************
@@ -315,9 +315,9 @@ cluster.on('exit', function (worker, code, signal) {
 
 if (argv.time !== undefined) {
   setTimeout(function () {
-    reset_interval_stats()
-    worker_probe(cluster)
-    worker_shutdown(cluster)
+    resetIntervalStats()
+    workerProbe(cluster)
+    workerShutdown(cluster)
   }, argv.time * 1000)
 }
 
@@ -328,5 +328,5 @@ cluster.setupMaster({
 
 stats.start()
 for (var p = 0; p < argv.processes; p++) {
-  worker_spawn()
+  workerSpawn()
 }

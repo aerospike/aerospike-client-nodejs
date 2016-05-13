@@ -48,10 +48,10 @@ var TABLE_STYLE = {
 var RANGE_COUNT = 0
 var ITERATION_COUNT = 0
 
-var mem_cnt = 0
-var mem_min
-var mem_max
-var mem_ranges = []
+var memCnt = 0
+var memMin
+var memMax
+var memRanges = []
 
 // *****************************************************************************
 // Options Parsing
@@ -95,20 +95,20 @@ if (argv.help === true) {
 var MEM_MAX_MB = 100
 var MEM_BUCKETS = 100
 
-function memory_bar (min_used_mb, max_used_mb) {
-  var min_used_len = Math.floor(min_used_mb / MEM_MAX_MB * MEM_BUCKETS)
-  var min_used_bar = new Buffer(min_used_len)
-  if (min_used_len > 0) {
-    min_used_bar.fill(']')
+function memoryBar (minUsedMb, maxUsedMb) {
+  var minUsedLen = Math.floor(minUsedMb / MEM_MAX_MB * MEM_BUCKETS)
+  var minUsedBar = new Buffer(minUsedLen)
+  if (minUsedLen > 0) {
+    minUsedBar.fill(']')
   }
 
-  var max_used_len = Math.floor(max_used_mb / MEM_MAX_MB * MEM_BUCKETS)
-  var max_used_bar = new Buffer(max_used_len - min_used_len)
-  if (max_used_len > 0) {
-    max_used_bar.fill(']')
+  var maxUsedLen = Math.floor(maxUsedMb / MEM_MAX_MB * MEM_BUCKETS)
+  var maxUsedBar = new Buffer(maxUsedLen - minUsedLen)
+  if (maxUsedLen > 0) {
+    maxUsedBar.fill(']')
   }
 
-  return min_used_bar.toString().blue + max_used_bar.toString().red
+  return minUsedBar.toString().blue + maxUsedBar.toString().red
 }
 
 function report () {
@@ -124,7 +124,7 @@ function report () {
 
   var l
 
-  var unfiltered = mem_ranges
+  var unfiltered = memRanges
 
   var filtered = unfiltered.filter(function (r, i) {
     if (argv.factor && i % argv.factor !== 0) {
@@ -157,7 +157,7 @@ function report () {
         (r[1] - l[1]).toFixed(3),
         r[2],
         (r[1] - r[0]).toFixed(3),
-        memory_bar(r[0], r[1])
+        memoryBar(r[0], r[1])
       ])
     } else {
       rtable.push([
@@ -167,7 +167,7 @@ function report () {
         0.00,
         r[2],
         (r[1] - r[0]).toFixed(3),
-        memory_bar(r[0], r[1])
+        memoryBar(r[0], r[1])
       ])
     }
     l = r
@@ -269,24 +269,24 @@ function readline (line) {
 
   var mem = parseFloat(matches[1])
 
-  if (mem_min === undefined) {
-    mem_min = mem
-    mem_cnt = 0
+  if (memMin === undefined) {
+    memMin = mem
+    memCnt = 0
   }
 
-  if (mem_max === undefined || mem > mem_max) {
-    mem_max = mem
-    mem_cnt++
+  if (memMax === undefined || mem > memMax) {
+    memMax = mem
+    memCnt++
   } else {
     // this is where the magic happens
 
     // we will filter based on a factor
-    mem_ranges.push([mem_min, mem_max, mem_cnt])
+    memRanges.push([memMin, memMax, memCnt])
 
     // reset
-    mem_min = mem
-    mem_max = mem
-    mem_cnt = 0
+    memMin = mem
+    memMax = mem
+    memCnt = 0
     RANGE_COUNT++
   }
 
@@ -297,23 +297,23 @@ function readline (line) {
 // Event Listeners
 // *****************************************************************************
 
-var last_line
+var lastLine
 
 process.stdin.on('data', function (chunk) {
   var i = 0
   var j = 0
 
   for (i = 0, j = chunk.indexOf('\n', i); j !== -1; i = j + 1, j = chunk.indexOf('\n', i)) {
-    if (last_line) {
-      readline(last_line + chunk.slice(i, j))
-      last_line = undefined
+    if (lastLine) {
+      readline(lastLine + chunk.slice(i, j))
+      lastLine = undefined
     } else {
       readline(chunk.slice(i, j))
     }
   }
 
   if (chunk.length > i) {
-    last_line = chunk.slice(i)
+    lastLine = chunk.slice(i)
   }
 })
 

@@ -143,10 +143,10 @@ Aerospike.connect(config, function (err, client) {
   // Perform the operation
   //
 
-  const max_concurrent = 200
-  var in_flight = 0
+  const maxConcurrent = 200
+  var inFlight = 0
 
-  function get_done (client, start, end, skip) {
+  function getDone (client, start, end, skip) {
     var total = end - start + 1
     var done = 0
     var success = 0
@@ -158,7 +158,7 @@ Aerospike.connect(config, function (err, client) {
     console.time(timeLabel)
 
     return function (err, record, metadata, key, skippy) {
-      in_flight--
+      inFlight--
       if (skippy === true) {
         console.log('SKIP - ', key)
         skipped++
@@ -189,8 +189,8 @@ Aerospike.connect(config, function (err, client) {
     }
   }
 
-  function get_start (client, start, end, skip) {
-    var done = get_done(client, start, end, skip)
+  function getStart (client, start, end, skip) {
+    var done = getDone(client, start, end, skip)
     var i = start
     var s = 0
 
@@ -203,11 +203,11 @@ Aerospike.connect(config, function (err, client) {
         continue
       }
 
-      in_flight++
-      deasync.loopWhile(function () { return in_flight > max_concurrent })
+      inFlight++
+      deasync.loopWhile(function () { return inFlight > maxConcurrent })
       client.get(key, done)
     }
   }
 
-  get_start(client, argv.start, argv.end, argv.skip)
+  getStart(client, argv.start, argv.end, argv.skip)
 })

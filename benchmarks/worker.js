@@ -45,7 +45,7 @@ if (!cluster.isWorker) {
   process.exit()
 }
 
-argv.ttl = stats.parse_time_to_secs(argv.ttl)
+argv.ttl = stats.parseTimeToSecs(argv.ttl)
 
 // variables to track memory growth(RSS) of worker process.
 var heapMemory = 0
@@ -141,11 +141,11 @@ function recordgen (key, binSpec) {
         data[bin.name] += key
         break
       case 'BYTES':
-        var buf_data = STRING_DATA
-        while (buf_data.length < bin.size) {
-          buf_data += STRING_DATA
+        var bufData = STRING_DATA
+        while (bufData.length < bin.size) {
+          bufData += STRING_DATA
         }
-        data[bin.name] = new Buffer(buf_data)
+        data[bin.name] = new Buffer(bufData)
         break
       default:
         data.num = key
@@ -157,11 +157,11 @@ function recordgen (key, binSpec) {
 }
 
 function get (key, done) {
-  var time_start = process.hrtime()
+  var timeStart = process.hrtime()
   client.get(key, function (_error, _record, _metadata, _key) {
-    var time_end = process.hrtime()
+    var timeEnd = process.hrtime()
     var status = (_error && _error.code) || 0
-    done(status, time_start, time_end, READ)
+    done(status, timeStart, timeEnd, READ)
   })
 }
 
@@ -171,17 +171,17 @@ var metadata = {
 }
 
 function put (options, done) {
-  var time_start = process.hrtime()
+  var timeStart = process.hrtime()
   client.put(options.key, options.record, metadata, function (_error, _record, _metadata, _key) {
-    var time_end = process.hrtime()
+    var timeEnd = process.hrtime()
     var status = (_error && _error.code) || 0
-    done(status, time_start, time_end, WRITE)
+    done(status, timeStart, timeEnd, WRITE)
   })
 }
 
 // Structure to store per second statistics.
-var interval_data = new Array(OP_TYPES)
-reset_interval_data()
+var intervalData = new Array(OP_TYPES)
+resetIntervalData()
 
 function run (options) {
   var expected = options.rops + options.wops
@@ -194,16 +194,16 @@ function run (options) {
   // Consider having histogram for each worker Vs sending the
   // results in an array - Which one is more memory efficient.
   var operations = Array(expected)
-  var read_ops = options.rops
-  var write_ops = options.wops
+  var readOps = options.rops
+  var writeOps = options.wops
 
-  function done (op_status, op_time_start, op_time_end, op_type) {
-    operations[completed] = [op_status, op_time_start, op_time_end]
-    interval_data[op_type][TPS]++
-    if (op_status === status.AEROSPIKE_ERR_TIMEOUT) {
-      interval_data[op_type][TIMEOUT]++
-    } else if (op_status !== status.AEROSPIKE_OK && op_status !== status.AEROSPIKE_ERR_TIMEOUT) {
-      interval_data[op_type][ERROR]++
+  function done (opStatus, opTimeStart, opTimeEnd, opType) {
+    operations[completed] = [opStatus, opTimeStart, opTimeEnd]
+    intervalData[opType][TPS]++
+    if (opStatus === status.AEROSPIKE_ERR_TIMEOUT) {
+      intervalData[opType][TIMEOUT]++
+    } else if (opStatus !== status.AEROSPIKE_OK && opStatus !== status.AEROSPIKE_ERR_TIMEOUT) {
+      intervalData[opType][ERROR]++
     }
 
     completed++
@@ -213,38 +213,38 @@ function run (options) {
     }
   }
 
-  while (write_ops > 0 || read_ops > 0) {
+  while (writeOps > 0 || readOps > 0) {
     var k = keygen(options.keyRange.min, options.keyRange.max)
     var key = {ns: options.namespace, set: options.set, key: k}
     var record = recordgen(k, options.binSpec)
     var ops = {key: key, record: record}
-    if (write_ops > 0) {
-      write_ops--
+    if (writeOps > 0) {
+      writeOps--
       put(ops, done)
     }
-    if (read_ops > 0) {
-      read_ops--
+    if (readOps > 0) {
+      readOps--
       get(key, done)
     }
   }
 }
 
 /*
- * Sends the populated interval_data to the parent and resets it for the next second
+ * Sends the populated intervalData to the parent and resets it for the next second
  */
 function respond () {
-  process.send(['trans', interval_data])
-  reset_interval_data()
+  process.send(['trans', intervalData])
+  resetIntervalData()
 }
 
 /*
- * Reset interval_data
+ * Reset intervalData
  */
-function reset_interval_data () {
-  interval_data[READ] = [0, 0, 0] // [reads_performed, reads_timeout, reads_error]
-  interval_data[WRITE] = [0, 0, 0] // [writes_performed, writes_timeout, writes_error]
-  interval_data[QUERY] = [0, 0, 0] // [QueryRecords, query_timeout, query_error]
-  interval_data[SCAN] = [0, 0, 0]
+function resetIntervalData () {
+  intervalData[READ] = [0, 0, 0] // [reads_performed, reads_timeout, reads_error]
+  intervalData[WRITE] = [0, 0, 0] // [writes_performed, writes_timeout, writes_error]
+  intervalData[QUERY] = [0, 0, 0] // [QueryRecords, query_timeout, query_error]
+  intervalData[SCAN] = [0, 0, 0]
 }
 
 /*
@@ -256,12 +256,12 @@ function executeJob (options, opType, callback) {
   var stream = job.execute()
   stream.on('data', function (record) {
     // count the records returned
-    interval_data[opType][TPS]++
+    intervalData[opType][TPS]++
   })
   stream.on('error', function (error) {
-    interval_data[opType][ERROR]++
+    intervalData[opType][ERROR]++
     if (error.code === status.AEROSPIKE_ERR_TIMEOUT) {
-      interval_data[opType][TIMEOUT]++
+      intervalData[opType][TIMEOUT]++
     }
   })
   stream.on('end', function () {

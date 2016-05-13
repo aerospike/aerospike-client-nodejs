@@ -140,13 +140,13 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
   deasync.loopWhile(function () { return !done })
 }
 
-var udf_helper = new UDFHelper(client)
-var index_helper = new IndexHelper(client)
-var server_info_helper = new ServerInfoHelper(client)
+var udfHelper = new UDFHelper(client)
+var indexHelper = new IndexHelper(client)
+var serverInfoHelper = new ServerInfoHelper(client)
 
-exports.udf = udf_helper
-exports.index = index_helper
-exports.cluster = server_info_helper
+exports.udf = udfHelper
+exports.index = indexHelper
+exports.cluster = serverInfoHelper
 
 exports.fail = function fail (message) {
   if (typeof message !== 'string') {
@@ -159,8 +159,8 @@ exports.fail = function fail (message) {
 before(function (done) {
   client.connect(function (err) {
     if (err) throw err
-    server_info_helper.fetch_info()
-    server_info_helper.fetch_namespace_config(options.namespace)
+    serverInfoHelper.fetch_info()
+    serverInfoHelper.fetch_namespace_config(options.namespace)
     done()
   })
 })

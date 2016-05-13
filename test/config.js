@@ -20,16 +20,16 @@ const Config = require('../lib/config')
 require('./test_helper')
 
 describe('Config', function () {
-  var as_hosts_env
+  var asHostsEnv
   beforeEach(function () {
-    as_hosts_env = process.env.AEROSPIKE_HOSTS
+    asHostsEnv = process.env.AEROSPIKE_HOSTS
     delete process.env.AEROSPIKE_HOSTS
   })
 
   afterEach(function () {
     delete process.env.AEROSPIKE_HOSTS
-    if (as_hosts_env) {
-      process.env.AEROSPIKE_HOSTS = as_hosts_env
+    if (asHostsEnv) {
+      process.env.AEROSPIKE_HOSTS = asHostsEnv
     }
   })
 
