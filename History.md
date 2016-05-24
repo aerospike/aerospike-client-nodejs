@@ -1,6 +1,9 @@
 HEAD
 ===================
 
+* **Fixes**
+  * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
+
 * **Improvements**
   * Key objects returned in callbacks now include the digest
   * Code cleanup to support standard@7.0.0 which adds several new rules
