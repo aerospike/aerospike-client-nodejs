@@ -35,7 +35,7 @@ extern "C" {
 using namespace v8;
 
 typedef struct AsyncData {
-	bool param_err = false;
+	bool param_err;
 	aerospike* as;
 	as_error err;
 	as_policy_info policy;
@@ -53,6 +53,7 @@ static void* prepare(ResolveArgs(info))
 	LogInfo* log = client->log;
 
 	AsyncData* data = new AsyncData();
+	data->param_err = false;
 	data->as = client->as;
 	data->log = client->log;
 	data->job_id = info[0]->ToInteger()->Value();
