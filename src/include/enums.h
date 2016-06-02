@@ -22,31 +22,17 @@
 
 using namespace v8;
 
-Local<Object> status();
-
-Local<Object> key_policy_values();
-
-Local<Object> retry_policy_values();
-
 Local<Object> generation_policy_values();
-
-Local<Object> policy();
-
-Local<Object> operations();
-
-Local<Object> log();
-
-Local<Object> languages();
-
-Local<Object> scanPriority();
-
-Local<Object> predicates();
-
 Local<Object> indexDataType();
-
 Local<Object> indexType();
-
 Local<Object> jobStatus();
-
+Local<Object> key_policy_values();
+Local<Object> languages();
+Local<Object> log();
 Local<Object> map_enum_values();
-
+Local<Object> opcode_values();
+Local<Object> policy();
+Local<Object> predicates();
+Local<Object> retry_policy_values();
+Local<Object> scanPriority();
+Local<Object> status();

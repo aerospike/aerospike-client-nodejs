@@ -1311,7 +1311,7 @@ Return:
 	return result;
 }
 
-Local<Object> export_ops_table_as_enum() {
+Local<Object> opcode_values() {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
 
