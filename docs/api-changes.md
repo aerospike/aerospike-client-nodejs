@@ -1,5 +1,29 @@
 # Backward Incompatible API Changes
 
+## Version 2.1.0
+
+### New modules for Scalar, List & Map operations
+
+The `Aerospike.operator` module has been split into three separate modules for operations on scalar values, lists and maps:
+
+ - `Aerospike.operations` - Operations on scalar values (Strings, Integers, Doubles, etc.).
+ - `Aerospike.lists` - Operations on Lists, e.g. append, insert, remove.
+ - `Aerospike.maps` - Operations on Sorted Maps, e.g. put, getByKey, removeByIndex.
+
+The old `Aerospike.operator` module has been deprecated and will be removed in the next major release.
+
+### Deprecations
+
+| Deprecated Function          | Replacement                                    | Remarks                                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `Aerospike.operator.append`  | `Aerospike.operations.append`                  | -                                           |
+| `Aerospike.operator.incr`    | `Aerospike.operations.incr`                    | -                                           |
+| `Aerospike.operator.prepend` | `Aerospike.operations.prepend`                 | -                                           |
+| `Aerospike.operator.read`    | `Aerospike.operations.read`                    | -                                           |
+| `Aerospike.operator.touch`   | `Aerospike.operations.touch`                   | -                                           |
+| `Aerospike.operator.write`   | `Aerospike.operations.write`                   | -                                           |
+| `Aerospike.operator.list<*>` | `Aerospike.lists.<*>`                          | -                                           |
+
 ## Version 2.0.0
 
 None. But see 2.0.0-alpha.1 through 2.0.0-alpha.3 for list of backward incompatible changes since v1.x.

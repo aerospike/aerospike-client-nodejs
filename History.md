@@ -1,4 +1,4 @@
-HEAD
+v2.1.0 / 2016-07-03
 ===================
 
 * **New Features**
@@ -10,6 +10,11 @@ HEAD
 
 * **Fixes**
   * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
+
+* **Changes**
+  * The `aerospike.operator` module has been split up into two seperate modules `aerospike.operations` and `aerospike.lists` for operations on scalar and
+    list data types respectively. See detailed list of [API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-210)
+    for further details.
 
 * **Documentation**
   * Pulled client configuration out into a separate class and expanded the documentation.
