@@ -55,7 +55,7 @@ describe('client.apply()', function (done) {
 
   it('should invoke an UDF with apply policy', function (done) {
     var applypolicy = {timeout: 1500}
-    var udfArgs = {module: 'udf', funcname: 'withArguments', args: [[1, 2, 3]]}
+    var udfArgs = { module: 'udf', funcname: 'withArguments', args: [[1, 2, 3]] }
     client.apply(key, udfArgs, applypolicy, function (error, result) {
       if (error) throw error
       expect(result).to.eql([1, 2, 3])

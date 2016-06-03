@@ -24,7 +24,10 @@ extern "C" {
 #include <unistd.h>
 #include "client.h"
 #include "enums.h"
+#include "operations.h"
 #include "log.h"
+
+#define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
 
 using namespace v8;
 
@@ -34,7 +37,7 @@ using namespace v8;
 
 NAN_METHOD(register_as_event_loop)
 {
-    Nan::HandleScope();
+	Nan::HandleScope();
 	if (!as_event_set_external_loop_capacity(1)) {
 		return Nan::ThrowError("Unable to register default event loop");
 	}
@@ -43,7 +46,7 @@ NAN_METHOD(register_as_event_loop)
 
 NAN_METHOD(release_as_event_loop)
 {
-    Nan::HandleScope();
+	Nan::HandleScope();
 	as_event_close_loops();
 }
 
@@ -56,16 +59,16 @@ NAN_METHOD(get_cluster_count)
 
 NAN_METHOD(enable_as_logging)
 {
-    Nan::HandleScope();
+	Nan::HandleScope();
 	as_log_set_level(AS_LOG_LEVEL_TRACE);
 	as_log_set_callback(v8_logging_callback);
 }
 
 NAN_METHOD(client)
 {
-    Nan::HandleScope();
+	Nan::HandleScope();
 	Local<Object> config = info[0].As<Object>();
-    info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
+	info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
 }
 
 /**
@@ -73,23 +76,25 @@ NAN_METHOD(client)
  */
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
-    AerospikeClient::Init();
-    exports->Set(Nan::New("register_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
-    exports->Set(Nan::New("release_as_event_loop").ToLocalChecked(), Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
-    exports->Set(Nan::New("get_cluster_count").ToLocalChecked(), Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
-    exports->Set(Nan::New("enable_as_logging").ToLocalChecked(), Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
-    exports->Set(Nan::New("client").ToLocalChecked(),   Nan::New<FunctionTemplate>(client)->GetFunction());
-    exports->Set(Nan::New("status").ToLocalChecked(),   status());
-    exports->Set(Nan::New("policy").ToLocalChecked(),   policy());
-    exports->Set(Nan::New("operations").ToLocalChecked(), operations());
-    exports->Set(Nan::New("cdt_operations").ToLocalChecked(), cdt_operations());
-	exports->Set(Nan::New("language").ToLocalChecked(), languages());
-    exports->Set(Nan::New("log").ToLocalChecked(),      log());
-	exports->Set(Nan::New("scanPriority").ToLocalChecked(), scanPriority());
-	exports->Set(Nan::New("jobStatus").ToLocalChecked(), jobStatus());
-	exports->Set(Nan::New("predicates").ToLocalChecked(), predicates());
-	exports->Set(Nan::New("indexDataType").ToLocalChecked(), indexDataType());
-	exports->Set(Nan::New("indexType").ToLocalChecked(), indexType());
+	AerospikeClient::Init();
+	export("client",					Nan::New<FunctionTemplate>(client)->GetFunction());
+	export("enable_as_logging",			Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
+	export("get_cluster_count",			Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
+	export("register_as_event_loop",	Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
+	export("release_as_event_loop",		Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
+
+	// enumerations
+	export("indexDataType",				indexDataType());
+	export("indexType",					indexType());
+	export("jobStatus",					jobStatus());
+	export("language",					languages());
+	export("maps",						map_enum_values());
+	export("predicates",				predicates());
+	export("scanPriority",				scanPriority());
+	export("log",						log());
+	export("operations",				opcode_values());
+	export("policy",					policy());
+	export("status",					status());
 }
 
 NODE_MODULE(aerospike, Aerospike)

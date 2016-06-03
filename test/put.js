@@ -216,6 +216,18 @@ describe('client.put()', function () {
       }
       putGetVerify(record, expected, done)
     })
+
+    it('writes bin with Map value as map and reads it back', function (done) {
+      this.skip('pending support for Map values')
+      var record = { map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
+        ['d', new Double(3.14)], ['e', new Buffer('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
+        ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
+      }
+      var expected = { map: { a: 1, b: 'foo', c: 1.23, d: 3.14, e: new Buffer('bar'),
+        f: '{"type":"Point","coordinates":[103.8,1.283]}', g: [1, 2, 3], h: { a: 1, b: 2 } }
+      }
+      putGetVerify(record, expected, done)
+    })
   })
 
   it('should write, read, write, and check gen', function (done) {

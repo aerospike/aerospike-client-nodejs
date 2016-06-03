@@ -25,12 +25,12 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 
 const status = Aerospike.status
-const op = Aerospike.operator
+const op = Aerospike.operations
 
 describe('client.operate()', function () {
   var client = helper.client
 
-  describe('operator.incr()', function () {
+  describe('operations.incr()', function () {
     it('should increment bin with integer value', function (done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
 
@@ -40,7 +40,7 @@ describe('client.operate()', function () {
           op.incr('i', 432)
         ]
 
-        client.operate(key, ops, function (err) {
+        client.operate(key, ops, function (err, result) {
           expect(err).to.not.be.ok()
 
           client.get(key, function (err, record2) {

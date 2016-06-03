@@ -1,12 +1,20 @@
-HEAD
+v2.1.0 / 2016-07-03
 ===================
 
-* **Fixes**
-  * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
+* **New Features**
+  * Support for operations on Sorted Maps. Requires Aerospike server version 3.8.4 or later.
 
 * **Improvements**
   * Key objects returned in callbacks now include the digest
   * Code cleanup to support standard@7.0.0 which adds several new rules
+
+* **Fixes**
+  * Fix compile time error with Node 0.12 using gcc 4.4. [#131](https://github.com/aerospike/aerospike-client-nodejs/issues/131)
+
+* **Changes**
+  * The `aerospike.operator` module has been split up into two seperate modules `aerospike.operations` and `aerospike.lists` for operations on scalar and
+    list data types respectively. See detailed list of [API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-210)
+    for further details.
 
 * **Documentation**
   * Pulled client configuration out into a separate class and expanded the documentation.

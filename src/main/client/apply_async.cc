@@ -44,7 +44,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	as_error err;
 	as_status status;
 
-    as_arraylist* udf_args = NULL;
+    as_list* udf_args = NULL;
     char* udf_module = NULL;
     char* udf_function = NULL;
 	bool udf_params_initialized = false;
@@ -73,7 +73,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	}
 
 	as_v8_debug(log, "Sending async apply command");
-	status = aerospike_key_apply_async(client->as, &err, p_policy, &key, udf_module, udf_function, (as_list*) udf_args, async_value_listener, data, NULL, NULL);
+	status = aerospike_key_apply_async(client->as, &err, p_policy, &key, udf_module, udf_function, udf_args, async_value_listener, data, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
 		invoke_error_callback(&err, data);
 	}
@@ -81,7 +81,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 Cleanup:
 	if (key_initalized) as_key_destroy(&key);
 	if (udf_params_initialized) {
-		as_arraylist_destroy(udf_args);
+		as_list_destroy(udf_args);
 		cf_free(udf_module);
 		cf_free(udf_function);
 	}
