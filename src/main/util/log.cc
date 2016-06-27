@@ -46,7 +46,7 @@ bool v8_logging_callback(as_log_level level, const char* func, const char * file
     return true;
 }
 
-void as_v8_log_function( LogInfo * log, as_log_level level, const char* func, const char * file, uint32_t line, const char* fmt, ...)
+void as_v8_log_function(const LogInfo* log, as_log_level level, const char* func, const char* file, uint32_t line, const char* fmt, ...)
 {
     if ( NULL == log) {
         return;
@@ -140,4 +140,3 @@ void stringify(char* err_str, const as_error *err, const char* data_type)
         }
     }
 }
-
