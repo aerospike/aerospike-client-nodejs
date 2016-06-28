@@ -78,7 +78,7 @@ void async_error_callback(uv_timer_t* timer)
 {
 	Nan::HandleScope scope;
 	CallbackData* data = reinterpret_cast<CallbackData*>(timer->data);
-	LogInfo* log = data->client->log;
+	const LogInfo* log = data->client->log;
 	as_error* error = (as_error*)data->data;
 
 	const int argc = 1;
@@ -119,8 +119,8 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 		return Nan::ThrowError("Missing callback data - cannot process record callback");
 	}
 
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	const AerospikeClient * client = data->client;
+	const LogInfo * log = client->log;
 
 	const int argc = 3;
 	Local<Value> argv[argc];
@@ -156,8 +156,8 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 		return Nan::ThrowError("Missing callback data - cannot process write callback");
 	}
 
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	const AerospikeClient * client = data->client;
+	const LogInfo * log = client->log;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
@@ -189,8 +189,8 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 		return Nan::ThrowError("Missing callback data - cannot process value callback");
 	}
 
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	const AerospikeClient * client = data->client;
+	const LogInfo * log = client->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
@@ -224,8 +224,8 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 		return Nan::ThrowError("Missing callback data - cannot process record callback");
 	}
 
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	const AerospikeClient * client = data->client;
+	const LogInfo * log = client->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
@@ -261,8 +261,8 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 		return false;
 	}
 
-	AerospikeClient * client = data->client;
-	LogInfo * log = client->log;
+	const AerospikeClient* client = data->client;
+	const LogInfo* log = client->log;
 
 	const int argc = 4;
 	bool reached_end = false;

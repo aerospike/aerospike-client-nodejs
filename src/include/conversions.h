@@ -67,50 +67,50 @@ bool is_double_value(Local<Value> value);
 double double_value(Local<Value> value);
 
 // Functions to convert C client structure to v8 object(map)
-Local<Object> error_to_jsobject(as_error * error, LogInfo *log);
-Local<Value> val_to_jsvalue(as_val * val, LogInfo *log );
-Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log );
-Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log );
-Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log );
-Local<Array> batch_records_to_jsarray(const as_batch_read_records* record, LogInfo* log );
-Local<Object> key_to_jsobject(const as_key * key, LogInfo * log );
-Local<Object> jobinfo_to_jsobject(const as_job_info* info, LogInfo* log);
+Local<Object> error_to_jsobject(as_error* error, const LogInfo* log);
+Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log);
+Local<Object> recordbins_to_jsobject(const as_record* record, const LogInfo* log );
+Local<Object> recordmeta_to_jsobject(const as_record* record, const LogInfo* log );
+Local<Object> record_to_jsobject(const as_record* record, const as_key* key, const LogInfo* log);
+Local<Array> batch_records_to_jsarray(const as_batch_read_records* record, const LogInfo* log);
+Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log);
+Local<Object> jobinfo_to_jsobject(const as_job_info* info, const LogInfo* log);
 
 // Functions to convert v8 objects(maps) to C client structures
-int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log );
-int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log);
-int log_from_jsobject( LogInfo * log, Local<Object> obj);
-int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log );
-int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log );
-int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log );
-int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log );
-int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo * log);
-int batch_from_jsarray(as_batch * batch, Local<Array> arr, LogInfo * log );
-int batch_read_records_from_jsarray(as_batch_read_records** batch, Local<Array> arr, LogInfo* log);
-int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, LogInfo* log);
-int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log);
-int list_from_jsarray(as_list** list, Local<Array> array, LogInfo* log);
-int map_from_jsobject(as_map** map, Local<Object> obj, LogInfo* log);
-int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log);
+int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log);
+int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const LogInfo* log);
+int log_from_jsobject(LogInfo* log, Local<Object> obj);
+int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log);
+int recordmeta_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log);
+int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log);
+int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log);
+int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const LogInfo* log);
+int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log);
+int batch_read_records_from_jsarray(as_batch_read_records** batch, Local<Array> arr, const LogInfo* log);
+int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, const LogInfo* log);
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, const LogInfo* log);
+int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log);
+int map_from_jsobject(as_map** map, Local<Object> obj, const LogInfo* log);
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log);
 
 //clone functions for record and key
-bool record_clone(const as_record * src, as_record ** dest, LogInfo * log );
-bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key = true );
-as_val* asval_clone(const as_val* val, LogInfo * log);
+bool record_clone(const as_record* src, as_record** dest, const LogInfo* log);
+bool key_clone(const as_key* src, as_key** dest, const LogInfo* log, bool alloc_key = true );
+as_val* asval_clone(const as_val* val, const LogInfo* log);
 
 // Functions to convert v8 policies to C structures
-int writepolicy_from_jsobject(as_policy_write * policy, Local<Object> obj, LogInfo * log );
-int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj, LogInfo * log );
-int removepolicy_from_jsobject( as_policy_remove* policy, Local<Object> obj, LogInfo * log );
-int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj, LogInfo * log );
-int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log );
-int infopolicy_from_jsobject ( as_policy_info * policy, Local<Object> obj, LogInfo * log );
-int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo * log);
-int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo * log);
-int querypolicy_from_jsobject( as_policy_query * policy, Local<Object> obj, LogInfo * log);
-int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogInfo * log);
+int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const LogInfo* log );
+int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj, const LogInfo* log );
+int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, const LogInfo* log );
+int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const LogInfo* log );
+int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, const LogInfo* log );
+int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log );
+int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log);
+int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log);
+int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log);
+int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log);
 
 
 // Functions to set metadata of the record.
-int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log );
-int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log );
+int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log);
+int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log);

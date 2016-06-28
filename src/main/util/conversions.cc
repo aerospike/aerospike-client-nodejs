@@ -66,7 +66,7 @@ const char * GeoJSONType = "GeoJSON";
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
-int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
+int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log)
 {
 
     Local<Value> hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
@@ -374,7 +374,7 @@ int config_from_jsobject(as_config * config, Local<Object> obj, LogInfo * log)
 }
 
 
-int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo * log)
+int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const LogInfo* log)
 {
     if (obj->Has(Nan::New("addr").ToLocalChecked()) ) {
         Local<Value> addrVal = obj->Get(Nan::New("addr").ToLocalChecked());
@@ -401,7 +401,7 @@ int host_from_jsobject( Local<Object> obj, char **addr, uint16_t * port, LogInfo
     return AS_NODE_PARAM_OK;
 }
 
-int log_from_jsobject( LogInfo * log, Local<Object> obj)
+int log_from_jsobject(LogInfo* log, Local<Object> obj)
 {
     int rc = AS_NODE_PARAM_OK;
     int level = log->severity;
@@ -454,7 +454,7 @@ int log_from_jsobject( LogInfo * log, Local<Object> obj)
     return AS_NODE_PARAM_OK;
 }
 
-as_val* asval_clone(const as_val* val, LogInfo* log)
+as_val* asval_clone(const as_val* val, const LogInfo* log)
 {
     as_val_t t = as_val_type( (as_val*)val);
     as_val* clone_val = NULL;
@@ -579,7 +579,7 @@ as_val* asval_clone(const as_val* val, LogInfo* log)
     return clone_val;
 }
 
-bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
+bool key_clone(const as_key* src, as_key** dest, const LogInfo* log, bool alloc_key)
 {
     if(src == NULL || dest== NULL ) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
@@ -614,7 +614,7 @@ bool key_clone(const as_key* src, as_key** dest, LogInfo * log, bool alloc_key)
     return true;
 }
 
-bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
+bool record_clone(const as_record* src, as_record** dest, const LogInfo* log)
 {
     if(src == NULL || dest == NULL) {
         return false;
@@ -643,7 +643,7 @@ bool record_clone(const as_record* src, as_record** dest, LogInfo * log)
     return true;
 }
 
-Local<Object> error_to_jsobject(as_error * error, LogInfo * log)
+Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> err = Nan::New<Object>();
@@ -697,7 +697,7 @@ Local<Object> error_to_jsobject(as_error * error, LogInfo * log)
 }
 
 
-Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
+Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
     if ( val == NULL) {
@@ -796,7 +796,7 @@ Local<Value> val_to_jsvalue(as_val * val, LogInfo * log )
 }
 
 
-Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
+Local<Object> recordbins_to_jsobject(const as_record* record, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
 
@@ -822,7 +822,7 @@ Local<Object> recordbins_to_jsobject(const as_record * record, LogInfo * log )
     return scope.Escape(bins);
 }
 
-Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
+Local<Object> recordmeta_to_jsobject(const as_record* record, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> meta;
@@ -841,7 +841,7 @@ Local<Object> recordmeta_to_jsobject(const as_record * record, LogInfo * log)
     return scope.Escape(meta);
 }
 
-Local<Object> record_to_jsobject(const as_record * record, const as_key * key, LogInfo * log )
+Local<Object> record_to_jsobject(const as_record* record, const as_key* key, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> okey;
@@ -862,7 +862,7 @@ Local<Object> record_to_jsobject(const as_record * record, const as_key * key, L
     return scope.Escape(rec);
 }
 
-Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, LogInfo* log)
+Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
 	const as_vector* list = &records->list;
@@ -891,8 +891,8 @@ Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, LogI
 }
 
 //Forward references;
-int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log);
-int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log);
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log);
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, const LogInfo* log);
 
 bool instanceof(Local<Value> value, const char * type)
 {
@@ -935,7 +935,7 @@ double double_value(Local<Value> value)
     return (double) value->ToNumber()->Value();
 }
 
-int list_from_jsarray(as_list** list, Local<Array> array, LogInfo* log)
+int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
 {
     const uint32_t capacity = array->Length();
     as_v8_detail(log, "Creating new as_arraylist with capacity %d", capacity);
@@ -956,7 +956,7 @@ int list_from_jsarray(as_list** list, Local<Array> array, LogInfo* log)
     return AS_NODE_PARAM_OK;
 }
 
-int map_from_jsobject(as_map** map, Local<Object> obj, LogInfo* log)
+int map_from_jsobject(as_map** map, Local<Object> obj, const LogInfo* log)
 {
     const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
     const uint32_t capacity = props->Length();
@@ -980,7 +980,7 @@ int map_from_jsobject(as_map** map, Local<Object> obj, LogInfo* log)
     return AS_NODE_PARAM_OK;
 }
 
-int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log)
+int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
 {
     if (v8value->IsNull()) {
         as_v8_detail(log, "The as_val is NULL");
@@ -1028,7 +1028,7 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, LogInfo* log)
     return AEROSPIKE_OK;
 }
 
-int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
+int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log)
 {
     const Local<Array> props = obj->GetOwnPropertyNames();
     const uint32_t count = props->Length();
@@ -1093,7 +1093,7 @@ int recordbins_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 }
 
 
-int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
+int recordmeta_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log)
 {
 
     setTTL( obj, &rec->ttl, log);
@@ -1104,7 +1104,7 @@ int recordmeta_from_jsobject(as_record * rec, Local<Object> obj, LogInfo * log)
 
 
 //@TO-DO - GetIndexedProperties is to be checked
-int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogInfo* log)
+int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, const LogInfo* log)
 {
     if (!node::Buffer::HasInstance(obj)) {
         as_v8_error(log, "The binary data is not of the type UnsignedBytes");
@@ -1119,7 +1119,7 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, LogI
 }
 
 
-int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
+int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 {
     if ( obj->Has(Nan::New("ttl").ToLocalChecked())) {
         Local<Value> v8ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
@@ -1134,7 +1134,7 @@ int setTTL ( Local<Object> obj, uint32_t *ttl, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
+int setTimeOut(Local<Object> obj, uint32_t* timeout, const LogInfo* log)
 {
 
     if ( obj->Has(Nan::New("timeout").ToLocalChecked()) ) {
@@ -1154,7 +1154,7 @@ int setTimeOut( Local<Object> obj, uint32_t *timeout, LogInfo * log )
     return AS_NODE_PARAM_OK;
 }
 
-int setTtlPolicy( Local<Object> obj, uint32_t *ttl, LogInfo * log )
+int setTtlPolicy(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 {
 
     if ( obj->Has(Nan::New("ttl").ToLocalChecked()) ) {
@@ -1174,7 +1174,7 @@ int setTtlPolicy( Local<Object> obj, uint32_t *ttl, LogInfo * log )
     return AS_NODE_PARAM_OK;
 }
 
-int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
+int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 {
     if ( obj->Has(Nan::New("gen").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New("gen").ToLocalChecked());
@@ -1191,7 +1191,7 @@ int setGeneration( Local<Object> obj, uint16_t * generation, LogInfo * log )
     return AS_NODE_PARAM_OK;
 }
 
-int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumValue, LogInfo * log )
+int setPolicyGeneric(Local<Object> obj, const char* policyname, int* policyEnumValue, const LogInfo* log)
 {
 
     if ( obj->Has(Nan::New(policyname).ToLocalChecked()) ) {
@@ -1215,7 +1215,7 @@ int setPolicyGeneric(Local<Object> obj, const char *policyname, int *policyEnumV
     return AS_NODE_PARAM_OK;
 }
 
-int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
+int setKeyPolicy(Local<Object> obj, as_policy_key* keypolicy, const LogInfo* log)
 {
 
     if (setPolicyGeneric(obj, "key", (int *) keypolicy, log) != AS_NODE_PARAM_OK) {
@@ -1226,7 +1226,7 @@ int setKeyPolicy( Local<Object> obj, as_policy_key *keypolicy, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy, LogInfo * log)
+int setGenPolicy(Local<Object> obj, as_policy_gen* genpolicy, const LogInfo* log)
 {
     if ( setPolicyGeneric(obj, "gen", (int *) genpolicy, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
@@ -1236,7 +1236,7 @@ int setGenPolicy( Local<Object> obj, as_policy_gen * genpolicy, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int setRetryPolicy( Local<Object> obj, uint32_t* retrypolicy, LogInfo * log)
+int setRetryPolicy(Local<Object> obj, uint32_t* retrypolicy, const LogInfo* log)
 {
     if (setPolicyGeneric(obj, "retry", (int *) retrypolicy, log) != AS_NODE_PARAM_OK ) {
         return AS_NODE_PARAM_OK;
@@ -1247,7 +1247,7 @@ int setRetryPolicy( Local<Object> obj, uint32_t* retrypolicy, LogInfo * log)
 }
 
 
-int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo * log)
+int setExistsPolicy(Local<Object> obj, as_policy_exists* existspolicy, const LogInfo* log)
 {
     if ( setPolicyGeneric(obj, "exists", (int *) existspolicy, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
@@ -1257,7 +1257,7 @@ int setExistsPolicy( Local<Object> obj, as_policy_exists * existspolicy, LogInfo
     return AS_NODE_PARAM_OK;
 }
 
-int setCommitLevelPolicy( Local<Object> obj, as_policy_commit_level* commitpolicy, LogInfo * log)
+int setCommitLevelPolicy(Local<Object> obj, as_policy_commit_level* commitpolicy, const LogInfo* log)
 {
     if( setPolicyGeneric(obj, "commitLevel", (int*) commitpolicy, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
@@ -1267,7 +1267,7 @@ int setCommitLevelPolicy( Local<Object> obj, as_policy_commit_level* commitpolic
     return AS_NODE_PARAM_OK;
 }
 
-int setCompressionThresholdPolicy( Local<Object> obj, uint32_t* compression_threshold, LogInfo * log)
+int setCompressionThresholdPolicy(Local<Object> obj, uint32_t* compression_threshold, const LogInfo* log)
 {
     if( setPolicyGeneric(obj, "compressionThreshold", (int*) compression_threshold, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
@@ -1277,7 +1277,7 @@ int setCompressionThresholdPolicy( Local<Object> obj, uint32_t* compression_thre
     return AS_NODE_PARAM_OK;
 }
 
-int setReplicaPolicy(Local<Object> obj, as_policy_replica *replicapolicy, LogInfo *log)
+int setReplicaPolicy(Local<Object> obj, as_policy_replica* replicapolicy, const LogInfo* log)
 {
     if( setPolicyGeneric(obj, "replica", (int*) replicapolicy, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
@@ -1287,7 +1287,8 @@ int setReplicaPolicy(Local<Object> obj, as_policy_replica *replicapolicy, LogInf
     return AS_NODE_PARAM_OK;
 }
 
-int setConsistencyLevelPolicy( Local<Object> obj, as_policy_consistency_level *consistencypolicy, LogInfo * log){
+int setConsistencyLevelPolicy(Local<Object> obj, as_policy_consistency_level* consistencypolicy, const LogInfo* log)
+{
     if( setPolicyGeneric(obj, "consistencyLevel", (int*) consistencypolicy, log) != AS_NODE_PARAM_OK) {
         return AS_NODE_PARAM_ERR;
     }
@@ -1296,7 +1297,7 @@ int setConsistencyLevelPolicy( Local<Object> obj, as_policy_consistency_level *c
     return AS_NODE_PARAM_OK;
 }
 
-int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInfo * log)
+int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log)
 {
     if ( obj->IsUndefined() || obj->IsNull()) {
         return AS_NODE_PARAM_ERR;
@@ -1330,14 +1331,14 @@ int infopolicy_from_jsobject( as_policy_info * policy, Local<Object> obj, LogInf
     return  AS_NODE_PARAM_OK;
 }
 
-int adminpolicy_from_jsobject( as_policy_admin * policy, Local<Object> obj, LogInfo * log)
+int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log)
 {
     if( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     as_v8_detail(log, "Timeout in admin policy is set to %d", policy->timeout);
     return AS_NODE_PARAM_OK;
 }
 
-int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, LogInfo * log)
+int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_operate_init( policy);
@@ -1353,7 +1354,7 @@ int operatepolicy_from_jsobject( as_policy_operate * policy, Local<Object> obj, 
     return AS_NODE_PARAM_OK;
 }
 
-int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj, LogInfo * log)
+int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_batch_init(policy);
@@ -1363,7 +1364,7 @@ int batchpolicy_from_jsobject( as_policy_batch * policy, Local<Object> obj, LogI
     return AS_NODE_PARAM_OK;
 }
 
-int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, LogInfo * log)
+int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_remove_init(policy);
@@ -1394,7 +1395,7 @@ int removepolicy_from_jsobject( as_policy_remove * policy, Local<Object> obj, Lo
     return AS_NODE_PARAM_OK;
 }
 
-int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInfo * log)
+int readpolicy_from_jsobject(as_policy_read* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_read_init( policy );
@@ -1410,7 +1411,7 @@ int readpolicy_from_jsobject( as_policy_read * policy, Local<Object> obj, LogInf
     return AS_NODE_PARAM_OK;
 }
 
-int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogInfo * log)
+int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_write_init( policy );
@@ -1427,7 +1428,7 @@ int writepolicy_from_jsobject( as_policy_write * policy, Local<Object> obj, LogI
     return AS_NODE_PARAM_OK;
 }
 
-int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogInfo* log)
+int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_apply_init( policy);
@@ -1441,7 +1442,7 @@ int applypolicy_from_jsobject( as_policy_apply * policy, Local<Object> obj, LogI
     return AS_NODE_PARAM_OK;
 }
 
-int querypolicy_from_jsobject( as_policy_query* policy, Local<Object> obj, LogInfo* log)
+int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log)
 {
 
     as_policy_query_init( policy);
@@ -1452,7 +1453,7 @@ int querypolicy_from_jsobject( as_policy_query* policy, Local<Object> obj, LogIn
     return AS_NODE_PARAM_OK;
 }
 
-int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInfo* log)
+int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log)
 {
     as_policy_scan_init( policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
@@ -1473,7 +1474,7 @@ int scanpolicy_from_jsobject( as_policy_scan * policy, Local<Object> obj, LogInf
     return AS_NODE_PARAM_OK;
 }
 
-Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
+Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
     Local<Object> obj;
@@ -1538,7 +1539,7 @@ Local<Object> key_to_jsobject(const as_key * key, LogInfo * log)
     return scope.Escape(obj);
 }
 
-Local<Object> jobinfo_to_jsobject(const as_job_info * info, LogInfo * log)
+Local<Object> jobinfo_to_jsobject(const as_job_info* info, const LogInfo* log)
 {
     Local<Object> jobinfo;
 
@@ -1558,7 +1559,7 @@ Local<Object> jobinfo_to_jsobject(const as_job_info * info, LogInfo * log)
     return jobinfo;
 }
 
-int key_from_jsobject(as_key * key, Local<Object> obj, LogInfo * log)
+int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 {
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
@@ -1666,7 +1667,7 @@ ReturnError:
     return AS_NODE_PARAM_ERR;
 }
 
-int key_from_jsarray(as_key * key, Local<Array> arr, LogInfo * log)
+int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
 {
     as_namespace ns = { '\0' };
     as_set set = { '\0' };
@@ -1719,7 +1720,7 @@ Ret_Err:
     return AS_NODE_PARAM_ERR;
 }
 
-int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
+int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log)
 {
 
     uint32_t capacity = arr->Length();
@@ -1742,7 +1743,7 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, LogInfo * log)
     return AS_NODE_PARAM_OK;
 }
 
-int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array> arr, LogInfo* log)
+int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array> arr, const LogInfo* log)
 {
 	uint32_t no_records = arr->Length();
 	*records = as_batch_read_create(no_records);
@@ -1776,7 +1777,7 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 	return AS_NODE_PARAM_OK;
 }
 
-int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogInfo* log)
+int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const LogInfo* log)
 {
     int arr_length = arr->Length();
     char** c_bins = NULL;
@@ -1796,7 +1797,7 @@ int bins_from_jsarray( char*** bins, uint32_t* num_bins, Local<Array> arr, LogIn
     return AS_NODE_PARAM_OK;
 }
 
-int udfargs_from_jsobject( char** filename, char** funcname, as_list** args, Local<Object> obj, LogInfo * log)
+int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, const LogInfo* log)
 {
     if(obj->IsNull()) {
         as_v8_error(log, "Object passed is NULL");
