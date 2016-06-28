@@ -649,6 +649,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns reverse index', function (done) {
+      this.skip('reverse index results broken in AS 3.8.4 - re-enable spec once fix is released')
       helper.cluster.supports_feature('cdt-map') || this.skip('cdt-maps feature not supported')
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
