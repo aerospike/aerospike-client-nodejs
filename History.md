@@ -3,7 +3,7 @@ v2.1.1 / 2016-06-29
 
 * **Fixes**
   * Prevent segfault processing query/scan record stream if client object goes out of scope. [CLIENT-735]
-  * Update C client to v4.0.6 with fix to complete scan on empty sets. [#135](https://github.com/aerospike/aerospike-client-nodejs/issues/132)
+  * Update C client to v4.0.6 with fix to complete scan on empty sets. [#132](https://github.com/aerospike/aerospike-client-nodejs/issues/132)
 
 v2.1.0 / 2016-06-03
 ===================
