@@ -1,6 +1,6 @@
 #! /bin/bash
 ################################################################################
-# Copyright 2013-2014 Aerospike, Inc.
+# Copyright 2013-2016 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,122 +38,6 @@ LUA_PATH=${AEROSPIKE_LUA_PATH}
 # FUNCTIONS
 #
 ################################################################################
-
-detect_linux()
-{
-  # check to see if `lsb_release` is available.
-  if [ ! -z "$(which lsb_release)" ]; then
-
-    # We have LSB, so use it.
-    DIST_IDEN=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-    DIST_VERS=$(lsb_release -rs | cut -d. -f1 )
-    DIST_NAME=${DIST_IDEN}${DIST_VERS}
-
-    case ${DIST_NAME} in
-
-      "centos6" | "redhatenterpriseserver6" | "centos7" | "fedora20" | "fedora21" | "fedora22" | "fedora23" | "korora22" | "korora23")
-        echo "el6" "rpm"
-        return 0
-        ;;
-
-      "debian6" )
-        echo "debian6" "deb"
-        return 0
-        ;;
-
-
-      "debian7" | "debian8" )
-        echo "debian7" "deb"
-        return 0
-        ;;
-
-      "ubuntu12" | "ubuntu13" | "ubuntu14" | "ubuntu15" | "ubuntu16" | "linuxmint17" )
-        echo "ubuntu12"  "deb"
-        return 0
-        ;;
-
-      * )
-        echo "error: ${DIST_NAME} is not supported."
-        return 1
-        ;;
-
-    esac
-  fi
-
-  # no LSB, check for /etc/redhat-release
-  if [ -f /etc/redhat-release ]; then
-    dist=$(cat /etc/redhat-release | tr '[:upper:]' '[:lower:]')
-    case ${dist} in
-
-      "centos"* | "red hat enterprise linux"* | "fedora"* | "korora"*)
-	echo "el6" "rpm"
-	return 0
-	;;
-
-       * )
-	echo "error: ${dist} is not supported."
-	return 1
-	;;
-     esac
-   fi
-
-
-  # Ok, no LSB, so check for /etc/issue
-  if [ -f /etc/issue ]; then
-    dist=$(cat /etc/issue | tr '[:upper:]' '[:lower:]')
-    case ${dist} in
-
-      "centos"* | "red hat enterprise linux"* | "fedora"* | "korora"*)
-        echo "el6" "rpm"
-        return 0
-        ;;
-
-      "debian"* )
-        vers=$(cat /etc/debian_version)
-        case ${vers} in
-          "7."* | "8."* )
-            echo "debian7" "deb"
-            return 0
-            ;;
-
-          * )
-            echo "error: Debian ${vers} is not supported."
-            return 1
-            ;;
-        esac
-        ;;
-
-      "ubuntu"* )
-        vers=$(lsb_release -r -s)
-        case ${vers} in
-          "12."* | "13."* | "14.*" )
-            echo "ubuntu12"  "deb"
-            return 0
-            ;;
-
-          * )
-            echo "error: Ubuntu ${vers} is not supported."
-            return 1
-            ;;
-        esac
-        ;;
-
-      "amazon linux"* )
-        echo "el6" "rpm"
-        return 0
-        ;;
-
-      * )
-        echo "error: ${DIST_NAME} is not supported."
-        return 1
-        ;;
-
-    esac
-  fi
-
-  echo "error: Linux Distro not supported"
-  return 1
-}
 
 download()
 {
@@ -241,13 +125,20 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # LINUX
     ############################################################################
     "linux" )
-      result=$(detect_linux)
+      PKG_DIST=$(`dirname $0`/os_version)
       if [ $? -ne 0 ]; then
-        printf "$result\n" >&2
+        printf "$PKG_DIST\n" >&2
         exit 1
       fi
 
-      IFS=" " read PKG_DIST PKG_TYPE <<< "${result}"
+      case $PKG_DIST in
+        "el"* )
+          PKG_TYPE="rpm"
+          ;;
+        "debian"* | "ubuntu"* )
+          PKG_TYPE="deb"
+      esac
+
       PKG_PATH=${AEROSPIKE}/package/usr
       LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
       ;;
@@ -284,7 +175,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     printf "warning: new package. If you would like to download a new package\n"
     printf "warning: then please remove the 'aerospike-client' directory and any \n"
     printf "warning: 'aerospike-client.tgz' file in this directory.\n"
-    printf "warning: \n"
   else
 
     ##############################################################################
@@ -297,7 +187,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: We will be using this package, rather than downloading a new package.\n"
       printf "warning: If you would like to download a new package, then please remove.\n"
       printf "warning: 'aerospike-client.tgz' from this directory.\n"
-      printf "warning: \n"
     else
       download
 
