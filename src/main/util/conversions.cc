@@ -1042,13 +1042,13 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
         // can be an undefined value.
         // If a bin is undefined, it must error out at the earliest.
         if( value->IsUndefined()) {
-            as_v8_error(log, "Bin value passed for bin %s is undefined", *String::Utf8Value(name));
+            as_v8_error(log, "Bin value 'undefined' not supported: %s", *String::Utf8Value(name));
             return AS_NODE_PARAM_ERR;
         }
 
         String::Utf8Value n(name);
         if( strlen(*n) > AS_BIN_NAME_MAX_SIZE ) {
-            as_v8_error(log, "Valid length for a bin name is 14. Bin name length exceeded");
+            as_v8_error(log, "Bin name length exceeded (max. 14): %s", *n);
             return AS_NODE_PARAM_ERR;
         }
         as_val* val = NULL;
@@ -1058,7 +1058,7 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
         switch(as_val_type(val)) {
             case AS_BOOLEAN:
                 as_val_destroy(val);
-                as_v8_error(log,"Boolean datatype not supported");
+                as_v8_error(log, "Boolean type not supported: %s", *n);
                 return AS_NODE_PARAM_ERR;
             case AS_INTEGER:
                 as_record_set_integer(rec, *n, (as_integer*)val);
@@ -1085,6 +1085,7 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
                 as_record_set_nil(rec, *n);
                 break;
             default:
+                as_v8_error(log,"Skipping unsupported as_val type %i: %s", as_val_type(val), *n);
                 break;
         }
     }
