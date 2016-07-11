@@ -370,6 +370,18 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         as_v8_debug(log, "Tender interval set to %d ms", config->tender_interval);
     }
 
+    if (obj->Has(Nan::New("maxConnsPerNode").ToLocalChecked())) {
+        Local<Value> maxConnsPerNode = obj->Get(Nan::New("maxConnsPerNode").ToLocalChecked());
+        config->async_max_conns_per_node = V8INTEGER_TO_CINTEGER(maxConnsPerNode);
+        as_v8_debug(log, "Max. async connections per node set to %d", config->async_max_conns_per_node);
+    }
+
+    if (obj->Has(Nan::New("maxConnsPerNodeSync").ToLocalChecked())) {
+        Local<Value> maxConnsPerNodeSync = obj->Get(Nan::New("maxConnsPerNodeSync").ToLocalChecked());
+        config->max_conns_per_node = V8INTEGER_TO_CINTEGER(maxConnsPerNodeSync);
+        as_v8_debug(log, "Max. synchronous connections per node set to %d", config->max_conns_per_node)
+    }
+
     return AS_NODE_PARAM_OK;
 }
 
