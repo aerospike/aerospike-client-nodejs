@@ -167,6 +167,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(cons, "queryApply", QueryApply);
 	Nan::SetPrototypeMethod(cons, "queryAsync", QueryAsync);
 	Nan::SetPrototypeMethod(cons, "queryBackground", QueryBackground);
+	Nan::SetPrototypeMethod(cons, "queryForeach", QueryForeach);
 	Nan::SetPrototypeMethod(cons, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(cons, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(cons, "scanAsync", ScanAsync);

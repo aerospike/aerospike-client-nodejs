@@ -35,3 +35,10 @@ function count(stream)
   end
   return stream : map(mapper) : reduce(reducer)
 end
+
+function multiply(stream, bin, factor)
+  local function mult(rec)
+    return map { value = rec[bin] * factor }
+  end
+  return stream : map(mult)
+end

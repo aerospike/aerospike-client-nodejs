@@ -177,6 +177,26 @@ describe('Queries', function () {
   })
 
   describe('query.foreach()', function () {
+    it('should apply a stream UDF to the results', function (done) {
+      var args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      var query = client.query(helper.namespace, testSet, args)
+      query.udf = { module: 'udf', funcname: 'multiply', args: ['value', 2] }
+      var stream = query.foreach()
+      var results = []
+      stream.on('error', function (error) {
+        throw error
+      })
+      stream.on('data', function (data) {
+        results.push(data.value)
+      })
+      stream.on('end', function () {
+        expect(results.sort()).to.eql([20, 40, 60])
+        done()
+      })
+    })
+
     it('returns the key if it was stored on the server', function (done) {
       var uniqueKey = 'test/query/record_with_stored_key'
       var key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
