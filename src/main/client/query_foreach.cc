@@ -65,36 +65,7 @@ static bool async_queue_populate(const as_val* val, AsyncData* data)
 	}
 
 	// Clone the value as as_val is freed up after the callback.
-	as_val* clone = NULL;
-	as_val_t type = as_val_type(val);
-	switch (type) {
-		case AS_REC: {
-			as_record* p_rec = as_record_fromval(val);
-			if (!p_rec) {
-				as_v8_error(data->log, "record returned in the callback is NULL");
-				return false;
-			}
-			uint16_t numbins = as_record_numbins(p_rec);
-			as_record* rec = as_record_new(numbins);
-			record_clone(p_rec, &rec, data->log);
-			clone = as_record_toval(rec);
-			break;
-		}
-		case AS_NIL:
-		case AS_BOOLEAN:
-		case AS_INTEGER:
-		case AS_STRING:
-		case AS_BYTES:
-		case AS_LIST:
-		case AS_MAP: {
-			clone = asval_clone((as_val*) val, data->log);
-			break;
-		}
-		default:
-			as_v8_debug(data->log, "Query returned - unrecognizable type");
-			break;
-	}
-
+	as_val* clone = asval_clone((as_val*) val, data->log);
 	if (clone != NULL) {
 		if (cf_queue_sz(data->result_q) >= data->max_q_size) {
 			sleep(1);
@@ -119,24 +90,12 @@ static void async_queue_process(AsyncData* data)
 	while (data->result_q && cf_queue_sz(data->result_q) > 0) {
 		int rv = cf_queue_pop(data->result_q, &val, CF_QUEUE_FOREVER);
 		if (rv == CF_QUEUE_OK) {
-			if (as_val_type(val) == AS_REC) {
-				as_record* record = as_record_fromval(val);
-				const int argc = 4;
-				Local<Value> argv[argc];
-				argv[0] = err_ok();
-				argv[1] = recordbins_to_jsobject(record, data->log);
-				argv[2] = recordmeta_to_jsobject(record, data->log);
-				argv[3] = key_to_jsobject(&record->key, data->log);
-				as_record_destroy(record);
-				Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-			} else {
-				const int argc = 2;
-				Local<Value> argv[argc];
-				argv[0] = err_ok();
-				argv[1] = val_to_jsvalue(val, data->log);
-				as_val_destroy(val);
-				Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-			}
+			const int argc = 2;
+			Local<Value> argv[argc];
+			argv[0] = err_ok();
+			argv[1] = val_to_jsvalue(val, data->log);
+			Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+			as_val_destroy(val);
 		}
 	}
 }
@@ -280,10 +239,6 @@ static void respond(uv_work_t* req, int status)
 
 	delete req;
 }
-
-/*******************************************************************************
- *  OPERATION
- ******************************************************************************/
 
 /**
  *  The 'query.foreach()' Operation
