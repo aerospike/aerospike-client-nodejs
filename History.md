@@ -1,7 +1,8 @@
-XXX
+v2.2.0 / 2016-07-13
 ===================
 
 * **Improvements**
+  * Added back support for applying stream UDF to query results w/o aggregation.
   * Added `maxConnsPerNode` config setting to address [#130](https://github.com/aerospike/aerospike-client-nodejs/issues/130).
 
 v2.1.1 / 2016-06-29
