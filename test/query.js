@@ -69,7 +69,11 @@ describe('Queries', function () {
     { name: 'region map non-match', mg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
     { name: 'aggregate', value: 10 },
     { name: 'aggregate', value: 20 },
-    { name: 'aggregate', value: 30 }
+    { name: 'aggregate', value: 30 },
+    { name: 'filter', value: 1 },
+    { name: 'filter', value: 2 },
+    { name: 'filter', value: 3 },
+    { name: 'filter', value: 4 }
   ]
   const numberOfSamples = samples.length
   const indexes = [
@@ -177,6 +181,26 @@ describe('Queries', function () {
   })
 
   describe('query.foreach()', function () {
+    it('should apply a stream UDF to filter the results', function (done) {
+      var args = {
+        filters: [filter.equal('name', 'filter')]
+      }
+      var query = client.query(helper.namespace, testSet, args)
+      query.setUdf('udf', 'even')
+      var stream = query.foreach()
+      var results = []
+      stream.on('error', function (error) {
+        throw error
+      })
+      stream.on('data', function (data) {
+        results.push(data)
+      })
+      stream.on('end', function () {
+        expect(results.sort()).to.eql([2, 4])
+        done()
+      })
+    })
+
     it('returns the key if it was stored on the server', function (done) {
       var uniqueKey = 'test/query/record_with_stored_key'
       var key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)

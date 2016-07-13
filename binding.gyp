@@ -44,6 +44,7 @@
         'src/main/client/query_async.cc',
         'src/main/client/query_apply.cc',
         'src/main/client/query_background.cc',
+        'src/main/client/query_foreach.cc',
         'src/main/client/remove_async.cc',
         'src/main/client/scan_async.cc',
         'src/main/client/scan_background.cc',

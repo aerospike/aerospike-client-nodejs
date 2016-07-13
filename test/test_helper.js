@@ -80,7 +80,7 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
     datatype: dataType
   }
   var job = this.createIndex(index)
-  deasync(job.waitUntilDone).bind(job)(10)
+  deasync(job.waitUntilDone).bind(job)(100)
 }
 
 IndexHelper.prototype.remove = function (indexName) {

@@ -95,6 +95,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(QueryApply);
 		static NAN_METHOD(QueryAsync);
 		static NAN_METHOD(QueryBackground);
+		static NAN_METHOD(QueryForeach);
 		static NAN_METHOD(Register);
 		static NAN_METHOD(RegisterWait);
 		static NAN_METHOD(RemoveAsync);

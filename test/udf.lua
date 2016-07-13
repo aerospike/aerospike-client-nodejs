@@ -35,3 +35,13 @@ function count(stream)
   end
   return stream : map(mapper) : reduce(reducer)
 end
+
+function even(stream, bin)
+  local function filt(rec)
+    return rec.value % 2 == 0
+  end
+  local function mapper(rec)
+    return rec.value
+  end
+  return stream : filter(filt) : map(mapper)
+end
