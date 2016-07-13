@@ -36,9 +36,12 @@ function count(stream)
   return stream : map(mapper) : reduce(reducer)
 end
 
-function multiply(stream, bin, factor)
-  local function mult(rec)
-    return map { value = rec[bin] * factor }
+function even(stream, bin)
+  local function filt(rec)
+    return rec.value % 2 == 0
   end
-  return stream : map(mult)
+  local function mapper(rec)
+    return rec.value
+  end
+  return stream : filter(filt) : map(mapper)
 end
