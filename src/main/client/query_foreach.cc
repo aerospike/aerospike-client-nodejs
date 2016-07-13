@@ -15,35 +15,25 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_key.h>
 	#include <aerospike/aerospike_query.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/as_key.h>
-	#include <aerospike/as_record.h>
-	#include <aerospike/as_record_iterator.h>
+	#include <aerospike/as_error.h>
+	#include <aerospike/as_policy.h>
+	#include <aerospike/as_query.h>
+	#include <aerospike/as_status.h>
 	#include <citrusleaf/cf_queue.h>
 }
 
 #include <node.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <time.h>
-#include <sys/time.h>
 
-#include "query.h"
-#include "client.h"
 #include "async.h"
+#include "client.h"
 #include "conversions.h"
 #include "log.h"
+#include "query.h"
 
 using namespace v8;
 
 #define QUEUE_SZ 100000
-
-/*******************************************************************************
- *  TYPES
- ******************************************************************************/
 
 typedef struct AsyncData {
 	bool param_err;
@@ -52,67 +42,42 @@ typedef struct AsyncData {
 	as_policy_query policy;
 	as_policy_query* p_policy;
 	as_query query;
-	uint64_t query_id;
-
 	cf_queue* result_q;
 	int max_q_size;
 	int signal_interval;
 	uv_async_t async_handle;
-
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
 } AsyncData;
 
-/*******************************************************************************
- *  FUNCTIONS
- ******************************************************************************/
-
-// Clone the as_val into a new val. And push the cloned value
-// into the queue. When the queue size reaches 1/20th of total queue size
-// send an async signal to v8 thread to process the records in the queue.
-
-
-// This is common function used by both scan and query.
-// scan populates only as_val of type record.
-// In case of query it can be record - in case of query without aggregation
-// In query aggregation, the value can be any as_val.
-
-bool async_queue_populate(const as_val* val, AsyncData* data)
+// Push the record from the server to a queue.
+// The record cannot be passed directly from query callback to v8 thread
+// because v8 objects can only be created inside a v8 context. This
+// callback is in C client thread, which is not aware of the v8 context. So
+// store this records in a temporary queue. When the queue reaches a certain
+// size, signal v8 thread to process the queue.
+static bool async_queue_populate(const as_val* val, AsyncData* data)
 {
 	if (data->result_q == NULL) {
-		// in case result_q is not initialized, return from the callback.
-		// But this should never happen.
-		as_v8_error(data->log,"Internal Error: Queue not initialized");
+		// Result queue is not initialized - this should never happen!
+		as_v8_error(data->log, "Internal Error: Queue not initialized");
 		return false;
 	}
 
-	// if the record queue is full sleep for n microseconds.
-	if (cf_queue_sz(data->result_q) > data->max_q_size) {
-		usleep(20); // why 20?
-	}
-
+	// Clone the value as as_val is freed up after the callback.
+	as_val* clone = NULL;
 	as_val_t type = as_val_type(val);
 	switch (type) {
 		case AS_REC: {
 			as_record* p_rec = as_record_fromval(val);
-			as_record* rec = NULL;
 			if (!p_rec) {
 				as_v8_error(data->log, "record returned in the callback is NULL");
 				return false;
 			}
 			uint16_t numbins = as_record_numbins(p_rec);
-			rec = as_record_new(numbins);
-			// clone the record into Asyncdata structure here.
-			// as_val is freed up after the callback. We need to retain a copy of this
-			// as_val until we pass this structure to nodejs
+			as_record* rec = as_record_new(numbins);
 			record_clone(p_rec, &rec, data->log);
-
-			as_val* clone_rec = as_record_toval(rec);
-			if (cf_queue_sz(data->result_q) >= data->max_q_size) {
-				sleep(1);
-			}
-			cf_queue_push(data->result_q, &clone_rec);
-			data->signal_interval++;
+			clone = as_record_toval(rec);
 			break;
 		}
 		case AS_NIL:
@@ -122,37 +87,38 @@ bool async_queue_populate(const as_val* val, AsyncData* data)
 		case AS_BYTES:
 		case AS_LIST:
 		case AS_MAP: {
-			as_val* clone = asval_clone((as_val*) val, data->log);
-			if (cf_queue_sz(data->result_q) >= data->max_q_size) {
-				sleep(1);
-			}
-			cf_queue_push(data->result_q, &clone);
-			data->signal_interval++;
+			clone = asval_clone((as_val*) val, data->log);
 			break;
-		 }
+		}
 		default:
 			as_v8_debug(data->log, "Query returned - unrecognizable type");
 			break;
 	}
 
-	int async_signal_sz = (data->max_q_size) / 20;
-	if (data->signal_interval % async_signal_sz == 0) {
-		data->signal_interval = 0;
-		uv_async_send(&data->async_handle);
+	if (clone != NULL) {
+		if (cf_queue_sz(data->result_q) >= data->max_q_size) {
+			sleep(1);
+		}
+		cf_queue_push(data->result_q, &clone);
+		data->signal_interval++;
+		if (data->signal_interval % (data->max_q_size / 20) == 0) {
+			data->signal_interval = 0;
+			uv_async_send(&data->async_handle);
+		}
 	}
+
 	return true;
 }
 
-void async_queue_process(AsyncData* data)
+// Pop each record from the queue and invoke the node callback with this record.
+static void async_queue_process(AsyncData* data)
 {
+	Nan::HandleScope scope;
+	Local<Function> cb = Nan::New<Function>(data->callback);
 	as_val* val = NULL;
-
-	// Pop each record from the queue and invoke the node callback with this record.
 	while (data->result_q && cf_queue_sz(data->result_q) > 0) {
 		int rv = cf_queue_pop(data->result_q, &val, CF_QUEUE_FOREVER);
 		if (rv == CF_QUEUE_OK) {
-			Nan::HandleScope scope;
-			Local<Function> cb = Nan::New<Function>(data->callback);
 			if (as_val_type(val) == AS_REC) {
 				as_record* record = as_record_fromval(val);
 				const int argc = 4;
@@ -175,8 +141,7 @@ void async_queue_process(AsyncData* data)
 	}
 }
 
-
-void async_callback(ResolveAsyncCallbackArgs)
+static void async_callback(ResolveAsyncCallbackArgs)
 {
 	AsyncData* data = reinterpret_cast<AsyncData*>(handle->data);
 	if (data->result_q == NULL) {
@@ -186,30 +151,17 @@ void async_callback(ResolveAsyncCallbackArgs)
 	async_queue_process(data);
 }
 
-// callback for query here.
-// Queue the record into a common queue and generate an event
-// when the queue size reaches 1/20th of the total size of the queue.
-
-bool aerospike_query_callback(const as_val* val, void* udata)
+static bool query_foreach_callback(const as_val* val, void* udata)
 {
 	AsyncData* data = reinterpret_cast<AsyncData*>(udata);
-
 	if (val == NULL) {
 		as_v8_debug(data->log, "value returned by query callback is NULL");
 		return false;
 	}
-
-	// push the record from the server to a queue.
-	// Why? Here the record cannot be directly passed on from scan callback to v8 thread.
-	// Because v8 objects can only be created inside a v8 context. This callback is in
-	// C client thread, which is not aware of the v8 context.
-	// So store this records in a temporary queue.
-	// When a queue reaches a certain size, signal v8 thread to process this queue.
-	bool res = async_queue_populate(val, data);
-	return res;
+	return async_queue_populate(val, data);
 }
 
-void release_handle(uv_handle_t* async_handle)
+static void release_handle(uv_handle_t* async_handle)
 {
     AsyncData* data = reinterpret_cast<AsyncData*>(async_handle->data);
     delete data;
@@ -272,7 +224,7 @@ static void execute(uv_work_t* req)
 		as_v8_debug(log, "Parameter error in the query options");
 	} else {
 		as_v8_debug(log, "Sending query command with UDF aggregation");
-		aerospike_query_foreach(data->as, &data->err, data->p_policy, &data->query, aerospike_query_callback, data);
+		aerospike_query_foreach(data->as, &data->err, data->p_policy, &data->query, query_foreach_callback, data);
 
 		// send an async signal here. If at all there's any residual records left in the result_q,
 		// this signal's callback will send it to node layer.

@@ -44,12 +44,12 @@ typedef struct AsyncData {
 	Nan::Persistent<Function> callback;
 } AsyncData;
 
-bool query_foreach_callback(const as_val* val, void* udata) {
+static bool query_foreach_callback(const as_val* val, void* udata) {
 	if (val) {
 		AsyncData* data = reinterpret_cast<AsyncData*>(udata);
 		data->val = asval_clone(val, data->log);
 	}
-	return true;
+	return false;
 }
 
 static void* prepare(ResolveArgs(info))
