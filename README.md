@@ -10,7 +10,7 @@
 An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js v0.12.x, io.js, v4.x, v5.x, v6.x and supports the following operating systems:
-CentOS/RHEL 6.x, Debian 6+, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and Mac OS X.
+CentOS/RHEL 6.x, Debian 7/8, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -134,7 +134,7 @@ Aerospike addon using Node.js v4/v5, gcc-4.8 or later is required. To update
 the gcc tool chain you may have to install a recent version of the [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
 or a compatible devtoolset version for CentOS.
 
-### Debian 6+
+### Debian 7+
 
 To install library prerequisites via `apt-get`:
 

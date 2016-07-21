@@ -111,11 +111,6 @@ detect_linux()
       "debian"* )
         vers=$(cat /etc/debian_version)
         case ${vers} in
-          "6."* )
-            echo "debian6" "deb"
-            return 0
-            ;;
-
           "7."* | "8."* )
             echo "debian7" "deb"
             return 0
