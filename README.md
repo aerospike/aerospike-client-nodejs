@@ -426,7 +426,9 @@ to the API by release.
 
 ## License
 
-The Aerospike Node.js Client is made availabled under the terms of the Apache License, Version 2, as stated in the file `LICENSE`.
+The Aerospike Node.js Client is made available under the terms of the Apache
+License, Version 2, as stated in the file `LICENSE`.
 
-Individual files may be made available under their own specific license,
-all compatible with Apache License, Version 2. Please see individual files for details.
+Individual files may be made available under their own specific license, all
+compatible with Apache License, Version 2. Please see individual files for
+details.
