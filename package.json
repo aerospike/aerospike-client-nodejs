@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "expect.js": "^0.3",
-    "mocha": ">0",
+    "mocha": "^3.0",
     "yargs": "1.2.1",
     "standard": "^7.0",
     "deasync": "^0.1.4",
