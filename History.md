@@ -3,6 +3,7 @@ Head
 
 * **Changes**
   * Drop support for Debian 6
+  * Update C client library to v4.0.7.
 
 v2.2.0 / 2016-07-13
 ===================
