@@ -34,19 +34,19 @@ context('Scans', function () {
   var numberOfRecords = 100
 
   before(function (done) {
-    helper.udf.register('udf.lua')
-    var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/scan/'})
-    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
-    var mgen = metagen.constant({ ttl: 300 })
-    var policy = { key: Aerospike.policy.key.SEND, exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
-    putgen.put(numberOfRecords, kgen, rgen, mgen, policy, function (key) {
-      if (!key) done()
+    helper.udf.register('udf.lua', function () {
+      var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/scan/'})
+      var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
+      var mgen = metagen.constant({ ttl: 300 })
+      var policy = { key: Aerospike.policy.key.SEND, exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
+      putgen.put(numberOfRecords, kgen, rgen, mgen, policy, function (key) {
+        if (!key) done()
+      })
     })
   })
 
   after(function (done) {
-    helper.udf.remove('udf.lua')
-    done()
+    helper.udf.remove('udf.lua', done)
   })
 
   describe('client.scan()', function () {

@@ -113,21 +113,27 @@ describe('Queries', function () {
     var mgen = metagen.constant({ ttl: 300 })
     putgen.put(numberOfSamples, kgen, sampleGen, mgen, function (key, record) {
       if (!key) {
-        helper.udf.register('udf.lua')
-        indexes.forEach(function (idx) {
-          helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])
+        helper.udf.register('udf.lua', function () {
+          var created = 0
+          indexes.forEach(function (idx) {
+            helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], function () {
+              if (++created >= indexes.length) done()
+            })
+          })
         })
-        done()
       }
     })
   })
 
   after(function (done) {
-    helper.udf.remove('udf.lua')
-    indexes.forEach(function (idx) {
-      helper.index.remove(idx[0])
+    helper.udf.remove('udf.lua', function () {
+      var cnt = 0
+      indexes.forEach(function (idx) {
+        helper.index.remove(idx[0], function () {
+          if (++cnt >= indexes.length) done()
+        })
+      })
     })
-    done()
   })
 
   describe('client.query()', function () {

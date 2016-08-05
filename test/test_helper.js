@@ -18,7 +18,6 @@ const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
 const options = require('./util/options')
 const expect = require('expect.js')
-const deasync = require('deasync')
 const util = require('util')
 const path = require('path')
 
@@ -42,35 +41,32 @@ exports.client = client
 
 function UDFHelper (client) {
   this.client = client
-  this.udfRegister = deasync(this.client.udfRegister).bind(client)
-  this.udfRegisterWait = deasync(this.client.udfRegisterWait).bind(client)
-  this.udfRemove = deasync(this.client.udfRemove).bind(client)
 }
 
-UDFHelper.prototype.register = function (filename, done) {
+UDFHelper.prototype.register = function (filename, callback) {
   var script = path.join(__dirname, filename)
-  this.udfRegister(script)
-  this.udfRegisterWait(filename, 50)
-  if (done) done()
+  var self = this
+  this.client.udfRegister(script, function (err) {
+    if (err) throw err
+    self.client.udfRegisterWait(filename, 50, function (err) {
+      if (err) throw err
+      callback()
+    })
+  })
 }
 
-UDFHelper.prototype.remove = function (filename, done) {
-  try {
-    this.udfRemove(filename)
-  } catch (error) {
-    if (error.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw error
-  }
-  if (done) done()
+UDFHelper.prototype.remove = function (filename, callback) {
+  this.client.udfRemove(filename, function (err) {
+    if (err && err.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw err
+    callback()
+  })
 }
 
 function IndexHelper (client) {
   this.client = client
-  this.createIndex = deasync(client.createIndex).bind(client)
-  this.indexRemove = deasync(client.indexRemove).bind(client)
-  this.info = deasync(client.info).bind(client)
 }
 
-IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType) {
+IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType, callback) {
   var index = {
     ns: options.namespace,
     set: setName,
@@ -79,40 +75,27 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
     type: indexType || Aerospike.indexType.DEFAULT,
     datatype: dataType
   }
-  var job = this.createIndex(index)
-  deasync(job.waitUntilDone).bind(job)(100)
-}
-
-IndexHelper.prototype.remove = function (indexName) {
-  this.indexRemove(options.namespace, indexName, {})
-}
-
-IndexHelper.prototype.exists = function (indexName) {
-  var sindex = 'sindex/' + options.namespace + '/' + indexName
-  var exists = false
-  var attempts = 0
-  while (attempts < 5) {
-    attempts++
-    this.info(sindex, function (err, info) {
+  this.client.createIndex(index, function (err, job) {
+    if (err) throw err
+    job.waitUntilDone(100, function (err) {
       if (err) throw err
-      var indexStats = Info.parseInfo(info)[sindex]
-      var noIndexErr = (typeof indexStats === 'string') && (indexStats.indexOf('FAIL:201:NO INDEX') >= 0)
-      exists = exists || !noIndexErr
+      callback()
     })
-    if (exists) return exists
-    deasync.sleep(5)
-  }
-  return false
+  })
+}
+
+IndexHelper.prototype.remove = function (indexName, callback) {
+  this.client.indexRemove(options.namespace, indexName, {}, callback)
 }
 
 function ServerInfoHelper () {
-  this.features = []
+  this.features = new Set()
   this.nsconfig = {}
   this.cluster = []
 }
 
 ServerInfoHelper.prototype.supports_feature = function (feature) {
-  return this.features.indexOf(feature) >= 0
+  return this.features.has(feature)
 }
 
 ServerInfoHelper.prototype.ldt_enabled = function () {
@@ -121,23 +104,27 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
 
 ServerInfoHelper.prototype.fetch_info = function () {
   var self = this
-  var done = false
-  client.info('features', function (err, result) {
+  client.infoAll('features', function (err, results) {
     if (err) throw err
-    self.features = Info.parseInfo(result)['features']
-  }, function () { done = true })
-  deasync.loopWhile(function () { return !done })
+    results.forEach(function (response) {
+      var features = Info.parseInfo(response.info)['features']
+      if (Array.isArray(features)) {
+        features.forEach(function (feature) {
+          self.features.add(feature)
+        })
+      }
+    })
+  })
 }
 
 ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
   var self = this
-  var done = false
   var nsKey = 'namespace/' + ns
-  client.info(nsKey, function (err, result) {
+  client.infoAll(nsKey, function (err, results) {
     if (err) throw err
-    self.nsconfig = Info.parseInfo(result)[nsKey]
-  }, function () { done = true })
-  deasync.loopWhile(function () { return !done })
+    var info = results.pop()['info']
+    self.nsconfig = Info.parseInfo(info)[nsKey]
+  })
 }
 
 var udfHelper = new UDFHelper(client)

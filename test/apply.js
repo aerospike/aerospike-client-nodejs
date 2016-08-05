@@ -26,13 +26,15 @@ describe('client.apply()', function (done) {
   var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
 
   before(function (done) {
-    helper.udf.register('udf.lua')
-    client.put(key, {'foo': 'bar'}, {ttl: 1000}, done)
+    helper.udf.register('udf.lua', function () {
+      client.put(key, {'foo': 'bar'}, {ttl: 1000}, done)
+    })
   })
 
   after(function (done) {
-    helper.udf.remove('udf.lua')
-    client.remove(key, done)
+    helper.udf.remove('udf.lua', function () {
+      client.remove(key, done)
+    })
   })
 
   it('should invoke an UDF to without any args', function (done) {

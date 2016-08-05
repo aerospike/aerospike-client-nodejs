@@ -18,6 +18,8 @@
 
 const Aerospike = require('../lib/aerospike')
 const AerospikeError = require('../lib/aerospike_error')
+const Info = require('../lib/info')
+const Job = require('../lib/job')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 
@@ -31,9 +33,31 @@ context('secondary indexes', function () {
     testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
     testIndex.bin = 'bin-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
   })
-  afterEach(function () {
-    helper.index.remove(testIndex.name)
+  afterEach(function (done) {
+    helper.index.remove(testIndex.name, function () { done() })
   })
+
+  function verifyIndexExists (namespace, indexName, callback) {
+    var sindex = 'sindex/' + namespace + '/' + indexName
+    var checkStatus = function (callback) {
+      client.infoAll(sindex, function (err, info) {
+        if (err) {
+          callback(err)
+        } else {
+          var done = info.every(function (response) {
+            var stats = Info.parseInfo(response.info)[sindex]
+            var noIndexErr = (typeof stats === 'string') && (stats.indexOf('FAIL:201:NO INDEX') >= 0)
+            return !noIndexErr
+          })
+          callback(null, done)
+        }
+      })
+    }
+    Job.pollUntilDone(checkStatus, 1000, function (err) {
+      if (err) throw err
+      callback()
+    })
+  }
 
   describe('client.indexCreate()', function () {
     it('should create a complex index on list', function (done) {
@@ -47,9 +71,8 @@ context('secondary indexes', function () {
       }
       client.createIndex(options, function (err, job) {
         expect(err).not.to.be.ok()
-        expect(helper.index.exists(testIndex.name)).to.be(true)
         expect(job).to.be.a(IndexJob)
-        done()
+        verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
 
@@ -64,8 +87,7 @@ context('secondary indexes', function () {
       var policy = { timeout: 100 }
       client.createIndex(options, policy, function (err) {
         expect(err).not.to.be.ok()
-        expect(helper.index.exists(testIndex.name)).to.be(true)
-        done()
+        verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
   })
@@ -80,8 +102,7 @@ context('secondary indexes', function () {
       }
       client.createIntegerIndex(options, function (err) {
         expect(err).not.to.be.ok()
-        expect(helper.index.exists(testIndex.name)).to.be(true)
-        done()
+        verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
   })
@@ -96,8 +117,7 @@ context('secondary indexes', function () {
       }
       client.createStringIndex(args, function (err) {
         expect(err).not.to.be.ok()
-        expect(helper.index.exists(testIndex.name)).to.be(true)
-        done()
+        verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
   })
@@ -112,15 +132,15 @@ context('secondary indexes', function () {
       }
       client.createGeo2DSphereIndex(args, function (err) {
         expect(err).not.to.be.ok()
-        expect(helper.index.exists(testIndex.name)).to.be(true)
-        done()
+        verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
   })
 
   describe('client.indexRemove()', function () {
-    beforeEach(function () {
-      helper.index.create(testIndex.name, helper.set, testIndex.bin, Aerospike.indexDataType.STRING)
+    beforeEach(function (done) {
+      helper.index.create(testIndex.name, helper.set, testIndex.bin,
+          Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT, function () { done() })
     })
 
     it('should drop an index', function (done) {
@@ -144,8 +164,7 @@ context('secondary indexes', function () {
 
         client.indexCreateWait(helper.namespace, testIndex.name, 100, function (err) {
           expect(err).not.to.be.ok()
-          expect(helper.index.exists(testIndex.name)).to.be(true)
-          done()
+          verifyIndexExists(helper.namespace, testIndex.name, done)
         })
       })
     })
