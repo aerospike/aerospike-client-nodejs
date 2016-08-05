@@ -42,6 +42,7 @@ NAN_METHOD(register_as_event_loop)
 		return Nan::ThrowError("Unable to register default event loop");
 	}
 	as_event_set_external_loop(uv_default_loop());
+	uv_update_time(uv_default_loop());
 }
 
 NAN_METHOD(release_as_event_loop)
