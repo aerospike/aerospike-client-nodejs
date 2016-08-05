@@ -1,9 +1,12 @@
 Head
 ===================
 
+*  **Improvements**
+  * Add Client#infoAll method to simplify processing info responses from multiple hosts. [#43](https://github.com/aerospike/aerospike-client-nodejs/issues/43)
+
 * **Changes**
-  * Drop support for Debian 6
   * Update C client library to v4.0.7.
+  * Drop support for Debian 6
   * Add work-around for issues running client with Node's interactive debugger. [#140](https://github.com/aerospike/aerospike-client-nodejs/issues/140)
 
 v2.2.0 / 2016-07-13
