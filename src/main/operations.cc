@@ -18,6 +18,7 @@ extern "C" {
 	#include <aerospike/as_operations.h>
 	#include <aerospike/as_list_operations.h>
 	#include <aerospike/as_map_operations.h>
+	#include <aerospike/as_nil.h>
 }
 
 #include <node.h>
@@ -186,9 +187,13 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
-		as_v8_detail(log, "Blob value to be written %u ", data);
+		as_v8_detail(log, "Blob value to be written: %u", data);
 		as_operations_add_write_rawp(ops, binName, data, len, true);
 		if (binName != NULL) free(binName);
+		return AS_NODE_PARAM_OK;
+	} else if (v8val->IsNull()) {
+		as_v8_detail(log, "Writing null value");
+		as_operations_add_write(ops, binName, (as_bin_value*) &as_nil);
 		return AS_NODE_PARAM_OK;
 	} else {
 		as_v8_debug(log, "Type error in write operation");

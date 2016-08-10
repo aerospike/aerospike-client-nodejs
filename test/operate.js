@@ -30,6 +30,33 @@ const op = Aerospike.operations
 describe('client.operate()', function () {
   var client = helper.client
 
+  describe('operations.write()', function () {
+    it('should delete a bin by writing null to it', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
+
+      client.put(key, {bin1: 123, bin2: 456}, function (err) {
+        if (err) throw err
+        var ops = [
+          op.write('bin1', null)
+        ]
+
+        client.operate(key, ops, function (err, result) {
+          expect(err).to.not.be.ok()
+
+          client.get(key, function (err, record) {
+            if (err) throw err
+            expect(record).to.eql({bin2: 456})
+
+            client.remove(key, function (err) {
+              if (err) throw err
+              done()
+            })
+          })
+        })
+      })
+    })
+  })
+
   describe('operations.incr()', function () {
     it('should increment bin with integer value', function (done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
