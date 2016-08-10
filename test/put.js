@@ -67,78 +67,56 @@ describe('client.put()', function () {
     }
   })
 
-  it('should write the record w/ string key', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+  context('records with various key types', function () {
+    it('should write a record w/ string key', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+      client.put(key, record, function (err) {
+        if (err) throw err
 
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
-
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
-
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
+        client.remove(key, function (err) {
+          if (err) throw err
           done()
         })
       })
     })
-  })
 
-  it('should write the record w/ int key', function (done) {
-    // generators
-    var kgen = keygen.integer(helper.namespace, helper.set)
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+    it('should write a record w/ integer key', function (done) {
+      var key = keygen.integer(helper.namespace, helper.set)()
+      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+      client.put(key, record, function (err) {
+        if (err) throw err
 
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
-
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
-
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
+        client.remove(key, function (err) {
+          if (err) throw err
           done()
         })
       })
     })
-  })
 
-  it('should write the record w/ bytes key', function (done) {
-    // generators
-    var kgen = keygen.bytes(helper.namespace, helper.set)
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
+    it('should write a record w/ byte array key', function (done) {
+      var key = keygen.bytes(helper.namespace, helper.set)()
+      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
 
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
+      client.put(key, record, function (err, key) {
+        if (err) throw err
 
         client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           done()
         })
+      })
+    })
+
+    it('should fail with a parameter error when trying to write an undefined key value', function (done) {
+      var key = new Aerospike.Key(helper.namespace, helper.set, undefined)
+      var record = { bin1: 123, bin2: 456 }
+
+      client.put(key, record, function (err) {
+        expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+        done()
       })
     })
   })
@@ -226,6 +204,60 @@ describe('client.put()', function () {
         f: '{"type":"Point","coordinates":[103.8,1.283]}', g: [1, 2, 3], h: { a: 1, b: 2 } }
       }
       putGetVerify(record, expected, done)
+    })
+
+    context('invalid bin values', function () {
+      it('should fail with a parameter error when trying to write an undefined bin value', function (done) {
+        var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+        var record = { valid: 123, invalid: undefined }
+
+        client.put(key, record, function (err) {
+          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+
+          client.remove(key, function (err, key) {
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            done()
+          })
+        })
+      })
+
+      it('should fail with a parameter error when trying to write a boolean bin value', function (done) {
+        var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+        var record = { valid: 'true', invalid: true }
+
+        client.put(key, record, function (err) {
+          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+
+          client.remove(key, function (err, key) {
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            done()
+          })
+        })
+      })
+    })
+  })
+
+  it('should delete a bin when writing null to it', function (done) {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    var record = { bin1: 123, bin2: 456 }
+    client.put(key, record, function (err) {
+      if (err) throw err
+
+      var update = { bin1: null }
+      client.put(key, update, function (err, result) {
+        if (err) throw err
+
+        client.get(key, function (err, record) {
+          if (err) throw err
+          var expected = { bin2: 456 }
+          expect(record).to.eql(expected)
+
+          client.remove(key, function (err) {
+            if (err) throw err
+            done()
+          })
+        })
+      })
     })
   })
 
@@ -387,124 +419,41 @@ describe('client.put()', function () {
     })
   })
 
-  it('should write a bin of type undefined and write should not fail', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({
-      l: valgen.constant([1, 2, 3]),
-      m: valgen.constant({a: 1, b: 2})
-    })
+  it('should write to a set with blank name', function (done) {
+    var blankSetName = ''
+    var key = keygen.string(helper.namespace, blankSetName, {prefix: 'test/put/'})()
+    var record = { bin1: 123, bin2: 456 }
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    record.bin_un = undefined
+    client.put(key, record, function (err) {
+      if (err) throw err
 
-    // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
-
-      client.remove(key, function (err, key) {
-        expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      client.remove(key, function (err) {
+        if (err) throw err
         done()
       })
     })
   })
 
-  it('should write a set with empty string and write should pass', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, '', {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({
-      l: valgen.constant([1, 2, 3]),
-      m: valgen.constant({a: 1, b: 2})
-    })
-
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).not.to.be.ok()
-
-      client.get(key1, function (err, bins, meta, key2) {
-        if (err) { throw new Error(err.message) }
-        expect(bins.m).to.eql({a: 1, b: 2})
-        expect(bins.l).to.eql([1, 2, 3])
-
-        client.remove(key2, function (err, key3) {
-          if (err) { throw new Error(err.message) }
-          done()
-        })
-      })
-    })
-  })
-
   it('should write a map with undefined entry and verify the record', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({
-      l: valgen.constant([1, 2, 3, undefined]),
-      m: valgen.constant({a: 1, b: 2, c: undefined})
-    })
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    var record = {
+      list: [1, 2, 3, undefined],
+      map: {a: 1, b: 2, c: undefined}
+    }
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).not.to.be.ok()
+    client.put(key, record, function (err) {
+      if (err) throw err
 
-      client.get(key1, function (err, bins, meta, key2) {
-        if (err) { throw new Error(err.message) }
-        expect(bins.m).to.eql({a: 1, b: 2, c: null})
-        expect(bins.l).to.eql([1, 2, 3, null])
+      client.get(key, function (err, record) {
+        if (err) throw err
+        expect(record.map).to.eql({a: 1, b: 2, c: null})
+        expect(record.list).to.eql([1, 2, 3, null])
 
-        client.remove(key2, function (err, key3) {
-          if (err) { throw new Error(err.message) }
+        client.remove(key, function (err) {
+          if (err) throw err
           done()
         })
       })
-    })
-  })
-
-  it('should write an object with boolean value and should fail', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = {boolbin: true}
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
-      done()
-    })
-  })
-
-  it('should write a key with undefined value and it should fail gracefully', function (done) {
-    // generators
-    var mgen = metagen.constant({ttl: 1000})
-
-    // values
-    var key = Aerospike.key(helper.namespace, helper.set, undefined)
-    var meta = mgen(key)
-    var record = { }
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).to.be.ok()
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
-      done()
     })
   })
 
