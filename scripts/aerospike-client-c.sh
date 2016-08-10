@@ -59,20 +59,20 @@ download()
   fi
 
   # Compose the URL for the client tgz
-  URL="http://www.aerospike.com/download/client/c/${AEROSPIKE_C_VERSION}/artifact/${PKG_DIST}"
+  URL="http://artifacts.aerospike.com/aerospike-client-c/${AEROSPIKE_C_VERSION}/${PKG_ARTIFACT}"
 
   # Download and extract the client tgz.
   # Use non-slient mode to show progress about the download. Important for slower networks.
   printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
 
   if [ $has_curl == 0 ]; then
-    curl -L ${URL} > ${AEROSPIKE}/package/aerospike-client-c.tgz
+    curl -L ${URL} > ${AEROSPIKE}/package/${PKG_ARTIFACT}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
     fi
   elif [ $has_wget == 0 ]; then
-    wget -O ${AEROSPIKE}/package/aerospike-client-c.tgz ${URL}
+    wget -O ${AEROSPIKE}/package/${PKG_ARTIFACT} ${URL}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
@@ -133,10 +133,19 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
       case $PKG_DIST in
         "el"* )
+          RPM_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
+          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${RPM_VERSION}.${PKG_DIST}.x86_64.rpm"
           PKG_TYPE="rpm"
           ;;
-        "debian"* | "ubuntu"* )
+        "debian"* )
+          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${PKG_DIST}.x86_64.deb"
           PKG_TYPE="deb"
+          ;;
+        "ubuntu"* )
+          OS_VERSION_LONG=$(`dirname $0`/os_version -long)
+          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${OS_VERSION_LONG}.x86_64.deb"
+          PKG_TYPE="deb"
+          ;;
       esac
 
       PKG_PATH=${AEROSPIKE}/package/usr
@@ -147,6 +156,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # MAC OS X
     ############################################################################
     "darwin" )
+      PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.pkg"
       PKG_DIST="mac"
       PKG_TYPE="pkg"
       PKG_PATH=${AEROSPIKE}/package/usr/local
@@ -169,60 +179,45 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   ##############################################################################
 
   if [ -d ${AEROSPIKE}/package/usr ]; then
-    printf "warning: 'aerospike-client-c/package/usr' directory exists.\n"
+    printf "warning: '%s' directory exists.\n" "${AEROSPIKE}/package/usr"
     printf "warning: \n"
     printf "warning: We will be using this directory, rather than downloading a\n"
     printf "warning: new package. If you would like to download a new package\n"
-    printf "warning: then please remove the 'aerospike-client' directory and any \n"
-    printf "warning: 'aerospike-client.tgz' file in this directory.\n"
+    printf "warning: please remove the 'aerospike-client/package' directory.\n"
   else
 
     ##############################################################################
     # DOWNLOAD TGZ
     ##############################################################################
 
-    if [ -f ${AEROSPIKE}/package/aerospike-client-c.tgz ]; then
-      printf "warning: 'aerospike-client-c/package/aerospike-client-c.tgz' file exists.\n"
+    if [ -f ${AEROSPIKE}/package/${PKG_ARTIFACT} ]; then
+      printf "warning: '%s' file exists.\n" "${AEROSPIKE}/package/${PKG_ARTIFACT}"
       printf "warning: \n"
       printf "warning: We will be using this package, rather than downloading a new package.\n"
-      printf "warning: If you would like to download a new package, then please remove.\n"
-      printf "warning: 'aerospike-client.tgz' from this directory.\n"
+      printf "warning: If you would like to download a new package please remove\n"
+      printf "warning: the existing '%s' package from this directory.\n" ${PKG_ARTIFACT}
     else
       download
-
     fi
-
-    ##############################################################################
-    # EXTRACT DEVEL INSTALLER
-    ##############################################################################
-
-    # let's go into the directory
-    cd ${AEROSPIKE}/package
-
-    # Find the `devel` installer package in the client tgz
-    INST_PATH=$(tar -tzf aerospike-client-c.tgz | grep -e ".*libuv-devel-.*\.${PKG_TYPE}")
-
-    # Extract the `devel` installer package from the client tgz
-    printf "info: extracting '${INST_PATH}' from 'aerospike-client-c.tgz'\n"
-    tar -xzf aerospike-client-c.tgz --strip=1 ${INST_PATH}
 
     ##############################################################################
     # EXTRACT FILES FROM DEVEL INSTALLER
     ##############################################################################
 
+    # let's go into the directory
+    cd ${AEROSPIKE}/package
+
     # Extract the contents of the `devel` installer package into `aerospike-client`
+    printf "info: extracting files from '%s'\n" ${PKG_ARTIFACT}
     case ${PKG_TYPE} in
       "rpm" )
-        printf "info: extracting files from '${INST_PATH}'\n"
-        rpm2cpio aerospike-client-c-libuv-devel-*.rpm | cpio -idm --no-absolute-filenames
+        rpm2cpio ${PKG_ARTIFACT} | cpio -idm --no-absolute-filenames
         ;;
       "deb" )
-        printf "info: extracting files from '${INST_PATH}'\n"
-        dpkg -x aerospike-client-c-libuv-devel-*.deb .
+        dpkg -x ${PKG_ARTIFACT} .
         ;;
       "pkg" )
-        printf "info: extracting files from '${INST_PATH}'\n"
-        xar -xf aerospike-client-c-libuv-devel-*.pkg
+        xar -xf ${PKG_ARTIFACT}
         cat Payload | gunzip -dc | cpio -i
         rm Bom PackageInfo Payload
         ;;
