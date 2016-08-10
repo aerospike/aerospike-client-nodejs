@@ -1,25 +1,28 @@
 Head
 ===================
 
-*  **Improvements**
+*  **New Features**
   * Add Client#infoAll method to simplify processing info responses from multiple hosts. [#43](https://github.com/aerospike/aerospike-client-nodejs/issues/43)
+
+* **Bug Fixes**
+  * Add work-around for issues running client with Node's interactive debugger. [#140](https://github.com/aerospike/aerospike-client-nodejs/issues/140)
+  * Support writing null values to delete bin using Client#operate. [#142](https://github.com/aerospike/aerospike-client-nodejs/issues/142)
 
 * **Changes**
   * Update C client library to v4.0.7.
   * Drop support for Debian 6
-  * Add work-around for issues running client with Node's interactive debugger. [#140](https://github.com/aerospike/aerospike-client-nodejs/issues/140)
 
 v2.2.0 / 2016-07-13
 ===================
 
-* **Improvements**
+* **New Features**
   * Added back support for applying stream UDF to query results w/o aggregation.
   * Added `maxConnsPerNode` config setting to address [#130](https://github.com/aerospike/aerospike-client-nodejs/issues/130).
 
 v2.1.1 / 2016-06-29
 ===================
 
-* **Fixes**
+* **Bug Fixes**
   * Prevent segfault processing query/scan record stream if client object goes out of scope. [CLIENT-735]
   * Update C client to v4.0.6 with fix to complete scan on empty sets. [#132](https://github.com/aerospike/aerospike-client-nodejs/issues/132)
 
