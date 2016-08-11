@@ -1,3 +1,9 @@
+v2.3.1 / 2016-08-11
+===================
+
+* **Bug Fixes**
+  * Fix installation on Amazon Linux. [#143](https://github.com/aerospike/aerospike-client-nodejs/issues/143)
+
 v2.3.0 / 2016-08-11
 ===================
 
