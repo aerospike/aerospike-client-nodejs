@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 ################################################################################
 # Copyright 2013-2016 Aerospike, Inc.
 #
@@ -25,13 +25,16 @@ AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'4.0.7'}
 ################################################################################
 
 CWD=$(pwd)
+SCRIPT_DIR=$(dirname $0)
 AEROSPIKE=${CWD}/aerospike-client-c
-
-unset PKG_DIST
-unset PKG_TYPE
-unset PKG_PATH
-
+LIB_PATH=${PREFIX}
 LUA_PATH=${AEROSPIKE_LUA_PATH}
+
+DOWNLOAD=${DOWNLOAD:=0}
+COPY_FILES=1
+
+unset PKG_TYPE
+
 
 ################################################################################
 #
@@ -39,74 +42,69 @@ LUA_PATH=${AEROSPIKE_LUA_PATH}
 #
 ################################################################################
 
-download()
-{
-  # create the package directory
+has_cmd() {
+  hash "$1" 2> /dev/null
+}
+
+download() {
   mkdir -p ${AEROSPIKE}/package
 
-  # check to see if `curl` or `wget` is available.
-  curl_path=`which curl`
-  has_curl=$?
-
-  # check for `wget`
-  wget_path=`which wget`
-  has_wget=$?
-
-  # Check
-  if [ $has_curl != 0 ] && [ $has_wget != 0 ]; then
-    echo "error: Not able to find 'curl' or `wget`. Either is required to download the package."
-    exit 1
-  fi
-
-  # Compose the URL for the client tgz
   URL="http://artifacts.aerospike.com/aerospike-client-c/${AEROSPIKE_C_VERSION}/${PKG_ARTIFACT}"
 
-  # Download and extract the client tgz.
-  # Use non-slient mode to show progress about the download. Important for slower networks.
-  printf "info: downloading '${URL}' to '${AEROSPIKE}/package/aerospike-client-c.tgz'\n"
+  printf "info: downloading '%s' to '%s'\n" "${URL}" "${AEROSPIKE}/package/${PKG_ARTIFACT}"
 
-  if [ $has_curl == 0 ]; then
+  if has_cmd curl; then
     curl -L ${URL} > ${AEROSPIKE}/package/${PKG_ARTIFACT}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
     fi
-  elif [ $has_wget == 0 ]; then
+  elif has_cmd wget; then
     wget -O ${AEROSPIKE}/package/${PKG_ARTIFACT} ${URL}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
     fi
+  else
+    echo "error: Not able to find 'curl' or 'wget'. Either is required to download the package."
+    exit 1
   fi
 
   return 0
 }
 
+function check_lib_path() {
+  [ -d "$1" ] && [ -f "$1/lib/libaerospike.a" ] && [ -f "$1/include/aerospike/aerospike.h" ]
+}
+
+function check_lua_path() {
+  [ -d "$1" ] && [ -f "$1/aerospike.lua" ]
+}
+
 ################################################################################
-# PREFIX is not defined, so we want to see if we can derive it.
+# LIB_PATH is not defined, so we want to see if we can derive it.
 ################################################################################
 
-if [ ! $DOWNLOAD ] && [ ! $PREFIX ]; then
-  if [ -d ${AEROSPIKE} ] && [ -f ${AEROSPIKE}/package/usr/lib/libaerospike.a ] && [ -f ${AEROSPIKE}/package/usr/include/aerospike/aerospike.h ]; then
-    # first, check to see if there is a local client
-    PREFIX=${AEROSPIKE}/package/usr
-    if [ -f ${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
-      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
-    elif [ -f ${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
-      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
+if [ $DOWNLOAD == 0 ] && [ -z $LIB_PATH ]; then
+  # first, check to see if there is a local client
+  if check_lib_path ${AEROSPIKE}; then
+    LIB_PATH=${AEROSPIKE}
+    if check_lua_path ${AEROSPIKE}/lua; then
+      LUA_PATH=${AEROSPIKE}/lua
     fi
-  elif [ -f /usr/lib/libaerospike.a ] && [ -f /usr/include/aerospike/aerospike.h ]; then
-    # next, check to see if there is an installed client
-    PREFIX=/usr
-    if [ -f /opt/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+    COPY_FILES=0
+  # next, check to see if there is an installed client
+  elif check_lib_path "/user"; then
+    LIB_PATH=/usr
+    if check_lua_path /opt/aerospike/client/sys/udf/lua; then
       LUA_PATH=/opt/aerospike/client/sys/udf/lua
-    elif [ -f /usr/local/aerospike/client/sys/udf/lua/aerospike.lua ]; then
+    elif check_lua_path /usr/local/aerospike/client/sys/udf/lua; then
       LUA_PATH=/usr/local/aerospike/client/sys/udf/lua
     fi
   fi
 
   # If we can't find it, then download it.
-  if [ ! $PREFIX ]; then
+  if [ ! $LIB_PATH ]; then
     DOWNLOAD=1
   fi
 fi
@@ -125,9 +123,9 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # LINUX
     ############################################################################
     "linux" )
-      PKG_DIST=$(`dirname $0`/os_version)
+      PKG_DIST=$($SCRIPT_DIR/os_version)
       if [ $? -ne 0 ]; then
-        printf "$PKG_DIST\n" >&2
+        printf "%s\n" "$PKG_DIST" >&2
         exit 1
       fi
 
@@ -142,13 +140,13 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           PKG_TYPE="deb"
           ;;
         "ubuntu"* )
-          OS_VERSION_LONG=$(`dirname $0`/os_version -long)
+          OS_VERSION_LONG=$($SCRIPT_DIR/os_version -long)
           PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${OS_VERSION_LONG}.x86_64.deb"
           PKG_TYPE="deb"
           ;;
       esac
 
-      PKG_PATH=${AEROSPIKE}/package/usr
+      LIB_PATH=${AEROSPIKE}/package/usr
       LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
       ;;
 
@@ -157,9 +155,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     ############################################################################
     "darwin" )
       PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.pkg"
-      PKG_DIST="mac"
       PKG_TYPE="pkg"
-      PKG_PATH=${AEROSPIKE}/package/usr/local
+      LIB_PATH=${AEROSPIKE}/package/usr/local
       LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
       ;;
 
@@ -178,12 +175,12 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   # We will then move the files to the correct location for building.
   ##############################################################################
 
-  if [ -d ${AEROSPIKE}/package/usr ]; then
-    printf "warning: '%s' directory exists.\n" "${AEROSPIKE}/package/usr"
+  if check_lib_path ${AEROSPIKE}; then
+    printf "warning: '%s' directory exists.\n" "${AEROSPIKE}"
     printf "warning: \n"
     printf "warning: We will be using this directory, rather than downloading a\n"
     printf "warning: new package. If you would like to download a new package\n"
-    printf "warning: please remove the 'aerospike-client/package' directory.\n"
+    printf "warning: please remove the '%s' directory.\n" $(basename ${AEROSPIKE})
   else
 
     ##############################################################################
@@ -195,7 +192,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: \n"
       printf "warning: We will be using this package, rather than downloading a new package.\n"
       printf "warning: If you would like to download a new package please remove\n"
-      printf "warning: the existing '%s' package from this directory.\n" ${PKG_ARTIFACT}
+      printf "warning: the package file.\n"
     else
       download
     fi
@@ -211,15 +208,15 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     printf "info: extracting files from '%s'\n" ${PKG_ARTIFACT}
     case ${PKG_TYPE} in
       "rpm" )
-        rpm2cpio ${PKG_ARTIFACT} | cpio -idm --no-absolute-filenames
+        rpm2cpio ${PKG_ARTIFACT} | cpio -idmu --no-absolute-filenames --quiet
         ;;
       "deb" )
         dpkg -x ${PKG_ARTIFACT} .
         ;;
       "pkg" )
-        xar -xf ${PKG_ARTIFACT}
-        cat Payload | gunzip -dc | cpio -i
-        rm Bom PackageInfo Payload
+        xar -xf ${PKG_ARTIFACT} Payload
+        cpio -idmu -I Payload --quiet
+        rm Payload
         ;;
     esac
 
@@ -228,40 +225,37 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
   fi
 
-  PREFIX=${PKG_PATH}
-
 fi
 
 ################################################################################
 # PERFORM CHECKS
 ################################################################################
 
-AEROSPIKE_LIBRARY=${PREFIX}/lib/libaerospike.a
-AEROSPIKE_INCLUDE=${PREFIX}/include/aerospike
+AEROSPIKE_LIBRARY=${LIB_PATH}/lib/libaerospike.a
+AEROSPIKE_INCLUDE=${LIB_PATH}/include/aerospike
 AEROSPIKE_LUA=${LUA_PATH}
 
 printf "\n" >&1
-
 printf "CHECK\n" >&1
 
 if [ -f ${AEROSPIKE_LIBRARY} ]; then
-  printf "   [✓] ${AEROSPIKE_LIBRARY}\n" >&1
+  printf "   [✓] %s\n" "${AEROSPIKE_LIBRARY}" >&1
 else
-  printf "   [✗] ${AEROSPIKE_LIBRARY}\n" >&1
+  printf "   [✗] %s\n" "${AEROSPIKE_LIBRARY}" >&1
   FAILED=1
 fi
 
 if [ -f ${AEROSPIKE_INCLUDE}/aerospike.h ]; then
-  printf "   [✓] ${AEROSPIKE_INCLUDE}/aerospike.h\n" >&1
+  printf "   [✓] %s\n" "${AEROSPIKE_INCLUDE}/aerospike.h" >&1
 else
-  printf "   [✗] ${AEROSPIKE_INCLUDE}/aerospike.h\n" >&1
+  printf "   [✗] %s\n" "${AEROSPIKE_INCLUDE}/aerospike.h" >&1
   FAILED=1
 fi
 
 if [ -f ${AEROSPIKE_LUA}/aerospike.lua ]; then
-  printf "   [✓] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+  printf "   [✓] %s\n" "${AEROSPIKE_LUA}/aerospike.lua" >&1
 else
-  printf "   [✗] ${AEROSPIKE_LUA}/aerospike.lua\n" >&1
+  printf "   [✗] %s\n" "${AEROSPIKE_LUA}/aerospike.lua" >&1
   FAILED=1
 fi
 
@@ -271,14 +265,14 @@ if [ $FAILED ]; then
   exit 1
 fi
 
-rm -rf ${AEROSPIKE}/lib
-mkdir -p ${AEROSPIKE}/lib
-cp ${PREFIX}/lib/libaerospike.a ${AEROSPIKE}/lib/.
+################################################################################
+# COPY FILES TO AEROSPIKE-C-CLIENT DIR
+################################################################################
 
-rm -rf ${AEROSPIKE}/include
-mkdir -p ${AEROSPIKE}/include
-cp -R ${PREFIX}/include/* ${AEROSPIKE}/include
-
-rm -rf ${AEROSPIKE}/lua
-mkdir -p ${AEROSPIKE}/lua
-cp -R ${AEROSPIKE_LUA}/* ${AEROSPIKE}/lua
+if [ $COPY_FILES == 1 ]; then
+  rm -rf ${AEROSPIKE}/{lib,include,lua}
+  mkdir -p ${AEROSPIKE}/{lib,include,lua}
+  cp ${AEROSPIKE_LIBRARY} ${AEROSPIKE}/lib/
+  cp -R ${AEROSPIKE_INCLUDE} ${AEROSPIKE}/include/
+  cp ${AEROSPIKE_LUA}/*.lua ${AEROSPIKE}/lua/
+fi
