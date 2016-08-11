@@ -144,6 +144,15 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${OS_VERSION_LONG}.x86_64.deb"
           PKG_TYPE="deb"
           ;;
+        "ami"* )
+          RPM_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
+          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${RPM_VERSION}.el6.x86_64.rpm"
+          PKG_TYPE="rpm"
+          ;;
+        * )
+          printf "error: Linux distribution not supported: '%s'\n" "$PKG_DIST" >&2
+          exit 1
+          ;;
       esac
 
       LIB_PATH=${AEROSPIKE}/package/usr
@@ -164,7 +173,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # OTHER
     ############################################################################
     * )
-      printf "error: OS not supported\n" >&2
+      printf "error: OS not supported: '%s'\n" "${sysname}" >&2
       exit 1
       ;;
 
