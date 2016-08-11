@@ -8,6 +8,9 @@ Head
   * Add work-around for issues running client with Node's interactive debugger. [#140](https://github.com/aerospike/aerospike-client-nodejs/issues/140)
   * Support writing null values to delete bin using Client#operate. [#142](https://github.com/aerospike/aerospike-client-nodejs/issues/142)
 
+* **Improvements**
+  * Improved C-client resolution to avoid issues fetching C client artifact during npm package installation
+
 * **Changes**
   * Update C client library to v4.0.7.
   * Drop support for Debian 6

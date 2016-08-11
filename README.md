@@ -126,12 +126,13 @@ Note: Lua is used for query aggregation. If the application is not using the agg
 To install library prerequisites via `yum`:
 
 ```bash
-sudo yum install openssl-devel lua-devel
+sudo yum install gcc-c++ openssl-devel lua-devel
 ```
 
 Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. To build the
-Aerospike addon using Node.js v4/v5, gcc-4.8 or later is required. To update
-the gcc tool chain you may have to install a recent version of the [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
+Aerospike addon using Node.js v4 or later, gcc-4.8 or later is required. To
+update the gcc tool chain you can install a recent version of the
+ [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
 or a compatible devtoolset version for CentOS.
 
 ### Debian 7+
@@ -139,7 +140,7 @@ or a compatible devtoolset version for CentOS.
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install libssl0.9.8 libssl-dev liblua5.1-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev liblua5.1-dev
 ```
 
 The following symlinks need to be created for Aerospike's packaged examples to compile:
@@ -154,8 +155,13 @@ sudo ln -s /usr/lib/liblua5.1.a /usr/lib/liblua.a
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install libssl0.9.8 libssl-dev liblua5.1-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev liblua5.1-dev
 ```
+
+Note: The `gcc` tool chain included in Ubuntu 12.04 is gcc-4.6. To build the
+Aerospike addon using Node.js v4 or later, gcc-4.8 or later is required. To
+update the gcc tool chain you can install a more recent version of gcc
+toolchain using several available PPA repositories.
 
 The following symlinks need to be created for Aerospike's packaged examples to compile:
 
