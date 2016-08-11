@@ -232,7 +232,7 @@ fi
 ################################################################################
 
 AEROSPIKE_LIBRARY=${LIB_PATH}/lib/libaerospike.a
-AEROSPIKE_INCLUDE=${LIB_PATH}/include/aerospike
+AEROSPIKE_INCLUDE=${LIB_PATH}/include
 AEROSPIKE_LUA=${LUA_PATH}
 
 printf "\n" >&1
@@ -245,10 +245,10 @@ else
   FAILED=1
 fi
 
-if [ -f ${AEROSPIKE_INCLUDE}/aerospike.h ]; then
-  printf "   [✓] %s\n" "${AEROSPIKE_INCLUDE}/aerospike.h" >&1
+if [ -f ${AEROSPIKE_INCLUDE}/aerospike/aerospike.h ]; then
+  printf "   [✓] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
 else
-  printf "   [✗] %s\n" "${AEROSPIKE_INCLUDE}/aerospike.h" >&1
+  printf "   [✗] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
   FAILED=1
 fi
 
@@ -273,6 +273,6 @@ if [ $COPY_FILES == 1 ]; then
   rm -rf ${AEROSPIKE}/{lib,include,lua}
   mkdir -p ${AEROSPIKE}/{lib,include,lua}
   cp ${AEROSPIKE_LIBRARY} ${AEROSPIKE}/lib/
-  cp -R ${AEROSPIKE_INCLUDE} ${AEROSPIKE}/include/
+  cp -R ${AEROSPIKE_INCLUDE}/{aerospike,citrusleaf} ${AEROSPIKE}/include/
   cp ${AEROSPIKE_LUA}/*.lua ${AEROSPIKE}/lua/
 fi
