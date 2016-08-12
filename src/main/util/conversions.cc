@@ -593,33 +593,30 @@ as_val* asval_clone(const as_val* val, const LogInfo* log)
 
 bool key_clone(const as_key* src, as_key** dest, const LogInfo* log, bool alloc_key)
 {
-    if(src == NULL || dest== NULL ) {
+    if (src == NULL || dest== NULL) {
         as_v8_info(log, "Parameter error : NULL in source/destination");
         return false;
     }
 
     as_v8_detail(log, "Cloning the key");
-    as_key_value* val   = src->valuep;
-    if(val != NULL) {
-        as_key_value* clone_val = (as_key_value*) asval_clone( (as_val*) val, log);
-        if( alloc_key)
-        {
-            *dest   = as_key_new_value( src->ns, src->set, (as_key_value*) clone_val);
-        }
-        else
-        {
-            as_key_init_value(*dest, src->ns, src->set, (as_key_value*) clone_val);
-        }
-    }
-    else if( src->digest.init == true) {
-        if( alloc_key) {
-            *dest = as_key_new_digest( src->ns, src->set, src->digest.value);
-        }
-        else {
+    as_key_value* val = src->valuep;
+    if (src->digest.init == true) {
+        if (alloc_key) {
+            *dest = as_key_new_digest(src->ns, src->set, src->digest.value);
+        } else {
             as_key_init_digest(*dest, src->ns, src->set, src->digest.value);
         }
-    }
-    else {
+        if (val != NULL) {
+            (*dest)->valuep = (as_key_value*) asval_clone((as_val*) val, log);
+        }
+    } else if (val != NULL) {
+        as_key_value* clone_val = (as_key_value*) asval_clone((as_val*) val, log);
+        if (alloc_key) {
+            *dest = as_key_new_value(src->ns, src->set, (as_key_value*) clone_val);
+        } else {
+            as_key_init_value(*dest, src->ns, src->set, (as_key_value*) clone_val);
+        }
+    } else {
         as_v8_detail(log, "Key has neither value nor digest ");
     }
 
