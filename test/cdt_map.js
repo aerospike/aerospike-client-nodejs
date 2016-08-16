@@ -126,9 +126,10 @@ describe('client.operate() - CDT Map operations', function () {
         var record = { map: {a: 1, b: 2, c: 3} }
         var policy = { writeMode: maps.writeMode.UPDATE_ONLY }
         var operation = maps.put('map', 'd', 99, policy)
-        var expectedResult = { map: 3 }
-        var expectedRecord = { map: {a: 1, b: 2, c: 3} }
-        verifyOperation(record, operation, expectedResult, expectedRecord, done)
+        verifyOperation(record, operation, null, null, function (err) {
+          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND)
+          teardown(done)
+        })
       })
     })
 
@@ -138,9 +139,10 @@ describe('client.operate() - CDT Map operations', function () {
         var record = { map: {a: 1, b: 2, c: 3} }
         var policy = { writeMode: maps.writeMode.CREATE_ONLY }
         var operation = maps.put('map', 'b', 99, policy)
-        var expectedResult = { map: 3 }
-        var expectedRecord = { map: {a: 1, b: 2, c: 3} }
-        verifyOperation(record, operation, expectedResult, expectedRecord, done)
+        verifyOperation(record, operation, null, null, function (err) {
+          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS)
+          teardown(done)
+        })
       })
 
       it('creates a new key if it does not exist', function (done) {
