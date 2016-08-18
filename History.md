@@ -1,3 +1,10 @@
+HEAD
+===================
+
+* **Improvements**
+  * Add support for two new server error codes (23 & 24) introduced in Aerospike Server v3.9.1.
+  * Regression: Skip LDT and CDT Map tests if server does not support the feature [CLIENT-753]
+
 v2.3.1 / 2016-08-11
 ===================
 
