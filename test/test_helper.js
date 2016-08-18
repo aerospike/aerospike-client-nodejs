@@ -102,7 +102,7 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
   return this.nsconfig['ldt-enabled'] === 'true'
 }
 
-ServerInfoHelper.prototype.fetch_info = function () {
+ServerInfoHelper.prototype.fetch_info = function (done) {
   var self = this
   client.infoAll('features', function (err, results) {
     if (err) throw err
@@ -114,16 +114,18 @@ ServerInfoHelper.prototype.fetch_info = function () {
         })
       }
     })
+    done()
   })
 }
 
-ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
+ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
   var self = this
   var nsKey = 'namespace/' + ns
   client.infoAll(nsKey, function (err, results) {
     if (err) throw err
     var info = results.pop()['info']
     self.nsconfig = Info.parseInfo(info)[nsKey]
+    done()
   })
 }
 
@@ -146,9 +148,11 @@ exports.fail = function fail (message) {
 before(function (done) {
   client.connect(function (err) {
     if (err) throw err
-    serverInfoHelper.fetch_info()
-    serverInfoHelper.fetch_namespace_config(options.namespace)
-    done()
+    serverInfoHelper.fetch_info(function () {
+      serverInfoHelper.fetch_namespace_config(options.namespace, function () {
+        done()
+      })
+    })
   })
 })
 
