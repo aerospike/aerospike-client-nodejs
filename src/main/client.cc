@@ -124,9 +124,10 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> info)
 {
 	Nan::EscapableHandleScope scope;
 	const unsigned argc = 1;
-	Handle<Value> argv[argc] = { info };
-	Local<FunctionTemplate> constructorHandle = Nan::New<FunctionTemplate>(constructor);
-	Local<Value> instance = constructorHandle->GetFunction()->NewInstance(argc, argv);
+	Local<Value> argv[argc] = { info };
+	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(constructor);
+	Local<Function> function = Nan::GetFunction(tpl).ToLocalChecked();
+	Local<Value> instance = Nan::NewInstance(function, argc, argv).ToLocalChecked();
 	return scope.Escape(instance);
 }
 

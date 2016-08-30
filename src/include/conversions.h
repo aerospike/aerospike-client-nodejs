@@ -50,9 +50,6 @@ __err.line = __LINE__; \
 __err.file = __FILE__; \
 __err.func = __func__;
 
-#define V8INTEGER_TO_CINTEGER(__num) \
-    __num->ToNumber()->Value();
-
 #define AS_NODE_PARAM_ERR -1
 #define AS_NODE_PARAM_OK   0
 #define HOST_ADDRESS_SIZE 50

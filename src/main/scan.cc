@@ -77,13 +77,13 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	Local<Value> percent = options->Get(Nan::New("percent").ToLocalChecked());
 	TYPE_CHECK_OPT(percent, IsNumber, "percent must be a number");
 	if (percent->IsNumber()) {
-		as_scan_set_percent(scan, percent->ToNumber()->Value());
+		as_scan_set_percent(scan, percent->IntegerValue());
 	}
 
 	Local<Value> priority = options->Get(Nan::New("priority").ToLocalChecked());
 	TYPE_CHECK_OPT(priority, IsNumber, "prioriy must be a number");
 	if (priority->IsNumber()) {
-		as_scan_set_priority(scan, (as_scan_priority) priority->ToNumber()->Value());
+		as_scan_set_priority(scan, (as_scan_priority) priority->IntegerValue());
 	}
 
 	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());

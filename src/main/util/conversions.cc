@@ -89,7 +89,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
             }
 
             if ( port->IsNumber() ) {
-                config->hosts[i].port = V8INTEGER_TO_CINTEGER(port);
+                config->hosts[i].port = port->IntegerValue();
                 as_v8_detail(log,"host[%d].port = %d", i, config->hosts[i].port);
             }
             else {
@@ -111,35 +111,35 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
             Local<Object> policies = policy_val->ToObject();
             if (policies->Has(Nan::New("timeout").ToLocalChecked())) {
                 Local<Value> v8timeout = policies->Get(Nan::New("timeout").ToLocalChecked());
-                config->policies.timeout = V8INTEGER_TO_CINTEGER(v8timeout);
+                config->policies.timeout = v8timeout->IntegerValue();
             }
             if (policies->Has(Nan::New("retry").ToLocalChecked())) {
                 Local<Value> v8retry = policies->Get(Nan::New("retry").ToLocalChecked());
-                config->policies.retry = (as_policy_retry)V8INTEGER_TO_CINTEGER(v8retry);
+                config->policies.retry = (as_policy_retry)v8retry->IntegerValue();
             }
             if (policies->Has(Nan::New("key").ToLocalChecked())) {
                 Local<Value> v8key = policies->Get(Nan::New("key").ToLocalChecked());
-                config->policies.key = (as_policy_key)V8INTEGER_TO_CINTEGER(v8key);
+                config->policies.key = (as_policy_key)v8key->IntegerValue();
             }
             if( policies->Has(Nan::New("exists").ToLocalChecked())) {
                 Local<Value> v8exists = policies->Get(Nan::New("exists").ToLocalChecked());
-                config->policies.exists = (as_policy_exists)V8INTEGER_TO_CINTEGER(v8exists);
+                config->policies.exists = (as_policy_exists)v8exists->IntegerValue();
             }
             if (policies->Has(Nan::New("gen").ToLocalChecked())) {
                 Local<Value> v8gen = policies->Get(Nan::New("gen").ToLocalChecked());
-                config->policies.gen = (as_policy_gen)V8INTEGER_TO_CINTEGER(v8gen);
+                config->policies.gen = (as_policy_gen)v8gen->IntegerValue();
             }
             if (policies->Has(Nan::New("replica").ToLocalChecked())) {
                 Local<Value> v8replica = policies->Get(Nan::New("replica").ToLocalChecked());
-                config->policies.replica = (as_policy_replica) V8INTEGER_TO_CINTEGER(v8replica);
+                config->policies.replica = (as_policy_replica) v8replica->IntegerValue();
             }
             if (policies->Has(Nan::New("consistencyLevel").ToLocalChecked())) {
                 Local<Value> v8consistency = policies->Get(Nan::New("consistencyLevel").ToLocalChecked());
-                config->policies.consistency_level = (as_policy_consistency_level) V8INTEGER_TO_CINTEGER(v8consistency);
+                config->policies.consistency_level = (as_policy_consistency_level) v8consistency->IntegerValue();
             }
             if (policies->Has(Nan::New("commitLevel").ToLocalChecked())) {
                 Local<Value> v8commitLevel = policies->Get(Nan::New("commitLevel").ToLocalChecked());
-                config->policies.commit_level = (as_policy_commit_level) V8INTEGER_TO_CINTEGER(v8commitLevel);
+                config->policies.commit_level = (as_policy_commit_level) v8commitLevel->IntegerValue();
             }
             if (policies->Has(Nan::New("read").ToLocalChecked())) {
                 Local<Value> readpolicy = policies->Get(Nan::New("read").ToLocalChecked());
@@ -314,7 +314,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         if ( shm_obj->Has(Nan::New("key").ToLocalChecked())) {
             Local<Value> key = shm_obj->Get(Nan::New("key").ToLocalChecked());
             if (key->IsNumber()) {
-                config->shm_key =  key->ToInteger()->Value();
+                config->shm_key =  key->IntegerValue();
                 as_v8_debug(log, "SHM key is set to %x ", config->shm_key);
             }
             else {
@@ -325,7 +325,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         if ( shm_obj->Has(Nan::New("maxNodes").ToLocalChecked())) {
             Local<Value> max_nodes = shm_obj->Get(Nan::New("maxNodes").ToLocalChecked());
             if (max_nodes->IsNumber()) {
-                config->shm_max_nodes =  max_nodes->ToNumber()->Value();
+                config->shm_max_nodes =  max_nodes->IntegerValue();
                 as_v8_debug(log, "SHM max nodes is set to %d", config->shm_max_nodes);
             }
             else {
@@ -336,7 +336,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         if ( shm_obj->Has(Nan::New("maxNamespaces").ToLocalChecked())) {
             Local<Value> max_namespaces = shm_obj->Get(Nan::New("maxNamespaces").ToLocalChecked());
             if (max_namespaces->IsNumber()) {
-                config->shm_max_namespaces =  V8INTEGER_TO_CINTEGER(max_namespaces);
+                config->shm_max_namespaces =  max_namespaces->IntegerValue();
                 as_v8_debug(log, "SHM max namespaces is set to %d", config->shm_max_namespaces);
             }
             else {
@@ -347,7 +347,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         if ( shm_obj->Has(Nan::New("takeoverThresholdSeconds").ToLocalChecked())) {
             Local<Value> takeover_threshold_secs = shm_obj->Get(Nan::New("takeoverThresholdSeconds").ToLocalChecked());
             if (takeover_threshold_secs->IsNumber()) {
-                config->shm_takeover_threshold_sec =  V8INTEGER_TO_CINTEGER(takeover_threshold_secs);
+                config->shm_takeover_threshold_sec =  takeover_threshold_secs->IntegerValue();
                 as_v8_debug(log, "SHM takeover threshold seconds is set to %d", config->shm_takeover_threshold_sec);
             }
             else {
@@ -360,25 +360,25 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
 
     if (obj->Has(Nan::New("connTimeoutMs").ToLocalChecked())) {
         Local<Value> v8connTimeoutMs = obj->Get(Nan::New("connTimeoutMs").ToLocalChecked());
-        config->conn_timeout_ms = V8INTEGER_TO_CINTEGER(v8connTimeoutMs);
+        config->conn_timeout_ms = v8connTimeoutMs->IntegerValue();
         as_v8_debug(log, "Initial connection timeout set to %d ms", config->conn_timeout_ms);
     }
 
     if (obj->Has(Nan::New("tenderInterval").ToLocalChecked())) {
         Local<Value> v8tenderInterval = obj->Get(Nan::New("tenderInterval").ToLocalChecked());
-        config->tender_interval = V8INTEGER_TO_CINTEGER(v8tenderInterval);
+        config->tender_interval = v8tenderInterval->IntegerValue();
         as_v8_debug(log, "Tender interval set to %d ms", config->tender_interval);
     }
 
     if (obj->Has(Nan::New("maxConnsPerNode").ToLocalChecked())) {
         Local<Value> maxConnsPerNode = obj->Get(Nan::New("maxConnsPerNode").ToLocalChecked());
-        config->async_max_conns_per_node = V8INTEGER_TO_CINTEGER(maxConnsPerNode);
+        config->async_max_conns_per_node = maxConnsPerNode->IntegerValue();
         as_v8_debug(log, "Max. async connections per node set to %d", config->async_max_conns_per_node);
     }
 
     if (obj->Has(Nan::New("maxConnsPerNodeSync").ToLocalChecked())) {
         Local<Value> maxConnsPerNodeSync = obj->Get(Nan::New("maxConnsPerNodeSync").ToLocalChecked());
-        config->max_conns_per_node = V8INTEGER_TO_CINTEGER(maxConnsPerNodeSync);
+        config->max_conns_per_node = maxConnsPerNodeSync->IntegerValue();
         as_v8_debug(log, "Max. synchronous connections per node set to %d", config->max_conns_per_node)
     }
 
@@ -403,7 +403,7 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
     if ( obj->Has(Nan::New("port").ToLocalChecked()) ){
         Local<Value> portVal = obj->Get(Nan::New("port").ToLocalChecked());
         if ( portVal->IsNumber() ) {
-            *port = V8INTEGER_TO_CINTEGER(portVal);
+            *port = portVal->IntegerValue();
         }
         else {
             return AS_NODE_PARAM_ERR;
@@ -426,7 +426,7 @@ int log_from_jsobject(LogInfo* log, Local<Object> obj)
         if ( rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("level").ToLocalChecked()) ) {
             Local<Value> v8_log_level = v8_log->Get(Nan::New("level").ToLocalChecked());
             if ( v8_log_level->IsNumber() ){
-                level = (as_log_level) V8INTEGER_TO_CINTEGER(v8_log_level);
+                level = (as_log_level) v8_log_level->IntegerValue();
             }
             else if ( v8_log_level->IsNull() || v8_log_level->IsUndefined() ){
                 // `null` and `undefined` imply the value should not change.
@@ -441,7 +441,7 @@ int log_from_jsobject(LogInfo* log, Local<Object> obj)
         if ( rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("file").ToLocalChecked())) {
             Local<Value> v8_file = obj->Get(Nan::New("file").ToLocalChecked());
             if ( v8_file->IsNumber() ) {
-                fd = V8INTEGER_TO_CINTEGER(v8_file);
+                fd = v8_file->IntegerValue();
             }
             else if (v8_file->IsNull() || v8_file->IsUndefined()){
                 // `null` and `undefined` imply the value should not change.
@@ -926,8 +926,8 @@ bool instanceof(Local<Value> value, const char * type)
 bool is_double_value(Local<Value> value)
 {
     if (value->IsNumber()) {
-        int64_t i = value->ToInteger()->Value();
-        double d = value->ToNumber()->Value();
+        int64_t i = value->IntegerValue();
+        double d = value->NumberValue();
         return d != (double)i;
     } else if (instanceof(value, DoubleType)) {
         return true;
@@ -941,7 +941,7 @@ double double_value(Local<Value> value)
     if (instanceof(value, DoubleType)) {
         value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
     }
-    return (double) value->ToNumber()->Value();
+    return (double) value->NumberValue();
 }
 
 int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
@@ -1002,17 +1002,15 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         as_v8_detail(log, "Object passed is undefined");
         *value = (as_val*) &as_nil;
     } else if (v8value->IsBoolean()) {
-        *value = (as_val*) as_boolean_new(v8value->ToBoolean()->Value());
+        *value = (as_val*) as_boolean_new(v8value->BooleanValue());
     } else if (v8value->IsString()) {
         *value = (as_val*) as_string_new(strdup(*String::Utf8Value(v8value)), true);
-    } else if (v8value->IsInt32() ) {
-        *value = (as_val*) as_integer_new(v8value->ToInt32()->Value());
-    } else if (v8value->IsUint32()) {
-        *value = (as_val*) as_integer_new(v8value->ToUint32()->Value());
+    } else if (v8value->IsInt32() || v8value->IsUint32()) {
+        *value = (as_val*) as_integer_new(v8value->IntegerValue());
     } else if (is_double_value(v8value)) {
         *value = (as_val*) as_double_new(double_value(v8value));
     } else if (v8value->IsNumber()) {
-        *value = (as_val*) as_integer_new(v8value->ToInteger()->Value());
+        *value = (as_val*) as_integer_new(v8value->IntegerValue());
     } else if (node::Buffer::HasInstance(v8value)) {
         int size;
         uint8_t* data;
@@ -1134,7 +1132,7 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
     if ( obj->Has(Nan::New("ttl").ToLocalChecked())) {
         Local<Value> v8ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
         if ( v8ttl->IsNumber() ) {
-            (*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
+            (*ttl) = (uint32_t) v8ttl->IntegerValue();
         }
         else {
             return AS_NODE_PARAM_ERR;
@@ -1150,7 +1148,7 @@ int setTimeOut(Local<Object> obj, uint32_t* timeout, const LogInfo* log)
     if ( obj->Has(Nan::New("timeout").ToLocalChecked()) ) {
         Local<Value> v8timeout = obj->Get(Nan::New<String>("timeout").ToLocalChecked()) ;
         if ( v8timeout->IsNumber() ) {
-            (*timeout) = (uint32_t) V8INTEGER_TO_CINTEGER(v8timeout);
+            (*timeout) = (uint32_t) v8timeout->IntegerValue();
             as_v8_detail(log, "timeout value %d", *timeout);
         }
         else {
@@ -1170,7 +1168,7 @@ int setTtlPolicy(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
     if ( obj->Has(Nan::New("ttl").ToLocalChecked()) ) {
         Local<Value> v8ttl = obj->Get(Nan::New<String>("ttl").ToLocalChecked()) ;
         if ( v8ttl->IsNumber() ) {
-            (*ttl) = (uint32_t) V8INTEGER_TO_CINTEGER(v8ttl);
+            (*ttl) = (uint32_t) v8ttl->IntegerValue();
             as_v8_detail(log, "ttl value %d", *ttl);
         }
         else {
@@ -1189,7 +1187,7 @@ int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
     if ( obj->Has(Nan::New("gen").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New("gen").ToLocalChecked());
         if ( v8gen->IsNumber() ) {
-            (*generation) = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
+            (*generation) = (uint16_t) v8gen->IntegerValue();
             as_v8_detail(log, "Generation value %d ", (*generation));
         }
         else {
@@ -1209,7 +1207,7 @@ int setPolicyGeneric(Local<Object> obj, const char* policyname, int* policyEnumV
 
         // Check if node layer is passing a legal integer value
         if (policy->IsNumber()) {
-            *policyEnumValue = V8INTEGER_TO_CINTEGER(policy);
+            *policyEnumValue = policy->IntegerValue();
         }
         else {
             as_v8_error(log, "value for %s policy must be an integer", policyname);
@@ -1404,7 +1402,7 @@ int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, cons
     if ( obj->Has(Nan::New("generation").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New("generation").ToLocalChecked());
         if ( v8gen->IsNumber() ) {
-            policy->generation = (uint16_t) V8INTEGER_TO_CINTEGER(v8gen);
+            policy->generation = (uint16_t) v8gen->IntegerValue();
             as_v8_detail(log, "Generation value %d ", policy->generation);
         }
         else {
@@ -1667,7 +1665,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
             as_v8_detail(log, "key.key = \"%s\"", value);
             ((as_string *) key->valuep)->free = true;
         } else if (val_obj->IsNumber()) {
-            int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
+            int64_t value = val_obj->IntegerValue();
             as_key_init_int64(key, ns, set, value);
             as_v8_detail(log, "key.key = %d", value);
         } else if (val_obj->IsObject()) {
@@ -1741,7 +1739,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
         goto Ret_Ok;
     }
     else if ( val_obj->IsNumber() ) {
-        int64_t value = V8INTEGER_TO_CINTEGER(val_obj);
+        int64_t value = val_obj->IntegerValue();
         as_key_init_int64(key, ns, set, value);
         goto Ret_Ok;
     }

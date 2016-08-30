@@ -198,7 +198,7 @@ static void * prepare(ResolveArgs(info))
     as_bytes_init_wrap(&data->content, file_content, size, true);
 
     if (maybe_type->IsNumber()) {
-        data->type = (as_udf_type) V8INTEGER_TO_CINTEGER(maybe_type);
+        data->type = (as_udf_type) maybe_type->IntegerValue();
     } else {
         data->type = AS_UDF_TYPE_LUA;
         as_v8_detail(log, "UDF type not an argument using default value(LUA)");

@@ -106,7 +106,7 @@ static void * prepare(ResolveArgs(info))
     }
 
     if(maybe_poll_interval->IsInt32()) {
-        data->interval_ms = maybe_poll_interval->ToInt32()->Value();
+        data->interval_ms = maybe_poll_interval->IntegerValue();
         as_v8_detail(log, "UDF registration status checking - poll interval %d ", data->interval_ms);
     } else {
         as_v8_error(log, "Poll interval for udf registration must be int32");
