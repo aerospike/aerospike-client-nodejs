@@ -14,13 +14,12 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it */
+/* global expect, describe, context, it */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
-const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
@@ -30,27 +29,17 @@ describe('client.remove()', function () {
   var client = helper.client
 
   it('should remove a record w/ string key', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+    var meta = { ttl: 1000 }
+    var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
-
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
-
-        client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
-
-          client.get(key, function (err, record, metadata, key) {
+    client.put(key, record, meta, function (err) {
+      if (err) throw err
+      client.exists(key, function (err) {
+        if (err) throw err
+        client.remove(key, function (err) {
+          if (err) throw err
+          client.exists(key, function (err) {
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
           })
@@ -60,27 +49,17 @@ describe('client.remove()', function () {
   })
 
   it('should remove a record w/ integer key', function (done) {
-    // generators
-    var kgen = keygen.integer(helper.namespace, helper.set)
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var key = keygen.integer(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+    var meta = { ttl: 1000 }
+    var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      if (err) { throw new Error(err.message) }
-
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
-
-        client.remove(key, function (err, key) {
-          expect(err).not.to.be.ok()
-
-          client.get(key, function (err, record, metadata, key) {
+    client.put(key, record, meta, function (err) {
+      if (err) throw err
+      client.exists(key, function (err) {
+        if (err) throw err
+        client.remove(key, function (err) {
+          if (err) throw err
+          client.exists(key, function (err) {
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
             done()
           })
@@ -89,43 +68,81 @@ describe('client.remove()', function () {
     })
   })
 
-  it('should apply the remove policy', function (done) {
-    var kgen = keygen.integer(helper.namespace, helper.set)
-    var mgen = metagen.constant({ttl: 1000, gen: 1})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+  it('should fail to remove a non-existent key', function (done) {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/not_found/'})()
+    client.remove(key, function (err) {
+      expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      done()
+    })
+  })
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+  context('with generation policy value', function () {
+    it('should remove the record if the generation matches', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
+      var meta = { ttl: 1000 }
+      var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
 
-    client.put(key, record, meta, function (err) {
-      if (err) { throw new Error(err.message) }
+      client.put(key, record, meta, function (err) {
+        if (err) throw err
 
-      var removePolicy = {
-        gen: Aerospike.policy.gen.EQ,
-        generation: 2
-      }
-      client.remove(key, removePolicy, function (err) {
-        expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION)
+        var removePolicy = {
+          gen: Aerospike.policy.gen.EQ,
+          generation: 1
+        }
+        client.remove(key, removePolicy, function (err) {
+          if (err) throw err
 
-        client.exists(key, function (err) {
-          if (err) { throw new Error(err.message) }
-          done()
+          client.exists(key, function (err) {
+            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            done()
+          })
+        })
+      })
+    })
+
+    it('should not remove the record if the generation does not match', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
+      var meta = { ttl: 1000 }
+      var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+
+      client.put(key, record, meta, function (err) {
+        if (err) throw err
+
+        var removePolicy = {
+          gen: Aerospike.policy.gen.EQ,
+          generation: 2
+        }
+        client.remove(key, removePolicy, function (err) {
+          expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION)
+
+          client.exists(key, function (err) {
+            if (err) throw err
+            done()
+          })
         })
       })
     })
   })
 
-  it('should not remove a non-existent key', function (done) {
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})
+  it('should apply set the durable delete policy', function (done) {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
+    var meta = { ttl: 1000 }
+    var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
 
-    // values
-    var key = kgen()
+    client.put(key, record, meta, function (err) {
+      if (err) throw err
 
-    client.remove(key, function (err, key) {
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-      done()
+      var policy = {
+        durableDelete: true
+      }
+      client.remove(key, policy, function (err) {
+        if (err) throw err
+
+        client.exists(key, function (err) {
+          expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+          done()
+        })
+      })
     })
   })
 })

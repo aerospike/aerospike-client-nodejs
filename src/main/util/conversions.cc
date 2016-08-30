@@ -1277,6 +1277,24 @@ int setCommitLevelPolicy(Local<Object> obj, as_policy_commit_level* commitpolicy
     return AS_NODE_PARAM_OK;
 }
 
+int setDurableDeletePolicy(Local<Object> obj, bool* durableDelete, const LogInfo* log)
+{
+	if (obj->Has(Nan::New("duableDelete").ToLocalChecked()) ) {
+		Local<Value> v8durableDelete = obj->Get(Nan::New<String>("durableDelete").ToLocalChecked());
+		if (v8durableDelete->IsBoolean()) {
+			*durableDelete = (bool) v8durableDelete->ToBoolean()->Value();
+			as_v8_detail(log,"durable delete is set to %s", *durableDelete ? "true":"false")
+		} else {
+			as_v8_error(log, "durableDelete should be a boolean");
+			return AS_NODE_PARAM_ERR;
+		}
+	} else {
+		as_v8_detail(log, "Durable delete policy not specified - using default");
+	}
+
+	return AS_NODE_PARAM_OK;
+}
+
 int setCompressionThresholdPolicy(Local<Object> obj, uint32_t* compression_threshold, const LogInfo* log)
 {
     if( setPolicyGeneric(obj, "compressionThreshold", (int*) compression_threshold, log) != AS_NODE_PARAM_OK) {
@@ -1360,6 +1378,7 @@ int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, co
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     return AS_NODE_PARAM_OK;
 }
@@ -1401,6 +1420,7 @@ int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, cons
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     return AS_NODE_PARAM_OK;
 }
@@ -1433,6 +1453,7 @@ int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const 
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setExistsPolicy( obj, &policy->exists, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail(log, "Parsing write policy : success");
     return AS_NODE_PARAM_OK;
@@ -1446,6 +1467,7 @@ int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const 
     if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
     if ( setTtlPolicy( obj, &policy->ttl, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     as_v8_detail( log, "Parsing apply policy : success");
 
@@ -1467,6 +1489,7 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 {
     as_policy_scan_init( policy);
     if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
+    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
 
     if ( obj->Has(Nan::New("failOnClusterChange").ToLocalChecked()) ) {
         Local<Value> failOnClusterChange = obj->Get(Nan::New("failOnClusterChange").ToLocalChecked());
