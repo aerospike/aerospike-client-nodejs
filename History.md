@@ -1,5 +1,8 @@
-HEAD
+v2.4.0 / XXX
 ===================
+
+* **New Features**
+  * Support for durable delete write policy [CLIENT-769]; requires Aerospike server v3.10 or later.
 
 * **Improvements**
   * Add support for two new server error codes (23 & 24) introduced in Aerospike Server v3.9.1.
@@ -14,7 +17,7 @@ v2.3.1 / 2016-08-11
 v2.3.0 / 2016-08-11
 ===================
 
-*  **New Features**
+* **New Features**
   * Add Client#infoAll method to simplify processing info responses from multiple hosts. [#43](https://github.com/aerospike/aerospike-client-nodejs/issues/43)
 
 * **Bug Fixes**
