@@ -1,3 +1,12 @@
+HEAD
+===================
+
+* **New Features**
+  * Added list increment operator [AER-5149]
+
+* **Changes**
+  * Renamed Cluster ID to Cluster Name; Cluster Name verification requires Aerospike Server v3.10 or later.
+
 v2.4.0 / 2016-09-09
 ===================
 

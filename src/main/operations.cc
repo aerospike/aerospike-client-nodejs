@@ -504,6 +504,28 @@ int add_list_get_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	return AS_NODE_PARAM_OK;
 }
 
+int add_list_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value;
+	if (get_asval_property(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_increment(ops, binName, index, value);
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
 int add_list_size_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName;
@@ -1182,6 +1204,7 @@ const ops_table_entry ops_table[] = {
 	{ "LIST_TRIM", add_list_trim_op },
 	{ "LIST_GET", add_list_get_op },
 	{ "LIST_GET_RANGE", add_list_get_range_op },
+	{ "LIST_INCREMENT", add_list_increment_op },
 	{ "LIST_SIZE", add_list_size_op },
 	{ "MAP_SET_POLICY", add_map_set_policy_op },
 	{ "MAP_PUT", add_map_put_op },
