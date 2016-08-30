@@ -18,13 +18,18 @@
 
 const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
+const utils = require('../lib/utils')
 const helper = require('./test_helper')
 
 describe('client.info()', function () {
   var client = helper.client
 
   context('querying a single node', function () {
-    var host = client.config.hosts[0]
+    var hosts = client.config.hosts
+    if (typeof hosts === 'string') {
+      hosts = utils.parseHostsString(hosts)
+    }
+    var host = hosts[0]
 
     it('should fetch object count from specific cluster node', function (done) {
       client.info('objects', host, function (err, response, respondingHost) {

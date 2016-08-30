@@ -83,12 +83,12 @@ describe('Config', function () {
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {
       process.env.AEROSPIKE_HOSTS = 'db1:3001'
       var config = new Config()
-      expect(config.hosts).to.eql([{addr: 'db1', port: 3001}])
+      expect(config.hosts).to.eql('db1:3001')
     })
 
     it('defaults to "localhost:3000"', function () {
       var config = new Config()
-      expect(config.hosts).to.eql([{addr: 'localhost', port: 3000}])
+      expect(config.hosts).to.eql('localhost:3000')
     })
   })
 })

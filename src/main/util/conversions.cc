@@ -63,47 +63,54 @@ using namespace v8;
 const char * DoubleType = "Double";
 const char * GeoJSONType = "GeoJSON";
 
+const uint16_t DEFAULT_PORT = 3000;
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
 int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log)
 {
 
-    Local<Value> hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
+    Local<Value> maybe_hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
+    if (maybe_hosts->IsString()) {
+        String::Utf8Value hosts(maybe_hosts);
+        as_v8_detail(log, "setting seed hosts: \"%s\"", *hosts);
+        if (as_config_add_hosts(config, *hosts, DEFAULT_PORT) == false) {
+            as_v8_error(log, "invalid hosts string: \"%s\"", *hosts);
+            return AS_NODE_PARAM_ERR;
+        }
+    } else if (maybe_hosts->IsArray()) {
+        Local<Array> host_list = Local<Array>::Cast(maybe_hosts);
+        for (uint32_t i = 0; i < host_list->Length(); i++) {
+            Local<Object> host = host_list->Get(i)->ToObject();
+            Local<Value> maybe_addr = host->Get(Nan::New("addr").ToLocalChecked());
+            Local<Value> maybe_port = host->Get(Nan::New("port").ToLocalChecked());
 
-    if(hosts->IsArray()) {
-        Local<Array> hostlist = Local<Array>::Cast(hosts);
-        for ( uint32_t i=0; i<hostlist->Length(); i++) {
-
-            Local<Value> addr = hostlist->Get(i)->ToObject()->Get(Nan::New("addr").ToLocalChecked());
-            Local<Value> port = hostlist->Get(i)->ToObject()->Get(Nan::New("port").ToLocalChecked());
-
-
-            if ( addr->IsString() ) {
-                config->hosts[i].addr = strdup(*String::Utf8Value(addr));
-                as_v8_detail(log,"host[%d].addr = \"%s\"", i, config->hosts[i].addr);
-            }
-            else {
-                as_v8_error(log, "host[%d].addr should be an string", i);
-                return AS_NODE_PARAM_ERR;
-            }
-
-            if ( port->IsNumber() ) {
-                config->hosts[i].port = port->IntegerValue();
-                as_v8_detail(log,"host[%d].port = %d", i, config->hosts[i].port);
-            }
-            else {
+            uint16_t port = DEFAULT_PORT;
+            if (maybe_port->IsNumber()) {
+                port = maybe_port->IntegerValue();
+            } else if (maybe_port->IsUndefined()) {
+                // use default value
+            } else {
                 as_v8_error(log, "host[%d].port should be an integer", i);
                 return AS_NODE_PARAM_ERR;
             }
+
+            if (maybe_addr->IsString()) {
+                String::Utf8Value addr(maybe_addr);
+                as_config_add_host(config, *addr, port);
+                as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
+            } else {
+                as_v8_error(log, "host[%d].addr should be a string", i);
+                return AS_NODE_PARAM_ERR;
+            }
         }
-    }
-    else{
-        as_v8_error(log, "Host list has to be an array");
+    } else {
+        as_v8_error(log, "Host list has to be a string or an array");
         return AS_NODE_PARAM_ERR;
     }
 
-    if ( obj->Has(Nan::New("policies").ToLocalChecked())){
+    if (obj->Has(Nan::New("policies").ToLocalChecked())) {
 
         Local<Value> policy_val = obj->Get(Nan::New("policies").ToLocalChecked());
 
