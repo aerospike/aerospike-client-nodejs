@@ -70,6 +70,17 @@ const uint16_t DEFAULT_PORT = 3000;
  ******************************************************************************/
 int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log)
 {
+    Local<Value> maybe_cluster_id = obj->Get(Nan::New("clusterID").ToLocalChecked());
+    if (maybe_cluster_id->IsString()) {
+        String::Utf8Value cluster_id(maybe_cluster_id);
+        as_v8_detail(log, "setting cluster ID to \"%s\"", *cluster_id);
+        as_config_set_cluster_id(config, *cluster_id);
+    } else if (maybe_cluster_id->IsUndefined()) {
+        // not setting cluster ID
+    } else {
+        as_v8_error(log, "cluster ID should be a string");
+        return AS_NODE_PARAM_ERR;
+    }
 
     Local<Value> maybe_hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
     if (maybe_hosts->IsString()) {

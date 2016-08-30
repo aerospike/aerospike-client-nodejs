@@ -36,6 +36,7 @@ describe('Config', function () {
   describe('new Config', function () {
     it('copies config values from the passed Object', function () {
       var obj = {
+        clusterID: 'testCluster',
         hosts: [ { addr: 'localhost', port: 3000 } ],
         log: { level: 1, file: 2 },
         policies: { timeout: 1000 },
@@ -47,6 +48,7 @@ describe('Config', function () {
         modlua: { systemPath: '/system/path', userPath: '/user/path' }
       }
       var config = new Config(obj)
+      expect(config).to.have.property('clusterID')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
       expect(config).to.have.property('policies')

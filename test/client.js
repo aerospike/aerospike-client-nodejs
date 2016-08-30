@@ -19,6 +19,7 @@
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
 const helper = require('./test_helper')
+const extend = require('util')._extend
 
 describe('Client', function () {
   describe('Client#isConnected', function () {
@@ -62,6 +63,19 @@ describe('Client', function () {
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
           expect(client.isConnected(true)).to.be(false)
           expect(tenderHealthCheck).to.be(true)
+          done()
+        })
+      })
+    })
+
+    context('cluster ID', function () {
+      it('should fail to connect to the cluster if the cluster ID does not match', function (done) {
+        var config = extend({}, helper.config)
+        config.clusterID = 'notAValidClusterId'
+        client = new Client(config)
+
+        client.connect(function (err) {
+          expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
           done()
         })
       })
