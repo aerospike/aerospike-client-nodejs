@@ -16,6 +16,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
+const utils = require('../lib/utils')
 const options = require('./util/options')
 const expect = require('expect.js')
 const util = require('util')
@@ -126,6 +127,18 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
     var info = results.pop()['info']
     self.nsconfig = Info.parseInfo(info)[nsKey]
     done()
+  })
+}
+
+ServerInfoHelper.prototype.randomNode = function (done) {
+  client.infoAny('service', function (err, response) {
+    if (err) throw err
+    var service = Info.parseInfo(response).service
+    if (Array.isArray(service)) {
+      service = service.pop()
+    }
+    var host = utils.parseHostString(service)
+    done(host)
   })
 }
 

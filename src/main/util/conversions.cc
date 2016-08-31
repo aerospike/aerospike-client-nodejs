@@ -82,11 +82,23 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
         return AS_NODE_PARAM_ERR;
     }
 
+    uint16_t default_port = DEFAULT_PORT;
+    Local<Value> maybe_port = obj->Get(Nan::New("port").ToLocalChecked());
+    if (maybe_port->IsNumber()) {
+        default_port = maybe_port->IntegerValue();
+        as_v8_detail(log, "Setting default port: %d", default_port);
+    } else if (maybe_port->IsUndefined()) {
+        // using default port 3000
+    } else {
+        as_v8_error(log, "Port should be a number");
+        return AS_NODE_PARAM_ERR;
+    }
+
     Local<Value> maybe_hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
     if (maybe_hosts->IsString()) {
         String::Utf8Value hosts(maybe_hosts);
         as_v8_detail(log, "setting seed hosts: \"%s\"", *hosts);
-        if (as_config_add_hosts(config, *hosts, DEFAULT_PORT) == false) {
+        if (as_config_add_hosts(config, *hosts, default_port) == false) {
             as_v8_error(log, "invalid hosts string: \"%s\"", *hosts);
             return AS_NODE_PARAM_ERR;
         }
@@ -97,7 +109,7 @@ int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* lo
             Local<Value> maybe_addr = host->Get(Nan::New("addr").ToLocalChecked());
             Local<Value> maybe_port = host->Get(Nan::New("port").ToLocalChecked());
 
-            uint16_t port = DEFAULT_PORT;
+            uint16_t port = default_port;
             if (maybe_port->IsNumber()) {
                 port = maybe_port->IntegerValue();
             } else if (maybe_port->IsUndefined()) {

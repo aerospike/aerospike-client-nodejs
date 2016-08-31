@@ -27,14 +27,8 @@ describe('client.info()', function () {
     var host = null
 
     before(function (done) {
-      client.infoAny('service', function (err, response) {
-        if (err) throw err
-        var service = info.parseInfo(response).service
-        var i = service.lastIndexOf(':')
-        host = {
-          addr: service.slice(0, i),
-          port: Number.parseInt(service.slice(i + 1), 10)
-        }
+      helper.cluster.randomNode(function (addr) {
+        host = addr
         done()
       })
     })
