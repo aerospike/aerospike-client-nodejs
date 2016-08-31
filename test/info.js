@@ -14,48 +14,55 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it, context */
+/* global expect, describe, it, context, before */
 
 const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
-const utils = require('../lib/utils')
 const helper = require('./test_helper')
 
 describe('client.info()', function () {
   var client = helper.client
 
   context('querying a single node', function () {
-    var hosts = client.config.hosts
-    if (typeof hosts === 'string') {
-      hosts = utils.parseHostsString(hosts)
-    }
-    var host = hosts[0]
+    var host = null
 
-    it('should fetch object count from specific cluster node', function (done) {
-      client.info('objects', host, function (err, response, respondingHost) {
-        expect(err).not.to.be.ok()
-        expect(respondingHost).to.eql(host)
-        expect(info.parseInfo(response)).to.have.property('objects')
+    before(function (done) {
+      client.infoAny('service', function (err, response) {
+        if (err) throw err
+        var service = info.parseInfo(response).service
+        var i = service.lastIndexOf(':')
+        host = {
+          addr: service.slice(0, i),
+          port: Number.parseInt(service.slice(i + 1), 10)
+        }
         done()
       })
     })
 
-    it('should accept a string with the host address', function (done) {
+    it('sends status query to a specific cluster node', function (done) {
+      client.info('status', host, function (err, response) {
+        expect(err).not.to.be.ok()
+        expect(response).to.be('status\tok\n')
+        done()
+      })
+    })
+
+    it('accepts a string with the host address', function (done) {
       var hostAddress = host.addr + ':' + host.port
-      client.info('objects', hostAddress, function (err, response, respondingHost) {
+      client.info('status', hostAddress, function (err, response, respondingHost) {
         expect(err).not.to.be.ok()
         expect(respondingHost).to.eql(host)
-        expect(info.parseInfo(response)).to.have.property('objects')
+        expect(response).to.be('status\tok\n')
         done()
       })
     })
   })
 
   context('querying all the nodes', function () {
-    it('should fetch object count from all cluster nodes', function (done) {
-      client.info('objects', function (err, response, host) {
+    it('should return status for all cluster nodes', function (done) {
+      client.info('status', function (err, response, host) {
         expect(err).not.to.be.ok()
-        expect(info.parseInfo(response)).to.have.property('objects')
+        expect(response).to.be('status\tok\n')
       }, done)
     })
   })
@@ -73,6 +80,35 @@ describe('client.info()', function () {
   it('should return a client error if the client is not connected', function (done) {
     Aerospike.client(helper.config).info(function (err) {
       expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+      done()
+    })
+  })
+})
+
+describe('client.infoAny()', function () {
+  var client = helper.client
+
+  it('executes the info command on a single cluster node', function (done) {
+    client.infoAny('status', function (err, result) {
+      expect(err).to.not.be.ok()
+      expect(result).to.be('status\tok\n')
+      done()
+    })
+  })
+})
+
+describe('client.infoAll()', function () {
+  var client = helper.client
+
+  it('executes the info command on all cluster nodes an returns a list of results', function (done) {
+    client.infoAll('status', function (err, results) {
+      expect(err).to.not.be.ok()
+      expect(Array.isArray(results)).to.be(true)
+      results.forEach(function (result) {
+        expect(result.host).to.be.ok()
+        expect(result.info).to.be('status\tok\n')
+        expect(result.error).to.be.ok()
+      })
       done()
     })
   })

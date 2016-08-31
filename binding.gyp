@@ -38,6 +38,7 @@
         'src/main/client/exists_async.cc',
         'src/main/client/get_async.cc',
         'src/main/client/info.cc',
+        'src/main/client/info_foreach.cc',
         'src/main/client/job_info.cc',
         'src/main/client/operate_async.cc',
         'src/main/client/put_async.cc',
