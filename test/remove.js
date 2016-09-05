@@ -124,7 +124,10 @@ describe('client.remove()', function () {
     })
   })
 
-  it('should apply set the durable delete policy', function (done) {
+  it('should apply the durable delete policy', function (done) {
+    if (!helper.cluster.is_enterprise()) {
+      return this.skip('durable delete requires enterprise edition')
+    }
     var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
     var meta = { ttl: 1000 }
     var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()

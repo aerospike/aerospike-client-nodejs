@@ -91,6 +91,7 @@ IndexHelper.prototype.remove = function (indexName, callback) {
 
 function ServerInfoHelper () {
   this.features = new Set()
+  this.edition = 'community'
   this.nsconfig = {}
   this.cluster = []
 }
@@ -103,12 +104,18 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
   return this.nsconfig['ldt-enabled'] === 'true'
 }
 
+ServerInfoHelper.prototype.is_enterprise = function () {
+  return this.edition.match('Enterprise')
+}
+
 ServerInfoHelper.prototype.fetch_info = function (done) {
   var self = this
-  client.infoAll('features', function (err, results) {
+  client.infoAll('edition\nfeatures', function (err, results) {
     if (err) throw err
     results.forEach(function (response) {
-      var features = Info.parseInfo(response.info)['features']
+      var info = Info.parseInfo(response.info)
+      self.edition = info['edition']
+      var features = info['features']
       if (Array.isArray(features)) {
         features.forEach(function (feature) {
           self.features.add(feature)
