@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "policy.h"
+#include "log.h"
+
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/aerospike_key.h>
@@ -22,17 +28,6 @@ extern "C" {
     #include <aerospike/as_record.h>
     #include <aerospike/aerospike_batch.h>
 }
-
-#include <node.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <iostream>
-#include <vector>
-
-#include "client.h"
-#include "async.h"
-#include "conversions.h"
-#include "log.h"
 
 using namespace v8;
 

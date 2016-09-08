@@ -25,7 +25,9 @@
       'sources': [
         'src/main/aerospike.cc',
         'src/main/client.cc',
+        'src/main/config.cc',
         'src/main/operations.cc',
+        'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/async.cc',
@@ -38,6 +40,7 @@
         'src/main/client/exists_async.cc',
         'src/main/client/get_async.cc',
         'src/main/client/info.cc',
+        'src/main/client/info_foreach.cc',
         'src/main/client/job_info.cc',
         'src/main/client/operate_async.cc',
         'src/main/client/put_async.cc',

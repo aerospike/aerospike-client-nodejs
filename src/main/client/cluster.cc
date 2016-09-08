@@ -14,16 +14,14 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "client.h"
+#include "conversions.h"
+#include "log.h"
+
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/as_async_proto.h>
 }
-
-#include <node.h>
-
-#include "client.h"
-#include "conversions.h"
-#include "log.h"
 
 using namespace v8;
 

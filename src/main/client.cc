@@ -14,6 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <node.h>
+#include "client.h"
+#include "conversions.h"
+#include "config.h"
+#include "log.h"
+
 extern "C" {
 	#include <aerospike/aerospike.h>
 	#include <aerospike/aerospike_key.h>
@@ -23,20 +29,6 @@ extern "C" {
 	#include <aerospike/as_log.h>
 }
 
-#include <unistd.h>
-#include <node.h>
-#include "client.h"
-#include "conversions.h"
-#include "log.h"
-
-/*******************************************************************************
- *  Fields
- ******************************************************************************/
-
-/**
- *  JavaScript constructor for AerospikeClient
- */
-Nan::Persistent<FunctionTemplate> AerospikeClient::constructor;
 
 /*******************************************************************************
  *  Constructor and Destructor
@@ -92,8 +84,8 @@ NAN_METHOD(AerospikeClient::New)
 		int default_log_set = 0;
 		if (info[0]->ToObject()->Has(Nan::New("log").ToLocalChecked())) {
 			Local<Value> log_val = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
-			if (log_from_jsobject( client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
-				default_log_set = 1; // Log is passed as an argument. set the default value
+			if (log_from_jsobject(client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
+				default_log_set = 1; // Log is passed as an argument; set the default value.
 			} else {
 				//log info is set to default level
 			}
@@ -106,13 +98,12 @@ NAN_METHOD(AerospikeClient::New)
 	if (info[0]->IsObject()) {
 		int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);
 		if (result != AS_NODE_PARAM_OK) {
-			// Throw an exception if an error happens in parsing the config object.
-			Nan::ThrowError("Configuration Error while creating client object");
+			Nan::ThrowError("Invalid client configuration");
 		}
 	}
 
 	aerospike_init(client->as, &config);
-	as_v8_debug(client->log, "Aerospike object initialization : success");
+	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
 }
@@ -123,12 +114,15 @@ NAN_METHOD(AerospikeClient::New)
 Local<Value> AerospikeClient::NewInstance(Local<Object> info)
 {
 	Nan::EscapableHandleScope scope;
-	const unsigned argc = 1;
+	const int argc = 1;
 	Local<Value> argv[argc] = { info };
-	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(constructor);
-	Local<Function> function = Nan::GetFunction(tpl).ToLocalChecked();
-	Local<Value> instance = Nan::NewInstance(function, argc, argv).ToLocalChecked();
-	return scope.Escape(instance);
+	Local<Function> cons = Nan::New<Function>(constructor());
+	Nan::TryCatch try_catch;
+	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
+	if (try_catch.HasCaught()) {
+		Nan::FatalException(try_catch);
+	}
+	return scope.Escape(instance.ToLocalChecked());
 }
 
 /**
@@ -137,45 +131,43 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> info)
  */
 void AerospikeClient::Init()
 {
-	// Prepare constructor template
-	Local<FunctionTemplate> cons = Nan::New<FunctionTemplate>(AerospikeClient::New);
-	cons->SetClassName(Nan::New("AerospikeClient").ToLocalChecked());
+	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(AerospikeClient::New);
+	tpl->SetClassName(Nan::New("AerospikeClient").ToLocalChecked());
 
-	// A client object created in node.js, holds reference to the wrapped c++
+	// A client object created in Node.js, holds reference to the wrapped C++
 	// object using an internal field.
-	// InternalFieldCount signifies the number of c++ objects the node.js object
-	// will refer to when it is intiatiated in node.js
-	cons->InstanceTemplate()->SetInternalFieldCount(1);
+	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-	// Prototype
-	Nan::SetPrototypeMethod(cons, "hasPendingAsyncCommands", HasPendingAsyncCommands);
-	Nan::SetPrototypeMethod(cons, "applyAsync", ApplyAsync);
-	Nan::SetPrototypeMethod(cons, "batchGet", BatchGet);
-	Nan::SetPrototypeMethod(cons, "batchExists", BatchExists);
-	Nan::SetPrototypeMethod(cons, "batchSelect", BatchSelect);
-	Nan::SetPrototypeMethod(cons, "batchRead", BatchReadAsync);
-	Nan::SetPrototypeMethod(cons, "close", Close);
-	Nan::SetPrototypeMethod(cons, "connect", Connect);
-	Nan::SetPrototypeMethod(cons, "isConnected", IsConnected);
-	Nan::SetPrototypeMethod(cons, "existsAsync", ExistsAsync);
-	Nan::SetPrototypeMethod(cons, "getAsync", GetAsync);
-	Nan::SetPrototypeMethod(cons, "info", Info);
-	Nan::SetPrototypeMethod(cons, "indexCreate", IndexCreate);
-	Nan::SetPrototypeMethod(cons, "indexRemove", IndexRemove);
-	Nan::SetPrototypeMethod(cons, "jobInfo", JobInfo);
-	Nan::SetPrototypeMethod(cons, "operateAsync", OperateAsync);
-	Nan::SetPrototypeMethod(cons, "putAsync", PutAsync);
-	Nan::SetPrototypeMethod(cons, "queryApply", QueryApply);
-	Nan::SetPrototypeMethod(cons, "queryAsync", QueryAsync);
-	Nan::SetPrototypeMethod(cons, "queryBackground", QueryBackground);
-	Nan::SetPrototypeMethod(cons, "queryForeach", QueryForeach);
-	Nan::SetPrototypeMethod(cons, "removeAsync", RemoveAsync);
-	Nan::SetPrototypeMethod(cons, "scanBackground", ScanBackground);
-	Nan::SetPrototypeMethod(cons, "scanAsync", ScanAsync);
-	Nan::SetPrototypeMethod(cons, "selectAsync", SelectAsync);
-	Nan::SetPrototypeMethod(cons, "udfRegister", Register);
-	Nan::SetPrototypeMethod(cons, "udfRegisterWait", RegisterWait);
-	Nan::SetPrototypeMethod(cons, "udfRemove", UDFRemove);
-	Nan::SetPrototypeMethod(cons, "updateLogging", SetLogLevel);
-	constructor.Reset(cons);
+	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "applyAsync", ApplyAsync);
+	Nan::SetPrototypeMethod(tpl, "batchGet", BatchGet);
+	Nan::SetPrototypeMethod(tpl, "batchExists", BatchExists);
+	Nan::SetPrototypeMethod(tpl, "batchSelect", BatchSelect);
+	Nan::SetPrototypeMethod(tpl, "batchRead", BatchReadAsync);
+	Nan::SetPrototypeMethod(tpl, "close", Close);
+	Nan::SetPrototypeMethod(tpl, "connect", Connect);
+	Nan::SetPrototypeMethod(tpl, "isConnected", IsConnected);
+	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
+	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
+	Nan::SetPrototypeMethod(tpl, "info", Info);
+	Nan::SetPrototypeMethod(tpl, "infoForeach", InfoForeach);
+	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
+	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
+	Nan::SetPrototypeMethod(tpl, "jobInfo", JobInfo);
+	Nan::SetPrototypeMethod(tpl, "operateAsync", OperateAsync);
+	Nan::SetPrototypeMethod(tpl, "putAsync", PutAsync);
+	Nan::SetPrototypeMethod(tpl, "queryApply", QueryApply);
+	Nan::SetPrototypeMethod(tpl, "queryAsync", QueryAsync);
+	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
+	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
+	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
+	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
+	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
+	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
+	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
+	Nan::SetPrototypeMethod(tpl, "udfRegisterWait", RegisterWait);
+	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);
+	Nan::SetPrototypeMethod(tpl, "updateLogging", SetLogLevel);
+
+	constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
 }

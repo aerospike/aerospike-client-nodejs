@@ -36,6 +36,7 @@ describe('Config', function () {
   describe('new Config', function () {
     it('copies config values from the passed Object', function () {
       var obj = {
+        clusterID: 'testCluster',
         hosts: [ { addr: 'localhost', port: 3000 } ],
         log: { level: 1, file: 2 },
         policies: { timeout: 1000 },
@@ -44,9 +45,11 @@ describe('Config', function () {
         user: 'admin',
         password: 'sekret',
         sharedMemory: { key: 1234 },
-        modlua: { systemPath: '/system/path', userPath: '/user/path' }
+        modlua: { systemPath: '/system/path', userPath: '/user/path' },
+        tls: { enable: true, encryptOnly: true }
       }
       var config = new Config(obj)
+      expect(config).to.have.property('clusterID')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
       expect(config).to.have.property('policies')
@@ -56,6 +59,7 @@ describe('Config', function () {
       expect(config).to.have.property('password')
       expect(config).to.have.property('sharedMemory')
       expect(config).to.have.property('modlua')
+      expect(config).to.have.property('tls')
     })
 
     it('rejects invalid config properties', function () {
@@ -83,12 +87,12 @@ describe('Config', function () {
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {
       process.env.AEROSPIKE_HOSTS = 'db1:3001'
       var config = new Config()
-      expect(config.hosts).to.eql([{addr: 'db1', port: 3001}])
+      expect(config.hosts).to.eql('db1:3001')
     })
 
     it('defaults to "localhost:3000"', function () {
       var config = new Config()
-      expect(config.hosts).to.eql([{addr: 'localhost', port: 3000}])
+      expect(config.hosts).to.eql('localhost:3000')
     })
   })
 })

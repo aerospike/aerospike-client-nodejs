@@ -14,6 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "policy.h"
+#include "log.h"
+
 extern "C" {
 	#include <aerospike/aerospike_scan.h>
 	#include <aerospike/as_error.h>
@@ -21,14 +27,6 @@ extern "C" {
 	#include <aerospike/as_policy.h>
 	#include <aerospike/as_status.h>
 }
-
-#include <node.h>
-
-#include "async.h"
-#include "client.h"
-#include "conversions.h"
-#include "log.h"
-#include "async.h"
 
 #define JOB_MODULE_LEN 50
 

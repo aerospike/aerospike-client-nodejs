@@ -29,80 +29,6 @@ extern "C" {
 
 using namespace v8;
 
-int get_string_property(char** strp, Local<Object> obj, char const* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (!value->IsString()) {
-		as_v8_error(log, "Type error: %s property should be string", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	(*strp) = strdup(*String::Utf8Value(value));
-	return AS_NODE_PARAM_OK;
-}
-
-int get_integer_property(int64_t* intp, Local<Object> obj, char const* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (!value->IsNumber()) {
-		as_v8_error(log, "Type error: %s property should be integer", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	(*intp) = value->NumberValue();
-	return AS_NODE_PARAM_OK;
-}
-
-int get_optional_integer_property(int64_t* intp, bool* defined, Local<Object> obj, char const* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (value->IsNumber()) {
-		(*defined) = true;
-		(*intp) = value->NumberValue();
-	} else if (value->IsUndefined() || value->IsNull()) {
-		(*defined) = false;
-	} else {
-		as_v8_error(log, "Type error: %s property should be integer", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	return AS_NODE_PARAM_OK;
-}
-
-int get_array_property(as_list** list, Local<Object> obj, char const* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (!value->IsArray()) {
-		as_v8_error(log, "Type error: %s property should be array", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	return list_from_jsarray(list, Local<Array>::Cast(value), log);
-}
-
-int get_property_value(as_val** value, Local<Object> obj, const char* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> v8value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (v8value->IsUndefined()) {
-		as_v8_error(log, "Type error: %s property should not be undefined", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	return asval_from_jsvalue(value, v8value, log);
-}
-
-int get_optional_property_value(as_val** value, bool* defined, Local<Object> obj, const char* prop, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> v8value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (v8value->IsUndefined() || v8value->IsNull()) {
-		(*defined) = false;
-		return AS_NODE_PARAM_OK;
-	}
-	(*defined) = true;
-	return asval_from_jsvalue(value, v8value, log);
-}
-
 int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
@@ -169,7 +95,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 
 	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
 	if (v8val->IsNumber()) {
-		int64_t val = v8val->NumberValue();
+		int64_t val = v8val->IntegerValue();
 		as_v8_detail(log, "integer value to be written %d", val);
 		as_operations_add_write_int64(ops, binName, val);
 		if (binName != NULL) free(binName);
@@ -229,7 +155,7 @@ int add_incr_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		if (binName != NULL) free (binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsNumber()) {
-		int64_t binValue = v8val->NumberValue();
+		int64_t binValue = v8val->IntegerValue();
 		as_v8_detail(log, "value to be incremented %lld", binValue);
 		as_operations_add_incr( ops, binName, binValue);
 		if (binName != NULL) free (binName);
@@ -320,7 +246,7 @@ int add_list_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* val;
-	if (get_property_value(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -337,7 +263,7 @@ int add_list_append_items_op(as_operations* ops, Local<Object> obj, LogInfo* log
 	}
 
 	as_list* list;
-	if (get_array_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -354,12 +280,12 @@ int add_list_insert_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* val;
-	if (get_property_value(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -376,12 +302,12 @@ int add_list_insert_items_op(as_operations* ops, Local<Object> obj, LogInfo* log
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_list* list;
-	if (get_array_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -398,7 +324,7 @@ int add_list_pop_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -415,13 +341,13 @@ int add_list_pop_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -442,7 +368,7 @@ int add_list_remove_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -459,13 +385,13 @@ int add_list_remove_range_op(as_operations* ops, Local<Object> obj, LogInfo* log
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -498,12 +424,12 @@ int add_list_set_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* val;
-	if (get_property_value(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -520,12 +446,12 @@ int add_list_trim_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	int64_t count;
-	if (get_integer_property(&count, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&count, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -542,7 +468,7 @@ int add_list_get_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -559,13 +485,13 @@ int add_list_get_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -616,12 +542,12 @@ int add_map_put_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* key;
-	if (get_property_value(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* value;
-	if (get_property_value(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -673,12 +599,12 @@ int add_map_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* key;
-	if (get_property_value(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* incr;
-	if (get_property_value(&incr, obj, "incr", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&incr, obj, "incr", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -701,12 +627,12 @@ int add_map_decrement_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* key;
-	if (get_property_value(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* decr;
-	if (get_property_value(&decr, obj, "decr", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&decr, obj, "decr", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -742,7 +668,7 @@ int add_map_remove_by_key_op(as_operations* ops, Local<Object> obj, LogInfo* log
 	}
 
 	as_val* key;
-	if (get_property_value(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -765,7 +691,7 @@ int add_map_remove_by_key_list_op(as_operations* ops, Local<Object> obj, LogInfo
 	}
 
 	as_list* keys;
-	if (get_array_property(&keys, obj, "keys", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&keys, obj, "keys", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -789,13 +715,13 @@ int add_map_remove_by_key_range_op(as_operations* ops, Local<Object> obj, LogInf
 
 	bool begin_defined;
 	as_val* begin = NULL;
-	if (get_optional_property_value(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool end_defined;
 	as_val* end = NULL;
-	if (get_optional_property_value(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -818,7 +744,7 @@ int add_map_remove_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* l
 	}
 
 	as_val* value;
-	if (get_property_value(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -841,7 +767,7 @@ int add_map_remove_by_value_list_op(as_operations* ops, Local<Object> obj, LogIn
 	}
 
 	as_list* values;
-	if (get_array_property(&values, obj, "values", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&values, obj, "values", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -865,13 +791,13 @@ int add_map_remove_by_value_range_op(as_operations* ops, Local<Object> obj, LogI
 
 	bool begin_defined;
 	as_val* begin = NULL;
-	if (get_optional_property_value(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool end_defined;
 	as_val* end = NULL;
-	if (get_optional_property_value(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -894,7 +820,7 @@ int add_map_remove_by_index_op(as_operations* ops, Local<Object> obj, LogInfo* l
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -917,13 +843,13 @@ int add_map_remove_by_index_range_op(as_operations* ops, Local<Object> obj, LogI
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -950,7 +876,7 @@ int add_map_remove_by_rank_op(as_operations* ops, Local<Object> obj, LogInfo* lo
 	}
 
 	int64_t rank;
-	if (get_integer_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -973,13 +899,13 @@ int add_map_remove_by_rank_range_op(as_operations* ops, Local<Object> obj, LogIn
 	}
 
 	int64_t rank;
-	if (get_integer_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1019,7 +945,7 @@ int add_map_get_by_key_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* key;
-	if (get_property_value(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&key, obj, "key", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1043,13 +969,13 @@ int add_map_get_by_key_range_op(as_operations* ops, Local<Object> obj, LogInfo* 
 
 	bool begin_defined;
 	as_val* begin = NULL;
-	if (get_optional_property_value(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool end_defined;
 	as_val* end = NULL;
-	if (get_optional_property_value(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1072,7 +998,7 @@ int add_map_get_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_val* value;
-	if (get_property_value(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1096,13 +1022,13 @@ int add_map_get_by_value_range_op(as_operations* ops, Local<Object> obj, LogInfo
 
 	bool begin_defined;
 	as_val* begin = NULL;
-	if (get_optional_property_value(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&begin, &begin_defined, obj, "begin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool end_defined;
 	as_val* end = NULL;
-	if (get_optional_property_value(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&end, &end_defined, obj, "end", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1125,7 +1051,7 @@ int add_map_get_by_index_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1148,13 +1074,13 @@ int add_map_get_by_index_range_op(as_operations* ops, Local<Object> obj, LogInfo
 	}
 
 	int64_t index;
-	if (get_integer_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1181,7 +1107,7 @@ int add_map_get_by_rank_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int64_t rank;
-	if (get_integer_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1204,13 +1130,13 @@ int add_map_get_by_rank_range_op(as_operations* ops, Local<Object> obj, LogInfo*
 	}
 
 	int64_t rank;
-	if (get_integer_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&rank, obj, "rank", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool count_defined;
 	int64_t count;
-	if (get_optional_integer_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_int64_property(&count, &count_defined, obj, "count", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1298,7 +1224,7 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 	for (uint32_t i = 0; i < capacity; i++) {
 		Local<Object> obj = arr->Get(i)->ToObject();
 		setTTL(obj, &ops->ttl, log);
-		result = get_integer_property(&op, obj, "op", log);
+		result = get_int64_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {
 			const ops_table_entry *entry = &ops_table[op];
 			if (entry) {

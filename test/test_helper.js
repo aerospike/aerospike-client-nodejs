@@ -16,6 +16,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
+const utils = require('../lib/utils')
 const options = require('./util/options')
 const expect = require('expect.js')
 const util = require('util')
@@ -90,6 +91,7 @@ IndexHelper.prototype.remove = function (indexName, callback) {
 
 function ServerInfoHelper () {
   this.features = new Set()
+  this.edition = 'community'
   this.nsconfig = {}
   this.cluster = []
 }
@@ -102,12 +104,18 @@ ServerInfoHelper.prototype.ldt_enabled = function () {
   return this.nsconfig['ldt-enabled'] === 'true'
 }
 
+ServerInfoHelper.prototype.is_enterprise = function () {
+  return this.edition.match('Enterprise')
+}
+
 ServerInfoHelper.prototype.fetch_info = function (done) {
   var self = this
-  client.infoAll('features', function (err, results) {
+  client.infoAll('edition\nfeatures', function (err, results) {
     if (err) throw err
     results.forEach(function (response) {
-      var features = Info.parseInfo(response.info)['features']
+      var info = Info.parseInfo(response.info)
+      self.edition = info['edition']
+      var features = info['features']
       if (Array.isArray(features)) {
         features.forEach(function (feature) {
           self.features.add(feature)
@@ -126,6 +134,18 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
     var info = results.pop()['info']
     self.nsconfig = Info.parseInfo(info)[nsKey]
     done()
+  })
+}
+
+ServerInfoHelper.prototype.randomNode = function (done) {
+  client.infoAny('service', function (err, response) {
+    if (err) throw err
+    var service = Info.parseInfo(response).service
+    if (Array.isArray(service)) {
+      service = service.pop()
+    }
+    var host = utils.parseHostString(service)
+    done(host)
   })
 }
 

@@ -14,18 +14,17 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "client.h"
+#include "enums.h"
+#include "operations.h"
+#include "log.h"
+
 extern "C" {
 	#include <aerospike/as_event.h>
 	#include <aerospike/as_log.h>
 	#include <aerospike/as_async_proto.h>
 }
 
-#include <uv.h>
-#include <unistd.h>
-#include "client.h"
-#include "enums.h"
-#include "operations.h"
-#include "log.h"
 
 #define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
 

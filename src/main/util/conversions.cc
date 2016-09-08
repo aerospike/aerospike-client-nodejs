@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 Aerospike Inc.
+ * Copyright 2013-2016 Aerospike Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,7 +31,6 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
-#include <aerospike/as_config.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_record_iterator.h>
@@ -66,323 +65,155 @@ const char * GeoJSONType = "GeoJSON";
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
-int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log)
+
+int get_string_property(char** strp, Local<Object> obj, char const* prop, const LogInfo* log)
 {
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!value->IsString()) {
+		as_v8_error(log, "Type error: %s property should be string", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	(*strp) = strdup(*String::Utf8Value(value));
+	return AS_NODE_PARAM_OK;
+}
 
-    Local<Value> hosts = obj->Get(Nan::New("hosts").ToLocalChecked());
+int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsString()) {
+		if (defined != NULL) (*defined) = true;
+		(*strp) = strdup(*String::Utf8Value(value));
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be string", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
 
-    if(hosts->IsArray()) {
-        Local<Array> hostlist = Local<Array>::Cast(hosts);
-        for ( uint32_t i=0; i<hostlist->Length(); i++) {
+int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!value->IsNumber()) {
+		as_v8_error(log, "Type error: %s property should be integer", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	(*intp) = value->IntegerValue();
+	return AS_NODE_PARAM_OK;
+}
 
-            Local<Value> addr = hostlist->Get(i)->ToObject()->Get(Nan::New("addr").ToLocalChecked());
-            Local<Value> port = hostlist->Get(i)->ToObject()->Get(Nan::New("port").ToLocalChecked());
+int get_optional_int64_property(int64_t* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsNumber()) {
+		if (defined != NULL) (*defined) = true;
+		(*intp) = value->IntegerValue();
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be integer", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
 
+int get_optional_int32_property(int32_t* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsInt32()) {
+		if (defined != NULL) (*defined) = true;
+		(*intp) = value->Int32Value();
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be integer (int32)", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
 
-            if ( addr->IsString() ) {
-                config->hosts[i].addr = strdup(*String::Utf8Value(addr));
-                as_v8_detail(log,"host[%d].addr = \"%s\"", i, config->hosts[i].addr);
-            }
-            else {
-                as_v8_error(log, "host[%d].addr should be an string", i);
-                return AS_NODE_PARAM_ERR;
-            }
+int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsUint32()) {
+		if (defined != NULL) (*defined) = true;
+		(*intp) = value->Uint32Value();
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be integer (uint32)", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
 
-            if ( port->IsNumber() ) {
-                config->hosts[i].port = port->IntegerValue();
-                as_v8_detail(log,"host[%d].port = %d", i, config->hosts[i].port);
-            }
-            else {
-                as_v8_error(log, "host[%d].port should be an integer", i);
-                return AS_NODE_PARAM_ERR;
-            }
-        }
-    }
-    else{
-        as_v8_error(log, "Host list has to be an array");
-        return AS_NODE_PARAM_ERR;
-    }
+int get_bool_property(bool* boolp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!value->IsBoolean()) {
+		as_v8_error(log, "Type error: %s property should be boolean", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	(*boolp) = value->BooleanValue();
+	return AS_NODE_PARAM_OK;
+}
 
-    if ( obj->Has(Nan::New("policies").ToLocalChecked())){
+int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsBoolean()) {
+		if (defined != NULL) (*defined) = true;
+		(*boolp) = value->BooleanValue();
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be boolean", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
 
-        Local<Value> policy_val = obj->Get(Nan::New("policies").ToLocalChecked());
+int get_list_property(as_list** list, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!value->IsArray()) {
+		as_v8_error(log, "Type error: %s property should be array", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return list_from_jsarray(list, Local<Array>::Cast(value), log);
+}
 
-        if ( policy_val->IsObject() ){
-            Local<Object> policies = policy_val->ToObject();
-            if (policies->Has(Nan::New("timeout").ToLocalChecked())) {
-                Local<Value> v8timeout = policies->Get(Nan::New("timeout").ToLocalChecked());
-                config->policies.timeout = v8timeout->IntegerValue();
-            }
-            if (policies->Has(Nan::New("retry").ToLocalChecked())) {
-                Local<Value> v8retry = policies->Get(Nan::New("retry").ToLocalChecked());
-                config->policies.retry = (as_policy_retry)v8retry->IntegerValue();
-            }
-            if (policies->Has(Nan::New("key").ToLocalChecked())) {
-                Local<Value> v8key = policies->Get(Nan::New("key").ToLocalChecked());
-                config->policies.key = (as_policy_key)v8key->IntegerValue();
-            }
-            if( policies->Has(Nan::New("exists").ToLocalChecked())) {
-                Local<Value> v8exists = policies->Get(Nan::New("exists").ToLocalChecked());
-                config->policies.exists = (as_policy_exists)v8exists->IntegerValue();
-            }
-            if (policies->Has(Nan::New("gen").ToLocalChecked())) {
-                Local<Value> v8gen = policies->Get(Nan::New("gen").ToLocalChecked());
-                config->policies.gen = (as_policy_gen)v8gen->IntegerValue();
-            }
-            if (policies->Has(Nan::New("replica").ToLocalChecked())) {
-                Local<Value> v8replica = policies->Get(Nan::New("replica").ToLocalChecked());
-                config->policies.replica = (as_policy_replica) v8replica->IntegerValue();
-            }
-            if (policies->Has(Nan::New("consistencyLevel").ToLocalChecked())) {
-                Local<Value> v8consistency = policies->Get(Nan::New("consistencyLevel").ToLocalChecked());
-                config->policies.consistency_level = (as_policy_consistency_level) v8consistency->IntegerValue();
-            }
-            if (policies->Has(Nan::New("commitLevel").ToLocalChecked())) {
-                Local<Value> v8commitLevel = policies->Get(Nan::New("commitLevel").ToLocalChecked());
-                config->policies.commit_level = (as_policy_commit_level) v8commitLevel->IntegerValue();
-            }
-            if (policies->Has(Nan::New("read").ToLocalChecked())) {
-                Local<Value> readpolicy = policies->Get(Nan::New("read").ToLocalChecked());
-                if ( readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)  != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("write").ToLocalChecked())) {
-                Local<Value> writepolicy = policies->Get(Nan::New("write").ToLocalChecked());
-                if( writepolicy_from_jsobject(&config->policies.write, writepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("remove").ToLocalChecked())) {
-                Local<Value> removepolicy = policies->Get(Nan::New("remove").ToLocalChecked());
-                if( removepolicy_from_jsobject(&config->policies.remove, removepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("batch").ToLocalChecked())) {
-                Local<Value> batchpolicy = policies->Get(Nan::New("batch").ToLocalChecked());
-                if( batchpolicy_from_jsobject(&config->policies.batch, batchpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("operate").ToLocalChecked())) {
-                Local<Value> operatepolicy = policies->Get(Nan::New("operate").ToLocalChecked());
-                if( operatepolicy_from_jsobject(&config->policies.operate, operatepolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("info").ToLocalChecked())) {
-                Local<Value> infopolicy = policies->Get(Nan::New("info").ToLocalChecked());
-                if( infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("admin").ToLocalChecked())) {
-                Local<Value> adminpolicy = policies->Get(Nan::New("admin").ToLocalChecked());
-                if( adminpolicy_from_jsobject(&config->policies.admin, adminpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("scan").ToLocalChecked())) {
-                Local<Value> scanpolicy = policies->Get(Nan::New("scan").ToLocalChecked());
-                if( scanpolicy_from_jsobject(&config->policies.scan, scanpolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
-            if (policies->Has(Nan::New("query").ToLocalChecked())) {
-                Local<Value> querypolicy = policies->Get(Nan::New("query").ToLocalChecked());
-                if( querypolicy_from_jsobject(&config->policies.query, querypolicy->ToObject(), log) != AS_NODE_PARAM_OK) {
-                    return AS_NODE_PARAM_ERR;
-                }
-            }
+int get_asval_property(as_val** value, Local<Object> obj, const char* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> v8value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (v8value->IsUndefined()) {
+		as_v8_error(log, "Type error: %s property should not be undefined", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return asval_from_jsvalue(value, v8value, log);
+}
 
-
-        }
-        as_v8_debug(log, "Parsing global policies : Done");
-    }
-    // stores information about mod-lua userpath and systempath.
-    bool syspath_set = false;
-    bool usrpath_set = false;
-
-    // If modlua path is passed in config object, set those values here
-    if( obj->Has(Nan::New("modlua").ToLocalChecked())) {
-        Local<Object> modlua = obj->Get(Nan::New("modlua").ToLocalChecked())->ToObject();
-
-        if ( modlua->Has(Nan::New("systemPath").ToLocalChecked())) {
-            Local<Value> v8syspath = modlua->Get(Nan::New("systemPath").ToLocalChecked());
-            strcpy(config->lua.system_path, *String::Utf8Value(v8syspath));
-            as_v8_debug(log, "The system path in the config is %s ", config->lua.system_path);
-            syspath_set = true;
-        }
-        if( modlua->Has(Nan::New("userPath").ToLocalChecked())) {
-            Local<Value> v8usrpath = modlua->Get(Nan::New("userPath").ToLocalChecked());
-            strcpy(config->lua.user_path, *String::Utf8Value(v8usrpath));
-            as_v8_debug(log, "The user path in the config is %s ", config->lua.user_path);
-            usrpath_set = true;
-        }
-    }
-
-    // Modlua system and user path is not passed in a config object.
-    // Set them to default values here.
-    if(!syspath_set) {
-#ifdef __linux
-        char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
-#elif __APPLE__
-        char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif
-        int rc = access(syspath, R_OK);
-        if(rc == 0) {
-            strcpy(config->lua.system_path, syspath);
-        }
-        else {
-#ifdef __linux
-            char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
-#elif __APPLE__
-            char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif
-            rc = access(syspath, R_OK);
-            if ( rc== 0) {
-                strcpy(config->lua.system_path, syspath);
-            }
-            else {
-                as_v8_debug(log,"Could not find a valid LUA system path %s", syspath);
-            }
-        }
-    }
-    if(!usrpath_set) {
-#ifdef __linux
-        char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
-#elif __APPLE__
-        char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua/";
-#endif
-        int rc = access(usrpath, R_OK);
-        if ( rc == 0) {
-            strcpy(config->lua.user_path, usrpath);
-        }
-        else {
-#ifdef __linux
-            char const * usrpath = "./aerospike-client-c/package/opt/aerospike/client/usr/udf/lua";
-#elif __APPLE__
-            char const * usrpath = "./aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua";
-#endif
-            rc = access(usrpath, R_OK);
-            if( rc == 0) {
-                strcpy(config->lua.user_path, usrpath);
-            }
-            else {
-                as_v8_debug(log, "Could not find valid LUA user path %s", usrpath);
-            }
-
-        }
-    }
-
-    if ( obj->Has(Nan::New("user").ToLocalChecked())) {
-        if(!obj->Has(Nan::New("password").ToLocalChecked())) {
-            as_v8_error(log, "Password must be passed with username for connecting to secure cluster");
-            return AS_NODE_PARAM_ERR;
-        }
-
-        Local<Value> v8usr = obj->Get(Nan::New("user").ToLocalChecked());
-        Local<Value> v8pwd = obj->Get(Nan::New("password").ToLocalChecked());
-
-        if ( !v8usr->IsUndefined() && !v8usr->IsNull() ) {
-            if(!(v8usr->IsString())) {
-                as_v8_error(log, "Username passed must be string");
-                return AS_NODE_PARAM_ERR;
-            } else {
-                if ( !v8pwd->IsUndefined() && !v8pwd->IsNull() ) {
-                    if(!(v8pwd->IsString())) {
-                        as_v8_error(log, "Password passed must be a string");
-                        return AS_NODE_PARAM_ERR;
-                    } else {
-
-                        bool setConfig = as_config_set_user(config,*String::Utf8Value(v8usr), *String::Utf8Value(v8pwd));
-
-                        if(!setConfig) {
-                            as_v8_error(log, "Setting config failed");
-                            return AS_NODE_PARAM_ERR;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if ( obj->Has(Nan::New("sharedMemory").ToLocalChecked())) {
-        Local<Object> shm_obj = obj->Get(Nan::New("sharedMemory").ToLocalChecked())->ToObject();
-        config->use_shm = true;
-        if ( shm_obj->Has(Nan::New("key").ToLocalChecked())) {
-            Local<Value> key = shm_obj->Get(Nan::New("key").ToLocalChecked());
-            if (key->IsNumber()) {
-                config->shm_key =  key->IntegerValue();
-                as_v8_debug(log, "SHM key is set to %x ", config->shm_key);
-            }
-            else {
-                as_v8_error(log, "SHM key is not an integer. Integer expected");
-                return AS_NODE_PARAM_ERR;
-            }
-        }
-        if ( shm_obj->Has(Nan::New("maxNodes").ToLocalChecked())) {
-            Local<Value> max_nodes = shm_obj->Get(Nan::New("maxNodes").ToLocalChecked());
-            if (max_nodes->IsNumber()) {
-                config->shm_max_nodes =  max_nodes->IntegerValue();
-                as_v8_debug(log, "SHM max nodes is set to %d", config->shm_max_nodes);
-            }
-            else {
-                as_v8_error(log, "SHM max nodes is not an integer. Integer expected");
-                return AS_NODE_PARAM_ERR;
-            }
-        }
-        if ( shm_obj->Has(Nan::New("maxNamespaces").ToLocalChecked())) {
-            Local<Value> max_namespaces = shm_obj->Get(Nan::New("maxNamespaces").ToLocalChecked());
-            if (max_namespaces->IsNumber()) {
-                config->shm_max_namespaces =  max_namespaces->IntegerValue();
-                as_v8_debug(log, "SHM max namespaces is set to %d", config->shm_max_namespaces);
-            }
-            else {
-                as_v8_error(log, "SHM max namespaces is not an integer. Integer expected");
-                return AS_NODE_PARAM_ERR;
-            }
-        }
-        if ( shm_obj->Has(Nan::New("takeoverThresholdSeconds").ToLocalChecked())) {
-            Local<Value> takeover_threshold_secs = shm_obj->Get(Nan::New("takeoverThresholdSeconds").ToLocalChecked());
-            if (takeover_threshold_secs->IsNumber()) {
-                config->shm_takeover_threshold_sec =  takeover_threshold_secs->IntegerValue();
-                as_v8_debug(log, "SHM takeover threshold seconds is set to %d", config->shm_takeover_threshold_sec);
-            }
-            else {
-                as_v8_error(log, "SHM takeover threshold seconds is not an integer. Integer expected");
-                return AS_NODE_PARAM_ERR;
-            }
-        }
-
-    }
-
-    if (obj->Has(Nan::New("connTimeoutMs").ToLocalChecked())) {
-        Local<Value> v8connTimeoutMs = obj->Get(Nan::New("connTimeoutMs").ToLocalChecked());
-        config->conn_timeout_ms = v8connTimeoutMs->IntegerValue();
-        as_v8_debug(log, "Initial connection timeout set to %d ms", config->conn_timeout_ms);
-    }
-
-    if (obj->Has(Nan::New("tenderInterval").ToLocalChecked())) {
-        Local<Value> v8tenderInterval = obj->Get(Nan::New("tenderInterval").ToLocalChecked());
-        config->tender_interval = v8tenderInterval->IntegerValue();
-        as_v8_debug(log, "Tender interval set to %d ms", config->tender_interval);
-    }
-
-    if (obj->Has(Nan::New("maxConnsPerNode").ToLocalChecked())) {
-        Local<Value> maxConnsPerNode = obj->Get(Nan::New("maxConnsPerNode").ToLocalChecked());
-        config->async_max_conns_per_node = maxConnsPerNode->IntegerValue();
-        as_v8_debug(log, "Max. async connections per node set to %d", config->async_max_conns_per_node);
-    }
-
-    if (obj->Has(Nan::New("maxConnsPerNodeSync").ToLocalChecked())) {
-        Local<Value> maxConnsPerNodeSync = obj->Get(Nan::New("maxConnsPerNodeSync").ToLocalChecked());
-        config->max_conns_per_node = maxConnsPerNodeSync->IntegerValue();
-        as_v8_debug(log, "Max. synchronous connections per node set to %d", config->max_conns_per_node)
-    }
-
-    return AS_NODE_PARAM_OK;
+int get_optional_asval_property(as_val** value, bool* defined, Local<Object> obj, const char* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> v8value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (v8value->IsUndefined() || v8value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+		return AS_NODE_PARAM_OK;
+	}
+  if (defined != NULL) (*defined) = true;
+	return asval_from_jsvalue(value, v8value, log);
 }
 
 
@@ -1142,46 +973,6 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
     return AS_NODE_PARAM_OK;
 }
 
-int setTimeOut(Local<Object> obj, uint32_t* timeout, const LogInfo* log)
-{
-
-    if ( obj->Has(Nan::New("timeout").ToLocalChecked()) ) {
-        Local<Value> v8timeout = obj->Get(Nan::New<String>("timeout").ToLocalChecked()) ;
-        if ( v8timeout->IsNumber() ) {
-            (*timeout) = (uint32_t) v8timeout->IntegerValue();
-            as_v8_detail(log, "timeout value %d", *timeout);
-        }
-        else {
-            as_v8_error(log, "timeout should be an integer");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-    else {
-        as_v8_detail(log, "Object does not have timeout");
-    }
-    return AS_NODE_PARAM_OK;
-}
-
-int setTtlPolicy(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
-{
-
-    if ( obj->Has(Nan::New("ttl").ToLocalChecked()) ) {
-        Local<Value> v8ttl = obj->Get(Nan::New<String>("ttl").ToLocalChecked()) ;
-        if ( v8ttl->IsNumber() ) {
-            (*ttl) = (uint32_t) v8ttl->IntegerValue();
-            as_v8_detail(log, "ttl value %d", *ttl);
-        }
-        else {
-            as_v8_error(log, "ttl should be an integer");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-    else {
-        as_v8_detail(log, "Object does not have ttl");
-    }
-    return AS_NODE_PARAM_OK;
-}
-
 int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 {
     if ( obj->Has(Nan::New("gen").ToLocalChecked()) ) {
@@ -1198,313 +989,6 @@ int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 
     return AS_NODE_PARAM_OK;
 }
-
-int setPolicyGeneric(Local<Object> obj, const char* policyname, int* policyEnumValue, const LogInfo* log)
-{
-
-    if ( obj->Has(Nan::New(policyname).ToLocalChecked()) ) {
-        Local<Value> policy = obj->Get(Nan::New(policyname).ToLocalChecked());
-
-        // Check if node layer is passing a legal integer value
-        if (policy->IsNumber()) {
-            *policyEnumValue = policy->IntegerValue();
-        }
-        else {
-            as_v8_error(log, "value for %s policy must be an integer", policyname);
-            //Something other than expected type which is Number
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-    else {
-        as_v8_detail(log, "Object does not have %s ", policyname);
-    }
-    // The policyEnumValue will/should be inited to the default value by the caller
-    // So, do not change anything if we get an non-integer from node layer
-    return AS_NODE_PARAM_OK;
-}
-
-int setKeyPolicy(Local<Object> obj, as_policy_key* keypolicy, const LogInfo* log)
-{
-
-    if (setPolicyGeneric(obj, "key", (int *) keypolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Key policy is set to %d", *keypolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int setGenPolicy(Local<Object> obj, as_policy_gen* genpolicy, const LogInfo* log)
-{
-    if ( setPolicyGeneric(obj, "gen", (int *) genpolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Generation policy is set to %d", *genpolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int setRetryPolicy(Local<Object> obj, uint32_t* retrypolicy, const LogInfo* log)
-{
-    if (setPolicyGeneric(obj, "retry", (int *) retrypolicy, log) != AS_NODE_PARAM_OK ) {
-        return AS_NODE_PARAM_OK;
-    }
-
-    as_v8_detail(log, "Retry Policy is set to %d", *retrypolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-
-int setExistsPolicy(Local<Object> obj, as_policy_exists* existspolicy, const LogInfo* log)
-{
-    if ( setPolicyGeneric(obj, "exists", (int *) existspolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Exists policy is set to %d", *existspolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int setCommitLevelPolicy(Local<Object> obj, as_policy_commit_level* commitpolicy, const LogInfo* log)
-{
-    if( setPolicyGeneric(obj, "commitLevel", (int*) commitpolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Commit Level policy is set to %d", *commitpolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int setDurableDeletePolicy(Local<Object> obj, bool* durableDelete, const LogInfo* log)
-{
-	if (obj->Has(Nan::New("duableDelete").ToLocalChecked()) ) {
-		Local<Value> v8durableDelete = obj->Get(Nan::New<String>("durableDelete").ToLocalChecked());
-		if (v8durableDelete->IsBoolean()) {
-			*durableDelete = (bool) v8durableDelete->ToBoolean()->Value();
-			as_v8_detail(log,"durable delete is set to %s", *durableDelete ? "true":"false")
-		} else {
-			as_v8_error(log, "durableDelete should be a boolean");
-			return AS_NODE_PARAM_ERR;
-		}
-	} else {
-		as_v8_detail(log, "Durable delete policy not specified - using default");
-	}
-
-	return AS_NODE_PARAM_OK;
-}
-
-int setCompressionThresholdPolicy(Local<Object> obj, uint32_t* compression_threshold, const LogInfo* log)
-{
-    if( setPolicyGeneric(obj, "compressionThreshold", (int*) compression_threshold, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Compression Threshold policy is set to %d", *compression_threshold);
-    return AS_NODE_PARAM_OK;
-}
-
-int setReplicaPolicy(Local<Object> obj, as_policy_replica* replicapolicy, const LogInfo* log)
-{
-    if( setPolicyGeneric(obj, "replica", (int*) replicapolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Replica policy is set to %d ", *replicapolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int setConsistencyLevelPolicy(Local<Object> obj, as_policy_consistency_level* consistencypolicy, const LogInfo* log)
-{
-    if( setPolicyGeneric(obj, "consistencyLevel", (int*) consistencypolicy, log) != AS_NODE_PARAM_OK) {
-        return AS_NODE_PARAM_ERR;
-    }
-
-    as_v8_detail(log, "Consistency Level Policy is set to %d", *consistencypolicy);
-    return AS_NODE_PARAM_OK;
-}
-
-int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log)
-{
-    if ( obj->IsUndefined() || obj->IsNull()) {
-        return AS_NODE_PARAM_ERR;
-    }
-    as_policy_info_init(policy);
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    if ( obj->Has(Nan::New("send_as_is").ToLocalChecked()) ) {
-        Local<Value> v8send_as_is = obj->Get(Nan::New<String>("send_as_is").ToLocalChecked());
-        if ( v8send_as_is->IsBoolean() ) {
-            policy->send_as_is = (bool) v8send_as_is->ToBoolean()->Value();
-            as_v8_detail(log,"info policy send_as_is is set to %s", policy->send_as_is ? "true":"false");
-        }
-        else {
-            as_v8_error(log, "send_as_is should be a boolean object");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-    if ( obj->Has(Nan::New("check_bounds").ToLocalChecked()) ) {
-        Local<Value> v8check_bounds = obj->Get(Nan::New("check_bounds").ToLocalChecked());
-        if ( v8check_bounds->IsBoolean() ) {
-            policy->check_bounds = (bool) v8check_bounds->ToBoolean()->Value();
-            as_v8_detail(log, "info policy check bounds is set to %s", policy->check_bounds ? "true" : "false");
-        }
-        else {
-            as_v8_error(log, "check_bounds should be a boolean object");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-
-    return  AS_NODE_PARAM_OK;
-}
-
-int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log)
-{
-    if( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    as_v8_detail(log, "Timeout in admin policy is set to %d", policy->timeout);
-    return AS_NODE_PARAM_OK;
-}
-
-int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_operate_init( policy);
-
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    return AS_NODE_PARAM_OK;
-}
-
-int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_batch_init(policy);
-
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    return AS_NODE_PARAM_OK;
-}
-
-int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_remove_init(policy);
-
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    // only remove policy object has generation field, so directly look up
-    // the generation field in "obj" argument and set the generation value in policy structure.
-    if ( obj->Has(Nan::New("generation").ToLocalChecked()) ) {
-        Local<Value> v8gen = obj->Get(Nan::New("generation").ToLocalChecked());
-        if ( v8gen->IsNumber() ) {
-            policy->generation = (uint16_t) v8gen->IntegerValue();
-            as_v8_detail(log, "Generation value %d ", policy->generation);
-        }
-        else {
-            as_v8_error(log, "Generation should be an integer");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-    else {
-        as_v8_detail(log,"Remove policy does not have generation value");
-    }
-
-    if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    return AS_NODE_PARAM_OK;
-}
-
-int readpolicy_from_jsobject(as_policy_read* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_read_init( policy );
-
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setReplicaPolicy( obj, &policy->replica, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setConsistencyLevelPolicy( obj, &policy->consistency_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    as_v8_detail(log, "Parsing read policy : success");
-
-    return AS_NODE_PARAM_OK;
-}
-
-int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_write_init( policy );
-
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setGenPolicy( obj, &policy->gen, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setRetryPolicy( obj, &policy->retry, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setCompressionThresholdPolicy( obj, &policy->compression_threshold, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setExistsPolicy( obj, &policy->exists, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    as_v8_detail(log, "Parsing write policy : success");
-    return AS_NODE_PARAM_OK;
-}
-
-int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_apply_init( policy);
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setKeyPolicy( obj, &policy->key, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setCommitLevelPolicy( obj, &policy->commit_level, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setTtlPolicy( obj, &policy->ttl, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    as_v8_detail( log, "Parsing apply policy : success");
-
-    return AS_NODE_PARAM_OK;
-}
-
-int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log)
-{
-
-    as_policy_query_init( policy);
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    as_v8_detail( log, "Parsing query policy : success");
-
-    return AS_NODE_PARAM_OK;
-}
-
-int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log)
-{
-    as_policy_scan_init( policy);
-    if ( setTimeOut( obj, &policy->timeout, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-    if ( setDurableDeletePolicy( obj, &policy->durable_delete, log) != AS_NODE_PARAM_OK) return AS_NODE_PARAM_ERR;
-
-    if ( obj->Has(Nan::New("failOnClusterChange").ToLocalChecked()) ) {
-        Local<Value> failOnClusterChange = obj->Get(Nan::New("failOnClusterChange").ToLocalChecked());
-        if ( failOnClusterChange->IsBoolean() ) {
-            policy->fail_on_cluster_change = (bool) failOnClusterChange->ToBoolean()->Value();
-            as_v8_detail(log,"scan policy fail on cluster change is set to %s", policy->fail_on_cluster_change ? "true":"false");
-        }
-        else {
-            as_v8_error(log, "failOnClusterChange should be a boolean object");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-
-    as_v8_detail( log, "Parsing scan policy : success");
-    return AS_NODE_PARAM_OK;
-}
-
 Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
