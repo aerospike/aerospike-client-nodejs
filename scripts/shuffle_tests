@@ -14,9 +14,9 @@ RANDOM_SEED=${RANDOM_SEED:-$RANDOM}
 shuffle () {
   awk -v Seed=$RANDOM_SEED 'BEGIN { if (Seed) { srand(Seed) } else { srand() }; OFMT="%.17f"} {print rand(), $0}' "$@" | sort -k1,1n | cut -d ' ' -f2-
 }
-echo "Running tests in randomized order. Use RANDOM_SEED=$RANDOM_SEED to reproduce."
+echo "Running tests in randomized order. Use RANDOM_SEED=${RANDOM_SEED} to reproduce."
 tests=`ls test/*.js | shuffle`
 mocha $tests
 success=$?
-echo "Tests executed in randomized order. Use RANDOM_SEED=$RANDOM_SEED to reproduce."
+echo "Tests executed in randomized order. Use RANDOM_SEED=${RANDOM_SEED} to reproduce."
 exit $success
