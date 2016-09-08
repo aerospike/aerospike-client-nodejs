@@ -25,7 +25,9 @@
       'sources': [
         'src/main/aerospike.cc',
         'src/main/client.cc',
+        'src/main/config.cc',
         'src/main/operations.cc',
+        'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/async.cc',

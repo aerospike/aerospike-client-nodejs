@@ -23,6 +23,7 @@
 #include "client.h"
 #include "async.h"
 #include "conversions.h"
+#include "policy.h"
 #include "log.h"
 
 extern "C" {

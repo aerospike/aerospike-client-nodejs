@@ -25,7 +25,6 @@ extern "C" {
 	#include <aerospike/aerospike.h>
 	#include <aerospike/aerospike_key.h>
 	#include <aerospike/aerospike_batch.h>
-	#include <aerospike/as_config.h>
 	#include <aerospike/as_job.h>
 	#include <aerospike/as_key.h>
 	#include <aerospike/as_record.h>
@@ -62,6 +61,18 @@ __err.func = __func__;
 bool is_double_value(Local<Value> value);
 double double_value(Local<Value> value);
 
+// Utility functions to extract property values from V8 Object instances
+int get_list_property(as_list** list, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_bool_property(bool* boolp, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_asval_property(as_val** value, Local<Object> obj, const char* prop, const LogInfo* log);
+int get_string_property(char** strp, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_optional_asval_property(as_val** value, bool* defined, Local<Object> obj, const char* prop, const LogInfo* log);
+int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_optional_int64_property(int64_t* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log);
+int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log);
+
 // Functions to convert C client structure to v8 object(map)
 Local<Object> error_to_jsobject(as_error* error, const LogInfo* log);
 Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log);
@@ -73,7 +84,6 @@ Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log);
 Local<Object> jobinfo_to_jsobject(const as_job_info* info, const LogInfo* log);
 
 // Functions to convert v8 objects(maps) to C client structures
-int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log);
 int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const LogInfo* log);
 int log_from_jsobject(LogInfo* log, Local<Object> obj);
 int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log);
@@ -93,19 +103,6 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
 bool record_clone(const as_record* src, as_record** dest, const LogInfo* log);
 bool key_clone(const as_key* src, as_key** dest, const LogInfo* log, bool alloc_key = true );
 as_val* asval_clone(const as_val* val, const LogInfo* log);
-
-// Functions to convert v8 policies to C structures
-int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const LogInfo* log );
-int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj, const LogInfo* log );
-int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, const LogInfo* log );
-int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const LogInfo* log );
-int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, const LogInfo* log );
-int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log );
-int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log);
-int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log);
-int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log);
-int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log);
-
 
 // Functions to set metadata of the record.
 int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log);

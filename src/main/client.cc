@@ -17,6 +17,7 @@
 #include <node.h>
 #include "client.h"
 #include "conversions.h"
+#include "config.h"
 #include "log.h"
 
 extern "C" {
