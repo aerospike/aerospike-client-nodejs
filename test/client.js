@@ -57,7 +57,7 @@ describe('Client', function () {
       before(function () { orig = client.as_client.isConnected })
       after(function () { client.as_client.isConnected = orig })
 
-      it("calls the Aerospike C client libraries' isConnected() method", function (done) {
+      it("calls the Aerospike C client library's isConnected() method", function (done) {
         client.connect(function () {
           var tenderHealthCheck = false
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
