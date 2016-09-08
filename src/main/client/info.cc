@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 Aerospike Inc.
+ * Copyright 2013-2016 Aerospike Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -20,17 +20,15 @@
  * IN THE SOFTWARE.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_info.h>
-}
-
-#include <node.h>
-
 #include "client.h"
 #include "async.h"
 #include "conversions.h"
 #include "log.h"
+
+extern "C" {
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_info.h>
+}
 
 #define INFO_REQUEST_LEN  50
 

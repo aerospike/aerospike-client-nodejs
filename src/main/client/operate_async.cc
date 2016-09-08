@@ -14,10 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <node.h>
-
-#include "async.h"
 #include "client.h"
+#include "async.h"
 #include "conversions.h"
 #include "operations.h"
 #include "log.h"

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <node.h>
 #include <cstdlib>
 #include <unistd.h>
+#include "client.h"
 
 extern "C" {
 	#include <aerospike/aerospike.h>
@@ -34,8 +35,6 @@ extern "C" {
 	#include <aerospike/as_list.h>
 	#include <citrusleaf/cf_queue.h>
 }
-
-#include "client.h"
 
 using namespace v8;
 

@@ -14,6 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <node.h>
+#include "client.h"
+#include "conversions.h"
+#include "log.h"
+
 extern "C" {
 	#include <aerospike/aerospike.h>
 	#include <aerospike/aerospike_key.h>
@@ -22,12 +27,6 @@ extern "C" {
 	#include <aerospike/as_record.h>
 	#include <aerospike/as_log.h>
 }
-
-#include <unistd.h>
-#include <node.h>
-#include "client.h"
-#include "conversions.h"
-#include "log.h"
 
 
 /*******************************************************************************

@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2013-2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,16 @@
 
 #pragma once
 
+#define __STDC_LIMIT_MACROS
+
+#include <stdint.h>
 #include <node.h>
 #include <nan.h>
 #include "log.h"
+
+extern "C" {
+	#include <aerospike/aerospike.h>
+}
 
 #if NODE_MODULE_VERSION > 0x000B
 #  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
@@ -35,10 +42,6 @@
 
 #define UDF_MAX_MODULE_NAME 255
 #define UDF_MAX_FUNCTION_NAME 255
-
-extern "C" {
-	#include <aerospike/aerospike.h>
-}
 
 using namespace node;
 using namespace v8;

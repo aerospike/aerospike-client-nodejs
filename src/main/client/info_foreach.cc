@@ -20,17 +20,15 @@
  * IN THE SOFTWARE.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_info.h>
-}
-
-#include <node.h>
-
 #include "client.h"
 #include "async.h"
 #include "conversions.h"
 #include "log.h"
+
+extern "C" {
+	#include <aerospike/aerospike.h>
+	#include <aerospike/aerospike_info.h>
+}
 
 #define INFO_REQUEST_LEN  50
 

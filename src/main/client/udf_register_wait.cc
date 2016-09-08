@@ -14,6 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include "client.h"
+#include "async.h"
+#include "conversions.h"
+#include "log.h"
+
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/aerospike_udf.h>
@@ -21,15 +26,6 @@ extern "C" {
     #include <aerospike/as_config.h>
     #include <aerospike/as_string.h>
 }
-
-#include <node.h>
-#include <cstdlib>
-#include <unistd.h>
-
-#include "client.h"
-#include "async.h"
-#include "conversions.h"
-#include "log.h"
 
 #define FILESIZE 255
 
