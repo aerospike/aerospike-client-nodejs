@@ -1,12 +1,29 @@
-v2.4.0 / XXX
+v2.4.0 / 2016-09-09
 ===================
 
 * **New Features**
-  * Support for durable delete write policy [CLIENT-769]; requires Aerospike server v3.10 or later.
+  * Support for durable delete write policy [CLIENT-769]; requires Aerospike
+    Server Enterprise Edition v3.10 or later.
+  * Support IPv6 socket protocol; requires Aerospike Server v3.10 or later.
+  * Support Cluster ID verification; requires Aerospike Server v3.10 or later.
+  * Support new peers info protocol; requires Aerospike Server v3.10 or later.
+  * Support TLS 1.2 secure socket protocol; requires future Aerospike Server release.
+  * New [Client#infoAny](http://www.aerospike.com/apidocs/nodejs/Client.html#infoAny)
+    command to send info request to single cluster node.
 
 * **Improvements**
   * Add support for two new server error codes (23 & 24) introduced in Aerospike Server v3.9.1.
   * Regression: Skip LDT and CDT Map tests if server does not support the feature [CLIENT-753]
+
+* **Changes**
+  * Update C client library to [v4.1.0](http://www.aerospike.com/download/client/c/notes.html#4.1.0).
+  * Shared memory layout has changed in v4.1.0 of the C client library. See
+    [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-240)
+    for more details.
+  * The <code>retry<code> policy value for read, write, remove and operate
+    policies has been deprecated as it does not actually affect single key
+    read/write commands, the batch read command or query/scan commands in
+    client versions v2.x.
 
 v2.3.1 / 2016-08-11
 ===================

@@ -1,5 +1,38 @@
 # Backward Incompatible API Changes
 
+## Version 2.4.0
+
+### Shared Memory Layout Changes
+
+Multiple client instances running in separate processes on the same machine can
+use shared memory to share cluster status, including nodes and data partition
+maps. See [sharedMemory config](http://www.aerospike.com/apidocs/nodejs/Config.html#sharedMemory)
+for more information.
+
+In v4.1.0 of the Aerospike C client library, which is included in v2.4.0 of the
+Aerospike Node.js client, the shared memory layout has changed. The default
+shm_key config has changed to 0xA6000000 so old client applications do not mix
+shared memory with new client applications. If you are using shared memory
+clients with a custom shm_key, it's critical that this key changes when
+upgrading to v2.4.0 of the Aerospike Node.js client.
+
+### Deprecations
+
+| Deprecated Function          | Replacement                                    | Remarks                                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `InfoPolicy#send_as_is`      | `InfoPolicy#sendAsIs`                          | -                                           |
+| `InfoPolicy#check_bounds`    | `InfoPolicy#checkBounds`                       | -                                           |
+| `ReadPolicy#retry`           | -                                              | -                                           |
+| `WritePolicy#retry`          | -                                              | -                                           |
+| `RemovePolicy#retry`         | -                                              | -                                           |
+| `OperatePolicy#retry`        | -                                              | -                                           |
+
+*Notes:*
+
+* The `retry` policy value for read, write, remove and operate policies
+  has not been effective for any single key read/write commands, the batch read
+  command or query/scan commands in client versions v2.x.
+
 ## Version 2.1.0
 
 ### New modules for Scalar, List & Map operations
