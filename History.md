@@ -20,7 +20,7 @@ v2.4.0 / 2016-09-09
   * Shared memory layout has changed in v4.1.0 of the C client library. See
     [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-240)
     for more details.
-  * The <code>retry<code> policy value for read, write, remove and operate
+  * The <code>retry</code> policy value for read, write, remove and operate
     policies has been deprecated as it does not actually affect single key
     read/write commands, the batch read command or query/scan commands in
     client versions v2.x.
