@@ -15,7 +15,7 @@ v2.4.0 / 2016-09-09
   * Add support for two new server error codes (23 & 24) introduced in Aerospike Server v3.9.1.
   * Regression: Skip LDT and CDT Map tests if server does not support the feature [CLIENT-753]
 
-* **Changes**
+* **Updates**
   * Update C client library to [v4.1.0](http://www.aerospike.com/download/client/c/notes.html#4.1.0).
   * Shared memory layout has changed in v4.1.0 of the C client library. See
     [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-240)
