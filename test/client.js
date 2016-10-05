@@ -68,10 +68,10 @@ describe('Client', function () {
       })
     })
 
-    context('cluster ID', function () {
-      it('should fail to connect to the cluster if the cluster ID does not match', function (done) {
+    context('cluster name', function () {
+      it('should fail to connect to the cluster if the cluster name does not match', function (done) {
         var config = extend({}, helper.config)
-        config.clusterID = 'notAValidClusterId'
+        config.clusterName = 'notAValidClusterName'
         client = new Client(config)
 
         client.connect(function (err) {

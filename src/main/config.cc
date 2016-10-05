@@ -38,12 +38,12 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	bool defined;
 	int rc;
 
-	char* cluster_id;
-	if ((rc = get_optional_string_property(&cluster_id, &defined, configObj, "clusterID", log)) != AS_NODE_PARAM_OK) {
+	char* cluster_name;
+	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj, "clusterName", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	} else if (defined) {
-		as_v8_detail(log, "Setting cluster ID: \"%s\"", cluster_id);
-		as_config_set_cluster_id(config, cluster_id);
+		as_v8_detail(log, "Setting Cluster Name: \"%s\"", cluster_name);
+		as_config_set_cluster_name(config, cluster_name);
 	}
 
 	uint32_t default_port = DEFAULT_PORT;
