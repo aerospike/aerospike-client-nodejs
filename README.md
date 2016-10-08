@@ -10,7 +10,7 @@
 An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js v0.12.x, io.js, v4.x, v5.x, v6.x and supports the following operating systems:
-CentOS/RHEL 6.x, Debian 7/8, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and Mac OS X.
+CentOS/RHEL 6+, Debian 7/8, Ubuntu 12.04+, Fedora 20+, Korora 22+, Linuxmint and Mac OS X.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -121,7 +121,7 @@ The package has the following compile time/run time dependencies:
 
 Note: Lua is used for query aggregation. If the application is not using the aggregation feature, lua installation can be skipped.
 
-### CentOS/RHEL 6.x
+### CentOS/RHEL 6+
 
 To install library prerequisites via `yum`:
 
