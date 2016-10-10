@@ -1,4 +1,4 @@
-HEAD
+v2.4.1 / 2016-10-10
 ===================
 
 * **Bug Fixes**
@@ -6,6 +6,9 @@ HEAD
 
 * **Changes**
   * Renamed Cluster ID to Cluster Name; Cluster Name verification requires Aerospike Server v3.10 or later.
+
+* **Updates**
+  * Update C client library to [v4.1.1](http://www.aerospike.com/download/client/c/notes.html#4.1.1).
 
 v2.4.0 / 2016-09-09
 ===================
