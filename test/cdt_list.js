@@ -244,7 +244,8 @@ describe('client.operate() - CDT List operations', function () {
     })
   })
 
-  describe('lists.increment', function () {
+  // pending server-side support for list increment operation [AER-5149]
+  describe.skip('lists.increment', function () {
     it('increments the element at the specified index and returns the final value', function (done) {
       var record = { list: [1, 2, 3, 4, 5] }
       var operation = lists.increment('list', 1, 3)
