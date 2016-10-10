@@ -4,6 +4,9 @@ HEAD
 * **New Features**
   * Added list increment operator [AER-5149]
 
+* **Bug Fixes**
+  * Fix write operator to support double values. [#148](https://github.com/aerospike/aerospike-client-nodejs/issues/148) Thanks to [@OlegPoberegets](https://github.com/OlegPoberegets)!
+
 * **Changes**
   * Renamed Cluster ID to Cluster Name; Cluster Name verification requires Aerospike Server v3.10 or later.
 

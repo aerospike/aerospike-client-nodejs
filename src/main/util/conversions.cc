@@ -736,9 +736,13 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, cons
 
 bool instanceof(Local<Value> value, const char * type)
 {
-    Local<String> ctor_name = value->ToObject()->GetConstructorName();
-    String::Utf8Value cn(ctor_name);
-    return 0 == strncmp(*cn, type, strlen(type));
+	if (value->IsObject()) {
+		Local<String> ctor_name = value->ToObject()->GetConstructorName();
+		String::Utf8Value cn(ctor_name);
+		return 0 == strncmp(*cn, type, strlen(type));
+	} else {
+		return false;
+	}
 }
 
 /**

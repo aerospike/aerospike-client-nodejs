@@ -94,7 +94,13 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_v8_detail(log, "write operation on bin : %s", binName);
 
 	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
-	if (v8val->IsNumber()) {
+	if (is_double_value(v8val)) {
+		double val = double_value(v8val);
+		as_v8_detail(log, "double value to be written %f", val);
+		as_operations_add_write_double(ops, binName, val);
+		if (binName != NULL) free(binName);
+		return AS_NODE_PARAM_OK;
+	} else if (v8val->IsNumber()) {
 		int64_t val = v8val->IntegerValue();
 		as_v8_detail(log, "integer value to be written %d", val);
 		as_operations_add_write_int64(ops, binName, val);

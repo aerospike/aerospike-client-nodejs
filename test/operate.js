@@ -31,8 +31,34 @@ describe('client.operate()', function () {
   var client = helper.client
 
   describe('operations.write()', function () {
+    it('should write a bin with a double value', function (done) {
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/op.write/double'})()
+
+      client.put(key, { bin1: 1.23, bin2: new Double(1.0) }, function (err) {
+        if (err) throw err
+        var ops = [
+          op.write('bin1', 2.34),
+          op.write('bin2', new Double(2.0))
+        ]
+
+        client.operate(key, ops, function (err, result) {
+          if (err) throw err
+
+          client.get(key, function (err, record) {
+            if (err) throw err
+            expect(record).to.eql({ bin1: 2.34, bin2: 2.0 })
+
+            client.remove(key, function (err) {
+              if (err) throw err
+              done()
+            })
+          })
+        })
+      })
+    })
+
     it('should delete a bin by writing null to it', function (done) {
-      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/incr/int'})()
+      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/op.write/null'})()
 
       client.put(key, {bin1: 123, bin2: 456}, function (err) {
         if (err) throw err
