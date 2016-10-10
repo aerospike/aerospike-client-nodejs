@@ -102,7 +102,7 @@ client.connect(function (err) {
     logger.error('Aerospike server connection error: ', err)
     process.exit(1)
   } else {
-    logger.info('worker connected: ' + client.config.hosts.map(function (host) { return host.addr + ':' + host.port }))
+    logger.info('worker connected: ' + client.config.hosts)
   }
 })
 

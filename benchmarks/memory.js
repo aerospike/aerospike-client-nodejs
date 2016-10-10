@@ -45,7 +45,6 @@ var TABLE_STYLE = {
   'compact': true
 }
 
-var RANGE_COUNT = 0
 var ITERATION_COUNT = 0
 
 var memCnt = 0
@@ -287,7 +286,6 @@ function readline (line) {
     memMin = mem
     memMax = mem
     memCnt = 0
-    RANGE_COUNT++
   }
 
   ITERATION_COUNT++
