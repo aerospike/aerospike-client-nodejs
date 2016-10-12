@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Runs tests cases in a randomized order to help detect interdependencies between tests.
 # npm test is setup to run the tests via this script.
 # To re-run test cases in the same order as during some previous iteration,
