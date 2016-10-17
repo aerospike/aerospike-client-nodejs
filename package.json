@@ -2,6 +2,9 @@
   "name": "aerospike",
   "version": "1.0.58",
   "description": "Aerospike Client Library",
+  "publishConfig": {
+    "tag": "maint10"
+  },
   "tags": [
     "aerospike",
     "database",
