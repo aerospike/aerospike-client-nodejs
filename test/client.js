@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global after, afterEach, before, beforeEach, context, expect, describe, it */
+/* global context, expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
@@ -23,27 +23,23 @@ const extend = require('util')._extend
 
 describe('Client', function () {
   describe('Client#isConnected', function () {
-    var client = null
-    beforeEach(function () {
-      client = new Client(helper.config)
-    })
-    afterEach(function () {
-      client.close(false)
-    })
-
     context('without tender health check', function () {
       it('returns false if the client is not connected', function () {
+        var client = new Client(helper.config)
         expect(client.isConnected(false)).to.be(false)
       })
 
       it('returns true if the client is connected', function (done) {
+        var client = new Client(helper.config)
         client.connect(function () {
           expect(client.isConnected(false)).to.be(true)
+          client.close(false)
           done()
         })
       })
 
       it('returns false after the connection is closed', function (done) {
+        var client = new Client(helper.config)
         client.connect(function () {
           client.close(false)
           expect(client.isConnected(false)).to.be(false)
@@ -53,31 +49,31 @@ describe('Client', function () {
     })
 
     context('with tender health check', function () {
-      var orig = null
-      before(function () { orig = client.as_client.isConnected })
-      after(function () { client.as_client.isConnected = orig })
-
       it("calls the Aerospike C client library's isConnected() method", function (done) {
+        var client = new Client(helper.config)
+        var orig = client.as_client.isConnected
         client.connect(function () {
           var tenderHealthCheck = false
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
           expect(client.isConnected(true)).to.be(false)
           expect(tenderHealthCheck).to.be(true)
+          client.as_client.isConnected = orig
+          client.close(false)
           done()
         })
       })
     })
+  })
 
-    context('cluster name', function () {
-      it('should fail to connect to the cluster if the cluster name does not match', function (done) {
-        var config = extend({}, helper.config)
-        config.clusterName = 'notAValidClusterName'
-        client = new Client(config)
-
-        client.connect(function (err) {
-          expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
-          done()
-        })
+  context('cluster name', function () {
+    it('should fail to connect to the cluster if the cluster name does not match', function (done) {
+      var config = extend({}, helper.config)
+      config.clusterName = 'notAValidClusterName'
+      var client = new Client(config)
+      client.connect(function (err) {
+        expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+        client.close(false)
+        done()
       })
     })
   })
