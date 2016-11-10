@@ -15,7 +15,6 @@
 # limitations under the License.
 ################################################################################
 
-AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'4.1.1'}
 
 ################################################################################
 #
@@ -26,6 +25,9 @@ AEROSPIKE_C_VERSION=${AEROSPIKE_C_VERSION:-'4.1.1'}
 
 CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
+BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
+INIFILE=${BASE_DIR}/aerospike-client-c.ini
+CHECKSUMS=${BASE_DIR}/aerospike-client-c.sha256
 AEROSPIKE=${CWD}/aerospike-client-c
 LIB_PATH=${PREFIX}
 LUA_PATH=${AEROSPIKE_LUA_PATH}
@@ -33,7 +35,9 @@ LUA_PATH=${AEROSPIKE_LUA_PATH}
 DOWNLOAD=${DOWNLOAD:=0}
 COPY_FILES=1
 
-unset PKG_TYPE
+unset PKG_TYPE PKG_VERSION PKG_SUFFIX PKG_ARTIFACT
+
+source ${INIFILE}
 
 
 ################################################################################
@@ -47,26 +51,34 @@ has_cmd() {
 }
 
 download() {
-  mkdir -p ${AEROSPIKE}/package
+  DOWNLOAD_DIR=${AEROSPIKE}/package
+  mkdir -p ${DOWNLOAD_DIR}
 
-  URL="http://artifacts.aerospike.com/aerospike-client-c/${AEROSPIKE_C_VERSION}/${PKG_ARTIFACT}"
+  URL="https://artifacts.aerospike.com/aerospike-client-c/${AEROSPIKE_C_VERSION}/${PKG_ARTIFACT}"
 
-  printf "info: downloading '%s' to '%s'\n" "${URL}" "${AEROSPIKE}/package/${PKG_ARTIFACT}"
+  printf "info: downloading '%s' to '%s'\n" "${URL}" "${DOWNLOAD_DIR}/${PKG_ARTIFACT}"
 
   if has_cmd curl; then
-    curl -L ${URL} > ${AEROSPIKE}/package/${PKG_ARTIFACT}
+    curl -L ${URL} > ${DOWNLOAD_DIR}/${PKG_ARTIFACT}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
     fi
   elif has_cmd wget; then
-    wget -O ${AEROSPIKE}/package/${PKG_ARTIFACT} ${URL}
+    wget -O ${DOWNLOAD_DIR}/${PKG_ARTIFACT} ${URL}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${URL}'"
       exit 1
     fi
   else
     echo "error: Not able to find 'curl' or 'wget'. Either is required to download the package."
+    exit 1
+  fi
+
+  if (cd ${DOWNLOAD_DIR}; grep ${PKG_ARTIFACT} ${CHECKSUMS} | sha256sum -c - >/dev/null 2>&1); then
+    printf "info: verifying checksum for '%s': OK\n" "${PKG_ARTIFACT}"
+  else
+    printf "error: invalid checksum for '%s'\n" "${PKG_ARTIFACT}"
     exit 1
   fi
 
@@ -115,6 +127,9 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   # DETECT OPERATING ENVIRONMENT
   ##############################################################################
 
+  PKG_VERSION=${AEROSPIKE_C_VERSION}
+  PKG_BUILD="${AEROSPIKE_C_FLAVOR:+-$AEROSPIKE_C_FLAVOR}-devel"
+
   sysname=$(uname | tr '[:upper:]' '[:lower:]')
 
   case ${sysname} in
@@ -131,22 +146,22 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
 
       case $PKG_DIST in
         "el"* )
-          RPM_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
-          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${RPM_VERSION}.${PKG_DIST}.x86_64.rpm"
+          PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
+          PKG_SUFFIX="${PKG_DIST}.x86_64.rpm"
           PKG_TYPE="rpm"
           ;;
         "debian"* )
-          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${PKG_DIST}.x86_64.deb"
+          PKG_SUFFIX="${PKG_DIST}.x86_64.deb"
           PKG_TYPE="deb"
           ;;
         "ubuntu"* )
           OS_VERSION_LONG=$($SCRIPT_DIR/os_version -long)
-          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.${OS_VERSION_LONG}.x86_64.deb"
+          PKG_SUFFIX="${OS_VERSION_LONG}.x86_64.deb"
           PKG_TYPE="deb"
           ;;
         "ami"* )
-          RPM_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
-          PKG_ARTIFACT="aerospike-client-c-libuv-devel-${RPM_VERSION}.el6.x86_64.rpm"
+          PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
+          PKG_SUFFIX="$el6.x86_64.rpm"
           PKG_TYPE="rpm"
           ;;
         * )
@@ -154,6 +169,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           exit 1
           ;;
       esac
+
+      PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.${PKG_SUFFIX}"
 
       LIB_PATH=${AEROSPIKE}/package/usr
       LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
@@ -163,7 +180,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # MAC OS X
     ############################################################################
     "darwin" )
-      PKG_ARTIFACT="aerospike-client-c-libuv-devel-${AEROSPIKE_C_VERSION}.pkg"
+      PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.pkg"
       PKG_TYPE="pkg"
       LIB_PATH=${AEROSPIKE}/package/usr/local
       LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
