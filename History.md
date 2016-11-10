@@ -1,3 +1,13 @@
+v2.4.2 / 2016-11-10
+===================
+
+* **New Features**
+  * Added constant enums `Aerospike.ttl` for "special" TTL values, incl. `DONT_UPDATE` value supported by Aerospike Server v3.10.1 and later.
+
+* **Bug Fixes**
+  * Security Fix: Download C client using HTTPS and verify package checksum. [#153](https://github.com/aerospike/aerospike-client-nodejs/issues/153) Thanks to [Adam Baldwin](https://github.com/evilpacket) of [@liftsecurity](https://github.com/liftsecurity) for the report!
+  * Support for Ubuntu 16.10/17.04 in the C client download script. [#154](https://github.com/aerospike/aerospike-client-nodejs/issues/154) Thanks to [@kitex](https://github.com/kitex)!
+
 v2.4.1 / 2016-10-10
 ===================
 
