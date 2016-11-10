@@ -66,6 +66,7 @@
         'src/main/enums/scanPriority.cc',
         'src/main/enums/job_status.cc',
         'src/main/enums/udf_languages.cc',
+        'src/main/enums/ttl.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
       ],

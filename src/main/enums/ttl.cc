@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2014 Aerospike, Inc.
+ * Copyright 2016 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,19 @@
  * limitations under the License.
  ******************************************************************************/
 
-#pragma once
-
-#include <nan.h>
 #include <node.h>
-#include "client.h"
+#include "enums.h"
 
 using namespace v8;
 
-Local<Object> generation_policy_values();
-Local<Object> indexDataType();
-Local<Object> indexType();
-Local<Object> jobStatus();
-Local<Object> key_policy_values();
-Local<Object> languages();
-Local<Object> log();
-Local<Object> map_enum_values();
-Local<Object> opcode_values();
-Local<Object> policy();
-Local<Object> predicates();
-Local<Object> retry_policy_values();
-Local<Object> scanPriority();
-Local<Object> status();
-Local<Object> ttl_enum_values();
+#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+
+Local<Object> ttl_enum_values()
+{
+    Nan::EscapableHandleScope scope;
+    Local<Object> obj = Nan::New<Object>();
+    set(obj, "NAMESPACE_DEFAULT", 0);
+    set(obj, "NEVER_EXPIRE", -1);
+    set(obj, "DONT_UPDDATE", -2);
+    return scope.Escape(obj);
+}

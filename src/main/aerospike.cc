@@ -95,6 +95,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	export("operations",				opcode_values());
 	export("policy",					policy());
 	export("status",					status());
+	export("ttl",						ttl_enum_values());
 }
 
 NODE_MODULE(aerospike, Aerospike)
