@@ -154,9 +154,16 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           PKG_SUFFIX="${PKG_DIST}.x86_64.deb"
           PKG_TYPE="deb"
           ;;
+        "ubuntu12" )
+          PKG_SUFFIX="ubuntu12.04.x86_64.deb"
+          PKG_TYPE="deb"
+          ;;
+        "ubuntu14" )
+          PKG_SUFFIX="ubuntu14.04.x86_64.deb"
+          PKG_TYPE="deb"
+          ;;
         "ubuntu"* )
-          OS_VERSION_LONG=$($SCRIPT_DIR/os_version -long)
-          PKG_SUFFIX="${OS_VERSION_LONG}.x86_64.deb"
+          PKG_SUFFIX="ubuntu16.04.x86_64.deb"
           PKG_TYPE="deb"
           ;;
         "ami"* )
