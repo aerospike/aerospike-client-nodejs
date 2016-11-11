@@ -34,6 +34,7 @@ LUA_PATH=${AEROSPIKE_LUA_PATH}
 
 DOWNLOAD=${DOWNLOAD:=0}
 COPY_FILES=1
+DOWNLOAD_DIR=${AEROSPIKE}/package
 
 unset PKG_TYPE PKG_VERSION PKG_SUFFIX PKG_ARTIFACT
 
@@ -50,35 +51,57 @@ has_cmd() {
   hash "$1" 2> /dev/null
 }
 
+verify_checksum() {
+  artifact=$1
+  dir=$2
+  checksums=$3
+  binary=${dir}/${artifact}
+  expected=$(grep ${artifact} ${checksums} | cut -d" " -f1)
+
+  if has_cmd sha256sum; then
+    actual=$(sha256sum $binary | cut -d" " -f1)
+  elif has_cmd openssl; then
+    actual=$(openssl dgst -sha256 $binary | cut -d" " -f2)
+  else
+    echo "error: Not able to verify download. Either 'sha256sum' or 'openssl' are required."
+    exit 1
+  fi
+
+  if [ $actual = $expected ]; then
+    printf "info: verifying checksum for '%s': OK\n" "${artifact}"
+  else
+    printf "error: invalid checksum for '%s'\n" "${artifact}"
+    exit 1
+  fi
+
+  return 0
+}
+
 download() {
-  DOWNLOAD_DIR=${AEROSPIKE}/package
-  mkdir -p ${DOWNLOAD_DIR}
+  artifact=$1
+  version=$2
+  dest_dir=$3
+  dest="${dest_dir}/${artifact}"
 
-  URL="https://artifacts.aerospike.com/aerospike-client-c/${AEROSPIKE_C_VERSION}/${PKG_ARTIFACT}"
+  mkdir -p ${dest_dir}
 
-  printf "info: downloading '%s' to '%s'\n" "${URL}" "${DOWNLOAD_DIR}/${PKG_ARTIFACT}"
+  url="https://artifacts.aerospike.com/aerospike-client-c/${version}/${artifact}"
+  printf "info: downloading '%s' to '%s'\n" "${url}" "${dest}"
 
   if has_cmd curl; then
-    curl -L ${URL} > ${DOWNLOAD_DIR}/${PKG_ARTIFACT}
+    curl -L ${url} > ${dest}
     if [ $? != 0 ]; then
-      echo "error: Unable to download package from '${URL}'"
+      echo "error: Unable to download package from '${url}'"
       exit 1
     fi
   elif has_cmd wget; then
-    wget -O ${DOWNLOAD_DIR}/${PKG_ARTIFACT} ${URL}
+    wget -O ${dest} ${url}
     if [ $? != 0 ]; then
-      echo "error: Unable to download package from '${URL}'"
+      echo "error: Unable to download package from '${url}'"
       exit 1
     fi
   else
     echo "error: Not able to find 'curl' or 'wget'. Either is required to download the package."
-    exit 1
-  fi
-
-  if (cd ${DOWNLOAD_DIR}; grep ${PKG_ARTIFACT} ${CHECKSUMS} | sha256sum -c - >/dev/null 2>&1); then
-    printf "info: verifying checksum for '%s': OK\n" "${PKG_ARTIFACT}"
-  else
-    printf "error: invalid checksum for '%s'\n" "${PKG_ARTIFACT}"
     exit 1
   fi
 
@@ -227,7 +250,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       printf "warning: If you would like to download a new package please remove\n"
       printf "warning: the package file.\n"
     else
-      download
+      download ${PKG_ARTIFACT} ${AEROSPIKE_C_VERSION} ${DOWNLOAD_DIR}
+      verify_checksum ${PKG_ARTIFACT} ${DOWNLOAD_DIR} ${CHECKSUMS}
     fi
 
     ##############################################################################
