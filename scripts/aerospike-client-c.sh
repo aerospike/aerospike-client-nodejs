@@ -191,7 +191,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           ;;
         "ami"* )
           PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
-          PKG_SUFFIX="$el6.x86_64.rpm"
+          PKG_SUFFIX="el6.x86_64.rpm"
           PKG_TYPE="rpm"
           ;;
         * )
