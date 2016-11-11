@@ -82,8 +82,8 @@
       },
       'variables': {
         'uselua': '<!(echo $USELUA)',
-        'isnode': '<!(which node > /dev/null 2> /dev/null; echo $?)',
-        'isnodejs': '<!(which nodejs > /dev/null 2> /dev/null; echo $?)'
+        'isnode': '<!(hash node 2> /dev/null; echo $?)',
+        'isnodejs': '<!(hash nodejs 2> /dev/null; echo $?)'
       },
       'defines': [
         'AS_USE_LIBUV'
