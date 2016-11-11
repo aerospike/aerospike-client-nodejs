@@ -76,7 +76,8 @@
       ],
       'link_settings': {
         'libraries': [
-          '../aerospike-client-c/lib/libaerospike.a'
+          '../aerospike-client-c/lib/libaerospike.a',
+          '-lz'
         ]
       },
       'variables': {
