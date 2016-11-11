@@ -1,3 +1,11 @@
+v2.4.3 / 2016-11-11
+===================
+
+* **Bug Fixes**
+  * Fix installation on macOS. [#155](https://github.com/aerospike/aerospike-client-nodejs/issues/155) Thanks to [@arch1t3ct](https://github.com/arch1t3ct)!
+  * Fix installation on platforms without `which` command.
+  * Explicity link zlib to fix usage on Alpine Linux. [#117](https://github.com/aerospike/aerospike-client-nodejs/issues/117) Thanks to [@rma4ok](https://github.com/rma4ok)!
+
 v2.4.2 / 2016-11-10
 ===================
 
