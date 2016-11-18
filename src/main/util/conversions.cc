@@ -673,7 +673,15 @@ Local<Object> recordmeta_to_jsobject(const as_record* record, const LogInfo* log
     }
 
     meta = Nan::New<Object>();
-    meta->Set(Nan::New("ttl").ToLocalChecked(), Nan::New((double)record->ttl));
+    Local<Number> ttl;
+    switch(record->ttl) {
+        case AS_RECORD_NO_EXPIRE_TTL:
+            ttl = Nan::New<Number>(TTL_NEVER_EXPIRE);
+            break;
+        default:
+            ttl = Nan::New<Number>(record->ttl);
+    }
+    meta->Set(Nan::New("ttl").ToLocalChecked(), ttl);
     as_v8_detail(log, "TTL of the record %d", record->ttl);
     meta->Set(Nan::New("gen").ToLocalChecked(), Nan::New(record->gen));
     as_v8_detail(log, "Gen of the record %d", record->gen);

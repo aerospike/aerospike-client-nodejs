@@ -20,6 +20,10 @@
 #include <node.h>
 #include "client.h"
 
+#define TTL_NAMESPACE_DEFAULT	0
+#define TTL_NEVER_EXPIRE		-1
+#define TTL_DONT_UPDATE			-2
+
 using namespace v8;
 
 Local<Object> generation_policy_values();

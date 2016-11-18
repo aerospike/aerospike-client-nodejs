@@ -1,3 +1,9 @@
+HEAD
+===================
+
+* **Bug Fixes**
+  * Fix TTL value returned from server for records that never expire. [#156](https://github.com/aerospike/aerospike-client-nodejs/issues/156)
+
 v2.4.3 / 2016-11-11
 ===================
 
