@@ -115,7 +115,7 @@ if (argv.help === true) {
 // *****************************************************************************
 
 var config = {
-  host: argv.host,
+  hosts: argv.host,
   log: {
     level: argv['log-level'],
     file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2

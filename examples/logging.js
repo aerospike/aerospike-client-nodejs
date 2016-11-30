@@ -188,7 +188,7 @@ function run (client, done) {
 // *****************************************************************************
 
 var config = {
-  host: argv.host,
+  hosts: argv.host,
   policies: {
     timeout: argv.timeout
   },
