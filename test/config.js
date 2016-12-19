@@ -45,8 +45,7 @@ describe('Config', function () {
         user: 'admin',
         password: 'sekret',
         sharedMemory: { key: 1234 },
-        modlua: { systemPath: '/system/path', userPath: '/user/path' },
-        tls: { enable: true, encryptOnly: true }
+        modlua: { systemPath: '/system/path', userPath: '/user/path' }
       }
       var config = new Config(obj)
       expect(config).to.have.property('clusterName')
@@ -59,7 +58,6 @@ describe('Config', function () {
       expect(config).to.have.property('password')
       expect(config).to.have.property('sharedMemory')
       expect(config).to.have.property('modlua')
-      expect(config).to.have.property('tls')
     })
 
     it('rejects invalid config properties', function () {

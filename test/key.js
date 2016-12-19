@@ -110,24 +110,27 @@ describe('Key', function () {
     context('plain object keys (for backward compatibility)', function () {
       var client = helper.client
 
-      it('accepts plain objects as user keys', function () {
+      it('accepts plain objects as user keys', function (done) {
         var key = {ns: helper.namespace, set: helper.set, key: 1234}
         client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM_ERROR)
+          expect(err).to.not.be.ok()
+          done()
         })
       })
 
-      it('returns an error for an unsupported float user key', function () {
+      it('returns an error for an unsupported float user key', function (done) {
         var key = {ns: helper.namespace, set: helper.set, key: 3.1415}
         client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM_ERROR)
+          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM)
+          done()
         })
       })
 
-      it('returns an error for an invalid user key', function () {
-        var key = {ns: helper.namespace, set: helper.set, key: 'a_string'}
+      it('returns an error for an invalid user key', function (done) {
+        var key = {ns: helper.namespace, set: helper.set, key: {a: 1, b: 2, c: 3}}
         client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be.ok()
+          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM)
+          done()
         })
       })
     })
