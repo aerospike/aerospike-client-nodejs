@@ -1,8 +1,12 @@
-HEAD
+v2.4.4 / 2016-12-19
 ===================
 
 * **Bug Fixes**
   * Fix TTL value returned from server for records that never expire. [#156](https://github.com/aerospike/aerospike-client-nodejs/issues/156)
+  * Add type checks for record keys and raise error when float keys are used. [#158](https://github.com/aerospike/aerospike-client-nodejs/issues/158)
+
+* **Documentation**
+  * Mark LargeList functionality as deprectated. [#159](https://github.com/aerospike/aerospike-client-nodejs/issues/159)
 
 v2.4.3 / 2016-11-11
 ===================
