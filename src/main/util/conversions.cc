@@ -1095,57 +1095,53 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     // All the v8 local variables have to declared before any of the goto
     // statements. V8 demands that.
 
-    if(obj->IsNull())
-    {
+    if(obj->IsNull()) {
         as_v8_error(log, "The key object passed is Null");
         goto ReturnError;
     }
 
     // get the namespace
-    if ( obj->Has(Nan::New("ns").ToLocalChecked()) ) {
+    if (obj->Has(Nan::New("ns").ToLocalChecked())) {
         Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
-        if ( ns_obj->IsString() ) {
+        if (ns_obj->IsString()) {
             strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
             as_v8_detail(log, "key.ns = \"%s\"", ns);
-            if ( strlen(ns) == 0 ) {
+            if (strlen(ns) == 0) {
                 as_v8_error(log, "The namespace has null string");
                 goto ReturnError;
             }
-        }
-        else {
+        } else {
             as_v8_error(log, "The namespace passed must be string");
             goto ReturnError;
         }
-    }
-    else {
+    } else {
         as_v8_error(log, "The key object should have an \"ns\" entry");
         goto ReturnError;
     }
 
     // get the set
-    if ( obj->Has(Nan::New("set").ToLocalChecked()) ) {
+    if (obj->Has(Nan::New("set").ToLocalChecked())) {
         Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
         //check if set is string or a null value.
-        if ( set_obj->IsString() ) {
+        if (set_obj->IsString()) {
             strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
             as_v8_detail(log,"key.set = \"%s\"", set);
-            if ( strlen(set) == 0 ) {
+            if (strlen(set) == 0) {
                 as_v8_debug(log, "Set passed is empty string");
             }
         }
         // null value for set is valid in a key. Any value other than null and string is not
         // acceptable for set
-        else if( !set_obj->IsNull()){
+        else if (!set_obj->IsNull()) {
             as_v8_error(log, "The set in the key must be a key");
             goto ReturnError;
         }
     }
 
     // get the value
-    if ( obj->Has(Nan::New("key").ToLocalChecked()) ) {
+    if (obj->Has(Nan::New("key").ToLocalChecked())) {
         Local<Value> val_obj = obj->Get(Nan::New("key").ToLocalChecked());
-        if(val_obj->IsNull())
-        {
+        if (val_obj->IsNull()) {
             as_v8_error(log, "The key entry must not be null");
             goto ReturnError;
         }
@@ -1160,6 +1156,9 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
             as_key_init(key, ns, set, value);
             as_v8_detail(log, "key.key = \"%s\"", value);
             ((as_string *) key->valuep)->free = true;
+        } else if (is_double_value(val_obj)) {
+            as_v8_error(log, "Invalid key type - only string, integer and Buffer are supported");
+            goto ReturnError;
         } else if (val_obj->IsNumber()) {
             int64_t value = val_obj->IntegerValue();
             as_key_init_int64(key, ns, set, value);
@@ -1180,6 +1179,9 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
                     size > 2 ? data[2] : 0,
                     size > 3 ? " ..." : ""
                     );
+        } else {
+            as_v8_error(log, "Invalid key type - only string, integer and Buffer are supported");
+            goto ReturnError;
         }
         Local<Object> buff = Nan::CopyBuffer((char*)as_key_digest(key)->value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
