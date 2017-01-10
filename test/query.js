@@ -117,7 +117,9 @@ describe('Queries', function () {
           var created = 0
           indexes.forEach(function (idx) {
             helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], function () {
-              if (++created >= indexes.length) done()
+              if (++created >= indexes.length) {
+                done()
+              }
             })
           })
         })

@@ -78,7 +78,7 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
   }
   this.client.createIndex(index, function (err, job) {
     if (err) throw err
-    job.waitUntilDone(100, function (err) {
+    job.waitUntilDone(10, function (err) {
       if (err) throw err
       callback()
     })
