@@ -18,9 +18,8 @@ addons:
     packages:
       - g++-4.8
       - autoconf
-      - libssl-dev
 install:
-- wget -O aerospike-server.tgz http://aerospike.com/download/server/latest/artifact/tgz
+- wget -O aerospike-server.tgz http://www.aerospike.com/download/server/3.10.1.3/artifact/tgz
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
