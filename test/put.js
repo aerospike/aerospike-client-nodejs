@@ -31,39 +31,31 @@ const GeoJSON = Aerospike.GeoJSON
 describe('client.put()', function () {
   var client = helper.client
 
-  it('should write and validate 100 records', function (done) {
-    // counters
-    var total = 100
-    var count = 0
-
-    // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
-
-    function iteration () {
-      // values
-      var key = kgen()
-      var meta = mgen(key)
-      var record = rgen(key, meta)
-
-      // write the record then check
-      client.put(key, record, meta, function (err, key) {
-        expect(err).not.to.be.ok()
-
-        client.get(key, function (err, _record, _metadata, _key) {
-          if (err) { throw new Error(err.message) }
-          expect(_record).to.eql(record)
-          count++
-          if (count >= total) {
-            done()
-          }
+  it('should write and validate records', function (done) {
+    var meta = {ttl: 1000, exists: Aerospike.policy.exists.CREATE_OR_REPLACE}
+    var putAndGet = function (key, recordPut, cb) {
+      client.put(key, recordPut, meta, function (err) {
+        if (err) throw err
+        client.get(key, function (err, recordGot) {
+          if (err) throw err
+          expect(recordPut).to.eql(recordGot)
+          cb()
         })
       })
     }
 
+    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/putAndGet/'})
+    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var total = 50
+    var count = 0
+
     for (var i = 0; i < total; i++) {
-      iteration()
+      putAndGet(kgen(), rgen(), function () {
+        count++
+        if (count === total) {
+          done()
+        }
+      })
     }
   })
 
