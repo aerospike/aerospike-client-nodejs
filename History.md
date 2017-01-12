@@ -1,3 +1,9 @@
+HEAD
+===================
+
+* **Updates**
+  * Update C client library to [v4.1.3](http://www.aerospike.com/download/client/c/notes.html#4.1.3).
+
 v2.4.4 / 2016-12-19
 ===================
 
