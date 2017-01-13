@@ -9,7 +9,7 @@
     "outputSourceFiles": true,
     "systemName": "Aerospike",
     "footer": "<div style=\"text-align: center\">High performance NoSQL database delivering speed at scale - <a href=\"http://www.aerospike.com/\">Aerospike.com</a></div>",
-    "copyright": "© 2013-2016 Aerospike, Inc.",
+    "copyright": "© 2013-2017 Aerospike, Inc.",
     "navType": "vertical",
     "theme": "simplex",
     "linenums": true,

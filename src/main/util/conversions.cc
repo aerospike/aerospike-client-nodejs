@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2016 Aerospike Inc.
+ * Copyright 2013-2017 Aerospike Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
