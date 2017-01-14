@@ -19,7 +19,7 @@ addons:
       - g++-4.8
       - autoconf
 install:
-- wget -O aerospike-server.tgz http://www.aerospike.com/download/server/3.10.1.3/artifact/tgz
+- wget -O aerospike-server.tgz http://www.aerospike.com/download/server/latest/artifact/tgz
 - tar xvzf aerospike-server.tgz
 - cp -f .travis/aerospike.conf ./aerospike-server/share/etc
 - cd aerospike-server
