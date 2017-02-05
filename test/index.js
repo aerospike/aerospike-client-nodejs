@@ -42,18 +42,26 @@ context('secondary indexes', function () {
     var checkStatus = function (callback) {
       client.infoAll(sindex, function (err, info) {
         if (err) {
-          callback(err)
-        } else {
+          switch (err.code) {
+            case Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND:
+              callback(null, false)
+              break
+            default:
+              callback(err)
+          }
+        } else if (info.length > 0) {
           var done = info.every(function (response) {
             var stats = Info.parseInfo(response.info)[sindex]
             var noIndexErr = (typeof stats === 'string') && (stats.indexOf('FAIL:201:NO INDEX') >= 0)
             return !noIndexErr
           })
           callback(null, done)
+        } else {
+          callback(null, false)
         }
       })
     }
-    Job.pollUntilDone(checkStatus, 1000, function (err) {
+    Job.pollUntilDone(checkStatus, 10, function (err) {
       if (err) throw err
       callback()
     })
@@ -162,7 +170,7 @@ context('secondary indexes', function () {
       client.createIntegerIndex(args, function (err) {
         if (err) throw err
 
-        client.indexCreateWait(helper.namespace, testIndex.name, 100, function (err) {
+        client.indexCreateWait(helper.namespace, testIndex.name, 10, function (err) {
           expect(err).not.to.be.ok()
           verifyIndexExists(helper.namespace, testIndex.name, done)
         })
