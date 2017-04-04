@@ -52,6 +52,7 @@
         'src/main/client/scan_async.cc',
         'src/main/client/scan_background.cc',
         'src/main/client/select_async.cc',
+        'src/main/client/truncate.cc',
         'src/main/client/index_create.cc',
         'src/main/client/index_remove.cc',
         'src/main/client/udf_register.cc',
