@@ -95,6 +95,7 @@ IndexHelper.prototype.remove = function (indexName, callback) {
 function ServerInfoHelper () {
   this.features = new Set()
   this.edition = 'community'
+  this.build = ''
   this.nsconfig = {}
   this.cluster = []
 }
@@ -111,13 +112,18 @@ ServerInfoHelper.prototype.is_enterprise = function () {
   return this.edition.match('Enterprise')
 }
 
+ServerInfoHelper.prototype.build_gte = function (minVer) {
+  return semverCmp(this.build, minVer) >= 0
+}
+
 ServerInfoHelper.prototype.fetch_info = function (done) {
   var self = this
-  client.infoAll('edition\nfeatures', function (err, results) {
+  client.infoAll('build\nedition\nfeatures', function (err, results) {
     if (err) throw err
     results.forEach(function (response) {
       var info = Info.parseInfo(response.info)
       self.edition = info['edition']
+      self.build = info['build']
       var features = info['features']
       if (Array.isArray(features)) {
         features.forEach(function (feature) {
@@ -184,3 +190,17 @@ after(function (done) {
   client.close()
   done()
 })
+
+function semverCmp (a, b) {
+  var pa = a.split('.')
+  var pb = b.split('.')
+  for (var i = 0; i < 4; i++) {
+    var na = Number(pa[i])
+    var nb = Number(pb[i])
+    if (na > nb) return 1
+    if (nb > na) return -1
+    if (!isNaN(na) && isNaN(nb)) return 1
+    if (isNaN(na) && !isNaN(nb)) return -1
+  }
+  return 0
+}

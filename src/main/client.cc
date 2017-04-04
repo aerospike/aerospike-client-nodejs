@@ -164,6 +164,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
+	Nan::SetPrototypeMethod(tpl, "truncate", Truncate);
 	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
 	Nan::SetPrototypeMethod(tpl, "udfRegisterWait", RegisterWait);
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);
