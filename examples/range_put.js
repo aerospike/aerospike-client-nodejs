@@ -197,7 +197,7 @@ Aerospike.connect(config, function (err, client) {
         k: i,
         s: 'abc',
         i: i * 1000 + 123,
-        b: new Buffer([0xa, 0xb, 0xc])
+        b: Buffer.from([0xa, 0xb, 0xc])
       }
 
       var metadata = {

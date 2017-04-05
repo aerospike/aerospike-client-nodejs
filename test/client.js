@@ -19,7 +19,6 @@
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
 const helper = require('./test_helper')
-const extend = require('util')._extend
 
 describe('Client', function () {
   describe('Client#isConnected', function () {
@@ -67,7 +66,7 @@ describe('Client', function () {
 
   context('cluster name', function () {
     it('should fail to connect to the cluster if the cluster name does not match', function (done) {
-      var config = extend({}, helper.config)
+      var config = Object.assign({}, helper.config)
       config.clusterName = 'notAValidClusterName'
       var client = new Client(config)
       client.connect(function (err) {
