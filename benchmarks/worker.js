@@ -145,7 +145,7 @@ function recordgen (key, binSpec) {
         while (bufData.length < bin.size) {
           bufData += STRING_DATA
         }
-        data[bin.name] = new Buffer(bufData)
+        data[bin.name] = Buffer.from(bufData)
         break
       default:
         data.num = key

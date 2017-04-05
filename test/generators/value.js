@@ -88,7 +88,7 @@ function bytes (options) {
   var opt = merge(bytes.defaults, options)
   return function () {
     var len = randomInt(opt.length.min, opt.length.max)
-    var buf = new Buffer(len)
+    var buf = Buffer.alloc(len)
     for (var i = 0; i < len; i++) {
       buf[i] = randomInt(opt.byte.min, opt.byte.max)
     }

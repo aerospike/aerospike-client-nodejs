@@ -82,7 +82,7 @@ describe('Key', function () {
       })
 
       it('allows byte array user key', function () {
-        var buf = new Buffer([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
+        var buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
         expect(new Key('ns', 'set', buf)).to.be.ok()
       })
 
@@ -98,8 +98,8 @@ describe('Key', function () {
         expect(function () { return new Key('ns', 'set', '') }).to.throwException('Key must be a string, integer, or Buffer')
       })
 
-      it('rejects empty byte array  user key', function () {
-        expect(function () { return new Key('ns', 'set', new Buffer([])) }).to.throwException('Key must be a string, integer, or Buffer')
+      it('rejects empty byte array user key', function () {
+        expect(function () { return new Key('ns', 'set', Buffer.from([])) }).to.throwException('Key must be a string, integer, or Buffer')
       })
 
       it('rejects float user key', function () {

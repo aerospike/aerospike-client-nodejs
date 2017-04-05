@@ -239,8 +239,8 @@ function reportFinal () {
 }
 
 function exec (p, i, o) {
-  var stdout = new Buffer('')
-  var stderr = new Buffer('')
+  var stdout = Buffer.alloc(0)
+  var stderr = Buffer.alloc(0)
 
   var prog = 'node'
 
