@@ -1,8 +1,21 @@
-HEAD
+v2.5.0 / 2017-04-05
 ===================
 
+This is the last release to support Node.js v0.12 and io.js. The next client release will require Node.js v4 or later.
+
+* **New Features**
+  * Support ns/set truncate command [#712](https://github.com/aerospike/aerospike-client-nodejs/issues/172)
+  * Support configurable scan socket write timeout [#174](https://github.com/aerospike/aerospike-client-nodejs/issues/174)
+
+* **Bug Fixes**
+  * Possible memory leak during batchRead - fix included in Aerospike C client v4.1.5 [#167](https://github.com/aerospike/aerospike-client-nodejs/issues/167)
+  * Query/scan policy not getting applied on some operations [#175](https://github.com/aerospike/aerospike-client-nodejs/issues/175)
+
 * **Updates**
-  * Update C client library to [v4.1.3](http://www.aerospike.com/download/client/c/notes.html#4.1.3).
+  * Update C client library to [v4.1.5](http://www.aerospike.com/download/client/c/notes.html#4.1.5).
+  * Update npm install script to support additional Linux distros [#166](https://github.com/aerospike/aerospike-client-nodejs/issues/166), [#170](https://github.com/aerospike/aerospike-client-nodejs/issues/170)
+  * Update to JavaScript Standard Style v9 [#178](https://github.com/aerospike/aerospike-client-nodejs/pull/178)
+  * Add WebWorker based test case to scan stress test [#180](https://github.com/aerospike/aerospike-client-nodejs/pull/180)
 
 v2.4.4 / 2016-12-19
 ===================
