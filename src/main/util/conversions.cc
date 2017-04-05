@@ -75,6 +75,7 @@ int get_string_property(char** strp, Local<Object> obj, char const* prop, const 
 		return AS_NODE_PARAM_ERR;
 	}
 	(*strp) = strdup(*String::Utf8Value(value));
+	as_v8_detail(log, "%s => \"%s\"", prop, *strp);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -85,6 +86,7 @@ int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, 
 	if (value->IsString()) {
 		if (defined != NULL) (*defined) = true;
 		(*strp) = strdup(*String::Utf8Value(value));
+		as_v8_detail(log, "%s => \"%s\"", prop, *strp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
 	} else {
@@ -103,6 +105,7 @@ int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const
 		return AS_NODE_PARAM_ERR;
 	}
 	(*intp) = value->IntegerValue();
+	as_v8_detail(log, "%s => (int64) %d", prop, *intp);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -113,8 +116,10 @@ int get_optional_int64_property(int64_t* intp, bool* defined, Local<Object> obj,
 	if (value->IsNumber()) {
 		if (defined != NULL) (*defined) = true;
 		(*intp) = value->IntegerValue();
+		as_v8_detail(log, "%s => (int64) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
 	} else {
 		as_v8_error(log, "Type error: %s property should be integer", prop);
 		return AS_NODE_PARAM_ERR;
@@ -129,8 +134,10 @@ int get_optional_int32_property(int32_t* intp, bool* defined, Local<Object> obj,
 	if (value->IsInt32()) {
 		if (defined != NULL) (*defined) = true;
 		(*intp) = value->Int32Value();
+		as_v8_detail(log, "%s => (uint32) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
 	} else {
 		as_v8_error(log, "Type error: %s property should be integer (int32)", prop);
 		return AS_NODE_PARAM_ERR;
@@ -145,8 +152,10 @@ int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> ob
 	if (value->IsUint32()) {
 		if (defined != NULL) (*defined) = true;
 		(*intp) = value->Uint32Value();
+		as_v8_detail(log, "%s => (uint32) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
 	} else {
 		as_v8_error(log, "Type error: %s property should be integer (uint32)", prop);
 		return AS_NODE_PARAM_ERR;
@@ -163,6 +172,7 @@ int get_bool_property(bool* boolp, Local<Object> obj, char const* prop, const Lo
 		return AS_NODE_PARAM_ERR;
 	}
 	(*boolp) = value->BooleanValue();
+	as_v8_detail(log, "%s => (bool) %d", prop, *boolp);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -173,8 +183,10 @@ int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, ch
 	if (value->IsBoolean()) {
 		if (defined != NULL) (*defined) = true;
 		(*boolp) = value->BooleanValue();
+		as_v8_detail(log, "%s => (bool) %d", prop, *boolp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
 	} else {
 		as_v8_error(log, "Type error: %s property should be boolean", prop);
 		return AS_NODE_PARAM_ERR;
@@ -210,9 +222,10 @@ int get_optional_asval_property(as_val** value, bool* defined, Local<Object> obj
 	Local<Value> v8value = obj->Get(Nan::New(prop).ToLocalChecked());
 	if (v8value->IsUndefined() || v8value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
 		return AS_NODE_PARAM_OK;
 	}
-  if (defined != NULL) (*defined) = true;
+	if (defined != NULL) (*defined) = true;
 	return asval_from_jsvalue(value, v8value, log);
 }
 

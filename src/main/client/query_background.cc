@@ -58,7 +58,7 @@ static void* prepare(ResolveArgs(info))
 	setup_query(&data->query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (writepolicy_from_jsobject(&data->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (writepolicy_from_jsobject(&data->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing of query policy from object failed");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = true;

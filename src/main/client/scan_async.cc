@@ -57,7 +57,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	setup_scan(&scan, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (scanpolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (scanpolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			invoke_error_callback(&err, data);
 			goto Cleanup;

@@ -58,7 +58,7 @@ static void* prepare(ResolveArgs(info))
 	setup_scan(&data->scan, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (scanpolicy_from_jsobject(&data->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (scanpolicy_from_jsobject(&data->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing of scan policy from object failed");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
 			data->param_err = true;
