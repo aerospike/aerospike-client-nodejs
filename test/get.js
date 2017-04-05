@@ -36,7 +36,7 @@ describe('client.get()', function () {
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
-      client.get(key, function (err, record, metadata, key) {
+      client.get(key, function (err, record) {
         if (err) throw err
         client.remove(key, function (err, key) {
           if (err) throw err
@@ -63,7 +63,7 @@ describe('client.get()', function () {
 
     client.put(key, record, meta, function (err, key) {
       if (err) throw err
-      client.get(key, pol, function (err, record, metadata, key) {
+      client.get(key, pol, function (err, record) {
         if (err) throw err
         client.remove(key, function (err, key) {
           if (err) throw err
@@ -80,9 +80,9 @@ describe('client.get()', function () {
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
-      client.get(key, function (err, record, meta) {
+      client.get(key, function (err, record) {
         if (err) throw err
-        expect(meta.ttl).to.be(Aerospike.ttl.NEVER_EXPIRE)
+        expect(record.ttl).to.be(Aerospike.ttl.NEVER_EXPIRE)
         client.remove(key, function (err) {
           if (err) throw err
           done()

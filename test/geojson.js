@@ -85,7 +85,7 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record.location).to.equal(point)
+          expect(record.bins.location).to.equal(point)
           done()
         })
       })
@@ -98,7 +98,7 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record.locations).to.eql([point, point])
+          expect(record.bins.locations).to.eql([point, point])
           done()
         })
       })
@@ -111,7 +111,7 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record.map.location).to.equal(point)
+          expect(record.bins.map.location).to.equal(point)
           done()
         })
       })

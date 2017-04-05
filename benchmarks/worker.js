@@ -158,11 +158,9 @@ function recordgen (key, binSpec) {
 
 function get (key, done) {
   var timeStart = process.hrtime()
-  client.get(key, function (_error, _record, _metadata, _key) {
-    var timeEnd = process.hrtime()
-    var status = (_error && _error.code) || 0
-    done(status, timeStart, timeEnd, READ)
-  })
+  client.get(key)
+    .then(() => done(0, timeStart, process.hrtime(), READ))
+    .catch((err) => done(err.code, timeStart, process.hrtime(), READ))
 }
 
 // set the ttl for the write
@@ -172,11 +170,9 @@ var metadata = {
 
 function put (options, done) {
   var timeStart = process.hrtime()
-  client.put(options.key, options.record, metadata, function (_error, _record, _metadata, _key) {
-    var timeEnd = process.hrtime()
-    var status = (_error && _error.code) || 0
-    done(status, timeStart, timeEnd, WRITE)
-  })
+  client.put(options.key, options.record, metadata)
+    .then(() => done(0, timeStart, process.hrtime(), WRITE))
+    .catch((err) => done(err.code, timeStart, process.hrtime(), WRITE))
 }
 
 // Structure to store per second statistics.

@@ -43,14 +43,14 @@ describe('client.operate() - CDT List operations', function () {
   // Helper method to execute a single operation on the given record and verify:
   // 1) The results returned by the operation,
   // 2) The contents of the record after the operation.
-  function verifyOperation (record, op, expectedResult, expectedRecordPostOp, done) {
+  function verifyOperation (record, op, expectedResult, expectedBinsPostOp, done) {
     setup(record, function () {
       client.operate(key, [op], function (err, result) {
         if (err) throw err
-        expect(result).to.eql(expectedResult)
+        expect(result.bins).to.eql(expectedResult)
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record).to.eql(expectedRecordPostOp)
+          expect(record.bins).to.eql(expectedBinsPostOp)
           teardown(done)
         })
       })

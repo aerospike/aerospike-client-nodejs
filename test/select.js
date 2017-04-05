@@ -20,35 +20,29 @@ const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
-const metagen = helper.metagen
 const recgen = helper.recgen
 const valgen = helper.valgen
 
 const status = Aerospike.status
-const policy = Aerospike.policy
 
 describe('client.select()', function () {
   var client = helper.client
 
   it('should read the record', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})()
+    var meta = {ttl: 1000}
+    var bins = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+    var selected = ['i', 's']
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    var bins = Object.keys(record).slice(0, 1)
-
-    client.put(key, record, meta, function (err) {
+    client.put(key, bins, meta, function (err) {
       if (err) throw err
 
-      client.select(key, bins, function (err, _record) {
-        expect(err).not.to.be.ok()
-        expect(_record).to.only.have.keys(bins)
+      client.select(key, selected, function (err, record) {
+        if (err) throw err
+        expect(record.bins).to.only.have.keys(selected)
 
-        for (var bin in _record) {
-          expect(_record[bin]).to.be(record[bin])
+        for (var bin in selected) {
+          expect(record.bins[bin]).to.be(bins[bin])
         }
 
         client.remove(key, function (err) {
@@ -59,21 +53,16 @@ describe('client.select()', function () {
     })
   })
 
-  it('should fail - when a select is called without key ', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+  it('should fail - when a select is called without key', function (done) {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})()
+    var meta = {ttl: 1000}
+    var bins = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+    var selected = ['i', 's']
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    var bins = Object.keys(record).slice(0, 1)
-
-    client.put(key, record, meta, function (err) {
+    client.put(key, bins, meta, function (err) {
       if (err) throw err
-      var selectKey = {ns: helper.namespace, set: helper.set}
 
-      client.select(selectKey, bins, function (err, _record) {
+      client.select({ns: helper.namespace, set: helper.set}, selected, function (err) {
         expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
 
         client.remove(key, function (err) {
@@ -85,41 +74,30 @@ describe('client.select()', function () {
   })
 
   it('should not find the record', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/not_found/'})()
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    var bins = Object.keys(record).slice(0, 1)
-
-    client.select(key, bins, function (err, record) {
+    client.select(key, ['i'], function (err, record) {
       expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
       done()
     })
   })
 
   it('should read the record w/ a key send policy', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})()
+    var meta = {ttl: 1000}
+    var bins = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+    var selected = ['i', 's']
+    var policy = {key: Aerospike.policy.key.SEND}
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-    var bins = Object.keys(record).slice(0, 1)
-    var pol = {key: policy.key.SEND}
-
-    client.put(key, record, meta, function (err) {
+    client.put(key, bins, meta, function (err) {
       if (err) throw err
 
-      client.select(key, bins, pol, function (err, _record) {
-        expect(err).not.to.be.ok()
-        expect(_record).to.only.have.keys(bins)
+      client.select(key, selected, policy, function (err, record) {
+        if (err) throw err
+        expect(record.bins).to.only.have.keys(selected)
 
-        for (var bin in _record) {
-          expect(_record[bin]).to.be(record[bin])
+        for (var bin in selected) {
+          expect(record.bins[bin]).to.be(bins[bin])
         }
 
         client.remove(key, function (err) {

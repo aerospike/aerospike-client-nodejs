@@ -33,12 +33,12 @@ describe('client.put()', function () {
 
   it('should write and validate records', function (done) {
     var meta = {ttl: 1000, exists: Aerospike.policy.exists.CREATE_OR_REPLACE}
-    var putAndGet = function (key, recordPut, cb) {
-      client.put(key, recordPut, meta, function (err) {
+    var putAndGet = function (key, bins, cb) {
+      client.put(key, bins, meta, function (err) {
         if (err) throw err
-        client.get(key, function (err, recordGot) {
+        client.get(key, function (err, record) {
           if (err) throw err
-          expect(recordPut).to.eql(recordGot)
+          expect(bins).to.eql(record.bins)
           cb()
         })
       })
@@ -110,13 +110,13 @@ describe('client.put()', function () {
     var meta = { ttl: 600 }
     var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
 
-    function putGetVerify (record, expected, done) {
+    function putGetVerify (bins, expected, done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
-      client.put(key, record, meta, policy, function (err) {
+      client.put(key, bins, meta, policy, function (err) {
         if (err) throw err
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record).to.eql(expected)
+          expect(record.bins).to.eql(expected)
           client.remove(key, done)
         })
       })
@@ -254,7 +254,7 @@ describe('client.put()', function () {
         client.get(key, function (err, record) {
           if (err) throw err
           var expected = { bin2: 456 }
-          expect(record).to.eql(expected)
+          expect(record.bins).to.eql(expected)
 
           client.remove(key, function (err) {
             if (err) throw err
@@ -266,52 +266,38 @@ describe('client.put()', function () {
   })
 
   it('should write, read, write, and check gen', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
-    var record = rgen(key, meta)
+    var bins = rgen(key, meta)
 
     // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).not.to.be.ok()
-      expect(key1).to.have.property('ns', key.ns)
-      expect(key1).to.have.property('set', key.set)
-      expect(key1).to.have.property('key', key.key)
+    client.put(key, bins, meta, function (err, key1) {
+      if (err) throw err
+      expect(key1).to.eql(key)
 
-      client.get(key1, function (err, record2, metadata2, key2) {
-        if (err) { throw new Error(err.message) }
-        expect(key2).to.have.property('ns', key.ns)
-        expect(key2).to.have.property('set', key.set)
-        expect(key2).to.have.property('key', key.key)
-        expect(record2).to.eql(record)
+      client.get(key1, function (err, record2) {
+        if (err) throw err
+        expect(record2.key).to.eql(key)
+        expect(record2.bins).to.eql(bins)
 
-        var key3 = key2
-        var record3 = record2
+        record2.bins.i++
 
-        record3.i++
+        client.put(record2.key, record2.bins, meta, function (err, key3) {
+          if (err) throw err
+          expect(key3).to.eql(key)
 
-        client.put(key3, record3, meta, function (err, key4) {
-          expect(err).not.to.be.ok()
-          expect(key4).to.have.property('ns', key.ns)
-          expect(key4).to.have.property('set', key.set)
-          expect(key4).to.have.property('key', key.key)
+          client.get(key3, function (err, record4) {
+            if (err) throw err
+            expect(record4.key).to.eql(key)
+            expect(record4.bins).to.eql(record2.bins)
+            expect(record4.gen).to.equal(record2.gen + 1)
 
-          client.get(key4, function (err, record5, metadata5, key5) {
-            if (err) { throw new Error(err.message) }
-            expect(key5).to.have.property('ns', key.ns)
-            expect(key5).to.have.property('set', key.set)
-            expect(key5).to.have.property('key', key.key)
-            expect(record5).to.eql(record3)
-            expect(metadata5.gen).to.equal(metadata2.gen + 1)
-            expect(record5.i).to.equal(record3.i)
-
-            client.remove(key5, function (err, key) {
-              if (err) { throw new Error(err.message) }
+            client.remove(key, function (err) {
+              if (err) throw err
               done()
             })
           })
@@ -321,56 +307,43 @@ describe('client.put()', function () {
   })
 
   it('should write, read, remove, read, write, and check gen', function (done) {
-    // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
 
-    // values
     var key = kgen()
     var meta = mgen(key)
-    var record = rgen(key, meta)
+    var bins = rgen(key, meta)
 
     // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).not.to.be.ok()
-      expect(key1).to.have.property('ns', key.ns)
-      expect(key1).to.have.property('set', key.set)
-      expect(key1).to.have.property('key', key.key)
+    client.put(key, bins, meta, function (err, key1) {
+      if (err) throw err
+      expect(key1).to.eql(key)
 
-      client.get(key1, function (err, record2, metadata2, key2) {
-        if (err) { throw new Error(err.message) }
-        expect(key2).to.have.property('ns', key.ns)
-        expect(key2).to.have.property('set', key.set)
-        expect(key2).to.have.property('key', key.key)
-        expect(record2).to.eql(record)
+      client.get(key1, function (err, record2) {
+        if (err) throw err
+        expect(record2.key).to.eql(key)
+        expect(record2.bins).to.eql(bins)
 
-        client.remove(key2, function (err, key3) {
-          if (err) { throw new Error(err.message) }
-          expect(key3).to.have.property('ns', key.ns)
-          expect(key3).to.have.property('set', key.set)
-          expect(key3).to.have.property('key', key.key)
+        client.remove(record2.key, function (err, key3) {
+          if (err) throw err
+          expect(key3).to.eql(key)
 
-          client.get(key3, function (err, record4, metadata4, key4) {
-            expect(err).to.be.ok()
+          client.get(key3, function (err, record4) {
             expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
 
-            client.put(key, record, meta, function (err, key5) {
-              expect(err).not.to.be.ok()
-              expect(key5).to.have.property('ns', key.ns)
-              expect(key5).to.have.property('set', key.set)
-              expect(key5).to.have.property('key', key.key)
+            client.put(record4.key, bins, meta, function (err, key5) {
+              if (err) throw err
+              expect(key5).to.eql(key)
 
-              client.get(key5, function (err, record6, metadata6, key6) {
-                if (err) { throw new Error(err.message) }
-                expect(key6).to.have.property('ns', key.ns)
-                expect(key6).to.have.property('set', key.set)
-                expect(key6).to.have.property('key', key.key)
-                expect(record6).to.eql(record)
-                expect(metadata6.gen).to.equal(1)
+              client.get(key5, function (err, record6) {
+                if (err) throw err
+                expect(record6.key).to.eql(key)
+                expect(record6.bins).to.eql(bins)
+                expect(record6.gen).to.equal(1)
 
-                client.remove(key6, function (err, key) {
-                  if (err) { throw new Error(err.message) }
+                client.remove(record6.key, function (err) {
+                  if (err) throw err
                   done()
                 })
               })
@@ -395,28 +368,20 @@ describe('client.put()', function () {
     // values
     var key = kgen()
     var meta = mgen(key)
-    var record = rgen(key, meta)
+    var bins = rgen(key, meta)
 
     // write the record then check
-    client.put(key, record, meta, function (err, key1) {
-      expect(err).not.to.be.ok()
-      expect(key1).to.have.property('ns', key.ns)
-      expect(key1).to.have.property('set', key.set)
-      expect(key1).to.have.property('key', key.key)
+    client.put(key, bins, meta, function (err, key1) {
+      if (err) throw err
+      expect(key1).to.eql(key)
 
-      client.get(key1, function (err, record2, metadata2, key2) {
-        if (err) { throw new Error(err.message) }
-        expect(key2).to.have.property('ns', key.ns)
-        expect(key2).to.have.property('set', key.set)
-        expect(key2).to.have.property('key', key.key)
-        expect(record2).to.eql(record)
-        expect(record2.m).to.eql({a: 1, b: 2})
-        expect(record2.me).to.be.eql({})
-        expect(record2.l).to.eql([1, 2, 3])
-        expect(record2.le).to.be.eql([])
+      client.get(key1, function (err, record2) {
+        if (err) throw err
+        expect(record2.key).to.eql(key)
+        expect(record2.bins).to.eql(bins)
 
         client.remove(key, function (err, key) {
-          if (err) { throw new Error(err.message) }
+          if (err) throw err
           done()
         })
       })
@@ -450,8 +415,8 @@ describe('client.put()', function () {
 
       client.get(key, function (err, record) {
         if (err) throw err
-        expect(record.map).to.eql({a: 1, b: 2, c: null})
-        expect(record.list).to.eql([1, 2, 3, null])
+        expect(record.bins.map).to.eql({a: 1, b: 2, c: null})
+        expect(record.bins.list).to.eql([1, 2, 3, null])
 
         client.remove(key, function (err) {
           if (err) throw err
@@ -461,42 +426,36 @@ describe('client.put()', function () {
     })
   })
 
-  it('should check generation and then update record only if generation is equal (CAS)', function (done) {
-    // generators
-    var kgen = keygen.integer(helper.namespace, helper.set)
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+  context('gen policy', function () {
+    it('updates record if generation matches', function () {
+      var key = keygen.integer(helper.namespace, helper.set)()
 
-    // values
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
-
-    // write the record then check
-    client.put(key, record, meta, function (err, key) {
-      expect(err).not.to.be.ok()
-
-      // check the content of the record
-      client.get(key, function (err, record, metadata, key) {
-        if (err) { throw new Error(err.message) }
-        var mgen = metagen.constant({gen: 1})
-        var meta = mgen(key)
-        var writePolicy = {gen: Aerospike.policy.gen.EQ}
-
-        client.put(key, record, meta, writePolicy, function (err, key) {
-          expect(err).not.to.be.ok()
-
-          client.get(key, function (err, record, metadata, key) {
-            if (err) { throw new Error(err.message) }
-            expect(metadata.gen).to.equal(2)
-
-            client.remove(key, function (err, key) {
-              if (err) { throw new Error(err.message) }
-              done()
-            })
-          })
+      return client.put(key, { i: 1 })
+        .then(() => client.get(key))
+        .then(record => expect(record.gen).to.be(1))
+        .then(() => client.put(key, { i: 2 }, { gen: 1 }, { gen: Aerospike.policy.gen.EQ }))
+        .then(() => client.get(key))
+        .then(record => {
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.gen).to.be(2)
         })
-      })
+        .then(() => client.remove(key))
+    })
+
+    it('does not update record if generation does not match', function () {
+      var key = keygen.integer(helper.namespace, helper.set)()
+
+      return client.put(key, { i: 1 })
+        .then(() => client.get(key))
+        .then(record => expect(record.gen).to.be(1))
+        .then(() => client.put(key, { i: 2 }, { gen: 99 }, { gen: Aerospike.policy.gen.EQ }))
+        .catch(err => expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION))
+        .then(() => client.get(key))
+        .then(record => {
+          expect(record.bins).to.eql({ i: 1 })
+          expect(record.gen).to.be(1)
+        })
+        .then(() => client.remove(key))
     })
   })
 })
