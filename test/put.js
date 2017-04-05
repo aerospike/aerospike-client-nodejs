@@ -176,13 +176,25 @@ describe('client.put()', function () {
     })
 
     it('writes bin with object value as map and reads it back', function (done) {
-      var record = { map: { a: 1, b: 'foo', c: 1.23, d: new Double(3.14),
-        e: new Buffer('bar'), f: GeoJSON.Point(103.8, 1.283), g: [1, 2, 3],
+      var record = { map: {
+        a: 1,
+        b: 'foo',
+        c: 1.23,
+        d: new Double(3.14),
+        e: new Buffer('bar'),
+        f: GeoJSON.Point(103.8, 1.283),
+        g: [1, 2, 3],
         h: { a: 1, b: 2 } }
       }
-      var expected = { map: { a: 1, b: 'foo', c: 1.23, d: 3.14,
-        e: new Buffer('bar'), f: '{"type":"Point","coordinates":[103.8,1.283]}',
-        g: [1, 2, 3], h: { a: 1, b: 2 } }
+      var expected = { map: {
+        a: 1,
+        b: 'foo',
+        c: 1.23,
+        d: 3.14,
+        e: new Buffer('bar'),
+        f: '{"type":"Point","coordinates":[103.8,1.283]}',
+        g: [1, 2, 3],
+        h: { a: 1, b: 2 } }
       }
       putGetVerify(record, expected, done)
     })
@@ -192,8 +204,15 @@ describe('client.put()', function () {
         ['d', new Double(3.14)], ['e', new Buffer('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
         ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
       }
-      var expected = { map: { a: 1, b: 'foo', c: 1.23, d: 3.14, e: new Buffer('bar'),
-        f: '{"type":"Point","coordinates":[103.8,1.283]}', g: [1, 2, 3], h: { a: 1, b: 2 } }
+      var expected = { map: {
+        a: 1,
+        b: 'foo',
+        c: 1.23,
+        d: 3.14,
+        e: new Buffer('bar'),
+        f: '{"type":"Point","coordinates":[103.8,1.283]}',
+        g: [1, 2, 3],
+        h: { a: 1, b: 2 } }
       }
       putGetVerify(record, expected, done)
     })
