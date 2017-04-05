@@ -11,7 +11,7 @@
   "license": "Apache-2.0",
   "main": "lib/aerospike",
   "engines": {
-    "node": ">=0.12"
+    "node": ">=4"
   },
   "os": [
     "linux",
