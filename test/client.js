@@ -20,7 +20,6 @@ const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
 const helper = require('./test_helper')
 const keygen = helper.keygen
-const extend = require('util')._extend
 
 describe('Client', function () {
   describe('Client#isConnected', function () {
@@ -68,7 +67,7 @@ describe('Client', function () {
 
   context('cluster name', function () {
     it('should fail to connect to the cluster if the cluster name does not match', function (done) {
-      var config = extend({}, helper.config)
+      var config = Object.assign({}, helper.config)
       config.clusterName = 'notAValidClusterName'
       var client = new Client(config)
       client.connect(function (err) {
@@ -121,7 +120,7 @@ describe('Client', function () {
 
     it('callback is asynchronous in case of an I/O error', function (done) {
       // maxConnsPerNode = 0 will trigger an error in the C client when trying to send a command
-      var config = extend({ maxConnsPerNode: 0 }, helper.config)
+      var config = Object.assign({ maxConnsPerNode: 0 }, helper.config)
       Aerospike.connect(config, function (err, client) {
         if (err) throw err
         var errorCheck = function (err) {
