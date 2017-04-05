@@ -96,13 +96,13 @@ var MEM_BUCKETS = 100
 
 function memoryBar (minUsedMb, maxUsedMb) {
   var minUsedLen = Math.floor(minUsedMb / MEM_MAX_MB * MEM_BUCKETS)
-  var minUsedBar = new Buffer(minUsedLen)
+  var minUsedBar = Buffer.alloc(minUsedLen)
   if (minUsedLen > 0) {
     minUsedBar.fill(']')
   }
 
   var maxUsedLen = Math.floor(maxUsedMb / MEM_MAX_MB * MEM_BUCKETS)
-  var maxUsedBar = new Buffer(maxUsedLen - minUsedLen)
+  var maxUsedBar = Buffer.alloc(maxUsedLen - minUsedLen)
   if (maxUsedLen > 0) {
     maxUsedBar.fill(']')
   }
