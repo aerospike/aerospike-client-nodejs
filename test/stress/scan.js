@@ -31,6 +31,8 @@ describe('client.scan()', function () {
   var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'scanPerfData')
   var recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
   var numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
+  var webWorkerThreads = 10 // number of WebWorker threads to use
+  var reportingInterval = 10000 // report progress every 10 seconds
 
   // Execute scan using given onData handler to process each scanned record
   function executeScan (onData, done) {
@@ -40,13 +42,13 @@ describe('client.scan()', function () {
     var stream = scan.foreach()
 
     var received = 0
-    var timer = perfdata.interval(10000, function (ms) {
+    var timer = perfdata.interval(reportingInterval, function (ms) {
       var throughput = Math.round(1000 * received / ms)
       var memUsage = process.memoryUsage()
       var rss = Math.round(memUsage.rss / mega)
       var heapUsed = Math.round(memUsage.heapUsed / mega)
       var heapTotal = Math.round(memUsage.heapTotal / mega)
-      console.log('%d ms: %d records scanned (%d rps; mem: %d MB, heap: %d / %d MB)',
+      console.log('%d ms: %d records received (%d rps; mem: %d MB, heap: %d / %d MB)',
           ms, received, throughput, rss, heapUsed, heapTotal)
     })
 
@@ -96,6 +98,43 @@ describe('client.scan()', function () {
       for (var x = 0; x < 1e5; x++) {} // busy loop
     }
     executeScan(busy, done)
+  })
+
+  it('scans ' + numberOfRecords + ' records with busy loop in WebWorker', function (done) {
+    try {
+      var Worker = require('webworker-threads')
+    } catch (err) {
+      console.error('gem install webworker-threads to run this test!')
+      this.skip('gem install webworker-threads to run this test!')
+      return
+    }
+    function doWork () {
+      for (var x = 0; x < 1e5; x++) {} // busy loop
+    }
+    var threadPool = Worker.createPool(webWorkerThreads).all.eval(doWork)
+    console.log('created WebWorker pool with %s threads', webWorkerThreads)
+    var processed = 0
+    var timer = perfdata.interval(reportingInterval, function (ms) {
+      var throughput = Math.round(1000 * processed / ms)
+      var memUsage = process.memoryUsage()
+      var rss = Math.round(memUsage.rss / mega)
+      var heapUsed = Math.round(memUsage.heapUsed / mega)
+      var heapTotal = Math.round(memUsage.heapTotal / mega)
+      console.log('%d ms: %d records processed (%d rps; mem: %d MB, heap: %d / %d MB)',
+          ms, processed, throughput, rss, heapUsed, heapTotal)
+    })
+    var worker = function (record, meta, key) {
+      threadPool.any.eval('doWork()', function (err) {
+        if (err) throw err
+        if (++processed === numberOfRecords) {
+          timer.call()
+          timer.clear()
+          threadPool.destroy()
+          done()
+        }
+      })
+    }
+    executeScan(worker, function () {})
   })
 
   it('scans ' + numberOfRecords + ' records with file IO', function (done) {
