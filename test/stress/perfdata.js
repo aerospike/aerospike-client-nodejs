@@ -70,4 +70,3 @@ module.exports = {
   interval: interval,
   generate: generate
 }
-

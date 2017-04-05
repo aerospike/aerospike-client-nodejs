@@ -177,8 +177,11 @@ var operations = [
 function run (client, done) {
   operations.reduceRight(function (r, l) {
     return function (err) {
-      if (err) err
-      l(client, r)
+      if (err) {
+        return err
+      } else {
+        l(client, r)
+      }
     }
   }, done)()
 }
