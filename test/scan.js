@@ -38,7 +38,11 @@ context('Scans', function () {
       var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/scan/'})
       var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
       var mgen = metagen.constant({ ttl: 300 })
-      var policy = { key: Aerospike.policy.key.SEND, exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
+      var policy = {
+        key: Aerospike.policy.key.SEND,
+        exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
+        timeout: 1000
+      }
       putgen.put(numberOfRecords, kgen, rgen, mgen, policy, function (key) {
         if (!key) done()
       })
@@ -117,6 +121,19 @@ context('Scans', function () {
         expect(key.key).to.not.be.empty()
         stream.abort()
       })
+      stream.on('end', done)
+    })
+
+    it('sets a scan policy', function (done) {
+      var scan = client.scan(helper.namespace, testSet)
+      var scanPolicy = {
+        timeout: 1000,
+        socketTimeout: 1000,
+        durableDelete: true,
+        failOnClusterChange: true
+      }
+      var stream = scan.foreach(scanPolicy)
+      stream.on('data', function () { stream.abort() })
       stream.on('end', done)
     })
 

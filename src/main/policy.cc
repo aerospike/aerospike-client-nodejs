@@ -238,6 +238,9 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
