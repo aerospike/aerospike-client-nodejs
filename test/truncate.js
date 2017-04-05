@@ -68,10 +68,12 @@ describe('client.truncate()', function () {
       setTimeout(function () {
         client.truncate(ns, set, 0, function (err) {
           if (err) throw err
-          countRecords(ns, set, function (count) {
-            expect(count).to.equal(0)
-            done()
-          })
+          setTimeout(function () {
+            countRecords(ns, set, function (count) {
+              expect(count).to.equal(0)
+              done()
+            })
+          }, 100)
         })
       }, 100)
     })
@@ -90,10 +92,12 @@ describe('client.truncate()', function () {
           genRecords(ns, set, noRecordsAfter, function () {
             client.truncate(ns, set, timeNanos, function (err) {
               if (err) throw err
-              countRecords(ns, set, function (count) {
-                expect(count).to.equal(noRecordsAfter)
-                done()
-              })
+              setTimeout(function () {
+                countRecords(ns, set, function (count) {
+                  expect(count).to.equal(noRecordsAfter)
+                  done()
+                })
+              }, 100)
             })
           })
         }, 100)
