@@ -112,7 +112,7 @@ main() {
 			distro_version=6
 		else
 			error "Unsupported linux distibution: $distro_id $distro_version"
-		exit 1
+			exit 1
 		fi
 		distro_long="centos${distro_version}"
 		distro_short="el${distro_version}"
@@ -122,11 +122,51 @@ main() {
 		distro_version=${distro_version%.*}
 		distro_short="${distro_id}${distro_version}"
 		;;
+	'elementary' )
+		case "$distro_version" in
+		"0.4" )
+			distro_version="16.04"
+			;;
+		* )
+			error "Unsupported linux distibution version: $distro_id $distro_version"
+			error "Guessing compatibility with Ubuntu 16.04"
+			distro_version="16.04"
+			;;
+		esac
+		distro_id="ubuntu"
+		distro_long="${distro_id}${distro_version}"
+		distro_version=${distro_version%.*}
+		distro_short="${distro_id}${distro_version}"
+		;;
+	'linuxmint' )
+		case "$distro_version" in
+		"17"* )
+			distro_version="14.04"
+			;;
+		"18"* )
+			distro_version="16.04"
+			;;
+		* )
+			error "Unsupported linux distibution version: $distro_id $distro_version"
+			error "Guessing compatibility with Ubuntu 16.04"
+			distro_version="16.04"
+			;;
+		esac
+		distro_id="ubuntu"
+		distro_long="${distro_id}${distro_version}"
+		distro_version=${distro_version%.*}
+		distro_short="${distro_id}${distro_version}"
+		;;
 	'amzn' )
 		distro_long="ami"
 		distro_short="ami"
 		;;
 	* )
+		if [ "$ID_LIKE" ]
+		then
+			distro_id=$(echo "$ID_LIKE" | cut -d" " -f1)
+			distro_version="_unknown"
+		fi
 		distro_long="${distro_id}${distro_version}"
 		distro_short="${distro_id}${distro_version}"
 		;;
