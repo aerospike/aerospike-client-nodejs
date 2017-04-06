@@ -109,7 +109,7 @@ describe('Queries', function () {
     var sampleGen = function () {
       return samples.pop()
     }
-    var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/query/'})
+    var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/query/', random: false})
     var mgen = metagen.constant({ ttl: 300 })
     putgen.put(numberOfSamples, kgen, sampleGen, mgen, function (key, record) {
       if (!key) {

@@ -38,7 +38,7 @@ describe('client.truncate()', function () {
   })
 
   function genRecords (ns, set, noRecords, callback) {
-    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/'})
+    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
     var mgen = metagen.constant({ ttl: 300 })
     var rgen = recgen.constant({ a: 'foo', b: 'bar' })
     putgen.put(noRecords, kgen, rgen, mgen, function (key) {

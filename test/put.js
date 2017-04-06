@@ -44,7 +44,10 @@ describe('client.put()', function () {
       })
     }
 
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/putAndGet/'})
+    var kgen = keygen.string(helper.namespace, helper.set, {
+      prefix: 'test/put/putAndGet/',
+      random: false
+    })
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
     var total = 50
     var count = 0
