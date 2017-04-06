@@ -37,8 +37,7 @@ describe('client.truncate()', function () {
     }
   })
 
-  function genRecords (ns, set, noRecords, callback) {
-    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
+  function genRecords (kgen, noRecords, callback) {
     var mgen = metagen.constant({ ttl: 300 })
     var rgen = recgen.constant({ a: 'foo', b: 'bar' })
     putgen.put(noRecords, kgen, rgen, mgen, function (key) {
@@ -64,7 +63,8 @@ describe('client.truncate()', function () {
     var set = setgen()
     var noRecords = 5
 
-    genRecords(ns, set, noRecords, function () {
+    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
+    genRecords(kgen, noRecords, function () {
       setTimeout(function () {
         client.truncate(ns, set, 0, function (err) {
           if (err) throw err
@@ -85,11 +85,12 @@ describe('client.truncate()', function () {
     var noRecordsBefore = 5
     var noRecordsAfter = 2
 
-    genRecords(ns, set, noRecordsBefore, function () {
+    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
+    genRecords(kgen, noRecordsBefore, function () {
       setTimeout(function () {
         var timeNanos = new Date().getTime() * 1000000
         setTimeout(function () {
-          genRecords(ns, set, noRecordsAfter, function () {
+          genRecords(kgen, noRecordsAfter, function () {
             client.truncate(ns, set, timeNanos, function (err) {
               if (err) throw err
               setTimeout(function () {

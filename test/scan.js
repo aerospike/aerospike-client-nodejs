@@ -35,7 +35,7 @@ context('Scans', function () {
 
   before(function (done) {
     helper.udf.register('udf.lua', function () {
-      var kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/, random: false' })
+      var kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
       var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
       var mgen = metagen.constant({ ttl: 300 })
       var policy = {
