@@ -1,3 +1,9 @@
+v2.5.1 / 2017-04-11
+===================
+
+* **Bug Fixes**
+  * Support queries with keys with just namespace + digest [#184](https://github.com/aerospike/aerospike-client-nodejs/issues/184)
+
 v2.5.0 / 2017-04-05
 ===================
 
