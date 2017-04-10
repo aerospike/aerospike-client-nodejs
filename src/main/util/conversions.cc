@@ -1104,109 +1104,110 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
-
-    // All the v8 local variables have to declared before any of the goto
-    // statements. V8 demands that.
-
-    if(obj->IsNull()) {
+    if (obj->IsNull()) {
         as_v8_error(log, "The key object passed is Null");
-        goto ReturnError;
+        return AS_NODE_PARAM_ERR;
     }
 
-    // get the namespace
-    if (obj->Has(Nan::New("ns").ToLocalChecked())) {
-        Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
-        if (ns_obj->IsString()) {
-            strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
-            as_v8_detail(log, "key.ns = \"%s\"", ns);
-            if (strlen(ns) == 0) {
-                as_v8_error(log, "The namespace has null string");
-                goto ReturnError;
-            }
-        } else {
-            as_v8_error(log, "The namespace passed must be string");
-            goto ReturnError;
+    Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
+    if (ns_obj->IsString()) {
+        strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+        if (strlen(ns) == 0) {
+            as_v8_error(log, "The key namespace must not be empty");
+            return AS_NODE_PARAM_ERR;
         }
+        as_v8_detail(log, "key.ns = \"%s\"", ns);
     } else {
-        as_v8_error(log, "The key object should have an \"ns\" entry");
-        goto ReturnError;
+        as_v8_error(log, "The key namespace must be a string");
+        return AS_NODE_PARAM_ERR;
     }
 
-    // get the set
-    if (obj->Has(Nan::New("set").ToLocalChecked())) {
-        Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
-        //check if set is string or a null value.
-        if (set_obj->IsString()) {
-            strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
-            as_v8_detail(log,"key.set = \"%s\"", set);
-            if (strlen(set) == 0) {
-                as_v8_debug(log, "Set passed is empty string");
-            }
+    Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
+    if (set_obj->IsString()) {
+        strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+        if (strlen(set) == 0) {
+            as_v8_debug(log, "Key set passed is empty string");
         }
-        // null value for set is valid in a key. Any value other than null and string is not
-        // acceptable for set
-        else if (!set_obj->IsNull()) {
-            as_v8_error(log, "The set in the key must be a key");
-            goto ReturnError;
-        }
+        as_v8_detail(log,"key.set = \"%s\"", set);
+    } else if (set_obj->IsNull() || set_obj->IsUndefined()) {
+        // noop - set name may not be specified
+    } else {
+        as_v8_error(log, "The key set must be a string");
+        return AS_NODE_PARAM_ERR;
     }
 
-    // get the value
-    if (obj->Has(Nan::New("key").ToLocalChecked())) {
-        Local<Value> val_obj = obj->Get(Nan::New("key").ToLocalChecked());
-        if (val_obj->IsNull()) {
-            as_v8_error(log, "The key entry must not be null");
-            goto ReturnError;
+    bool has_value = false;
+    Local<Value> val_obj = obj->Get(Nan::New("key").ToLocalChecked());
+    if (val_obj->IsString()) {
+        char* value = strdup(*String::Utf8Value(val_obj));
+        as_key_init(key, ns, set, value);
+        as_v8_detail(log, "key.key = \"%s\"", value);
+        ((as_string*) key->valuep)->free = true;
+        has_value = true;
+    } else if (is_double_value(val_obj)) {
+        as_v8_error(log, "Invalid key value: double - only string, integer and Buffer are supported");
+        return AS_NODE_PARAM_ERR;
+    } else if (val_obj->IsNumber()) {
+        int64_t value = val_obj->IntegerValue();
+        as_key_init_int64(key, ns, set, value);
+        as_v8_detail(log, "key.key = %d", value);
+        has_value = true;
+    } else if (val_obj->IsObject()) {
+        Local<Object> obj = val_obj->ToObject();
+        int size ;
+        uint8_t* data ;
+        if (extract_blob_from_jsobject(&data, &size, obj, log) != AS_NODE_PARAM_OK) {
+            return AS_NODE_PARAM_ERR;
         }
+        as_key_init_rawp(key, ns, set, data, size, true);
+        has_value = true;
 
-        if (val_obj->IsUndefined()) {
-            as_v8_error(log, "The key value cannot be undefined");
-            goto ReturnError;
-        }
+        as_v8_detail(log,
+                "key.key = <%x %x %x%s>",
+                size > 0 ? data[0] : 0,
+                size > 1 ? data[1] : 0,
+                size > 2 ? data[2] : 0,
+                size > 3 ? " ..." : ""
+                );
+    } else if (val_obj->IsNull() || val_obj->IsUndefined()) {
+        // noop - value can be omitted if digest is given
+    } else {
+        as_v8_error(log, "Invalid key value - only string, integer and Buffer are supported");
+        return AS_NODE_PARAM_ERR;
+    }
 
-        if (val_obj->IsString()) {
-            char * value = strdup(*String::Utf8Value(val_obj));
-            as_key_init(key, ns, set, value);
-            as_v8_detail(log, "key.key = \"%s\"", value);
-            ((as_string *) key->valuep)->free = true;
-        } else if (is_double_value(val_obj)) {
-            as_v8_error(log, "Invalid key type - only string, integer and Buffer are supported");
-            goto ReturnError;
-        } else if (val_obj->IsNumber()) {
-            int64_t value = val_obj->IntegerValue();
-            as_key_init_int64(key, ns, set, value);
-            as_v8_detail(log, "key.key = %d", value);
-        } else if (val_obj->IsObject()) {
-            Local<Object> obj = val_obj->ToObject();
-            int size ;
-            uint8_t* data ;
-            if (extract_blob_from_jsobject(&data, &size, obj, log) != AS_NODE_PARAM_OK) {
-                return AS_NODE_PARAM_ERR;
-            }
-            as_key_init_rawp(key, ns, set, data, size, true);
-
-            as_v8_detail(log,
-                    "key.key = <%x %x %x%s>",
-                    size > 0 ? data[0] : 0,
-                    size > 1 ? data[1] : 0,
-                    size > 2 ? data[2] : 0,
-                    size > 3 ? " ..." : ""
-                    );
-        } else {
-            as_v8_error(log, "Invalid key type - only string, integer and Buffer are supported");
-            goto ReturnError;
-        }
+    if (has_value) {
         Local<Object> buff = Nan::CopyBuffer((char*)as_key_digest(key)->value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     } else {
-        as_v8_error(log, "The Key object must have a \" key \" entry ");
-        goto ReturnError;
+        Local<Value> digest_value = obj->Get(Nan::New("digest").ToLocalChecked());
+        if (digest_value->IsObject()) {
+            Local<Object> digest_obj = digest_value->ToObject();
+            int size;
+            uint8_t* data;
+            if (extract_blob_from_jsobject(&data, &size, digest_obj, log) != AS_NODE_PARAM_OK) {
+                return AS_NODE_PARAM_ERR;
+            }
+            as_digest_value digest;
+            memcpy(digest, data, AS_DIGEST_VALUE_SIZE);
+            as_v8_detail(log,
+                    "key.digest = <%x %x %x%s>",
+                    size > 0 ? digest[0] : 0,
+                    size > 1 ? digest[1] : 0,
+                    size > 2 ? digest[2] : 0,
+                    size > 3 ? " ..." : ""
+                    );
+            as_key_init_digest(key, ns, set, digest);
+        } else if (digest_value->IsNull() || digest_value->IsUndefined()) {
+            as_v8_error(log, "The key must have either a \"value\" or a \"digest\"");
+            return AS_NODE_PARAM_ERR;
+        } else {
+            as_v8_error(log, "Invalid digest value: \"digest\" must be a 20-byte Buffer");
+            return AS_NODE_PARAM_ERR;
+        }
     }
 
     return AS_NODE_PARAM_OK;
-
-ReturnError:
-    return AS_NODE_PARAM_ERR;
 }
 
 int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)

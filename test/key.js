@@ -68,6 +68,8 @@ describe('Key', function () {
     })
 
     context('user key', function () {
+      var dummyDigest = new Buffer([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+
       it('allows string user key', function () {
         expect(new Key('ns', 'set', 'abc')).to.be.ok()
       })
@@ -87,11 +89,11 @@ describe('Key', function () {
       })
 
       it('allows undefined user key', function () {
-        expect(new Key('ns', 'set', undefined)).to.be.ok()
+        expect(new Key('ns', 'set', undefined, dummyDigest)).to.be.ok()
       })
 
       it('allows null user key', function () {
-        expect(new Key('ns', 'set', null)).to.be.ok()
+        expect(new Key('ns', 'set', null, dummyDigest)).to.be.ok()
       })
 
       it('rejects empty string user key', function () {
@@ -104,6 +106,41 @@ describe('Key', function () {
 
       it('rejects float user key', function () {
         expect(function () { return new Key('ns', 'set', 3.1415) }).to.throwException('Key must be a string, integer, or Buffer')
+      })
+
+      it('requires either key or digest', function () {
+        expect(function () { return new Key('ns', 'set') }).to.throwException('Either key or digest must be set')
+      })
+    })
+
+    context('digest', function () {
+      var client = helper.client
+
+      it('allows creating a new key with just the namespace and digest', function () {
+        var digest = new Buffer([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+        expect(new Key('ns', null, null, digest)).to.be.ok()
+      })
+
+      it('rejects a digest that is not a buffer', function () {
+        expect(function () { return new Key('ns', null, null, 'some string') }).to.throwException('Digest must be a 20-byte Buffer')
+      })
+
+      it('rejects a digest that is not the right size', function () {
+        expect(function () { return new Key('ns', null, null, new Buffer([0x01])) }).to.throwException('Digest must be a 20-byte Buffer')
+      })
+
+      it('fetches a record given the digest', function (done) {
+        var key = new Key('test', 'test', 'digestOnly')
+        client.put(key, {foo: 'bar'}, function (err) {
+          if (err) throw err
+          var digest = key.digest
+          var key2 = new Key('test', null, null, digest)
+          client.get(key2, function (err, record) {
+            if (err) throw err
+            expect(record.foo).to.equal('bar')
+            done()
+          })
+        })
       })
     })
 

@@ -104,16 +104,6 @@ describe('client.put()', function () {
         })
       })
     })
-
-    it('should fail with a parameter error when trying to write an undefined key value', function (done) {
-      var key = new Aerospike.Key(helper.namespace, helper.set, undefined)
-      var record = { bin1: 123, bin2: 456 }
-
-      client.put(key, record, function (err) {
-        expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
-        done()
-      })
-    })
   })
 
   context('bins with various data types', function () {
