@@ -19,6 +19,7 @@
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
 const helper = require('./test_helper')
+const keygen = helper.keygen
 const extend = require('util')._extend
 
 describe('Client', function () {
@@ -74,6 +75,60 @@ describe('Client', function () {
         expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
         client.close(false)
         done()
+      })
+    })
+  })
+
+  context('callbacks', function () {
+    it('should raise an error when calling a command without passing a callback function', function () {
+      expect(function () { helper.client.truncate('foo', 'bar') }).to.throwException(function (e) {
+        expect(e).to.be.a(TypeError)
+        expect(e.message).to.be('"callback" argument must be a function')
+      })
+    })
+
+    // Execute a client command on a client instance that has been setup to
+    // trigger an error; check that the error callback occurs asynchronously,
+    // i.e. only after the command function has returned.
+    // The get command is used for the test but the same behavior should apply
+    // to all client commands.
+    function assertErrorCbAsync (client, errorCb, done) {
+      var checkpoints = []
+      var checkAssertions = function (checkpoint) {
+        checkpoints.push(checkpoint)
+        if (checkpoints.length !== 2) return
+        expect(checkpoints).to.eql(['after', 'callback'])
+        client.close(false)
+        done()
+      }
+      var key = keygen.string(helper.namespace, helper.set)()
+      client.get(key, function (err, _record) {
+        errorCb(err)
+        checkAssertions('callback')
+      })
+      checkAssertions('after')
+    }
+
+    it('callback is asynchronous in case of an client error', function (done) {
+      // trying to send a command to a client that is not connected will trigger a client error
+      var client = Aerospike.client()
+      var errorCheck = function (err) {
+        expect(err).to.be.an(Error)
+        expect(err.message).to.equal('Not connected.')
+      }
+      assertErrorCbAsync(client, errorCheck, done)
+    })
+
+    it('callback is asynchronous in case of an I/O error', function (done) {
+      // maxConnsPerNode = 0 will trigger an error in the C client when trying to send a command
+      var config = extend({ maxConnsPerNode: 0 }, helper.config)
+      Aerospike.connect(config, function (err, client) {
+        if (err) throw err
+        var errorCheck = function (err) {
+          expect(err).to.be.an(Error)
+          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_NO_MORE_CONNECTIONS)
+        }
+        assertErrorCbAsync(client, errorCheck, done)
       })
     })
   })
