@@ -132,4 +132,18 @@ describe('Client', function () {
       })
     })
   })
+
+  describe('Client#captureStackTraces', function () {
+    it('should capture stack traces that show the command being called', function (done) {
+      var client = helper.client
+      var key = keygen.string(helper.namespace, helper.set)()
+      var orig = client.captureStackTraces
+      client.captureStackTraces = true
+      client.get(key, function (err) {
+        expect(err.stack).to.match(/Client.get/)
+        client.captureStackTraces = orig
+        done()
+      })
+    })
+  })
 })
