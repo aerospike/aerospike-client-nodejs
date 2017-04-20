@@ -178,7 +178,6 @@ context('Scans', function () {
       it('should only scan approx. half of the records', function (done) {
         var scan = client.scan(helper.namespace, testSet, {
           percent: 50,
-          concurrent: true,
           nobins: true
         })
         var recordsReceived = 0
@@ -188,8 +187,9 @@ context('Scans', function () {
           recordsReceived++
         })
         stream.on('end', function () {
-          // FIXME: with percent < 100, scan oftern returns zero records - is this a problem?!
-          expect(recordsReceived).to.be.within(0, numberOfRecords - 1)
+          // The scan percentage is not very exact, esp. for small sets, so we
+          // just test that the scan did not return every single record.
+          expect(recordsReceived).to.be.lessThan(numberOfRecords)
           done()
         })
       })
