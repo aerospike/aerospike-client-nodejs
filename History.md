@@ -1,3 +1,15 @@
+v2.5.2 / 2017-04-20
+===================
+
+v2.5.x is the last release to support Node.js v0.12 and io.js. The next major client release will require Node.js v4 or later.
+
+* **New Features**
+  * Capture more useful stacktraces for debugging [#189](https://github.com/aerospike/aerospike-client-nodejs/issues/189)
+
+* **Bug Fixes**
+  * Synchronous error callback in query command causes "unspecified" error in record stream [#146](https://github.com/aerospike/aerospike-client-nodejs/issues/146)
+  * Query/scan record stream should emit AerospikeError instances [#187](https://github.com/aerospike/aerospike-client-nodejs/issues/187)
+
 v2.5.1 / 2017-04-11
 ===================
 
@@ -6,8 +18,6 @@ v2.5.1 / 2017-04-11
 
 v2.5.0 / 2017-04-05
 ===================
-
-This is the last release to support Node.js v0.12 and io.js. The next client release will require Node.js v4 or later.
 
 * **New Features**
   * Support ns/set truncate command [#712](https://github.com/aerospike/aerospike-client-nodejs/issues/172)
