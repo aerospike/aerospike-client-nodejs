@@ -18,7 +18,7 @@ the master process.
 ### Using Shared Memory to More Efficiently Manage Cluster Status
 
 Each Aerospike client instance runs an extra cluster _tend_ thread that
-periodically polls the server nodes for cluster status. This is reuquired to,
+periodically polls the server nodes for cluster status. This is required to,
 among other things, maintain the data partition map, so that the client knows
 how to send database commands to the cluster node that holds the master replica
 of a given record.
