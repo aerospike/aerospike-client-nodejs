@@ -30,7 +30,8 @@
   "scripts": {
     "test": "standard && ./scripts/shuffle_tests",
     "apidocs": "jsdoc -c jsdoc.json",
-    "preversion": "npm test"
+    "preversion": "npm test",
+    "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/"
   },
   "dependencies": {
     "nan": "~2.3.0"

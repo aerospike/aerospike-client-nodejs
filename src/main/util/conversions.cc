@@ -1323,8 +1323,7 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const LogInfo* log)
 {
     int arr_length = arr->Length();
-    char** c_bins = NULL;
-    c_bins = (char**) cf_calloc(sizeof(char*), arr_length+1);
+    char** c_bins = (char**) cf_calloc(sizeof(char*), arr_length+1);
     as_v8_debug(log, "Number of bins requested %d", arr_length);
     for( int i = 0; i < arr_length; i++) {
         Local<Value> bname = arr->Get(i);
