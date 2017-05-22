@@ -41,7 +41,7 @@ bool v8_logging_callback(as_log_level level, const char* func, const char * file
     msg[1024-1] = '\0';
     va_end(ap);
 
-    fprintf(stderr, "[%s:%d][%s] %s\n", basename((char*) file), line, func, msg);
+    fprintf(stderr, "[%s:%u][%s] %s\n", basename((char*) file), line, func, msg);
 
     return true;
 }
@@ -74,7 +74,7 @@ void as_v8_log_function(const LogInfo* log, as_log_level level, const char* func
     now = time(NULL);
     gmtime_r(&now, &nowtm);
     pos += strftime(msg, limit, "%b %d %Y %T %Z: ", &nowtm);
-    pos += snprintf(msg+pos, limit-pos, "%-5s(%d) [%s:%d] [%s] - ", log_severity_strings[level+1], getpid(), basename((char*) file), line, func);
+    pos += snprintf(msg+pos, limit-pos, "%-5s(%d) [%s:%u] [%s] - ", log_severity_strings[level+1], getpid(), basename((char*) file), line, func);
 
     va_list ap;
     va_start(ap, fmt);

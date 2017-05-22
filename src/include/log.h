@@ -118,7 +118,7 @@ static inline void _log(const char * func, const char * file, uint32_t line, con
     vsnprintf(msg, 1024-1, fmt, ap);
     va_end(ap);
 
-    fprintf(stderr, "[%s:%d][%s] %s\n", file, line, func, msg);
+    fprintf(stderr, "[%s:%u][%s] %s\n", file, line, func, msg);
 }
 
 /**
@@ -131,7 +131,7 @@ static inline void _log_record(LogInfo * log, const char * func, const char * fi
     size_t limit = sizeof(msg)-2;
     size_t pos = 0;
 
-    pos += snprintf(msg+pos, limit-pos, "[%s:%d] Record has \n", file, line);
+    pos += snprintf(msg+pos, limit-pos, "[%s:%u] Record has \n", file, line);
 
     as_record_iterator it;
     as_record_iterator_init(&it, record);
@@ -141,7 +141,7 @@ static inline void _log_record(LogInfo * log, const char * func, const char * fi
         char * name = as_bin_get_name(bin);
         as_val * val = (as_val *) as_bin_get_value(bin);
         char * str = as_val_tostring(val);
-        pos += snprintf(msg+pos, limit-pos, "[%s:%d]%s = %s\n", file, line, name, str);
+        pos += snprintf(msg+pos, limit-pos, "[%s:%u]%s = %s\n", file, line, name, str);
         free(str);
     }
 

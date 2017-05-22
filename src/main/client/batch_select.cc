@@ -72,8 +72,7 @@ bool batch_select_callback(const as_batch_read * results, uint32_t n, void * uda
             as_v8_debug(log, "batch result for the key");
             key_clone(results[i].key, (as_key**) &data->results[i].key, log);
             if (results[i].result == AEROSPIKE_OK) {
-                as_record * rec = NULL ;
-                rec = &data->results[i].record;
+                as_record* rec = &data->results[i].record;
 
                 as_v8_detail(log, "Record[%d]", i);
 

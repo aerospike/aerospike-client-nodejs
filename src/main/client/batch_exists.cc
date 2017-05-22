@@ -73,8 +73,7 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
             data->results[i].result = results[i].result;
             key_clone(results[i].key, (as_key**) &data->results[i].key, log);
             if (results[i].result == AEROSPIKE_OK) {
-                as_record * rec = NULL;
-                rec = &data->results[i].record;
+                as_record* rec = &data->results[i].record;
                 as_v8_debug(log, "record[%d]", i);
                 record_clone(&results[i].record, &rec, log);
             }
