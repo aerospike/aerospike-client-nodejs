@@ -118,6 +118,21 @@ describe('Client', function () {
     })
   })
 
+  describe('Client#getNodes', function () {
+    var client = helper.client
+
+    it('returns a list of cluster nodes', function () {
+      var nodes = client.getNodes()
+
+      expect(nodes).to.be.an('array')
+      expect(nodes.length).to.be.greaterThan(0)
+      nodes.forEach(function (node) {
+        expect(node.name).to.match(/^[0-9A-F]{15}$/)
+        expect(node.address).to.be.a('string')
+      })
+    })
+  })
+
   context('cluster name', function () {
     it('should fail to connect to the cluster if the cluster name does not match', function (done) {
       var config = Object.assign({}, helper.config)
