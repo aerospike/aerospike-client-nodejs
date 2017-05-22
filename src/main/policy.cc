@@ -109,6 +109,15 @@ int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const 
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->allow_inline, NULL, obj, "allowInline", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->send_set_name, NULL, obj, "sendSetName", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail(log, "Parsing batch policy: success");
 	return AS_NODE_PARAM_OK;
 }
