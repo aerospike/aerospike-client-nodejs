@@ -138,21 +138,22 @@ void AerospikeClient::Init()
 	// object using an internal field.
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "addSeedHost", AddSeedHost);
 	Nan::SetPrototypeMethod(tpl, "applyAsync", ApplyAsync);
-	Nan::SetPrototypeMethod(tpl, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(tpl, "batchExists", BatchExists);
-	Nan::SetPrototypeMethod(tpl, "batchSelect", BatchSelect);
+	Nan::SetPrototypeMethod(tpl, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(tpl, "batchRead", BatchReadAsync);
+	Nan::SetPrototypeMethod(tpl, "batchSelect", BatchSelect);
 	Nan::SetPrototypeMethod(tpl, "close", Close);
 	Nan::SetPrototypeMethod(tpl, "connect", Connect);
-	Nan::SetPrototypeMethod(tpl, "isConnected", IsConnected);
 	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
-	Nan::SetPrototypeMethod(tpl, "info", Info);
-	Nan::SetPrototypeMethod(tpl, "infoForeach", InfoForeach);
+	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
+	Nan::SetPrototypeMethod(tpl, "info", Info);
+	Nan::SetPrototypeMethod(tpl, "infoForeach", InfoForeach);
+	Nan::SetPrototypeMethod(tpl, "isConnected", IsConnected);
 	Nan::SetPrototypeMethod(tpl, "jobInfo", JobInfo);
 	Nan::SetPrototypeMethod(tpl, "operateAsync", OperateAsync);
 	Nan::SetPrototypeMethod(tpl, "putAsync", PutAsync);
@@ -161,8 +162,9 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
-	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
+	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
+	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(tpl, "truncate", Truncate);
 	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
