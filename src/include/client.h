@@ -84,6 +84,7 @@ class AerospikeClient : public ObjectWrap {
 		 *  CLIENT OPERATIONS
 		 **********************************************************************/
 
+		static NAN_METHOD(AddSeedHost);
 		static NAN_METHOD(ApplyAsync);
 		static NAN_METHOD(BatchExists);
 		static NAN_METHOD(BatchGet);
@@ -107,6 +108,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(Register);
 		static NAN_METHOD(RegisterWait);
 		static NAN_METHOD(RemoveAsync);
+		static NAN_METHOD(RemoveSeedHost);
 		static NAN_METHOD(ScanBackground);
 		static NAN_METHOD(ScanAsync);
 		static NAN_METHOD(SelectAsync);

@@ -21,6 +21,7 @@
 extern "C" {
     #include <aerospike/aerospike.h>
     #include <aerospike/as_async_proto.h>
+    #include <aerospike/as_cluster.h>
 }
 
 using namespace v8;
@@ -94,4 +95,38 @@ NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 	bool pending = as_async_get_pending(client->as->cluster) > 0;
 
 	info.GetReturnValue().Set(Nan::New(pending));
+}
+
+/**
+ * Adds a seed host to the cluster.
+ */
+NAN_METHOD(AerospikeClient::AddSeedHost)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
+	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
+
+	String::Utf8Value hostname(info[0]->ToString());
+	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+
+	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
+}
+
+/**
+ * Removes a seed host from the cluster.
+ */
+NAN_METHOD(AerospikeClient::RemoveSeedHost)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
+	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
+
+	String::Utf8Value hostname(info[0]->ToString());
+	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+
+	as_cluster_remove_seed(client->as->cluster, *hostname, port);
 }

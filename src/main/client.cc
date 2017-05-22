@@ -138,6 +138,7 @@ void AerospikeClient::Init()
 	// object using an internal field.
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
+	Nan::SetPrototypeMethod(tpl, "addSeedHost", AddSeedHost);
 	Nan::SetPrototypeMethod(tpl, "applyAsync", ApplyAsync);
 	Nan::SetPrototypeMethod(tpl, "batchExists", BatchExists);
 	Nan::SetPrototypeMethod(tpl, "batchGet", BatchGet);
@@ -161,6 +162,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
+	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
