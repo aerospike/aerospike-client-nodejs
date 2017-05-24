@@ -46,10 +46,9 @@ function UDFHelper (client) {
 
 UDFHelper.prototype.register = function (filename, callback) {
   var script = path.join(__dirname, filename)
-  var self = this
-  this.client.udfRegister(script, function (err) {
+  this.client.udfRegister(script, function (err, job) {
     if (err) throw err
-    self.client.udfRegisterWait(filename, 50, function (err) {
+    job.waitUntilDone(50, function (err) {
       if (err) throw err
       callback()
     })
@@ -57,9 +56,12 @@ UDFHelper.prototype.register = function (filename, callback) {
 }
 
 UDFHelper.prototype.remove = function (filename, callback) {
-  this.client.udfRemove(filename, function (err) {
+  this.client.udfRemove(filename, function (err, job) {
     if (err && err.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw err
-    callback()
+    job.waitUntilDone(50, function (err) {
+      if (err) throw err
+      callback()
+    })
   })
 }
 

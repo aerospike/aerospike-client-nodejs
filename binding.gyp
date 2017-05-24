@@ -56,7 +56,6 @@
         'src/main/client/index_create.cc',
         'src/main/client/index_remove.cc',
         'src/main/client/udf_register.cc',
-        'src/main/client/udf_register_wait.cc',
         'src/main/client/udf_remove.cc',
         'src/main/enums/predicates.cc',
         'src/main/enums/log.cc',

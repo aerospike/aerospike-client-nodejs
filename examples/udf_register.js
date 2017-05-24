@@ -21,8 +21,6 @@
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
-const path = require('path')
-const iteration = require('./iteration')
 
 // *****************************************************************************
 // Options parsing
@@ -78,11 +76,6 @@ var argp = yargs
       alias: 'P',
       default: null,
       describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
     }
   })
 
@@ -100,8 +93,6 @@ if (!file) {
   argp.showHelp()
   process.exit(1)
 }
-
-iteration.setLimit(argv.iterations)
 
 // *****************************************************************************
 // Configure the client.
@@ -128,11 +119,11 @@ var config = {
 // *****************************************************************************
 
 function run (client, done) {
-  client.udfRegister(file, function (err) {
+  client.udfRegister(file, function (err, job) {
     if (err) throw err
-    client.udfRegisterWait(path.basename(file), 1000, function (err) {
+    job.waitUntilDone(function (err) {
       if (err) throw err
-      !argv.quiet && console.log('UDF Registration Successful - %s', file)
+      !argv.quiet && console.log('UDF module registered successfully: %s', file)
       done()
     })
   })
