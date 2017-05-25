@@ -46,10 +46,9 @@ function UDFHelper (client) {
 
 UDFHelper.prototype.register = function (filename, callback) {
   var script = path.join(__dirname, filename)
-  var self = this
-  this.client.udfRegister(script, function (err) {
+  this.client.udfRegister(script, function (err, job) {
     if (err) throw err
-    self.client.udfRegisterWait(filename, 50, function (err) {
+    job.waitUntilDone(50, function (err) {
       if (err) throw err
       callback()
     })
@@ -57,9 +56,12 @@ UDFHelper.prototype.register = function (filename, callback) {
 }
 
 UDFHelper.prototype.remove = function (filename, callback) {
-  this.client.udfRemove(filename, function (err) {
+  this.client.udfRemove(filename, function (err, job) {
     if (err && err.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw err
-    callback()
+    job.waitUntilDone(50, function (err) {
+      if (err) throw err
+      callback()
+    })
   })
 }
 
@@ -121,7 +123,7 @@ ServerInfoHelper.prototype.fetch_info = function (done) {
   client.infoAll('build\nedition\nfeatures', function (err, results) {
     if (err) throw err
     results.forEach(function (response) {
-      var info = Info.parseInfo(response.info)
+      var info = Info.parse(response.info)
       self.edition = info['edition']
       self.build = info['build']
       var features = info['features']
@@ -141,7 +143,7 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
   client.infoAll(nsKey, function (err, results) {
     if (err) throw err
     var info = results.pop()['info']
-    self.nsconfig = Info.parseInfo(info)[nsKey]
+    self.nsconfig = Info.parse(info)[nsKey]
     done()
   })
 }
@@ -149,7 +151,7 @@ ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
 ServerInfoHelper.prototype.randomNode = function (done) {
   client.infoAny('service', function (err, response) {
     if (err) throw err
-    var service = Info.parseInfo(response).service
+    var service = Info.parse(response).service
     if (Array.isArray(service)) {
       service = service.pop()
     }
