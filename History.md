@@ -1,3 +1,16 @@
+v2.6.0 / 2017-05-25
+===================
+
+* **New Features**
+  * Expose new consistency level in batch policy [#197](https://github.com/aerospike/aerospike-client-nodejs/pull/197)
+  * Add interface to dynamically add/remove seed hosts [#194](https://github.com/aerospike/aerospike-client-nodejs/pull/194)
+  * New UDF register/unregister job to async wait for job completion [#198](https://github.com/aerospike/aerospike-client-nodejs/pull/198)
+  * Improved Info.parse() function, replacing Info.parseInfo()
+
+* **Updates**
+  * Update C client library to [v4.1.6](http://www.aerospike.com/download/client/c/notes.html#4.1.6).
+  * The Client#udfRegisterWait and Info#parseInfo functions have been marked deprecated. See [API Changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md) for details.
+
 v2.5.2 / 2017-04-20
 ===================
 

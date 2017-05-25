@@ -18,7 +18,6 @@
 
 const Aerospike = require('../lib/aerospike')
 const AerospikeError = require('../lib/aerospike_error')
-const Info = require('../lib/info')
 const Job = require('../lib/job')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
@@ -49,15 +48,8 @@ context('secondary indexes', function () {
             default:
               callback(err)
           }
-        } else if (info.length > 0) {
-          var done = info.every(function (response) {
-            var stats = Info.parseInfo(response.info)[sindex]
-            var noIndexErr = (typeof stats === 'string') && (stats.indexOf('FAIL:201:NO INDEX') >= 0)
-            return !noIndexErr
-          })
-          callback(null, done)
         } else {
-          callback(null, false)
+          callback(null, true)
         }
       })
     }

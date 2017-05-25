@@ -108,34 +108,49 @@ describe('client.infoAll()', function () {
   })
 })
 
-describe('info.parseInfo()', function () {
+describe('info.parse()', function () {
   it('should parse key-value pairs from an info string', function () {
     var infoStr = 'version\t1\nedition\tCommunity Edition\n'
-    var infoHash = info.parseInfo(infoStr)
+    var infoHash = info.parse(infoStr)
     expect(infoHash).to.eql({version: 1, edition: 'Community Edition'})
   })
 
   it('should parse nested key-value pairs', function () {
     var infoStr = 'statistics\tmem=10;req=20\n'
-    var infoHash = info.parseInfo(infoStr)
+    var infoHash = info.parse(infoStr)
     expect(infoHash['statistics']).to.eql({mem: 10, req: 20})
   })
 
   it('should parse list values', function () {
     var infoStr = 'features\tgeo;double\n'
-    var infoHash = info.parseInfo(infoStr)
+    var infoHash = info.parse(infoStr)
     expect(infoHash['features']).to.eql(['geo', 'double'])
   })
 
   it('should parse numeric strings as numbers', function () {
     var infoStr = 'version\t1'
-    var infoHash = info.parseInfo(infoStr)
+    var infoHash = info.parse(infoStr)
     expect(infoHash['version']).to.be.a('number')
   })
 
   it('should be able to handle an empty string', function () {
     var infoStr = ''
-    var infoHash = info.parseInfo(infoStr)
+    var infoHash = info.parse(infoStr)
     expect(infoHash).to.eql({})
+  })
+
+  it('should parse the udf-list info key', function () {
+    var infoStr = 'udf-list\tfilename=mod1.lua,hash=00557374fc319b8d0f38c6668015db35358d7b62,type=LUA;filename=mod2.lua,hash=c96771bd8ce6911a22a592e4857fd47082f14990,type=LUA;'
+    var infoHash = info.parse(infoStr)
+    expect(infoHash['udf-list']).to.eql([
+      { filename: 'mod1.lua', hash: '00557374fc319b8d0f38c6668015db35358d7b62', type: 'LUA' },
+      { filename: 'mod2.lua', hash: 'c96771bd8ce6911a22a592e4857fd47082f14990', type: 'LUA' }
+    ])
+  })
+
+  it('should parse the bins info key', function () {
+    var infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
+    var infoHash = info.parse(infoStr)
+    expect(infoHash['bins']).to.eql({ test: { names: ['bin1', 'bin2'], stats: { bin_names: 2, bin_names_quota: 32768 } } })
   })
 })

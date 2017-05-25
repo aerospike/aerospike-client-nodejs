@@ -21,7 +21,6 @@
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
-const iteration = require('./iteration')
 
 // *****************************************************************************
 // Options parsing
@@ -77,11 +76,6 @@ var argp = yargs
       alias: 'P',
       default: null,
       describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
     }
   })
 
@@ -99,8 +93,6 @@ if (!module) {
   argp.showHelp()
   process.exit(1)
 }
-
-iteration.setLimit(argv.iterations)
 
 // *****************************************************************************
 // Configure the client.
@@ -127,10 +119,13 @@ var config = {
 // *****************************************************************************
 
 function run (client, done) {
-  client.udfRemove(module, function (err) {
+  client.udfRemove(module, function (err, job) {
     if (err) throw err
-    !argv.quiet && console.log('OK.')
-    iteration.next(run, client, done)
+    job.waitUntilDone(function (err) {
+      if (err) throw err
+      !argv.quiet && console.log('UDF module removed successfully: %s', module)
+      done()
+    })
   })
 }
 

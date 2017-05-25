@@ -1,5 +1,30 @@
 # Backward Incompatible API Changes
 
+## Version 2.6.0
+
+### Deprecations
+
+| Deprecated Function          | Replacement                                    | Remarks                                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `Infoy#parseInfo`            | `Info#parse`                                   | `parse` and `parseInfo` both parse the info data returned by the Aerospike server; there are some minor differences between the parsed data returned by the two functions for some info keys |
+| `Client#udfRegisterWait`     | `UdfJob#waitUntilDone`                         | An `UdfJob` instance is passed to the client's `udfRegister`/`udfRemove` callback functions. |
+
+## Version 2.4.4
+
+### Deprecation of LargeList Functionality
+
+Aerospike will no longer support the Large Data Type (LDT) feature so all
+LargeList related functions have been marked as deprecated. Please refer to
+[this article](http://www.aerospike.com/blog/aerospike-ldt/) on the Aerospike
+company blog for more details.
+
+### Deprecations
+
+| Deprecated Function          | Replacement                                    | Remarks                                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `Client#LargeList`           | -                                              | see above                                   |
+| `LargeList#*`                | -                                              | see above                                   |
+
 ## Version 2.4.0
 
 ### Shared Memory Layout Changes
@@ -387,3 +412,4 @@ The following functions have been deprecated and/or replaced:
 | `Client#batchSelect` | `Client#batchRead`      | Requires Aerospike server version >= 3.6.0. |
 | `Client#execute`     | `Client#apply`          | -                                           |
 | `Client#add`         | `Client#incr`           | -                                           |
+:q

@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "2.5.2",
+  "version": "2.6.0",
   "description": "Aerospike Client Library",
   "tags": [
     "aerospike",
@@ -30,7 +30,8 @@
   "scripts": {
     "test": "standard && ./scripts/shuffle_tests",
     "apidocs": "jsdoc -c jsdoc.json",
-    "preversion": "npm test"
+    "preversion": "npm test",
+    "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/"
   },
   "dependencies": {
     "nan": "~2.3.0"
@@ -40,7 +41,6 @@
     "mocha": "^3.0",
     "yargs": "1.2.1",
     "standard": "^10.0",
-    "deasync": "^0.1.4",
     "jsdoc": "^3.4.0",
     "ink-docstrap": "^1.1.0"
   },
