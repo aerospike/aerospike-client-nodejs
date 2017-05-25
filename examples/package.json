@@ -15,6 +15,7 @@
   "dependencies": {
     "aerospike": "^2.4",
     "yargs": ">=1.2.1",
-    "sleep": "^3.0.0"
+    "sleep": "^3.0.0",
+    "deasync": "^0.1.4"
   }
 }
