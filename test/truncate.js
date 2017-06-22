@@ -16,6 +16,7 @@
 
 /* global expect, describe, it, beforeEach */
 
+const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 const setgen = helper.valgen.string({
@@ -40,22 +41,24 @@ describe('client.truncate()', function () {
   function genRecords (kgen, noRecords, callback) {
     var mgen = metagen.constant({ ttl: 300 })
     var rgen = recgen.constant({ a: 'foo', b: 'bar' })
+    var records = []
     putgen.put(noRecords, kgen, rgen, mgen, function (key) {
       if (key === null) {
-        callback()
+        callback(records)
+      } else {
+        records.push({ key: key })
       }
     })
   }
 
-  function countRecords (ns, set, callback) {
-    var recordsReceived = 0
-    var scan = client.scan(ns, set, { nobins: true })
-    var stream = scan.foreach()
-    stream.on('data', function () { recordsReceived++ })
-    stream.on('error', function (error) { throw error })
-    stream.on('end', function () {
-      callback(recordsReceived)
+  function foundKeys (batchResults) {
+    var found = []
+    batchResults.forEach(function (result) {
+      if (result.status === Aerospike.status.AEROSPIKE_OK) {
+        found.push({ key: result.key })
+      }
     })
+    return found
   }
 
   it('deletes all records in the set', function (done) {
@@ -64,13 +67,14 @@ describe('client.truncate()', function () {
     var noRecords = 5
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
-    genRecords(kgen, noRecords, function () {
+    genRecords(kgen, noRecords, function (records) {
       setTimeout(function () {
         client.truncate(ns, set, 0, function (err) {
           if (err) throw err
           setTimeout(function () {
-            countRecords(ns, set, function (count) {
-              expect(count).to.equal(0)
+            client.batchRead(records, function (err, results) {
+              if (err) throw err
+              expect(foundKeys(results)).to.eql([])
               done()
             })
           }, 200)
@@ -86,16 +90,17 @@ describe('client.truncate()', function () {
     var noRecordsAfter = 2
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
-    genRecords(kgen, noRecordsBefore, function () {
+    genRecords(kgen, noRecordsBefore, function (batchBefore) {
       setTimeout(function () {
         var timeNanos = new Date().getTime() * 1000000
         setTimeout(function () {
-          genRecords(kgen, noRecordsAfter, function () {
+          genRecords(kgen, noRecordsAfter, function (batchAfter) {
             client.truncate(ns, set, timeNanos, function (err) {
               if (err) throw err
               setTimeout(function () {
-                countRecords(ns, set, function (count) {
-                  expect(count).to.equal(noRecordsAfter)
+                client.batchRead(batchBefore.concat(batchAfter), function (err, results) {
+                  if (err) throw err
+                  expect(foundKeys(results)).to.eql(batchAfter)
                   done()
                 })
               }, 200)
