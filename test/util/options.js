@@ -84,11 +84,15 @@ function baseDir () {
 
 options.getConfig = function () {
   var config = {
-    log: {level: options.log, file: options.log_file},
-    policies: {timeout: options.timeout},
+    log: {
+      level: options.log,
+      file: options.log_file
+    },
+    policies: {
+      timeout: options.timeout
+    },
     modlua: {
-      userPath: baseDir() + '/test',
-      systemPath: baseDir() + '/aerospike-client-c/lua'
+      userPath: baseDir() + '/test'
     }
   }
   if (options.host !== null) {
