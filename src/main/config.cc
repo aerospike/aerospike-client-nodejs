@@ -178,75 +178,28 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		as_v8_debug(log, "Parsing global policies: success");
 	}
 
-	// stores information about mod-lua userpath and systempath.
-	bool syspath_set = false;
-	bool usrpath_set = false;
-
 	// If modlua path is passed in config object, set those values here
 	if (configObj->Has(Nan::New("modlua").ToLocalChecked())) {
 		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked())->ToObject();
 
 		char* system_path;
+		bool syspath_set = false;
 		if ((rc = get_optional_string_property(&system_path, &syspath_set, modlua, "systemPath", log)) != AS_NODE_PARAM_OK) {
 			return rc;
 		} else if (syspath_set) {
 			strcpy(config->lua.system_path, system_path);
+		} else {
+			as_v8_debug(log, "Using default Lua system path: %s", AS_CONFIG_LUA_SYSTEM_PATH);
 		}
 
 		char* user_path;
+		bool usrpath_set = false;
 		if ((rc = get_optional_string_property(&user_path, &usrpath_set, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {
 			return rc;
 		} else if (usrpath_set) {
 			strcpy(config->lua.user_path, user_path);
-		}
-	}
-
-	// Modlua system and user path is not passed in a config object.
-	// Set them to default values here.
-	if (!syspath_set) {
-#ifdef __linux
-		char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
-#elif __APPLE__
-		char const * syspath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif
-		int rc = access(syspath, R_OK);
-		if (rc == 0) {
-			strcpy(config->lua.system_path, syspath);
 		} else {
-#ifdef __linux
-			char const * syspath = "./aerospike-client-c/package/opt/aerospike/client/sys/udf/lua/";
-#elif __APPLE__
-			char const * syspath = "./aerospike-client-c/package/usr/local/aerospike/client/sys/udf/lua/";
-#endif
-			rc = access(syspath, R_OK);
-			if (rc== 0) {
-				strcpy(config->lua.system_path, syspath);
-			} else {
-				as_v8_debug(log,"Could not find a valid LUA system path %s", syspath);
-			}
-		}
-	}
-	if (!usrpath_set) {
-#ifdef __linux
-		char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/opt/aerospike/client/usr/udf/lua/";
-#elif __APPLE__
-		char const * usrpath = "./node_modules/aerospike/aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua/";
-#endif
-		int rc = access(usrpath, R_OK);
-		if (rc == 0) {
-			strcpy(config->lua.user_path, usrpath);
-		} else {
-#ifdef __linux
-			char const * usrpath = "./aerospike-client-c/package/opt/aerospike/client/usr/udf/lua";
-#elif __APPLE__
-			char const * usrpath = "./aerospike-client-c/package/usr/local/aerospike/client/usr/udf/lua";
-#endif
-			rc = access(usrpath, R_OK);
-			if (rc == 0) {
-				strcpy(config->lua.user_path, usrpath);
-			} else {
-				as_v8_debug(log, "Could not find valid LUA user path %s", usrpath);
-			}
+			as_v8_debug(log, "Using default Lua user path: %s", AS_CONFIG_LUA_USER_PATH);
 		}
 	}
 

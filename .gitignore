@@ -4,5 +4,4 @@ node_modules/
 aerospike-client-c/
 npm-debug.log
 test.log
-valgrind/
-apidocs/
+aerospike-*.tgz

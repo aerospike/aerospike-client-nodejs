@@ -81,13 +81,9 @@
         ]
       },
       'variables': {
-        'uselua': '<!(echo $USELUA)',
         'isnode': '<!(hash node 2> /dev/null; echo $?)',
         'isnodejs': '<!(hash nodejs 2> /dev/null; echo $?)'
       },
-      'defines': [
-        'AS_USE_LIBUV'
-      ],
       'conditions': [
         ['OS=="linux"',{
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
@@ -96,9 +92,6 @@
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
           }
-        }],
-        ['uselua==1',{
-          'libraries': ['-llua']
         }],
         ['isnode==0',{
           'include_dirs': [
