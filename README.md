@@ -119,16 +119,13 @@ The package has the following compile time/run time dependencies:
 | --- | --- | --- |
 | libssl | openssl | |
 | libcrypto | openssl | Required for RIPEMD160 hash function. |
-| liblua5.1 | lua | Required for Lua execution, used in query aggregation. |
-
-Note: Lua is used for query aggregation. If the application is not using the aggregation feature, lua installation can be skipped.
 
 ### CentOS/RHEL 6+
 
 To install library prerequisites via `yum`:
 
 ```bash
-sudo yum install gcc-c++ openssl-devel lua-devel
+sudo yum install gcc-c++ openssl-devel
 ```
 
 Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. To build the
@@ -142,14 +139,7 @@ or a compatible devtoolset version for CentOS.
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev liblua5.1-dev
-```
-
-The following symlinks need to be created for Aerospike's packaged examples to compile:
-
-```bash
-sudo ln -s /usr/lib/liblua5.1.so /usr/lib/liblua.so
-sudo ln -s /usr/lib/liblua5.1.a /usr/lib/liblua.a
+sudo apt-get install g++ libssl1.0.0 libssl-dev
 ```
 
 ### Ubuntu 12.04+
@@ -157,7 +147,7 @@ sudo ln -s /usr/lib/liblua5.1.a /usr/lib/liblua.a
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev liblua5.1-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev
 ```
 
 Note: The `gcc` tool chain included in Ubuntu 12.04 is gcc-4.6. To build the
@@ -165,39 +155,18 @@ Aerospike addon using Node.js v4 or later, gcc-4.8 or later is required. To
 update the gcc tool chain you can install a more recent version of gcc
 toolchain using several available PPA repositories.
 
-The following symlinks need to be created for Aerospike's packaged examples to compile:
-
-```bash
-sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.so /usr/lib/liblua.so
-sudo ln -s /usr/lib/x86_64-linux-gnu/liblua5.1.a /usr/lib/liblua.a
-```
-
 ### Mac OS X
 
 Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
 
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
-- Lua 5.1.5 library.  Required when running queries with user defined aggregations.
 
 #### Openssl library installation in Mac OS X.
 
 ```bash
 $ brew install openssl
 $ brew link openssl --force
-```
-
-#### Lua Installation in Mac OS X
-
-Lua is required for performing aggregations on results returned from the database. The following are instruction for installing Lua 5.1:
-
-```bash
-$ curl -O http://www.lua.org/ftp/lua-5.1.5.tar.gz
-$ tar xvf lua-5.1.5.tar.gz
-$ cd lua-5.1.5
-$ make macosx
-$ make test
-$ sudo make install
 ```
 
 <a name="Installation"></a>
@@ -224,16 +193,6 @@ A module may be installed in global location via the `-g` flag. The global locat
 is usually reserved for modules that are not directly depended on by an application,
 but may have executables which you want to be able to call regardless of the
 application. This is usually the case for tools like tools like `npm` and `mocha`.
-
-If the application uses query aggregation feature, LUA library should be installed
-following the instruction given in [Prerequisites](#Prerequisites). The last step
-in aggregation is executed in the client machine which  uses LUA. To install `aerospike`
-library with LUA enabled, an environment variable `USELUA` must be set. For more details
-[Aerospike with Aggregation](#Aerospike with Aggregation)
-
-```bash
-$ export USELUA=1
-```
 
 <a name="Installing-via-npm-Registry"></a>
 ### Installing via npm Registry
@@ -311,20 +270,6 @@ Once installed, the module can be required in the application:
 
 	const Aerospike = require('aerospike')
 
-<a name="Aerospike with Aggregation"></a>
-### Aerospike with Aggregation
-
-Aerospike nodejs client does not include LUA by default during installation. Application can set
-an environment variable `USELUA` to inclue LUA library, and can use the Aggregation feature in
-Aerospike. To install with Aggregation enabled:
-
-	$ USELUA=1 npm install
-
-If application includes `aerospike` as a dependency in `package.json` the variable `USELUA`
-can be exported as a environment variable as follows:
-
-	$ export USELUA=1
-
 <a name="C-Client-Resolution"></a>
 ### C Client Resolution
 
@@ -373,16 +318,6 @@ The following is an example of specifying the path to the Aerospike C client
 build directory:
 
     $ export PREFIX=~/aerospike-client-c/target/Linux-x86_64
-
-When Aerospike C Client is resolved through the environment variable PREFIX,
-the location to lua files that comes with C client installation must also be specified.
-Specifying lua file location is done using environment variable `AEROSPIKE_LUA_PATH=<PATH>`.
-The `<PATH>` must be a path to a directory containing files `aerospike.lua` and `as.lua`.
-
-The following is an example of specifying `AEROSPIKE_LUA_PATH` and then installing.
-
-	$ export AEROSPIKE_LUA_PATH=/opt/aerospike/client/sys/udf/lua/
-	$ npm install
 
 <a name="Tests"></a>
 ## Tests

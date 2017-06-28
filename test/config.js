@@ -68,8 +68,7 @@ describe('Config', function () {
         tenderInterval: '1000',
         user: {name: 'admin'},
         password: 12345,
-        sharedMemory: true,
-        modlua: '/system/path'
+        sharedMemory: true
       }
       var config = new Config(obj)
       expect(config).to.not.have.property('log')
@@ -79,7 +78,6 @@ describe('Config', function () {
       expect(config).to.not.have.property('user')
       expect(config).to.not.have.property('password')
       expect(config).to.not.have.property('sharedMemory')
-      expect(config).to.not.have.property('modlua')
     })
 
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {

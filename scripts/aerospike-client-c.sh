@@ -30,7 +30,6 @@ INIFILE=${BASE_DIR}/aerospike-client-c.ini
 CHECKSUMS=${BASE_DIR}/aerospike-client-c.sha256
 AEROSPIKE=${CWD}/aerospike-client-c
 LIB_PATH=${PREFIX}
-LUA_PATH=${AEROSPIKE_LUA_PATH}
 
 DOWNLOAD=${DOWNLOAD:=0}
 COPY_FILES=1
@@ -112,9 +111,6 @@ function check_lib_path() {
   [ -d "$1" ] && [ -f "$1/lib/libaerospike.a" ] && [ -f "$1/include/aerospike/aerospike.h" ]
 }
 
-function check_lua_path() {
-  [ -d "$1" ] && [ -f "$1/aerospike.lua" ]
-}
 
 ################################################################################
 # LIB_PATH is not defined, so we want to see if we can derive it.
@@ -124,18 +120,10 @@ if [ $DOWNLOAD == 0 ] && [ -z $LIB_PATH ]; then
   # first, check to see if there is a local client
   if check_lib_path ${AEROSPIKE}; then
     LIB_PATH=${AEROSPIKE}
-    if check_lua_path ${AEROSPIKE}/lua; then
-      LUA_PATH=${AEROSPIKE}/lua
-    fi
     COPY_FILES=0
   # next, check to see if there is an installed client
   elif check_lib_path "/user"; then
     LIB_PATH=/usr
-    if check_lua_path /opt/aerospike/client/sys/udf/lua; then
-      LUA_PATH=/opt/aerospike/client/sys/udf/lua
-    elif check_lua_path /usr/local/aerospike/client/sys/udf/lua; then
-      LUA_PATH=/usr/local/aerospike/client/sys/udf/lua
-    fi
   fi
 
   # If we can't find it, then download it.
@@ -203,7 +191,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.${PKG_SUFFIX}"
 
       LIB_PATH=${AEROSPIKE}/package/usr
-      LUA_PATH=${AEROSPIKE}/package/opt/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -213,7 +200,6 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.pkg"
       PKG_TYPE="pkg"
       LIB_PATH=${AEROSPIKE}/package/usr/local
-      LUA_PATH=${AEROSPIKE}/package/usr/local/aerospike/client/sys/udf/lua
       ;;
 
     ############################################################################
@@ -290,7 +276,6 @@ fi
 
 AEROSPIKE_LIBRARY=${LIB_PATH}/lib/libaerospike.a
 AEROSPIKE_INCLUDE=${LIB_PATH}/include
-AEROSPIKE_LUA=${LUA_PATH}
 
 printf "\n" >&1
 printf "CHECK\n" >&1
@@ -309,13 +294,6 @@ else
   FAILED=1
 fi
 
-if [ -f ${AEROSPIKE_LUA}/aerospike.lua ]; then
-  printf "   [✓] %s\n" "${AEROSPIKE_LUA}/aerospike.lua" >&1
-else
-  printf "   [✗] %s\n" "${AEROSPIKE_LUA}/aerospike.lua" >&1
-  FAILED=1
-fi
-
 printf "\n" >&1
 
 if [ $FAILED ]; then
@@ -327,9 +305,8 @@ fi
 ################################################################################
 
 if [ $COPY_FILES == 1 ]; then
-  rm -rf ${AEROSPIKE}/{lib,include,lua}
-  mkdir -p ${AEROSPIKE}/{lib,include,lua}
+  rm -rf ${AEROSPIKE}/{lib,include}
+  mkdir -p ${AEROSPIKE}/{lib,include}
   cp ${AEROSPIKE_LIBRARY} ${AEROSPIKE}/lib/
   cp -R ${AEROSPIKE_INCLUDE}/{aerospike,citrusleaf} ${AEROSPIKE}/include/
-  cp ${AEROSPIKE_LUA}/*.lua ${AEROSPIKE}/lua/
 fi
