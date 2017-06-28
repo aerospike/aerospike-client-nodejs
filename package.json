@@ -51,5 +51,17 @@
     "ignore": [
       "apidocs"
     ]
-  }
+  },
+  "files": [
+    "aerospike-client-c.ini",
+    "aerospike-client-c.sha256",
+    "binding.gyp",
+    "benchmarks/",
+    "examples/",
+    "lib/",
+    "modules/lua-core/",
+    "scripts/",
+    "src/",
+    "test/"
+  ]
 }
