@@ -122,7 +122,7 @@ if [ $DOWNLOAD == 0 ] && [ -z $LIB_PATH ]; then
     LIB_PATH=${AEROSPIKE}
     COPY_FILES=0
   # next, check to see if there is an installed client
-  elif check_lib_path "/user"; then
+  elif check_lib_path "/usr"; then
     LIB_PATH=/usr
   fi
 
