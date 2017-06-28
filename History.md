@@ -1,3 +1,10 @@
+Head
+===================
+
+* **Updates**
+  * Update C client library to [v4.1.7](http://www.aerospike.com/download/client/c/notes.html#4.1.7).
+  * Update packaging to include system *.lua files in npm package [#202](https://github.com/aerospike/aerospike-client-nodejs/pull/202)
+
 v2.6.0 / 2017-05-25
 ===================
 
