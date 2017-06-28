@@ -17,6 +17,7 @@
 const aerospike = require('../../lib/aerospike')
 const yargs = require('yargs')
 const fs = require('fs')
+const path = require('path')
 
 // *****************************************************************************
 //  Options parsing
@@ -78,8 +79,8 @@ var parser = yargs
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv
 
-function baseDir () {
-  return __dirname.split('/').slice(0, -2).join('/')
+function testDir () {
+  return path.resolve(__dirname, '..')
 }
 
 options.getConfig = function () {
@@ -92,7 +93,7 @@ options.getConfig = function () {
       timeout: options.timeout
     },
     modlua: {
-      userPath: baseDir() + '/test'
+      userPath: testDir()
     }
   }
   if (options.host !== null) {
