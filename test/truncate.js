@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it, beforeEach */
+/* global describe, it, beforeEach */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -38,76 +38,85 @@ describe('client.truncate()', function () {
     }
   })
 
-  function genRecords (kgen, noRecords, callback) {
+  // Generates a number of records; the callback function is called with a list
+  // of the record keys.
+  function genRecords (kgen, noRecords, done) {
     var mgen = metagen.constant({ ttl: 300 })
     var rgen = recgen.constant({ a: 'foo', b: 'bar' })
     var records = []
     putgen.put(noRecords, kgen, rgen, mgen, function (key) {
       if (key === null) {
-        callback(records)
+        done(records)
       } else {
         records.push({ key: key })
       }
     })
   }
 
-  function foundKeys (batchResults) {
-    var found = []
-    batchResults.forEach(function (result) {
-      if (result.status === Aerospike.status.AEROSPIKE_OK) {
-        found.push({ key: result.key })
+  // Checks to verify that records that are supposed to have been truncated
+  // are gone and that records that are supposed to remain still exist. If some
+  // truncated records still exist it will try again every pollInt ms.
+  function checkRecords (truncated, remaining, pollInt, done) {
+    client.batchRead(truncated.concat(remaining), function (err, results) {
+      if (err) throw err
+      for (var result of results) {
+        var expectExist = !!remaining.find(function (record) { return record.key.key === result.key.key })
+        switch (result.status) {
+          case Aerospike.status.AEROSPIKE_OK:
+            if (!expectExist) return setTimeout(checkRecords, pollInt, truncated, remaining, done)
+            break
+          case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+            if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.key)
+            break
+          default:
+            throw new Error('Unexpected batchRead status code: ' + result.status)
+        }
       }
+      done()
     })
-    return found
   }
 
   it('deletes all records in the set', function (done) {
-    var ns = helper.namespace
-    var set = setgen()
-    var noRecords = 5
+    const ns = helper.namespace
+    const set = setgen()
+    const noRecords = 5
+    const pollIntMs = 50 // Poll interval in ms to check whether records have been removed
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
     genRecords(kgen, noRecords, function (records) {
       setTimeout(function () {
         client.truncate(ns, set, 0, function (err) {
           if (err) throw err
-          setTimeout(function () {
-            client.batchRead(records, function (err, results) {
-              if (err) throw err
-              expect(foundKeys(results)).to.eql([])
-              done()
-            })
-          }, 200)
+          checkRecords(records, [], pollIntMs, done)
         })
-      }, 200)
+      }, 1)
     })
   })
 
   it('deletes all records with an older update timestamp', function (done) {
-    var ns = helper.namespace
-    var set = setgen()
-    var noRecordsBefore = 5
-    var noRecordsAfter = 2
+    const ns = helper.namespace
+    const set = setgen()
+    const noRecordsToDelete = 5
+    const noRecordsToRemain = 2
+    const pollIntMs = 50 // Poll interval in ms to check whether records have been removed
+    const allowanceMs = 200 // Test will fail if client and server clocks differ by more than this many ms!
 
-    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
-    genRecords(kgen, noRecordsBefore, function (batchBefore) {
+    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/del/', random: false})
+    genRecords(kgen, noRecordsToDelete, function (batchToDelete) {
       setTimeout(function () {
         var timeNanos = new Date().getTime() * 1000000
         setTimeout(function () {
-          genRecords(kgen, noRecordsAfter, function (batchAfter) {
-            client.truncate(ns, set, timeNanos, function (err) {
-              if (err) throw err
-              setTimeout(function () {
-                client.batchRead(batchBefore.concat(batchAfter), function (err, results) {
-                  if (err) throw err
-                  expect(foundKeys(results)).to.eql(batchAfter)
-                  done()
-                })
-              }, 200)
-            })
+          var kgen = keygen.string(ns, set, {prefix: 'test/trunc/rem/', random: false})
+          genRecords(kgen, noRecordsToRemain, function (batchToRemain) {
+            setTimeout(function () {
+              client.truncate(ns, set, timeNanos, function (err) {
+                if (err) throw err
+                checkRecords(batchToDelete, batchToRemain, pollIntMs, done)
+              })
+            }, 1)
           })
-        }, 200)
-      }, 200)
+        }, allowanceMs)
+      }, allowanceMs)
     })
   })
 })
