@@ -63,7 +63,7 @@ describe('client.truncate()', function () {
         var expectExist = !!remaining.find(function (record) { return record.key.key === result.key.key })
         switch (result.status) {
           case Aerospike.status.AEROSPIKE_OK:
-            if (!expectExist) return setTimeout(checkRecords, pollInt, truncated, remaining, done)
+            if (!expectExist) return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
             break
           case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
             if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.key)
