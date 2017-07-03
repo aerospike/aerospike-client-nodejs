@@ -9,10 +9,10 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js v4.x (LTS), v6.x (LTS) and v7.x. It
+This module is compatible with Node.js v4.x (LTS), v6.x (LTS) and v8.x. It
 supports the following operating systems: CentOS/RHEL 6/7, Debian 7/8,
 Ubuntu 12.04/14.04/16.04, as well as many Linux destributions compatible with
-one of these OS releases and macOS.
+one of these OS releases. macOS is also supported.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -99,14 +99,13 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-The aerospike package supports Node.js v0.12.x, v4.2.x (LTS) and v5.x as well
-as io.js. To download and install the latest stable version of Node.js, visit
+The aerospike package supports Node.js v4.x (LTS), v6.x (LTS) and v8.x. To
+download and install the latest stable version of Node.js, visit
 [nodejs.org](http://nodejs.org/) or use the version that comes bundled with
 your operating system.
 
 The Aerospike package includes a native addon. `gcc`/`g++` v4.8 or newer or
-`clang`/`clang++` v3.4 or newer are required to build the addon with Node.js
-v4.x/v5.x.
+`clang`/`clang++` v3.4 or newer are required to build the addon.
 
 The Aerospike addon depends on the Aerospike C client library, which gets
 downloaded during package installation. Either the cURL or Wget command line tool
