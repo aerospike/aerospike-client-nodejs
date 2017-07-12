@@ -15,9 +15,11 @@
  ******************************************************************************/
 
 #include <node.h>
+#include "async.h"
 #include "client.h"
 #include "conversions.h"
 #include "config.h"
+#include "events.h"
 #include "log.h"
 
 extern "C" {
@@ -44,8 +46,6 @@ AerospikeClient::~AerospikeClient() {}
 
 NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-	Nan::HandleScope();
-
 	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
 
 	if (info[0]->IsObject()){
@@ -58,14 +58,13 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 	info.GetReturnValue().Set(info.Holder());
 }
 
+
 /**
  *  Instantiate a new 'AerospikeClient(config)'
  *  Constructor for AerospikeClient.
  */
 NAN_METHOD(AerospikeClient::New)
 {
-	Nan::HandleScope();
-
 	AerospikeClient * client = new AerospikeClient();
 	client->as = (aerospike*) cf_malloc(sizeof(aerospike));
 	client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
@@ -102,6 +101,9 @@ NAN_METHOD(AerospikeClient::New)
 		}
 	}
 
+	Local<Function> callback = info[1].As<Function>();
+	events_setup_callback(&config, callback, client->log);
+
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
@@ -109,13 +111,13 @@ NAN_METHOD(AerospikeClient::New)
 }
 
 /**
- *  Instantiate a new 'AerospikeClient(config)'
+ *  Instantiate a new 'AerospikeClient(config, eventCb)'
  */
-Local<Value> AerospikeClient::NewInstance(Local<Object> info)
+Local<Value> AerospikeClient::NewInstance(Local<Object> config, Local<Function> eventCb)
 {
 	Nan::EscapableHandleScope scope;
-	const int argc = 1;
-	Local<Value> argv[argc] = { info };
+	const int argc = 2;
+	Local<Value> argv[argc] = { config, eventCb };
 	Local<Function> cons = Nan::New<Function>(constructor());
 	Nan::TryCatch try_catch;
 	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);

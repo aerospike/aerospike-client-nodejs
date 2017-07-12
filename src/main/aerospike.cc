@@ -68,7 +68,8 @@ NAN_METHOD(client)
 {
 	Nan::HandleScope();
 	Local<Object> config = info[0].As<Object>();
-	info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
+	Local<Function> eventCb = info[1].As<Function>();
+	info.GetReturnValue().Set(AerospikeClient::NewInstance(config, eventCb));
 }
 
 /**
