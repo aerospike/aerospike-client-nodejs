@@ -26,6 +26,7 @@
         'src/main/aerospike.cc',
         'src/main/client.cc',
         'src/main/config.cc',
+        'src/main/events.cc',
         'src/main/operations.cc',
         'src/main/policy.cc',
         'src/main/query.cc',

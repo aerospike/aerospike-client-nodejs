@@ -58,10 +58,11 @@ class AerospikeClient : public ObjectWrap {
 
 	public:
 		static void Init();
-		static Local<Value> NewInstance(Local<Object> args);
+		static Local<Value> NewInstance(Local<Object> config, Local<Function> eventCb);
 
 		aerospike* as;
 		LogInfo* log;
+		uv_async_t asyncEventCb;
 
 
 	/***************************************************************************
