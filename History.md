@@ -1,17 +1,18 @@
-Head
+v2.7.0 / 2017-07-17
 ===================
 
 * **New Features**
   * Client emits cluster state changed events [#206](https://github.com/aerospike/aerospike-client-nodejs/issues/206)
+
 * **Updates**
   * Update C client library to [v4.1.8](http://www.aerospike.com/download/client/c/notes.html#4.1.8).
-  * Update packaging to include system *.lua files in npm package [#202](https://github.com/aerospike/aerospike-client-nodejs/pull/202)
+  * Update packaging to include system Lua scripts in npm package [#202](https://github.com/aerospike/aerospike-client-nodejs/pull/202)
 
 v2.6.0 / 2017-05-25
 ===================
 
 * **New Features**
-  * Expose new consistency level in batch policy [#197](https://github.com/aerospike/aerospike-client-nodejs/pull/197)
+  * Expose new consistency level in batch policy [#197](https://github.com/aerospike/aerospike-client-nodejs/pull/197
   * Add interface to dynamically add/remove seed hosts [#194](https://github.com/aerospike/aerospike-client-nodejs/pull/194)
   * New UDF register/unregister job to async wait for job completion [#198](https://github.com/aerospike/aerospike-client-nodejs/pull/198)
   * Improved Info.parse() function, replacing Info.parseInfo()
