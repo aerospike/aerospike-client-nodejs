@@ -236,6 +236,9 @@ int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const 
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail( log, "Parsing query policy : success");
 	return AS_NODE_PARAM_OK;
 }
