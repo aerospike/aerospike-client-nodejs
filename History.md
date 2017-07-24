@@ -1,3 +1,9 @@
+v2.7.1 / 2017-07-24
+===================
+
+* **New Features**
+  * Add socket timeout setting to query policy [#207](https://github.com/aerospike/aerospike-client-nodejs/issues/207)
+
 v2.7.0 / 2017-07-17
 ===================
 
