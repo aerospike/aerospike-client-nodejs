@@ -1,3 +1,9 @@
+v2.7.2 / 2017-08-03
+===================
+
+* **Buf Fixes**
+  * Close cluster event callback handle when client is close [#211](https://github.com/aerospike/aerospike-client-nodejs/issues/211)
+
 v2.7.1 / 2017-07-24
 ===================
 
