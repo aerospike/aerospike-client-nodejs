@@ -90,4 +90,13 @@ describe('client.get()', function () {
       })
     })
   })
+
+  it('should return a Promise that resolves to a Record', function () {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})()
+
+    return client.put(key, { i: 42 })
+      .then(() => client.get(key))
+      .then(record => expect(record.bins).to.eql({ i: 42 }))
+      .then(() => client.remove(key))
+  })
 })

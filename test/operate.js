@@ -430,4 +430,17 @@ describe('client.operate()', function () {
       })
     })
   })
+
+  it('should return a Promise that resolves to the result of the operation', function () {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/operate/'})()
+    var ops = [
+      op.incr('i', 432),
+      op.read('i')
+    ]
+
+    return client.put(key, {i: 123})
+      .then(() => client.operate(key, ops))
+      .then(record => expect(record.bins['i']).to.be(555))
+      .then(() => client.remove(key))
+  })
 })

@@ -107,4 +107,13 @@ describe('client.select()', function () {
       })
     })
   })
+
+  it('should return a Promise that resolves to a Record', function () {
+    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/'})()
+
+    return client.put(key, {i: 42, s: 'abc', f: 3.1416})
+      .then(() => client.select(key, ['i', 'f']))
+      .then(record => expect(record.bins).to.eql({i: 42, f: 3.1416}))
+      .then(() => client.remove(key))
+  })
 })

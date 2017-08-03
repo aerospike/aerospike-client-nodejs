@@ -80,4 +80,11 @@ describe('client.apply()', function (done) {
       done()
     })
   })
+
+  it('should return a Promise that resolves to the return value of the UDF function', function () {
+    var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
+
+    return client.apply(key, udfArgs)
+      .then(result => expect(result).to.be(1))
+  })
 })
