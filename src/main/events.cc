@@ -101,8 +101,9 @@ typedef struct EventQueue {
 // Forward Declarations.
 //
 
-void cluster_event_callback(as_cluster_event *event);
-void cluster_event_async(uv_async_t *handle);
+static void cluster_event_callback(as_cluster_event *event);
+static void cluster_event_async(uv_async_t *handle);
+static void events_async_close(uv_handle_t *handle);
 
 //==========================================================
 // Inlines and Macros.
@@ -113,7 +114,7 @@ void cluster_event_async(uv_async_t *handle);
 //
 
 void
-events_setup_callback(as_config *config, Local<Function> callback, LogInfo *log)
+events_callback_init(as_config *config, Local<Function> callback, LogInfo *log)
 {
 	Nan::HandleScope scope;
 	uv_async_t *handle = (uv_async_t *) cf_malloc(sizeof(uv_async_t));
@@ -123,11 +124,25 @@ events_setup_callback(as_config *config, Local<Function> callback, LogInfo *log)
 	config->event_callback = cluster_event_callback;
 }
 
+void
+events_callback_close(as_config *config)
+{
+	Nan::HandleScope scope;
+	uv_handle_t *async = (uv_handle_t *)config->event_callback_udata;
+	uv_close(async, events_async_close);
+}
+
 //==========================================================
 // Local helpers.
 //
 
-void
+static void
+events_async_close(uv_handle_t *handle)
+{
+	cf_free((uv_async_t *)handle);
+}
+
+static void
 cluster_event_callback(as_cluster_event *event)
 {
 	uv_async_t *handle = (uv_async_t *) event->udata;
@@ -136,7 +151,7 @@ cluster_event_callback(as_cluster_event *event)
 	uv_async_send(handle);
 }
 
-void
+static void
 cluster_event_async(uv_async_t *handle)
 {
 	Nan::HandleScope scope;

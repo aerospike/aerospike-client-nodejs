@@ -102,7 +102,7 @@ NAN_METHOD(AerospikeClient::New)
 	}
 
 	Local<Function> callback = info[1].As<Function>();
-	events_setup_callback(&config, callback, client->log);
+	events_callback_init(&config, callback, client->log);
 
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");

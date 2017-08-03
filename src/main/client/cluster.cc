@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "events.h"
 #include "log.h"
 
 extern "C" {
@@ -65,6 +66,7 @@ NAN_METHOD(AerospikeClient::Close)
 
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
+	events_callback_close(&client->as->config);
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 	free(client->as);
