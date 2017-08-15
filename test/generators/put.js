@@ -14,7 +14,10 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 const Aerospike = require('../../lib/aerospike')
+const Record = require('../../lib/record')
 const helper = require('../test_helper')
 
 function createRecords (client, generator, recordsToCreate, maxConcurrent, callback) {
@@ -27,19 +30,16 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
       throw err
     }
     if (record) {
-      callback(record.key, record.bins, record.meta)
+      callback(record)
       inFlight--
     }
     currentRecordNo++
     if (currentRecordNo <= recordsToCreate && inFlight < maxConcurrent) {
-      record = {
-        key: generator.key(),
-        bins: generator.record(),
-        meta: generator.metadata()
-      }
-      var putCb = creator.bind(this, record)
-      var policy = generator.policy()
-      client.put(record.key, record.bins, record.meta, policy, putCb)
+      record = new Record(generator.key(), generator.bins(), generator.metadata())
+      let putCb = creator.bind(this, record)
+      let policy = generator.policy()
+      let meta = { ttl: record.ttl, gen: record.gen }
+      client.put(record.key, record.bins, meta, policy, putCb)
       inFlight++
     } else if (currentRecordNo > recordsToCreate && inFlight === 0) {
       callback(null)
@@ -59,11 +59,24 @@ function put (n, keygen, recgen, metagen, policy, callback) {
   policy = policy || { exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
   var generator = {
     key: keygen,
-    record: recgen,
+    bins: recgen,
     metadata: metagen,
     policy: function () { return policy }
   }
-  createRecords(helper.client, generator, n, 200, callback)
+  if (callback) {
+    createRecords(helper.client, generator, n, 200, callback)
+  } else {
+    return new Promise((resolve, reject) => {
+      let records = []
+      createRecords(helper.client, generator, n, 200, record => {
+        if (record) {
+          records.push(record)
+        } else {
+          resolve(records)
+        }
+      })
+    })
+  }
 }
 
 module.exports = {

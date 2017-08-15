@@ -14,6 +14,9 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
+var Key = require('../../lib/key')
 var valgen = require('./value')
 
 //
@@ -22,7 +25,7 @@ var valgen = require('./value')
 function bytes (namespace, set, options) {
   var bgen = valgen.bytes(options)
   return function () {
-    return {ns: namespace, set: set, key: bgen()}
+    return new Key(namespace, set, bgen())
   }
 }
 
@@ -32,7 +35,7 @@ function bytes (namespace, set, options) {
 function string (namespace, set, options) {
   var sgen = valgen.string(options)
   return function () {
-    return {ns: namespace, set: set, key: sgen()}
+    return new Key(namespace, set, sgen())
   }
 }
 
@@ -42,7 +45,7 @@ function string (namespace, set, options) {
 function integer (namespace, set, options) {
   var igen = valgen.integer(options)
   return function () {
-    return {ns: namespace, set: set, key: igen()}
+    return new Key(namespace, set, igen())
   }
 }
 

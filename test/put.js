@@ -388,9 +388,9 @@ describe('client.put()', function () {
     })
   })
 
-  it('should write to a set with blank name', function (done) {
-    var blankSetName = ''
-    var key = keygen.string(helper.namespace, blankSetName, {prefix: 'test/put/'})()
+  it('should write a key without set name', function (done) {
+    var noSet = null
+    var key = keygen.string(helper.namespace, noSet, {prefix: 'test/put/'})()
     var record = { bin1: 123, bin2: 456 }
 
     client.put(key, record, function (err) {

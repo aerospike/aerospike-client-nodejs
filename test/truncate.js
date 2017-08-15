@@ -43,14 +43,9 @@ describe('client.truncate()', function () {
   function genRecords (kgen, noRecords, done) {
     var mgen = metagen.constant({ ttl: 300 })
     var rgen = recgen.constant({ a: 'foo', b: 'bar' })
-    var records = []
-    putgen.put(noRecords, kgen, rgen, mgen, function (key) {
-      if (key === null) {
-        done(records)
-      } else {
-        records.push({ key: key })
-      }
-    })
+    putgen.put(noRecords, kgen, rgen, mgen)
+      .then(done)
+      .catch(err => { throw err })
   }
 
   // Checks to verify that records that are supposed to have been truncated
@@ -60,13 +55,13 @@ describe('client.truncate()', function () {
     client.batchRead(truncated.concat(remaining), function (err, results) {
       if (err) throw err
       for (var result of results) {
-        var expectExist = !!remaining.find(function (record) { return record.key.key === result.key.key })
+        var expectExist = !!remaining.find(record => record.key.equals(result.record.key))
         switch (result.status) {
           case Aerospike.status.AEROSPIKE_OK:
             if (!expectExist) return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
             break
           case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-            if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.key)
+            if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.record.key)
             break
           default:
             throw new Error('Unexpected batchRead status code: ' + result.status)

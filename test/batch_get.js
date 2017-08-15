@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
@@ -28,30 +30,25 @@ const valgen = helper.valgen
 describe('client.batchGet()', function () {
   var client = helper.client
 
-  it('should successfully read 10 records', function (done) {
+  it('should successfully read 10 records', function () {
     var numberOfRecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/success', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    var recordsCreated = {}
-    putgen.put(numberOfRecords, kgen, rgen, mgen, function (key, bins) {
-      if (key) {
-        recordsCreated[key.key] = {key: key, bins: bins}
-      } else {
-        var keys = Object.keys(recordsCreated).map(function (key) { return recordsCreated[key]['key'] })
-        client.batchGet(keys, function (err, results) {
-          expect(err).not.to.be.ok()
-          expect(results.length).to.equal(numberOfRecords)
-          results.forEach(function (result) {
-            var key = result.key
-            expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
-            expect(result.record).to.eql(recordsCreated[key.key].bins)
+    return putgen.put(numberOfRecords, kgen, rgen, mgen)
+      .then(records => {
+        let keys = records.map(record => record.key)
+        return client.batchGet(keys)
+          .then(results => {
+            expect(results.length).to.equal(numberOfRecords)
+            results.forEach(result => {
+              let putRecord = records.find(record => record.key.key === result.record.key.key)
+              expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+              expect(result.record.bins).to.eql(putRecord.bins)
+            })
           })
-          done()
-        })
-      }
-    })
+      })
   })
 
   it('should fail reading 10 records', function (done) {
