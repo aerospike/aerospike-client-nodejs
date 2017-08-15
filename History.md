@@ -1,3 +1,9 @@
+HEAD
+===================
+
+* **Bug Fixes**
+  * Fix memory leak in batchRead [#213](https://github.com/aerospike/aerospike-client-nodejs/issues/213)
+
 v2.7.2 / 2017-08-03
 ===================
 

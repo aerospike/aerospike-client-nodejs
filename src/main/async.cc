@@ -237,7 +237,7 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 		argv[0] = err_ok();
 		argv[1] = batch_records_to_jsarray(records, log);
 	}
-	as_batch_read_destroy(records);
+	free_batch_records(records);
 
 	as_v8_debug(log, "Invoking JS callback function");
 	Nan::TryCatch try_catch;

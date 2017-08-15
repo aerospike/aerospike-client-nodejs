@@ -34,7 +34,6 @@ extern "C" {
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_record_iterator.h>
-#include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_arraylist_iterator.h>
@@ -743,12 +742,10 @@ Local<Array> batch_records_to_jsarray(const as_batch_read_records* records, cons
 			result->Set(Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
 		}
 
-		as_key_destroy(key);
-		as_record_destroy(record);
 		results->Set(i, result);
 	}
 
-    return scope.Escape(results);
+	return scope.Escape(results);
 }
 
 //Forward references;
@@ -1338,6 +1335,24 @@ int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const 
     *num_bins = (uint32_t) arr_length;
     return AS_NODE_PARAM_OK;
 }
+
+void
+free_batch_records(as_batch_read_records* records)
+{
+	const as_vector* list = &records->list;
+	for (uint32_t i = 0; i < list->size; i++) {
+		as_batch_read_record* batch_record = (as_batch_read_record*) as_vector_get((as_vector*) list, i);
+		if (batch_record->n_bin_names > 0) {
+			for (uint32_t j = 0; j < batch_record->n_bin_names; j++) {
+				cf_free(batch_record->bin_names[j]);
+			}
+			cf_free(batch_record->bin_names);
+		}
+	}
+
+	as_batch_read_destroy(records);
+}
+
 
 int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, const LogInfo* log)
 {

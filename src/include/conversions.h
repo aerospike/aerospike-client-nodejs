@@ -104,6 +104,8 @@ bool record_clone(const as_record* src, as_record** dest, const LogInfo* log);
 bool key_clone(const as_key* src, as_key** dest, const LogInfo* log, bool alloc_key = true );
 as_val* asval_clone(const as_val* val, const LogInfo* log);
 
+void free_batch_records(as_batch_read_records* records);
+
 // Functions to set metadata of the record.
 int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log);
 int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log);
