@@ -172,4 +172,83 @@ describe('Key', function () {
       })
     })
   })
+
+  describe('equals', function () {
+    it('matches two keys with identical ns, set and user key', function () {
+      let key1 = new Key('ns1', 'set1', 'key1')
+      let key2 = new Key('ns1', 'set1', 'key1')
+      expect(key1.equals(key2)).to.be(true)
+      expect(key2.equals(key1)).to.be(true)
+    })
+
+    it('matches two keys with identical ns, set, user key and digest', function () {
+      let key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      let key2 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      expect(key1.equals(key2)).to.be(true)
+      expect(key2.equals(key1)).to.be(true)
+    })
+
+    it('matches two keys with identical ns, set and digest', function () {
+      let key1 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      let key2 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      expect(key1.equals(key2)).to.be(true)
+      expect(key2.equals(key1)).to.be(true)
+    })
+
+    it('a key with digest to another key with identical ns, set and user key but without digest', function () {
+      let key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      let key2 = new Key('ns1', 'set1', 'key1')
+      expect(key1.equals(key2)).to.be(true)
+      expect(key2.equals(key1)).to.be(true)
+    })
+
+    it('matches two keys with identical ns, empty set and user key', function () {
+      let key1 = new Key('ns1', null, 'key1')
+      let key2 = new Key('ns1', null, 'key1')
+      expect(key1.equals(key2)).to.be(true)
+      expect(key2.equals(key1)).to.be(true)
+    })
+
+    it('does not match two keys with different ns', function () {
+      let key1 = new Key('ns1', 'set1', 'key1')
+      let key2 = new Key('ns2', 'set1', 'key1')
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+
+    it('does not match two keys with different set', function () {
+      let key1 = new Key('ns1', 'set1', 'key1')
+      let key2 = new Key('ns1', 'set2', 'key1')
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+
+    it('does not match a key with set and a key without set', function () {
+      let key1 = new Key('ns1', 'set1', 'key1')
+      let key2 = new Key('ns1', null, 'key1')
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+
+    it('does not match two keys with different user keys', function () {
+      let key1 = new Key('ns1', 'set1', 'key1')
+      let key2 = new Key('ns1', 'set1', 'key2')
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+
+    it('does not match a key with user key and a key without user key', function () {
+      let key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      let key2 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+
+    it('does not match two keys with different digests', function () {
+      let key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
+      let key2 = new Key('ns1', 'set1', 'key1', Buffer.from('0j9i8h7g6f5e4d3c2b1a'))
+      expect(key1.equals(key2)).to.be(false)
+      expect(key2.equals(key1)).to.be(false)
+    })
+  })
 })
