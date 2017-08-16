@@ -39,5 +39,14 @@ describe('Aerospike', function () {
         })
       })
     })
+
+    it('returns a Promise that resolves to a client', function () {
+      return Aerospike.connect(helper.config)
+        .then(client => {
+          expect(client).to.be.a(Aerospike.Client)
+          return client
+        })
+        .then(client => client.close(false))
+    })
   })
 })
