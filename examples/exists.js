@@ -141,14 +141,9 @@ var config = {
 function run (client, done) {
   var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
-  client.exists(key, function (err) {
-    if (!err) {
-      !argv.quiet && console.log('Key ' + key.key + ' exists.')
-    } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
-      !argv.quiet && console.log('Key ' + key.key + ' does not exist.')
-    } else {
-      throw err
-    }
+  client.exists(key, function (err, result) {
+    if (err) throw err
+    !argv.quiet && console.log('Key ' + key.key + ' exists?', result)
     iteration.next(run, client, done)
   })
 }

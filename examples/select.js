@@ -148,18 +148,8 @@ var config = {
 function run (client, done) {
   var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
 
-  client.select(key, bins, function (err, bins, metadata) {
+  client.select(key, bins, function (err, record) {
     if (!err) {
-      var record = {}
-      if (argv['key']) {
-        record.key = key
-      }
-      if (argv['metadata']) {
-        record.metadata = metadata
-      }
-      if (argv['bins']) {
-        record.bins = bins
-      }
       !argv.quiet && console.log('Found key ' + key.key + '.')
       !argv.quiet && console.log(JSON.stringify(record, null, '    '))
     } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {

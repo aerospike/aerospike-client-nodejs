@@ -116,7 +116,7 @@ function header (message) {
 function get (key) {
   return function (client, callback) {
     console.log('*** get')
-    client.get(key, function (err, record, metadata, key) {
+    client.get(key, function (err, record) {
       callback(err)
     })
   }

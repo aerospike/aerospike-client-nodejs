@@ -21,7 +21,6 @@
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
-const sleep = require('sleep')
 const iteration = require('./iteration')
 
 // *****************************************************************************
@@ -117,48 +116,24 @@ var config = {
 Aerospike.connect(config, function (err, client) {
   if (err) throw err
 
-  //
-  // Perform the operation
-  // Fire up a background scan command and check the status of the scan
-  // every 1 second
-  //
+  var scan = client.query(argv.namespace, argv.set)
+  scan.background('scan', 'updateRecord', function (error, job) {
+    if (error) throw error
 
-  var options = {
-    UDF: {
-      module: 'scan',
-      funcname: 'updateRecord'
-    }
-  }
-
-  var scanBackground = client.query(argv.namespace, argv.set, options)
-
-  var scanStream = scanBackground.execute()
-
-  scanStream.on('error', function (err) {
-    console.log(err)
+    var timer = setInterval(function () {
+      job.info((error, info) => {
+        if (error) {
+          console.info('Error checking background scan status:', error)
+          clearInterval(timer)
+          client.close()
+        } else if (info.status === Aerospike.jobStatus.COMPLETED) {
+          console.info('Scan completed')
+          clearInterval(timer)
+          client.close()
+        } else {
+          console.info('Scan status:', info)
+        }
+      })
+    }, 10)
   })
-
-  var checkStatus = function (scanJobStats) {
-    console.log(scanJobStats)
-    if (scanJobStats.status !== Aerospike.jobStatus.COMPLETED) {
-      return false
-    } else {
-      return true
-    }
-  }
-
-  var infoCallback = function (scanJobStats, scanId) {
-    if (checkStatus(scanJobStats)) {
-      client.close()
-    } else {
-      sleep.usleep(100 * 1000)
-      scanBackground.info(scanId, infoCallback)
-    }
-  }
-
-  var info = function (scanId) {
-    console.log('ScanID:', scanId)
-    scanBackground.info(scanId, infoCallback)
-  }
-  scanStream.on('end', info)
 })

@@ -43,7 +43,7 @@ var argp = yargs
     },
     host: {
       alias: 'h',
-      default: '127.0.0.1',
+      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
       describe: 'Aerospike database address.'
     },
     timeout: {
@@ -125,7 +125,8 @@ function run (client, done) {
     filters: [filter.range('i', 100, 500)]
   }
 
-  var stream = client.query(argv.namespace, argv.set, options).execute()
+  var query = client.query(argv.namespace, argv.set, options)
+  var stream = query.foreach()
 
   stream.on('data', function (rec) {
     !argv.quiet && console.log(JSON.stringify(rec, null, '    '))

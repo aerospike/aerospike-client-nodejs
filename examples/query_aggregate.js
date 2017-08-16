@@ -122,25 +122,14 @@ var config = {
 
 function run (client, done) {
   var options = {
-    aggregationUDF: {
-      module: 'query',
-      funcname: 'sum_test_bin'
-    },
     filters: [filter.range('i', 0, 10000)],
     select: ['s', 'i']
   }
 
-  var stream = client.query(argv.namespace, argv.set, options).execute()
-
-  stream.on('data', function (rec) {
-    !argv.quiet && console.log(JSON.stringify(rec, null, '    '))
-  })
-
-  stream.on('error', function (err) {
-    throw err
-  })
-
-  stream.on('end', function () {
+  var query = client.query(argv.namespace, argv.set, options)
+  query.apply('query', 'sum_test_bin', function (err, result) {
+    if (err) throw err
+    !argv.quiet && console.log(JSON.stringify(result, null, '    '))
     iteration.next(run, client, done)
   })
 }
