@@ -49,8 +49,6 @@ The main classes included in the `aerospike` module are:
 * {@link Double} - Wrapper class for double precision floating point values.
 * {@link GeoJSON} - A representation of GeoJSON values.
 * {@link AerospikeError} - Error class representing a Aerospike server and/or client error.
-* {@link LargeList} - The LargeList class provides an interface to the
-  [Aerospike LDT feature](http://www.aerospike.com/docs/guide/ldt_guide.html).
 * {@link Job} - The Job class is used to query the status of long running
   background jobs.
 

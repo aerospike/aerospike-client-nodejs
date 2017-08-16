@@ -38,7 +38,6 @@ With a new client, you can use any of the methods specified below:
   - [info()](#info)
   - [indexCreateWait()](#indexCreateWait)
   - [indexRemove()](#indexRemove)
-  - [LargeList()](#largeList)
   - [operate()](#operate)
   - [prepend()](#prepend)
   - [put()](#put)
@@ -732,35 +731,6 @@ client.createIntegerIndex(args, function (error) {
 })
 
 ```
-
-<!--
-################################################################################
-LargeList()
-################################################################################
--->
-<a name="largeList"></a>
-
-### LargeList(key, binName, writePolicy, createModule):LargeList
-
-Creates a new [LargeList](largelist.md) object, which is used to perform all LDT operations in the database.
-
-Parameters:
-- `key`         - A [Key object](datamodel.md#key), used to locate the record in the cluster.
-- `binName`     - Name of the Large Data Type Bin.
-- `applyPolicy` - (optional) A [Apply Policy object](policies.md#ApplyPolicy) to use for this operation.
-- `createModule`- (optional) Lua function name that initialized list configuration parameters, pass null for
-                  default list.
-
-Example:
-
-```js
-var key     = {ns: 'test', set: 'demo', key: 'ldt_key'}
-var binName = 'ldtBinName';
-var policy  = {timeout: 1000}
-var llist = client.LargeList(key, binName, policy);
-```
-
-For details, see [LargeList Class](largelist.md)
 
 <!--
 ################################################################################
