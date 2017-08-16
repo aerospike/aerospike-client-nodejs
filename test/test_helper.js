@@ -14,6 +14,8 @@
 // limitations under the License.
 // ****************************************************************************
 
+'use strict'
+
 const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
 const utils = require('../lib/utils')
@@ -44,33 +46,28 @@ function UDFHelper (client) {
   this.client = client
 }
 
-UDFHelper.prototype.register = function (filename, callback) {
-  var script = path.join(__dirname, filename)
-  this.client.udfRegister(script, function (err, job) {
-    if (err) throw err
-    job.waitUntilDone(50, function (err) {
-      if (err) throw err
-      callback()
-    })
-  })
+UDFHelper.prototype.register = function (filename) {
+  let script = path.join(__dirname, filename)
+  return this.client.udfRegister(script)
+    .then(job => job.wait(50))
 }
 
-UDFHelper.prototype.remove = function (filename, callback) {
-  this.client.udfRemove(filename, function (err, job) {
-    if (err && err.code !== Aerospike.status.AEROSPIKE_ERR_UDF) throw err
-    job.waitUntilDone(50, function (err) {
-      if (err) throw err
-      callback()
+UDFHelper.prototype.remove = function (filename) {
+  return this.client.udfRemove(filename)
+    .then(job => job.wait(50))
+    .catch(error => {
+      if (error.code !== Aerospike.status.AEROSPIKE_ERR_UDF) {
+        return Promise.reject(error)
+      }
     })
-  })
 }
 
 function IndexHelper (client) {
   this.client = client
 }
 
-IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType, callback) {
-  var index = {
+IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType) {
+  let index = {
     ns: options.namespace,
     set: setName,
     bin: binName,
@@ -78,20 +75,12 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
     type: indexType || Aerospike.indexType.DEFAULT,
     datatype: dataType
   }
-  this.client.createIndex(index, function (err, job) {
-    if (err) throw err
-    // TODO: Remove delay once AER-5450 is fixed server-side
-    setTimeout(function () {
-      job.waitUntilDone(10, function (err) {
-        if (err) throw err
-        callback()
-      })
-    }, 150)
-  })
+  return this.client.createIndex(index)
+    .then(job => job.wait(10))
 }
 
-IndexHelper.prototype.remove = function (indexName, callback) {
-  this.client.indexRemove(options.namespace, indexName, {}, callback)
+IndexHelper.prototype.remove = function (indexName) {
+  return this.client.indexRemove(options.namespace, indexName)
 }
 
 function ServerInfoHelper () {

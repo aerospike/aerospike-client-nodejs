@@ -14,10 +14,11 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, beforeEach, afterEach, context, describe, it */
 
 const Aerospike = require('../lib/aerospike')
-const AerospikeError = require('../lib/aerospike_error')
 const Job = require('../lib/job')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
@@ -26,40 +27,39 @@ context('secondary indexes', function () {
   var client = helper.client
 
   // generate unique index name for each test
-  var testIndex = { name: null, bin: null, counter: 0 }
-  beforeEach(function () {
+  let testIndex = { name: null, bin: null, counter: 0 }
+  beforeEach(() => {
     testIndex.counter++
     testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
     testIndex.bin = 'bin-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
   })
-  afterEach(function (done) {
-    helper.index.remove(testIndex.name, function () { done() })
-  })
+  afterEach(() => helper.index.remove(testIndex.name))
 
   function verifyIndexExists (namespace, indexName, callback) {
     var sindex = 'sindex/' + namespace + '/' + indexName
     var checkStatus = function (callback) {
-      client.infoAll(sindex, function (err, info) {
-        if (err) {
-          switch (err.code) {
-            case Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND:
-              callback(null, false)
-              break
-            default:
-              callback(err)
+      return new Promise((resolve, reject) => {
+        client.infoAll(sindex, function (err, info) {
+          if (err) {
+            switch (err.code) {
+              case Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND:
+                resolve(false)
+                break
+              default:
+                reject(err)
+            }
+          } else {
+            resolve(true)
           }
-        } else {
-          callback(null, true)
-        }
+        })
       })
     }
-    Job.pollUntilDone(checkStatus, 10, function (err) {
-      if (err) throw err
-      callback()
-    })
+    Job.pollUntilDone(checkStatus, 10)
+      .then(() => callback())
+      .catch(error => { throw error })
   }
 
-  describe('client.indexCreate()', function () {
+  describe('Client#indexCreate()', function () {
     it('should create a complex index on list', function (done) {
       var options = {
         ns: helper.namespace,
@@ -92,7 +92,7 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('client.createIntegerIndex()', function () {
+  describe('Client#createIntegerIndex()', function () {
     it('should create an integer index', function (done) {
       var options = {
         ns: helper.namespace,
@@ -107,7 +107,7 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('client.createStringIndex()', function () {
+  describe('Client#createStringIndex()', function () {
     it('should create an string index', function (done) {
       var args = {
         ns: helper.namespace,
@@ -122,7 +122,7 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('client.createGeo2DSphereIndex()', function () {
+  describe('Client#createGeo2DSphereIndex()', function () {
     it('should create a geospatial index', function (done) {
       var args = {
         ns: helper.namespace,
@@ -137,76 +137,19 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('client.indexRemove()', function () {
-    beforeEach(function (done) {
-      helper.index.create(testIndex.name, helper.set, testIndex.bin,
-          Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT, function () { done() })
-    })
+  describe('Client#indexRemove()', function () {
+    beforeEach(() => helper.index.create(testIndex.name, helper.set, testIndex.bin,
+          Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT))
 
     it('should drop an index', function (done) {
       client.indexRemove(helper.namespace, testIndex.name, function (err) {
-        expect(err).not.to.be.ok()
+        expect(err).to.be(null)
         done()
       })
     })
-  })
 
-  describe('IndexJob', function () {
-    describe('IndexJob#waitUntilDone()', function () {
-      it('should wait until the index creation is completed', function (done) {
-        var options = {
-          ns: helper.namespace,
-          set: helper.set,
-          bin: testIndex.bin,
-          index: testIndex.name
-        }
-        client.createIntegerIndex(options, function (err, job) {
-          if (err) throw err
-
-          job.waitUntilDone(10, function (err) {
-            expect(err).to.not.be.ok()
-            done()
-          })
-        })
-      })
-    })
-
-    describe('IndexJob#checkStatus()', function () {
-      it('should return a boolean indicating whether the job is done or not', function (done) {
-        var options = {
-          ns: helper.namespace,
-          set: helper.set,
-          bin: testIndex.bin,
-          index: testIndex.name
-        }
-        client.createIntegerIndex(options, function (err, job) {
-          if (err) throw err
-
-          job.checkStatus(function (err, status) {
-            expect(err).to.not.be.ok()
-            expect(status).to.be.a('boolean')
-            done()
-          })
-        })
-      })
-
-      it('should return false if the index does not exist', function (done) {
-        var job = new IndexJob(client, helper.namespace, 'thisIndexDoesNotExist')
-        job.checkStatus(function (err, status) {
-          expect(err).to.not.be.ok()
-          expect(status).to.be(false)
-          done()
-        })
-      })
-
-      it('should return an error if one of the cluster nodes cannot be queried', function (done) {
-        var client = Aerospike.client() // not connected, should return error when info command is executed
-        var job = new IndexJob(client, helper.ns, 'thisIndexDoesNotExist')
-        job.checkStatus(function (err, status) {
-          expect(err).to.be.a(AerospikeError)
-          done()
-        })
-      })
+    it('should return a Promise if called without callback function', function () {
+      return client.indexRemove(helper.namespace, testIndex.name)
     })
   })
 })

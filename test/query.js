@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
@@ -105,38 +107,21 @@ describe('Queries', function () {
     })
   }
 
-  before(function (done) {
-    var sampleGen = function () {
-      return samples.pop()
-    }
-    var kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/query/', random: false})
-    var mgen = metagen.constant({ ttl: 300 })
-    putgen.put(numberOfSamples, kgen, sampleGen, mgen, function (key, record) {
-      if (!key) {
-        helper.udf.register('udf.lua', function () {
-          var created = 0
-          indexes.forEach(function (idx) {
-            helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], function () {
-              if (++created >= indexes.length) {
-                done()
-              }
-            })
-          })
-        })
-      }
-    })
+  before(() => {
+    let sampleGen = () => samples.pop()
+    let kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/query/', random: false})
+    let mgen = metagen.constant({ ttl: 300 })
+    return Promise.all([
+      putgen.put(numberOfSamples, kgen, sampleGen, mgen)
+        .then(() => Promise.all(indexes.map(idx =>
+          helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])))),
+      helper.udf.register('udf.lua')
+    ])
   })
 
-  after(function (done) {
-    helper.udf.remove('udf.lua', function () {
-      var cnt = 0
-      indexes.forEach(function (idx) {
-        helper.index.remove(idx[0], function () {
-          if (++cnt >= indexes.length) done()
-        })
-      })
-    })
-  })
+  after(() => helper.udf.remove('udf.lua')
+      .then(() => Promise.all(indexes.map(idx =>
+        helper.index.remove(idx[0])))))
 
   describe('client.query()', function () {
     it('creates a new Query instance and sets up it\'s properties', function () {
