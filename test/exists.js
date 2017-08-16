@@ -14,52 +14,59 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it */
+'use strict'
 
-const Aerospike = require('../lib/aerospike')
+/* global context, expect, describe, it */
+
 const helper = require('./test_helper')
-
 const keygen = helper.keygen
-const metagen = helper.metagen
-const recgen = helper.recgen
-const valgen = helper.valgen
-
-const status = Aerospike.status
 
 describe('client.exists()', function () {
-  var client = helper.client
+  let client = helper.client
 
-  it('should find the record', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+  context('Promises', function () {
+    it('returns true if the record exists', function () {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})()
 
-    var key = kgen()
-    var meta = mgen(key)
-    var record = rgen(key, meta)
+      return client.put(key, {str: 'abcde'})
+        .then(() => client.exists(key))
+        .then(result => expect(result).to.be(true))
+        .then(() => client.remove(key))
+    })
 
-    client.put(key, record, meta, function (err) {
-      if (err) throw err
+    it('returns false if the record does not exist', function () {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})()
 
-      client.exists(key, function (err, metadata) {
-        expect(err).not.to.be.ok()
-
-        client.remove(key, function (err) {
-          if (err) throw err
-          done()
-        })
-      })
+      return client.exists(key)
+        .then(result => expect(result).to.be(false))
     })
   })
 
-  it('should not find the record', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/fail/'})
+  context('Callbacks', function () {
+    it('returns true if the record exists', function (done) {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})()
 
-    var key = kgen()
+      client.put(key, {str: 'abcde'}, error => {
+        if (error) throw error
+        client.exists(key, (error, result) => {
+          if (error) throw error
+          expect(result).to.be(true)
+          client.remove(key, error => {
+            if (error) throw error
+            done()
+          })
+        })
+      })
+    })
 
-    client.exists(key, function (err, metadata, key) {
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
-      done()
+    it('returns false if the record does not exist', function (done) {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})()
+
+      client.exists(key, (error, result) => {
+        if (error) throw error
+        expect(result).to.be(false)
+        done()
+      })
     })
   })
 })
