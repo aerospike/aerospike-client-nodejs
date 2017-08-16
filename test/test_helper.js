@@ -103,46 +103,40 @@ ServerInfoHelper.prototype.build_gte = function (minVer) {
   return semverCmp(this.build, minVer) >= 0
 }
 
-ServerInfoHelper.prototype.fetch_info = function (done) {
-  var self = this
-  client.infoAll('build\nedition\nfeatures', function (err, results) {
-    if (err) throw err
-    results.forEach(function (response) {
-      var info = Info.parse(response.info)
-      self.edition = info['edition']
-      self.build = info['build']
-      var features = info['features']
-      if (Array.isArray(features)) {
-        features.forEach(function (feature) {
-          self.features.add(feature)
-        })
-      }
+ServerInfoHelper.prototype.fetch_info = function () {
+  return client.infoAll('build\nedition\nfeatures')
+    .then(results => {
+      results.forEach(response => {
+        let info = Info.parse(response.info)
+        this.edition = info['edition']
+        this.build = info['build']
+        let features = info['features']
+        if (Array.isArray(features)) {
+          features.forEach(feature => this.features.add(feature))
+        }
+      })
     })
-    done()
-  })
 }
 
-ServerInfoHelper.prototype.fetch_namespace_config = function (ns, done) {
-  var self = this
-  var nsKey = 'namespace/' + ns
-  client.infoAll(nsKey, function (err, results) {
-    if (err) throw err
-    var info = results.pop()['info']
-    self.nsconfig = Info.parse(info)[nsKey]
-    done()
-  })
+ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
+  let nsKey = 'namespace/' + ns
+  return client.infoAny(nsKey)
+    .then(results => {
+      let info = Info.parse(results)
+      this.nsconfig = info[nsKey]
+    })
 }
 
-ServerInfoHelper.prototype.randomNode = function (done) {
-  client.infoAny('service', function (err, response) {
-    if (err) throw err
-    var service = Info.parse(response).service
-    if (Array.isArray(service)) {
-      service = service.pop()
-    }
-    var host = utils.parseHostString(service)
-    done(host)
-  })
+ServerInfoHelper.prototype.randomNode = function () {
+  return client.infoAny('service')
+    .then(response => {
+      let service = Info.parse(response).service
+      if (Array.isArray(service)) {
+        service = service.pop()
+      }
+      let host = utils.parseHostString(service)
+      return host
+    })
 }
 
 var udfHelper = new UDFHelper(client)
@@ -161,16 +155,10 @@ exports.fail = function fail (message) {
 }
 
 /* global before */
-before(function (done) {
-  client.connect(function (err) {
-    if (err) throw err
-    serverInfoHelper.fetch_info(function () {
-      serverInfoHelper.fetch_namespace_config(options.namespace, function () {
-        done()
-      })
-    })
-  })
-})
+before(() => client.connect()
+  .then(() => serverInfoHelper.fetch_info())
+  .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
+)
 
 /* global after */
 after(function (done) {
