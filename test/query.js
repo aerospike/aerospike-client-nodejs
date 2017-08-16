@@ -371,6 +371,17 @@ describe('Queries', function () {
         done()
       })
     })
+
+    it('returns a Promise that resolves to the result of the aggregation', function () {
+      let args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      let query = client.query(helper.namespace, testSet, args)
+      return query.apply('udf', 'count')
+        .then(result => {
+          expect(result).to.equal(3)
+        })
+    })
   })
 
   describe('query.background()', function () {
@@ -384,6 +395,17 @@ describe('Queries', function () {
         expect(job).to.be.a(Job)
         done()
       })
+    })
+
+    it('returns a Promise that resolves to a Job', function () {
+      let args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      let query = client.query(helper.namespace, testSet, args)
+      return query.background('udf', 'noop')
+        .then(job => {
+          expect(job).to.be.a(Job)
+        })
     })
   })
 

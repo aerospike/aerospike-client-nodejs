@@ -20,6 +20,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
+const Job = require('../lib/job')
 const helper = require('./test_helper')
 
 const Key = Aerospike.Key
@@ -242,6 +243,15 @@ context('Scans', function () {
           stream.on('end', done)
         })
       })
+    })
+
+    it('returns a Promise that resolves to a Job', function () {
+      let token = valgen.string({length: {min: 10, max: 10}})()
+      let backgroundScan = client.scan(helper.namespace, testSet)
+      return backgroundScan.background('udf', 'updateRecord', ['x', token])
+        .then(job => {
+          expect(job).to.be.a(Job)
+        })
     })
   })
 
