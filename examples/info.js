@@ -117,13 +117,9 @@ var config = {
 // *****************************************************************************
 
 function run (client, done) {
-  client.info(request, function (err, response, host) {
+  client.infoAll(request, function (err, response) {
     if (err) throw err
-    var res = {
-      host: host,
-      response: response
-    }
-    !argv.quiet && console.log(JSON.stringify(res, null, '    '))
+    !argv.quiet && console.log(JSON.stringify(response, null, '    '))
   }, function () {
     iteration.next(run, client, done)
   })

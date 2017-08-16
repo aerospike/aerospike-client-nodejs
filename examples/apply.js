@@ -155,7 +155,7 @@ function run (client, done) {
     })
   }
 
-  client.execute(key, udf, function (err, value) {
+  client.apply(key, udf, function (err, value) {
     if (err) throw err
     !argv.quiet && console.log(JSON.stringify(value, null, '    '))
     iteration.next(run, client, done)

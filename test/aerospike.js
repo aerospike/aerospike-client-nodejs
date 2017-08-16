@@ -33,9 +33,8 @@ describe('Aerospike', function () {
       Aerospike.connect(helper.config, function (err, client) {
         expect(err).to.not.be.ok()
         expect(client).to.be.a(Aerospike.Client)
-        client.info(function (err, result) {
+        client.infoAny(function (err, result) {
           expect(err).to.not.be.ok()
-        }, function () {
           done()
         })
       })
