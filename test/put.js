@@ -135,8 +135,8 @@ describe('client.put()', function () {
     })
 
     it('writes bin with Buffer value and reads it back', function (done) {
-      var record = { buffer: new Buffer([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
-      var expected = { buffer: new Buffer([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      var record = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      var expected = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
       putGetVerify(record, expected, done)
     })
 
@@ -159,10 +159,10 @@ describe('client.put()', function () {
     })
 
     it('writes bin with array value as list and reads it back', function (done) {
-      var record = { list: [ 1, 'foo', 1.23, new Double(3.14), new Buffer('bar'),
+      var record = { list: [ 1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
         GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 } ]
       }
-      var expected = { list: [ 1, 'foo', 1.23, 3.14, new Buffer('bar'),
+      var expected = { list: [ 1, 'foo', 1.23, 3.14, Buffer.from('bar'),
         '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 } ]
       }
       putGetVerify(record, expected, done)
@@ -174,7 +174,7 @@ describe('client.put()', function () {
         b: 'foo',
         c: 1.23,
         d: new Double(3.14),
-        e: new Buffer('bar'),
+        e: Buffer.from('bar'),
         f: GeoJSON.Point(103.8, 1.283),
         g: [1, 2, 3],
         h: { a: 1, b: 2 } }
@@ -184,7 +184,7 @@ describe('client.put()', function () {
         b: 'foo',
         c: 1.23,
         d: 3.14,
-        e: new Buffer('bar'),
+        e: Buffer.from('bar'),
         f: '{"type":"Point","coordinates":[103.8,1.283]}',
         g: [1, 2, 3],
         h: { a: 1, b: 2 } }
@@ -194,7 +194,7 @@ describe('client.put()', function () {
 
     it.skip('writes bin with Map value as map and reads it back', function (done) {
       var record = { map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
-        ['d', new Double(3.14)], ['e', new Buffer('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
+        ['d', new Double(3.14)], ['e', Buffer.from('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
         ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
       }
       var expected = { map: {
@@ -202,7 +202,7 @@ describe('client.put()', function () {
         b: 'foo',
         c: 1.23,
         d: 3.14,
-        e: new Buffer('bar'),
+        e: Buffer.from('bar'),
         f: '{"type":"Point","coordinates":[103.8,1.283]}',
         g: [1, 2, 3],
         h: { a: 1, b: 2 } }

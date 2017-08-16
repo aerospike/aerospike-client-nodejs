@@ -11,7 +11,7 @@
   "license": "Apache-2.0",
   "main": "lib/aerospike",
   "engines": {
-    "node": ">=0.12"
+    "node": ">=4"
   },
   "os": [
     "linux",
@@ -40,7 +40,7 @@
     "expect.js": "^0.3",
     "mocha": "^3.0",
     "yargs": "1.2.1",
-    "standard": "^9.0",
+    "standard": "^10.0",
     "jsdoc": "^3.4.0",
     "ink-docstrap": "^1.1.0"
   },

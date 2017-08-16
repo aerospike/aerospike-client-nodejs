@@ -68,7 +68,7 @@ describe('Key', function () {
     })
 
     context('user key', function () {
-      var dummyDigest = new Buffer([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+      var dummyDigest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
 
       it('allows string user key', function () {
         expect(new Key('ns', 'set', 'abc')).to.be.ok()
@@ -84,7 +84,7 @@ describe('Key', function () {
       })
 
       it('allows byte array user key', function () {
-        var buf = new Buffer([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
+        var buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
         expect(new Key('ns', 'set', buf)).to.be.ok()
       })
 
@@ -100,8 +100,8 @@ describe('Key', function () {
         expect(function () { return new Key('ns', 'set', '') }).to.throwException('Key must be a string, integer, or Buffer')
       })
 
-      it('rejects empty byte array  user key', function () {
-        expect(function () { return new Key('ns', 'set', new Buffer([])) }).to.throwException('Key must be a string, integer, or Buffer')
+      it('rejects empty byte array user key', function () {
+        expect(function () { return new Key('ns', 'set', Buffer.from([])) }).to.throwException('Key must be a string, integer, or Buffer')
       })
 
       it('rejects float user key', function () {
@@ -117,7 +117,7 @@ describe('Key', function () {
       var client = helper.client
 
       it('allows creating a new key with just the namespace and digest', function () {
-        var digest = new Buffer([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+        var digest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
         expect(new Key('ns', null, null, digest)).to.be.ok()
       })
 
@@ -126,7 +126,7 @@ describe('Key', function () {
       })
 
       it('rejects a digest that is not the right size', function () {
-        expect(function () { return new Key('ns', null, null, new Buffer([0x01])) }).to.throwException('Digest must be a 20-byte Buffer')
+        expect(function () { return new Key('ns', null, null, Buffer.from([0x01])) }).to.throwException('Digest must be a 20-byte Buffer')
       })
 
       it('fetches a record given the digest', function (done) {
