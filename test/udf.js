@@ -80,21 +80,6 @@ context('registering/unregistering UDF modules', function () {
     })
   })
 
-  describe('#udfRegisterWait', function () {
-    it('wait for module registration using the legacy udfRegisterWait method', function (done) {
-      client.udfRegister(filename, function (err, _job) {
-        if (err) throw err
-        client.udfRegisterWait(module, 10, function (err) {
-          if (err) throw err
-          client.udfRemove(module, function (err, removeJob) {
-            if (err) throw err
-            removeJob.waitUntilDone(10, done)
-          })
-        })
-      })
-    })
-  })
-
   context('error handling', function () {
     it('should fail to register an non-existent module', function (done) {
       client.udfRegister('no-such-udf.lua', function (err) {

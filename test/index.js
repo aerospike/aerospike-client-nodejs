@@ -151,25 +151,6 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('client.indexCreateWait()', function (done) {
-    it('should create an index and wait until index creation is done', function (done) {
-      var args = {
-        ns: helper.namespace,
-        set: helper.set,
-        bin: testIndex.bin,
-        index: testIndex.name
-      }
-      client.createIntegerIndex(args, function (err) {
-        if (err) throw err
-
-        client.indexCreateWait(helper.namespace, testIndex.name, 10, function (err) {
-          expect(err).not.to.be.ok()
-          verifyIndexExists(helper.namespace, testIndex.name, done)
-        })
-      })
-    })
-  })
-
   describe('IndexJob', function () {
     describe('IndexJob#waitUntilDone()', function () {
       it('should wait until the index creation is completed', function (done) {
