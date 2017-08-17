@@ -158,6 +158,15 @@ function recordgen (key, binSpec) {
 
 function get (key, done) {
   var timeStart = process.hrtime()
+  client.get(key, function (_error, _record, _metadata, _key) {
+    var timeEnd = process.hrtime()
+    var status = (_error && _error.code) || 0
+    done(status, timeStart, timeEnd, READ)
+  })
+}
+
+function getPromise (key, done) {
+  var timeStart = process.hrtime()
   client.get(key)
     .then(() => done(0, timeStart, process.hrtime(), READ))
     .catch((err) => done(err.code, timeStart, process.hrtime(), READ))
@@ -169,6 +178,15 @@ var metadata = {
 }
 
 function put (options, done) {
+  var timeStart = process.hrtime()
+  client.put(options.key, options.record, metadata, function (_error, _record, _metadata, _key) {
+    var timeEnd = process.hrtime()
+    var status = (_error && _error.code) || 0
+    done(status, timeStart, timeEnd, WRITE)
+  })
+}
+
+function putPromise (options, done) {
   var timeStart = process.hrtime()
   client.put(options.key, options.record, metadata)
     .then(() => done(0, timeStart, process.hrtime(), WRITE))
@@ -209,6 +227,8 @@ function run (options) {
     }
   }
 
+  var usePromises = options.promises
+
   while (writeOps > 0 || readOps > 0) {
     var k = keygen(options.keyRange.min, options.keyRange.max)
     var key = {ns: options.namespace, set: options.set, key: k}
@@ -216,11 +236,19 @@ function run (options) {
     var ops = {key: key, record: record}
     if (writeOps > 0) {
       writeOps--
-      put(ops, done)
+      if (usePromises) {
+        putPromise(ops, done)
+      } else {
+        put(ops, done)
+      }
     }
     if (readOps > 0) {
       readOps--
-      get(key, done)
+      if (usePromises) {
+        getPromise(key, done)
+      } else {
+        get(key, done)
+      }
     }
   }
 }

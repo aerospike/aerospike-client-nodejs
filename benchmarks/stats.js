@@ -185,6 +185,7 @@ function printConfigTable (config, print, prefix) {
   configTable.push({'operations': config.operations})
   configTable.push({'iterations': config.iterations === undefined ? 'undefined' : config.iterations})
   configTable.push({'processes': config.processes})
+  configTable.push({'promises': !!config.promises})
   configTable.push({'time': config.time === undefined ? 'undefined' : timeUnits(config.time)})
 
   printTable(configTable, print, prefix)
