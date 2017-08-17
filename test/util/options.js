@@ -79,6 +79,9 @@ var parser = yargs
 
 var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv
 
+// enable debug stacktraces
+process.env['AEROSPIKE_DEBUG_STACKTRACES'] = process.env['AEROSPIKE_DEBUG_STACKTRACES'] || true
+
 function testDir () {
   return path.resolve(__dirname, '..')
 }
