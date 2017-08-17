@@ -106,10 +106,6 @@ ServerInfoHelper.prototype.supports_feature = function (feature) {
   return this.features.has(feature)
 }
 
-ServerInfoHelper.prototype.ldt_enabled = function () {
-  return this.nsconfig['ldt-enabled'] === 'true'
-}
-
 ServerInfoHelper.prototype.is_enterprise = function () {
   return this.edition.match('Enterprise')
 }
