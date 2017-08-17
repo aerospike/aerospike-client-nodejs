@@ -15,23 +15,29 @@
 // *****************************************************************************
 
 // *****************************************************************************
-// Write a record.
+// Get state information from the cluster or a single host.
 // *****************************************************************************
 
 const Aerospike = require('aerospike')
 const fs = require('fs')
 const yargs = require('yargs')
+const iteration = require('./iteration')
 
 // *****************************************************************************
 // Options parsing
 // *****************************************************************************
 
 var argp = yargs
-  .usage('$0 [options] key')
+  .usage('$0 [options] key module function [args ...]')
   .options({
     help: {
       boolean: true,
       describe: 'Display this message.'
+    },
+    quiet: {
+      alias: 'q',
+      boolean: true,
+      describe: 'Do not display content.'
     },
     host: {
       alias: 'h',
@@ -70,16 +76,48 @@ var argp = yargs
     password: {
       alias: 'P',
       default: null,
-      describe: 'Password to connectt to secured cluster'
+      describe: 'Password to connecttt to secured cluster'
+    },
+    iterations: {
+      alias: 'I',
+      default: 1,
+      describe: 'Number of iterations'
     }
   })
 
 var argv = argp.argv
+var keyv = argv._.shift()
+var udfModule = argv._.shift()
+var udfFunction = argv._.shift()
+var udfArgs = argv._
 
 if (argv.help === true) {
   argp.showHelp()
   process.exit(0)
 }
+
+if (!keyv) {
+  console.error('Error: Please provide a key for the operation')
+  console.error()
+  argp.showHelp()
+  process.exit(1)
+}
+
+if (!udfModule) {
+  console.error('Error: Please provide a key for the operation')
+  console.error()
+  argp.showHelp()
+  process.exit(1)
+}
+
+if (!udfFunction) {
+  console.error('Error: Please provide a key for the operation')
+  console.error()
+  argp.showHelp()
+  process.exit(1)
+}
+
+iteration.setLimit(argv.iterations)
 
 // *****************************************************************************
 // Configure the client.
@@ -94,105 +132,39 @@ var config = {
   policies: {
     timeout: argv.timeout
   },
-  modlua: {
-    userPath: __dirname
-  },
   user: argv.user,
   password: argv.password
 }
 
 // *****************************************************************************
-// Perform the operation
+// Perform the operation.
 // *****************************************************************************
 
-var checkError = function (err, msg) {
-  if (err) {
-    console.error(err)
-  } else {
-    console.log(msg)
+function run (client, done) {
+  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
+
+  var udf = {
+    module: udfModule,
+    funcname: udfFunction,
+    args: udfArgs.map(function (v) {
+      try {
+        return JSON.parse(v)
+      } catch (exception) {
+        return '' + v
+      }
+    })
   }
+
+  client.apply(key, udf, function (err, value) {
+    if (err) throw err
+    !argv.quiet && console.log(JSON.stringify(value, null, '    '))
+    iteration.next(run, client, done)
+  })
 }
 
 Aerospike.connect(config, function (err, client) {
   if (err) throw err
-
-  // Get a largelist object from client.
-  var listkey = new Aerospike.Key(argv.namespace, argv.set, 'ldt_list_key')
-  var policy = { timeout: 1000 }
-  var list = client.LargeList(listkey, 'ldt_list_bin', policy)
-
-  // perform all the largelist operations.
-
-  // add single value to the list.
-  var val = 'listvalsingle'
-  list.add(val, function (err, val) {
-    checkError(err, 'Added a single value')
-  })
-
-  // update single value added to the list.
-  var updateVal = 'listvalupdated'
-  list.update(updateVal, function (err, val) {
-    checkError(err, 'Updated a single value')
-  })
-
-  // find an entry in the list.
-  list.find('listvalsingle', function (err, val) {
-    checkError(err, 'Find function verified')
-    console.log('value found ', val)
-  })
-
-  // remove an entry in the list.
-  list.remove('listvalsingle', function (err, val) {
-    checkError(err, 'Remove an entry verified')
-  })
-
-  // add an array of values to the list.
-  val = ['listadd1', 'listadd2', 'listadd3', 'listadd4', 'listadd5']
-  list.add(val, function (err, retVal) {
-    checkError(err, 'Added an array of values')
-  })
-
-  // update an array of value in the list.
-  val = ['listupdate1', 'listupdate2', 'listupdate3', 'listupdate4', 'listupdate5']
-  list.update(val, function (err, val) {
-    checkError(err, 'Updated an array of values')
-  })
-
-  // find a range of entries in the list.
-  list.findRange('listadd1', 'listadd9', function (err, val) {
-    checkError(err, 'Find Range Entry Verified')
-    console.log(val)
-  })
-
-  // remove a range of entries in the list.
-  list.removeRange('listadd1', 'listadd9', function (err, val) {
-    checkError(err, 'Remove a range of entries verified')
-  })
-
-  // remove an array of values in the list.
-  val = ['listupdate1', 'listupdate2', 'listupdate3', 'listupdate4', 'listupdate5']
-  list.remove(val, function (err, val) {
-    checkError(err, 'Removed an array of values')
-  })
-
-  // scan the whole llist.
-  list.scan(function (err, val) {
-    checkError(err, 'Scan Completed')
-    console.log('scanned value', val)
-  })
-
-  // Get the size of the list and destroy the list.
-  list.size(function (err, val) {
-    checkError(err, 'Get size is verified')
-    console.log('The size of the list is ', val)
-    list.getConfig(function (err, val) {
-      if (err) throw err
-      console.log(val)
-      // destroy the llist completely.
-      list.destroy(function (err, val) {
-        checkError(err, 'The list is destroyed')
-        client.close()
-      })
-    })
+  run(client, function () {
+    client.close()
   })
 })

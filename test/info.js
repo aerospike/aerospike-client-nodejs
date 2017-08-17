@@ -14,66 +14,35 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it, context, before */
+/* global expect, describe, it, before */
 
-const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
 const helper = require('./test_helper')
 
 describe('client.info()', function () {
   var client = helper.client
+  var host = null
 
-  context('querying a single node', function () {
-    var host = null
-
-    before(function (done) {
-      helper.cluster.randomNode(function (addr) {
-        host = addr
-        done()
-      })
-    })
-
-    it('sends status query to a specific cluster node', function (done) {
-      client.info('status', host, function (err, response) {
-        expect(err).not.to.be.ok()
-        expect(response).to.be('status\tok\n')
-        done()
-      })
-    })
-
-    it('accepts a string with the host address', function (done) {
-      var hostAddress = host.addr + ':' + host.port
-      client.info('status', hostAddress, function (err, response, respondingHost) {
-        expect(err).not.to.be.ok()
-        expect(respondingHost).to.eql(host)
-        expect(response).to.be('status\tok\n')
-        done()
-      })
-    })
-  })
-
-  context('querying all the nodes', function () {
-    it('should return status for all cluster nodes', function (done) {
-      client.info('status', function (err, response, host) {
-        expect(err).not.to.be.ok()
-        expect(response).to.be('status\tok\n')
-      }, done)
-    })
-  })
-
-  it('should call the done callback after the info callback', function (done) {
-    var infoCbCalled = 0
-    client.info(function () {
-      infoCbCalled += 1
-    }, function () {
-      expect(infoCbCalled).to.not.eql(0)
+  before(function (done) {
+    helper.cluster.randomNode(function (addr) {
+      host = addr
       done()
     })
   })
 
-  it('should return a client error if the client is not connected', function (done) {
-    Aerospike.client(helper.config).info(function (err) {
-      expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+  it('sends status query to a specific cluster node', function (done) {
+    client.info('status', host, function (err, response) {
+      expect(err).not.to.be.ok()
+      expect(response).to.be('status\tok\n')
+      done()
+    })
+  })
+
+  it('accepts a string with the host address', function (done) {
+    var hostAddress = host.addr + ':' + host.port
+    client.info('status', hostAddress, function (err, response) {
+      expect(err).not.to.be.ok()
+      expect(response).to.be('status\tok\n')
       done()
     })
   })

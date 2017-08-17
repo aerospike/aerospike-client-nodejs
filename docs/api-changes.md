@@ -1,5 +1,11 @@
 # Backward Incompatible API Changes
 
+## Version X.Y.Z
+
+### Removal of LargeList Functionality
+
+As of v3.15, Aerospike Server has removed support for Large Data Type (LTD) functionality.
+
 ## Version 2.6.0
 
 ### Deprecations
