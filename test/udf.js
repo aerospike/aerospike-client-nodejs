@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global context, describe, it, expect */
+/* global context, it, expect */
 
 const path = require('path')
 
