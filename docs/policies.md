@@ -1,5 +1,5 @@
-**This document covers the 1.x version of the Aerospike Node.js client. For the
-2.0 client, please refer to the API documentation available at
+**This document covers the 1.x version of the Aerospike Node.js client. For newer
+client versions, please refer to the API documentation available at
 [http://www.aerospike.com/apidocs/nodejs/](http://www.aerospike.com/apidocs/nodejs/).**
 
 ----------

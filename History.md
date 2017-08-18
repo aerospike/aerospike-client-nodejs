@@ -1,8 +1,18 @@
-HEAD
+PENDING -- (v3.0.0)
 ===================
+
+* **New Features**
+  * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
 
 * **Bug Fixes**
   * Fix memory leak in batchRead [#213](https://github.com/aerospike/aerospike-client-nodejs/issues/213)
+
+* **Updates**
+  * Requires Node.js v4.x (LTS) or later; Node.js v0.12.x and io.js are no longer supported [PR #179](https://github.com/aerospike/aerospike-client-nodejs/pull/179)
+  * Several client functions, that were marked as deprecated under v2.x, have been removed. [PR #214](https://github.com/aerospike/aerospike-client-nodejs/pull/214)
+  * Several callback functions, that returned multiple callback values under v2.x, have been updated to return a single callback value under v3. [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
+  * See full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
+    for further details.
 
 v2.7.2 / 2017-08-03
 ===================

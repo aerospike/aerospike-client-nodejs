@@ -1,10 +1,90 @@
 # Backward Incompatible API Changes
 
-## Version X.Y.Z
+## Version 3.0.0
 
-### Removal of LargeList Functionality
+### Removal of LargeList (LDT) Functionality
 
-As of v3.15, Aerospike Server has removed support for Large Data Type (LTD) functionality.
+The `Client#LargeList` function and all related functionality supporting Large Data Types (LDT) have been removed.
+Deprecation of LDT was first announced on the Aerospike Blog in [November 2016](http://www.aerospike.com/blog/aerospike-ldt/).
+Aerospike Server v3.14 is the last server release to support LDT functionality.
+
+### Promise-based API & Changes in Callback Method Signatures
+
+In addition to callback functions, the v3 client also supports an async API
+based on Promises. The callback function parameter on all async client commands
+is now optional. If no callback function is passed, the command will return a
+Promise instead. A [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+object represents the eventual completion (or failure) of an asynchronous
+operation, and its resulting value.
+
+In contrast to callback functions, a Promise can only resolve to a single
+result value. In v2, several of the client's callback functions passed more
+than one result value. For example, the record callback
+function used by the `Client#get` command, passed the record's bins, meta
+data and the record's keys in three separate parameters to the provided
+callback function: `recordCallback(error, bin, meta, key)`.
+
+To harmonize the result values passed to callback functions and returned by
+Promises, all client commands in v3 return a single result value. The method
+signatures of several callback functions have been updated to combine multiple
+separate result values into a single result object.
+
+| Callback Function Type       | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
+| [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | `cb(error, record, metadata, key)` | `cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` | The `record` passed in the v3 cb is an instance of the `Record` class, which contains the records bins, key and meta-data. |
+| [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in the v3 cb contains instances of the `Record` class instead of separate bins, meta-data and key values. |
+
+### Changed Semantics of `Client#exists` Command
+
+The `Client#exists` command now returns a simple boolean value to indicate
+whether a record exists in the database under the given key. It is no longer
+necessary, nor possible, to check the command's error code for the
+`AEROSPIKE_ERR_RECORD_NOT_FOUND` status code.
+
+Usage under v2:
+
+```JavaScript
+let key = new Aerospike.Key('test', 'test', 'noSuchKey')
+client.exists(key, error => {
+  if (error && error.code !== Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+    // An error occurred while executing the command.
+  } else if (error) {
+    // The record does not exist.
+  } else {
+    // The record for the key exists.
+  }
+})
+```
+
+Usage under v3:
+
+```JavaScript
+let key = new Aerospike.Key('test', 'test', 'noSuchKey')
+client.exists(key, (error, result) => {
+  if (error) {
+    // An error occurred while executing the command.
+  } else if (result) {
+    // The record for the key exists.
+  } else {
+    // The record does not exist.
+  }
+})
+```
+
+### Removal of Client Functions Deprecated under v2
+
+The following Client functions have been marked as deprecated under v2.x and have been removed in v3:
+
+| Removed Function             | Replacement                                    | Remarks                                     |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `LargeList#*`                | -                                              | See above                                   |
+| `Client#LargeList`           | -                                              | See above                                   |
+| `Client#execute`             | `Client#apply`                                 | -                                           |
+| `Client#info` w/o `host` param | `Client#infoAll`                             | -                                           |
+| `Client#udfRegisterWait`     | `UdfJob#wait`                                  | `Client#udfRegister` & `Client#udfRemove` return a `UdfJob` instance.         |
+| `Client#createIndexWait`     | `IndexTask#wait`                               | `Client#createIndex` & `Client#create<*>Index` return an `IndexJob` instance. |
+| `Aerospike.operator.<*>`     | `Aerospike.operations.<*>`                     | -                                           |
+| `Aerospike.operator.list<*>` | `Aerospike.lists.<*>`                          | -                                           |
+
 
 ## Version 2.6.0
 
@@ -12,7 +92,7 @@ As of v3.15, Aerospike Server has removed support for Large Data Type (LTD) func
 
 | Deprecated Function          | Replacement                                    | Remarks                                     |
 | ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| `Infoy#parseInfo`            | `Info#parse`                                   | `parse` and `parseInfo` both parse the info data returned by the Aerospike server; there are some minor differences between the parsed data returned by the two functions for some info keys |
+| `Info#parseInfo`             | `Info#parse`                                   | `parse` and `parseInfo` both parse the info data returned by the Aerospike server; there are some minor differences between the parsed data returned by the two functions for some info keys |
 | `Client#udfRegisterWait`     | `UdfJob#waitUntilDone`                         | An `UdfJob` instance is passed to the client's `udfRegister`/`udfRemove` callback functions. |
 
 ## Version 2.4.4
