@@ -80,7 +80,7 @@ The following Client functions have been marked as deprecated under v2.x and hav
 | `Aerospike.Double()`             | `new Double()`                                 | -                                           |
 | `Aerospike.filter.geoContains()` | `Aerospike.filter.geoContainsGeoJSONPoint()`   | -                                           |
 | `Aerospike.filter.geoWithin()`   | `Aerospike.filter.geoWithinGeoJSONRegion()`    | -                                           |
-| `Aerospike.indexType.(STRING|NUMERIC|GEO2DSPHERE)` | `Aerospike.indexDataType.(STRING|NUMERIC|GEO2DSPHERE)` | -                 |
+| `Aerospike.indexType.<STRING, NUMERIC, GEO2DSPHERE>` | `Aerospike.indexDataType.<STRING, NUMERIC, GEO2DSPHERE>` | -             |
 | `Aerospike.info.parseInfo()`     | `Aerospike.info.parse()`                       | -                                           |
 | `Aerospike.key()`                | `new Key()`                                    | -                                           |
 | `Aerospike.operator.<*>`         | `Aerospike.operations.<*>`                     | -                                           |
