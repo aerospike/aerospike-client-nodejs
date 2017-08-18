@@ -18,18 +18,14 @@
 
 const Aerospike = require('../lib/aerospike')
 const Double = Aerospike.Double
+
 require('./test_helper.js')
 
 describe('Aerospike.Double', function () {
   describe('constructor', function () {
-    it('returns a new Double value when called as an Object constructor', function () {
+    it('returns a new Double value', function () {
       var subject = new Double(3.1415)
-      expect(subject).to.be.a(Double)
-      expect(subject.Double).to.be(3.1415)
-    })
 
-    it('returns a new Double value when called as function', function () {
-      var subject = Double(3.1415)
       expect(subject).to.be.a(Double)
       expect(subject.Double).to.be(3.1415)
     })

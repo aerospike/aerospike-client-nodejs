@@ -53,7 +53,7 @@ context('registering/unregistering UDF modules', function () {
   })
 
   it('should register a module with an info policy', function (done) {
-    var policy = { timeout: 1000, send_as_is: true, check_bounds: false }
+    var policy = { timeout: 1000, sendAsIs: true, checkBounds: false }
     client.udfRegister(filename, policy, function (err, registerJob) {
       if (err) throw err
       registerJob.waitUntilDone(10, function (err) {
@@ -67,7 +67,7 @@ context('registering/unregistering UDF modules', function () {
   })
 
   it('should register a module as Lua language with an info policy', function (done) {
-    var policy = { timeout: 1000, send_as_is: true, check_bounds: false }
+    var policy = { timeout: 1000, sendAsIs: true, checkBounds: false }
     client.udfRegister(filename, Aerospike.language.LUA, policy, function (err, registerJob) {
       if (err) throw err
       registerJob.waitUntilDone(10, function (err) {
