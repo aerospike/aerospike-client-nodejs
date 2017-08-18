@@ -29,7 +29,8 @@ Promises, all client commands in v3 return a single result value. The method
 signatures of several callback functions have been updated to combine multiple
 separate result values into a single result object.
 
-| Callback Function Type       | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
+| Callback Function Type | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
+| ---------------------- | ------------------- | ------------------- | ------------------------ | ------- |
 | [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | `cb(error, record, metadata, key)` | `cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` | The `record` passed in the v3 cb is an instance of the `Record` class, which contains the records bins, key and meta-data. |
 | [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in the v3 cb contains instances of the `Record` class instead of separate bins, meta-data and key values. |
 
@@ -74,17 +75,26 @@ client.exists(key, (error, result) => {
 
 The following Client functions have been marked as deprecated under v2.x and have been removed in v3:
 
-| Removed Function             | Replacement                                    | Remarks                                     |
-| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| `LargeList#*`                | -                                              | See above                                   |
-| `Client#LargeList`           | -                                              | See above                                   |
-| `Client#execute`             | `Client#apply`                                 | -                                           |
-| `Client#info` w/o `host` param | `Client#infoAll`                             | -                                           |
-| `Client#udfRegisterWait`     | `UdfJob#wait`                                  | `Client#udfRegister` & `Client#udfRemove` return a `UdfJob` instance.         |
-| `Client#createIndexWait`     | `IndexTask#wait`                               | `Client#createIndex` & `Client#create<*>Index` return an `IndexJob` instance. |
-| `Aerospike.operator.<*>`     | `Aerospike.operations.<*>`                     | -                                           |
-| `Aerospike.operator.list<*>` | `Aerospike.lists.<*>`                          | -                                           |
-
+| Removed Function                 | Replacement                                    | Remarks                                     |
+| -------------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| `Aerospike.Double()`             | `new Double()`                                 | -                                           |
+| `Aerospike.filter.geoContains()` | `Aerospike.filter.geoContainsGeoJSONPoint()`   | -                                           |
+| `Aerospike.filter.geoWithin()`   | `Aerospike.filter.geoWithinGeoJSONRegion()`    | -                                           |
+| `Aerospike.indexType.(STRING|NUMERIC|GEO2DSPHERE)` | `Aerospike.indexDataType.(STRING|NUMERIC|GEO2DSPHERE)` | -                 |
+| `Aerospike.info.parseInfo()`     | `Aerospike.info.parse()`                       | -                                           |
+| `Aerospike.key()`                | `new Key()`                                    | -                                           |
+| `Aerospike.operator.<*>`         | `Aerospike.operations.<*>`                     | -                                           |
+| `Aerospike.operator.list<*>`     | `Aerospike.lists.<*>`                          | -                                           |
+| `Client#LargeList()`             | -                                              | See "Removal of LDT functionality"          |
+| `Client#execute()`               | `Client#apply()`                               | -                                           |
+| `Client#info()` w/o `host` param | `Client#infoAll()`                             | -                                           |
+| `Client#udfRegisterWait()`       | `UdfJob#wait()`                                | `Client#udfRegister()` & `Client#udfRemove()` return a `UdfJob` instance.         |
+| `Client#createIndexWait()`       | `IndexTask#wait()`                             | `Client#createIndex()` & `Client#create<*>Index()` return an `IndexJob` instance. |
+| `InfoPolicy#send_as_is`          | `InfoPolicy#sendAsIs`                          | -                                           |
+| `InfoPolicy#check_bounds`        | `InfoPolicy#checkBounds`                       | -                                           |
+| `LargeList#*`                    | -                                              | See "Removal of LDT functionality"          |
+| `Query#execute()`                | `Query#foreach()`                              |                                             |
+| `Scan#execute()`                 | `Scan#foreach()`                               |                                             |
 
 ## Version 2.6.0
 
