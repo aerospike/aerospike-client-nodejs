@@ -121,7 +121,7 @@ function run (client, done) {
     concurrent: true
   }
 
-  var stream = client.query(argv.namespace, argv.set, options).execute()
+  var stream = client.scan(argv.namespace, argv.set, options).execute()
 
   stream.on('data', function (rec) {
     !argv.quiet && console.log(JSON.stringify(rec, null, '    '))

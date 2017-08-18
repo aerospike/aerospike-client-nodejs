@@ -157,23 +157,23 @@ Aerospike.connect(config, function (err, client) {
 
     console.time(timeLabel)
 
-    return function (err, record, metadata, key, skippy) {
+    return function (err, record, skippy) {
       inFlight--
       if (skippy === true) {
-        console.log('SKIP - ', key)
+        console.log('SKIP - ', record.key)
         skipped++
       } else if (err) {
         switch (err.code) {
           case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-            console.log('NOT_FOUND - ', key)
+            console.log('NOT_FOUND - ', record.key)
             notfound++
             break
           default:
-            console.log('ERR - ', err, key)
+            console.log('ERR - ', err, record.key)
             failure++
         }
       } else {
-        console.log('OK - ', key, metadata, record)
+        console.log('OK - ', record)
         success++
       }
 
@@ -199,7 +199,7 @@ Aerospike.connect(config, function (err, client) {
 
       if (skip !== 0 && ++s >= skip) {
         s = 0
-        done(null, null, null, key, true)
+        done(null, {key: key}, true)
         continue
       }
 

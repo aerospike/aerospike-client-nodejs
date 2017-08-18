@@ -1,21 +1,12 @@
 {
   "name" : "aerospike-client-examples",
-  "version" : "v0.1.0",
   "description" : "Aerospike Client Library Examples",
-  "tags" : [ "aerospike", "database", "nosql" ],
-  "engines" : {
-    "node" : ">=0.10"
-  },
-  "os" : [ "linux" ],
-  "cpu" : [ "x64" ],
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
+  "engines": {
+    "node": ">=4"
   },
   "dependencies": {
-    "aerospike": "^2.4",
+    "aerospike": "*",
     "yargs": ">=1.2.1",
-    "sleep": "^3.0.0",
     "deasync": "^0.1.4"
   }
 }

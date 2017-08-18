@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it, before */
 
 const Aerospike = require('../lib/aerospike')
@@ -26,19 +28,18 @@ const putgen = helper.putgen
 const valgen = helper.valgen
 
 const Key = Aerospike.Key
+const Record = Aerospike.Record
 const status = Aerospike.status
 
 describe('client.batchRead()', function () {
   var client = helper.client
 
-  before(function (done) {
+  before(function () {
     var nrecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_read/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
-    putgen.put(nrecords, kgen, rgen, mgen, function (key) {
-      if (!key) done()
-    })
+    return putgen.put(nrecords, kgen, rgen, mgen)
   })
 
   it('returns the status whether each key was found or not', function (done) {
@@ -73,8 +74,7 @@ describe('client.batchRead()', function () {
       expect(results.length).to.be(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(status.AEROSPIKE_OK)
-        expect(result.bins).to.be.empty()
-        expect(result.meta).to.have.keys('ttl')
+        expect(result.record.bins).to.be.empty()
       })
       done()
     })
@@ -92,8 +92,9 @@ describe('client.batchRead()', function () {
       expect(results.length).to.be(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(status.AEROSPIKE_OK)
-        expect(result.bins).to.only.have.keys('i')
-        expect(result.meta).to.have.keys('ttl')
+        expect(result.record.bins).to.only.have.keys('i')
+        expect(result.record.gen).to.be.ok()
+        expect(result.record.ttl).to.be.ok()
       })
       done()
     })
@@ -111,8 +112,9 @@ describe('client.batchRead()', function () {
       expect(results.length).to.be(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(status.AEROSPIKE_OK)
-        expect(result.bins).to.have.keys('i', 's')
-        expect(result.meta).to.have.keys('ttl')
+        expect(result.record.bins).to.have.keys('i', 's')
+        expect(result.record.gen).to.be.ok()
+        expect(result.record.ttl).to.be.ok()
       })
       done()
     })
@@ -129,15 +131,16 @@ describe('client.batchRead()', function () {
       expect(err).not.to.be.ok()
       expect(results.length).to.be(3)
       results.forEach(function (result) {
-        switch (result.key.key) {
+        let record = result.record
+        switch (record.key.key) {
           case 'test/batch_read/1':
-            expect(result.bins).to.only.have.keys('i', 's')
+            expect(record.bins).to.only.have.keys('i', 's')
             break
           case 'test/batch_read/3':
-            expect(result.bins).to.only.have.keys('i')
+            expect(record.bins).to.only.have.keys('i')
             break
           case 'test/batch_read/5':
-            expect(result.bins).to.be.empty()
+            expect(record.bins).to.be.empty()
             break
           default:
             throw new Error('unpexected record key')
@@ -145,5 +148,21 @@ describe('client.batchRead()', function () {
       })
       done()
     })
+  })
+
+  it('returns a Promise that resolves to the batch results', function () {
+    var batchRecords = [
+      {key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true}
+    ]
+
+    return client.batchRead(batchRecords)
+      .then(results => {
+        expect(results.length).to.be(1)
+        return results.pop()
+      })
+      .then(result => {
+        expect(result.status).to.be(Aerospike.status.AEROSPIKE_OK)
+        expect(result.record).to.be.a(Record)
+      })
   })
 })

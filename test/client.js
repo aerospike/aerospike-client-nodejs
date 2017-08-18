@@ -79,7 +79,7 @@ describe('Client', function () {
   })
 
   context('callbacks', function () {
-    it('should raise an error when calling a command without passing a callback function', function () {
+    it.skip('should raise an error when calling a command without passing a callback function', function () {
       expect(function () { helper.client.truncate('foo', 'bar') }).to.throwException(function (e) {
         expect(e).to.be.a(TypeError)
         expect(e.message).to.be('"callback" argument must be a function')

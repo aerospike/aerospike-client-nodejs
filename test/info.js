@@ -14,112 +14,145 @@
 // limitations under the License.
 // *****************************************************************************
 
-/* global expect, describe, it, before */
+'use strict'
 
+/* global expect, describe, it, context, before */
+
+const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
 const helper = require('./test_helper')
 
-describe('client.info()', function () {
-  var client = helper.client
-  var host = null
+context('Info commands', function () {
+  let client = helper.client
 
-  before(function (done) {
-    helper.cluster.randomNode(function (addr) {
-      host = addr
-      done()
-    })
-  })
+  describe('Client#info()', function () {
+    let host = null
 
-  it('sends status query to a specific cluster node', function (done) {
-    client.info('status', host, function (err, response) {
-      expect(err).not.to.be.ok()
-      expect(response).to.be('status\tok\n')
-      done()
-    })
-  })
+    before(() => helper.cluster.randomNode()
+      .then(randomHost => { host = randomHost }))
 
-  it('accepts a string with the host address', function (done) {
-    var hostAddress = host.addr + ':' + host.port
-    client.info('status', hostAddress, function (err, response) {
-      expect(err).not.to.be.ok()
-      expect(response).to.be('status\tok\n')
-      done()
-    })
-  })
-})
-
-describe('client.infoAny()', function () {
-  var client = helper.client
-
-  it('executes the info command on a single cluster node', function (done) {
-    client.infoAny('status', function (err, result) {
-      expect(err).to.not.be.ok()
-      expect(result).to.be('status\tok\n')
-      done()
-    })
-  })
-})
-
-describe('client.infoAll()', function () {
-  var client = helper.client
-
-  it('executes the info command on all cluster nodes an returns a list of results', function (done) {
-    client.infoAll('status', function (err, results) {
-      expect(err).to.not.be.ok()
-      expect(Array.isArray(results)).to.be(true)
-      results.forEach(function (result) {
-        expect(result.host).to.be.ok()
-        expect(result.info).to.be('status\tok\n')
-        expect(result.error).to.be.ok()
+    it('sends status query to a specific cluster node', function (done) {
+      client.info('status', host, (error, response) => {
+        if (error) throw error
+        expect(response).to.be('status\tok\n')
+        done()
       })
-      done()
+    })
+
+    it('accepts a string with the host address', function (done) {
+      let hostAddress = host.addr + ':' + host.port
+      client.info('status', hostAddress, (error, response) => {
+        if (error) throw error
+        expect(response).to.be('status\tok\n')
+        done()
+      })
+    })
+
+    it('fetches all info if no request is passed', function (done) {
+      client.info(null, host, (error, response) => {
+        if (error) throw error
+        expect(response).to.contain('\nversion\t')
+        expect(response).to.contain('\nedition\t')
+        done()
+      })
+    })
+
+    it('should return a client error if the client is not connected', function (done) {
+      Aerospike.client(helper.config).info('status', host, error => {
+        expect(error.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+        done()
+      })
     })
   })
-})
 
-describe('info.parse()', function () {
-  it('should parse key-value pairs from an info string', function () {
-    var infoStr = 'version\t1\nedition\tCommunity Edition\n'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash).to.eql({version: 1, edition: 'Community Edition'})
+  describe('Client#infoAny()', function () {
+    it('executes the info command on a single cluster node', function (done) {
+      client.infoAny('status', function (err, result) {
+        expect(err).to.not.be.ok()
+        expect(result).to.be('status\tok\n')
+        done()
+      })
+    })
+
+    it('returns a Promise that resolves to the result of the info query', function () {
+      return client.infoAny('status')
+        .then(result => {
+          expect(result).to.be('status\tok\n')
+        })
+    })
   })
 
-  it('should parse nested key-value pairs', function () {
-    var infoStr = 'statistics\tmem=10;req=20\n'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash['statistics']).to.eql({mem: 10, req: 20})
+  describe('client.infoAll()', function () {
+    it('executes the info command on all cluster nodes an returns a list of results', function (done) {
+      client.infoAll('status', function (err, results) {
+        expect(err).to.not.be.ok()
+        expect(Array.isArray(results)).to.be(true)
+        results.forEach(function (result) {
+          expect(result.host).to.be.ok()
+          expect(result.info).to.be('status\tok\n')
+          expect(result.error).to.be(null)
+        })
+        done()
+      })
+    })
+
+    it('returns a Promise that resolves to the result of the info query', function () {
+      return client.infoAll('status')
+        .then(results => {
+          expect(Array.isArray(results)).to.be(true)
+          results.forEach(result => {
+            expect(result.host).to.be.ok()
+            expect(result.info).to.be('status\tok\n')
+            expect(result.error).to.be(null)
+          })
+        })
+    })
   })
 
-  it('should parse list values', function () {
-    var infoStr = 'features\tgeo;double\n'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash['features']).to.eql(['geo', 'double'])
-  })
+  describe('info.parse()', function () {
+    it('should parse key-value pairs from an info string', function () {
+      var infoStr = 'version\t1\nedition\tCommunity Edition\n'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash).to.eql({version: 1, edition: 'Community Edition'})
+    })
 
-  it('should parse numeric strings as numbers', function () {
-    var infoStr = 'version\t1'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash['version']).to.be.a('number')
-  })
+    it('should parse nested key-value pairs', function () {
+      var infoStr = 'statistics\tmem=10;req=20\n'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['statistics']).to.eql({mem: 10, req: 20})
+    })
 
-  it('should be able to handle an empty string', function () {
-    var infoStr = ''
-    var infoHash = info.parse(infoStr)
-    expect(infoHash).to.eql({})
-  })
+    it('should parse list values', function () {
+      var infoStr = 'features\tgeo;double\n'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['features']).to.eql(['geo', 'double'])
+    })
 
-  it('should parse the udf-list info key', function () {
-    var infoStr = 'udf-list\tfilename=mod1.lua,hash=00557374fc319b8d0f38c6668015db35358d7b62,type=LUA;filename=mod2.lua,hash=c96771bd8ce6911a22a592e4857fd47082f14990,type=LUA;'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash['udf-list']).to.eql([
-      { filename: 'mod1.lua', hash: '00557374fc319b8d0f38c6668015db35358d7b62', type: 'LUA' },
-      { filename: 'mod2.lua', hash: 'c96771bd8ce6911a22a592e4857fd47082f14990', type: 'LUA' }
-    ])
-  })
+    it('should parse numeric strings as numbers', function () {
+      var infoStr = 'version\t1'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['version']).to.be.a('number')
+    })
 
-  it('should parse the bins info key', function () {
-    var infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
-    var infoHash = info.parse(infoStr)
-    expect(infoHash['bins']).to.eql({ test: { names: ['bin1', 'bin2'], stats: { bin_names: 2, bin_names_quota: 32768 } } })
+    it('should be able to handle an empty string', function () {
+      var infoStr = ''
+      var infoHash = info.parse(infoStr)
+      expect(infoHash).to.eql({})
+    })
+
+    it('should parse the udf-list info key', function () {
+      var infoStr = 'udf-list\tfilename=mod1.lua,hash=00557374fc319b8d0f38c6668015db35358d7b62,type=LUA;filename=mod2.lua,hash=c96771bd8ce6911a22a592e4857fd47082f14990,type=LUA;'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['udf-list']).to.eql([
+        { filename: 'mod1.lua', hash: '00557374fc319b8d0f38c6668015db35358d7b62', type: 'LUA' },
+        { filename: 'mod2.lua', hash: 'c96771bd8ce6911a22a592e4857fd47082f14990', type: 'LUA' }
+      ])
+    })
+
+    it('should parse the bins info key', function () {
+      var infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['bins']).to.eql({ test: { names: ['bin1', 'bin2'], stats: { bin_names: 2, bin_names_quota: 32768 } } })
+    })
   })
 })

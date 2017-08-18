@@ -31,11 +31,11 @@ describe('client.operate() - CDT Map operations', function () {
     }
   })
 
-  function setup (record, done) {
+  function setup (bins, done) {
     key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
     var meta = { ttl: 600 }
     var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
-    client.put(key, record, meta, policy, function (err) {
+    client.put(key, bins, meta, policy, function (err) {
       if (err) throw err
       done()
     })
@@ -48,17 +48,17 @@ describe('client.operate() - CDT Map operations', function () {
   // Helper method to execute a single operation on the given record and verify:
   // 1) The results returned by the operation,
   // 2) The contents of the record after the operation.
-  function verifyOperation (record, ops, expectedResult, expectedRecordPostOp, done) {
+  function verifyOperation (record, ops, expectedResult, expectedBinsPostOp, done) {
     setup(record, function () {
       if (!Array.isArray(ops)) {
         ops = [ops]
       }
       client.operate(key, ops, function (err, result) {
         if (err) return done(err)
-        expect(result).to.eql(expectedResult)
+        expect(result.bins).to.eql(expectedResult)
         client.get(key, function (err, record) {
           if (err) throw err
-          expect(record).to.eql(expectedRecordPostOp)
+          expect(record.bins).to.eql(expectedBinsPostOp)
           teardown(done)
         })
       })

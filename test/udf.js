@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global context, it, expect */
 
 const path = require('path')
@@ -29,11 +31,11 @@ context('registering/unregistering UDF modules', function () {
   it('should register and then remove a module', function (done) {
     client.udfRegister(filename, function (err, registerJob) {
       if (err) throw err
-      registerJob.waitUntilDone(10, function (err) {
+      registerJob.wait(10, function (err) {
         if (err) throw err
         client.udfRemove(module, function (err, removeJob) {
           if (err) throw err
-          removeJob.waitUntilDone(10, done)
+          removeJob.wait(10, done)
         })
       })
     })
@@ -42,11 +44,11 @@ context('registering/unregistering UDF modules', function () {
   it('should register a module as Lua language', function (done) {
     client.udfRegister(filename, Aerospike.language.LUA, function (err, registerJob) {
       if (err) throw err
-      registerJob.waitUntilDone(10, function (err) {
+      registerJob.wait(10, function (err) {
         if (err) throw err
         client.udfRemove(module, function (err, removeJob) {
           if (err) throw err
-          removeJob.waitUntilDone(10, done)
+          removeJob.wait(10, done)
         })
       })
     })
@@ -56,11 +58,11 @@ context('registering/unregistering UDF modules', function () {
     var policy = { timeout: 1000, sendAsIs: true, checkBounds: false }
     client.udfRegister(filename, policy, function (err, registerJob) {
       if (err) throw err
-      registerJob.waitUntilDone(10, function (err) {
+      registerJob.wait(10, function (err) {
         if (err) throw err
         client.udfRemove(module, function (err, removeJob) {
           if (err) throw err
-          removeJob.waitUntilDone(10, done)
+          removeJob.wait(10, done)
         })
       })
     })
@@ -70,14 +72,21 @@ context('registering/unregistering UDF modules', function () {
     var policy = { timeout: 1000, sendAsIs: true, checkBounds: false }
     client.udfRegister(filename, Aerospike.language.LUA, policy, function (err, registerJob) {
       if (err) throw err
-      registerJob.waitUntilDone(10, function (err) {
+      registerJob.wait(10, function (err) {
         if (err) throw err
         client.udfRemove(module, function (err, removeJob) {
           if (err) throw err
-          removeJob.waitUntilDone(10, done)
+          removeJob.wait(10, done)
         })
       })
     })
+  })
+
+  it('returns a Promise if no callback function is passed', function () {
+    return client.udfRegister(filename)
+      .then(job => job.wait(10))
+      .then(() => client.udfRemove(module))
+      .then(job => job.wait(10))
   })
 
   context('error handling', function () {

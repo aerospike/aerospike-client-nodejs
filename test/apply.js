@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it, before, after */
 
 const Aerospike = require('../lib/aerospike')
@@ -21,21 +23,15 @@ const helper = require('./test_helper')
 
 const keygen = helper.keygen
 
-describe('client.apply()', function (done) {
-  var client = helper.client
-  var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
+describe('client.apply()', function () {
+  let client = helper.client
+  let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
 
-  before(function (done) {
-    helper.udf.register('udf.lua', function () {
-      client.put(key, {'foo': 'bar'}, {ttl: 1000}, done)
-    })
-  })
+  before(() => helper.udf.register('udf.lua')
+    .then(() => client.put(key, {'foo': 'bar'}, {ttl: 1000})))
 
-  after(function (done) {
-    helper.udf.remove('udf.lua', function () {
-      client.remove(key, done)
-    })
-  })
+  after(() => helper.udf.remove('udf.lua')
+    .then(() => client.remove(key)))
 
   it('should invoke an UDF to without any args', function (done) {
     var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
@@ -79,5 +75,12 @@ describe('client.apply()', function (done) {
       expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
       done()
     })
+  })
+
+  it('should return a Promise that resolves to the return value of the UDF function', function () {
+    var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
+
+    return client.apply(key, udfArgs)
+      .then(result => expect(result).to.be(1))
   })
 })

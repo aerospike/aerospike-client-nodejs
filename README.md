@@ -42,53 +42,57 @@ const Key = Aerospike.Key
 const Double = Aerospike.Double
 const GeoJSON = Aerospike.GeoJSON
 
-const config = {
+let config = {
   hosts: '192.168.33.10:3000'
 }
-Aerospike.connect(config, (error, client) => {
-  if (error) throw error
+let key = new Key('test', 'demo', 'demo')
 
-  var key = new Key('test', 'demo', 'demo')
-  var record = {
-    i: 123,
-    s: 'hello',
-    b: new Buffer('world'),
-    d: new Double(3.1415),
-    g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
-    l: [1, 'a', {x: 'y'}],
-    m: {foo: 4, bar: 7}
-  }
-  var meta = { ttl: 10000 }
-  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+Aerospike.connect(config)
+  .then(client => {
+    let bins = {
+      i: 123,
+      s: 'hello',
+      b: Buffer.from('world'),
+      d: new Double(3.1415),
+      g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+      l: [1, 'a', {x: 'y'}],
+      m: {foo: 4, bar: 7}
+    }
+    let meta = { ttl: 10000 }
+    let policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
 
-  client.put(key, record, meta, policy, (error) => {
-    if (error) throw error
+    return client.put(key, bins, meta, policy)
+      .then(() => {
+        let ops = [
+          op.incr('i', 1),
+          op.read('i'),
+          lists.append('l', 'z'),
+          maps.removeByKey('m', 'bar')
+        ]
 
-    var ops = [
-      op.incr('i', 1),
-      op.read('i'),
-      lists.append('l', 'z'),
-      maps.removeByKey('m', 'bar')
-    ]
+        return client.operate(key, ops)
+      })
+      .then(result => {
+        console.log(result.bins)   // => { c: 4, i: 124, m: null }
 
-    client.operate(key, ops, (error, result) => {
-      if (error) throw error
-      console.log(result)   // => { c: 4, i: 124 }
-
-      client.get(key, (error, record, meta) => {
-        if (error) throw error
-        console.log(record) // => { i: 124,
-                            //      s: 'hello',
-                            //      b: <Buffer 77 6f 72 6c 64>,
-                            //      d: 3.1415,
-                            //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
-                            //      l: [ 1, 'a', { x: 'y' }, 'z' ] },
-                            //      m: { foo: 4 }
+        return client.get(key)
+      })
+      .then(record => {
+        console.log(record.bins) // => { i: 124,
+                                 //      s: 'hello',
+                                 //      b: <Buffer 77 6f 72 6c 64>,
+                                 //      d: 3.1415,
+                                 //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
+                                 //      l: [ 1, 'a', { x: 'y' }, 'z' ],
+                                 //      m: { foo: 4 } }
         client.close()
       })
-    })
+      .catch(error => {
+        console.error(error)
+        client.close()
+      })
   })
-})
+  .catch(error => console.log(error))
 ```
 
 More examples illustrating the use of the API are located in the

@@ -14,10 +14,13 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
+const Job = require('../lib/job')
 const helper = require('./test_helper')
 
 const Key = Aerospike.Key
@@ -29,29 +32,24 @@ const recgen = helper.recgen
 const valgen = helper.valgen
 
 context('Scans', function () {
-  var client = helper.client
-  var testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
-  var numberOfRecords = 100
+  let client = helper.client
+  let testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
+  let numberOfRecords = 100
 
-  before(function (done) {
-    helper.udf.register('udf.lua', function () {
-      var kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
-      var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
-      var mgen = metagen.constant({ ttl: 300 })
-      var policy = {
+  before(() => helper.udf.register('udf.lua')
+    .then(() => {
+      let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
+      let rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
+      let mgen = metagen.constant({ ttl: 300 })
+      let policy = {
         key: Aerospike.policy.key.SEND,
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
         timeout: 1000
       }
-      putgen.put(numberOfRecords, kgen, rgen, mgen, policy, function (key) {
-        if (!key) done()
-      })
-    })
-  })
+      return putgen.put(numberOfRecords, kgen, rgen, mgen, policy)
+    }))
 
-  after(function (done) {
-    helper.udf.remove('udf.lua', done)
-  })
+  after(() => helper.udf.remove('udf.lua'))
 
   describe('client.scan()', function () {
     it('creates a new Scan instance and sets up it\'s properties', function () {
@@ -245,6 +243,15 @@ context('Scans', function () {
           stream.on('end', done)
         })
       })
+    })
+
+    it('returns a Promise that resolves to a Job', function () {
+      let token = valgen.string({length: {min: 10, max: 10}})()
+      let backgroundScan = client.scan(helper.namespace, testSet)
+      return backgroundScan.background('udf', 'updateRecord', ['x', token])
+        .then(job => {
+          expect(job).to.be.a(Job)
+        })
     })
   })
 

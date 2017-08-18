@@ -165,6 +165,13 @@ function get (key, done) {
   })
 }
 
+function getPromise (key, done) {
+  var timeStart = process.hrtime()
+  client.get(key)
+    .then(() => done(0, timeStart, process.hrtime(), READ))
+    .catch((err) => done(err.code, timeStart, process.hrtime(), READ))
+}
+
 // set the ttl for the write
 var metadata = {
   ttl: argv.ttl
@@ -177,6 +184,13 @@ function put (options, done) {
     var status = (_error && _error.code) || 0
     done(status, timeStart, timeEnd, WRITE)
   })
+}
+
+function putPromise (options, done) {
+  var timeStart = process.hrtime()
+  client.put(options.key, options.record, metadata)
+    .then(() => done(0, timeStart, process.hrtime(), WRITE))
+    .catch((err) => done(err.code, timeStart, process.hrtime(), WRITE))
 }
 
 // Structure to store per second statistics.
@@ -213,6 +227,8 @@ function run (options) {
     }
   }
 
+  var usePromises = options.promises
+
   while (writeOps > 0 || readOps > 0) {
     var k = keygen(options.keyRange.min, options.keyRange.max)
     var key = {ns: options.namespace, set: options.set, key: k}
@@ -220,11 +236,19 @@ function run (options) {
     var ops = {key: key, record: record}
     if (writeOps > 0) {
       writeOps--
-      put(ops, done)
+      if (usePromises) {
+        putPromise(ops, done)
+      } else {
+        put(ops, done)
+      }
     }
     if (readOps > 0) {
       readOps--
-      get(key, done)
+      if (usePromises) {
+        getPromise(key, done)
+      } else {
+        get(key, done)
+      }
     }
   }
 }

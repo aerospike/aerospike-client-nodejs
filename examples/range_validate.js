@@ -194,23 +194,23 @@ Aerospike.connect(config, function (err, client) {
 
     console.time(timeLabel)
 
-    return function (err, record, metadata, key) {
+    return function (err, record) {
       inFlight--
       done++
       if (err) {
-        console.log('ERR - ', err, key)
+        console.log('ERR - ', err, record.key)
       } else {
-        if (record.k !== key.key) {
-          console.log('INVALID - ', key, metadata, record)
-          console.log('        - record.k != key.key')
-        } else if (record.i !== record.k * 1000 + 123) {
-          console.log('INVALID - ', key, metadata, record)
-          console.log('        - record.i != record.k * 1000 + 123')
-        } else if (record.b[0] === 0xa && record.b[0] === 0xb && record.b[0] === 0xc) {
-          console.log('INVALID - ', key, metadata, record)
-          console.log('        - record.b != [0xa,0xb,0xc]')
+        if (record.bins.k !== record.key.key) {
+          console.log('INVALID - ', record)
+          console.log('        - record.bins.k != record.key.key')
+        } else if (record.bins.i !== record.bins.k * 1000 + 123) {
+          console.log('INVALID - ', record)
+          console.log('        - record.bins.i != record.bins.k * 1000 + 123')
+        } else if (record.bins.b[0] === 0xa && record.bins.b[0] === 0xb && record.bins.b[0] === 0xc) {
+          console.log('INVALID - ', record)
+          console.log('        - record.bins.b != [0xa,0xb,0xc]')
         } else {
-          console.log('VALID - ', key, metadata, record)
+          console.log('VALID - ', record)
         }
       }
 

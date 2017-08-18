@@ -16,7 +16,7 @@
     "operations"  : 100,
     "iterations"  : null,
     "processes"   : 4,
-    "time"        : "24h",
+    "time"        : "1h",
     "reads"       : 1,
     "writes"      : 1,
     "keyRange"     : {
@@ -39,5 +39,6 @@
             "type" : "INTEGER"
         }
     ],
+    "promises"    : true,
     "summary"     : true
 }

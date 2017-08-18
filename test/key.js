@@ -139,7 +139,7 @@ describe('Key', function () {
           var key2 = new Key('test', null, null, digest)
           client.get(key2, function (err, record) {
             if (err) throw err
-            expect(record.foo).to.equal('bar')
+            expect(record.bins.foo).to.equal('bar')
             done()
           })
         })

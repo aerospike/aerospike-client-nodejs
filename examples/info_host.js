@@ -117,7 +117,7 @@ var config = {
 // *****************************************************************************
 
 function run (client, done) {
-  var host = client.config.hosts[0]
+  var host = argv.host
   client.info(request, host, function (err, response, host) {
     if (err) throw err
     var res = {
@@ -125,7 +125,6 @@ function run (client, done) {
       response: response
     }
     !argv.quiet && console.log(JSON.stringify(res, null, '    '))
-  }, function () {
     iteration.next(run, client, done)
   })
 }

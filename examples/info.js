@@ -120,7 +120,6 @@ function run (client, done) {
   client.infoAll(request, function (err, response) {
     if (err) throw err
     !argv.quiet && console.log(JSON.stringify(response, null, '    '))
-  }, function () {
     iteration.next(run, client, done)
   })
 }

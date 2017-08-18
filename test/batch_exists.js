@@ -14,9 +14,12 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
+const Record = Aerospike.Record
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
@@ -28,27 +31,24 @@ const valgen = helper.valgen
 describe('client.batchExists()', function () {
   var client = helper.client
 
-  it('should successfully find 10 records', function (done) {
+  it('should successfully find 10 records', function () {
     var numberOfRecords = 10
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/10/', random: false})
     var mgen = metagen.constant({ttl: 1000})
     var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
 
-    var keysCreated = []
-    putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
-      if (key) {
-        keysCreated.push(key)
-      } else {
-        client.batchExists(keysCreated, function (err, results) {
-          expect(err).not.to.be.ok()
-          expect(results.length).to.equal(numberOfRecords)
-          results.forEach(function (result) {
-            expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
-          })
-          done()
+    return putgen.put(numberOfRecords, kgen, rgen, mgen)
+      .then(records => {
+        let keys = records.map(record => record.key)
+        return client.batchExists(keys)
+      })
+      .then(results => {
+        expect(results.length).to.equal(numberOfRecords)
+        results.forEach(result => {
+          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+          expect(result.record).to.be.a(Record)
         })
-      }
-    })
+      })
   })
 
   it('should fail finding 10 records', function (done) {

@@ -40,8 +40,6 @@ const fs = require('fs')
 const yargs = require('yargs')
 const deasync = require('deasync')
 
-const Status = Aerospike.status
-
 // *****************************************************************************
 // Options parsing
 // *****************************************************************************
@@ -155,24 +153,20 @@ Aerospike.connect(config, function (err, client) {
 
     console.time(timeLabel)
 
-    return function (err, metadata, key, skippy) {
+    return function (err, result, key, skippy) {
       inFlight--
       if (skippy === true) {
         console.log('SKIP - ', key)
         skipped++
       } else if (err) {
-        switch (err.code) {
-          case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
-            console.log('NOT_FOUND - ', key)
-            notfound++
-            break
-          default:
-            console.log('ERR - ', err, key)
-            failure++
-        }
-      } else {
-        console.log('OK - ', key, metadata)
+        console.log('ERR - ', key, err)
+        failure++
+      } else if (result) {
+        console.log('OK - ', key)
         success++
+      } else {
+        console.log('NOT_FOUND - ', key)
+        notfound++
       }
 
       done++
@@ -197,13 +191,13 @@ Aerospike.connect(config, function (err, client) {
 
       if (skip !== 0 && ++s >= skip) {
         s = 0
-        done(null, null, null, key, true)
+        done(null, null, key, true)
         continue
       }
 
       inFlight++
       deasync.loopWhile(function () { return inFlight > maxConcurrent })
-      client.exists(key, done)
+      client.exists(key, (err, result) => done(err, result, key))
     }
   }
 

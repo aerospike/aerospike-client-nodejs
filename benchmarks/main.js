@@ -137,7 +137,8 @@ function rwWorkerJob (worker) {
     keyRange: argv.keyRange,
     rops: ROPS,
     wops: WOPS,
-    binSpec: argv.binSpec
+    binSpec: argv.binSpec,
+    promises: argv.promises
   }
   worker.iteration++
   worker.send(['run', option])
@@ -239,8 +240,8 @@ function workerResults (worker) {
 var keyrange = argv.keyRange.max - argv.keyRange.min
 
 if (!argv.silent) {
-  logger.info('namespace: ' + argv.namespace + ', set: ' + argv.set + ', worker processes: ' + argv.processes +
-    ', keys: ' + keyrange + ', read: ' + ROPSPCT + '%, write: ' + WOPSPCT + '%')
+  logger.info('namespace: %s, set: %s, worker processes: %s, keys: %s, read: %s%%, write: %s%%, promises: %s',
+    argv.namespace, argv.set, argv.processes, keyrange, ROPSPCT, WOPSPCT, argv.promises)
 }
 
 /**
