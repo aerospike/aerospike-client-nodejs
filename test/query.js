@@ -16,7 +16,7 @@
 
 'use strict'
 
-/* global expect, describe, it, before, after, context */
+/* global expect, describe, it, beforeEach, before, after, context */
 
 const Aerospike = require('../lib/aerospike')
 const Query = require('../lib/query')
@@ -129,6 +129,7 @@ describe('Queries', function () {
       var set = 'demo'
       var options = {
         select: ['a', 'b', 'c'],
+        nobins: false,
         filters: [Aerospike.filter.equal('a', 9)]
       }
       var query = client.query(namespace, set, options)
@@ -137,6 +138,7 @@ describe('Queries', function () {
       expect(query.ns).to.equal('test')
       expect(query.set).to.equal('demo')
       expect(query.selected).to.eql(['a', 'b', 'c'])
+      expect(query.nobins).to.equal(false)
       expect(query.filters).to.be.an(Array)
       expect(query.filters.length).to.equal(1)
     })
@@ -208,6 +210,33 @@ describe('Queries', function () {
           expect(record.key.key).to.equal(uniqueKey)
         })
         stream.on('end', done)
+      })
+    })
+
+    context('with nobins set to true', function () {
+      beforeEach(function () {
+        if (!helper.cluster.build_gte('3.15.0')) {
+          this.skip('query with nobins flag not supported')
+        }
+      })
+
+      it('should return only meta data', function (done) {
+        var query = client.query(helper.namespace, testSet)
+        query.where(Aerospike.filter.equal('i', 5))
+        query.nobins = true
+        var received = null
+        var stream = query.foreach()
+        stream.on('error', error => { throw error })
+        stream.on('data', record => {
+          received = record
+          stream.abort()
+        })
+        stream.on('end', () => {
+          expect(received.bins).to.be.empty()
+          expect(received.gen).to.be.ok()
+          expect(received.ttl).to.be.ok()
+          done()
+        })
       })
     })
 
@@ -463,7 +492,7 @@ describe('Queries', function () {
   })
 
   context('legacy scan interface', function () {
-    ;['UDF', 'concurrent', 'percentage', 'nobins', 'priority'].forEach(function (key) {
+    ;['UDF', 'concurrent', 'percentage', 'priority'].forEach(function (key) {
       it('should throw an exception if the query options contain key "' + key + '"', function () {
         var args = {}
         args[key] = 'foo'
