@@ -16,7 +16,7 @@
 
 'use strict'
 
-/* global expect, describe, it */
+/* global expect, describe, it, beforeEach */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -246,13 +246,26 @@ describe('client.operate() - CDT List operations', function () {
     })
   })
 
-  // pending server-side support for list increment operation [AER-5149]
-  describe.skip('lists.increment', function () {
+  describe('lists.increment', function () {
+    beforeEach(function () {
+      if (!helper.cluster.build_gte('3.15.0')) {
+        this.skip('list increment operation not supported')
+      }
+    })
+
     it('increments the element at the specified index and returns the final value', function (done) {
       var record = { list: [1, 2, 3, 4, 5] }
       var operation = lists.increment('list', 1, 3)
       var expectedResult = { list: 5 }
       var expectedRecord = { list: [1, 5, 3, 4, 5] }
+      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    })
+
+    it('increments the element at the specified index by one and returns the final value', function (done) {
+      var record = { list: [1, 2, 3, 4, 5] }
+      var operation = lists.increment('list', 2)
+      var expectedResult = { list: 4 }
+      var expectedRecord = { list: [1, 2, 4, 4, 5] }
       verifyOperation(record, operation, expectedResult, expectedRecord, done)
     })
   })
