@@ -13,6 +13,7 @@ PENDING -- (v3.0.0)
   * Several callback functions, that returned multiple callback values under v2.x, have been updated to return a single callback value under v3. [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * See full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
     for further details.
+  * Update C client library to [v4.1.10](http://www.aerospike.com/download/client/c/notes.html#4.1.10).
 
 v2.7.2 / 2017-08-03
 ===================
