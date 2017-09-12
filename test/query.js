@@ -96,9 +96,9 @@ describe('Queries', function () {
     var query = client.query(helper.namespace, testSet, queryOptions)
     var matches = 0
     var stream = query.foreach()
-    stream.on('error', function (error) { throw error })
-    stream.on('data', function (record) {
-      expect(record).to.have.property('name', matchName)
+    stream.on('error', error => { throw error })
+    stream.on('data', record => {
+      expect(record.bins).to.have.property('name', matchName)
       matches++
     })
     stream.on('end', function () {
@@ -182,13 +182,9 @@ describe('Queries', function () {
       query.setUdf('udf', 'even')
       var stream = query.foreach()
       var results = []
-      stream.on('error', function (error) {
-        throw error
-      })
-      stream.on('data', function (data) {
-        results.push(data)
-      })
-      stream.on('end', function () {
+      stream.on('error', error => { throw error })
+      stream.on('data', record => results.push(record.bins))
+      stream.on('end', () => {
         expect(results.sort()).to.eql([2, 4])
         done()
       })
@@ -206,10 +202,10 @@ describe('Queries', function () {
         query.where(Aerospike.filter.equal('name', uniqueKey))
         var stream = query.foreach()
         var count = 0
-        stream.on('data', function (_bins, _meta, key) {
+        stream.on('data', record => {
           expect(++count).to.equal(1)
-          expect(key).to.be.a(Key)
-          expect(key.key).to.equal(uniqueKey)
+          expect(record.key).to.be.a(Key)
+          expect(record.key.key).to.equal(uniqueKey)
         })
         stream.on('end', done)
       })
@@ -220,7 +216,7 @@ describe('Queries', function () {
       var invalidPolicy = {timeout: 'not a valid timeout'}
       var stream = query.foreach(invalidPolicy)
       // if error is raised synchronously we will never reach here
-      stream.on('error', function (error) {
+      stream.on('error', error => {
         expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
         done()
       })

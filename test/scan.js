@@ -103,8 +103,8 @@ context('Scans', function () {
       var scan = client.scan(helper.namespace, testSet)
       var recordsReceived = 0
       var stream = scan.foreach()
-      stream.on('data', function () { recordsReceived++ })
-      stream.on('end', function () {
+      stream.on('data', () => recordsReceived++)
+      stream.on('end', () => {
         expect(recordsReceived).to.not.be.lessThan(numberOfRecords)
         done()
       })
@@ -114,9 +114,9 @@ context('Scans', function () {
       // requires { key: Aerospike.policy.key.SEND } when creating the record
       var scan = client.scan(helper.namespace, testSet)
       var stream = scan.foreach()
-      stream.on('data', function (record, meta, key) {
-        expect(key).to.be.a(Key)
-        expect(key.key).to.not.be.empty()
+      stream.on('data', record => {
+        expect(record.key).to.be.a(Key)
+        expect(record.key.key).to.not.be.empty()
         stream.abort()
       })
       stream.on('end', done)
@@ -131,7 +131,7 @@ context('Scans', function () {
         failOnClusterChange: true
       }
       var stream = scan.foreach(scanPolicy)
-      stream.on('data', function () { stream.abort() })
+      stream.on('data', () => stream.abort())
       stream.on('end', done)
     })
 
@@ -141,14 +141,15 @@ context('Scans', function () {
         scan.nobins = true
         var received = null
         var stream = scan.foreach()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function (bins, meta) {
-          received = {bins: bins, meta: meta}
+        stream.on('error', error => { throw error })
+        stream.on('data', record => {
+          received = record
           stream.abort()
         })
-        stream.on('end', function () {
+        stream.on('end', () => {
           expect(received.bins).to.be.empty()
-          expect(received.meta).to.not.be.empty()
+          expect(received.gen).to.be.ok()
+          expect(received.ttl).to.be.ok()
           done()
         })
       })
@@ -160,12 +161,12 @@ context('Scans', function () {
         scan.select('i')
         var received = null
         var stream = scan.foreach()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function (bins, meta) {
-          received = {bins: bins, meta: meta}
+        stream.on('error', error => { throw error })
+        stream.on('data', record => {
+          received = record
           stream.abort()
         })
-        stream.on('end', function () {
+        stream.on('end', () => {
           expect(received.bins).to.only.have.keys('i')
           done()
         })
@@ -180,11 +181,9 @@ context('Scans', function () {
         })
         var recordsReceived = 0
         var stream = scan.foreach()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function () {
-          recordsReceived++
-        })
-        stream.on('end', function () {
+        stream.on('error', error => { throw error })
+        stream.on('data', () => recordsReceived++)
+        stream.on('end', () => {
           // The scan percentage is not very exact, esp. for small sets, so we
           // just test that the scan did not return every single record.
           expect(recordsReceived).to.be.lessThan(numberOfRecords)
@@ -198,12 +197,12 @@ context('Scans', function () {
         var scan = client.scan(helper.namespace)
         var recordsReceived = 0
         var stream = scan.foreach()
-        stream.on('error', function (error) { throw error })
-        stream.on('data', function () {
+        stream.on('error', error => { throw error })
+        stream.on('data', () => {
           recordsReceived++
           stream.abort()
         })
-        stream.on('end', function () {
+        stream.on('end', () => {
           expect(recordsReceived).to.equal(1)
           done()
         })
@@ -214,14 +213,14 @@ context('Scans', function () {
       var scan = client.scan(helper.namespace, testSet)
       var stream = scan.foreach()
       var recordsReceived = 0
-      stream.on('error', function (error) { throw error })
-      stream.on('data', function (record) {
+      stream.on('error', error => { throw error })
+      stream.on('data', () => {
         recordsReceived++
         if (recordsReceived === 5) {
           stream.abort()
         }
       })
-      stream.on('end', function () {
+      stream.on('end', () => {
         expect(recordsReceived).to.be(5)
         done()
       })
@@ -238,8 +237,8 @@ context('Scans', function () {
           if (err) throw err
           var validationScan = client.scan(helper.namespace, testSet)
           var stream = validationScan.foreach()
-          stream.on('error', function (error) { throw error })
-          stream.on('data', function (record) { expect(record['x']).to.equal(token) })
+          stream.on('error', error => { throw error })
+          stream.on('data', record => expect(record.bins['x']).to.equal(token))
           stream.on('end', done)
         })
       })
