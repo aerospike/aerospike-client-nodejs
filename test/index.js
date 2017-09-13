@@ -100,9 +100,9 @@ context('secondary indexes', function () {
         datatype: Aerospike.indexDataType.NUMERIC
       }
       return client.createIndex(options)
-        .then(job => job.wait())
+        .then(job => job.wait(10))
         .then(() => client.createIndex(options)
-          .then(job => job.wait()))
+          .then(job => job.wait(10)))
     })
   })
 
