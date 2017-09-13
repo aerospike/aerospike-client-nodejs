@@ -90,6 +90,20 @@ context('secondary indexes', function () {
         verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })
+
+    it('re-creating an index with identical options does not return an error', function () {
+      let options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        datatype: Aerospike.indexDataType.NUMERIC
+      }
+      return client.createIndex(options)
+        .then(job => job.wait())
+        .then(() => client.createIndex(options)
+          .then(job => job.wait()))
+    })
   })
 
   describe('Client#createIntegerIndex()', function () {
