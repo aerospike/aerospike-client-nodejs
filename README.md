@@ -1,7 +1,9 @@
-# Aerospike Node.js Client [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
+# Aerospike Node.js Client [![travis][travis-image]][travis-url] [![codecov][codecov-image]][codecov-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
 
 [travis-image]: https://travis-ci.org/aerospike/aerospike-client-nodejs.svg?branch=master
 [travis-url]: https://travis-ci.org/aerospike/aerospike-client-nodejs
+[codecov-image]: https://codecov.io/gh/aerospike/aerospike-client-nodejs/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/aerospike/aerospike-client-nodejs
 [npm-image]: https://img.shields.io/npm/v/aerospike.svg
 [npm-url]: https://www.npmjs.com/package/aerospike
 [downloads-image]: https://img.shields.io/npm/dm/aerospike.svg
