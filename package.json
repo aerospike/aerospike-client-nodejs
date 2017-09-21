@@ -30,7 +30,7 @@
   "scripts": {
     "test": "./scripts/shuffle_tests",
     "posttest": "standard",
-    "coverage": "istanbul cover mocha -- -R spec",
+    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec",
     "postcoverage": "codecov",
     "prepush": "npm test",
     "apidocs": "jsdoc -c jsdoc.json",

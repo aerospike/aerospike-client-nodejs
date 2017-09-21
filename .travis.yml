@@ -38,8 +38,7 @@ install:
 - cd ../..
 script:
 - npm install
-- OPTIONS="--timeout 2000" npm test
-- npm run coverage
+- OPTIONS="--timeout 2000" npm run coverage
 notifications:
   email:
   - qe-notices@aerospike.com
