@@ -58,7 +58,9 @@ describe('client.truncate()', function () {
         var expectExist = !!remaining.find(record => record.key.equals(result.record.key))
         switch (result.status) {
           case Aerospike.status.AEROSPIKE_OK:
-            if (!expectExist) return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
+            if (!expectExist) {
+              return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
+            }
             break
           case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
             if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.record.key)
@@ -75,7 +77,7 @@ describe('client.truncate()', function () {
     const ns = helper.namespace
     const set = setgen()
     const noRecords = 5
-    const pollIntMs = 50 // Poll interval in ms to check whether records have been removed
+    const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
     genRecords(kgen, noRecords, function (records) {
@@ -84,7 +86,7 @@ describe('client.truncate()', function () {
           if (err) throw err
           checkRecords(records, [], pollIntMs, done)
         })
-      }, 1)
+      }, 5)
     })
   })
 
@@ -93,7 +95,7 @@ describe('client.truncate()', function () {
     const set = setgen()
     const noRecordsToDelete = 5
     const noRecordsToRemain = 2
-    const pollIntMs = 50 // Poll interval in ms to check whether records have been removed
+    const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
     const allowanceMs = 200 // Test will fail if client and server clocks differ by more than this many ms!
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/del/', random: false})
@@ -108,7 +110,7 @@ describe('client.truncate()', function () {
                 if (err) throw err
                 checkRecords(batchToDelete, batchToRemain, pollIntMs, done)
               })
-            }, 1)
+            }, 5)
           })
         }, allowanceMs)
       }, allowanceMs)
