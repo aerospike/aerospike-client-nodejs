@@ -106,6 +106,18 @@ context('Operations', function () {
           })
       })
 
+      it('can be called using the "incr" alias', function () {
+        let ops = [
+          op.incr('int', 432)
+        ]
+
+        return client.operate(key, ops)
+          .then(() => client.get(key))
+          .then(record => {
+            expect(record.bins['int']).to.equal(555)
+          })
+      })
+
       it('returns a parameter error when trying to add a string value', function () {
         let ops = [
           op.add('int', 'abc')
@@ -212,6 +224,18 @@ context('Operations', function () {
           })
         })
       })
+    })
+
+    it('sends meta data and applies an operate policy', function () {
+      let ops = [
+        op.add('int', 42)
+      ]
+
+      client.operate(key, ops, { gen: 12345 }, { gen: Aerospike.policy.gen.EQ })
+        .catch(error => {
+          expect(error.code).to.be(Aerospike.status.AEROSPIKE_ERR_RECORD_GENERATION)
+          return Promise.resolve(true)
+        })
     })
 
     it('calls the callback function with the results of the operation', function (done) {

@@ -56,6 +56,11 @@ describe('AerospikeError', function () {
       expect(subject.file).to.be('lib/client.js')
       expect(subject.line).to.be(101)
     })
+
+    it('returns an AerospikeError instance unmodified', function () {
+      let error = new AerospikeError(-1, 'client error', 'connect', 'lib/client.js', 101)
+      expect(AerospikeError.fromASError(error)).to.equal(error)
+    })
   })
 
   describe('#toString()', function () {

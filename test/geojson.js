@@ -36,6 +36,12 @@ describe('Aerospike.GeoJSON', function () {
     it('parses a GeoJSON string', function () {
       expect(new GeoJSON('{"type": "Point", "coordinates": [103.913, 1.308]}')).to.be.a(GeoJSON)
     })
+
+    it('throws a type error if passed an invalid GeoJSON value', function () {
+      let fn = () => new GeoJSON(45)
+      expect(fn).to.throwException(ex =>
+        expect(ex).to.be.a(TypeError))
+    })
   })
 
   describe('#value()', function () {

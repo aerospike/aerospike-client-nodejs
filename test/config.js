@@ -45,7 +45,8 @@ describe('Config', function () {
         user: 'admin',
         password: 'sekret',
         sharedMemory: { key: 1234 },
-        modlua: { systemPath: '/system/path', userPath: '/user/path' }
+        modlua: { systemPath: '/system/path', userPath: '/user/path' },
+        port: 3333
       }
       var config = new Config(obj)
       expect(config).to.have.property('clusterName')
@@ -58,6 +59,7 @@ describe('Config', function () {
       expect(config).to.have.property('password')
       expect(config).to.have.property('sharedMemory')
       expect(config).to.have.property('modlua')
+      expect(config).to.have.property('port')
     })
 
     it('rejects invalid config properties', function () {
@@ -89,6 +91,13 @@ describe('Config', function () {
     it('defaults to "localhost:3000"', function () {
       var config = new Config()
       expect(config.hosts).to.eql('localhost:3000')
+    })
+
+    it('defaults to the specified default port number', function () {
+      var config = new Config({
+        port: 3333
+      })
+      expect(config.hosts).to.eql('localhost:3333')
     })
   })
 })

@@ -122,6 +122,21 @@ context('Scans', function () {
       stream.on('end', done)
     })
 
+    it('attaches event handlers to the stream', function (done) {
+      let scan = client.scan(helper.namespace, testSet)
+      let dataHandlerCalled = false
+      let stream = scan.foreach(null,
+        (_record) => {
+          dataHandlerCalled = true
+          stream.abort()
+        },
+        (error) => { throw error },
+        () => {
+          expect(dataHandlerCalled).to.be(true)
+          done()
+        })
+    })
+
     it('sets a scan policy', function (done) {
       var scan = client.scan(helper.namespace, testSet)
       var scanPolicy = {

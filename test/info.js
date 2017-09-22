@@ -96,6 +96,12 @@ context('Info commands', function () {
       })
     })
 
+    it('does not require an info command', function () {
+      return client.infoAll()
+        .then(results =>
+          expect(Array.isArray(results)).to.be(true))
+    })
+
     it('returns a Promise that resolves to the result of the info query', function () {
       return client.infoAll('status')
         .then(results => {

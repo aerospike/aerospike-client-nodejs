@@ -222,6 +222,21 @@ describe('Queries', function () {
       })
     })
 
+    it('attaches event handlers to the stream', function (done) {
+      let query = client.query(helper.namespace, testSet)
+      let dataHandlerCalled = false
+      let stream = query.foreach(null,
+        (_record) => {
+          dataHandlerCalled = true
+          stream.abort()
+        },
+        (error) => { throw error },
+        () => {
+          expect(dataHandlerCalled).to.be(true)
+          done()
+        })
+    })
+
     context('filter predicates', function () {
       describe('filter.equal()', function () {
         it('should match equal integer values', function (done) {
@@ -232,6 +247,12 @@ describe('Queries', function () {
         it('should match equal string values', function (done) {
           var args = { filters: [filter.equal('s', 'banana')] }
           verifyQueryResults(args, 'string match', done)
+        })
+
+        it('throws a type error if the comparison value is of invalid type', function () {
+          let fn = () => filter.equal('str', { foo: 'bar' })
+          expect(fn).to.throwException(ex =>
+            expect(ex).to.be.a(TypeError))
         })
       })
 
@@ -277,6 +298,12 @@ describe('Queries', function () {
           var args = { filters: [filter.contains('mks', 'banana', MAPKEYS)] }
           verifyQueryResults(args, 'string mapkeys match', done)
         })
+
+        it('throws a type error if the comparison value is of invalid type', function () {
+          let fn = () => filter.contains('list', { foo: 'bar' }, LIST)
+          expect(fn).to.throwException(ex =>
+            expect(ex).to.be.a(TypeError))
+        })
       })
 
       describe('filter.geoWithinGeoJSONRegion()', function () {
@@ -296,6 +323,12 @@ describe('Queries', function () {
           var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
           var args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
           verifyQueryResults(args, 'point map match', done)
+        })
+
+        it('accepts a plain object as GeoJSON', function (done) {
+          var region = {type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]}
+          var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+          verifyQueryResults(args, 'point match', done)
         })
       })
 
@@ -333,6 +366,12 @@ describe('Queries', function () {
           var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
           var args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
           verifyQueryResults(args, 'region map match', done)
+        })
+
+        it('accepts a plain object as GeoJSON', function (done) {
+          var point = {type: 'Point', coordinates: [103.913, 1.308]}
+          var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+          verifyQueryResults(args, 'region match', done)
         })
       })
 

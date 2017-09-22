@@ -29,6 +29,17 @@ describe('Aerospike.Double', function () {
       expect(subject).to.be.a(Double)
       expect(subject.Double).to.be(3.1415)
     })
+
+    it('throws an error if not passed a number', function () {
+      let fn = () => new Double('four point nine')
+      expect(fn).to.throwException(ex =>
+        expect(ex).to.be.a(TypeError))
+    })
+
+    it('throws an error if called without `new`', function () {
+      let fn = () => Double(3.1415)
+      expect(fn).to.throwException(/Invalid use of Double constructor/)
+    })
   })
 
   describe('#value()', function () {
