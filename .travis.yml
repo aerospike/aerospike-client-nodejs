@@ -4,7 +4,10 @@ node_js:
 - '6'
 - '4'
 env:
-- CXX=g++-4.8
+  global:
+    - CXX=g++-4.8
+    - AEROSPIKE_HOSTS=127.0.0.1:3000,127.0.0.1:3100
+    - OPTIONS="--timeout 2000"
 sudo: false
 os:
 - linux
@@ -16,29 +19,14 @@ addons:
     packages:
       - g++-4.8
       - autoconf
+before_script:
+- .travis/start_cluster.sh 2
 install:
-- wget -O aerospike-server.tgz http://www.aerospike.com/download/server/latest/artifact/tgz
-- tar xvzf aerospike-server.tgz
-- cp -f .travis/aerospike.conf ./aerospike-server/share/etc
-- cd aerospike-server
-- sed -i -e 's/\${me}/"root"/' share/libexec/aerospike-start
-- sed -i -e 's/set_shmmax$/#set_shmmax/' share/libexec/aerospike-start
-- sed -i -e 's/set_shmall$/#set_shmall/' share/libexec/aerospike-start
-- mkdir instance1
-- mkdir instance2
-- ./bin/aerospike init --home instance1 --instance 1 --service-port 3000
-- ./bin/aerospike init --home instance2 --instance 2 --service-port 3010
-- cd instance1
-- ./bin/aerospike start
-- ../../scripts/wait-for-node.sh var/log/aerospike.log
-- cd ..
-- cd instance2
-- ./bin/aerospike start
-- ../../scripts/wait-for-node.sh var/log/aerospike.log
-- cd ../..
-script:
 - npm install
-- OPTIONS="--timeout 2000" npm run coverage
+script:
+- npm run coverage
+after_script:
+- npm run codecov
 notifications:
   email:
   - qe-notices@aerospike.com

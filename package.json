@@ -30,8 +30,8 @@
   "scripts": {
     "test": "./scripts/shuffle_tests",
     "posttest": "standard",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec",
-    "postcoverage": "codecov",
+    "coverage": "nyc npm test",
+    "codecov": "codecov",
     "prepush": "npm test",
     "apidocs": "jsdoc -c jsdoc.json",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/"
@@ -44,9 +44,9 @@
     "codecov": "^2.3.0",
     "expect.js": "^0.3",
     "ink-docstrap": "^1.1.0",
-    "istanbul": "^0.4.5",
     "jsdoc": "^3.4.0",
     "mocha": "^3.0",
+    "nyc": "^11.2.1",
     "standard": "^10.0",
     "yargs": "^1.2.1"
   },
