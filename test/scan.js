@@ -105,7 +105,7 @@ context('Scans', function () {
       var stream = scan.foreach()
       stream.on('data', () => recordsReceived++)
       stream.on('end', () => {
-        expect(recordsReceived).to.not.be.lessThan(numberOfRecords)
+        expect(recordsReceived).to.be(numberOfRecords)
         done()
       })
     })
@@ -132,26 +132,27 @@ context('Scans', function () {
       }
       var stream = scan.foreach(scanPolicy)
       stream.on('data', () => stream.abort())
+      stream.on('error', error => {
+        if (error.code === Aerospike.status.AEROSPIKE_ERR_CLUSTER_CHANGE) {
+          // ignore errors caused by cluster change events
+        } else {
+          throw error
+        }
+      })
       stream.on('end', done)
     })
 
     context('with nobins set to true', function () {
       it('should return only meta data', function (done) {
-        var scan = client.scan(helper.namespace, testSet)
-        scan.nobins = true
-        var received = null
-        var stream = scan.foreach()
-        stream.on('error', error => { throw error })
+        let scan = client.scan(helper.namespace, testSet, { nobins: true })
+        let stream = scan.foreach()
         stream.on('data', record => {
-          received = record
+          expect(record.bins).to.be.empty()
+          expect(record.gen).to.be.ok()
+          expect(record.ttl).to.be.ok()
           stream.abort()
         })
-        stream.on('end', () => {
-          expect(received.bins).to.be.empty()
-          expect(received.gen).to.be.ok()
-          expect(received.ttl).to.be.ok()
-          done()
-        })
+        stream.on('end', done)
       })
     })
 
@@ -159,29 +160,23 @@ context('Scans', function () {
       it('should return only selected bins', function (done) {
         var scan = client.scan(helper.namespace, testSet)
         scan.select('i')
-        var received = null
         var stream = scan.foreach()
-        stream.on('error', error => { throw error })
         stream.on('data', record => {
-          received = record
+          expect(record.bins).to.only.have.keys('i')
           stream.abort()
         })
-        stream.on('end', () => {
-          expect(received.bins).to.only.have.keys('i')
-          done()
-        })
+        stream.on('end', done)
       })
     })
 
     context('with percent sampling', function () {
       it('should only scan approx. half of the records', function (done) {
-        var scan = client.scan(helper.namespace, testSet, {
+        let scan = client.scan(helper.namespace, testSet, {
           percent: 50,
           nobins: true
         })
         var recordsReceived = 0
         var stream = scan.foreach()
-        stream.on('error', error => { throw error })
         stream.on('data', () => recordsReceived++)
         stream.on('end', () => {
           // The scan percentage is not very exact, esp. for small sets, so we
@@ -206,23 +201,6 @@ context('Scans', function () {
           expect(recordsReceived).to.equal(1)
           done()
         })
-      })
-    })
-
-    it('should stop the scan when false is returned from the data handler', function (done) {
-      var scan = client.scan(helper.namespace, testSet)
-      var stream = scan.foreach()
-      var recordsReceived = 0
-      stream.on('error', error => { throw error })
-      stream.on('data', () => {
-        recordsReceived++
-        if (recordsReceived === 5) {
-          stream.abort()
-        }
-      })
-      stream.on('end', () => {
-        expect(recordsReceived).to.be(5)
-        done()
       })
     })
   })
@@ -251,6 +229,24 @@ context('Scans', function () {
         .then(job => {
           expect(job).to.be.a(Job)
         })
+    })
+  })
+
+  describe('stream.abort()', function () {
+    it('should stop the scan when the stream is aborted', function (done) {
+      let scan = client.scan(helper.namespace, testSet)
+      let stream = scan.foreach()
+      let recordsReceived = 0
+      stream.on('data', () => {
+        recordsReceived++
+        if (recordsReceived === 5) {
+          stream.abort()
+        }
+      })
+      stream.on('end', () => {
+        expect(recordsReceived).to.be(5)
+        done()
+      })
     })
   })
 

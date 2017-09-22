@@ -405,6 +405,24 @@ describe('Queries', function () {
     })
   })
 
+  describe('stream.abort()', function () {
+    it('should stop the query when the stream is aborted', function (done) {
+      let query = client.query(helper.namespace, testSet)
+      let stream = query.foreach()
+      let recordsReceived = 0
+      stream.on('data', () => {
+        recordsReceived++
+        if (recordsReceived === 5) {
+          stream.abort()
+        }
+      })
+      stream.on('end', () => {
+        expect(recordsReceived).to.be(5)
+        done()
+      })
+    })
+  })
+
   context('legacy scan interface', function () {
     ;['UDF', 'concurrent', 'percentage', 'nobins', 'priority'].forEach(function (key) {
       it('should throw an exception if the query options contain key "' + key + '"', function () {
