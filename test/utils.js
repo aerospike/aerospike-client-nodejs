@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global expect, describe, it */
 
 require('./test_helper')

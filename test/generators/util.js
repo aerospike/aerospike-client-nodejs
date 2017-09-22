@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 function range (end, start) {
   start = start || 0
   end = end || start + 1

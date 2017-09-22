@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global beforeEach, afterEach, expect, describe, it */
 
 const Config = require('../lib/config')

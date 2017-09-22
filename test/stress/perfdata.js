@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 const helper = require('../test_helper')
 
 const keygen = helper.keygen

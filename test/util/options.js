@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 const aerospike = require('../../lib/aerospike')
 const yargs = require('yargs')
 const fs = require('fs')

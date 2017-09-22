@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+'use strict'
+
 /* global context, expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
