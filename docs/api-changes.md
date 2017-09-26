@@ -29,10 +29,11 @@ Promises, all client commands in v3 return a single result value. The method
 signatures of several callback functions have been updated to combine multiple
 separate result values into a single result object.
 
-| Callback Function Type | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
-| ---------------------- | ------------------- | ------------------- | ------------------------ | ------- |
-| [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | `cb(error, record, metadata, key)` | `cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` | The `record` passed in the v3 cb is an instance of the `Record` class, which contains the records bins, key and meta-data. |
-| [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in the v3 cb contains instances of the `Record` class instead of separate bins, meta-data and key values. |
+| Callback | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
+| -------- | ------------------- | ------------------- | ------------------------ | ------- |
+| [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | `cb(error, bins, meta, key)` | `cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` | The `record` passed in v3 is an instance of the `Record` class, which contains the records bins, key and meta-data. |
+| [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in v3 contains instances of the `Record` class instead of separate bins, meta-data and key values. |
+| [Record Stream `data` Event Callback](http://www.aerospike.com/apidocs/nodejs/RecordStream.html#event:data__anchor) | `cb(bins, meta, key)` | `cb(record)` | `Query#foreach`, `Scan#foreach` | The `record` passed in v3 is an instance of the `Record` class, which contains the records bins, key and meta-data. |
 
 ### Changed Semantics of `Client#exists` Command
 
@@ -70,6 +71,28 @@ client.exists(key, (error, result) => {
   }
 })
 ```
+
+### Changed Semantics of `Client#createIndex` and `Client#indexRemove` Commands
+
+The `Client#createIndex` command now returns an error with status code
+`AEROSPIKE_ERR_INDEX_FOUND` if an index with the same name already exists
+and/or if an index of any name already exists on the same bin.
+
+The `Client#removeIndex` command now returns an error with status code
+`AEROSPIKE_ERR_INDEX_NOT_FOUND` if no index with the given name exists in the
+cluster.
+
+### Shared Memory Layout & Key Changes
+
+Shared memory layout has changed. If you are using shared memory clients, it is
+critical to change the shared memory key (`Config#sharedMemory.key`) when
+upgrading from Node.js client v2 to v3. The default value for the key has
+changed from 0xA6000000 to 0xA7000000.
+
+Please refer to the [Shared
+Memory](http://www.aerospike.com/docs/client/c/usage/shm.html) section in the
+Aerospike C Client's documentation for more information about the client's
+usage of shared memory.
 
 ### Removal of Client Functions Deprecated under v2
 
