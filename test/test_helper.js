@@ -77,10 +77,24 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
   }
   return this.client.createIndex(index)
     .then(job => job.wait(10))
+    .catch(error => {
+      if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_FOUND) {
+        // ignore - index already exists
+      } else {
+        return Promise.reject(error)
+      }
+    })
 }
 
 IndexHelper.prototype.remove = function (indexName) {
   return this.client.indexRemove(options.namespace, indexName)
+    .catch(error => {
+      if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND) {
+        // ignore - index does not exist
+      } else {
+        return Promise.reject(error)
+      }
+    })
 }
 
 function ServerInfoHelper () {

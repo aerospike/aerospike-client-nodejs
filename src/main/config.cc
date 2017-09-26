@@ -96,30 +96,172 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 		if (policy_val->IsObject()){
 			Local<Object> policies = policy_val->ToObject();
-			if ((rc = get_optional_uint32_property(&config->policies.timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property(&config->policies.read.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property(&config->policies.retry, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property(&config->policies.read.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property(&config->policies.read.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.exists, NULL, policies, "exists", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.read.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.gen, NULL, policies, "gen", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.read.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.read.consistency_level, NULL, policies, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.consistency_level, NULL, policies, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+
+			if ((rc = get_optional_uint32_property(&config->policies.write.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.commit_level, NULL, policies, "commitLevel", log)) != AS_NODE_PARAM_OK) {
+			if ((rc = get_optional_uint32_property(&config->policies.write.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
+			if ((rc = get_optional_uint32_property(&config->policies.write.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.write.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.write.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.write.commit_level, NULL, policies, "commitLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.write.gen, NULL, policies, "gen", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.write.exists, NULL, policies, "exists", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_bool_property(&config->policies.write.durable_delete, NULL, policies, "durableDelete", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.apply.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.apply.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.apply.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.apply.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.apply.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.apply.commit_level, NULL, policies, "commitLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_bool_property(&config->policies.apply.durable_delete, NULL, policies, "durableDelete", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.operate.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.operate.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.operate.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.operate.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.operate.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.operate.consistency_level, NULL, policies, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.operate.commit_level, NULL, policies, "commitLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.operate.gen, NULL, policies, "gen", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_bool_property(&config->policies.operate.durable_delete, NULL, policies, "durableDelete", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.remove.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.remove.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.remove.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.remove.key, NULL, policies, "key", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.remove.replica, NULL, policies, "replica", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.remove.commit_level, NULL, policies, "commitLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.remove.gen, NULL, policies, "gen", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_bool_property(&config->policies.remove.durable_delete, NULL, policies, "durableDelete", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.batch.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.batch.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.batch.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &config->policies.batch.consistency_level, NULL, policies, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.query.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.query.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.query.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.scan.base.socket_timeout, NULL, policies, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.scan.base.total_timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property(&config->policies.scan.base.max_retries, NULL, policies, "retry", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_bool_property(&config->policies.scan.durable_delete, NULL, policies, "durableDelete", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.info.timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
+			if ((rc = get_optional_uint32_property(&config->policies.admin.timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+
 			if (policies->Has(Nan::New("read").ToLocalChecked())) {
 				Local<Value> readpolicy = policies->Get(Nan::New("read").ToLocalChecked());
 				if ((rc = readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)) != AS_NODE_PARAM_OK) {

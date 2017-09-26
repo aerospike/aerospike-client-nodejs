@@ -91,7 +91,7 @@ context('secondary indexes', function () {
       })
     })
 
-    it('re-creating an index with identical options does not return an error', function () {
+    it('re-creating an index with identical options returns an error', function () {
       let options = {
         ns: helper.namespace,
         set: helper.set,
@@ -102,7 +102,14 @@ context('secondary indexes', function () {
       return client.createIndex(options)
         .then(job => job.wait(10))
         .then(() => client.createIndex(options)
-          .then(job => job.wait(10)))
+          .then(job => Promise.reject(new Error('Recreating existing index should have returned an error')))
+          .catch(error => {
+            if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_FOUND) {
+              // All good!
+            } else {
+              return Promise.reject(error)
+            }
+          }))
     })
   })
 
