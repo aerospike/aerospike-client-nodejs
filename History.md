@@ -5,6 +5,7 @@ PENDING -- (v3.0.0)
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * Support nobins flag on query operations
   * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
+  * Support gen value in Apply Policy
 
 * **Bug Fixes**
   * Fix memory leak in batchRead [#213](https://github.com/aerospike/aerospike-client-nodejs/issues/213)
