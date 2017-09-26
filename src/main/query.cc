@@ -136,6 +136,12 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		}
 	}
 
+	Local<Value> nobins = options->Get(Nan::New("nobins").ToLocalChecked());
+	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
+	if (nobins->IsBoolean()) {
+		query->no_bins = nobins->ToBoolean()->Value();
+	}
+
 	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {

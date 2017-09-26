@@ -3,6 +3,9 @@ PENDING -- (v3.0.0)
 
 * **New Features**
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
+  * Support nobins flag on query operations
+  * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
+  * Support gen value in Apply Policy
 
 * **Bug Fixes**
   * Fix memory leak in batchRead [#213](https://github.com/aerospike/aerospike-client-nodejs/issues/213)
@@ -13,7 +16,9 @@ PENDING -- (v3.0.0)
   * Several callback functions, that returned multiple callback values under v2.x, have been updated to return a single callback value under v3. [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * See full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
     for further details.
-  * Update C client library to [v4.1.10](http://www.aerospike.com/download/client/c/notes.html#4.1.10).
+  * Update C client library to [v4.2.0](http://www.aerospike.com/download/client/c/notes.html#4.2.0).
+  * Client#createIndex now returns an error if the index already exists; Client#indexRemove returns an error if the index does not exist.
+  * Changes to shared memory layout and default shared memory key.
 
 v2.7.2 / 2017-08-03
 ===================

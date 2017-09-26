@@ -522,8 +522,9 @@ int add_list_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_val* value;
-	if (get_asval_property(&value, obj, "value", log) != AS_NODE_PARAM_OK) {
+	bool value_defined;
+	as_val* value = NULL;
+	if (get_optional_asval_property(&value, &value_defined, obj, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
