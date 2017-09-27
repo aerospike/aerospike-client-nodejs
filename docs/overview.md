@@ -20,17 +20,21 @@ database clusters.
 
 The main modules included in the `aerospike` package are:
 
-* [`aerospike`]{@link module:aerospike} - The aerospike module contains the
-  core classes that make up the Client API, such as the Client, Query and
-  Scan classes. It provides module level functions to connect to an Aerospike
-  cluster.
-* [`aerospike.filter`]{@link module:aerospike/filter} - The filter module is a
-  submodule containing predicate helpers for use with the Query class.
-* [`aerospike.operations`]{@link module:aerospike/operations},
-  [`aerospike.lists`]{@link module:aerospike/lists},
-  [`aerospike.maps`]{@link module:aerospike/maps} - These three modules define
-  the operations on scalar, list and map values that can be executed with the
-  {@link Client#operate} command.
+* {@link module:aerospike} - The aerospike module contains the core classes
+  that make up the Client API, such as the Client, Query and Scan classes. It
+  provides module level functions to connect to an Aerospike cluster.
+* {@link module:aerospike/policy} - The policy module defines policies and
+  policy values that define the behavior of database operations.
+* {@link module:aerospike/filter} - The filter module is a submodule containing
+  predicate helpers for use with the Query class.
+* {@link module:aerospike/operations}, {@link module:aerospike/lists},
+  {@link module:aerospike/maps} - These three modules define the operations on
+  scalar, list and map values that can be executed with the {@link
+  Client#operate} command.
+* {@link module:aerospike/info} - The info protocol provides access to
+  configuration and statistics for the Aerospike server. This module
+  includes utility functions for parsing the info data returned by the
+  Aerospike server.
 
 ### Classes
 
@@ -39,20 +43,38 @@ The main classes included in the `aerospike` module are:
 * {@link Client} - The main interface of the Aerospike client. Through the
   Client class commands such as put, get or query can be sent to an Aerospike
   database cluster.
+* {@link Key} - Keys are used to uniquely identify a record in the Aerospike database.
+* {@link Record} - Records consists of one or more record "bins" (name-value
+  pairs) and meta-data, incl. time-to-live and generation; a
+  record is uniquely identified by it's key within a given namespace.
 * {@link Query} - The Query class can be used to perform value-based searches
   on secondary indexes.
 * {@link Scan} - Through the Scan class scans of an entire namespaces can be
   performed.
 * {@link RecordStream} - Queries and scans return records through a
-  RecordStream instance.
-* {@link Key} - Keys are used to uniquely identify a record in the Aerospike database.
+  RecordStream instance which acts as an EventEmitter.
+* {@link Job} - The Job class is used to query the status of long running
+  background jobs, such as background scans or index creation.
 * {@link Double} - Wrapper class for double precision floating point values.
 * {@link GeoJSON} - A representation of GeoJSON values.
 * {@link AerospikeError} - Error class representing a Aerospike server and/or client error.
-* {@link Job} - The Job class is used to query the status of long running
-  background jobs.
 
 All modules and classes can also be accessed directly through the drop-down menu at the top of each page.
+
+## Supported Data Types
+
+Aerospike supports integer, double, string, bytes, list and map data types.
+Within the Node.js client these values are represented as JS numbers
+(integer and double), JS strings, Buffers (bytes), Arrays (list) and Objects
+(map). Lists and Maps can contain any of the other supported data types and
+can be nested (e.g. lists-within-lists, maps-within-maps, lists-within-maps,
+etc.).
+
+Aerospike currently does not support a boolean data type. To store boolean
+values in the database, the application needs to convert them to a supported
+data type as the client does not do any automatica data type conversions.
+Attempting to store a boolean value in a record bin will lead to a parameter
+error being returned by the client.
 
 ## Example
 

@@ -73,7 +73,7 @@ describe('Client', function () {
       config.clusterName = 'notAValidClusterName'
       var client = new Client(config)
       client.connect(function (err) {
-        expect(err.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+        expect(err.code).to.be(Aerospike.status.ERR_CLIENT)
         client.close(false)
         done()
       })
@@ -127,7 +127,7 @@ describe('Client', function () {
         if (err) throw err
         var errorCheck = function (err) {
           expect(err).to.be.an(Error)
-          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_NO_MORE_CONNECTIONS)
+          expect(err.code).to.equal(Aerospike.status.ERR_NO_MORE_CONNECTIONS)
         }
         assertErrorCbAsync(client, errorCheck, done)
       })

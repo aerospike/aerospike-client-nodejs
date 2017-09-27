@@ -145,7 +145,7 @@ function run (client, done) {
     if (!err) {
       !argv.quiet && console.log('Found key ' + key.key + '.')
       !argv.quiet && console.log(JSON.stringify(record, null, '    '))
-    } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+    } else if (err.code === Aerospike.status.ERR_RECORD_NOT_FOUND) {
       !argv.quiet && console.log('Key ' + key.key + ' not found.')
     } else {
       throw err

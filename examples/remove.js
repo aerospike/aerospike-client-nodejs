@@ -129,7 +129,7 @@ function run (client, done) {
   client.remove(key, function (err) {
     if (!err) {
       !argv.quiet && console.log('OK.')
-    } else if (err.code === Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+    } else if (err.code === Aerospike.status.ERR_RECORD_NOT_FOUND) {
       !argv.quiet && console.log('Key ' + key.key + ' not found.')
     } else {
       throw err

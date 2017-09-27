@@ -65,7 +65,7 @@ describe('client.select()', function () {
       if (err) throw err
 
       client.select({ns: helper.namespace, set: helper.set}, selected, function (err) {
-        expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+        expect(err.code).to.equal(status.ERR_PARAM)
 
         client.remove(key, function (err) {
           if (err) throw err
@@ -79,7 +79,7 @@ describe('client.select()', function () {
     var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/select/not_found/'})()
 
     client.select(key, ['i'], function (err, record) {
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
       done()
     })
   })

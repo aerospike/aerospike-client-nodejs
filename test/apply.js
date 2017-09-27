@@ -64,7 +64,7 @@ describe('client.apply()', function () {
   it('should return an error if the user-defined function does not exist', function (done) {
     var udfArgs = { module: 'udf', funcname: 'not-such-function' }
     client.apply(key, udfArgs, function (error, result) {
-      expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_UDF)
+      expect(error.code).to.equal(Aerospike.status.ERR_UDF)
       done()
     })
   })
@@ -72,7 +72,7 @@ describe('client.apply()', function () {
   it('should return an error if the UDF arguments are invalid', function (done) {
     var udfArgs = { module: 'udf', funcname: 'noop', args: 42 } // args should always be an array
     client.apply(key, udfArgs, function (error, result) {
-      expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
+      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
       done()
     })
   })

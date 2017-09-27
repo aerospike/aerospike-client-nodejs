@@ -44,7 +44,7 @@ describe('client.remove()', function () {
 
     return client.remove(key)
       .catch(error =>
-        expect(error.code).to.be(status.AEROSPIKE_ERR_RECORD_NOT_FOUND))
+        expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
   })
 
   context('with generation policy value', function () {
@@ -74,7 +74,7 @@ describe('client.remove()', function () {
           }
           return client.remove(key, removePolicy)
             .catch(error =>
-              expect(error.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION))
+              expect(error.code).to.be(status.ERR_RECORD_GENERATION))
         })
         .then(() => client.exists(key))
         .then(result => expect(result).to.be(false))

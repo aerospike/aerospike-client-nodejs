@@ -56,7 +56,7 @@ describe('client.batchRead()', function () {
       expect(results.length).to.be(5)
       var found = results.filter(function (result) { return result.status === status.AEROSPIKE_OK })
       expect(found.length).to.be(3)
-      var notFound = results.filter(function (result) { return result.status === status.AEROSPIKE_ERR_RECORD_NOT_FOUND })
+      var notFound = results.filter(function (result) { return result.status === status.ERR_RECORD_NOT_FOUND })
       expect(notFound.length).to.be(2)
       done()
     })

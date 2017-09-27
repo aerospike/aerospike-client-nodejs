@@ -56,7 +56,7 @@ UDFHelper.prototype.remove = function (filename) {
   return this.client.udfRemove(filename)
     .then(job => job.wait(50))
     .catch(error => {
-      if (error.code !== Aerospike.status.AEROSPIKE_ERR_UDF) {
+      if (error.code !== Aerospike.status.ERR_UDF) {
         return Promise.reject(error)
       }
     })
@@ -78,7 +78,7 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
   return this.client.createIndex(index)
     .then(job => job.wait(10))
     .catch(error => {
-      if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_FOUND) {
+      if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
         // ignore - index already exists
       } else {
         return Promise.reject(error)
@@ -89,7 +89,7 @@ IndexHelper.prototype.create = function (indexName, setName, binName, dataType, 
 IndexHelper.prototype.remove = function (indexName) {
   return this.client.indexRemove(options.namespace, indexName)
     .catch(error => {
-      if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND) {
+      if (error.code === Aerospike.status.ERR_INDEX_NOT_FOUND) {
         // ignore - index does not exist
       } else {
         return Promise.reject(error)

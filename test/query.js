@@ -246,7 +246,7 @@ describe('Queries', function () {
       var stream = query.foreach(invalidPolicy)
       // if error is raised synchronously we will never reach here
       stream.on('error', error => {
-        expect(error.code).to.equal(Aerospike.status.AEROSPIKE_ERR_PARAM)
+        expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
         done()
       })
     })

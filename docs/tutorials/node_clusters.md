@@ -154,7 +154,7 @@ format the response as JSON and send it to the client.
 function sendResponse (res, error, body) {
   if (error) {
     switch (error.code) {
-      case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+      case Aerospike.status.ERR_RECORD_NOT_FOUND:
         res.writeHead(404, error.message)
         break
       default:

@@ -148,7 +148,7 @@ context('Scans', function () {
       var stream = scan.foreach(scanPolicy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
-        if (error.code === Aerospike.status.AEROSPIKE_ERR_CLUSTER_CHANGE) {
+        if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {
           // ignore errors caused by cluster change events
         } else {
           throw error

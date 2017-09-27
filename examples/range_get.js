@@ -164,7 +164,7 @@ Aerospike.connect(config, function (err, client) {
         skipped++
       } else if (err) {
         switch (err.code) {
-          case Status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+          case Status.ERR_RECORD_NOT_FOUND:
             console.log('NOT_FOUND - ', record.key)
             notfound++
             break
