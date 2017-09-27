@@ -52,9 +52,16 @@ describe('client.apply()', function () {
   })
 
   it('should invoke an UDF with apply policy', function (done) {
-    var applypolicy = {timeout: 1500}
-    var udfArgs = { module: 'udf', funcname: 'withArguments', args: [[1, 2, 3]] }
-    client.apply(key, udfArgs, applypolicy, function (error, result) {
+    let policy = new Aerospike.ApplyPolicy({
+      totalTimeout: 1500
+    })
+    let udf = {
+      module: 'udf',
+      funcname: 'withArguments',
+      args: [[1, 2, 3]]
+    }
+
+    client.apply(key, udf, policy, function (error, result) {
       if (error) throw error
       expect(result).to.eql([1, 2, 3])
       done()

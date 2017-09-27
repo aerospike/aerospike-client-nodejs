@@ -21,6 +21,32 @@
 const Aerospike = require('../lib/aerospike')
 require('./test_helper')
 
+describe('ApplyPolicy', function () {
+  describe('new ApplyPolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.ApplyPolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1,
+        gen: Aerospike.policy.gen.EQ,
+        key: Aerospike.policy.key.SEND,
+        commitLevel: 2,
+        ttl: 3600,
+        durableDelete: true
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+      expect(subject.gen).to.be(Aerospike.policy.gen.EQ)
+      expect(subject.key).to.be(Aerospike.policy.key.SEND)
+      expect(subject.commitLevel).to.be(2)
+      expect(subject.ttl).to.be(3600)
+      expect(subject.durableDelete).to.be(true)
+    })
+  })
+})
+
 describe('WritePolicy', function () {
   describe('new WritePolicy', function () {
     it('sets the policy values from a value object', function () {
