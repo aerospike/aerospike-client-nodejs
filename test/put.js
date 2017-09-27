@@ -218,10 +218,10 @@ describe('client.put()', function () {
         var record = { valid: 123, invalid: undefined }
 
         client.put(key, record, function (err) {
-          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.equal(status.ERR_PARAM)
 
           client.remove(key, function (err, key) {
-            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
             done()
           })
         })
@@ -232,10 +232,10 @@ describe('client.put()', function () {
         var record = { valid: 'true', invalid: true }
 
         client.put(key, record, function (err) {
-          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.equal(status.ERR_PARAM)
 
           client.remove(key, function (err, key) {
-            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
             done()
           })
         })
@@ -332,7 +332,7 @@ describe('client.put()', function () {
           expect(key3).to.eql(key)
 
           client.get(key3, function (err, record4) {
-            expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+            expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
 
             client.put(record4.key, bins, meta, function (err, key5) {
               if (err) throw err
@@ -451,7 +451,7 @@ describe('client.put()', function () {
         .then(() => client.get(key))
         .then(record => expect(record.gen).to.be(1))
         .then(() => client.put(key, { i: 2 }, { gen: 99 }, { gen: Aerospike.policy.gen.EQ }))
-        .catch(err => expect(err.code).to.be(status.AEROSPIKE_ERR_RECORD_GENERATION))
+        .catch(err => expect(err.code).to.be(status.ERR_RECORD_GENERATION))
         .then(() => client.get(key))
         .then(record => {
           expect(record.bins).to.eql({ i: 1 })

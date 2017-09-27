@@ -59,7 +59,7 @@ context('Info commands', function () {
 
     it('should return a client error if the client is not connected', function (done) {
       Aerospike.client(helper.config).info('status', host, error => {
-        expect(error.code).to.be(Aerospike.status.AEROSPIKE_ERR_CLIENT)
+        expect(error.code).to.be(Aerospike.status.ERR_CLIENT)
         done()
       })
     })

@@ -19,7 +19,7 @@
 /* global expect, beforeEach, afterEach, describe, it */
 
 const Aerospike = require('../lib/aerospike')
-const AerospikeError = require('../lib/aerospike_error')
+const AerospikeError = require('../lib/error')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 

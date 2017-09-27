@@ -108,7 +108,7 @@ describe('client.operate() - CDT Map operations', function () {
       var record = { map: 'this is not a map' }
       var operation = maps.put('map', 'a', 1)
       verifyOperation(record, operation, null, null, function (err) {
-        expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE)
+        expect(err.code).to.equal(Aerospike.status.ERR_BIN_INCOMPATIBLE_TYPE)
         teardown(done)
       })
     })
@@ -128,7 +128,7 @@ describe('client.operate() - CDT Map operations', function () {
         var policy = { writeMode: maps.writeMode.UPDATE_ONLY }
         var operation = maps.put('map', 'd', 99, policy)
         verifyOperation(record, operation, null, null, function (err) {
-          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND)
+          expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_NOT_FOUND)
           teardown(done)
         })
       })
@@ -140,7 +140,7 @@ describe('client.operate() - CDT Map operations', function () {
         var policy = { writeMode: maps.writeMode.CREATE_ONLY }
         var operation = maps.put('map', 'b', 99, policy)
         verifyOperation(record, operation, null, null, function (err) {
-          expect(err.code).to.equal(Aerospike.status.AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS)
+          expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_EXISTS)
           teardown(done)
         })
       })

@@ -214,9 +214,9 @@ function run (options) {
   function done (opStatus, opTimeStart, opTimeEnd, opType) {
     operations[completed] = [opStatus, opTimeStart, opTimeEnd]
     intervalData[opType][TPS]++
-    if (opStatus === status.AEROSPIKE_ERR_TIMEOUT) {
+    if (opStatus === status.ERR_TIMEOUT) {
       intervalData[opType][TIMEOUT]++
-    } else if (opStatus !== status.AEROSPIKE_OK && opStatus !== status.AEROSPIKE_ERR_TIMEOUT) {
+    } else if (opStatus !== status.OK && opStatus !== status.ERR_TIMEOUT) {
       intervalData[opType][ERROR]++
     }
 
@@ -284,7 +284,7 @@ function executeJob (options, opType, callback) {
   })
   stream.on('error', function (error) {
     intervalData[opType][ERROR]++
-    if (error.code === status.AEROSPIKE_ERR_TIMEOUT) {
+    if (error.code === status.ERR_TIMEOUT) {
       intervalData[opType][TIMEOUT]++
     }
   })

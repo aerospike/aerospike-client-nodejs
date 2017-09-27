@@ -35,19 +35,34 @@ separate result values into a single result object.
 | [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in v3 contains instances of the `Record` class instead of separate bins, meta-data and key values. |
 | [Record Stream `data` Event Callback](http://www.aerospike.com/apidocs/nodejs/RecordStream.html#event:data__anchor) | `cb(bins, meta, key)` | `cb(record)` | `Query#foreach`, `Scan#foreach` | The `record` passed in v3 is an instance of the `Record` class, which contains the records bins, key and meta-data. |
 
+### Update Error Status Codes & Messages
+
+The constants for the error status codes in the `Aerospike.status` module have
+been renamed to drop the redundant `AEROSPIKE_` prefix. E.g.
+
+* `Aerospike.status.AEROSPIKE_OK` → `Aerospike.status.OK`
+* `Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND` → `Aerospike.status.ERR_RECORD_NOT_FOUND`
+* `Aerospike.status.AEROSPIKE_ERR_NO_MORE_CONNECTIONS` → `Aerospike.status.ERR_NO_MORE_CONNECTIONS`
+* ...
+
+The old contants (with `AEROSPIKE_` prefix) still exist for now, but are
+undocumented; they will be removed in the next major client version.
+
+`AerospikeError` instances now also have proper error messages in most cases.
+
 ### Changed Semantics of `Client#exists` Command
 
 The `Client#exists` command now returns a simple boolean value to indicate
 whether a record exists in the database under the given key. It is no longer
 necessary, nor possible, to check the command's error code for the
-`AEROSPIKE_ERR_RECORD_NOT_FOUND` status code.
+`ERR_RECORD_NOT_FOUND` status code.
 
 Usage under v2:
 
 ```JavaScript
 let key = new Aerospike.Key('test', 'test', 'noSuchKey')
 client.exists(key, error => {
-  if (error && error.code !== Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND) {
+  if (error && error.code !== Aerospike.status.ERR_RECORD_NOT_FOUND) {
     // An error occurred while executing the command.
   } else if (error) {
     // The record does not exist.
@@ -75,12 +90,11 @@ client.exists(key, (error, result) => {
 ### Changed Semantics of `Client#createIndex` and `Client#indexRemove` Commands
 
 The `Client#createIndex` command now returns an error with status code
-`AEROSPIKE_ERR_INDEX_FOUND` if an index with the same name already exists
-and/or if an index of any name already exists on the same bin.
+`ERR_INDEX_FOUND` if an index with the same name already exists and/or if an
+index of any name already exists on the same bin.
 
 The `Client#removeIndex` command now returns an error with status code
-`AEROSPIKE_ERR_INDEX_NOT_FOUND` if no index with the given name exists in the
-cluster.
+`ERR_INDEX_NOT_FOUND` if no index with the given name exists in the cluster.
 
 ### Shared Memory Layout & Key Changes
 

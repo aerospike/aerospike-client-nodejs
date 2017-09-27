@@ -160,7 +160,7 @@ describe('Key', function () {
       it('returns an error for an unsupported float user key', function (done) {
         var key = {ns: helper.namespace, set: helper.set, key: 3.1415}
         client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.be(status.ERR_PARAM)
           done()
         })
       })
@@ -168,7 +168,7 @@ describe('Key', function () {
       it('returns an error for an invalid user key', function (done) {
         var key = {ns: helper.namespace, set: helper.set, key: {a: 1, b: 2, c: 3}}
         client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.be(status.ERR_PARAM)
           done()
         })
       })

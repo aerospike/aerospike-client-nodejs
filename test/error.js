@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-const AerospikeError = require('../lib/aerospike_error')
+const AerospikeError = require('../lib/error')
 require('./test_helper.js')
 
 describe('AerospikeError', function () {

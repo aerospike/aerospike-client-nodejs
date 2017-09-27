@@ -183,7 +183,7 @@ function removeRecords (client, ndx, end, done) {
   var key = new Key(argv.namespace, argv.set, ndx)
 
   client.remove(key, function (err, key) {
-    if (err && err.code !== status.AEROSPIKE_ERR_RECORD_NOT_FOUND) throw err
+    if (err && err.code !== status.ERR_RECORD_NOT_FOUND) throw err
     removeRecords(client, ndx + 1, end, done)
   })
 }

@@ -124,7 +124,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.AEROSPIKE_ERR_PARAM))
+          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
       })
     })
 
@@ -147,7 +147,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.AEROSPIKE_ERR_PARAM))
+          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
       })
     })
 
@@ -170,7 +170,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.AEROSPIKE_ERR_PARAM))
+          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
       })
     })
 
@@ -233,7 +233,7 @@ context('Operations', function () {
 
       client.operate(key, ops, { gen: 12345 }, { gen: Aerospike.policy.gen.EQ })
         .catch(error => {
-          expect(error.code).to.be(Aerospike.status.AEROSPIKE_ERR_RECORD_GENERATION)
+          expect(error.code).to.be(Aerospike.status.ERR_RECORD_GENERATION)
           return Promise.resolve(true)
         })
     })

@@ -64,7 +64,7 @@ describe('client.truncate()', function () {
               return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
             }
             break
-          case Aerospike.status.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+          case Aerospike.status.ERR_RECORD_NOT_FOUND:
             if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.record.key)
             break
           default:

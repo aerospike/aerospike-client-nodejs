@@ -42,7 +42,7 @@ context('secondary indexes', function () {
         client.infoAll(sindex, function (err, info) {
           if (err) {
             switch (err.code) {
-              case Aerospike.status.AEROSPIKE_ERR_INDEX_NOT_FOUND:
+              case Aerospike.status.ERR_INDEX_NOT_FOUND:
                 resolve(false)
                 break
               default:
@@ -104,7 +104,7 @@ context('secondary indexes', function () {
         .then(() => client.createIndex(options)
           .then(job => Promise.reject(new Error('Recreating existing index should have returned an error')))
           .catch(error => {
-            if (error.code === Aerospike.status.AEROSPIKE_ERR_INDEX_FOUND) {
+            if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
               // All good!
             } else {
               return Promise.reject(error)

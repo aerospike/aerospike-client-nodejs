@@ -52,7 +52,7 @@ describe('client.get()', function () {
     var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/not_found/'})()
 
     client.get(key, function (err, record) {
-      expect(err.code).to.equal(status.AEROSPIKE_ERR_RECORD_NOT_FOUND)
+      expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
       done()
     })
   })

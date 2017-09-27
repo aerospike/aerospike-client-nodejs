@@ -83,7 +83,7 @@ describe('client.operate() - CDT List operations', function () {
       var operation = lists.appendItems('list', 99)
       setup(record, function () {
         client.operate(key, [operation], function (err, result) {
-          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.equal(status.ERR_PARAM)
           teardown(done)
         })
       })
@@ -114,7 +114,7 @@ describe('client.operate() - CDT List operations', function () {
       var operation = lists.insertItems('list', 2, 99)
       setup(record, function () {
         client.operate(key, [operation], function (err, result) {
-          expect(err.code).to.equal(status.AEROSPIKE_ERR_PARAM)
+          expect(err.code).to.equal(status.ERR_PARAM)
           teardown(done)
         })
       })
@@ -221,7 +221,7 @@ describe('client.operate() - CDT List operations', function () {
       var operation = lists.get('list', 99)
       setup(record, function () {
         client.operate(key, [operation], function (err, result) {
-          expect(err.code).to.equal(status.AEROSPIKE_ERR_REQUEST_INVALID)
+          expect(err.code).to.equal(status.ERR_REQUEST_INVALID)
           teardown(done)
         })
       })
