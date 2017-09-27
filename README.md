@@ -61,7 +61,9 @@ Aerospike.connect(config)
       m: {foo: 4, bar: 7}
     }
     let meta = { ttl: 10000 }
-    let policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
 
     return client.put(key, bins, meta, policy)
       .then(() => {
