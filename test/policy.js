@@ -70,3 +70,25 @@ describe('ReadPolicy', function () {
     })
   })
 })
+
+describe('BatchPolicy', function () {
+  describe('new BatchPolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.BatchPolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1,
+        consistencyLevel: Aerospike.policy.consistencyLevel.ONE,
+        allowInline: false,
+        sendSetName: true
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+      expect(subject.consistencyLevel).to.be(Aerospike.policy.consistencyLevel.ONE)
+      expect(subject.allowInline).to.be(false)
+      expect(subject.sendSetName).to.be(true)
+    })
+  })
+})
