@@ -133,6 +133,11 @@ The following Client functions have been marked as deprecated under v2.x and hav
 | `Query#execute()`                | `Query#foreach()`                              |                                             |
 | `Scan#execute()`                 | `Scan#foreach()`                               |                                             |
 
+### Supported Node.js versions
+
+Node.js v0.12 is no longer supported. Node.js v4 (LTS) or later are required to
+run Aerospike Node.js client v3.0.
+
 ## Version 2.6.0
 
 ### Deprecations
