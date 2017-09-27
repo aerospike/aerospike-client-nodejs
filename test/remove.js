@@ -50,14 +50,14 @@ describe('client.remove()', function () {
   context('with generation policy value', function () {
     it('should remove the record if the generation matches', function () {
       let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+      let policy = new Aerospike.RemovePolicy({
+        gen: Aerospike.policy.gen.EQ,
+        generation: 1
+      })
 
       return client.put(key, {str: 'abcde'})
         .then(() => {
-          let removePolicy = {
-            gen: Aerospike.policy.gen.EQ,
-            generation: 1
-          }
-          return client.remove(key, removePolicy)
+          return client.remove(key, policy)
         })
         .then(() => client.exists(key))
         .then(result => expect(result).to.be(false))
@@ -65,14 +65,14 @@ describe('client.remove()', function () {
 
     it('should not remove the record if the generation does not match', function () {
       let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+      let policy = new Aerospike.RemovePolicy({
+        gen: Aerospike.policy.gen.EQ,
+        generation: 1
+      })
 
       return client.put(key, {str: 'abcde'})
         .then(() => {
-          let removePolicy = {
-            gen: Aerospike.policy.gen.EQ,
-            generation: 1
-          }
-          return client.remove(key, removePolicy)
+          return client.remove(key, policy)
             .catch(error =>
               expect(error.code).to.be(status.ERR_RECORD_GENERATION))
         })
@@ -85,16 +85,16 @@ describe('client.remove()', function () {
     if (!helper.cluster.is_enterprise()) {
       return this.skip('durable delete requires enterprise edition')
     }
-    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
-    var meta = { ttl: 1000 }
-    var record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+    let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
+    let meta = { ttl: 1000 }
+    let record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+    let policy = new Aerospike.RemovePolicy({
+      durableDelete: true
+    })
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
 
-      var policy = {
-        durableDelete: true
-      }
       client.remove(key, policy, function (err) {
         if (err) throw err
 

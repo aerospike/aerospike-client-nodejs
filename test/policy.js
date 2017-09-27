@@ -134,3 +134,29 @@ describe('InfoPolicy', function () {
     })
   })
 })
+
+describe('RemovePolicy', function () {
+  describe('new RemovePolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.RemovePolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1,
+        generation: 1234,
+        key: Aerospike.policy.key.SEND,
+        gen: Aerospike.policy.gen.EQ,
+        commitLevel: 2,
+        durableDelete: true
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+      expect(subject.generation).to.be(1234)
+      expect(subject.key).to.be(Aerospike.policy.key.SEND)
+      expect(subject.gen).to.be(Aerospike.policy.gen.EQ)
+      expect(subject.commitLevel).to.be(2)
+      expect(subject.durableDelete).to.be(true)
+    })
+  })
+})
