@@ -19,13 +19,12 @@
 /* global describe, it, expect */
 
 const Aerospike = require('../lib/aerospike')
-const policy = Aerospike.policy
 require('./test_helper')
 
 describe('WritePolicy', function () {
   describe('new WritePolicy', function () {
     it('sets the policy values from a value object', function () {
-      let subject = new policy.WritePolicy({
+      let subject = new Aerospike.WritePolicy({
         socketTimeout: 1000,
         totalTimeout: 2000,
         maxRetries: 1,
@@ -46,6 +45,28 @@ describe('WritePolicy', function () {
       expect(subject.exists).to.be(Aerospike.policy.exists.CREATE)
       expect(subject.commitLevel).to.be(2)
       expect(subject.durableDelete).to.be(true)
+    })
+  })
+})
+
+describe('ReadPolicy', function () {
+  describe('new ReadPolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.ReadPolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1,
+        key: Aerospike.policy.key.SEND,
+        replica: Aerospike.policy.replica.MASTER,
+        consistencyLevel: Aerospike.policy.consistencyLevel.ONE
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+      expect(subject.key).to.be(Aerospike.policy.key.SEND)
+      expect(subject.replica).to.be(Aerospike.policy.replica.MASTER)
+      expect(subject.consistencyLevel).to.be(Aerospike.policy.consistencyLevel.ONE)
     })
   })
 })

@@ -41,11 +41,11 @@ context('Scans', function () {
       let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
       let rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
       let mgen = metagen.constant({ ttl: 300 })
-      let policy = {
+      let policy = new Aerospike.WritePolicy({
+        totalTimeout: 1000,
         key: Aerospike.policy.key.SEND,
-        exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
-        timeout: 1000
-      }
+        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+      })
       return putgen.put(numberOfRecords, kgen, rgen, mgen, policy)
     }))
 

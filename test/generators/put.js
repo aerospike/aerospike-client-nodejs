@@ -56,7 +56,12 @@ function put (n, keygen, recgen, metagen, policy, callback) {
     callback = policy
     policy = null
   }
-  policy = policy || { exists: Aerospike.policy.exists.CREATE_OR_REPLACE, timeout: 1000 }
+  if (typeof policy === 'undefined') {
+    policy = new Aerospike.WritePolicy({
+      totalTimeout: 1000,
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
+  }
   var generator = {
     key: keygen,
     bins: recgen,

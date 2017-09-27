@@ -193,11 +193,14 @@ describe('Queries', function () {
     })
 
     it('returns the key if it was stored on the server', function (done) {
-      var uniqueKey = 'test/query/record_with_stored_key'
-      var key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
-      var record = { name: uniqueKey }
-      var meta = { ttl: 300 }
-      var policy = { key: Aerospike.policy.key.SEND }
+      let uniqueKey = 'test/query/record_with_stored_key'
+      let key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
+      let record = { name: uniqueKey }
+      let meta = { ttl: 300 }
+      let policy = new Aerospike.WritePolicy({
+        key: Aerospike.policy.key.SEND
+      })
+
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
         var query = client.query(helper.namespace, testSet)

@@ -39,7 +39,9 @@ context('Operations', function () {
       double1: 1.23,
       double2: new Double(1.0)
     }
-    let policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
     let meta = { ttl: 60 }
     return client.put(key, bins, meta, policy)
   })

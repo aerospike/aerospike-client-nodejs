@@ -35,8 +35,10 @@ describe('client.operate() - CDT Map operations', function () {
 
   function setup (bins, done) {
     key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
-    var meta = { ttl: 600 }
-    var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let meta = { ttl: 600 }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
     client.put(key, bins, meta, policy, function (err) {
       if (err) throw err
       done()

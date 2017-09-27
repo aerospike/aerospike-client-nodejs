@@ -19,7 +19,6 @@
 /* global expect, describe, it, context */
 
 const Aerospike = require('../lib/aerospike')
-const WritePolicy = Aerospike.policy.WritePolicy
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
@@ -110,8 +109,10 @@ describe('client.put()', function () {
   })
 
   context('bins with various data types', function () {
-    var meta = { ttl: 600 }
-    var policy = new WritePolicy({ exists: Aerospike.policy.exists.CREATE_OR_REPLACE })
+    let meta = { ttl: 600 }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
 
     function putGetVerify (bins, expected, done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
@@ -432,7 +433,9 @@ describe('client.put()', function () {
   context('gen policy', function () {
     it('updates record if generation matches', function () {
       let key = keygen.integer(helper.namespace, helper.set)()
-      let policy = new WritePolicy({ gen: Aerospike.policy.gen.EQ })
+      let policy = new Aerospike.WritePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
@@ -448,7 +451,9 @@ describe('client.put()', function () {
 
     it('does not update record if generation does not match', function () {
       let key = keygen.integer(helper.namespace, helper.set)()
-      let policy = new WritePolicy({ gen: Aerospike.policy.gen.EQ })
+      let policy = new Aerospike.WritePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
