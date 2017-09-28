@@ -44,7 +44,7 @@ describe('client.batchSelect()', function () {
       .then(results => {
         expect(results.length).to.equal(numberOfRecords)
         results.forEach(result => {
-          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
+          expect(result.status).to.equal(Aerospike.status.OK)
           expect(result.record.bins).to.only.have.keys('i', 's')
         })
       })

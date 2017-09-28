@@ -59,7 +59,7 @@ describe('client.truncate()', function () {
       for (var result of results) {
         var expectExist = !!remaining.find(record => record.key.equals(result.record.key))
         switch (result.status) {
-          case Aerospike.status.AEROSPIKE_OK:
+          case Aerospike.status.OK:
             if (!expectExist) {
               return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
             }
