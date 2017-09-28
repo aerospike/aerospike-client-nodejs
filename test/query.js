@@ -244,9 +244,12 @@ describe('Queries', function () {
     })
 
     it('should raise client errors asynchronously', function (done) {
-      var query = client.query('test')
-      var invalidPolicy = {timeout: 'not a valid timeout'}
-      var stream = query.foreach(invalidPolicy)
+      let invalidPolicy = new Aerospike.QueryPolicy({
+        totalTimeout: 'not a valid timeout'
+      })
+
+      let query = client.query('test')
+      let stream = query.foreach(invalidPolicy)
       // if error is raised synchronously we will never reach here
       stream.on('error', error => {
         expect(error.code).to.equal(Aerospike.status.ERR_PARAM)

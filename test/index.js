@@ -84,7 +84,9 @@ context('secondary indexes', function () {
         index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      let policy = new Aerospike.InfoPolicy({ timeout: 100 })
+      let policy = new Aerospike.InfoPolicy({
+        totalTimeout: 100
+      })
 
       client.createIndex(options, policy, function (error) {
         if (error) throw error

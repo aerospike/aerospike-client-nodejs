@@ -95,8 +95,8 @@ const config = {
 Aerospike.connect(config, (error, client) => {
   if (error) throw error
 
-  var key = new Key('test', 'demo', 'demo')
-  var record = {
+  let key = new Key('test', 'demo', 'demo')
+  let record = {
     i: 123,
     s: 'hello',
     b: new Buffer('world'),
@@ -105,13 +105,15 @@ Aerospike.connect(config, (error, client) => {
     l: [1, 'a', {x: 'y'}],
     m: {foo: 4, bar: 7}
   }
-  var meta = { ttl: 10000 }
-  var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+  let meta = { ttl: 10000 }
+  let policy = new Aerospike.WritePolicy({
+    exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+  })
 
   client.put(key, record, meta, policy, (error) => {
     if (error) throw error
 
-    var ops = [
+    let ops = [
       op.incr('i', 1),
       op.read('i'),
       lists.append('l', 'z'),

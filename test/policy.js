@@ -187,3 +187,39 @@ describe('OperatePolicy', function () {
     })
   })
 })
+
+describe('ScanPolicy', function () {
+  describe('new ScanPolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.ScanPolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1,
+        failOnClusterChange: true,
+        durableDelete: true
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+      expect(subject.failOnClusterChange).to.be(true)
+      expect(subject.durableDelete).to.be(true)
+    })
+  })
+})
+
+describe('QueryPolicy', function () {
+  describe('new QueryPolicy', function () {
+    it('sets the policy values from a value object', function () {
+      let subject = new Aerospike.QueryPolicy({
+        socketTimeout: 1000,
+        totalTimeout: 2000,
+        maxRetries: 1
+      })
+
+      expect(subject.socketTimeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(2000)
+      expect(subject.maxRetries).to.be(1)
+    })
+  })
+})

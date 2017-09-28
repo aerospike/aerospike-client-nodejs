@@ -138,14 +138,15 @@ context('Scans', function () {
     })
 
     it('sets a scan policy', function (done) {
-      var scan = client.scan(helper.namespace, testSet)
-      var scanPolicy = {
-        timeout: 1000,
+      let scan = client.scan(helper.namespace, testSet)
+      let policy = new Aerospike.ScanPolicy({
+        totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
         failOnClusterChange: true
-      }
-      var stream = scan.foreach(scanPolicy)
+      })
+
+      let stream = scan.foreach(policy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
         if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {
