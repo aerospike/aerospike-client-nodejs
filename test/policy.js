@@ -123,12 +123,12 @@ describe('InfoPolicy', function () {
   describe('new InfoPolicy', function () {
     it('sets the policy values from a value object', function () {
       let subject = new Aerospike.InfoPolicy({
-        timeout: 1000,
+        totalTimeout: 1000,
         sendAsIs: true,
         checkBounds: false
       })
 
-      expect(subject.timeout).to.be(1000)
+      expect(subject.totalTimeout).to.be(1000)
       expect(subject.sendAsIs).to.be(true)
       expect(subject.checkBounds).to.be(false)
     })

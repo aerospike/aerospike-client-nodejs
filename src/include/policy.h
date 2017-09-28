@@ -35,4 +35,3 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log);
 int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log);
 int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log);
-int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log);

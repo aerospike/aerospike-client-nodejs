@@ -55,16 +55,6 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 	return  AS_NODE_PARAM_OK;
 }
 
-int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log)
-{
-	int rc = 0;
-	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing admin policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
 int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const LogInfo* log)
 {
 	int rc = 0;

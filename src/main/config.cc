@@ -258,10 +258,6 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 				return rc;
 			}
 
-			if ((rc = get_optional_uint32_property(&config->policies.admin.timeout, NULL, policies, "timeout", log)) != AS_NODE_PARAM_OK) {
-				return rc;
-			}
-
 			if (policies->Has(Nan::New("read").ToLocalChecked())) {
 				Local<Value> readpolicy = policies->Get(Nan::New("read").ToLocalChecked());
 				if ((rc = readpolicy_from_jsobject(&config->policies.read, readpolicy->ToObject(), log)) != AS_NODE_PARAM_OK) {
@@ -295,12 +291,6 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 			if (policies->Has(Nan::New("info").ToLocalChecked())) {
 				Local<Value> infopolicy = policies->Get(Nan::New("info").ToLocalChecked());
 				if ((rc = infopolicy_from_jsobject(&config->policies.info, infopolicy->ToObject(), log)) != AS_NODE_PARAM_OK) {
-					return rc;
-				}
-			}
-			if (policies->Has(Nan::New("admin").ToLocalChecked())) {
-				Local<Value> adminpolicy = policies->Get(Nan::New("admin").ToLocalChecked());
-				if ((rc = adminpolicy_from_jsobject(&config->policies.admin, adminpolicy->ToObject(), log)) != AS_NODE_PARAM_OK) {
 					return rc;
 				}
 			}
