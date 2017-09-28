@@ -232,8 +232,14 @@ context('Operations', function () {
       let ops = [
         op.add('int', 42)
       ]
+      let meta = {
+        gen: 12345
+      }
+      let policy = new Aerospike.OperatePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
-      client.operate(key, ops, { gen: 12345 }, { gen: Aerospike.policy.gen.EQ })
+      client.operate(key, ops, meta, policy)
         .catch(error => {
           expect(error.code).to.be(Aerospike.status.ERR_RECORD_GENERATION)
           return Promise.resolve(true)
