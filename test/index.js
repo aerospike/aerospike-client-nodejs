@@ -77,16 +77,19 @@ context('secondary indexes', function () {
     })
 
     it('should create an integer index with info policy', function (done) {
-      var options = {
+      let options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
         index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      var policy = { timeout: 100 }
-      client.createIndex(options, policy, function (err) {
-        expect(err).not.to.be.ok()
+      let policy = new Aerospike.InfoPolicy({
+        totalTimeout: 100
+      })
+
+      client.createIndex(options, policy, function (error) {
+        if (error) throw error
         verifyIndexExists(helper.namespace, testIndex.name, done)
       })
     })

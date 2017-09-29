@@ -42,6 +42,9 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj, "sendAsIs", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -52,16 +55,6 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 	return  AS_NODE_PARAM_OK;
 }
 
-int adminpolicy_from_jsobject(as_policy_admin* policy, Local<Object> obj, const LogInfo* log)
-{
-	int rc = 0;
-	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing admin policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
 int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const LogInfo* log)
 {
 	int rc = 0;
@@ -69,6 +62,9 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "retry", log)) != AS_NODE_PARAM_OK) {

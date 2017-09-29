@@ -19,7 +19,6 @@
 /* global expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
-const Record = Aerospike.Record
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
@@ -45,8 +44,8 @@ describe('client.batchExists()', function () {
       .then(results => {
         expect(results.length).to.equal(numberOfRecords)
         results.forEach(result => {
-          expect(result.status).to.equal(Aerospike.status.AEROSPIKE_OK)
-          expect(result.record).to.be.a(Record)
+          expect(result.status).to.equal(Aerospike.status.OK)
+          expect(result.record).to.be.an(Aerospike.Record)
         })
       })
   })

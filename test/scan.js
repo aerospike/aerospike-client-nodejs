@@ -41,11 +41,11 @@ context('Scans', function () {
       let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
       let rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
       let mgen = metagen.constant({ ttl: 300 })
-      let policy = {
+      let policy = new Aerospike.WritePolicy({
+        totalTimeout: 1000,
         key: Aerospike.policy.key.SEND,
-        exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
-        timeout: 1000
-      }
+        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+      })
       return putgen.put(numberOfRecords, kgen, rgen, mgen, policy)
     }))
 
@@ -138,14 +138,15 @@ context('Scans', function () {
     })
 
     it('sets a scan policy', function (done) {
-      var scan = client.scan(helper.namespace, testSet)
-      var scanPolicy = {
-        timeout: 1000,
+      let scan = client.scan(helper.namespace, testSet)
+      let policy = new Aerospike.ScanPolicy({
+        totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
         failOnClusterChange: true
-      }
-      var stream = scan.foreach(scanPolicy)
+      })
+
+      let stream = scan.foreach(policy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
         if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {

@@ -84,7 +84,9 @@ describe('Aerospike.GeoJSON', function () {
     const geojson = GeoJSON(point)
     const key = new Key(helper.namespace, helper.set, 'test/geojson')
     const meta = {ttl: 1000}
-    const policy = {exists: Aerospike.policy.exists.CREATE_OR_REPLACE}
+    const policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
 
     it('can put/get a GeoJSON bin value', function (done) {
       const record = {location: geojson}

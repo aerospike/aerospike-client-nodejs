@@ -34,7 +34,7 @@ describe('client.put()', function () {
   var client = helper.client
 
   it('should write and validate records', function (done) {
-    var meta = {ttl: 1000, exists: Aerospike.policy.exists.CREATE_OR_REPLACE}
+    var meta = {ttl: 1000}
     var putAndGet = function (key, bins, cb) {
       client.put(key, bins, meta, function (err) {
         if (err) throw err
@@ -109,8 +109,10 @@ describe('client.put()', function () {
   })
 
   context('bins with various data types', function () {
-    var meta = { ttl: 600 }
-    var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let meta = { ttl: 600 }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
 
     function putGetVerify (bins, expected, done) {
       var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
@@ -430,12 +432,15 @@ describe('client.put()', function () {
 
   context('gen policy', function () {
     it('updates record if generation matches', function () {
-      var key = keygen.integer(helper.namespace, helper.set)()
+      let key = keygen.integer(helper.namespace, helper.set)()
+      let policy = new Aerospike.WritePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
         .then(record => expect(record.gen).to.be(1))
-        .then(() => client.put(key, { i: 2 }, { gen: 1 }, { gen: Aerospike.policy.gen.EQ }))
+        .then(() => client.put(key, { i: 2 }, { gen: 1 }, policy))
         .then(() => client.get(key))
         .then(record => {
           expect(record.bins).to.eql({ i: 2 })
@@ -445,12 +450,15 @@ describe('client.put()', function () {
     })
 
     it('does not update record if generation does not match', function () {
-      var key = keygen.integer(helper.namespace, helper.set)()
+      let key = keygen.integer(helper.namespace, helper.set)()
+      let policy = new Aerospike.WritePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
         .then(record => expect(record.gen).to.be(1))
-        .then(() => client.put(key, { i: 2 }, { gen: 99 }, { gen: Aerospike.policy.gen.EQ }))
+        .then(() => client.put(key, { i: 2 }, { gen: 99 }, policy))
         .catch(err => expect(err.code).to.be(status.ERR_RECORD_GENERATION))
         .then(() => client.get(key))
         .then(record => {

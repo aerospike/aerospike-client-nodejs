@@ -39,7 +39,9 @@ context('Operations', function () {
       double1: 1.23,
       double2: new Double(1.0)
     }
-    let policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
     let meta = { ttl: 60 }
     return client.put(key, bins, meta, policy)
   })
@@ -230,8 +232,14 @@ context('Operations', function () {
       let ops = [
         op.add('int', 42)
       ]
+      let meta = {
+        gen: 12345
+      }
+      let policy = new Aerospike.OperatePolicy({
+        gen: Aerospike.policy.gen.EQ
+      })
 
-      client.operate(key, ops, { gen: 12345 }, { gen: Aerospike.policy.gen.EQ })
+      client.operate(key, ops, meta, policy)
         .catch(error => {
           expect(error.code).to.be(Aerospike.status.ERR_RECORD_GENERATION)
           return Promise.resolve(true)

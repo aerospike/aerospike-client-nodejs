@@ -35,8 +35,10 @@ describe('client.operate() - CDT Map operations', function () {
 
   function setup (bins, done) {
     key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
-    var meta = { ttl: 600 }
-    var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let meta = { ttl: 600 }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
     client.put(key, bins, meta, policy, function (err) {
       if (err) throw err
       done()
@@ -69,12 +71,15 @@ describe('client.operate() - CDT Map operations', function () {
 
   describe('maps.setPolicy', function () {
     it('changes the map order', function (done) {
-      var record = { map: {c: 1, b: 2, a: 3} }
-      var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+      let record = { map: {c: 1, b: 2, a: 3} }
+      let policy = new maps.MapPolicy({
+        order: maps.order.KEY_ORDERED
+      })
+      let operations = [
+        maps.setPolicy('map', policy),
         maps.getByKeyRange('map', 'a', 'z', maps.returnType.KEY)
       ]
-      var expectedResult = { map: ['a', 'b', 'c'] }
+      let expectedResult = { map: ['a', 'b', 'c'] }
       verifyOperation(record, operations, expectedResult, record, done)
     })
   })
@@ -114,10 +119,13 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('update-only write mode', function () {
+      let updateOnlyPolicy = new maps.MapPolicy({
+        writeMode: maps.writeMode.UPDATE_ONLY
+      })
+
       it('overwrites an existing key', function (done) {
         var record = { map: {a: 1, b: 2, c: 3} }
-        var policy = { writeMode: maps.writeMode.UPDATE_ONLY }
-        var operation = maps.put('map', 'b', 99, policy)
+        var operation = maps.put('map', 'b', 99, updateOnlyPolicy)
         var expectedResult = { map: 3 }
         var expectedRecord = { map: {a: 1, b: 99, c: 3} }
         verifyOperation(record, operation, expectedResult, expectedRecord, done)
@@ -125,8 +133,7 @@ describe('client.operate() - CDT Map operations', function () {
 
       it('fails to write a non-existing key', function (done) {
         var record = { map: {a: 1, b: 2, c: 3} }
-        var policy = { writeMode: maps.writeMode.UPDATE_ONLY }
-        var operation = maps.put('map', 'd', 99, policy)
+        var operation = maps.put('map', 'd', 99, updateOnlyPolicy)
         verifyOperation(record, operation, null, null, function (err) {
           expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_NOT_FOUND)
           teardown(done)
@@ -135,10 +142,13 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('create-only write mode', function () {
+      let createOnlyPolicy = new maps.MapPolicy({
+        writeMode: maps.writeMode.CREATE_ONLY
+      })
+
       it('fails to overwrite an existing key', function (done) {
         var record = { map: {a: 1, b: 2, c: 3} }
-        var policy = { writeMode: maps.writeMode.CREATE_ONLY }
-        var operation = maps.put('map', 'b', 99, policy)
+        var operation = maps.put('map', 'b', 99, createOnlyPolicy)
         verifyOperation(record, operation, null, null, function (err) {
           expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_EXISTS)
           teardown(done)
@@ -147,8 +157,7 @@ describe('client.operate() - CDT Map operations', function () {
 
       it('creates a new key if it does not exist', function (done) {
         var record = { map: {a: 1, b: 2, c: 3} }
-        var policy = { writeMode: maps.writeMode.CREATE_ONLY }
-        var operation = maps.put('map', 'd', 99, policy)
+        var operation = maps.put('map', 'd', 99, createOnlyPolicy)
         var expectedResult = { map: 4 }
         var expectedRecord = { map: {a: 1, b: 2, c: 3, d: 99} }
         verifyOperation(record, operation, expectedResult, expectedRecord, done)
@@ -248,10 +257,14 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.removeByKeyRange', function () {
+    let keyOrderedPolicy = new maps.MapPolicy({
+      order: maps.order.KEY_ORDERED
+    })
+
     it('removes map entries identified by key range', function (done) {
       var record = { map: {a: 1, b: 2, c: 3, d: 4} }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.removeByKeyRange('map', 'b', 'd', maps.returnType.VALUE)
       ]
       var expectedResult = { map: [2, 3] }
@@ -262,7 +275,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('removes all keys from the specified start key until the end', function (done) {
       var record = { map: {a: 1, b: 2, c: 3, d: 4} }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.removeByKeyRange('map', 'b', null, maps.returnType.VALUE)
       ]
       var expectedResult = { map: [2, 3, 4] }
@@ -273,7 +286,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('removes all keys from the start to the specified end', function (done) {
       var record = { map: {a: 1, b: 2, c: 3, d: 4} }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.removeByKeyRange('map', null, 'b', maps.returnType.VALUE)
       ]
       var expectedResult = { map: [1] }
@@ -440,10 +453,14 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.getByKeyRange', function () {
+    let keyOrderedPolicy = new maps.MapPolicy({
+      order: maps.order.KEY_ORDERED
+    })
+
     it('fetches map entries identified by key range', function (done) {
       var record = { map: {a: 1, b: 2, c: 3, d: 4} }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKeyRange('map', 'b', 'd', maps.returnType.KEY)
       ]
       var expectedResult = { map: ['b', 'c'] }
@@ -453,7 +470,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('fetches all keys from the specified start key until the end', function (done) {
       var record = { map: {a: 1, b: 2, c: 3, d: 4} }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKeyRange('map', 'b', null, maps.returnType.KEY)
       ]
       var expectedResult = { map: ['b', 'c', 'd'] }
@@ -579,10 +596,14 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   context('returnTypes', function () {
+    let keyOrderedPolicy = new maps.MapPolicy({
+      order: maps.order.KEY_ORDERED
+    })
+
     it('returns nothing', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKey('map', 'b', maps.returnType.NONE)
       ]
       var expectedResult = { map: null }
@@ -592,7 +613,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns index', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKey('map', 'a', maps.returnType.INDEX)
       ]
       var expectedResult = { map: 0 }
@@ -602,7 +623,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns reverse index', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKey('map', 'a', maps.returnType.REVERSE_INDEX)
       ]
       var expectedResult = { map: 2 }
@@ -612,7 +633,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns value order (rank)', function (done) {
       var record = { map: { a: 3, b: 2, c: 1 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKey('map', 'a', maps.returnType.RANK)
       ]
       var expectedResult = { map: 2 }
@@ -622,7 +643,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns reverse value order (reverse rank)', function (done) {
       var record = { map: { a: 3, b: 2, c: 1 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKey('map', 'a', maps.returnType.REVERSE_RANK)
       ]
       var expectedResult = { map: 0 }
@@ -632,7 +653,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns count of items selected', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByKeyRange('map', 'a', 'c', maps.returnType.COUNT)
       ]
       var expectedResult = { map: 2 }
@@ -642,7 +663,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key for a single read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndex('map', 0, maps.returnType.KEY)
       ]
       var expectedResult = { map: 'a' }
@@ -652,7 +673,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns keys for range read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndexRange('map', 0, 2, maps.returnType.KEY)
       ]
       var expectedResult = { map: [ 'a', 'b' ] }
@@ -662,7 +683,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns value for a single read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndex('map', 0, maps.returnType.VALUE)
       ]
       var expectedResult = { map: 1 }
@@ -672,7 +693,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns values for range read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndexRange('map', 0, 2, maps.returnType.VALUE)
       ]
       var expectedResult = { map: [ 1, 2 ] }
@@ -682,7 +703,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key/value for a single read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndex('map', 0, maps.returnType.KEY_VALUE)
       ]
       var expectedResult = { map: [ 'a', 1 ] }
@@ -692,7 +713,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key/value for a range read', function (done) {
       var record = { map: { a: 1, b: 2, c: 3 } }
       var operations = [
-        maps.setPolicy('map', { order: maps.order.KEY_ORDERED }),
+        maps.setPolicy('map', keyOrderedPolicy),
         maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)
       ]
       var expectedResult = { map: [ 'a', 1, 'b', 2 ] }

@@ -30,8 +30,10 @@ describe('client.operate() - CDT List operations', function () {
 
   function setup (record, done) {
     key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_list/'})()
-    var meta = { ttl: 600 }
-    var policy = { exists: Aerospike.policy.exists.CREATE_OR_REPLACE }
+    let meta = { ttl: 600 }
+    let policy = new Aerospike.WritePolicy({
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+    })
     client.put(key, record, meta, policy, function (err) {
       if (err) throw err
       done()
