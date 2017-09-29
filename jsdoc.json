@@ -1,6 +1,6 @@
 {
   "source": {
-    "include": ["lib", "lib/policy"]
+    "include": ["lib", "lib/policies"]
   },
   "plugins": ["plugins/markdown"],
   "templates": {
