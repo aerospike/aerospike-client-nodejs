@@ -146,6 +146,7 @@ The following tutorials provide more in-depth examples for specific aspects of w
 
 * {@tutorial getting_started}
 * {@tutorial node_clusters}
+* {@tutorial callbacks_promises_async_await}
 
 ## Further Documentation
 

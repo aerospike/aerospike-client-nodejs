@@ -5,20 +5,22 @@ PENDING -- (v3.0.0)
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * Support nobins flag on query operations
   * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
-  * Support gen value in Apply Policy
+  * Support setting socket idle timeout through client policies.
+  * Support gen policy for apply UDF operation.
 
 * **Bug Fixes**
   * Fix memory leak in batchRead [#213](https://github.com/aerospike/aerospike-client-nodejs/issues/213)
 
 * **Updates**
   * Requires Node.js v4.x (LTS) or later; Node.js v0.12.x and io.js are no longer supported [PR #179](https://github.com/aerospike/aerospike-client-nodejs/pull/179)
-  * Several client functions, that were marked as deprecated under v2.x, have been removed. [PR #214](https://github.com/aerospike/aerospike-client-nodejs/pull/214)
-  * Several callback functions, that returned multiple callback values under v2.x, have been updated to return a single callback value under v3. [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
-  * See full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
-    for further details.
   * Update C client library to [v4.2.0](http://www.aerospike.com/download/client/c/notes.html#4.2.0).
-  * Client#createIndex now returns an error if the index already exists; Client#indexRemove returns an error if the index does not exist.
+  * Changes to callback function signatures for several client operations. [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
+  * Removal of several client functions, that were marked as deprecated under v2.x. [PR #214](https://github.com/aerospike/aerospike-client-nodejs/pull/214)
+  * Policy rewrite and changes to how default client policies are configured. [PR #221](https://github.com/aerospike/aerospike-client-nodejs/pull/221)
   * Changes to shared memory layout and default shared memory key.
+
+Please refer to the full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
+for further details.
 
 v2.7.2 / 2017-08-03
 ===================

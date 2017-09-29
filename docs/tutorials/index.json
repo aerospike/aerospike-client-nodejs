@@ -4,5 +4,8 @@
   },
   "node_clusters": {
     "title": "Managing Aerospike connections in a Node cluster"
+  },
+  "callbacks_promises_async_await": {
+    "title": "Handling asynchronous database operations using Callbacks, Promises or async/await"
   }
 }

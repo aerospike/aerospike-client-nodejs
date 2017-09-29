@@ -25,10 +25,9 @@ one of these OS releases. macOS is also supported.
   - [C Client Resolution](#C-Client-Resolution)
     - [Force Download](#Force-Download)
     - [Custom Search Path](#Custom-Search-Path)
+- [Documentaion](#Documentation)
 - [Tests](#Tests)
-- [Examples](#Examples)
 - [Benchmarks](#Benchmarks)
-- [API Documentaion](#API-Documentation)
 
 <a name="Usage"></a>
 ## Usage
@@ -326,10 +325,41 @@ build directory:
 
     $ export PREFIX=~/aerospike-client-c/target/Linux-x86_64
 
+
+<a name="Documentation"></a>
+## Documentation
+
+Detailed documentation of the client's API can be found at
+[http://www.aerospike.com/apidocs/nodejs](https://www.aerospike.com/apidocs/nodejs).
+This documentation is build from the client's source using [JSDocs
+v3](http://usejsdoc.org/index.html) for every release.
+
+The API docs also contain a few basic tutorials:
+
+* [Getting Started - Connecting to an Aerospike database cluster](https://www.aerospike.com/apidocs/nodejs/tutorial-getting_started.html)
+* [Managing Aerospike connections in a Node cluster](https://www.aerospike.com/apidocs/nodejs/tutorial-node_clusters.html)
+* [Handling asynchronous database operations using Callbacks, Promises or async/await](https://www.aerospike.com/apidocs/nodejs/tutorial-callbacks_promises_async_await.html)
+
+A variety of additional example applications are provided in the
+[`examples`](examples) directory of this repository.
+
+The list of [backward incompatible API changes](docs/api-changes.md) by release,
+to the API by release.
+
+### API Versioning
+
+The Aerospike Node.js client library follows [semantic versioning](http://semver.org/).
+Changes which break backwards compatibility will be indicated by an increase in
+the major version number. Minor and patch releases, which increment only the
+second and third version number, will always be backwards compatible.
+
+
 <a name="Tests"></a>
 ## Tests
 
-This module is packaged with a number of tests in the `test` directory.
+The client includes a comprehensive test suite using
+[Mocha](http://mochajs.org). The tests can be found in the ['test'](test)
+directory.
 
 Before running the tests, you need to update the dependencies:
 
@@ -339,14 +369,9 @@ To run all the test cases:
 
     $ npm test
 
-For details on the tests, see [`test/README.md`](test/README.md).
+To run the tests and also report on test coverage:
 
-
-<a name="Examples"></a>
-## Examples
-
-A variety of example applications are provided in the [`examples`](examples) directory.
-See the [`examples/README.md`](examples/README.md) for details.
+    $ npm run coverage
 
 <a name="Benchmarks"></a>
 ## Benchmarks
@@ -354,25 +379,6 @@ See the [`examples/README.md`](examples/README.md) for details.
 Benchmark utilies are provided in the [`benchmarks`](benchmarks) directory.
 See the [`benchmarks/README.md`](benchmarks/README.md) for details.
 
-<a name="API-Documentation"></a>
-## API Documentation
-
-API documentation is generated from the JS source code using JSDocs v3 and is
-hosted at [http://www.aerospike.com/apidocs/nodejs](http://www.aerospike.com/apidocs/nodejs).
-
-<a name="Versioning"></a>
-## API Versioning
-
-The Aerospike Node.js client library follows [semantic versioning](http://semver.org/).
-Changes which break backwards compatibility will be indicated by an increase in
-the major version number. Minor and patch releases, which increment only the
-second and third version number, will always be backwards compatible.
-
-<a name="API-Changes"></a>
-### Backward Incompatible Changes
-
-The documentation contains a list of [backward incompatible changes](docs/api-changes.md)
-to the API by release.
 
 ## License
 
