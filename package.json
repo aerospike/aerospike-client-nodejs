@@ -30,7 +30,7 @@
   "scripts": {
     "test": "./scripts/shuffle_tests",
     "posttest": "standard",
-    "coverage": "nyc npm test",
+    "coverage": "nyc npm test; nyc --reporter=lcov report",
     "codecov": "codecov",
     "prepush": "npm test",
     "apidocs": "jsdoc -c jsdoc.json",
