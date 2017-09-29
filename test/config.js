@@ -87,7 +87,34 @@ describe('Config', function () {
       expect(policies.write).to.be.an(Aerospike.WritePolicy)
     })
 
-    it('rejects invalid config properties', function () {
+    it('initializes default policies', function () {
+      let settings = {
+        policies: {
+          apply: { totalTimeout: 1000 },
+          batch: { totalTimeout: 1000 },
+          info: { totalTimeout: 1000 },
+          operate: { totalTimeout: 1000 },
+          query: { totalTimeout: 1000 },
+          read: { totalTimeout: 1000 },
+          remove: { totalTimeout: 1000 },
+          scan: { totalTimeout: 1000 },
+          write: { totalTimeout: 1000 }
+        }
+      }
+      let config = new Config(settings)
+
+      expect(config.policies.apply).to.be.an(Aerospike.ApplyPolicy)
+      expect(config.policies.batch).to.be.an(Aerospike.BatchPolicy)
+      expect(config.policies.info).to.be.an(Aerospike.InfoPolicy)
+      expect(config.policies.operate).to.be.an(Aerospike.OperatePolicy)
+      expect(config.policies.query).to.be.an(Aerospike.QueryPolicy)
+      expect(config.policies.read).to.be.an(Aerospike.ReadPolicy)
+      expect(config.policies.remove).to.be.an(Aerospike.RemovePolicy)
+      expect(config.policies.scan).to.be.an(Aerospike.ScanPolicy)
+      expect(config.policies.write).to.be.an(Aerospike.WritePolicy)
+    })
+
+    it('ignores invalid config properties', function () {
       var obj = {
         log: './debug.log',
         policies: 1000,
@@ -105,6 +132,16 @@ describe('Config', function () {
       expect(config).to.not.have.property('password')
       expect(config).to.not.have.property('sharedMemory')
       expect(config.policies).to.be.empty()
+    })
+
+    it('throws a TypeError if invalid policy values are passed', function () {
+      let settings = {
+        policies: {
+          totalTimeout: 1000
+        }
+      }
+      expect(() => new Config(settings)).to.throwException(e =>
+        expect(e).to.be.a(TypeError))
     })
 
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {
