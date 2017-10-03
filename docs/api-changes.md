@@ -4,14 +4,12 @@
 
 ### Removal of LargeList (LDT) Functionality
 
-The `Client#LargeList` function and all related functionality supporting Large Data Types (LDT) have been removed.
-Deprecation of LDT was first announced on the Aerospike Blog in [November 2016](http://www.aerospike.com/blog/aerospike-ldt/).
-Aerospike Server v3.14 is the last server release to support LDT functionality.
+The `Client#LargeList` function and all related functionality supporting Large Data Types (LDT) have been removed. Deprecation of LDT was first announced on the [Aerospike Blog](http://www.aerospike.com/blog/aerospike-ldt/) in November 2016. Aerospike Server v3.14 is the last server release to support LDT functionality.
 
 ### Promise-based API & Changes in Callback Method Signatures
 
 In addition to callback functions, the v3 client also supports an async API
-based on Promises. The callback function parameter on all async client commands
+based on Promises. (And `async`/`await` when using Node.js v8 or later!) The callback function parameter on all async client commands
 is now optional. If no callback function is passed, the command will return a
 Promise instead. A [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 object represents the eventual completion (or failure) of an asynchronous
@@ -20,20 +18,21 @@ operation, and its resulting value.
 In contrast to callback functions, a Promise can only resolve to a single
 result value. In v2, several of the client's callback functions passed more
 than one result value. For example, the record callback
-function used by the `Client#get` command, passed the record's bins, meta
-data and the record's keys in three separate parameters to the provided
-callback function: `recordCallback(error, bin, meta, key)`.
+function used by the v2 `Client#get` command, passes the record bins, meta
+data and the keys in three separate parameters to the callback function: `recordCallback(error, bin, meta, key)`.
 
-To harmonize the result values passed to callback functions and returned by
-Promises, all client commands in v3 return a single result value. The method
-signatures of several callback functions have been updated to combine multiple
-separate result values into a single result object.
+To harmonize the result values passed to callback functions and the values
+returned by Promises, all client commands in v3 return a single result value.
+The method signatures of several callback functions have been updated to
+combine multiple separate result values into a single result object.
 
-| Callback | v2 Method Signature | v3 Method Signature | Affected Client Commands | Remarks |
-| -------- | ------------------- | ------------------- | ------------------------ | ------- |
-| [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | `cb(error, bins, meta, key)` | `cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` | The `record` passed in v3 is an instance of the `Record` class, which contains the records bins, key and meta-data. |
-| [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | `cb(error, results)` | `cb(error, results)` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` | The `results` array passed in v3 contains instances of the `Record` class instead of separate bins, meta-data and key values. |
-| [Record Stream `data` Event Callback](http://www.aerospike.com/apidocs/nodejs/RecordStream.html#event:data__anchor) | `cb(bins, meta, key)` | `cb(record)` | `Query#foreach`, `Scan#foreach` | The `record` passed in v3 is an instance of the `Record` class, which contains the records bins, key and meta-data. |
+| Callback | v2 / v3 Method Signature | Affected Client Commands |
+| -------- | ------------------------ | ------------------------ |
+| [Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~recordCallback__anchor) | v2:&nbsp;`cb(error, bins, meta, key)`<br> v3:&nbsp;`cb(error, record)` | `Client#get`, `Client#operate`, `Client#append`, `Client#prepend`, `Client#add`, `Client#select` |
+| [Batch Record Callback](http://www.aerospike.com/apidocs/nodejs/Client.html#~batchRecordCallback__anchor) | v2:&nbsp;`cb(error, [{status:, key:, bins:, meta:}])`<br> v3:&nbsp;`cb(error, [{status:, record:}])` | `Client#batchRead`, `Client#batchGet`, `Client#batchSelect` |
+| [Record Stream `data` Event Callback](http://www.aerospike.com/apidocs/nodejs/RecordStream.html#event:data__anchor) | v2:&nbsp;`cb(bins, meta, key)`<br> v3:&nbsp;`cb(record)` | `Query#foreach`, `Scan#foreach` |
+
+Note: The `record` object passed in v3 is an instance of the new [`Record`](http://www.aerospike.com/apidocs/nodejs/Record.html) class, which contains the records bins, key and meta-data.
 
 ### Update Error Status Codes & Messages
 
@@ -48,14 +47,95 @@ been renamed to drop the redundant `AEROSPIKE_` prefix. E.g.
 The old contants (with `AEROSPIKE_` prefix) still exist for now, but are
 undocumented; they will be removed in the next major client version.
 
-`AerospikeError` instances now also have proper error messages in most cases.
+`AerospikeError` instances now also have proper, human readable error messages in most cases.
+
+### Policy Changes, Improved Timeout & Retry Handling
+
+The v3 client provides separate ES6 classes for all client transaction
+policies, e.g. `Aerospike.ReadPolicy`, `Aerospike.WritePolicy`, etc. Passing
+policy values as plain objects to client commands is still supported but maybe
+deprecated at some point in the future. The policy classes will provide
+additional functionality like validation, support for handling future, backward
+incompatible policy changes, etc. It is recommended that you start using
+the new policy classes over plain objects.
+
+Global default policies can be set when creating a new client instance. Default policies need to be set separately for all transaction types, e.g. read, write, operate, etc. Setting global default policy values that apply to all transaction policies is no longer supported.
+
+All [[1]](#f1) client transaction policies are based on a new `BasePolicy` class which
+encode some important differences in how the v3 client handles timeouts and automatic retries.
+
+The `timeout` policy value of the v2 client has been renamed to `totalTimeout`
+and specifies the total transaction timeout in milliseconds. The `totalTimeout`
+is tracked on the client and sent to the server along with the transaction in
+the wire protocol. The client will most likely timeout first, but the server
+also has the capability to timeout the transaction. If `totalTimeout` is not
+zero and `totalTimeout` is reached before the transaction completes, the
+transaction will return error `ERR_TIMEOUT`. If `totalTimeout` is zero, there
+will be no total time limit. The default value for `totalTimeout` is 1,000 milliseconds.
+
+The new `socketTimeout` policy value specifies the socket idle timeout in
+milliseconds. If `socketTimeout` is not zero and the socket has been idle for
+at least `socketTimeout`, both `maxRetries` and `totalTimeout` are checked. If
+`maxRetries` and `totalTimeout` are not exceeded, the transaction is retried.
+The default value for `socketTimeout` is zero, i.e. no socket idle time limit.
+
+`maxRetries` is used to specify the maximum number of retries before aborting
+the current transaction. The default value for `maxRetries` is 2. The initial
+attempt is not counted as a retry. If `maxRetries` is exceeded, the transaction
+will return error `ERR_TIMEOUT`.
+
+WARNING: Database writes that are not idempotent (such as `Client#incr`) should not be
+retried because the write operation may be performed multiple times if the
+client timed out previous transaction attempts. It is important to use a
+distinct `WritePolicy` for non-idempotent writes which sets `maxRetries` to
+zero.
+
+Example: Using the new policy classes to specify timeout and retry handling:
+
+```javascript
+const Aerospike = require('aerospike')
+
+let defaults = {
+  socketTimeout: 200,
+  totalTimeout: 500,
+  maxRetries: 2
+}
+let config = {
+  policies: {
+    read: new Aerospike.ReadPolicy(defaults),
+    write: new Aerospike.WritePolicy(defaults)
+    // timeout: 500 - Can no longer specify global defaults here!
+  }
+}
+
+let key = new Aerospike.Key('test', 'demo', 'k1')
+
+Aerospike.connect(config)
+  .then(client => {
+    return client.put(key, {value: 10})
+      .then(() => {
+        let policy = new Aerospike.OperatePolicy({ maxRetries: 0 })
+        return client.incr(key, {value: 20}, {}, policy)
+      })
+      .then(() => client.get(key))
+      .then(record => console.info('Value:', record.bins.value))
+      .then(() => client.close())
+      .catch(error => {
+        client.close()
+        return Promise.reject(error)
+      })
+  })
+  .catch(error => console.error('Error:', error))
+```
+
+<a name="f1"/>[1]</a> Except `InfoPolicy` and `MapPolicy`.
 
 ### Changed Semantics of `Client#exists` Command
 
 The `Client#exists` command now returns a simple boolean value to indicate
 whether a record exists in the database under the given key. It is no longer
-necessary, nor possible, to check the command's error code for the
-`ERR_RECORD_NOT_FOUND` status code.
+necessary, nor possible, to check the transactions's status code for the
+`ERR_RECORD_NOT_FOUND` error.
 
 Usage under v2:
 
@@ -114,19 +194,19 @@ The following Client functions have been marked as deprecated under v2.x and hav
 
 | Removed Function                 | Replacement                                    | Remarks                                     |
 | -------------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| `Aerospike.Double()`             | `new Double()`                                 | -                                           |
+| `Aerospike.Double()`             | `new Aerospike.Double()`                                 | -                                           |
 | `Aerospike.filter.geoContains()` | `Aerospike.filter.geoContainsGeoJSONPoint()`   | -                                           |
 | `Aerospike.filter.geoWithin()`   | `Aerospike.filter.geoWithinGeoJSONRegion()`    | -                                           |
 | `Aerospike.indexType.<STRING, NUMERIC, GEO2DSPHERE>` | `Aerospike.indexDataType.<STRING, NUMERIC, GEO2DSPHERE>` | -             |
 | `Aerospike.info.parseInfo()`     | `Aerospike.info.parse()`                       | -                                           |
-| `Aerospike.key()`                | `new Key()`                                    | -                                           |
+| `Aerospike.key()`                | `new Aerospike.Key()`                                    | -                                           |
 | `Aerospike.operator.<*>`         | `Aerospike.operations.<*>`                     | -                                           |
 | `Aerospike.operator.list<*>`     | `Aerospike.lists.<*>`                          | -                                           |
 | `Client#LargeList()`             | -                                              | See "Removal of LDT functionality"          |
 | `Client#execute()`               | `Client#apply()`                               | -                                           |
 | `Client#info()` w/o `host` param | `Client#infoAll()`                             | -                                           |
 | `Client#udfRegisterWait()`       | `UdfJob#wait()`                                | `Client#udfRegister()` & `Client#udfRemove()` return a `UdfJob` instance.         |
-| `Client#createIndexWait()`       | `IndexTask#wait()`                             | `Client#createIndex()` & `Client#create<*>Index()` return an `IndexJob` instance. |
+| `Client#createIndexWait()`       | `IndexJob#wait()`                             | `Client#createIndex()` & `Client#create<*>Index()` return an `IndexJob` instance. |
 | `InfoPolicy#send_as_is`          | `InfoPolicy#sendAsIs`                          | -                                           |
 | `InfoPolicy#check_bounds`        | `InfoPolicy#checkBounds`                       | -                                           |
 | `LargeList#*`                    | -                                              | See "Removal of LDT functionality"          |

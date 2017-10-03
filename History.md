@@ -1,11 +1,11 @@
-PENDING -- (v3.0.0)
+v3.0.0 / 2017-10-03
 ===================
 
 * **New Features**
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * Support nobins flag on query operations
   * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
-  * Support setting socket idle timeout through client policies.
+  * Improved timeout handling and automatic transaction retries - see [detailed API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300) for more info.
   * Support gen policy for apply UDF operation.
 
 * **Bug Fixes**
