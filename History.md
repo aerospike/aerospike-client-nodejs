@@ -1,3 +1,11 @@
+v3.0.1 / 2017-10-06
+===================
+
+* **Bug Fixes**
+  * Fixed typo: Aerospike.ttl.DONT_UPDDATE [#222](https://github.com/aerospike/aerospike-client-nodejs/issues/222)
+  * Return parameter error if ttl or gen meta-data values are invalid [#223](https://github.com/aerospike/aerospike-client-nodejs/issues/223)
+  * Call Client#connect callback asynchronously [#224](https://github.com/aerospike/aerospike-client-nodejs/issues/224)
+
 v3.0.0 / 2017-10-03
 ===================
 
@@ -144,7 +152,7 @@ v2.4.0 / 2016-09-09
   * Support IPv6 socket protocol; requires Aerospike Server v3.10 or later.
   * Support Cluster ID verification; requires Aerospike Server v3.10 or later.
   * Support new peers info protocol; requires Aerospike Server v3.10 or later.
-  * Support TLS 1.2 secure socket protocol; requires future Aerospike Server release.
+  * ~~Support TLS 1.2 secure socket protocol; requires future Aerospike Server release.~~
   * New [Client#infoAny](http://www.aerospike.com/apidocs/nodejs/Client.html#infoAny)
     command to send info request to single cluster node.
 
