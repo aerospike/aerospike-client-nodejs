@@ -27,6 +27,6 @@ Local<Object> ttl_enum_values()
     Local<Object> obj = Nan::New<Object>();
     set(obj, "NAMESPACE_DEFAULT", TTL_NAMESPACE_DEFAULT);
     set(obj, "NEVER_EXPIRE", TTL_NEVER_EXPIRE);
-    set(obj, "DONT_UPDDATE", TTL_DONT_UPDATE);
+    set(obj, "DONT_UPDATE", TTL_DONT_UPDATE);
     return scope.Escape(obj);
 }
