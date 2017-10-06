@@ -24,7 +24,37 @@ const helper = require('./test_helper')
 const keygen = helper.keygen
 
 describe('Client', function () {
-  describe('Client#isConnected', function () {
+  describe('#connect', function () {
+    it('return self', function () {
+      const client = new Client(helper.config)
+      return client.connect()
+        .then(client2 => {
+          expect(client2).to.equal(client)
+          client.close()
+        })
+    })
+
+    it('should call the callback asynchronously', function (done) {
+      const client = new Client(helper.config)
+      let async = false
+      client.connect(error => {
+        if (error) throw error
+        expect(async).to.equal(true)
+        client.close(false)
+        done()
+      })
+      async = true
+    })
+
+    it('should return a Promise if callback without callback', function () {
+      const client = new Client(helper.config)
+      const promise = client.connect()
+      expect(promise).to.be.a(Promise)
+      return promise.then(() => client.close(false))
+    })
+  })
+
+  describe('#isConnected', function () {
     context('without tender health check', function () {
       it('returns false if the client is not connected', function () {
         var client = new Client(helper.config)
@@ -81,13 +111,6 @@ describe('Client', function () {
   })
 
   context('callbacks', function () {
-    it.skip('should raise an error when calling a command without passing a callback function', function () {
-      expect(function () { helper.client.truncate('foo', 'bar') }).to.throwException(function (e) {
-        expect(e).to.be.a(TypeError)
-        expect(e.message).to.be('"callback" argument must be a function')
-      })
-    })
-
     // Execute a client command on a client instance that has been setup to
     // trigger an error; check that the error callback occurs asynchronously,
     // i.e. only after the command function has returned.
@@ -134,7 +157,7 @@ describe('Client', function () {
     })
   })
 
-  describe('Client#captureStackTraces', function () {
+  describe('#captureStackTraces', function () {
     it('should capture stack traces that show the command being called', function (done) {
       var client = helper.client
       var key = keygen.string(helper.namespace, helper.set)()
