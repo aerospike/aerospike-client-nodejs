@@ -32,21 +32,16 @@ one of these OS releases. macOS is also supported.
 <a name="Usage"></a>
 ## Usage
 
-The following is very simple example of how to write and read a record from Aerospike.
+The following is very simple example how to create, update, read and remove a
+record using the Aerospike database.
 
 ```js
 const Aerospike = require('aerospike')
-const op = Aerospike.operations
-const lists = Aerospike.lists
-const maps = Aerospike.maps
-const Key = Aerospike.Key
-const Double = Aerospike.Double
-const GeoJSON = Aerospike.GeoJSON
 
 let config = {
   hosts: '192.168.33.10:3000'
 }
-let key = new Key('test', 'demo', 'demo')
+let key = new Aerospike.Key('test', 'demo', 'demo')
 
 Aerospike.connect(config)
   .then(client => {
@@ -54,8 +49,8 @@ Aerospike.connect(config)
       i: 123,
       s: 'hello',
       b: Buffer.from('world'),
-      d: new Double(3.1415),
-      g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+      d: new Aerospike.Double(3.1415),
+      g: new Aerospike.GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
       l: [1, 'a', {x: 'y'}],
       m: {foo: 4, bar: 7}
     }
@@ -67,10 +62,10 @@ Aerospike.connect(config)
     return client.put(key, bins, meta, policy)
       .then(() => {
         let ops = [
-          op.incr('i', 1),
-          op.read('i'),
-          lists.append('l', 'z'),
-          maps.removeByKey('m', 'bar')
+          Aerospike.operations.incr('i', 1),
+          Aerospike.operations.read('i'),
+          Aerospike.lists.append('l', 'z'),
+          Aerospike.maps.removeByKey('m', 'bar')
         ]
 
         return client.operate(key, ops)
@@ -88,11 +83,11 @@ Aerospike.connect(config)
                                  //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
                                  //      l: [ 1, 'a', { x: 'y' }, 'z' ],
                                  //      m: { foo: 4 } }
-        client.close()
       })
+      .then(() => client.close())
       .catch(error => {
-        console.error(error)
         client.close()
+        return Promise.reject(error)
       })
   })
   .catch(error => console.log(error))
