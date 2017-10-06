@@ -2,7 +2,7 @@
   "name": "aerospike",
   "version": "3.0.0",
   "description": "Aerospike Client Library",
-  "tags": [
+  "keywords": [
     "aerospike",
     "database",
     "nosql"
