@@ -956,15 +956,18 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
 
 int recordmeta_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log)
 {
-
-    setTTL( obj, &rec->ttl, log);
-    setGeneration( obj, &rec->gen, log);
+    as_v8_detail(log, "Setting record meta from JS object");
+    if (setTTL(obj, &rec->ttl, log) != AS_NODE_PARAM_OK) {
+        return AS_NODE_PARAM_ERR;
+    };
+    if (setGeneration(obj, &rec->gen, log) != AS_NODE_PARAM_OK) {;
+        return AS_NODE_PARAM_ERR;
+    }
 
     return AS_NODE_PARAM_OK;
 }
 
 
-//@TO-DO - GetIndexedProperties is to be checked
 int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, const LogInfo* log)
 {
     if (!node::Buffer::HasInstance(obj)) {
@@ -982,12 +985,15 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, cons
 
 int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 {
-    if ( obj->Has(Nan::New("ttl").ToLocalChecked())) {
+    if (obj->Has(Nan::New("ttl").ToLocalChecked())) {
+        as_v8_detail(log, "Setting ttl from JS object");
         Local<Value> v8ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
-        if ( v8ttl->IsNumber() ) {
+        if (v8ttl->IsNumber()) {
             (*ttl) = (uint32_t) v8ttl->IntegerValue();
-        }
-        else {
+            as_v8_detail(log, "TTL: %d", (*ttl));
+        } else if (v8ttl->IsNull() || v8ttl->IsUndefined()) {
+            // noop - ttl may not be specified
+        } else {
             return AS_NODE_PARAM_ERR;
         }
     }
@@ -997,13 +1003,14 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 
 int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 {
-    if ( obj->Has(Nan::New("gen").ToLocalChecked()) ) {
+    if (obj->Has(Nan::New("gen").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New("gen").ToLocalChecked());
-        if ( v8gen->IsNumber() ) {
+        if (v8gen->IsNumber()) {
             (*generation) = (uint16_t) v8gen->IntegerValue();
-            as_v8_detail(log, "Generation value %d ", (*generation));
-        }
-        else {
+            as_v8_detail(log, "Generation: %d", (*generation));
+        } else if (v8gen->IsNull() || v8gen->IsUndefined()) {
+            // noop - gen may not be specified
+        } else {
             as_v8_error(log, "Generation should be an integer");
             return AS_NODE_PARAM_ERR;
         }
@@ -1011,6 +1018,7 @@ int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 
     return AS_NODE_PARAM_OK;
 }
+
 Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;

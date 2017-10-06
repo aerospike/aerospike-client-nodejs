@@ -358,6 +358,32 @@ describe('client.put()', function () {
     })
   })
 
+  it('should fail with a parameter error if gen is invalid', function (done) {
+    const key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    const bins = recgen.record({i: valgen.integer(), s: valgen.string()})()
+    const meta = {
+      gen: 'generation1'
+    }
+
+    client.put(key, bins, meta, error => {
+      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+      done()
+    })
+  })
+
+  it('should fail with a parameter error if ttl is invalid', function (done) {
+    const key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    const bins = recgen.record({i: valgen.integer(), s: valgen.string()})()
+    const meta = {
+      ttl: 'time-to-live'
+    }
+
+    client.put(key, bins, meta, error => {
+      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+      done()
+    })
+  })
+
   it('should write null for bins with empty list and map', function (done) {
     // generators
     var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
