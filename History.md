@@ -1,3 +1,9 @@
+v3.0.2 / 2017-10-09
+===================
+
+* **Bug Fixes**
+  * Release event loop on #close even if client not connected [#225](https://github.com/aerospike/aerospike-client-nodejs/issues/225)
+
 v3.0.1 / 2017-10-06
 ===================
 
