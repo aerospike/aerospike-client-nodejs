@@ -19,6 +19,7 @@
 /* global context, expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
+const AerospikeError = Aerospike.AerospikeError
 const Client = Aerospike.Client
 const helper = require('./test_helper')
 const keygen = helper.keygen
@@ -51,6 +52,27 @@ describe('Client', function () {
       const promise = client.connect()
       expect(promise).to.be.a(Promise)
       return promise.then(() => client.close(false))
+    })
+  })
+
+  describe('#close', function () {
+    it('should be a no-op if close is called after connection error', function (done) {
+      const client = new Client({hosts: '127.0.0.1:0'})
+      client.connect(error => {
+        expect(error.message).to.match(/Failed to connect/)
+        client.close(false)
+        done()
+      })
+    })
+
+    it('should be possible to call close multiple times', function (done) {
+      const client = new Client(helper.config)
+      client.connect(error => {
+        expect(error).to.be(null)
+        client.close(false)
+        client.close(false)
+        done()
+      })
     })
   })
 
