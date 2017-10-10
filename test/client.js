@@ -19,7 +19,6 @@
 /* global context, expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
-const AerospikeError = Aerospike.AerospikeError
 const Client = Aerospike.Client
 const helper = require('./test_helper')
 const keygen = helper.keygen
