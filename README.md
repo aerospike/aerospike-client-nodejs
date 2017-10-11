@@ -25,7 +25,7 @@ one of these OS releases. macOS is also supported.
   - [C Client Resolution](#C-Client-Resolution)
     - [Force Download](#Force-Download)
     - [Custom Search Path](#Custom-Search-Path)
-- [Documentaion](#Documentation)
+- [Documentation](#Documentation)
 - [Tests](#Tests)
 - [Benchmarks](#Benchmarks)
 
