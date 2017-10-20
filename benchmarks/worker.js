@@ -71,9 +71,13 @@ var logger = new (winston.Logger)({
 // Aerospike Client
 // *****************************************************************************
 
-var config = {
+let defaultPolicy = {
+  totalTimeout: argv.timeout
+}
+let config = {
   policies: {
-    timeout: argv.timeout
+    read: defaultPolicy,
+    write: defaultPolicy
   },
   sharedMemory: {
     key: 0xA5000000,
