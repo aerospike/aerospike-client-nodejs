@@ -161,19 +161,18 @@ function recordgen (key, binSpec) {
 }
 
 function get (key, done) {
-  var timeStart = process.hrtime()
-  client.get(key, function (_error, _record, _metadata, _key) {
-    var timeEnd = process.hrtime()
-    var status = (_error && _error.code) || 0
-    done(status, timeStart, timeEnd, READ)
+  let timeStart = process.hrtime()
+  client.get(key, function (error) {
+    let status = (error && error.code) || 0
+    done(status, process.hrtime(timeStart), READ)
   })
 }
 
 function getPromise (key, done) {
-  var timeStart = process.hrtime()
+  let timeStart = process.hrtime()
   client.get(key)
-    .then(() => done(0, timeStart, process.hrtime(), READ))
-    .catch((err) => done(err.code, timeStart, process.hrtime(), READ))
+    .then(() => done(0, process.hrtime(timeStart), READ))
+    .catch((err) => done(err.code, process.hrtime(timeStart), READ))
 }
 
 // set the ttl for the write
@@ -182,19 +181,18 @@ var metadata = {
 }
 
 function put (options, done) {
-  var timeStart = process.hrtime()
-  client.put(options.key, options.record, metadata, function (_error, _record, _metadata, _key) {
-    var timeEnd = process.hrtime()
-    var status = (_error && _error.code) || 0
-    done(status, timeStart, timeEnd, WRITE)
+  let timeStart = process.hrtime()
+  client.put(options.key, options.record, metadata, function (error) {
+    let status = (error && error.code) || 0
+    done(status, process.hrtime(timeStart), WRITE)
   })
 }
 
 function putPromise (options, done) {
-  var timeStart = process.hrtime()
+  let timeStart = process.hrtime()
   client.put(options.key, options.record, metadata)
-    .then(() => done(0, timeStart, process.hrtime(), WRITE))
-    .catch((err) => done(err.code, timeStart, process.hrtime(), WRITE))
+    .then(() => done(0, process.hrtime(timeStart), WRITE))
+    .catch((err) => done(err.code, process.hrtime(timeStart), WRITE))
 }
 
 // Structure to store per second statistics.
@@ -215,8 +213,8 @@ function run (options) {
   var readOps = options.rops
   var writeOps = options.wops
 
-  function done (opStatus, opTimeStart, opTimeEnd, opType) {
-    operations[completed] = [opStatus, opTimeStart, opTimeEnd]
+  function done (opStatus, elapsed, opType) {
+    operations[completed] = [opStatus, elapsed]
     intervalData[opType][TPS]++
     if (opStatus === status.ERR_TIMEOUT) {
       intervalData[opType][TIMEOUT]++
