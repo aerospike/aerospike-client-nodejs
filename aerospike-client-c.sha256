@@ -1,8 +1,8 @@
-100890b38955af0cb9f3e9542b3b0d872868fa539bfd17c400ed44aaca7d775f  aerospike-client-c-libuv-devel-4.2.0-1.el6.x86_64.rpm
-6a33b15b948894f22b5d94682981eaa231d2acde46b2dfb7df45138a6e6e333f  aerospike-client-c-libuv-devel-4.2.0-1.el7.x86_64.rpm
-5239e288cff411c869dbf82d86900779ee71fc264d1798f0524369484a72954a  aerospike-client-c-libuv-devel-4.2.0.debian7.x86_64.deb
-1e575b6bddb5919441176780604e9f1fd98fb521a2c61e7aca9c4b9afb1307bf  aerospike-client-c-libuv-devel-4.2.0.debian8.x86_64.deb
-9689d48b39f7f341ccc88f8b39c947967486ca9ff05d2d5d4a8a63346ca71ad3  aerospike-client-c-libuv-devel-4.2.0.pkg
-f782020242aed97c79e163c85e19d4b4ef1076700fe054ec959db4697a603747  aerospike-client-c-libuv-devel-4.2.0.ubuntu12.04.x86_64.deb
-88c02e9eb7108afc2ea43c10f4940ba8c0f24a3537a8d3ce02bdd00a4625b21e  aerospike-client-c-libuv-devel-4.2.0.ubuntu14.04.x86_64.deb
-17d4c326f46b326bb56eea0e8c728e81a51952988b3da7e1cba1a61224b012fb  aerospike-client-c-libuv-devel-4.2.0.ubuntu16.04.x86_64.deb
+06b3b5d6049db6721d6bfbd97eb033e0a2db9a04e9616082a37d3644d890a43c  aerospike-client-c-libuv-devel-4.2.1-1.el6.x86_64.rpm
+1d93a69799f62dc3d5441f57b8c07c6a1a1ae1426db3d72e452b8750e58077cd  aerospike-client-c-libuv-devel-4.2.1-1.el7.x86_64.rpm
+86dc5e78a9f0bf09535dd4a838e2b22b094b3c23989b16576471ef45fe634cb9  aerospike-client-c-libuv-devel-4.2.1.debian7.x86_64.deb
+ce827cd5a15af2e74ec3b16b685a8b4605d359d99d7ad39d5433d9ef10e452ef  aerospike-client-c-libuv-devel-4.2.1.debian8.x86_64.deb
+46d737a7300f9be28c20aa8f4479549061863d31f80dc92e7e6185e607198b4c  aerospike-client-c-libuv-devel-4.2.1.pkg
+4b48cd35e9db67e287ce2e8a06fd27fa8f40fd75b8e29081747c6424879b650a  aerospike-client-c-libuv-devel-4.2.1.ubuntu12.04.x86_64.deb
+30911f74b92bcab61a7969e47dfd77661e3aeb289ae8197441c8da07628f7295  aerospike-client-c-libuv-devel-4.2.1.ubuntu14.04.x86_64.deb
+47e496930114d86b9d9f4c7c58ea3457c769333ad986b606439b1af1f69c0638  aerospike-client-c-libuv-devel-4.2.1.ubuntu16.04.x86_64.deb
