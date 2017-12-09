@@ -1,8 +1,9 @@
-06b3b5d6049db6721d6bfbd97eb033e0a2db9a04e9616082a37d3644d890a43c  aerospike-client-c-libuv-devel-4.2.1-1.el6.x86_64.rpm
-1d93a69799f62dc3d5441f57b8c07c6a1a1ae1426db3d72e452b8750e58077cd  aerospike-client-c-libuv-devel-4.2.1-1.el7.x86_64.rpm
-86dc5e78a9f0bf09535dd4a838e2b22b094b3c23989b16576471ef45fe634cb9  aerospike-client-c-libuv-devel-4.2.1.debian7.x86_64.deb
-ce827cd5a15af2e74ec3b16b685a8b4605d359d99d7ad39d5433d9ef10e452ef  aerospike-client-c-libuv-devel-4.2.1.debian8.x86_64.deb
-46d737a7300f9be28c20aa8f4479549061863d31f80dc92e7e6185e607198b4c  aerospike-client-c-libuv-devel-4.2.1.pkg
-4b48cd35e9db67e287ce2e8a06fd27fa8f40fd75b8e29081747c6424879b650a  aerospike-client-c-libuv-devel-4.2.1.ubuntu12.04.x86_64.deb
-30911f74b92bcab61a7969e47dfd77661e3aeb289ae8197441c8da07628f7295  aerospike-client-c-libuv-devel-4.2.1.ubuntu14.04.x86_64.deb
-47e496930114d86b9d9f4c7c58ea3457c769333ad986b606439b1af1f69c0638  aerospike-client-c-libuv-devel-4.2.1.ubuntu16.04.x86_64.deb
+7e61ebf501110b5b46dd97484955246f3ab88f467f46a7cd32f459791de9bbfe  aerospike-client-c-libuv-devel-4.3.0-1.el6.x86_64.rpm
+e5f7d25a308d68381049e4f71569b3a836ea05055a91284abeebf2a4cd1cc833  aerospike-client-c-libuv-devel-4.3.0-1.el7.x86_64.rpm
+d577e59fca08260c04f673df2ae4fdab85c56c28e6667f2e105a49460d650151  aerospike-client-c-libuv-devel-4.3.0.debian7.x86_64.deb
+a1074f2f42c7f80dd7fcef8fa085d7177dfd6fe7c1afb44889d446cd2dbff068  aerospike-client-c-libuv-devel-4.3.0.debian8.x86_64.deb
+921b6a4be73ccb19fd93288ac1e9542a92521d2999e1e84436cc2c911995789b  aerospike-client-c-libuv-devel-4.3.0.debian9.x86_64.deb
+5ee8b0e4b967f7b6ec1c8e7fb43524a335ff9b1416c565c316d49667ba861bec  aerospike-client-c-libuv-devel-4.3.0.pkg
+f8b9678aa0f096b8d740967844cdc763264e4dcdb4b22412660a2b19c6cd98c1  aerospike-client-c-libuv-devel-4.3.0.ubuntu12.04.x86_64.deb
+681eab3e143110e3d29b88992ea060cdae6c820fd54996bc9035784007ffd9b0  aerospike-client-c-libuv-devel-4.3.0.ubuntu14.04.x86_64.deb
+da8d91dfb7f1661725264ce8f12b291c647d41e22cc41951401358bc1daaf732  aerospike-client-c-libuv-devel-4.3.0.ubuntu16.04.x86_64.deb
