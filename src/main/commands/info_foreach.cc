@@ -76,7 +76,7 @@ bool aerospike_info_cluster_callback(const as_error* error, const as_node* node,
 	as_vector* results = data->info_results;
 	node_info_result result;
 
-	if (node->name != NULL) {
+	if (strlen(node->name) > 0) {
 		as_v8_debug(log, "Response from node %s", node->name);
 		strncpy(result.node, node->name, AS_NODE_NAME_MAX_SIZE);
 	} else {
