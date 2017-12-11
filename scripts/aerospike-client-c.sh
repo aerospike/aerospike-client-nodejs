@@ -52,15 +52,14 @@ has_cmd() {
 
 verify_checksum() {
   artifact=$1
-  dir=$2
-  checksums=$3
-  binary=${dir}/${artifact}
+  checksums=$2
+  echo grep ${artifact} ${checksums}
   expected=$(grep ${artifact} ${checksums} | cut -d" " -f1)
 
   if has_cmd sha256sum; then
-    actual=$(sha256sum $binary | cut -d" " -f1)
+    actual=$(sha256sum $artifact | cut -d" " -f1)
   elif has_cmd openssl; then
-    actual=$(openssl dgst -sha256 $binary | cut -d" " -f2)
+    actual=$(openssl dgst -sha256 $artifact | cut -d" " -f2)
   else
     echo "error: Not able to verify download. Either 'sha256sum' or 'openssl' are required."
     exit 1
@@ -79,22 +78,18 @@ verify_checksum() {
 download() {
   artifact=$1
   version=$2
-  dest_dir=$3
-  dest="${dest_dir}/${artifact}"
-
-  mkdir -p ${dest_dir}
 
   url="https://artifacts.aerospike.com/aerospike-client-c/${version}/${artifact}"
-  printf "info: downloading '%s' to '%s'\n" "${url}" "${dest}"
+  printf "info: downloading '%s' to '%s'\n" "${url}" "${artifact}"
 
   if has_cmd curl; then
-    curl -L ${url} > ${dest}
+    curl -L ${url} > ${artifact}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${url}'"
       exit 1
     fi
   elif has_cmd wget; then
-    wget -O ${dest} ${url}
+    wget -O ${artifact} ${url}
     if [ $? != 0 ]; then
       echo "error: Unable to download package from '${url}'"
       exit 1
@@ -138,8 +133,13 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   # DETECT OPERATING ENVIRONMENT
   ##############################################################################
 
+  BASE="aerospike-client-c"
+  FLAVOR="${AEROSPIKE_C_FLAVOR:+-$AEROSPIKE_C_FLAVOR}"
+  BUILD="-devel"
+  VERSION=${AEROSPIKE_C_VERSION}
+  PLATFORM="x86_64"
+  FORMAT="tgz"
   PKG_VERSION=${AEROSPIKE_C_VERSION}
-  PKG_BUILD="${AEROSPIKE_C_FLAVOR:+-$AEROSPIKE_C_FLAVOR}-devel"
 
   sysname=$(uname | tr '[:upper:]' '[:lower:]')
 
@@ -149,38 +149,36 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # LINUX
     ############################################################################
     "linux" )
-      PKG_DIST=$($SCRIPT_DIR/os_version)
+      DISTRO=$($SCRIPT_DIR/os_version)
       if [ $? -ne 0 ]; then
-        printf "%s\n" "$PKG_DIST" >&2
+        printf "%s\n" "$OS_VERSION" >&2
         exit 1
       fi
 
-      case $PKG_DIST in
+      case $OS_VERSION in
         "el"* )
           PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
-          PKG_SUFFIX="${PKG_DIST}.x86_64.rpm"
-          PKG_TYPE="rpm"
+          PKG_FORMAT="rpm"
           ;;
         "debian"* )
-          PKG_SUFFIX="${PKG_DIST}.x86_64.deb"
-          PKG_TYPE="deb"
+          PKG_FORMAT="deb"
           ;;
         "ubuntu12" )
-          PKG_SUFFIX="ubuntu12.04.x86_64.deb"
-          PKG_TYPE="deb"
+          DISTRO="ubuntu12.04"
+          PKG_FORMAT="deb"
           ;;
         "ubuntu14" )
-          PKG_SUFFIX="ubuntu14.04.x86_64.deb"
-          PKG_TYPE="deb"
+          DISTRO="ubuntu14.04"
+          PKG_FORMAT="deb"
           ;;
         "ubuntu"* )
-          PKG_SUFFIX="ubuntu16.04.x86_64.deb"
-          PKG_TYPE="deb"
+          DISTRO="ubuntu16.04"
+          PKG_FORMAT="deb"
           ;;
         "ami"* )
+          DISTRO="el6"
           PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
-          PKG_SUFFIX="el6.x86_64.rpm"
-          PKG_TYPE="rpm"
+          PKG_FORMAT="rpm"
           ;;
         * )
           printf "error: Linux distribution not supported: '%s'\n" "$PKG_DIST" >&2
@@ -188,8 +186,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           ;;
       esac
 
-      PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.${PKG_SUFFIX}"
-
+      ARTIFACT="${BASE}${FLAVOR}-${AEROSPIKE_C_VERSION}.${DISTRO}.${PLATFORM}.${FORMAT}"
+      PACKAGE="${BASE}${FLAVOR}${BUILD}-${PKG_VERSION}.${DISTRO}.${PLATFORM}.${PKG_FORMAT}"
       LIB_PATH=${AEROSPIKE}/package/usr
       ;;
 
@@ -197,8 +195,11 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     # MAC OS X
     ############################################################################
     "darwin" )
-      PKG_ARTIFACT="aerospike-client-c${PKG_BUILD}-${PKG_VERSION}.pkg"
-      PKG_TYPE="pkg"
+      DISTRO="mac"
+      PKG_FORMAT="pkg"
+
+      ARTIFACT="${BASE}${FLAVOR}-${AEROSPIKE_C_VERSION}.${DISTRO}.${PLATFORM}.${FORMAT}"
+      PACKAGE="${BASE}${FLAVOR}${BUILD}-${PKG_VERSION}.${PKG_FORMAT}"
       LIB_PATH=${AEROSPIKE}/package/usr/local
       ;;
 
@@ -211,6 +212,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       ;;
 
   esac
+
+
 
   ##############################################################################
   # DOWNLOAD and extract the package, if it does not exist.
@@ -226,38 +229,49 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
   else
 
     ##############################################################################
-    # DOWNLOAD TGZ
+    # DOWNLOAD CLIENT ARTIFACT & EXTRACT DEVEL PACAKGE
     ##############################################################################
 
-    if [ -f ${AEROSPIKE}/package/${PKG_ARTIFACT} ]; then
-      printf "warning: '%s' file exists.\n" "${AEROSPIKE}/package/${PKG_ARTIFACT}"
+    mkdir -p ${DOWNLOAD_DIR}
+    cd ${DOWNLOAD_DIR}
+
+    if [ -f ${PACKAGE} ]; then
+      printf "warning: '%s' file exists.\n" "${DOWNLOAD_DIR}/${PACKAGE}"
       printf "warning: \n"
       printf "warning: We will be using this package, rather than downloading a new package.\n"
       printf "warning: If you would like to download a new package please remove\n"
       printf "warning: the package file.\n"
     else
-      download ${PKG_ARTIFACT} ${AEROSPIKE_C_VERSION} ${DOWNLOAD_DIR}
-      verify_checksum ${PKG_ARTIFACT} ${DOWNLOAD_DIR} ${CHECKSUMS}
+      if [ -f ${ARTIFACT} ]; then
+        printf "warning: '%s' file exists.\n" "${DOWNLOAD_DIR}/${ARTIFACT}"
+        printf "warning: \n"
+        printf "warning: We will be using this package, rather than downloading a new package.\n"
+        printf "warning: If you would like to download a new package please remove\n"
+        printf "warning: the package file.\n"
+      else
+        download ${ARTIFACT} ${AEROSPIKE_C_VERSION} ${DOWNLOAD_DIR}
+        verify_checksum ${ARTIFACT} ${CHECKSUMS}
+      fi
+
+      printf "info: extracting devel package from '%s'\n" ${ARTIFACT}
+      tar -xz --strip-components=1 -f ${ARTIFACT} "*/${PACKAGE}"
     fi
 
     ##############################################################################
     # EXTRACT FILES FROM DEVEL INSTALLER
     ##############################################################################
 
-    # let's go into the directory
-    cd ${AEROSPIKE}/package
-
     # Extract the contents of the `devel` installer package into `aerospike-client`
-    printf "info: extracting files from '%s'\n" ${PKG_ARTIFACT}
-    case ${PKG_TYPE} in
+    printf "info: extracting files from '%s'\n" ${PACKAGE}
+    case ${PKG_FORMAT} in
       "rpm" )
-        rpm2cpio ${PKG_ARTIFACT} | cpio -idmu --no-absolute-filenames --quiet
+        rpm2cpio ${PACKAGE} | cpio -idmu --no-absolute-filenames --quiet
         ;;
       "deb" )
-        dpkg -x ${PKG_ARTIFACT} .
+        dpkg -x ${PACKAGE} .
         ;;
       "pkg" )
-        xar -xf ${PKG_ARTIFACT} Payload
+        xar -xf ${PACKAGE} Payload
         cpio -idmu -I Payload --quiet
         rm Payload
         ;;
