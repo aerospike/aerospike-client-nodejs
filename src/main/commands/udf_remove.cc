@@ -159,13 +159,11 @@ static void respond(uv_work_t * req, int status)
     as_error *  err     = &data->err;
     LogInfo * log       = data->log;
     as_v8_debug(log, "UDF register operation : response is");
-    // AS_DEBUG(log, ERROR, err);
 
     Local<Value> argv[1];
     // Build the arguments array for the callback
     if (data->param_err == 0) {
         argv[0] = error_to_jsobject(err, log);
-        // AS_DEBUG(log, _KEY,  key);
     }
     else {
         err->func = NULL;
