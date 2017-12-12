@@ -14,16 +14,16 @@
  * limitations under the License.
  ******************************************************************************/
 
+extern "C" {
+#include <aerospike/as_event.h>
+#include <aerospike/as_log.h>
+#include <aerospike/as_async_proto.h>
+}
+
 #include "client.h"
 #include "enums.h"
 #include "operations.h"
 #include "log.h"
-
-extern "C" {
-	#include <aerospike/as_event.h>
-	#include <aerospike/as_log.h>
-	#include <aerospike/as_async_proto.h>
-}
 
 
 #define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
@@ -78,25 +78,25 @@ NAN_METHOD(client)
 void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
 	AerospikeClient::Init();
-	export("client",					Nan::New<FunctionTemplate>(client)->GetFunction());
-	export("enable_as_logging",			Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
-	export("get_cluster_count",			Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
-	export("register_as_event_loop",	Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
-	export("release_as_event_loop",		Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
+	export("client", Nan::New<FunctionTemplate>(client)->GetFunction());
+	export("enable_as_logging", Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
+	export("get_cluster_count", Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
+	export("register_as_event_loop", Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
+	export("release_as_event_loop", Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
 
 	// enumerations
-	export("indexDataType",				indexDataType());
-	export("indexType",					indexType());
-	export("jobStatus",					jobStatus());
-	export("language",					languages());
-	export("maps",						map_enum_values());
-	export("predicates",				predicates());
-	export("scanPriority",				scanPriority());
-	export("log",						log());
-	export("operations",				opcode_values());
-	export("policy",					policy());
-	export("status",					status());
-	export("ttl",						ttl_enum_values());
+	export("indexDataType", indexDataType());
+	export("indexType", indexType());
+	export("jobStatus", jobStatus());
+	export("language", languages());
+	export("maps", map_enum_values());
+	export("predicates", predicates());
+	export("scanPriority", scanPriority());
+	export("log", log());
+	export("operations", opcode_values());
+	export("policy", policy());
+	export("status", status());
+	export("ttl", ttl_enum_values());
 }
 
 NODE_MODULE(aerospike, Aerospike)

@@ -15,7 +15,7 @@
  ******************************************************************************/
 
 #include <node.h>
-#include "enums.h"
+#include <nan.h>
 
 using namespace v8;
 
@@ -23,13 +23,13 @@ using namespace v8;
 
 Local<Object> log()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "OFF",    -1);
-    set(obj, "ERROR",  0);
-    set(obj, "WARN",   1);
-    set(obj, "INFO",   2);
-    set(obj, "DEBUG",  3);
-    set(obj, "DETAIL", 4);
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "OFF",    -1);
+	set(obj, "ERROR",   0);
+	set(obj, "WARN",    1);
+	set(obj, "INFO",    2);
+	set(obj, "DEBUG",   3);
+	set(obj, "DETAIL",  4);
+	return scope.Escape(obj);
 }

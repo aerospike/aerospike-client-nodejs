@@ -14,12 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/as_map_operations.h>
-}
-
-#include <nan.h>
 #include <node.h>
+#include <nan.h>
+
+extern "C" {
+#include <aerospike/as_map_operations.h>
+}
 
 using namespace v8;
 

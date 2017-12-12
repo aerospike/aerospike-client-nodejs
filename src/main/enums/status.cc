@@ -14,9 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <nan.h>
 #include <node.h>
-#include "enums.h"
+
+extern "C" {
 #include <aerospike/as_status.h>
+}
 
 using namespace v8;
 

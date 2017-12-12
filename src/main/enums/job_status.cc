@@ -15,8 +15,11 @@
  ******************************************************************************/
 
 #include <node.h>
-#include "enums.h"
+#include <nan.h>
+
+extern "C" {
 #include <aerospike/as_job.h>
+}
 
 using namespace v8;
 
@@ -24,10 +27,10 @@ using namespace v8;
 
 Local<Object> jobStatus()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "UNDEF",    AS_JOB_STATUS_UNDEF);
-    set(obj, "INPROGRESS",     AS_JOB_STATUS_INPROGRESS);
-    set(obj, "COMPLETED",    AS_JOB_STATUS_COMPLETED);
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "UNDEF", AS_JOB_STATUS_UNDEF);
+	set(obj, "INPROGRESS", AS_JOB_STATUS_INPROGRESS);
+	set(obj, "COMPLETED", AS_JOB_STATUS_COMPLETED);
+	return scope.Escape(obj);
 }
