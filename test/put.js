@@ -456,6 +456,37 @@ describe('client.put()', function () {
     })
   })
 
+  context('exists policy', function () {
+    context('policy.exists.UPDATE', function () {
+      it('does not create a key that does not exist yet', function () {
+        let key = keygen.integer(helper.namespace, helper.set)()
+        let policy = new Aerospike.policy.WritePolicy({
+          exists: Aerospike.policy.exists.UPDATE
+        })
+
+        return client.put(key, {i: 49}, {}, policy)
+          .catch(error => expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
+          .then(() => client.exists(key))
+          .then(exists => expect(exists).to.be(false))
+      })
+    })
+
+    context('policy.exists.CREATE', function () {
+      it('does not update a record if it already exists', function () {
+        let key = keygen.integer(helper.namespace, helper.set)()
+        let policy = new Aerospike.policy.WritePolicy({
+          exists: Aerospike.policy.exists.CREATE
+        })
+
+        return client.put(key, {i: 49}, {}, policy)
+          .then(() => client.put(key, {i: 50}, {}, policy))
+          .catch(error => expect(error.code).to.be(status.ERR_RECORD_EXISTS))
+          .then(() => client.get(key))
+          .then(record => expect(record.bins.i).to.be(49))
+      })
+    })
+  })
+
   context('gen policy', function () {
     it('updates record if generation matches', function () {
       let key = keygen.integer(helper.namespace, helper.set)()
