@@ -17,8 +17,7 @@
 var Table = require('cli-table')
 
 const OPERATION_STATUS = 0
-const OPERATION_TIME_START = 1
-const OPERATION_TIME_END = 2
+const OPERATION_TIME_DIFF = 1
 
 // histograms
 // 1. For status code of each operation.
@@ -69,11 +68,8 @@ function sum (l, r) {
   return l + r
 }
 
-function duration (start, end) {
-  var s = (end[0] - start[0]) * 1000000000
-  var ns = s + end[1] - start[1]
-  var ms = ns / 1000000
-  return ms
+function duration (time) {
+  return (time[0] * 1000) + (time[1] / 1000000)
 }
 
 function parseTimeToSecs (time) {
@@ -98,27 +94,28 @@ function parseTimeToSecs (time) {
 }
 
 function timeHistogram (operations) {
-  operations.map(function (op) {
-    return duration(op[OPERATION_TIME_START], op[OPERATION_TIME_END])
-  }).forEach(function (dur) {
-    var d = Math.floor(dur)
-    if (d > 32) {
-      timeHist['> 32']++
-    }
-    if (d > 16) {
-      timeHist['> 16']++
-    } else if (d > 8) {
-      timeHist['> 8']++
-    } else if (d > 4) {
-      timeHist['> 4']++
-    } else if (d > 2) {
-      timeHist['> 2']++
-    } else if (d > 1) {
-      timeHist['> 1']++
-    } else {
-      timeHist['<= 1']++
-    }
-  })
+  operations
+    .map(op => {
+      let elapsed = op[OPERATION_TIME_DIFF]
+      return Math.floor(duration(elapsed))
+    })
+    .forEach(d => {
+      if (d > 32) {
+        timeHist['> 32']++
+      } else if (d > 16) {
+        timeHist['> 16']++
+      } else if (d > 8) {
+        timeHist['> 8']++
+      } else if (d > 4) {
+        timeHist['> 4']++
+      } else if (d > 2) {
+        timeHist['> 2']++
+      } else if (d > 1) {
+        timeHist['> 1']++
+      } else {
+        timeHist['<= 1']++
+      }
+    })
 }
 
 function numberFormat (v, precision) {
@@ -257,8 +254,8 @@ function start () {
 }
 
 function stop () {
-  var endTime = process.hrtime()
-  totalDuration = duration(startTime, endTime)
+  let elapsed = process.hrtime(startTime)
+  totalDuration = duration(elapsed)
 }
 
 function iteration (operations) {
