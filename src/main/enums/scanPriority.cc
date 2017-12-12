@@ -14,9 +14,12 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <nan.h>
 #include <node.h>
-#include "enums.h"
+
+extern "C" {
 #include <aerospike/as_scan.h>
+}
 
 using namespace v8;
 
@@ -24,11 +27,11 @@ using namespace v8;
 
 Local<Object> scanPriority()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "AUTO",   AS_SCAN_PRIORITY_AUTO );
-    set(obj, "LOW",    AS_SCAN_PRIORITY_LOW );
-    set(obj, "MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
-    set(obj, "HIGH",   AS_SCAN_PRIORITY_HIGH );
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "AUTO", AS_SCAN_PRIORITY_AUTO );
+	set(obj, "LOW", AS_SCAN_PRIORITY_LOW );
+	set(obj, "MEDIUM", AS_SCAN_PRIORITY_MEDIUM );
+	set(obj, "HIGH", AS_SCAN_PRIORITY_HIGH );
+	return scope.Escape(obj);
 }

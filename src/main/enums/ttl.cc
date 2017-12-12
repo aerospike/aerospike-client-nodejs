@@ -14,7 +14,9 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <nan.h>
 #include <node.h>
+
 #include "enums.h"
 
 using namespace v8;
@@ -23,10 +25,10 @@ using namespace v8;
 
 Local<Object> ttl_enum_values()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "NAMESPACE_DEFAULT", TTL_NAMESPACE_DEFAULT);
-    set(obj, "NEVER_EXPIRE", TTL_NEVER_EXPIRE);
-    set(obj, "DONT_UPDATE", TTL_DONT_UPDATE);
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "NAMESPACE_DEFAULT", TTL_NAMESPACE_DEFAULT);
+	set(obj, "NEVER_EXPIRE", TTL_NEVER_EXPIRE);
+	set(obj, "DONT_UPDATE", TTL_DONT_UPDATE);
+	return scope.Escape(obj);
 }

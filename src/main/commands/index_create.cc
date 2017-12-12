@@ -211,7 +211,6 @@ static void respond(uv_work_t * req, int status)
     as_error *  err     = &data->err;
     LogInfo * log       = data->log;
     as_v8_debug(log, "SINDEX creation : response is");
-    // AS_DEBUG(log, ERROR, err);
 
     Local<Value> argv[1];
     // Build the arguments array for the callback

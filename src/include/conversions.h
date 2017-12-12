@@ -19,7 +19,6 @@
 #include <node.h>
 #include <cstdlib>
 #include <unistd.h>
-#include "client.h"
 
 extern "C" {
 	#include <aerospike/aerospike.h>
@@ -34,6 +33,8 @@ extern "C" {
 	#include <aerospike/as_list.h>
 	#include <citrusleaf/cf_queue.h>
 }
+
+#include "client.h"
 
 using namespace v8;
 

@@ -14,8 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <nan.h>
 #include <node.h>
-#include "enums.h"
 
 using namespace v8;
 

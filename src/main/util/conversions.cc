@@ -22,10 +22,8 @@
 
 #include <node.h>
 #include <node_buffer.h>
-#include <v8.h>
 #include <cstdlib>
 #include <unistd.h>
-#include <inttypes.h>
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -259,54 +257,54 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
 int log_from_jsobject(LogInfo* log, Local<Object> obj)
 {
     int rc = AS_NODE_PARAM_OK;
-    int level = log->severity;
-    int fd = log->fd;
+    as_log_level level = log->level;
+    FILE* fd = log->fd;
 
-    if ( obj->IsObject() ) {
+    if (obj->IsObject()) {
         Local<Object> v8_log = obj->ToObject();
 
         // `level` is optional
-        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("level").ToLocalChecked()) ) {
+        if (v8_log->Has(Nan::New("level").ToLocalChecked())) {
             Local<Value> v8_log_level = v8_log->Get(Nan::New("level").ToLocalChecked());
-            if ( v8_log_level->IsNumber() ){
+            if (v8_log_level->IsNumber()){
                 level = (as_log_level) v8_log_level->IntegerValue();
-            }
-            else if ( v8_log_level->IsNull() || v8_log_level->IsUndefined() ){
+            } else if (v8_log_level->IsNull() || v8_log_level->IsUndefined()){
                 // `null` and `undefined` imply the value should not change.
-            }
-            else {
+            } else {
                 // Any other value is a bad parameter
                 rc = AS_NODE_PARAM_ERR;
             }
         }
 
         // `file` is optional
-        if ( rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("file").ToLocalChecked())) {
+        if (rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("file").ToLocalChecked())) {
             Local<Value> v8_file = obj->Get(Nan::New("file").ToLocalChecked());
-            if ( v8_file->IsNumber() ) {
-                fd = v8_file->IntegerValue();
-            }
-            else if (v8_file->IsNull() || v8_file->IsUndefined()){
+            if (v8_file->IsNumber()) {
+                int fildes = (int) v8_file->IntegerValue();
+                fd = fdopen(fildes, "a");
+                if (fd == NULL) {
+                  fprintf(stderr, "Could not open file descriptor for logging: %s\n", strerror(errno));
+                  rc = AS_NODE_PARAM_ERR;
+                }
+            } else if (v8_file->IsNull() || v8_file->IsUndefined()){
                 // `null` and `undefined` imply the value should not change.
-            }
-            else {
+            } else {
                 // Any other value is a bad parameter
                 rc = AS_NODE_PARAM_ERR;
             }
         }
-    }
-    else {
+    } else {
         // The value should be an object. Otherwise it should fail.
         rc = AS_NODE_PARAM_ERR;
     }
 
     // Only if no error occurred do we set the log values.
-    if ( rc == AS_NODE_PARAM_OK ) {
-        log->severity = (as_log_level) level;
+    if (rc == AS_NODE_PARAM_OK) {
+        log->level = level;
         log->fd = fd;
     }
 
-    return AS_NODE_PARAM_OK;
+    return rc;
 }
 
 as_val* asval_clone(const as_val* val, const LogInfo* log)

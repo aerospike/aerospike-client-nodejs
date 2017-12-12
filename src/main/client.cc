@@ -23,12 +23,12 @@
 #include "log.h"
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_key.h>
-	#include <aerospike/as_config.h>
-	#include <aerospike/as_key.h>
-	#include <aerospike/as_record.h>
-	#include <aerospike/as_log.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_key.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_key.h>
+#include <aerospike/as_record.h>
+#include <aerospike/as_log.h>
 }
 
 
@@ -46,14 +46,9 @@ AerospikeClient::~AerospikeClient() {}
 
 NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
-
-	if (info[0]->IsObject()){
-		LogInfo * log = client->log;
-		if ( log_from_jsobject(log, info[0]->ToObject()) != AS_NODE_PARAM_OK ) {
-			log->severity = AS_LOG_LEVEL_INFO;
-			log->fd       = 2;
-		}
+	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
+	if (info[0]->IsObject()) {
+		log_from_jsobject(client->log, info[0]->ToObject());
 	}
 	info.GetReturnValue().Set(info.Holder());
 }
@@ -70,27 +65,17 @@ NAN_METHOD(AerospikeClient::New)
 	client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
 
 	// initialize the log to default values.
-	LogInfo * log = client->log;
-	log->fd = 2;
-	log->severity = AS_LOG_LEVEL_INFO;
+	client->log->fd = g_log_info.fd;
+	client->log->level = g_log_info.level;
 
 	// initialize the config to default values.
 	as_config config;
 	as_config_init(&config);
 
-	// Assume by default log is not set
 	if (info[0]->IsObject()) {
-		int default_log_set = 0;
-		if (info[0]->ToObject()->Has(Nan::New("log").ToLocalChecked())) {
-			Local<Value> log_val = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
-			if (log_from_jsobject(client->log, log_val->ToObject()) == AS_NODE_PARAM_OK) {
-				default_log_set = 1; // Log is passed as an argument; set the default value.
-			} else {
-				//log info is set to default level
-			}
-		}
-		if (default_log_set == 0) {
-			log->fd = 2;
+		Local<Value> v8_log_info = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
+		if (v8_log_info->IsObject()) {
+			log_from_jsobject(client->log, v8_log_info->ToObject());
 		}
 	}
 
