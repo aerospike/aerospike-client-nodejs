@@ -24,7 +24,7 @@ extern "C" {
 #include "enums.h"
 #include "operations.h"
 #include "log.h"
-
+#include "conversions.h"
 
 #define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
 
@@ -57,11 +57,21 @@ NAN_METHOD(get_cluster_count)
 	info.GetReturnValue().Set(Nan::New(count));
 }
 
-NAN_METHOD(enable_as_logging)
+NAN_METHOD(setDefaultLogging)
 {
 	Nan::HandleScope();
-	as_log_set_level(AS_LOG_LEVEL_TRACE);
-	as_log_set_callback(v8_logging_callback);
+	if (info[0]->IsObject()){
+		if (log_from_jsobject(&g_log_info, info[0]->ToObject()) == AS_NODE_PARAM_OK) {
+			if (g_log_info.level < 0) {
+				// common logging does not support log level "OFF"
+				as_log_set_level(AS_LOG_LEVEL_ERROR);
+				as_log_set_callback(NULL);
+			} else {
+				as_log_set_level(g_log_info.level);
+				as_log_set_callback(as_log_callback_fnct);
+			}
+		}
+	}
 }
 
 NAN_METHOD(client)
@@ -79,10 +89,10 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 {
 	AerospikeClient::Init();
 	export("client", Nan::New<FunctionTemplate>(client)->GetFunction());
-	export("enable_as_logging", Nan::New<FunctionTemplate>(enable_as_logging)->GetFunction());
 	export("get_cluster_count", Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
 	export("register_as_event_loop", Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
 	export("release_as_event_loop", Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
+	export("setDefaultLogging", Nan::New<FunctionTemplate>(setDefaultLogging)->GetFunction());
 
 	// enumerations
 	export("indexDataType", indexDataType());
