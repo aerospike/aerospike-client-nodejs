@@ -39,6 +39,8 @@ exports.putgen = require('./generators/put')
 const config = options.getConfig()
 exports.config = config
 
+Aerospike.setDefaultLogging(config.log)
+
 const client = Aerospike.client(config)
 exports.client = client
 
