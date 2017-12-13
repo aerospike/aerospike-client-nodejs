@@ -15,8 +15,11 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <nan.h>
+
+extern "C" {
 #include <aerospike/aerospike_index.h>
-#include "enums.h"
+}
 
 using namespace v8;
 

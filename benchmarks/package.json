@@ -1,22 +1,32 @@
 {
-  "name" : "aerospike-benchmark",
-  "version" : "v0.1.0",
-  "description" : "Aerospike Client Benchmark",
-  "tags" : [ "aerospike", "database", "nosql" ],
-  "engines" : {
-    "node" : ">=0.10"
+  "name": "aerospike-benchmark",
+  "version": "v0.1.0",
+  "description": "Aerospike Client Benchmark",
+  "keywords": [
+    "aerospike",
+    "database",
+    "nosql",
+    "benchmark"
+  ],
+  "engines": {
+    "node": ">=4"
   },
-  "os" : [ "linux" ],
-  "cpu" : [ "x64" ],
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/aerospike/aerospike-client-nodejs"
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aerospike/aerospike-client-nodejs"
   },
   "dependencies": {
     "aerospike": ">0",
     "cli-table": "0.2.0",
     "colors": "0.6.2",
-    "yargs":"1.2.1",
+    "yargs": "1.2.1",
     "winston": "0.7.2"
   },
   "main": "main.js"
