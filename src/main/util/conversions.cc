@@ -1027,14 +1027,14 @@ Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
     }
 
     obj = Nan::New<Object>();
-    if ( key->ns && strlen(key->ns) > 0 ) {
+    if (strlen(key->ns) > 0) {
         as_v8_detail(log, "key.ns = \"%s\"", key->ns);
         obj->Set(Nan::New("ns").ToLocalChecked(), Nan::New(key->ns).ToLocalChecked());
     } else {
         as_v8_debug(log, "Key namespace is NULL");
     }
 
-    if ( key->set && strlen(key->set) > 0 ) {
+    if (strlen(key->set) > 0) {
         as_v8_detail(log, "key.set = \"%s\"", key->set);
         obj->Set(Nan::New("set").ToLocalChecked(), Nan::New(key->set).ToLocalChecked());
     } else {
