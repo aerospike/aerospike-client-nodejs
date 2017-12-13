@@ -35,8 +35,6 @@ DOWNLOAD=${DOWNLOAD:=0}
 COPY_FILES=1
 DOWNLOAD_DIR=${AEROSPIKE}/package
 
-unset PKG_TYPE PKG_VERSION PKG_SUFFIX PKG_ARTIFACT
-
 source ${INIFILE}
 
 
@@ -151,11 +149,11 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
     "linux" )
       DISTRO=$($SCRIPT_DIR/os_version)
       if [ $? -ne 0 ]; then
-        printf "%s\n" "$OS_VERSION" >&2
+        printf "%s\n" "$DISTRO" >&2
         exit 1
       fi
 
-      case $OS_VERSION in
+      case $DISTRO in
         "el"* )
           PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
           PKG_FORMAT="rpm"
@@ -181,7 +179,7 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           PKG_FORMAT="rpm"
           ;;
         * )
-          printf "error: Linux distribution not supported: '%s'\n" "$PKG_DIST" >&2
+          printf "error: Linux distribution not supported: '%s'\n" "$DISTRO" >&2
           exit 1
           ;;
       esac
@@ -254,7 +252,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
       fi
 
       printf "info: extracting devel package from '%s'\n" ${ARTIFACT}
-      tar -xz --strip-components=1 -f ${ARTIFACT} "*/${PACKAGE}"
+      PKG_PATH=${ARTIFACT%.${FORMAT}}/${PACKAGE}
+      tar -xz --strip-components=1 -f ${ARTIFACT} ${PKG_PATH}
     fi
 
     ##############################################################################
