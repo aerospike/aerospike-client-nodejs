@@ -228,6 +228,23 @@ context('Operations', function () {
       })
     })
 
+    context('exists policy', function () {
+      context('policy.exists.UPDATE', function () {
+        it('does not create a key that does not exist yet', function () {
+          let notExistentKey = keygen.string(helper.namespace, helper.set, {prefix: 'test/operate/doesNotExist'})()
+          let ops = [op.write('i', 49)]
+          let policy = new Aerospike.policy.OperatePolicy({
+            exists: Aerospike.policy.exists.UPDATE
+          })
+
+          return client.operate(notExistentKey, ops, {}, policy)
+            .catch(error => expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
+            .then(() => client.exists(notExistentKey))
+            .then(exists => expect(exists).to.be(false))
+        })
+      })
+    })
+
     it('sends meta data and applies an operate policy', function () {
       let ops = [
         op.add('int', 42)

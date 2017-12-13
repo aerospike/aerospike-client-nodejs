@@ -80,6 +80,9 @@ int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, co
 	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->exists, NULL, obj, "exists", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->gen, NULL, obj, "gen", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
