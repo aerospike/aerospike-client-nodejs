@@ -1,6 +1,10 @@
 {
   "source": {
-    "include": ["lib", "lib/policies"]
+    "include": [
+      "lib",
+      "lib/policies",
+      "lib/commands"
+    ]
   },
   "plugins": ["plugins/markdown"],
   "templates": {
