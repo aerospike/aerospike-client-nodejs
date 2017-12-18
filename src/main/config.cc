@@ -68,7 +68,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 			uint16_t port = default_port;
 			if (maybe_port->IsNumber()) {
-				port = maybe_port->IntegerValue();
+				port = (uint16_t) maybe_port->IntegerValue();
 			} else if (maybe_port->IsUndefined()) {
 				// use default value
 			} else {

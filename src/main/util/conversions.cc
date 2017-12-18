@@ -244,7 +244,7 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
     if ( obj->Has(Nan::New("port").ToLocalChecked()) ){
         Local<Value> portVal = obj->Get(Nan::New("port").ToLocalChecked());
         if ( portVal->IsNumber() ) {
-            *port = portVal->IntegerValue();
+            *port = (uint16_t) portVal->IntegerValue();
         }
         else {
             return AS_NODE_PARAM_ERR;

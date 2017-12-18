@@ -77,7 +77,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	Local<Value> percent = options->Get(Nan::New("percent").ToLocalChecked());
 	TYPE_CHECK_OPT(percent, IsNumber, "percent must be a number");
 	if (percent->IsNumber()) {
-		as_scan_set_percent(scan, percent->IntegerValue());
+		as_scan_set_percent(scan, (uint8_t) percent->IntegerValue());
 	}
 
 	Local<Value> priority = options->Get(Nan::New("priority").ToLocalChecked());

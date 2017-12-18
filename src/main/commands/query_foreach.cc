@@ -26,8 +26,9 @@ extern "C" {
 	#include <aerospike/as_error.h>
 	#include <aerospike/as_policy.h>
 	#include <aerospike/as_query.h>
+	#include <aerospike/as_sleep.h>
 	#include <aerospike/as_status.h>
-	#include <citrusleaf/cf_queue.h>
+	#include <aerospike/as_queue_mt.h>
 }
 
 using namespace v8;
@@ -41,9 +42,9 @@ typedef struct AsyncData {
 	as_policy_query policy;
 	as_policy_query* p_policy;
 	as_query query;
-	cf_queue* result_q;
-	int max_q_size;
-	int signal_interval;
+	as_queue_mt* result_q;
+	uint32_t max_q_size;
+	uint32_t signal_interval;
 	uv_async_t async_handle;
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
@@ -66,10 +67,10 @@ static bool async_queue_populate(const as_val* val, AsyncData* data)
 	// Clone the value as as_val is freed up after the callback.
 	as_val* clone = asval_clone((as_val*) val, data->log);
 	if (clone != NULL) {
-		if (cf_queue_sz(data->result_q) >= data->max_q_size) {
-			sleep(1);
+		if (as_queue_mt_size(data->result_q) >= data->max_q_size) {
+			as_sleep(1000);
 		}
-		cf_queue_push(data->result_q, &clone);
+		as_queue_mt_push(data->result_q, &clone);
 		data->signal_interval++;
 		if (data->signal_interval % (data->max_q_size / 20) == 0) {
 			data->signal_interval = 0;
@@ -86,9 +87,8 @@ static void async_queue_process(AsyncData* data)
 	Nan::HandleScope scope;
 	Local<Function> cb = Nan::New<Function>(data->callback);
 	as_val* val = NULL;
-	while (data->result_q && cf_queue_sz(data->result_q) > 0) {
-		int rv = cf_queue_pop(data->result_q, &val, CF_QUEUE_FOREVER);
-		if (rv == CF_QUEUE_OK) {
+	while (data->result_q && !as_queue_mt_empty(data->result_q)) {
+		if (as_queue_mt_pop(data->result_q, &val, AS_QUEUE_FOREVER)) {
 			const int argc = 2;
 			Local<Value> argv[argc];
 			argv[0] = err_ok();
@@ -157,7 +157,7 @@ static void* prepare(ResolveArgs(info))
 	}
 
 	data->signal_interval   = 0;
-	data->result_q          = cf_queue_create(sizeof(as_val*), true);
+	data->result_q          = as_queue_mt_create(sizeof(as_val*), QUEUE_SZ);
 	data->max_q_size        = QUEUE_SZ; // TODO: make this configurable
 
 	uv_async_init(uv_default_loop(), &data->async_handle, async_callback);
@@ -213,7 +213,7 @@ static void respond(uv_work_t* req, int status)
 		argv[0] = error_to_jsobject(&data->err, log);
 	} else {
 		argv[0] = err_ok();
-		if (data->result_q && !CF_Q_EMPTY(data->result_q)) {
+		if (data->result_q && !as_queue_mt_empty(data->result_q)) {
 			async_queue_process(data);
 		}
 	}
@@ -229,7 +229,7 @@ static void respond(uv_work_t* req, int status)
 
 	data->callback.Reset();
 	if (data->result_q != NULL) {
-		cf_queue_destroy(data->result_q);
+		as_queue_mt_destroy(data->result_q);
 		data->result_q = NULL;
 	}
 	uv_close((uv_handle_t*) &data->async_handle, release_handle);

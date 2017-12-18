@@ -28,7 +28,7 @@
 
 extern "C" {
 	#include <aerospike/as_config.h>
-	#include <citrusleaf/cf_queue.h>
+	#include <aerospike/as_queue_mt.h>
 }
 
 using namespace v8;
@@ -40,20 +40,20 @@ using namespace v8;
 typedef struct EventQueue {
 	public:
 		explicit EventQueue(Local<Function> cb, LogInfo *p_log) {
-			cf_queue_init(&events, sizeof(as_cluster_event), 4, true);
+			as_queue_mt_init(&events, sizeof(as_cluster_event), 4);
 			callback.SetFunction(cb);
 			log = p_log;
 		}
 
 		void push(as_cluster_event *event) {
-			cf_queue_push(&events, event);
+			as_queue_mt_push(&events, event);
 			as_v8_debug(log, "Cluster event %d triggered by node \"%s\" (%s)",
 					event->type, event->node_name, event->node_address);
 		}
 
 		void process() {
 			as_cluster_event event;
-			while (cf_queue_pop(&events, &event, 0) != CF_QUEUE_EMPTY) {
+			while (as_queue_mt_pop(&events, &event, 0)) {
 				Nan::TryCatch try_catch;
 				Local<Value> argv[] = { convert(&event) };
 				callback.Call(1, argv);
@@ -64,7 +64,7 @@ typedef struct EventQueue {
 		}
 
 	private:
-		cf_queue events;
+		as_queue_mt events;
 		Nan::Callback callback;
 		LogInfo *log;
 

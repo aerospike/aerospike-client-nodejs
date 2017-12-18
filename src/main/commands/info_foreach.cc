@@ -246,9 +246,8 @@ static void respond(uv_work_t* req, int status)
 	}
 
 	Nan::TryCatch try_catch;
-	Local<Value> done_argv[0];
 	Local<Function> done_cb = Nan::New<Function>(data->done);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, done_argv);
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, NULL);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
