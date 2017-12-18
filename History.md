@@ -1,3 +1,17 @@
+v3.1.0 / 2017-12-18
+===================
+
+* **New Features**
+  * Logging improvements: C client logs enabled by default; log level can be controlled through new, global log settings. [PR #231](https://github.com/aerospike/aerospike-client-nodejs/pull/231)
+  * Support "exists" policy for operate command. [PR #233](https://github.com/aerospike/aerospike-client-nodejs/pull/233)
+  * Support "linearize read" policy for Strong Consistency mode. (Requires Aerospike server v4.0.)
+
+* **Updates**
+  * Add support for Node.js v9.x
+  * Update C client library to [v4.3.1](http://www.aerospike.com/download/client/c/notes.html#4.3.1). [PR #232](https://github.com/aerospike/aerospike-client-nodejs/pull/232)
+  * Update to C client's new package format.
+  * Add support for Debian 9 ("Stretch")
+
 v3.0.2 / 2017-10-09
 ===================
 
