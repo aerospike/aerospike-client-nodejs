@@ -1,3 +1,9 @@
+HEAD
+===================
+
+* **Bug Fixes**
+  * Support all data types for write operation in Client#operate [#235](https://github.com/aerospike/aerospike-client-nodejs/issues/235)
+
 v3.1.0 / 2017-12-18
 ===================
 

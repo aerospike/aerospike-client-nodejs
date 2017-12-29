@@ -780,11 +780,8 @@ bool is_double_value(Local<Value> value)
         int64_t i = value->IntegerValue();
         double d = value->NumberValue();
         return d != (double)i;
-    } else if (instanceof(value, DoubleType)) {
-        return true;
-    } else {
-        return false;
     }
+    return instanceof(value, DoubleType);
 }
 
 double double_value(Local<Value> value)
@@ -793,6 +790,17 @@ double double_value(Local<Value> value)
         value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
     }
     return (double) value->NumberValue();
+}
+
+bool is_geojson_value(Local<Value> value)
+{
+    return instanceof(value, GeoJSONType);
+}
+
+char* geojson_as_string(Local<Value> value)
+{
+	Local<Value> strval = value->ToObject()->Get(Nan::New("str").ToLocalChecked());
+	return strdup(*String::Utf8Value(strval));
 }
 
 int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
@@ -874,9 +882,9 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         if (list_from_jsarray((as_list**) value, Local<Array>::Cast(v8value), log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
-    } else if (instanceof(v8value, GeoJSONType)) {
-        Local<Value> strval = v8value->ToObject()->Get(Nan::New("str").ToLocalChecked());
-        *value = (as_val*) as_geojson_new(strdup(*String::Utf8Value(strval)), true);
+    } else if (is_geojson_value(v8value)) {
+        char* jsonstr = geojson_as_string(v8value);
+        *value = (as_val*) as_geojson_new(jsonstr, true);
     } else { // generic object - treat as map
         if (map_from_jsobject((as_map**) value, v8value->ToObject(), log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;

@@ -62,6 +62,9 @@ __err.func = __func__;
 bool is_double_value(Local<Value> value);
 double double_value(Local<Value> value);
 
+bool is_geojson_value(Local<Value> value);
+char* geojson_as_string(Local<Value> value);
+
 // Utility functions to extract property values from V8 Object instances
 int get_list_property(as_list** list, Local<Object> obj, char const* prop, const LogInfo* log);
 int get_bool_property(bool* boolp, Local<Object> obj, char const* prop, const LogInfo* log);

@@ -87,50 +87,74 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 
 int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
-	char* binName;
+	char* binName = NULL;
 	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 	as_v8_detail(log, "write operation on bin : %s", binName);
 
+	int rc = AS_NODE_PARAM_OK;
 	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
 	if (is_double_value(v8val)) {
 		double val = double_value(v8val);
 		as_v8_detail(log, "double value to be written %f", val);
-		as_operations_add_write_double(ops, binName, val);
-		if (binName != NULL) free(binName);
-		return AS_NODE_PARAM_OK;
+		if (!as_operations_add_write_double(ops, binName, val)) {
+			rc = AS_NODE_PARAM_ERR;
+		}
 	} else if (v8val->IsNumber()) {
 		int64_t val = v8val->IntegerValue();
 		as_v8_detail(log, "integer value to be written %d", val);
-		as_operations_add_write_int64(ops, binName, val);
-		if (binName != NULL) free(binName);
-		return AS_NODE_PARAM_OK;
+		if (!as_operations_add_write_int64(ops, binName, val)) {
+			rc = AS_NODE_PARAM_ERR;
+		}
 	} else if (v8val->IsString()) {
 		char* binVal = strdup(*String::Utf8Value(v8val));
 		as_v8_detail(log, "String value to be written %s", binVal);
-		as_operations_add_write_str(ops, binName, binVal);
-		if (binName != NULL) free(binName);
-		return AS_NODE_PARAM_OK;
-	} else if (v8val->IsObject()) {
-		Local<Object> binObj = v8val->ToObject();
+		if (!as_operations_add_write_strp(ops, binName, binVal, true)) {
+			rc = AS_NODE_PARAM_ERR;
+		}
+	} else if (node::Buffer::HasInstance(v8val)) {
 		int len ;
 		uint8_t* data ;
-		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
-			return AS_NODE_PARAM_ERR;
+		if ((rc = extract_blob_from_jsobject(&data, &len, v8val->ToObject(), log)) == AS_NODE_PARAM_OK) {
+			as_v8_detail(log, "Blob value to be written: %u", data);
+			if (!as_operations_add_write_rawp(ops, binName, data, len, true)) {
+				rc = AS_NODE_PARAM_ERR;
+			}
 		}
-		as_v8_detail(log, "Blob value to be written: %u", data);
-		as_operations_add_write_rawp(ops, binName, data, len, true);
-		if (binName != NULL) free(binName);
-		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsNull()) {
 		as_v8_detail(log, "Writing null value");
-		as_operations_add_write(ops, binName, (as_bin_value*) &as_nil);
-		return AS_NODE_PARAM_OK;
+		if (!as_operations_add_write(ops, binName, (as_bin_value*) &as_nil)) {
+			rc = AS_NODE_PARAM_ERR;
+		}
+	} else if (is_geojson_value(v8val)) {
+		char* jsonstr = geojson_as_string(v8val);
+		if (!as_operations_add_write_geojson_strp(ops, binName, jsonstr, true)) {
+			rc = AS_NODE_PARAM_ERR;
+		}
+	} else if (v8val->IsArray()) {
+		as_list* list;
+		if ((rc = asval_from_jsvalue((as_val**) &list, v8val, log)) == AS_NODE_PARAM_OK) {
+			as_v8_detail(log, "Writing CDT list value");
+			if (!as_operations_add_write(ops, binName, (as_bin_value*) list)) {
+				rc = AS_NODE_PARAM_ERR;
+			}
+		}
+	} else if (v8val->IsObject()) {
+		as_map* map;
+		if ((rc = asval_from_jsvalue((as_val**) &map, v8val, log)) == AS_NODE_PARAM_OK) {
+			as_v8_detail(log, "Writing CDT map value");
+			if (!as_operations_add_write(ops, binName, (as_bin_value*) map)) {
+				rc = AS_NODE_PARAM_ERR;
+			}
+		}
 	} else {
 		as_v8_debug(log, "Type error in write operation");
-		return AS_NODE_PARAM_ERR;
+		rc = AS_NODE_PARAM_ERR;
 	}
+
+	if (binName != NULL) free(binName);
+	return rc;
 }
 
 int add_read_op(as_operations* ops, Local<Object> obj, LogInfo* log)

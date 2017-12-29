@@ -20,6 +20,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const Double = Aerospike.Double
+const GeoJSON = Aerospike.GeoJSON
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
@@ -37,7 +38,11 @@ context('Operations', function () {
       string: 'abc',
       int: 123,
       double1: 1.23,
-      double2: new Double(1.0)
+      double2: new Double(1.0),
+      geo: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+      blob: Buffer.from('foo'),
+      list: [1, 2, 3],
+      map: {a: 1, b: 2, c: 3}
     }
     let policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE
@@ -55,7 +60,11 @@ context('Operations', function () {
           op.write('string', 'def'),
           op.write('int', 432),
           op.write('double1', 2.34),
-          op.write('double2', new Double(2.0))
+          op.write('double2', new Double(2.0)),
+          op.write('geo', new GeoJSON({type: 'Point', coordinates: [123.456, 1.308]})),
+          op.write('blob', Buffer.from('bar')),
+          op.write('list', [2, 3, 4]),
+          op.write('map', {d: 4, e: 5, f: 6})
         ]
 
         return client.operate(key, ops)
@@ -65,6 +74,12 @@ context('Operations', function () {
             expect(record.bins['int']).to.equal(432)
             expect(record.bins['double1']).to.equal(2.34)
             expect(record.bins['double2']).to.equal(2.0)
+            expect(new GeoJSON(record.bins['geo']).toJSON()).to.eql(
+              { type: 'Point', coordinates: [123.456, 1.308] }
+            )
+            expect(record.bins['blob'].equals(Buffer.from('bar'))).to.be.ok()
+            expect(record.bins['list']).to.eql([2, 3, 4])
+            expect(record.bins['map']).to.eql({d: 4, e: 5, f: 6})
           })
       })
 
