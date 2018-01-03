@@ -48,7 +48,7 @@ class AerospikeClient : public ObjectWrap {
 
 	public:
 		static void Init();
-		static Local<Value> NewInstance(Local<Object> config, Local<Function> eventCb);
+		static Local<Value> NewInstance(Local<Object> config);
 
 		aerospike* as;
 		LogInfo* log;
@@ -103,6 +103,7 @@ class AerospikeClient : public ObjectWrap {
 		static NAN_METHOD(ScanAsync);
 		static NAN_METHOD(SelectAsync);
 		static NAN_METHOD(SetLogLevel);
+		static NAN_METHOD(SetupEventCb);
 		static NAN_METHOD(Truncate);
 		static NAN_METHOD(UDFRemove);
 		static NAN_METHOD(UDFScan);

@@ -37,7 +37,7 @@ describe('Aerospike', function () {
         expect(client).to.be.a(Aerospike.Client)
         client.infoAny(error => {
           if (error) throw error
-          client.close()
+          client.close(false)
           done()
         })
       })

@@ -86,9 +86,6 @@ NAN_METHOD(AerospikeClient::New)
 		}
 	}
 
-	Local<Function> callback = info[1].As<Function>();
-	events_callback_init(&config, callback, client->log);
-
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
@@ -96,13 +93,31 @@ NAN_METHOD(AerospikeClient::New)
 }
 
 /**
- *  Instantiate a new 'AerospikeClient(config, eventCb)'
+ * Setup event callback for cluster events.
  */
-Local<Value> AerospikeClient::NewInstance(Local<Object> config, Local<Function> eventCb)
+NAN_METHOD(AerospikeClient::SetupEventCb)
+{
+	Nan::HandleScope scope;
+	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	Local<Function> callback;
+	if (info.Length() > 0 && info[0]->IsFunction()) {
+		callback = info[0].As<Function>();
+		events_callback_init(&client->as->config, callback, client->log);
+	} else {
+		as_v8_error(client->log, "Callback function required");
+		return Nan::ThrowError("Callback function required");
+	}
+}
+
+/**
+ *  Instantiate a new AerospikeClient.
+ */
+Local<Value> AerospikeClient::NewInstance(Local<Object> config)
 {
 	Nan::EscapableHandleScope scope;
-	const int argc = 2;
-	Local<Value> argv[argc] = { config, eventCb };
+	const int argc = 1;
+	Local<Value> argv[argc] = { config };
 	Local<Function> cons = Nan::New<Function>(constructor());
 	Nan::TryCatch try_catch;
 	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
@@ -153,6 +168,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
+	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);
 	Nan::SetPrototypeMethod(tpl, "truncate", Truncate);
 	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);

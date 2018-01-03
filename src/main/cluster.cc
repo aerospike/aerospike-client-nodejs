@@ -20,9 +20,9 @@
 #include "log.h"
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/as_async_proto.h>
-    #include <aerospike/as_cluster.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/as_async_proto.h>
+#include <aerospike/as_cluster.h>
 }
 
 using namespace v8;

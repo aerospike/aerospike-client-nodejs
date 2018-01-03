@@ -131,6 +131,27 @@ describe('Client', function () {
     })
   })
 
+  describe('Events', function () {
+    it('client should emit nodeAdded events when connecting', function (done) {
+      let client = new Client(helper.config)
+      client.once('nodeAdded', event => {
+        client.close()
+        done()
+      })
+      client.connect()
+    })
+
+    it('client should emit events on cluster state changes', function (done) {
+      let client = new Client(helper.config)
+      client.once('event', event => {
+        expect(event.name).to.be('nodeAdded')
+        client.close()
+        done()
+      })
+      client.connect()
+    })
+  })
+
   context('callbacks', function () {
     // Execute a client command on a client instance that has been setup to
     // trigger an error; check that the error callback occurs asynchronously,
