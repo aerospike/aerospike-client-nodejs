@@ -27,8 +27,9 @@
 #include "log.h"
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_info.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_info.h>
+#include <aerospike/as_node.h>
 }
 
 #define INFO_REQUEST_LEN  50
@@ -39,10 +40,10 @@ using namespace v8;
  *  TYPES
  ******************************************************************************/
 
-typedef struct node_info_result_s {
-	char* response;
-	char node[AS_NODE_NAME_MAX_SIZE];
-} node_info_result;
+typedef struct node_info_s {
+	char* info;
+	char node[AS_NODE_NAME_SIZE];
+} node_info;
 
 /**
  *  AsyncData — Data to be used in async calls.
@@ -53,14 +54,14 @@ typedef struct node_info_result_s {
  */
 typedef struct AsyncData {
 	aerospike* as;
-	int param_err;
+	bool param_err;
 	as_error err;
-	as_policy_info* policy;
+	as_policy_info policy;
+	as_policy_info* p_policy;
 	char* req;
-	as_vector* info_results;
+	as_vector* res;
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
-	Nan::Persistent<Function> done;
 } AsyncData;
 
 
@@ -68,17 +69,16 @@ typedef struct AsyncData {
  *  FUNCTIONS
  ******************************************************************************/
 
-bool aerospike_info_cluster_callback(const as_error* error, const as_node* node, const char* info_req, char* response, void* udata)
+bool aerospike_info_callback(const as_error* error, const as_node* node, const char* info_req, char* response, void* udata)
 {
-	// Fetch the AsyncData structure
-	AsyncData* data    = reinterpret_cast<AsyncData*>(udata);
-	LogInfo* log       = data->log;
-	as_vector* results = data->info_results;
-	node_info_result result;
+	AsyncData* data = reinterpret_cast<AsyncData*>(udata);
+	LogInfo* log = data->log;
+	as_vector* results = data->res;
+	node_info result;
 
 	if (strlen(node->name) > 0) {
 		as_v8_debug(log, "Response from node %s", node->name);
-		strncpy(result.node, node->name, AS_NODE_NAME_MAX_SIZE);
+		strncpy(result.node, node->name, AS_NODE_NAME_SIZE);
 	} else {
 		result.node[0] = '\0';
 		as_v8_debug(log, "No host name from cluster");
@@ -86,10 +86,10 @@ bool aerospike_info_cluster_callback(const as_error* error, const as_node* node,
 
 	if (response != NULL) {
 		as_v8_debug(log, "Response is %s", response);
-		result.response = (char*) cf_malloc(strlen(response) + 1);
-		strncpy(result.response, response, strlen(response) + 1);
+		result.info = (char*) cf_malloc(strlen(response) + 1);
+		strncpy(result.info, response, strlen(response) + 1);
 	} else {
-		result.response = NULL;
+		result.info = NULL;
 		as_v8_debug(log, "No response from cluster");
 	}
 
@@ -108,61 +108,35 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	LogInfo* log = client->log;
 
-	AsyncData* data    = new AsyncData();
-	data->as           = client->as;
-	data->param_err    = 0;
-	data->policy       = NULL;
-	data->info_results = as_vector_create(sizeof(node_info_result), 4);
-	LogInfo* log = data->log = client->log;
+	AsyncData* data = new AsyncData();
+	data->param_err = false;
+	data->as = client->as;
+	data->log = client->log;
+	data->res = as_vector_create(sizeof(node_info), 4);
+	data->callback.Reset(info[2].As<Function>());
 
 	Local<Value> maybe_request = info[0];
 	Local<Value> maybe_policy = info[1];
-	Local<Value> maybe_info_callback = info[2];
-	Local<Value> maybe_done_callback = info[3];
 
 	if (maybe_request->IsString()) {
 		data->req = (char*) malloc(INFO_REQUEST_LEN);
-		strncpy(data->req, *String::Utf8Value(maybe_request->ToString()), INFO_REQUEST_LEN);
-	} else if (maybe_request->IsNull() || maybe_request->IsUndefined()) {
-		// request string is an optional parameter - ignore if missing
-	} else {
-		as_v8_error(log, "Request should be a String");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
+		String::Utf8Value request(maybe_request->ToString());
+		strncpy(data->req, *request, INFO_REQUEST_LEN);
 	}
 
 	if (maybe_policy->IsObject()) {
-		data->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
+		if (infopolicy_from_jsobject(&data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
 			as_v8_debug(log, "policy parameter is invalid");
 			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			data->param_err = 1;
+			data->param_err = true;
+			goto Return;
 		}
-	} else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
-		// policy is an optional parameter - ignore if missing
-	} else {
-		as_v8_error(log, "Readpolicy should be an object");
-		COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-		goto Err_Return;
+		data->p_policy = &data->policy;
 	}
 
-	if (maybe_info_callback->IsFunction()) {
-		data->callback.Reset(maybe_info_callback.As<Function>());
-	} else {
-		data->callback.Reset(Nan::New<FunctionTemplate>()->GetFunction());
-	}
-
-	if (maybe_done_callback->IsFunction()) {
-		data->done.Reset(maybe_done_callback.As<Function>());
-	} else {
-		data->done.Reset(Nan::New<FunctionTemplate>()->GetFunction());
-	}
-
-	return data;
-
-Err_Return:
-	data->param_err = 1;
+Return:
 	return data;
 }
 
@@ -174,15 +148,15 @@ Err_Return:
  */
 static void execute(uv_work_t* req)
 {
-	AsyncData* data         = reinterpret_cast<AsyncData*>(req->data);
-	aerospike* as           = data->as;
-	as_error* err           = &data->err;
-	char* request           = data->req;
-	as_policy_info* policy  = data->policy;
-	LogInfo* log            = data->log;
+	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
+	LogInfo* log = data->log;
 
-	as_v8_debug(log, "info request on entire cluster");
-	aerospike_info_foreach(as, err, policy, request, aerospike_info_cluster_callback, (void*)data);
+	if (data->param_err) {
+		as_v8_debug(log, "Parameter error in info command");
+	} else {
+		as_v8_debug(log, "Sending info command \"%s\" to all cluster hosts", data->req);
+		aerospike_info_foreach(data->as, &data->err, data->p_policy, data->req, aerospike_info_callback, (void*)data);
+	}
 }
 
 /**
@@ -195,70 +169,55 @@ static void execute(uv_work_t* req)
 static void respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-
 	AsyncData* data = reinterpret_cast<AsyncData *>(req->data);
-	as_error* err   = &data->err;
-	LogInfo* log    = data->log;
+	LogInfo* log = data->log;
 
-	as_vector* results = data->info_results;
-	as_v8_debug(log, "num of responses %d", results->size);
-
-	const int argc = 3;
+	const int argc = 2;
 	Local<Value> argv[argc];
-	for (uint32_t i = 0 ; i < results->size; i++) {
-		node_info_result* result = (node_info_result*) as_vector_get(results, i);
+	if (data->err.code != AEROSPIKE_OK) {
+		argv[0] = error_to_jsobject(&data->err, log);
+		argv[1] = Nan::Null();
+	} else {
+		as_vector* results = data->res;
+		Local<Array> v8Results = Nan::New<Array>(results->size);
+		as_v8_debug(log, "num of responses %d", results->size);
+		for (uint32_t i = 0 ; i < results->size; i++) {
+			node_info* result = (node_info*) as_vector_get(results, i);
+			const char* info = result->info;
+			const char* node = result->node;
 
-		if (data->param_err == 0) {
-			const char* node_name = result->node;
-			const char* response = result->response;
+			Local<Object> v8Result = Nan::New<Object>();
+			Local<Object> v8Node = Nan::New<Object>();
 
-			argv[0] = error_to_jsobject(err, log);
-
-			if (response != NULL && strlen(response) > 0) {
-				as_v8_debug(log, "Response is %s", response);
-				argv[1] = Nan::New(response).ToLocalChecked();
-				cf_free((void*) response);
-			} else {
-				argv[1] = Nan::Null();
+			if (node != NULL && strlen(node) > 0) {
+				as_v8_debug(log, "Node name: %s", node);
+				v8Node->Set(Nan::New("node_id").ToLocalChecked(), Nan::New(node).ToLocalChecked());
 			}
 
-			if( node_name != NULL && strlen(node_name) > 0 ) {
-				Local<Object> node = Nan::New<Object>();
-				as_v8_debug(log, "The host is %s", node_name);
-				node->Set(Nan::New("node_id").ToLocalChecked(), Nan::New(node_name).ToLocalChecked());
-				argv[2] = (node);
-			} else {
-				argv[2] = Nan::Null();
+			v8Result->Set(Nan::New("host").ToLocalChecked(), v8Node);
+
+			if (info != NULL && strlen(info) > 0) {
+				as_v8_debug(log, "Info response: %s", info);
+				v8Result->Set(Nan::New("info").ToLocalChecked(), Nan::New(info).ToLocalChecked());
+				cf_free((void*) info);
 			}
-		} else {
-			err->func = NULL;
-			argv[0] = error_to_jsobject(err, log);
-			argv[1] = Nan::Null();
-			argv[2] = Nan::Null();
+
+			v8Results->Set(i, v8Result);
 		}
 
-		Nan::TryCatch try_catch;
-		Local<Function> cb = Nan::New<Function>(data->callback);
-		Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-		if (try_catch.HasCaught()) {
-			Nan::FatalException(try_catch);
-		}
+		argv[0] = err_ok();
+		argv[1] = v8Results;
 	}
 
 	Nan::TryCatch try_catch;
-	Local<Function> done_cb = Nan::New<Function>(data->done);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), done_cb, 0, NULL);
+	Local<Function> cb = Nan::New<Function>(data->callback);
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
 
-	data->done.Reset();
+	as_vector_destroy(data->res);
 	data->callback.Reset();
-
-	if (data->policy != NULL) {
-		cf_free(data->policy);
-	}
-	as_vector_destroy(results);
 	delete data;
 	delete req;
 }
@@ -267,10 +226,11 @@ static void respond(uv_work_t* req, int status)
  *  OPERATION
  ******************************************************************************/
 
-/**
- *  The 'info()' Operation
- */
 NAN_METHOD(AerospikeClient::InfoForeach)
 {
+	TYPE_CHECK_OPT(info[0], IsString, "request must be a string");
+	TYPE_CHECK_OPT(info[1], IsObject, "policy must be an object");
+	TYPE_CHECK_REQ(info[2], IsFunction, "callback must be a function");
+
 	async_invoke(info, prepare, execute, respond);
 }
