@@ -40,10 +40,10 @@ Local<Object> err_ok()
  *  Setup an asynchronous invocation of a function using uv worker threads.
  */
 Local<Value> async_invoke(
-    ResolveArgs(args),
-    void *  (* prepare)(ResolveArgs(args)),
-    void    (* execute)(uv_work_t * req),
-    void    (* respond)(uv_work_t * req, int status)
+    const Nan::FunctionCallbackInfo<v8::Value> &args,
+    void* (* prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
+    void  (* execute)(uv_work_t* req),
+    void  (* respond)(uv_work_t* req, int status)
     )
 {
     // Create an async work token, and add AsyncData to it.

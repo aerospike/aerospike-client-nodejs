@@ -51,7 +51,7 @@ static bool query_foreach_callback(const as_val* val, void* udata) {
 	return false;
 }
 
-static void* prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;

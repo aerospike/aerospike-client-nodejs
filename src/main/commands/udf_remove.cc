@@ -64,7 +64,7 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
     Nan::HandleScope scope;
 

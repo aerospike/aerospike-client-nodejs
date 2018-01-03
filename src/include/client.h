@@ -27,16 +27,6 @@ extern "C" {
 	#include <aerospike/aerospike.h>
 }
 
-#if NODE_MODULE_VERSION > 0x000B
-#  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
-#  define ResolveAsyncCallbackArgs uv_async_t* handle
-#  define V8_RETURN
-#else
-#  define ResolveArgs(args) const Nan::FunctionCallbackInfo<v8::Value>& args
-#  define ResolveAsyncCallbackArgs uv_async_t* handle, int status
-#  define V8_RETURN return
-#endif
-
 #define TYPE_CHECK_REQ(val, type, msg) if (!val->type()) return Nan::ThrowTypeError(msg)
 #define TYPE_CHECK_OPT(val, type, msg) if (!(val->IsNull() || val->IsUndefined() || val->type())) return Nan::ThrowTypeError(msg)
 

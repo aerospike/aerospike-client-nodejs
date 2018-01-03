@@ -71,7 +71,7 @@ typedef struct AsyncData {
  *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void* prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
@@ -128,7 +128,7 @@ static void execute(uv_work_t* req)
 	LogInfo* log = data->log;
 
 	if (data->param_err) {
-		as_v8_debug(log, "Parameter error in the job info options");
+		as_v8_debug(log, "Parameter error in info command");
 	} else {
 		if (data->addr == NULL) {
 			as_v8_debug(log, "Sending info command \"%s\" to random cluster host", data->req);

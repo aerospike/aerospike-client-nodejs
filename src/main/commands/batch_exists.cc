@@ -94,7 +94,7 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
  *      This should only keep references to V8 or V8 structures for use in
  *      `respond()`, because it is unsafe for use in `execute()`.
  */
-static void * prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
     Nan::HandleScope scope;
     AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());

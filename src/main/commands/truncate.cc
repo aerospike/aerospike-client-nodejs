@@ -40,7 +40,7 @@ typedef struct AsyncData {
 } AsyncData;
 
 
-static void* prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;

@@ -99,7 +99,7 @@ static void async_queue_process(AsyncData* data)
 	}
 }
 
-static void async_callback(ResolveAsyncCallbackArgs)
+static void async_callback(uv_async_t* handle)
 {
 	AsyncData* data = reinterpret_cast<AsyncData*>(handle->data);
 	if (data->result_q == NULL) {
@@ -131,7 +131,7 @@ static void release_handle(uv_handle_t* async_handle)
  *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
  */
-static void* prepare(ResolveArgs(info))
+static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
 
