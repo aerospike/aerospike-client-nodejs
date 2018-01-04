@@ -5,6 +5,9 @@ HEAD
   * Support all data types for write operation in Client#operate [#235](https://github.com/aerospike/aerospike-client-nodejs/issues/235)
   * Only setup cluster events callback on Client#connect [#237](https://github.com/aerospike/aerospike-client-nodejs/issues/237)
 
+* **Updates**
+  * Update C client library to [v4.3.2](http://www.aerospike.com/download/client/c/notes.html#4.3.2).
+
 v3.1.0 / 2017-12-18
 ===================
 
