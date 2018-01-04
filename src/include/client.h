@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,11 @@ extern "C" {
 #define UDF_MAX_MODULE_NAME 255
 #define UDF_MAX_FUNCTION_NAME 255
 
-using namespace node;
-using namespace v8;
-
 /*******************************************************************************
  *  CLASS
  ******************************************************************************/
 
-class AerospikeClient : public ObjectWrap {
+class AerospikeClient : public Nan::ObjectWrap {
 
 	/***************************************************************************
 	 *  PUBLIC
@@ -48,7 +45,7 @@ class AerospikeClient : public ObjectWrap {
 
 	public:
 		static void Init();
-		static Local<Value> NewInstance(Local<Object> config);
+		static v8::Local<v8::Value> NewInstance(v8::Local<v8::Object> config);
 
 		aerospike* as;
 		LogInfo* log;
@@ -64,8 +61,8 @@ class AerospikeClient : public ObjectWrap {
 		AerospikeClient();
 		~AerospikeClient();
 
-		static inline Nan::Persistent<Function> & constructor() {
-			static Nan::Persistent<Function> my_constructor;
+		static inline Nan::Persistent<v8::Function> & constructor() {
+			static Nan::Persistent<v8::Function> my_constructor;
 			return my_constructor;
 		}
 

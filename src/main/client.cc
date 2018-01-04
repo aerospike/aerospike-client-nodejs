@@ -51,7 +51,7 @@ AerospikeClient::~AerospikeClient() {}
  */
 NAN_METHOD(AerospikeClient::New)
 {
-	AerospikeClient * client = new AerospikeClient();
+	AerospikeClient* client = new AerospikeClient();
 	client->as = (aerospike*) cf_malloc(sizeof(aerospike));
 	client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
 
@@ -89,7 +89,7 @@ NAN_METHOD(AerospikeClient::New)
 NAN_METHOD(AerospikeClient::Connect)
 {
 	Nan::HandleScope scope;
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	Local<Function> callback;
 	if (info.Length() > 0 && info[0]->IsFunction()) {
@@ -118,7 +118,7 @@ NAN_METHOD(AerospikeClient::Connect)
 NAN_METHOD(AerospikeClient::Close)
 {
 	Nan::HandleScope scope;
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
@@ -135,7 +135,7 @@ NAN_METHOD(AerospikeClient::Close)
 NAN_METHOD(AerospikeClient::IsConnected)
 {
 	Nan::HandleScope scope;
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	bool connected = aerospike_cluster_is_connected(client->as);
 
@@ -148,7 +148,7 @@ NAN_METHOD(AerospikeClient::IsConnected)
 NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	bool pending = as_async_get_pending(client->as->cluster) > 0;
 
@@ -161,7 +161,7 @@ NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 NAN_METHOD(AerospikeClient::AddSeedHost)
 {
 	Nan::HandleScope scope;
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
@@ -178,7 +178,7 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 NAN_METHOD(AerospikeClient::RemoveSeedHost)
 {
 	Nan::HandleScope scope;
-	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
@@ -191,7 +191,7 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 
 NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
 	if (info[0]->IsObject()) {
 		log_from_jsobject(client->log, info[0]->ToObject());
 	}
@@ -204,7 +204,7 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 NAN_METHOD(AerospikeClient::SetupEventCb)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	Local<Function> callback;
 	if (info.Length() > 0 && info[0]->IsFunction()) {

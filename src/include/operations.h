@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@
 #pragma once
 
 extern "C" {
-	#include <aerospike/as_operations.h>
+#include <aerospike/as_operations.h>
 }
 
 #include <node.h>
 
 #include "log.h"
 
-using namespace v8;
 
-int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log);
+int operations_from_jsarray(as_operations* ops, v8::Local<v8::Array> arr, LogInfo* log);
 
-Local<Object> export_ops_table_as_enum();
+v8::Local<v8::Object> export_ops_table_as_enum();

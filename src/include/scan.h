@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,11 @@
  ******************************************************************************/
 
 extern "C" {
-	#include <aerospike/as_scan.h>
+#include <aerospike/as_scan.h>
 }
 
 #include <node.h>
 
 #include "log.h"
 
-using namespace v8;
-
-void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> maybe_options, LogInfo* log);
+void setup_scan(as_scan* scan, v8::Local<v8::Value> ns, v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options, LogInfo* log);

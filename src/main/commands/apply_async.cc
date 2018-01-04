@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
 	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
 
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
 	CallbackData* data = new CallbackData();

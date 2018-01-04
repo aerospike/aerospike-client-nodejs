@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,7 @@
 #include "log.h"
 
 extern "C" {
-	#include <aerospike/as_policy.h>
+#include <aerospike/as_policy.h>
 }
 
-using namespace v8;
-
-int config_from_jsobject(as_config* config, Local<Object> obj, const LogInfo* log);
+int config_from_jsobject(as_config* config, v8::Local<v8::Object> obj, const LogInfo* log);

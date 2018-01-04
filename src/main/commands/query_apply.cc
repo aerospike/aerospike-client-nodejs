@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ static bool query_foreach_callback(const as_val* val, void* udata) {
 
 static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
 	AsyncData* data = new AsyncData();

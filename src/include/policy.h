@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +20,16 @@
 #include "log.h"
 
 extern "C" {
-	#include <aerospike/as_policy.h>
+#include <aerospike/as_policy.h>
 }
 
-using namespace v8;
-
 // Functions to convert v8 policies to C structures
-int writepolicy_from_jsobject(as_policy_write* policy, Local<Object> obj, const LogInfo* log );
-int readpolicy_from_jsobject( as_policy_read* policy, Local<Object> obj, const LogInfo* log );
-int removepolicy_from_jsobject(as_policy_remove* policy, Local<Object> obj, const LogInfo* log );
-int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const LogInfo* log );
-int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, const LogInfo* log );
-int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log );
-int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const LogInfo* log);
-int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const LogInfo* log);
-int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const LogInfo* log);
+int writepolicy_from_jsobject(as_policy_write* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int readpolicy_from_jsobject( as_policy_read* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int removepolicy_from_jsobject(as_policy_remove* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int batchpolicy_from_jsobject(as_policy_batch* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int operatepolicy_from_jsobject(as_policy_operate* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int infopolicy_from_jsobject(as_policy_info* policy, v8::Local<v8::Object> obj, const LogInfo* log );
+int applypolicy_from_jsobject(as_policy_apply* policy, v8::Local<v8::Object> obj, const LogInfo* log);
+int scanpolicy_from_jsobject(as_policy_scan* policy, v8::Local<v8::Object> obj, const LogInfo* log);
+int querypolicy_from_jsobject(as_policy_query* policy, v8::Local<v8::Object> obj, const LogInfo* log);

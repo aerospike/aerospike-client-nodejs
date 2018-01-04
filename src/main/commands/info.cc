@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike Inc.
+ * Copyright 2013-2018 Aerospike Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -74,7 +74,7 @@ typedef struct AsyncData {
 static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
 	AsyncData* data = new AsyncData();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
     Nan::HandleScope scope;
 
-    AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+    AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
     // Build the async data
     AsyncData *     data = new AsyncData();

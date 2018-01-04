@@ -29,19 +29,19 @@ extern "C" {
 
 typedef struct CallbackData {
 	AerospikeClient * client;
-	Nan::Persistent<Function> callback;
+	Nan::Persistent<v8::Function> callback;
 	void* data;
 } CallbackData;
 
 /**
  * Creates a new as_error struct with status code set to AEROSPIKE_ERR_OK.
  */
-Local<Object> err_ok();
+v8::Local<v8::Object> err_ok();
 
 /**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
-Local<Value> async_invoke(
+v8::Local<v8::Value> async_invoke(
     const Nan::FunctionCallbackInfo<v8::Value> &args,
     void* (* prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
     void  (* execute)(uv_work_t* req),
