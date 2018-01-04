@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  ******************************************************************************/
 
 #include <node.h>
-#include "async.h"
 #include "client.h"
 #include "conversions.h"
 #include "config.h"
@@ -25,12 +24,15 @@
 extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
+#include <aerospike/as_async_proto.h>
+#include <aerospike/as_cluster.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_key.h>
-#include <aerospike/as_record.h>
 #include <aerospike/as_log.h>
+#include <aerospike/as_record.h>
 }
 
+using namespace v8;
 
 /*******************************************************************************
  *  Constructor and Destructor
@@ -44,18 +46,7 @@ AerospikeClient::~AerospikeClient() {}
  *  Methods
  ******************************************************************************/
 
-NAN_METHOD(AerospikeClient::SetLogLevel)
-{
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
-	if (info[0]->IsObject()) {
-		log_from_jsobject(client->log, info[0]->ToObject());
-	}
-	info.GetReturnValue().Set(info.Holder());
-}
-
-
 /**
- *  Instantiate a new 'AerospikeClient(config)'
  *  Constructor for AerospikeClient.
  */
 NAN_METHOD(AerospikeClient::New)
@@ -90,6 +81,121 @@ NAN_METHOD(AerospikeClient::New)
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
 	info.GetReturnValue().Set(info.This());
+}
+
+/**
+ * Connect to an Aerospike Cluster
+ */
+NAN_METHOD(AerospikeClient::Connect)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	Local<Function> callback;
+	if (info.Length() > 0 && info[0]->IsFunction()) {
+		callback = Local<Function>::Cast(info[0]);
+	} else {
+		as_v8_error(client->log, "Callback function required");
+		return Nan::ThrowError("Callback function required");
+	}
+
+	as_error err;
+	aerospike_connect(client->as, &err);
+	if (err.code != AEROSPIKE_OK) {
+		as_v8_error(client->log, "Connecting to Cluster Failed: %s (%d)", err.message, err.code);
+	} else {
+		as_v8_debug(client->log, "Connecting to Cluster: Success");
+	}
+
+	const int argc = 1;
+	Local<Value> argv[argc] = { error_to_jsobject(&err, client->log) };
+	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, argc, argv);
+}
+
+/**
+ *  Close the connections to the Aeropsike cluster.
+ */
+NAN_METHOD(AerospikeClient::Close)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
+	as_error err;
+	events_callback_close(&client->as->config);
+	aerospike_close(client->as, &err);
+	aerospike_destroy(client->as);
+	free(client->as);
+	free(client->log);
+}
+
+/**
+ * Is cluster connected to any server nodes.
+ */
+NAN_METHOD(AerospikeClient::IsConnected)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	bool connected = aerospike_cluster_is_connected(client->as);
+
+	info.GetReturnValue().Set(Nan::New(connected));
+}
+
+/**
+ * Are there any pending async commands.
+ */
+NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
+{
+	Nan::HandleScope scope;
+	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	bool pending = as_async_get_pending(client->as->cluster) > 0;
+
+	info.GetReturnValue().Set(Nan::New(pending));
+}
+
+/**
+ * Adds a seed host to the cluster.
+ */
+NAN_METHOD(AerospikeClient::AddSeedHost)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
+	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
+
+	String::Utf8Value hostname(info[0]->ToString());
+	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+
+	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
+}
+
+/**
+ * Removes a seed host from the cluster.
+ */
+NAN_METHOD(AerospikeClient::RemoveSeedHost)
+{
+	Nan::HandleScope scope;
+	AerospikeClient * client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
+	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
+
+	String::Utf8Value hostname(info[0]->ToString());
+	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+
+	as_cluster_remove_seed(client->as->cluster, *hostname, port);
+}
+
+NAN_METHOD(AerospikeClient::SetLogLevel)
+{
+	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
+	if (info[0]->IsObject()) {
+		log_from_jsobject(client->log, info[0]->ToObject());
+	}
+	info.GetReturnValue().Set(info.Holder());
 }
 
 /**
