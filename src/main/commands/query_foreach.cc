@@ -35,7 +35,7 @@ using namespace v8;
 
 #define QUEUE_SZ 100000
 
-typedef struct AsyncData {
+typedef struct QueryForeachCmd {
 	bool param_err;
 	aerospike* as;
 	as_error err;
@@ -48,7 +48,7 @@ typedef struct AsyncData {
 	uv_async_t async_handle;
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
-} AsyncData;
+} QueryForeachCmd;
 
 // Push the record from the server to a queue.
 // The record cannot be passed directly from query callback to v8 thread
@@ -56,25 +56,25 @@ typedef struct AsyncData {
 // callback is in C client thread, which is not aware of the v8 context. So
 // store this records in a temporary queue. When the queue reaches a certain
 // size, signal v8 thread to process the queue.
-static bool async_queue_populate(const as_val* val, AsyncData* data)
+static bool async_queue_populate(const as_val* val, QueryForeachCmd* cmd)
 {
-	if (data->result_q == NULL) {
+	if (cmd->result_q == NULL) {
 		// Result queue is not initialized - this should never happen!
-		as_v8_error(data->log, "Internal Error: Queue not initialized");
+		as_v8_error(cmd->log, "Internal Error: Queue not initialized");
 		return false;
 	}
 
 	// Clone the value as as_val is freed up after the callback.
-	as_val* clone = asval_clone((as_val*) val, data->log);
+	as_val* clone = asval_clone((as_val*) val, cmd->log);
 	if (clone != NULL) {
-		if (as_queue_mt_size(data->result_q) >= data->max_q_size) {
+		if (as_queue_mt_size(cmd->result_q) >= cmd->max_q_size) {
 			as_sleep(1000);
 		}
-		as_queue_mt_push(data->result_q, &clone);
-		data->signal_interval++;
-		if (data->signal_interval % (data->max_q_size / 20) == 0) {
-			data->signal_interval = 0;
-			uv_async_send(&data->async_handle);
+		as_queue_mt_push(cmd->result_q, &clone);
+		cmd->signal_interval++;
+		if (cmd->signal_interval % (cmd->max_q_size / 20) == 0) {
+			cmd->signal_interval = 0;
+			uv_async_send(&cmd->async_handle);
 		}
 	}
 
@@ -82,17 +82,17 @@ static bool async_queue_populate(const as_val* val, AsyncData* data)
 }
 
 // Pop each record from the queue and invoke the node callback with this record.
-static void async_queue_process(AsyncData* data)
+static void async_queue_process(QueryForeachCmd* cmd)
 {
 	Nan::HandleScope scope;
-	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(cmd->callback);
 	as_val* val = NULL;
-	while (data->result_q && !as_queue_mt_empty(data->result_q)) {
-		if (as_queue_mt_pop(data->result_q, &val, AS_QUEUE_FOREVER)) {
+	while (cmd->result_q && !as_queue_mt_empty(cmd->result_q)) {
+		if (as_queue_mt_pop(cmd->result_q, &val, AS_QUEUE_FOREVER)) {
 			const int argc = 2;
 			Local<Value> argv[argc];
 			argv[0] = err_ok();
-			argv[1] = val_to_jsvalue(val, data->log);
+			argv[1] = val_to_jsvalue(val, cmd->log);
 			Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
 			as_val_destroy(val);
 		}
@@ -101,32 +101,32 @@ static void async_queue_process(AsyncData* data)
 
 static void async_callback(uv_async_t* handle)
 {
-	AsyncData* data = reinterpret_cast<AsyncData*>(handle->data);
-	if (data->result_q == NULL) {
-		as_v8_error(data->log, "Internal error: data or result q is not initialized");
+	QueryForeachCmd* cmd = reinterpret_cast<QueryForeachCmd*>(handle->data);
+	if (cmd->result_q == NULL) {
+		as_v8_error(cmd->log, "Internal error: data or result q is not initialized");
 		return;
 	}
-	async_queue_process(data);
+	async_queue_process(cmd);
 }
 
 static bool query_foreach_callback(const as_val* val, void* udata)
 {
-	AsyncData* data = reinterpret_cast<AsyncData*>(udata);
+	QueryForeachCmd* cmd = reinterpret_cast<QueryForeachCmd*>(udata);
 	if (val == NULL) {
-		as_v8_debug(data->log, "value returned by query callback is NULL");
+		as_v8_debug(cmd->log, "value returned by query callback is NULL");
 		return false;
 	}
-	return async_queue_populate(val, data);
+	return async_queue_populate(val, cmd);
 }
 
 static void release_handle(uv_handle_t* async_handle)
 {
-    AsyncData* data = reinterpret_cast<AsyncData*>(async_handle->data);
-    delete data;
+    QueryForeachCmd* cmd = reinterpret_cast<QueryForeachCmd*>(async_handle->data);
+    delete cmd;
 }
 
 /**
- *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
+ *  prepare() — Function to prepare QueryForeachCmd, for use in `execute()` and `respond()`.
  *
  *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
@@ -138,58 +138,58 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
-	AsyncData* data = new AsyncData();
-	data->param_err = false;
-	data->as = client->as;
-	data->log = client->log;
-	data->callback.Reset(info[4].As<Function>());
+	QueryForeachCmd* cmd = new QueryForeachCmd();
+	cmd->param_err = false;
+	cmd->as = client->as;
+	cmd->log = client->log;
+	cmd->callback.Reset(info[4].As<Function>());
 
-	setup_query(&data->query, info[0], info[1], info[2], log);
+	setup_query(&cmd->query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (querypolicy_from_jsobject(&data->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (querypolicy_from_jsobject(&cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing of query policy from object failed");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			data->param_err = true;
+			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
+			cmd->param_err = true;
 			goto Return;
 		}
-		data->p_policy = &data->policy;
+		cmd->p_policy = &cmd->policy;
 	}
 
-	data->signal_interval   = 0;
-	data->result_q          = as_queue_mt_create(sizeof(as_val*), QUEUE_SZ);
-	data->max_q_size        = QUEUE_SZ; // TODO: make this configurable
+	cmd->signal_interval   = 0;
+	cmd->result_q          = as_queue_mt_create(sizeof(as_val*), QUEUE_SZ);
+	cmd->max_q_size        = QUEUE_SZ; // TODO: make this configurable
 
-	uv_async_init(uv_default_loop(), &data->async_handle, async_callback);
-	data->async_handle.data = data;
+	uv_async_init(uv_default_loop(), &cmd->async_handle, async_callback);
+	cmd->async_handle.data = (void*) cmd;
 
 Return:
-	return data;
+	return cmd;
 }
 
 /**
  *  execute() — Function to execute inside the worker-thread.
  *
  *  It is not safe to access V8 or V8 data structures here, so everything
- *  we need for input and output should be in the AsyncData structure.
+ *  we need for input and output should be in the QueryForeachCmd structure.
  */
 static void execute(uv_work_t* req)
 {
-	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
-	LogInfo* log = data->log;
+	QueryForeachCmd* cmd = reinterpret_cast<QueryForeachCmd*>(req->data);
+	LogInfo* log = cmd->log;
 
-	if (data->param_err) {
+	if (cmd->param_err) {
 		as_v8_debug(log, "Parameter error in the query options");
 	} else {
 		as_v8_debug(log, "Sending query command with UDF aggregation");
-		aerospike_query_foreach(data->as, &data->err, data->p_policy, &data->query, query_foreach_callback, data);
+		aerospike_query_foreach(cmd->as, &cmd->err, cmd->p_policy, &cmd->query, query_foreach_callback, (void*) cmd);
 
 		// send an async signal here. If at all there's any residual records left in the result_q,
 		// this signal's callback will send it to node layer.
-		uv_async_send(&data->async_handle);
+		uv_async_send(&cmd->async_handle);
 	}
 
-	as_query_destroy(&data->query);
+	as_query_destroy(&cmd->query);
 }
 
 /**
@@ -203,38 +203,38 @@ static void execute(uv_work_t* req)
 static void respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
-	LogInfo* log = data->log;
+	QueryForeachCmd* cmd = reinterpret_cast<QueryForeachCmd*>(req->data);
+	LogInfo* log = cmd->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
-	if (data->err.code != AEROSPIKE_OK) {
-		as_v8_info(log, "Command failed: %d %s\n", data->err.code, data->err.message);
-		argv[0] = error_to_jsobject(&data->err, log);
+	if (cmd->err.code != AEROSPIKE_OK) {
+		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
+		argv[0] = error_to_jsobject(&cmd->err, log);
 	} else {
 		argv[0] = err_ok();
-		if (data->result_q && !as_queue_mt_empty(data->result_q)) {
-			async_queue_process(data);
+		if (cmd->result_q && !as_queue_mt_empty(cmd->result_q)) {
+			async_queue_process(cmd);
 		}
 	}
 	argv[1] = Nan::Null();
 
 	as_v8_detail(log, "Invoking JS callback for query_apply");
 	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(cmd->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
 
-	data->callback.Reset();
-	if (data->result_q != NULL) {
-		as_queue_mt_destroy(data->result_q);
-		data->result_q = NULL;
+	cmd->callback.Reset();
+	if (cmd->result_q != NULL) {
+		as_queue_mt_destroy(cmd->result_q);
+		cmd->result_q = NULL;
 	}
-	uv_close((uv_handle_t*) &data->async_handle, release_handle);
+	uv_close((uv_handle_t*) &cmd->async_handle, release_handle);
 
-	as_query_destroy(&data->query);
+	as_query_destroy(&cmd->query);
 
 	delete req;
 }

@@ -36,9 +36,9 @@ using namespace v8;
  ******************************************************************************/
 
 /**
- *      AsyncData — Data to be used in async calls.
+ *      BatchExistsCmd — Data to be used in async calls.
  */
-typedef struct AsyncData {
+typedef struct BatchExistsCmd {
     aerospike * as;
     int node_err;            // To Keep track of the parameter errors from Nodejs
     as_error err;
@@ -48,7 +48,7 @@ typedef struct AsyncData {
     LogInfo * log;
     uint32_t n;
     Nan::Persistent<Function> callback;
-} AsyncData;
+} BatchExistsCmd;
 
 
 
@@ -58,22 +58,21 @@ typedef struct AsyncData {
 
 bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * udata)
 {
-    // Fetch the AsyncData structure
-    AsyncData *     data    = reinterpret_cast<AsyncData *>(udata);
-    LogInfo * log           = data->log;
+    BatchExistsCmd* cmd = reinterpret_cast<BatchExistsCmd*>(udata);
+    LogInfo* log = cmd->log;
 
-    //copy the batch result to the shared data structure AsyncData,
+    //copy the batch result to the shared data structure BatchExistsCmd,
     //so that response can send it back to nodejs layer
-    //as_batch_read  *batch_result = &data->results;
+    //as_batch_read* batch_result = &cmd->results;
     if( results != NULL ) {
         as_v8_debug(log, "Bridge callback invoked in V8 for a batch request of %d records", n);
-        data->n = n;
-        data->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
+        cmd->n = n;
+        cmd->results = (as_batch_read*) calloc(n, sizeof(as_batch_read));
         for ( uint32_t i = 0; i < n; i++ ) {
-            data->results[i].result = results[i].result;
-            key_clone(results[i].key, (as_key**) &data->results[i].key, log);
+            cmd->results[i].result = results[i].result;
+            key_clone(results[i].key, (as_key**) &cmd->results[i].key, log);
             if (results[i].result == AEROSPIKE_OK) {
-                as_record* rec = &data->results[i].record;
+                as_record* rec = &cmd->results[i].record;
                 as_v8_debug(log, "record[%d]", i);
                 record_clone(&results[i].record, &rec, log);
             }
@@ -82,14 +81,14 @@ bool batch_exists_callback(const as_batch_read * results, uint32_t n, void * uda
     }
     else {
         as_v8_info(log, "Brigde callback in v8 for batch called with no batch results");
-        data->n = 0;
-        data->results = NULL;
+        cmd->n = 0;
+        cmd->results = NULL;
     }
     return false;
 }
 
 /**
- *      prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
+ *      prepare() — Function to prepare BatchExistsCmd, for use in `execute()` and `respond()`.
  *
  *      This should only keep references to V8 or V8 structures for use in
  *      `respond()`, because it is unsafe for use in `execute()`.
@@ -99,93 +98,93 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::HandleScope scope;
     AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-    AsyncData * data = new AsyncData();
-    data->as = client->as;
-    data->node_err = 0;
-    data->n = 0;
-    data->results = NULL;
-    data->policy = NULL;
-    LogInfo * log = data->log = client->log;
+    BatchExistsCmd* cmd = new BatchExistsCmd();
+    cmd->as = client->as;
+    cmd->node_err = 0;
+    cmd->n = 0;
+    cmd->results = NULL;
+    cmd->policy = NULL;
+    LogInfo* log = cmd->log = client->log;
 
     Local<Value> maybe_keys = info[0];
     Local<Value> maybe_policy = info[1];
     Local<Value> maybe_callback = info[2];
 
     if (maybe_callback->IsFunction()) {
-        data->callback.Reset(maybe_callback.As<Function>());
+        cmd->callback.Reset(maybe_callback.As<Function>());
         as_v8_detail(log, "batch_exists callback registered");
     } else {
         as_v8_error(log, "Arglist must contain a callback function");
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
     if (maybe_keys->IsArray()) {
         Local<Array> keys = Local<Array>::Cast(maybe_keys);
-        if( batch_from_jsarray(&data->batch, keys, log) != AS_NODE_PARAM_OK) {
+        if (batch_from_jsarray(&cmd->batch, keys, log) != AS_NODE_PARAM_OK) {
             as_v8_debug(log, "parsing batch keys failed");
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
     } else {
         as_v8_debug(log, "Batch key must be an array of key objects");
-        COPY_ERR_MESSAGE( data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
     if (maybe_policy->IsObject()) {
-        data->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
-        if (batchpolicy_from_jsobject(data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
+        cmd->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
+        if (batchpolicy_from_jsobject(cmd->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Parsing batch policy failed");
-            COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+            COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
             goto Err_Return;
         }
     } else if (maybe_policy->IsNull() || maybe_policy->IsUndefined()) {
         // policy is an optional parameter - ignore if missing
     } else {
         as_v8_error(log, "Batch policy must be an object");
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
         goto Err_Return;
     }
 
-    return data;
+    return cmd;
 
 Err_Return:
-    data->node_err = 1;
-    return data;
+    cmd->node_err = 1;
+    return cmd;
 }
 
 /**
  *      execute() — Function to execute inside the worker-thread.
  *
  *      It is not safe to access V8 or V8 data structures here, so everything
- *      we need for input and output should be in the AsyncData structure.
+ *      we need for input and output should be in the BatchExistsCmd structure.
  */
 static void execute(uv_work_t * req)
 {
-    // Fetch the AsyncData structure
-    AsyncData * data = reinterpret_cast<AsyncData *>(req->data);
+    // Fetch the BatchExistsCmd structure
+    BatchExistsCmd* cmd = reinterpret_cast<BatchExistsCmd *>(req->data);
 
     // Data to be used.
-    aerospike *     as      = data->as;
-    as_error  *     err     = &data->err;
-    as_batch  *     batch   = &data->batch;
-    as_policy_batch * policy= data->policy;
-    LogInfo *       log     = data->log;
+    aerospike* as = cmd->as;
+    as_error* err = &cmd->err;
+    as_batch* batch = &cmd->batch;
+    as_policy_batch* policy = cmd->policy;
+    LogInfo* log = cmd->log;
 
     if( as->cluster == NULL) {
         as_v8_debug(log, "Cluster Object is NULL, can't perform the operation");
-        data->node_err = 1;
-        COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
+        cmd->node_err = 1;
+        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
     }
     // Invoke the blocking call.
     // Check for no parameter errors from Nodejs
-    if( data->node_err == 0) {
+    if (cmd->node_err == 0) {
         as_v8_debug(log, "Submitting batch request to server with %d keys", batch->keys.size);
         aerospike_batch_exists(as, err, policy, batch, batch_exists_callback, (void*) req->data);
         if( err->code != AEROSPIKE_OK) {
-            data->results = NULL;
-            data->n = 0;
+            cmd->results = NULL;
+            cmd->n = 0;
         }
         as_batch_destroy(batch);
     }
@@ -202,13 +201,13 @@ static void execute(uv_work_t * req)
 static void respond(uv_work_t * req, int status)
 {
     Nan::HandleScope scope;
-    // Fetch the AsyncData structure
-    AsyncData * data    = reinterpret_cast<AsyncData *>(req->data);
-    as_error *  err     = &data->err;
-    uint32_t num_rec    = data->n;
-    as_batch_read * batch_results = data->results;
+    // Fetch the BatchExistsCmd structure
+    BatchExistsCmd* cmd = reinterpret_cast<BatchExistsCmd*>(req->data);
+    as_error*  err = &cmd->err;
+    uint32_t num_rec = cmd->n;
+    as_batch_read* batch_results = cmd->results;
 
-    LogInfo * log = data->log;
+    LogInfo* log = cmd->log;
 
     // maintain a linked list of pointers to be freed after the nodejs callback is called
     // Buffer object is not garbage collected by v8 gc. Have to delete explicitly
@@ -217,7 +216,7 @@ static void respond(uv_work_t * req, int status)
     // Build the arguments array for the callback
     Local<Value> argv[2];
 
-    if ( data->node_err == 1 ) {
+    if (cmd->node_err == 1) {
         // Sets the err->code and err->message in the 'err' variable
         err->func = NULL;
         err->line = 0;
@@ -282,7 +281,7 @@ static void respond(uv_work_t * req, int status)
     Nan::TryCatch try_catch;
 
     // Execute the callback.
-    Local<Function> cb = Nan::New<Function>(data->callback);
+    Local<Function> cb = Nan::New<Function>(cmd->callback);
 
     Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 2, argv);
 
@@ -295,21 +294,21 @@ static void respond(uv_work_t * req, int status)
 
     // Dispose the Persistent handle so the callback
     // function can be garbage-collected
-    data->callback.Reset();
+    cmd->callback.Reset();
 
     // clean up any memory we allocated
-    if (data->node_err == 1) {
-        free(data->results);
+    if (cmd->node_err == 1) {
+        free(cmd->results);
     }
     if (batch_results != NULL) {
         free(batch_results);
     }
-    if (data->policy != NULL) {
-        cf_free(data->policy);
+    if (cmd->policy != NULL) {
+        cf_free(cmd->policy);
     }
 
     as_v8_debug(log, "Cleaned up the resources");
-    delete data;
+    delete cmd;
     delete req;
 }
 

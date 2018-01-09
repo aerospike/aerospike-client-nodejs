@@ -46,11 +46,11 @@ Local<Value> async_invoke(
     void  (* respond)(uv_work_t* req, int status)
     )
 {
-    // Create an async work token, and add AsyncData to it.
+    // Create an async work request and prepare the command
     uv_work_t * req = new uv_work_t;
     req->data = prepare(args);
 
-    // Pass the work token to libuv to be run when a
+    // Pass the work request to libuv to be run when a
     // worker-thread is available to process it.
     uv_queue_work(
         uv_default_loop(),  // event loop

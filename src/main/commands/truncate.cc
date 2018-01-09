@@ -26,7 +26,7 @@ extern "C" {
 
 using namespace v8;
 
-typedef struct AsyncData {
+typedef struct TruncateCmd {
 	bool param_err;
 	aerospike* as;
 	as_error err;
@@ -37,7 +37,7 @@ typedef struct AsyncData {
 	uint64_t before_nanos;
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
-} AsyncData;
+} TruncateCmd;
 
 
 static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
@@ -45,72 +45,72 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
-	AsyncData* data = new AsyncData();
-	data->param_err = false;
-	data->as = client->as;
-	data->log = client->log;
-	data->callback.Reset(info[4].As<Function>());
-	strcpy(data->ns, *String::Utf8Value(info[0]->ToString()));
+	TruncateCmd* cmd = new TruncateCmd();
+	cmd->param_err = false;
+	cmd->as = client->as;
+	cmd->log = client->log;
+	cmd->callback.Reset(info[4].As<Function>());
+	strcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()));
 
 	if (info[1]->IsString()) {
-		strcpy(data->set, *String::Utf8Value(info[1]->ToString()));
+		strcpy(cmd->set, *String::Utf8Value(info[1]->ToString()));
 	}
 
 	if (info[2]->IsNumber()) {
-		data->before_nanos = (uint64_t) info[2]->ToInteger()->Value();
+		cmd->before_nanos = (uint64_t) info[2]->ToInteger()->Value();
 	}
 
 	if (info[3]->IsObject()) {
-		if (infopolicy_from_jsobject(&data->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (infopolicy_from_jsobject(&cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing of info policy from object failed");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			data->param_err = true;
+			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
+			cmd->param_err = true;
 			goto Return;
 		}
-		data->p_policy = &data->policy;
+		cmd->p_policy = &cmd->policy;
 	}
 
 Return:
-	return data;
+	return cmd;
 }
 
 static void execute(uv_work_t* req)
 {
-	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
-	LogInfo* log = data->log;
-	if (data->param_err) {
+	TruncateCmd* cmd = reinterpret_cast<TruncateCmd*>(req->data);
+	LogInfo* log = cmd->log;
+	if (cmd->param_err) {
 		as_v8_debug(log, "Parameter error in the truncate options");
 	} else {
 		as_v8_debug(log, "Invoking aerospike truncate");
-		aerospike_truncate(data->as, &data->err, data->p_policy, data->ns, data->set, data->before_nanos);
+		aerospike_truncate(cmd->as, &cmd->err, cmd->p_policy, cmd->ns, cmd->set, cmd->before_nanos);
 	}
 }
 
 static void respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	AsyncData* data = reinterpret_cast<AsyncData *>(req->data);
-	LogInfo* log = data->log;
+	TruncateCmd* cmd = reinterpret_cast<TruncateCmd*>(req->data);
+	LogInfo* log = cmd->log;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
-	if (data->err.code != AEROSPIKE_OK) {
-		as_v8_info(log, "Command failed: %d %s\n", data->err.code, data->err.message);
-		argv[0] = error_to_jsobject(&data->err, log);
+	if (cmd->err.code != AEROSPIKE_OK) {
+		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
+		argv[0] = error_to_jsobject(&cmd->err, log);
 	} else {
 		argv[0] = err_ok();
 	}
 
 	as_v8_detail(log, "Invoking JS callback for truncate");
 	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(cmd->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
 
-	data->callback.Reset();
-	delete data;
+	cmd->callback.Reset();
+	delete cmd;
 	delete req;
 }
 

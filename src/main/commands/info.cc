@@ -40,13 +40,13 @@ using namespace v8;
  ******************************************************************************/
 
 /**
- *  AsyncData — Data to be used in async calls.
+ *  InfoCmd — Data to be used in async calls.
  *
  *  libuv allows us to pass around a pointer to an arbitraty object when
  *  running asynchronous functions. We create a data structure to hold the
  *  data we need during and after async work.
  */
-typedef struct AsyncData {
+typedef struct InfoCmd {
 	aerospike* as;
 	bool param_err;
 	as_error err;
@@ -58,7 +58,7 @@ typedef struct AsyncData {
 	uint16_t port;
 	LogInfo* log;
 	Nan::Persistent<Function> callback;
-} AsyncData;
+} InfoCmd;
 
 
 /*******************************************************************************
@@ -66,7 +66,7 @@ typedef struct AsyncData {
  ******************************************************************************/
 
 /**
- *  prepare() — Function to prepare AsyncData, for use in `execute()` and `respond()`.
+ *  prepare() — Function to prepare InfoCmd, for use in `execute()` and `respond()`.
  *
  *  This should only keep references to V8 or V8 structures for use in
  *  `respond()`, because it is unsafe for use in `execute()`.
@@ -77,65 +77,65 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	LogInfo* log = client->log;
 
-	AsyncData* data = new AsyncData();
-	data->param_err = false;
-	data->as = client->as;
-	data->log = client->log;
-	data->callback.Reset(info[3].As<Function>());
+	InfoCmd* cmd = new InfoCmd();
+	cmd->param_err = false;
+	cmd->as = client->as;
+	cmd->log = client->log;
+	cmd->callback.Reset(info[3].As<Function>());
 
 	Local<Value> maybe_request = info[0];
 	Local<Value> maybe_host = info[1];
 	Local<Value> maybe_policy = info[2];
 
 	if (maybe_request->IsString()) {
-		data->req = (char*) cf_malloc(INFO_REQUEST_LEN);
+		cmd->req = (char*) cf_malloc(INFO_REQUEST_LEN);
 		String::Utf8Value request(maybe_request->ToString());
-		strncpy(data->req, *request, INFO_REQUEST_LEN);
+		strncpy(cmd->req, *request, INFO_REQUEST_LEN);
 	}
 
 	if (maybe_host->IsObject()) {
-		if (host_from_jsobject(maybe_host->ToObject(), &data->addr, &data->port, log) != AS_NODE_PARAM_OK) {
+		if (host_from_jsobject(maybe_host->ToObject(), &cmd->addr, &cmd->port, log) != AS_NODE_PARAM_OK) {
 			as_v8_debug(log, "host parameter is invalid");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			data->param_err = true;
+			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
+			cmd->param_err = true;
 			goto Return;
 		}
 	}
 
 	if (maybe_policy->IsObject()) {
-		if (infopolicy_from_jsobject(&data->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
+		if (infopolicy_from_jsobject(&cmd->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
 			as_v8_debug(log, "policy parameter is invalid");
-			COPY_ERR_MESSAGE(data->err, AEROSPIKE_ERR_PARAM);
-			data->param_err = true;
+			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
+			cmd->param_err = true;
 			goto Return;
 		}
-		data->p_policy = &data->policy;
+		cmd->p_policy = &cmd->policy;
 	}
 
 Return:
-	return data;
+	return cmd;
 }
 
 /**
  *  execute() — Function to execute inside the worker-thread.
  *
  *  It is not safe to access V8 or V8 data structures here, so everything
- *  we need for input and output should be in the AsyncData structure.
+ *  we need for input and output should be in the InfoCmd structure.
  */
 static void execute(uv_work_t* req)
 {
-	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
-	LogInfo* log = data->log;
+	InfoCmd* cmd = reinterpret_cast<InfoCmd*>(req->data);
+	LogInfo* log = cmd->log;
 
-	if (data->param_err) {
+	if (cmd->param_err) {
 		as_v8_debug(log, "Parameter error in info command");
 	} else {
-		if (data->addr == NULL) {
-			as_v8_debug(log, "Sending info command \"%s\" to random cluster host", data->req);
-			aerospike_info_any(data->as, &data->err, data->p_policy, data->req, &data->res);
+		if (cmd->addr == NULL) {
+			as_v8_debug(log, "Sending info command \"%s\" to random cluster host", cmd->req);
+			aerospike_info_any(cmd->as, &cmd->err, cmd->p_policy, cmd->req, &cmd->res);
 		} else {
-			as_v8_debug(log, "Sending info command \"%s\" to cluster host %s:%d", data->req, data->addr, data->port);
-			aerospike_info_host(data->as, &data->err, data->p_policy, data->addr, data->port, data->req, &data->res);
+			as_v8_debug(log, "Sending info command \"%s\" to cluster host %s:%d", cmd->req, cmd->addr, cmd->port);
+			aerospike_info_host(cmd->as, &cmd->err, cmd->p_policy, cmd->addr, cmd->port, cmd->req, &cmd->res);
 		}
 	}
 }
@@ -150,14 +150,14 @@ static void execute(uv_work_t* req)
 static void respond(uv_work_t * req, int status)
 {
 	Nan::HandleScope scope;
-	AsyncData* data = reinterpret_cast<AsyncData*>(req->data);
-	char* response = data->res;
-	LogInfo* log = data->log;
+	InfoCmd* cmd = reinterpret_cast<InfoCmd*>(req->data);
+	char* response = cmd->res;
+	LogInfo* log = cmd->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
-	if (data->err.code != AEROSPIKE_OK) {
-		argv[0] = error_to_jsobject(&data->err, log);
+	if (cmd->err.code != AEROSPIKE_OK) {
+		argv[0] = error_to_jsobject(&cmd->err, log);
 		argv[1] = Nan::Null();
 	} else {
 		argv[0] = err_ok();
@@ -171,14 +171,14 @@ static void respond(uv_work_t * req, int status)
 	}
 
 	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(data->callback);
+	Local<Function> cb = Nan::New<Function>(cmd->callback);
 	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
 
-	data->callback.Reset();
-	delete data;
+	cmd->callback.Reset();
+	delete cmd;
 	delete req;
 }
 
