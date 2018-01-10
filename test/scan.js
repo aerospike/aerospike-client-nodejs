@@ -239,9 +239,8 @@ context('Scans', function () {
     })
 
     it('returns a Promise that resolves to a Job', function () {
-      let token = valgen.string({length: {min: 10, max: 10}})()
       let backgroundScan = client.scan(helper.namespace, testSet)
-      return backgroundScan.background('udf', 'updateRecord', ['x', token])
+      return backgroundScan.background('udf', 'noop')
         .then(job => {
           expect(job).to.be.a(Job)
         })
