@@ -4,17 +4,39 @@
       'target_name': 'aerospike-client-c',
       'type': 'none',
       'hard_dependency': 1,
-      'actions': [
-        {
-          'action_name': 'run scripts/aerospike-client-c.sh',
-          'inputs': [
-          ],
-          'outputs': [
-            'aerospike-client-c/lib/libaerospike.a',
-            'aerospike-client-c/include'
-          ],
-          'action': ['scripts/aerospike-client-c.sh']
-        }
+      'conditions': [
+        ['OS!="win"', {
+          'actions': [
+            {
+              'action_name': 'Installing Aerospike C Client dependency',
+              'inputs': [],
+              'outputs': [
+                'aerospike-client-c/include/aerospike/aerospike.h',
+                'aerospike-client-c/lib/libaerospike.a'
+              ],
+              'action': [
+                'scripts/aerospike-client-c.sh'
+              ]
+            }
+          ]
+        }],
+        ['OS=="win"', {
+          'actions': [
+            {
+              'action_name': 'Installing Aerospike C Client dependency',
+              'inputs': [],
+              'outputs': [
+                'aerospike-client-c/include/aerospike/aerospike.h',
+                'aerospike-client-c/lib/aerospike.lib'
+              ],
+              'action': [
+                'powershell', 'scripts/build-c-client.ps1',
+                    '-Configuration', "$(ConfigurationName)",
+                    '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
+              ]
+            }
+          ]
+        }],
       ]
     },
     {
@@ -58,10 +80,10 @@
         'src/main/commands/udf_register.cc',
         'src/main/commands/udf_remove.cc',
         'src/main/enums/predicates.cc',
-        'src/main/enums/log.cc',
+        'src/main/enums/log_enum.cc',
         'src/main/enums/maps.cc',
         'src/main/enums/index.cc',
-        'src/main/enums/policy.cc',
+        'src/main/enums/policy_enum.cc',
         'src/main/enums/status.cc',
         'src/main/enums/scanPriority.cc',
         'src/main/enums/job_status.cc',
@@ -72,38 +94,43 @@
       ],
       'include_dirs': [
         'aerospike-client-c/include',
-        'src/include'
+        'src/include',
+        "<!(node -e \"require('nan')\")",
       ],
-      'link_settings': {
-        'libraries': [
-          '../aerospike-client-c/lib/libaerospike.a',
-          '-lz'
-        ]
-      },
-      'variables': {
-        'isnode': '<!(hash node 2> /dev/null; echo $?)',
-        'isnodejs': '<!(hash nodejs 2> /dev/null; echo $?)'
-      },
       'conditions': [
         ['OS=="linux"',{
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive']
+          'libraries': [
+            '../aerospike-client-c/lib/libaerospike.a',
+            '-lz'
+          ],
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive'],
         }],
         ['OS=="mac"',{
+          'libraries': [
+            '../aerospike-client-c/lib/libaerospike.a',
+            '-lz'
+          ],
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
-          }
+          },
         }],
-        ['isnode==0',{
-          'include_dirs': [
-            "<!(node -e \"require('nan')\")"
+        ['OS=="win"', {
+          'libraries': [
+            '../aerospike-client-c/lib/aerospike.lib',
+            '../aerospike-client-c/lib/pthreadVC2.lib',
           ],
+          'defines': [
+            'AS_USE_LIBUV',
+            'AS_SHARED_IMPORT',
+            '_TIMESPEC_DEFINED',
+          ],
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+              'DisableSpecificWarnings': ['4200']
+            }
+          },
         }],
-        ['isnodejs == 0',{
-          'include_dirs': [
-                "<!(nodejs -e \"require('nan')\")"
-          ],
-        }]
-     ]
+      ]
     }
   ]
 }

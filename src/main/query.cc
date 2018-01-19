@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/as_query.h>
-}
-
+#include <cstdint>
 #include <node.h>
 
 #include "async.h"
@@ -25,6 +22,10 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "query.h"
+
+extern "C" {
+#include <aerospike/as_query.h>
+}
 
 using namespace v8;
 
@@ -70,8 +71,8 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 							Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
 							Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
 							if (v8min->IsNumber() && v8max->IsNumber()) {
-								const int64_t min = v8min->NumberValue();
-								const int64_t max = v8max->NumberValue();
+								const int64_t min = v8min->IntegerValue();
+								const int64_t max = v8max->IntegerValue();
 								as_query_where(query, bin_name, predicate, type, datatype, min, max);
 								as_v8_debug(log, "Integer range predicate from %llu to %llu", min, max);
 							} else {
@@ -95,7 +96,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 						if (datatype == AS_INDEX_NUMERIC) {
 							Local<Value> value = filter->Get(Nan::New("val").ToLocalChecked());
 							if (value->IsNumber()) {
-								const int64_t val = value->NumberValue();
+								const int64_t val = value->IntegerValue();
 								as_query_where(query, bin_name, predicate, type, datatype, val);
 								as_v8_debug(log, "Integer equality predicate %d", val);
 							} else {
