@@ -28,7 +28,7 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs/issues"
   },
   "scripts": {
-    "test": "mocha $MOCHA_OPTIONS",
+    "test": "mocha",
     "posttest": "standard",
     "coverage": "nyc npm test && nyc --reporter=lcov report",
     "codecov": "codecov",
