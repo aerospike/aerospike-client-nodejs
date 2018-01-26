@@ -54,9 +54,6 @@
     "standard": "^10.0",
     "yargs": "^1.3.3"
   },
-  "optionalDependencies": {
-    "webworker-threads": "^0.7"
-  },
   "standard": {
     "ignore": [
       "apidocs"
