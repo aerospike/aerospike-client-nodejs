@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -96,5 +96,16 @@ describe('client.get()', function () {
       .then(() => client.get(key))
       .then(record => expect(record.bins).to.eql({ i: 42 }))
       .then(() => client.remove(key))
+  })
+
+  it('fetches a record given the digest', function () {
+    let key = new Aerospike.Key('test', 'test', 'digestOnly')
+    client.put(key, {foo: 'bar'})
+      .then(() => {
+        let digest = key.digest
+        let key2 = new Aerospike.Key('test', null, null, digest)
+        return client.get(key2)
+          .then(record => expect(record.bins.foo).to.equal('bar'))
+      })
   })
 })

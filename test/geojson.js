@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const Key = Aerospike.Key
@@ -24,57 +25,59 @@ const GeoJSON = Aerospike.GeoJSON
 const helper = require('./test_helper')
 
 describe('Aerospike.GeoJSON', function () {
-  var subject = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+  context('GeoJSON class #noserver', function () {
+    let subject = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
 
-  describe('constructor', function () {
-    it('returns a new GeoJSON value when called as an Object constructor', function () {
-      expect(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+    describe('constructor', function () {
+      it('returns a new GeoJSON value when called as an Object constructor', function () {
+        expect(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+      })
+
+      it('returns a new GeoJSON value when called as function', function () {
+        expect(GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+      })
+
+      it('parses a GeoJSON string', function () {
+        expect(new GeoJSON('{"type": "Point", "coordinates": [103.913, 1.308]}')).to.be.a(GeoJSON)
+      })
+
+      it('throws a type error if passed an invalid GeoJSON value', function () {
+        let fn = () => new GeoJSON(45)
+        expect(fn).to.throwException(ex =>
+          expect(ex).to.be.a(TypeError))
+      })
     })
 
-    it('returns a new GeoJSON value when called as function', function () {
-      expect(GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+    describe('#value()', function () {
+      it('returns the value as a JSON object', function () {
+        expect(subject.value()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
+      })
     })
 
-    it('parses a GeoJSON string', function () {
-      expect(new GeoJSON('{"type": "Point", "coordinates": [103.913, 1.308]}')).to.be.a(GeoJSON)
+    describe('#toJSON()', function () {
+      it('returns the GeoJSON value as a JSON object', function () {
+        expect(subject.toJSON()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
+      })
     })
 
-    it('throws a type error if passed an invalid GeoJSON value', function () {
-      let fn = () => new GeoJSON(45)
-      expect(fn).to.throwException(ex =>
-        expect(ex).to.be.a(TypeError))
+    describe('#toString()', function () {
+      it('returns a string representation of the GeoJSON value', function () {
+        expect(subject.toString()).to.equal('{"type":"Point","coordinates":[103.913,1.308]}')
+      })
     })
-  })
 
-  describe('#value()', function () {
-    it('returns the value as a JSON object', function () {
-      expect(subject.value()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
+    describe('GeoJSON.Point()', function () {
+      it('returns the lat, lng as a GeoJSON point value', function () {
+        var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+        expect(GeoJSON.Point(103.913, 1.308)).to.eql(point)
+      })
     })
-  })
 
-  describe('#toJSON()', function () {
-    it('returns the GeoJSON value as a JSON object', function () {
-      expect(subject.toJSON()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
-    })
-  })
-
-  describe('#toString()', function () {
-    it('returns a string representation of the GeoJSON value', function () {
-      expect(subject.toString()).to.equal('{"type":"Point","coordinates":[103.913,1.308]}')
-    })
-  })
-
-  describe('GeoJSON.Point()', function () {
-    it('returns the lat, lng as a GeoJSON point value', function () {
-      var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
-      expect(GeoJSON.Point(103.913, 1.308)).to.eql(point)
-    })
-  })
-
-  describe('GeoJSON.Polygon()', function () {
-    it('returns the coordinates as a GeoJSON polygon value', function () {
-      var polygon = new GeoJSON({type: 'Polygon', coordinates: [[[103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408]]]})
-      expect(GeoJSON.Polygon([103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408])).to.eql(polygon)
+    describe('GeoJSON.Polygon()', function () {
+      it('returns the coordinates as a GeoJSON polygon value', function () {
+        var polygon = new GeoJSON({type: 'Polygon', coordinates: [[[103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408]]]})
+        expect(GeoJSON.Polygon([103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408])).to.eql(polygon)
+      })
     })
   })
 
