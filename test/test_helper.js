@@ -24,6 +24,7 @@ const semver = require('./util/semver')
 const expect = require('expect.js')
 const util = require('util')
 const path = require('path')
+const runInNewProcessFn = require('./util/run_in_new_process')
 
 global.expect = expect
 
@@ -169,6 +170,14 @@ exports.fail = function fail (message) {
     message = util.inspect(message)
   }
   expect().fail(message)
+}
+
+exports.runInNewProcess = function (fn, timeout) {
+  let env = {
+    NODE_PATH: path.join(process.cwd(), 'node_modules'),
+    AEROSPIKE_HOSTS: client.config.hosts
+  }
+  return runInNewProcessFn(fn, timeout, env)
 }
 
 if (process.env.GLOBAL_CLIENT !== 'false') {

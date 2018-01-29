@@ -21,9 +21,11 @@
 
 extern "C" {
 #include <aerospike/as_policy.h>
+#include <aerospike/as_event.h>
 }
 
 // Functions to convert v8 policies to C structures
+int eventpolicy_from_jsobject(as_policy_event* policy, v8::Local<v8::Object> obj, const LogInfo* log );
 int writepolicy_from_jsobject(as_policy_write* policy, v8::Local<v8::Object> obj, const LogInfo* log );
 int readpolicy_from_jsobject( as_policy_read* policy, v8::Local<v8::Object> obj, const LogInfo* log );
 int removepolicy_from_jsobject(as_policy_remove* policy, v8::Local<v8::Object> obj, const LogInfo* log );

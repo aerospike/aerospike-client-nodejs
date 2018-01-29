@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "enums.h"
+#include "policy.h"
 #include "operations.h"
 #include "log.h"
 #include "conversions.h"
@@ -37,10 +38,23 @@ using namespace v8;
 NAN_METHOD(register_as_event_loop)
 {
 	Nan::HandleScope();
+
 	if (!as_event_set_external_loop_capacity(1)) {
 		return Nan::ThrowError("Unable to register default event loop");
 	}
-	as_event_set_external_loop(uv_default_loop());
+
+	as_policy_event policy;
+	as_policy_event_init(&policy);
+	eventpolicy_from_jsobject(&policy, info[0]->ToObject(), &g_log_info);
+
+	as_event_loop* loop;
+	as_error err;
+	as_status status = as_set_external_event_loop(&err, &policy, uv_default_loop(), &loop);
+	if (status != AEROSPIKE_OK) {
+		char errmsg[128];
+		snprintf(errmsg, sizeof(errmsg), "Unable to register default event loop: %s [%i]", err.message, err.code);
+		return Nan::ThrowError(errmsg);
+	}
 	uv_update_time(uv_default_loop());
 }
 

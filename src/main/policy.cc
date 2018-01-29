@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,31 @@
 #include "conversions.h"
 
 extern "C" {
-	#include <aerospike/as_policy.h>
+#include <aerospike/as_policy.h>
+#include <aerospike/as_event.h>
 }
 
 using namespace v8;
+
+int eventpolicy_from_jsobject(as_policy_event* policy, Local<Object> obj, const LogInfo* log)
+{
+	if (obj->IsUndefined() || obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	int rc = 0;
+	as_policy_event_init(policy);
+	if ((rc = get_optional_int32_property(&policy->max_commands_in_process, NULL, obj, "maxCommandsInProcess", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->max_commands_in_queue, NULL, obj, "maxCommandsInQueue", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->queue_initial_capacity, NULL, obj, "queueInitialCapacity", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing event policy: success");
+	return  AS_NODE_PARAM_OK;
+}
 
 int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const LogInfo* log)
 {
