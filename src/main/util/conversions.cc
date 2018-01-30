@@ -512,7 +512,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
     // and populate the error object.
     if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL) {
         char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
-        strcpy(err_message, error->message);
+        strncpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
         char *ptr;
         ptr = strtok(err_message, ":");
         if(ptr != NULL) {
@@ -529,7 +529,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
         }
 
         if(ptr != NULL) {
-            strcpy(error->message, ptr);
+            strncpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
             ptr = strtok(NULL, ":");
         }
 

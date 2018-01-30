@@ -50,10 +50,10 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	cmd->as = client->as;
 	cmd->log = client->log;
 	cmd->callback.Reset(info[4].As<Function>());
-	strcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()));
+	strncpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
 
 	if (info[1]->IsString()) {
-		strcpy(cmd->set, *String::Utf8Value(info[1]->ToString()));
+		strncpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE);
 	}
 
 	if (info[2]->IsNumber()) {

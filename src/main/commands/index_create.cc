@@ -98,7 +98,7 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
     }
 
     if (maybe_ns->IsString()) {
-        strcpy(cmd->ns, *String::Utf8Value(maybe_ns->ToString()));
+        strncpy(cmd->ns, *String::Utf8Value(maybe_ns->ToString()), AS_NAMESPACE_MAX_SIZE);
         as_v8_detail(log, "The index creation on namespace %s", cmd->ns);
     } else {
         as_v8_error(log, "namespace should be string");
@@ -108,12 +108,12 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
     }
 
     if (maybe_set->IsString()) {
-        strcpy(cmd->set, *String::Utf8Value(maybe_set->ToString()));
+        strncpy(cmd->set, *String::Utf8Value(maybe_set->ToString()), AS_SET_MAX_SIZE);
         as_v8_detail(log, "The index creation on set %s", cmd->set);
     }
 
     if (maybe_bin->IsString()) {
-        strcpy(cmd->bin, *String::Utf8Value(maybe_bin->ToString()));
+        strncpy(cmd->bin, *String::Utf8Value(maybe_bin->ToString()), AS_BIN_NAME_MAX_LEN);
         as_v8_detail(log, "The index creation on bin %s", cmd->bin);
     } else {
         as_v8_error(log, "bin name should be passed as a string");
