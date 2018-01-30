@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, beforeEach, afterEach, context, describe, it */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const Job = require('../lib/job')
@@ -24,7 +25,7 @@ const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 
 context('secondary indexes', function () {
-  var client = helper.client
+  let client = helper.client
 
   // generate unique index name for each test
   let testIndex = { name: null, bin: null, counter: 0 }
@@ -33,35 +34,41 @@ context('secondary indexes', function () {
     testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
     testIndex.bin = 'bin-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
   })
-  afterEach(() => helper.index.remove(testIndex.name))
 
-  function verifyIndexExists (namespace, indexName, callback) {
-    var sindex = 'sindex/' + namespace + '/' + indexName
-    var checkStatus = function (callback) {
-      return new Promise((resolve, reject) => {
-        client.infoAll(sindex, function (err, info) {
-          if (err) {
-            switch (err.code) {
-              case Aerospike.status.ERR_INDEX_NOT_FOUND:
-                resolve(false)
-                break
-              default:
-                reject(err)
-            }
-          } else {
-            resolve(true)
+  function verifyIndexExists (namespace, indexName) {
+    let sindex = 'sindex/' + namespace + '/' + indexName
+    let checkStatus = function () {
+      return client.infoAll(sindex)
+        .then(() => true)
+        .catch(error => {
+          if (error.code !== Aerospike.status.ERR_INDEX_NOT_FOUND) {
+            return Promise.reject(error)
           }
+          console.info('No such index:', indexName)
+          return false
         })
-      })
     }
-    Job.pollUntilDone(checkStatus, 10)
-      .then(() => callback())
-      .catch(error => { throw error })
+    return Job.pollUntilDone(checkStatus, 10)
+      .then(() => helper.index.remove(indexName))
   }
 
   describe('Client#indexCreate()', function () {
-    it('should create a complex index on list', function (done) {
-      var options = {
+    it('returns an IndexJob instance', function () {
+      let options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin + 'slkfjslkdfjslkdfjlskdfjslf',
+        index: testIndex.name,
+        datatype: Aerospike.indexDataType.NUMERIC
+      }
+
+      return client.createIndex(options)
+        .then(job => expect(job).to.be.an(IndexJob))
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+
+    it('should create a complex index on list', function () {
+      let options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -69,14 +76,12 @@ context('secondary indexes', function () {
         type: Aerospike.indexType.LIST,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      client.createIndex(options, function (err, job) {
-        expect(err).not.to.be.ok()
-        expect(job).to.be.a(IndexJob)
-        verifyIndexExists(helper.namespace, testIndex.name, done)
-      })
+
+      return client.createIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
 
-    it('should create an integer index with info policy', function (done) {
+    it('should create an integer index with info policy', function () {
       let options = {
         ns: helper.namespace,
         set: helper.set,
@@ -88,10 +93,8 @@ context('secondary indexes', function () {
         totalTimeout: 100
       })
 
-      client.createIndex(options, policy, function (error) {
-        if (error) throw error
-        verifyIndexExists(helper.namespace, testIndex.name, done)
-      })
+      return client.createIndex(options, policy)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
 
     it('re-creating an index with identical options returns an error', function () {
@@ -102,6 +105,7 @@ context('secondary indexes', function () {
         index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }
+
       return client.createIndex(options)
         .then(job => job.wait(10))
         .then(() => client.createIndex(options)
@@ -117,47 +121,44 @@ context('secondary indexes', function () {
   })
 
   describe('Client#createIntegerIndex()', function () {
-    it('should create an integer index', function (done) {
-      var options = {
+    it('should create an integer index', function () {
+      let options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
         index: testIndex.name
       }
-      client.createIntegerIndex(options, function (err) {
-        expect(err).not.to.be.ok()
-        verifyIndexExists(helper.namespace, testIndex.name, done)
-      })
+
+      return client.createIntegerIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
   })
 
   describe('Client#createStringIndex()', function () {
-    it('should create an string index', function (done) {
-      var args = {
+    it('should create an string index', function () {
+      let args = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
         index: testIndex.name
       }
-      client.createStringIndex(args, function (err) {
-        expect(err).not.to.be.ok()
-        verifyIndexExists(helper.namespace, testIndex.name, done)
-      })
+
+      return client.createStringIndex(args)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
   })
 
   describe('Client#createGeo2DSphereIndex()', function () {
-    it('should create a geospatial index', function (done) {
-      var args = {
+    it('should create a geospatial index', function () {
+      let args = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
         index: testIndex.name
       }
-      client.createGeo2DSphereIndex(args, function (err) {
-        expect(err).not.to.be.ok()
-        verifyIndexExists(helper.namespace, testIndex.name, done)
-      })
+
+      return client.createGeo2DSphereIndex(args)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
   })
 
