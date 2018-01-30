@@ -13,7 +13,7 @@
     "longevity"   : false,
     "alert"       : "CONSOLE",
     "filename"    : null,
-    "operations"  : 100,
+    "operations"  : 10,
     "iterations"  : null,
     "processes"   : 4,
     "time"        : "1h",

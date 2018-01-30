@@ -33,7 +33,7 @@ is available in the benchmark folder. This can be modified to run the desired co
  -  timeout     : Global timeout for all read/write operations performed in benchmark. (default `0` - infinite timeout).
  -  ttl         : Time to live for the objects written during benchmark run. (default `10000` seconds).
  -  log         : Log level of the client module (default INFO). 
- -  operations  : Number of operations for a single batch of operations. (default `100`).
+ -  operations  : Number of operations for a single batch of operations. (default `10`).
  -  iterations  : Number of iterations the benchmark should run. (default `null` - runs indefinitely).
  -  processes   : Number of worker process. These are work horses for the benchmark, that does actual read/write or scan/query operations                  in a aerospike cluster. (default  `4` - Recommened value Number of CPUs/cores in the machine).
  -  time        : Time to run the benchmark. This can be specified in the units of seconds/minutes/hours. 
