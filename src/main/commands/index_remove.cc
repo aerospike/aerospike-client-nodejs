@@ -89,7 +89,7 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
     }
 
     if (maybe_ns->IsString()) {
-        strcpy(cmd->ns, *String::Utf8Value(maybe_ns->ToString()));
+        strncpy(cmd->ns, *String::Utf8Value(maybe_ns->ToString()), AS_NAMESPACE_MAX_SIZE);
         as_v8_detail(log, "The index creation on namespace %s", cmd->ns);
     } else {
         as_v8_error(log, "namespace should be string");
