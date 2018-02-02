@@ -17,8 +17,6 @@
 #pragma once
 
 #include <node.h>
-#include <cstdlib>
-#include <unistd.h>
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -31,7 +29,6 @@ extern "C" {
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_list.h>
-#include <citrusleaf/cf_queue.h>
 }
 
 #include "client.h"

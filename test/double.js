@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const Double = Aerospike.Double
 
 require('./test_helper.js')
 
-describe('Aerospike.Double', function () {
+describe('Aerospike.Double #noserver', function () {
   describe('constructor', function () {
     it('returns a new Double value', function () {
       var subject = new Double(3.1415)

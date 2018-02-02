@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 require('./test_helper')
 const utils = require('../lib/utils')
 
-describe('utils.parseHostString()', function () {
+describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {
     var host = utils.parseHostString('aero.local')
     expect(host).to.eql({addr: 'aero.local', port: 3000})
@@ -89,7 +89,7 @@ describe('utils.parseHostString()', function () {
   })
 })
 
-describe('utils.parseHostsString()', function () {
+describe('utils.parseHostsString() #noserver', function () {
   it('parses a comma separate list of hosts', function () {
     var hosts = utils.parseHostsString('aero.local:aero.tls:3000,192.168.33.10:3000,[fde4:8dba:82e1::c4]')
     expect(hosts.length).to.be(3)

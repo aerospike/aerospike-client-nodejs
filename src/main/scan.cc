@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/as_scan.h>
-}
-
+#include <cstdint>
 #include <node.h>
 
 #include "async.h"
@@ -25,6 +22,10 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "scan.h"
+
+extern "C" {
+#include <aerospike/as_scan.h>
+}
 
 using namespace v8;
 

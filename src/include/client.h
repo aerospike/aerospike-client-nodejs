@@ -16,16 +16,14 @@
 
 #pragma once
 
-#define __STDC_LIMIT_MACROS
-
-#include <stdint.h>
 #include <node.h>
 #include <nan.h>
-#include "log.h"
 
 extern "C" {
-	#include <aerospike/aerospike.h>
+#include <aerospike/aerospike.h>
 }
+
+#include "log.h"
 
 #define TYPE_CHECK_REQ(val, type, msg) if (!val->type()) return Nan::ThrowTypeError(msg)
 #define TYPE_CHECK_OPT(val, type, msg) if (!(val->IsNull() || val->IsUndefined() || val->type())) return Nan::ThrowTypeError(msg)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  ******************************************************************************/
 
-extern "C" {
-#include <aerospike/as_event.h>
-#include <aerospike/as_log.h>
-#include <aerospike/as_async_proto.h>
-}
-
 #include "client.h"
 #include "enums.h"
 #include "operations.h"
 #include "log.h"
 #include "conversions.h"
+
+extern "C" {
+#include <aerospike/as_event.h>
+#include <aerospike/as_log.h>
+#include <aerospike/as_async_proto.h>
+}
 
 #define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
 
