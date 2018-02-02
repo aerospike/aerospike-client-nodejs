@@ -23,7 +23,7 @@ const status = require('../lib/status')
 
 require('./test_helper.js')
 
-describe('AerospikeError', function () {
+describe('AerospikeError #noserver', function () {
   describe('constructor', function () {
     it('creates a new AerospikeError instance', function () {
       expect(new AerospikeError()).to.be.a(AerospikeError)

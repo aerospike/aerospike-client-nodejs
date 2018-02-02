@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ describe('Client', function () {
   })
 
   describe('#close', function () {
-    it('should be a no-op if close is called after connection error', function (done) {
+    it('should be a no-op if close is called after connection error #noserver', function (done) {
       const client = new Client({hosts: '127.0.0.1:0'})
       client.connect(error => {
         expect(error.message).to.match(/Failed to connect/)
@@ -175,7 +175,7 @@ describe('Client', function () {
       checkAssertions('after')
     }
 
-    it('callback is asynchronous in case of an client error', function (done) {
+    it('callback is asynchronous in case of an client error #noserver', function (done) {
       // trying to send a command to a client that is not connected will trigger a client error
       var client = Aerospike.client()
       var errorCheck = function (err) {

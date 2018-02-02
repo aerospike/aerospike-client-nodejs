@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,25 @@
 //
 
 #include "time.h"
-#include <unistd.h>
-#include <libgen.h>
 
 extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/as_log.h>
+#include <aerospike/as_string.h>
 }
 
 #include "log.h"
 #include "enums.h"
+
+#if !defined(_MSC_VER)
+#include <unistd.h>
+#define as_gmtime(ts, tm) gmtime_r(ts, tm)
+#define as_getpid() getpid()
+#else
+#include <process.h>
+#define as_gmtime(ts, tm) gmtime_s(tm, ts)
+#define as_getpid() _getpid()
+#endif
 
 
 //==========================================================
@@ -104,15 +113,16 @@ _as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
 	char ts[64];
 	struct tm nowtm;
 	time_t now = time(NULL);
-	gmtime_r(&now, &nowtm);
+	as_gmtime(&now, &nowtm);
 	strftime(ts, 64, "%b %d %Y %T %Z", &nowtm);
 
-	const char* filename = basename((char*) file);
+	as_string file_string;
+	const char* filename = as_basename(&file_string, file);
 
 	char msg[1024];
 	vsnprintf(msg, 1024, fmt, args);
 
 	fprintf(log->fd, "%s: %-5s(%d) [%s:%u] [%s] - %s\n", ts,
-		log_level_name(level), getpid(), filename, line, func, msg);
+			log_level_name(level), as_getpid(), filename, line, func, msg);
 	fflush(log->fd);
 }

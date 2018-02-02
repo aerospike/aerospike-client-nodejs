@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 describe('Aerospike', function () {
-  describe('Aerospike.client()', function () {
+  describe('Aerospike.client() #noserver', function () {
     it('instantiates a new client instance', function (done) {
       var client = Aerospike.client(helper.config)
       expect(client).to.be.a(Aerospike.Client)

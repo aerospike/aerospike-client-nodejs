@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const Key = Aerospike.Key
 const status = Aerospike.status
 const helper = require('./test_helper')
 
-describe('Key', function () {
+describe('Key #noserver', function () {
   describe('constructor', function () {
     context('namespace', function () {
       it('rejects empty namespace', function () {
@@ -116,8 +116,6 @@ describe('Key', function () {
     })
 
     context('digest', function () {
-      var client = helper.client
-
       it('allows creating a new key with just the namespace and digest', function () {
         var digest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
         expect(new Key('ns', null, null, digest)).to.be.ok()
@@ -129,48 +127,6 @@ describe('Key', function () {
 
       it('rejects a digest that is not the right size', function () {
         expect(function () { return new Key('ns', null, null, Buffer.from([0x01])) }).to.throwException('Digest must be a 20-byte Buffer')
-      })
-
-      it('fetches a record given the digest', function (done) {
-        var key = new Key('test', 'test', 'digestOnly')
-        client.put(key, {foo: 'bar'}, function (err) {
-          if (err) throw err
-          var digest = key.digest
-          var key2 = new Key('test', null, null, digest)
-          client.get(key2, function (err, record) {
-            if (err) throw err
-            expect(record.bins.foo).to.equal('bar')
-            done()
-          })
-        })
-      })
-    })
-
-    context('plain object keys (for backward compatibility)', function () {
-      var client = helper.client
-
-      it('accepts plain objects as user keys', function (done) {
-        var key = {ns: helper.namespace, set: helper.set, key: 1234}
-        client.put(key, {foo: 'bar'}, function (err) {
-          expect(err).to.not.be.ok()
-          done()
-        })
-      })
-
-      it('returns an error for an unsupported float user key', function (done) {
-        var key = {ns: helper.namespace, set: helper.set, key: 3.1415}
-        client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.ERR_PARAM)
-          done()
-        })
-      })
-
-      it('returns an error for an invalid user key', function (done) {
-        var key = {ns: helper.namespace, set: helper.set, key: {a: 1, b: 2, c: 3}}
-        client.put(key, {foo: 'bar'}, function (err) {
-          expect(err.code).to.be(status.ERR_PARAM)
-          done()
-        })
       })
     })
   })
@@ -251,6 +207,34 @@ describe('Key', function () {
       let key2 = new Key('ns1', 'set1', 'key1', Buffer.from('0j9i8h7g6f5e4d3c2b1a'))
       expect(key1.equals(key2)).to.be(false)
       expect(key2.equals(key1)).to.be(false)
+    })
+  })
+})
+
+context('Plain Object Keys (for backward compatibility)', function () {
+  var client = helper.client
+
+  it('accepts plain objects as user keys', function (done) {
+    var key = {ns: helper.namespace, set: helper.set, key: 1234}
+    client.put(key, {foo: 'bar'}, function (err) {
+      expect(err).to.not.be.ok()
+      done()
+    })
+  })
+
+  it('returns an error for an unsupported float user key', function (done) {
+    var key = {ns: helper.namespace, set: helper.set, key: 3.1415}
+    client.put(key, {foo: 'bar'}, function (err) {
+      expect(err.code).to.be(status.ERR_PARAM)
+      done()
+    })
+  })
+
+  it('returns an error for an invalid user key', function (done) {
+    var key = {ns: helper.namespace, set: helper.set, key: {a: 1, b: 2, c: 3}}
+    client.put(key, {foo: 'bar'}, function (err) {
+      expect(err.code).to.be(status.ERR_PARAM)
+      done()
     })
   })
 })

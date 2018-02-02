@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,19 @@
  * limitations under the License.
  ******************************************************************************/
 
-extern "C" {
-	#include <aerospike/as_operations.h>
-	#include <aerospike/as_list_operations.h>
-	#include <aerospike/as_map_operations.h>
-	#include <aerospike/as_nil.h>
-}
-
+#include <cstdint>
 #include <node.h>
 
 #include "operations.h"
 #include "conversions.h"
 #include "log.h"
+
+extern "C" {
+#include <aerospike/as_operations.h>
+#include <aerospike/as_list_operations.h>
+#include <aerospike/as_map_operations.h>
+#include <aerospike/as_nil.h>
+}
 
 using namespace v8;
 
@@ -46,7 +47,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 	as_map_order order;
 	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
 	if (value->IsNumber()) {
-		order = (as_map_order) value->NumberValue();
+		order = (as_map_order) value->IntegerValue();
 	} else if (value->IsUndefined()) {
 		order = AS_MAP_UNORDERED;
 	} else {
@@ -57,7 +58,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 	as_map_write_mode write_mode;
 	value = policy_obj->Get(Nan::New("writeMode").ToLocalChecked());
 	if (value->IsNumber()) {
-		write_mode = (as_map_write_mode) value->NumberValue();
+		write_mode = (as_map_write_mode) value->IntegerValue();
 	} else if (value->IsUndefined()) {
 		write_mode = AS_MAP_UPDATE;
 	} else {
@@ -74,7 +75,7 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 	Nan::HandleScope scope;
 	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
 	if (value->IsNumber()) {
-		(*return_type) = (as_map_return_type) value->NumberValue();
+		(*return_type) = (as_map_return_type) value->IntegerValue();
 	} else if (value->IsUndefined()) {
 		(*return_type) = AS_MAP_RETURN_NONE;
 	} else {

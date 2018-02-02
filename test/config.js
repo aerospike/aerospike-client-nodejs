@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ const Aerospike = require('../lib/aerospike')
 const Config = require('../lib/config')
 require('./test_helper')
 
-describe('Config', function () {
+describe('Config #noserver', function () {
   var asHostsEnv
   beforeEach(function () {
     asHostsEnv = process.env.AEROSPIKE_HOSTS

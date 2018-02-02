@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -170,11 +170,13 @@ exports.fail = function fail (message) {
   expect().fail(message)
 }
 
-/* global before */
-before(() => client.connect()
-  .then(() => serverInfoHelper.fetch_info())
-  .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
-)
+if (process.env.GLOBAL_CLIENT !== 'false') {
+  /* global before */
+  before(() => client.connect()
+    .then(() => serverInfoHelper.fetch_info())
+    .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
+  )
+}
 
 /* global after */
 after(function (done) {
