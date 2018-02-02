@@ -114,6 +114,20 @@ describe('AerospikeError', function () {
     })
   })
 
+  describe('#isServerError()', function () {
+    it('returns true if the error code indicates a server error', function () {
+      let error = { code: status.ERR_RECORD_NOT_FOUND }
+      let subject = AerospikeError.fromASError(error)
+      expect(subject.isServerError()).to.be(true)
+    })
+
+    it('returns false if the error code indicates a client error', function () {
+      let error = { code: status.ERR_PARAM }
+      let subject = AerospikeError.fromASError(error)
+      expect(subject.isServerError()).to.be(false)
+    })
+  })
+
   describe('#toString()', function () {
     it('sets an informative error message', function () {
       let subject = new AerospikeError('Dooh!')
