@@ -546,6 +546,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
     err->Set(Nan::New("func").ToLocalChecked(), error->func ? Nan::New(error->func).ToLocalChecked() : Nan::New("\0").ToLocalChecked() );
     err->Set(Nan::New("file").ToLocalChecked(), error->file ? Nan::New(error->file).ToLocalChecked() : Nan::New("\0").ToLocalChecked() );
     err->Set(Nan::New("line").ToLocalChecked(), error->line ? Nan::New(error->line) : Nan::New((uint32_t)0) );
+    err->Set(Nan::New("inDoubt").ToLocalChecked(), error->in_doubt ? Nan::True() : Nan::False());
 
     return scope.Escape(err);
 }

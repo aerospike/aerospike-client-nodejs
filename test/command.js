@@ -16,32 +16,27 @@
 
 'use strict'
 
-const Command = require('./command')
-const Key = require('../key')
-const Record = require('../record')
+/* eslint-env mocha */
+/* global expect */
 
-const EndOfStream = {}
+require('./test_helper')
+const Command = require('../lib/commands/command')
 
-module.exports = asCommand => class StreamCommand extends Command(asCommand) {
-  constructor (stream, args) {
-    super(stream.client, args)
-    this.stream = stream
-  }
-
-  callback (error, record) {
-    if (error) {
-      this.stream.emit('error', error)
-    } else if (record === EndOfStream) {
-      this.stream.emit('end')
-    } else {
-      this.stream.emit('data', record)
+describe('Command', function () {
+  context('Extend Command', function () {
+    class TestCommand extends Command('testCmd') {
+      foo () { return 'bar' }
     }
-    return !this.stream.aborted
-  }
 
-  convertResult (bins, meta, asKey) {
-    if (!bins) return EndOfStream
-    let key = Key.fromASKey(asKey)
-    return new Record(key, bins, meta)
-  }
-}
+    it('creates subclasses with informative constructor names', function () {
+      let cmd = new TestCommand({})
+      expect(cmd.constructor.name).to.be('TestCommand')
+    })
+
+    it('keeps a reference to the client instance', function () {
+      let client = {}
+      let cmd = new TestCommand(client)
+      expect(cmd.client).to.be(client)
+    })
+  })
+})
