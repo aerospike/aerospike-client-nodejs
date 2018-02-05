@@ -14,7 +14,7 @@ An Aerospike add-on module for Node.js.
 This module is compatible with Node.js v4.x (LTS), v6.x (LTS), v8.x (LTS) and
 v9.x. It supports the following operating systems: CentOS/RHEL 6/7, Debian
 7/8/9, Ubuntu 12.04/14.04/16.04, as well as many Linux destributions compatible
-with one of these OS releases. macOS is also supported.
+with one of these OS releases. macOS and Windows are also supported.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
@@ -101,15 +101,16 @@ Details about the API are available in the [`docs`](docs) directory.
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-The aerospike package supports Node.js v4.x (LTS), v6.x (LTS) and v8.x. To
-download and install the latest stable version of Node.js, visit
+The Aerospike Node.js client supports all Node.js [LTS
+releases](https://github.com/nodejs/Release#release-schedule). To download and
+install the latest stable version of Node.js, visit
 [nodejs.org](http://nodejs.org/) or use the version that comes bundled with
 your operating system.
 
-The Aerospike package includes a native addon. `gcc`/`g++` v4.8 or newer or
-`clang`/`clang++` v3.4 or newer are required to build the addon.
+The package includes a native add-on. `gcc`/`g++` v4.8 or newer or
+`clang`/`clang++` v3.4 or newer are required to build the add-on.
 
-The Aerospike addon depends on the Aerospike C client library, which gets
+The Aerospike add-on depends on the Aerospike C client library, which is
 downloaded during package installation. Either the cURL or Wget command line tool
 is required for this. See ["C Client Resolution"](#C-Client-Resolution) below for
 further information.
@@ -130,7 +131,7 @@ sudo yum install gcc-c++ openssl-devel
 ```
 
 Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. To build the
-Aerospike addon using Node.js v4 or later, gcc-4.8 or later is required. To
+Aerospike add-on using Node.js v4 or later, gcc-4.8 or later is required. To
 update the gcc tool chain you can install a recent version of the
  [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
 or a compatible devtoolset version for CentOS.
@@ -169,6 +170,10 @@ Before starting with the Aerospike Nodejs Client, please make sure the following
 $ brew install openssl
 $ brew link openssl --force
 ```
+
+### Windows
+
+See [Prerequisites for Aerospike Node.js Client on Windows](https://github.com/aerospike/aerospike-client-nodejs/blob/master/README_WINDOWS.md).
 
 <a name="Installation"></a>
 ## Installation
@@ -333,13 +338,12 @@ The API docs also contain a few basic tutorials:
 
 * [Getting Started - Connecting to an Aerospike database cluster](https://www.aerospike.com/apidocs/nodejs/tutorial-getting_started.html)
 * [Managing Aerospike connections in a Node cluster](https://www.aerospike.com/apidocs/nodejs/tutorial-node_clusters.html)
-* [Handling asynchronous database operations using Callbacks, Promises or async/await](https://www.aerospike.com/apidocs/nodejs/tutorial-callbacks_promises_async_await.html)
+* [Handling asynchronous database operations using Callbacks, Promises or `async`/`await`](https://www.aerospike.com/apidocs/nodejs/tutorial-callbacks_promises_async_await.html)
 
 A variety of additional example applications are provided in the
 [`examples`](examples) directory of this repository.
 
-The list of [backward incompatible API changes](docs/api-changes.md) by release,
-to the API by release.
+The list of [backward incompatible API changes](docs/api-changes.md) by release.
 
 ### API Versioning
 
