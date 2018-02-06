@@ -1,11 +1,22 @@
-Unreleased
-==========
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+
+* **Buf Fixes**
+  * Avoid buffer overflows when copying bin/set/ns names. [#241](https://github.com/aerospike/aerospike-client-nodejs/pull/241)
+  * Fix possible race condition in `indexRemove` test cases. [#240](https://github.com/aerospike/aerospike-client-nodejs/pull/240)
+
+* **New Features**
+  * Support building package on Windows (64bit, Windows 7 or later) [#239](https://github.com/aerospike/aerospike-client-nodejs/pull/239)
+  * Added new `inDoubt` flag to `AerospikeError`. The `inDoubt` flag indicates if a write command may have completed even though an error was returned. This scenario can occur on a client timeout for a command that has been sent to the server. [#242](https://github.com/aerospike/aerospike-client-nodejs/pull/242)
+  * Added a command reference to `AerospikeError` for the database command, during which the error occurred. The `Command` object may contain additional information such as the record key for single-record-key read/write commands. [#242](https://github.com/aerospike/aerospike-client-nodejs/pull/242)
 
 * **Updates**
   * Update C client library to [v4.3.4](http://www.aerospike.com/download/client/c/notes.html#4.3.4).
 
-v3.1.1 / 2018-01-09
-===================
+## [3.1.1] - 2018-01-09
 
 * **Bug Fixes**
   * Support all data types for write operation in Client#operate [#235](https://github.com/aerospike/aerospike-client-nodejs/issues/235)
@@ -14,8 +25,7 @@ v3.1.1 / 2018-01-09
 * **Updates**
   * Update C client library to [v4.3.2](http://www.aerospike.com/download/client/c/notes.html#4.3.2).
 
-v3.1.0 / 2017-12-18
-===================
+## [3.1.0] - 2017-12-18
 
 * **New Features**
   * Logging improvements: C client logs enabled by default; log level can be controlled through new, global log settings. [PR #231](https://github.com/aerospike/aerospike-client-nodejs/pull/231)
@@ -28,22 +38,19 @@ v3.1.0 / 2017-12-18
   * Update to C client's new package format.
   * Add support for Debian 9 ("Stretch")
 
-v3.0.2 / 2017-10-09
-===================
+## [3.0.2] - 2017-10-09
 
 * **Bug Fixes**
   * Release event loop on #close even if client not connected [#225](https://github.com/aerospike/aerospike-client-nodejs/issues/225)
 
-v3.0.1 / 2017-10-06
-===================
+## [3.0.1] - 2017-10-06
 
 * **Bug Fixes**
   * Fixed typo: Aerospike.ttl.DONT_UPDDATE [#222](https://github.com/aerospike/aerospike-client-nodejs/issues/222)
   * Return parameter error if ttl or gen meta-data values are invalid [#223](https://github.com/aerospike/aerospike-client-nodejs/issues/223)
   * Call Client#connect callback asynchronously [#224](https://github.com/aerospike/aerospike-client-nodejs/issues/224)
 
-v3.0.0 / 2017-10-03
-===================
+## [3.0.0] - 2017-10-03
 
 * **New Features**
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
@@ -66,20 +73,17 @@ v3.0.0 / 2017-10-03
 Please refer to the full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
 for further details.
 
-v2.7.2 / 2017-08-03
-===================
+## [2.7.2] - 2017-08-03
 
 * **Bug Fixes**
   * Close cluster event callback handle when client is closed [#211](https://github.com/aerospike/aerospike-client-nodejs/issues/211)
 
-v2.7.1 / 2017-07-24
-===================
+## [2.7.1] - 2017-07-24
 
 * **New Features**
   * Add socket timeout setting to query policy [#207](https://github.com/aerospike/aerospike-client-nodejs/issues/207)
 
-v2.7.0 / 2017-07-17
-===================
+## [2.7.0] - 2017-07-17
 
 * **New Features**
   * Client emits cluster state changed events [#206](https://github.com/aerospike/aerospike-client-nodejs/issues/206)
@@ -88,8 +92,7 @@ v2.7.0 / 2017-07-17
   * Update C client library to [v4.1.8](http://www.aerospike.com/download/client/c/notes.html#4.1.8).
   * Update packaging to include system Lua scripts in npm package [#202](https://github.com/aerospike/aerospike-client-nodejs/pull/202)
 
-v2.6.0 / 2017-05-25
-===================
+## [2.6.0] - 2017-05-25
 
 * **New Features**
   * Expose new consistency level in batch policy [#197](https://github.com/aerospike/aerospike-client-nodejs/pull/197
@@ -101,8 +104,7 @@ v2.6.0 / 2017-05-25
   * Update C client library to [v4.1.6](http://www.aerospike.com/download/client/c/notes.html#4.1.6).
   * The Client#udfRegisterWait and Info#parseInfo functions have been marked deprecated. See [API Changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md) for details.
 
-v2.5.2 / 2017-04-20
-===================
+## [2.5.2] - 2017-04-20
 
 v2.5.x is the last release to support Node.js v0.12 and io.js. The next major client release will require Node.js v4 or later.
 
@@ -113,14 +115,12 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
   * Synchronous error callback in query command causes "unspecified" error in record stream [#146](https://github.com/aerospike/aerospike-client-nodejs/issues/146)
   * Query/scan record stream should emit AerospikeError instances [#187](https://github.com/aerospike/aerospike-client-nodejs/issues/187)
 
-v2.5.1 / 2017-04-11
-===================
+## [2.5.1] - 2017-04-11
 
 * **Bug Fixes**
   * Support queries with keys with just namespace + digest [#184](https://github.com/aerospike/aerospike-client-nodejs/issues/184)
 
-v2.5.0 / 2017-04-05
-===================
+## [2.5.0] - 2017-04-05
 
 * **New Features**
   * Support ns/set truncate command [#712](https://github.com/aerospike/aerospike-client-nodejs/issues/172)
@@ -136,8 +136,7 @@ v2.5.0 / 2017-04-05
   * Update to JavaScript Standard Style v9 [#178](https://github.com/aerospike/aerospike-client-nodejs/pull/178)
   * Add WebWorker based test case to scan stress test [#180](https://github.com/aerospike/aerospike-client-nodejs/pull/180)
 
-v2.4.4 / 2016-12-19
-===================
+## [2.4.4] - 2016-12-19
 
 * **Bug Fixes**
   * Fix TTL value returned from server for records that never expire. [#156](https://github.com/aerospike/aerospike-client-nodejs/issues/156)
@@ -149,16 +148,14 @@ v2.4.4 / 2016-12-19
 * **Documentation**
   * Mark LargeList functionality as deprectated. [#159](https://github.com/aerospike/aerospike-client-nodejs/issues/159)
 
-v2.4.3 / 2016-11-11
-===================
+## [2.4.3] - 2016-11-11
 
 * **Bug Fixes**
   * Fix installation on macOS. [#155](https://github.com/aerospike/aerospike-client-nodejs/issues/155) Thanks to [@arch1t3ct](https://github.com/arch1t3ct)!
   * Fix installation on platforms without `which` command.
   * Explicity link zlib to fix usage on Alpine Linux. [#117](https://github.com/aerospike/aerospike-client-nodejs/issues/117) Thanks to [@rma4ok](https://github.com/rma4ok)!
 
-v2.4.2 / 2016-11-10
-===================
+## [2.4.2] - 2016-11-10
 
 * **New Features**
   * Added constant enums `Aerospike.ttl` for "special" TTL values, incl. `DONT_UPDATE` value supported by Aerospike Server v3.10.1 and later.
@@ -167,8 +164,7 @@ v2.4.2 / 2016-11-10
   * Security Fix: Download C client using HTTPS and verify package checksum. [#153](https://github.com/aerospike/aerospike-client-nodejs/issues/153) Thanks to [Adam Baldwin](https://github.com/evilpacket) of [@liftsecurity](https://github.com/liftsecurity) for the report!
   * Support for Ubuntu 16.10/17.04 in the C client download script. [#154](https://github.com/aerospike/aerospike-client-nodejs/issues/154) Thanks to [@kitex](https://github.com/kitex)!
 
-v2.4.1 / 2016-10-10
-===================
+## [2.4.1] - 2016-10-10
 
 * **Bug Fixes**
   * Fix write operator to support double values. [#148](https://github.com/aerospike/aerospike-client-nodejs/issues/148) Thanks to [@OlegPoberegets](https://github.com/OlegPoberegets)!
@@ -179,8 +175,7 @@ v2.4.1 / 2016-10-10
 * **Updates**
   * Update C client library to [v4.1.1](http://www.aerospike.com/download/client/c/notes.html#4.1.1).
 
-v2.4.0 / 2016-09-09
-===================
+## [2.4.0] - 2016-09-09
 
 * **New Features**
   * Support for durable delete write policy [CLIENT-769]; requires Aerospike
@@ -206,14 +201,12 @@ v2.4.0 / 2016-09-09
     read/write commands, the batch read command or query/scan commands in
     client versions v2.x.
 
-v2.3.1 / 2016-08-11
-===================
+## [2.3.1] - 2016-08-11
 
 * **Bug Fixes**
   * Fix installation on Amazon Linux. [#143](https://github.com/aerospike/aerospike-client-nodejs/issues/143)
 
-v2.3.0 / 2016-08-11
-===================
+## [2.3.0] - 2016-08-11
 
 * **New Features**
   * Add Client#infoAll method to simplify processing info responses from multiple hosts. [#43](https://github.com/aerospike/aerospike-client-nodejs/issues/43)
@@ -229,22 +222,19 @@ v2.3.0 / 2016-08-11
   * Update C client library to v4.0.7.
   * Drop support for Debian 6
 
-v2.2.0 / 2016-07-13
-===================
+## [2.2.0] - 2016-07-13
 
 * **New Features**
   * Added back support for applying stream UDF to query results w/o aggregation.
   * Added `maxConnsPerNode` config setting to address [#130](https://github.com/aerospike/aerospike-client-nodejs/issues/130).
 
-v2.1.1 / 2016-06-29
-===================
+## [2.1.1] - 2016-06-29
 
 * **Bug Fixes**
   * Prevent segfault processing query/scan record stream if client object goes out of scope. [CLIENT-735]
   * Update C client to v4.0.6 with fix to complete scan on empty sets. [#132](https://github.com/aerospike/aerospike-client-nodejs/issues/132)
 
-v2.1.0 / 2016-06-03
-===================
+## [2.1.0] - 2016-06-03
 
 * **New Features**
   * Support for operations on Sorted Maps. Requires Aerospike server version 3.8.4 or later.
@@ -266,8 +256,7 @@ v2.1.0 / 2016-06-03
   * Documented `sharedMemory` configuration.
   * Added tutorial for using Aerospike client in Node.js cluster setup.
 
-v2.0.4 / 2016-05-09
-===================
+## [2.0.4] - 2016-05-09
 
 * **Fixes**
   * Query and Scan operations do not return record keys.
@@ -275,15 +264,13 @@ v2.0.4 / 2016-05-09
     [PR #127](https://github.com/aerospike/aerospike-client-nodejs/pull/127).
     Thanks to [@sel-fish](https://github.com/sel-fish)!
 
-v2.0.3 / 2016-05-03
-===================
+## [2.0.3] - 2016-05-03
 
 * **Fixes**
   * Event loop does not get released if module gets required but never used to open & close client connection.
     [#124](https://github.com/aerospike/aerospike-client-nodejs/issues/124)
 
-v2.0.2 / 2016-04-29
-===================
+## [2.0.2] - 2016-04-29
 
 * **Improvements**
   * Add support for node v6 by bumping nan dependency. [#121](https://github.com/aerospike/aerospike-client-nodejs/issues/121),
@@ -293,8 +280,7 @@ v2.0.2 / 2016-04-29
     [PR #123](https://github.com/aerospike/aerospike-client-nodejs/pull/123).
     Thanks to [@NawarA](https://github.com/NawarA)!
 
-v2.0.1 / 2016-04-27
-===================
+## [2.0.1] - 2016-04-27
 
 * **Improvements**
   * Optimize callback handler performance. [#119](https://github.com/aerospike/aerospike-client-nodejs/issues/119)
@@ -311,16 +297,14 @@ v2.0.1 / 2016-04-27
 * **Documentation**
   * Minor JSDoc documentation fixes
 
-v2.0.0 / 2016-04-19
-===================
+## [2.0.0] - 2016-04-19
 
 * **Documentation**
   * Added overview page for API docs
   * Added "Getting Started" tutorial to API docs
   * Updated documentation for aerospike module
 
-v2.0.0-alpha.3 / 2016-04-18
-===========================
+## [2.0.0-alpha.3] - 2016-04-18
 
 * **Improvements**
   * Added new filter predicates in the `Aerospike.filter` module:
@@ -344,8 +328,7 @@ v2.0.0-alpha.3 / 2016-04-18
 * **Fixes**
   * Fix possible memory corruption parsing UDF module or function names.
 
-v2.0.0-alpha.2 / 2016-04-12
-===========================
+## [2.0.0-alpha.2] - 2016-04-12
 
 * **Improvements**
   * Added support for creating secondary indexes on list and map values;
@@ -357,8 +340,7 @@ v2.0.0-alpha.2 / 2016-04-12
     completion asynchronously.
   * Added new Scan API implementation via `Client#scan`.
 
-v2.0.0-alpha.1 / 2016-03-30
-===========================
+## [2.0.0-alpha.1] - 2016-03-30
 
 * **Improvements**
   * Use asynchronous client commands of the new Aerospike C/C++ client library
@@ -407,8 +389,7 @@ v2.0.0-alpha.1 / 2016-03-30
     API documentation is generated from the source code using JSDoc v3. This is
     work-in-progress and will be completed before v2.0.0-final is released.
 
-1.0.57 / 2016-03-18
-===================
+## [1.0.57] - 2016-03-18
 
 * **Improvements**
   * Update build script to support Fedora 23 as well as Korora 22/23.
@@ -426,8 +407,7 @@ v2.0.0-alpha.1 / 2016-03-30
   * Fix lists being returned as bytes in listGetRange/listPopRange operations
     (via C client library v4.0.3).
 
-1.0.56 / 2016-02-11
-===================
+## [1.0.56] - 2016-02-11
 
 * **Improvements**
   * Support `operator.incr()` operation on double values.
@@ -442,8 +422,7 @@ v2.0.0-alpha.1 / 2016-03-30
   * Clarify supported data types and (lack of) automatic data type conversions.
   * Update supported Node.js versions.
 
-1.0.55 / 2016-01-15
-===================
+## [1.0.55] - 2016-01-15
 
 * **Improvements**
   * Update to C Client v4.0.0.
