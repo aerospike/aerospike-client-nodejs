@@ -1,3 +1,9 @@
+Unreleased
+==========
+
+* **Updates**
+  * Update C client library to [v4.3.4](http://www.aerospike.com/download/client/c/notes.html#4.3.4).
+
 v3.1.1 / 2018-01-09
 ===================
 
