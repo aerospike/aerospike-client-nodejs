@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
   * Added a command reference to `AerospikeError` for the database command, during which the error occurred. The `Command` object may contain additional information such as the record key for single-record-key read/write commands. [#242](https://github.com/aerospike/aerospike-client-nodejs/pull/242)
 
 * **Updates**
-  * Update C client library to [v4.3.4](http://www.aerospike.com/download/client/c/notes.html#4.3.4).
+  * Update C client library to [v4.3.5](http://www.aerospike.com/download/client/c/notes.html#4.3.5).
 
 ## [3.1.1] - 2018-01-09
 
