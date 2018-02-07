@@ -44,7 +44,6 @@ context('secondary indexes', function () {
           if (error.code !== Aerospike.status.ERR_INDEX_NOT_FOUND) {
             return Promise.reject(error)
           }
-          console.info('No such index:', indexName)
           return false
         })
     }
