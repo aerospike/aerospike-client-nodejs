@@ -20,6 +20,7 @@ const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
 const utils = require('../lib/utils')
 const options = require('./util/options')
+const semver = require('./util/semver')
 const expect = require('expect.js')
 const util = require('util')
 const path = require('path')
@@ -116,7 +117,7 @@ ServerInfoHelper.prototype.is_enterprise = function () {
 }
 
 ServerInfoHelper.prototype.build_gte = function (minVer) {
-  return semverCmp(this.build, minVer) >= 0
+  return semver.compare(this.build, minVer) >= 0
 }
 
 ServerInfoHelper.prototype.fetch_info = function () {
@@ -183,17 +184,3 @@ after(function (done) {
   client.close()
   done()
 })
-
-function semverCmp (a, b) {
-  var pa = a.split('.')
-  var pb = b.split('.')
-  for (var i = 0; i < 4; i++) {
-    var na = Number(pa[i])
-    var nb = Number(pb[i])
-    if (na > nb) return 1
-    if (nb > na) return -1
-    if (!isNaN(na) && isNaN(nb)) return 1
-    if (isNaN(na) && !isNaN(nb)) return -1
-  }
-  return 0
-}
