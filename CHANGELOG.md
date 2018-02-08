@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-* **Buf Fixes**
+## [3.2.0] - 2018-02-08
+
+* **Bug Fixes**
   * Avoid buffer overflows when copying bin/set/ns names. [#241](https://github.com/aerospike/aerospike-client-nodejs/pull/241)
   * Fix possible race condition in `indexRemove` test cases. [#240](https://github.com/aerospike/aerospike-client-nodejs/pull/240)
 
 * **New Features**
   * Support building package on Windows (64bit, Windows 7 or later) [#239](https://github.com/aerospike/aerospike-client-nodejs/pull/239)
-  * Add new, optional command queue. If configurable limit of in-process commands is exceeded, additional commands are queued for later execution.
+  * Add new, optional command queue. If configurable limit of in-process commands is exceeded, additional commands are queued for later execution. [#245](https://github.com/aerospike/aerospike-client-nodejs/pull/245)
   * Added new `inDoubt` flag to `AerospikeError`. The `inDoubt` flag indicates if a write command may have completed even though an error was returned. This scenario can occur on a client timeout for a command that has been sent to the server. [#242](https://github.com/aerospike/aerospike-client-nodejs/pull/242)
   * Added a command reference to `AerospikeError` for the database command, during which the error occurred. The `Command` object may contain additional information such as the record key for single-record-key read/write commands. [#242](https://github.com/aerospike/aerospike-client-nodejs/pull/242)
 
