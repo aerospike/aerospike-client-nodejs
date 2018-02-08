@@ -68,6 +68,7 @@ int get_asval_property(as_val** value, v8::Local<v8::Object> obj, const char* pr
 int get_string_property(char** strp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_asval_property(as_val** value, bool* defined, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 int get_optional_bool_property(bool* boolp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_optional_int32_property(int32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_int64_property(int64_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_string_property(char** strp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_uint32_property(uint32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
