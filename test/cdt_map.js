@@ -447,7 +447,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('does not fail if the key does not exist', function (done) {
       var record = { map: {a: 1, b: 2, c: 3} }
       var operation = maps.getByKey('map', 'z', maps.returnType.KEY_VALUE)
-      var expectedResult = { map: {} }
+      var expectedResult = { map: [] }
       verifyOperation(record, operation, expectedResult, record, done)
     })
   })

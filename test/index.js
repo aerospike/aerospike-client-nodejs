@@ -62,7 +62,7 @@ context('secondary indexes', function () {
       }
 
       return client.createIndex(options)
-        .then(job => expect(job).to.be.an(IndexJob))
+        .then(job => expect(job).to.be.instanceof(IndexJob))
         .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
 
@@ -167,7 +167,7 @@ context('secondary indexes', function () {
 
     it('should drop an index', function (done) {
       client.indexRemove(helper.namespace, testIndex.name, function (err) {
-        expect(err).to.be(null)
+        expect(err).to.be.null()
         done()
       })
     })

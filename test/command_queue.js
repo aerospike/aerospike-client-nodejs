@@ -35,7 +35,7 @@ describe('Command Queue #slow', function () {
         })
     }
     return helper.runInNewProcess(test, this.timeout())
-      .then(result => expect(result).to.be(10))
+      .then(result => expect(result).to.equal(10))
   })
 
   it('rejects commands it cannot queue', function () {

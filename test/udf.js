@@ -102,21 +102,21 @@ context('registering/unregistering UDF modules', function () {
   context('error handling', function () {
     it('should fail to register an non-existent module', function (done) {
       client.udfRegister('no-such-udf.lua', function (err) {
-        expect(err.code).to.be(Aerospike.status.ERR_CLIENT)
+        expect(err.code).to.equal(Aerospike.status.ERR_CLIENT)
         done()
       })
     })
 
     it('should fail to register module with invalid language', function (done) {
       client.udfRegister(filename, -99, function (err) {
-        expect(err.code).to.be(Aerospike.status.ERR_PARAM)
+        expect(err.code).to.equal(Aerospike.status.ERR_PARAM)
         done()
       })
     })
 
     it('should fail to remove a non-existent module', function (done) {
       client.udfRemove('no-such-udf.lua', function (err) {
-        expect(err.code).to.be(Aerospike.status.ERR_UDF)
+        expect(err.code).to.equal(Aerospike.status.ERR_UDF)
         done()
       })
     })

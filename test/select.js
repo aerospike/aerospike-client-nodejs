@@ -41,10 +41,10 @@ describe('client.select()', function () {
 
       client.select(key, selected, function (err, record) {
         if (err) throw err
-        expect(record.bins).to.only.have.keys(selected)
+        expect(record.bins).to.have.all.keys(selected)
 
         for (var bin in selected) {
-          expect(record.bins[bin]).to.be(bins[bin])
+          expect(record.bins[bin]).to.equal(bins[bin])
         }
 
         client.remove(key, function (err) {
@@ -98,10 +98,10 @@ describe('client.select()', function () {
 
       client.select(key, selected, policy, function (err, record) {
         if (err) throw err
-        expect(record.bins).to.only.have.keys(selected)
+        expect(record.bins).to.have.all.keys(selected)
 
         for (var bin in selected) {
-          expect(record.bins[bin]).to.be(bins[bin])
+          expect(record.bins[bin]).to.equal(bins[bin])
         }
 
         client.remove(key, function (err) {

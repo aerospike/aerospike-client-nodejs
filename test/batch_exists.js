@@ -45,7 +45,7 @@ describe('client.batchExists()', function () {
         expect(results.length).to.equal(numberOfRecords)
         results.forEach(result => {
           expect(result.status).to.equal(Aerospike.status.OK)
-          expect(result.record).to.be.an(Aerospike.Record)
+          expect(result.record).to.be.instanceof(Aerospike.Record)
         })
       })
   })

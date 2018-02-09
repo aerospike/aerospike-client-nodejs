@@ -80,7 +80,7 @@ describe('client.get()', function () {
       if (err) throw err
       client.get(key, function (err, record) {
         if (err) throw err
-        expect(record.ttl).to.be(Aerospike.ttl.NEVER_EXPIRE)
+        expect(record.ttl).to.equal(Aerospike.ttl.NEVER_EXPIRE)
         client.remove(key, function (err) {
           if (err) throw err
           done()

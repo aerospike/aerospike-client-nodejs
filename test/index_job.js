@@ -68,7 +68,7 @@ describe('IndexJob', function () {
     it('should return false if the index does not exist', function () {
       var job = new IndexJob(client, helper.namespace, 'thisIndexDoesNotExist')
       return job.checkStatus()
-        .then(status => expect(status).to.be(false))
+        .then(status => expect(status).to.be.false())
     })
 
     it('should return an error if one of the cluster nodes cannot be queried', function () {
@@ -76,7 +76,7 @@ describe('IndexJob', function () {
       var job = new IndexJob(client, helper.ns, 'thisIndexDoesNotExist')
       return job.checkStatus()
         .then(() => { throw new Error('Expected promise to reject') })
-        .catch(error => expect(error).to.be.an(AerospikeError))
+        .catch(error => expect(error).to.be.instanceof(AerospikeError))
     })
   })
 })

@@ -21,11 +21,14 @@ const Info = require('../lib/info')
 const utils = require('../lib/utils')
 const options = require('./util/options')
 const semver = require('./util/semver')
-const expect = require('expect.js')
 const util = require('util')
 const path = require('path')
 const runInNewProcessFn = require('./util/run_in_new_process')
 
+const chai = require('chai')
+const dirtyChai = require('dirty-chai')
+const expect = chai.expect
+chai.use(dirtyChai)
 global.expect = expect
 
 exports.options = options

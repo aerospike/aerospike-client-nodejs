@@ -26,48 +26,49 @@ require('./test_helper.js')
 describe('AerospikeError #noserver', function () {
   describe('constructor', function () {
     it('creates a new AerospikeError instance', function () {
-      expect(new AerospikeError()).to.be.a(AerospikeError)
+      expect(new AerospikeError()).to.be.instanceof(AerospikeError)
     })
 
     it('inherits from the Error class', function () {
-      expect(new AerospikeError()).to.be.a(Error)
+      expect(new AerospikeError()).to.be.instanceof(Error)
     })
 
     it('initializes the error with default values', function () {
       let subject = new AerospikeError()
-      expect(subject.message).to.be('')
-      expect(subject.code).to.be(status.ERR_CLIENT)
-      expect(subject.command).to.be(null)
-      expect(subject.func).to.be(null)
-      expect(subject.file).to.be(null)
-      expect(subject.line).to.be(null)
-      expect(subject.inDoubt).to.be(false)
+      expect(subject).to.have.property('message', '')
+      expect(subject).to.have.property('code', status.ERR_CLIENT)
+      expect(subject).to.have.property('command', null)
+      expect(subject).to.have.property('func', null)
+      expect(subject).to.have.property('file', null)
+      expect(subject).to.have.property('line', null)
+      expect(subject).to.have.property('inDoubt', false)
     })
 
     it('sets an error message', function () {
       let subject = new AerospikeError('Dooh!')
-      expect(subject.message).to.be('Dooh!')
+      expect(subject).to.have.property('message', 'Dooh!')
     })
 
     it('keeps a reference to the command', function () {
       let cmd = {}
       let subject = new AerospikeError('Dooh!', cmd)
-      expect(subject.command).to.be(cmd)
+      expect(subject).to.have.property('command', cmd)
     })
 
     it('captures a stacktrace', function () {
       let subject = new AerospikeError('Dooh!')
-      let stack = subject.stack.split('\n')
-      expect(stack).to.not.be.empty()
-      expect(stack.shift()).to.be('AerospikeError: Dooh!')
+      expect(subject).to.have.property('stack')
+        .that.is.a('string')
+        .that.includes('AerospikeError: Dooh!')
     })
 
     it('copies the stacktrace of the command', function () {
-      let cmd = {}
+      let cmd = { name: 'AerospikeError', message: 'Dooh!' }
       Error.captureStackTrace(cmd)
       let subject = new AerospikeError('Dooh!', cmd)
-      let expected = ['AerospikeError: Dooh!'].concat(cmd.stack.split('\n').slice(1)).join('\n')
-      expect(subject.stack).to.equal(expected)
+      expect(subject).to.have.property('stack')
+        .that.is.a('string')
+        .that.equals(cmd.stack)
     })
   })
 
@@ -82,12 +83,12 @@ describe('AerospikeError #noserver', function () {
         inDoubt: true
       }
       let subject = AerospikeError.fromASError(error)
-      expect(subject.code).to.be(-11)
-      expect(subject.message).to.be('Dooh!')
-      expect(subject.func).to.be('connect')
-      expect(subject.file).to.be('lib/client.js')
-      expect(subject.line).to.be(101)
-      expect(subject.inDoubt).to.be(true)
+      expect(subject).to.have.property('code', -11)
+      expect(subject).to.have.property('message', 'Dooh!')
+      expect(subject).to.have.property('func', 'connect')
+      expect(subject).to.have.property('file', 'lib/client.js')
+      expect(subject).to.have.property('line', 101)
+      expect(subject).to.have.property('inDoubt', true)
     })
 
     it('replaces error codes with descriptive messages', function () {
@@ -96,7 +97,7 @@ describe('AerospikeError #noserver', function () {
         message: '127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND'
       }
       let subject = AerospikeError.fromASError(error)
-      expect(subject.message).to.be('127.0.0.1:3000 Record does not exist in database. May be returned by read, or write with policy Aerospike.policy.exists.UPDATE')
+      expect(subject.message).to.equal('127.0.0.1:3000 Record does not exist in database. May be returned by read, or write with policy Aerospike.policy.exists.UPDATE')
     })
 
     it('returns an AerospikeError instance unmodified', function () {
@@ -106,11 +107,11 @@ describe('AerospikeError #noserver', function () {
 
     it('returns null if the status code is OK', function () {
       let error = { code: status.OK }
-      expect(AerospikeError.fromASError(error)).to.be(null)
+      expect(AerospikeError.fromASError(error)).to.be.null()
     })
 
     it('returns null if no error is passed', function () {
-      expect(AerospikeError.fromASError(null)).to.be(null)
+      expect(AerospikeError.fromASError(null)).to.be.null()
     })
   })
 
@@ -118,13 +119,13 @@ describe('AerospikeError #noserver', function () {
     it('returns true if the error code indicates a server error', function () {
       let error = { code: status.ERR_RECORD_NOT_FOUND }
       let subject = AerospikeError.fromASError(error)
-      expect(subject.isServerError()).to.be(true)
+      expect(subject.isServerError()).to.be.true()
     })
 
     it('returns false if the error code indicates a client error', function () {
       let error = { code: status.ERR_PARAM }
       let subject = AerospikeError.fromASError(error)
-      expect(subject.isServerError()).to.be(false)
+      expect(subject.isServerError()).to.be.false()
     })
   })
 

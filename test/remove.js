@@ -26,6 +26,7 @@ const recgen = helper.recgen
 const valgen = helper.valgen
 
 const status = Aerospike.status
+const AerospikeError = Aerospike.AerospikeError
 
 describe('client.remove()', function () {
   let client = helper.client
@@ -36,7 +37,7 @@ describe('client.remove()', function () {
     return client.put(key, {str: 'abcde'})
       .then(() => client.remove(key))
       .then(() => client.exists(key))
-      .then(result => expect(result).to.be(false))
+      .then(result => expect(result).to.be.false())
   })
 
   it('returns an error when trying to remove a non-existing key', function () {
@@ -44,7 +45,7 @@ describe('client.remove()', function () {
 
     return client.remove(key)
       .catch(error =>
-        expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
   })
 
   context('with generation policy value', function () {
@@ -60,7 +61,7 @@ describe('client.remove()', function () {
           return client.remove(key, policy)
         })
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be(false))
+        .then(result => expect(result).to.be.false())
     })
 
     it('should not remove the record if the generation does not match', function () {
@@ -74,10 +75,10 @@ describe('client.remove()', function () {
         .then(() => {
           return client.remove(key, policy)
             .catch(error =>
-              expect(error.code).to.be(status.ERR_RECORD_GENERATION))
+              expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_GENERATION))
         })
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be(false))
+        .then(result => expect(result).to.be.false())
     })
   })
 
@@ -100,7 +101,7 @@ describe('client.remove()', function () {
 
         client.exists(key, function (error, result) {
           if (error) throw error
-          expect(result).to.be(false)
+          expect(result).to.be.false()
           done()
         })
       })

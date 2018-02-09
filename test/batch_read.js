@@ -51,13 +51,13 @@ describe('client.batchRead()', function () {
 
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.be(5)
+      expect(results.length).to.equal(5)
       let found = results.filter(
         result => result.status === Aerospike.status.OK)
-      expect(found.length).to.be(3)
+      expect(found.length).to.equal(3)
       let notFound = results.filter(
         result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
-      expect(notFound.length).to.be(2)
+      expect(notFound.length).to.equal(2)
       done()
     })
   })
@@ -71,7 +71,7 @@ describe('client.batchRead()', function () {
 
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.be(3)
+      expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
         expect(result.record.bins).to.be.empty()
@@ -89,10 +89,10 @@ describe('client.batchRead()', function () {
 
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.be(3)
+      expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
-        expect(result.record.bins).to.only.have.keys('i')
+        expect(result.record.bins).to.have.all.keys('i')
         expect(result.record.gen).to.be.ok()
         expect(result.record.ttl).to.be.ok()
       })
@@ -109,7 +109,7 @@ describe('client.batchRead()', function () {
 
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.be(3)
+      expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
         expect(result.record.bins).to.have.keys('i', 's')
@@ -129,15 +129,15 @@ describe('client.batchRead()', function () {
 
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
-      expect(results.length).to.be(3)
+      expect(results.length).to.equal(3)
       results.forEach(function (result) {
         let record = result.record
         switch (record.key.key) {
           case 'test/batch_read/1':
-            expect(record.bins).to.only.have.keys('i', 's')
+            expect(record.bins).to.have.all.keys('i', 's')
             break
           case 'test/batch_read/3':
-            expect(record.bins).to.only.have.keys('i')
+            expect(record.bins).to.have.all.keys('i')
             break
           case 'test/batch_read/5':
             expect(record.bins).to.be.empty()
@@ -157,12 +157,12 @@ describe('client.batchRead()', function () {
 
     return client.batchRead(batchRecords)
       .then(results => {
-        expect(results.length).to.be(1)
+        expect(results.length).to.equal(1)
         return results.pop()
       })
       .then(result => {
-        expect(result.status).to.be(Aerospike.status.OK)
-        expect(result.record).to.be.an(Aerospike.Record)
+        expect(result.status).to.equal(Aerospike.status.OK)
+        expect(result.record).to.be.instanceof(Aerospike.Record)
       })
   })
 })

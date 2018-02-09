@@ -39,7 +39,7 @@ describe('Client', function () {
       let async = false
       client.connect(error => {
         if (error) throw error
-        expect(async).to.equal(true)
+        expect(async).to.be.true()
         client.close(false)
         done()
       })
@@ -49,7 +49,7 @@ describe('Client', function () {
     it('should return a Promise if callback without callback', function () {
       const client = new Client(helper.config)
       const promise = client.connect()
-      expect(promise).to.be.a(Promise)
+      expect(promise).to.be.instanceof(Promise)
       return promise.then(() => client.close(false))
     })
   })
@@ -67,7 +67,7 @@ describe('Client', function () {
     it('should be possible to call close multiple times', function (done) {
       const client = new Client(helper.config)
       client.connect(error => {
-        expect(error).to.be(null)
+        expect(error).to.be.null()
         client.close(false)
         client.close(false)
         done()
@@ -79,13 +79,13 @@ describe('Client', function () {
     context('without tender health check', function () {
       it('returns false if the client is not connected', function () {
         var client = new Client(helper.config)
-        expect(client.isConnected(false)).to.be(false)
+        expect(client.isConnected(false)).to.be.false()
       })
 
       it('returns true if the client is connected', function (done) {
         var client = new Client(helper.config)
         client.connect(function () {
-          expect(client.isConnected(false)).to.be(true)
+          expect(client.isConnected(false)).to.be.true()
           client.close(false)
           done()
         })
@@ -95,7 +95,7 @@ describe('Client', function () {
         var client = new Client(helper.config)
         client.connect(function () {
           client.close(false)
-          expect(client.isConnected(false)).to.be(false)
+          expect(client.isConnected(false)).to.be.false()
           done()
         })
       })
@@ -108,8 +108,8 @@ describe('Client', function () {
         client.connect(function () {
           var tenderHealthCheck = false
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
-          expect(client.isConnected(true)).to.be(false)
-          expect(tenderHealthCheck).to.be(true)
+          expect(client.isConnected(true)).to.be.false()
+          expect(tenderHealthCheck).to.be.true()
           client.as_client.isConnected = orig
           client.close(false)
           done()
@@ -124,7 +124,7 @@ describe('Client', function () {
       config.clusterName = 'notAValidClusterName'
       var client = new Client(config)
       client.connect(function (err) {
-        expect(err.code).to.be(Aerospike.status.ERR_CLIENT)
+        expect(err.code).to.equal(Aerospike.status.ERR_CLIENT)
         client.close(false)
         done()
       })
@@ -144,7 +144,7 @@ describe('Client', function () {
     it('client should emit events on cluster state changes', function (done) {
       let client = new Client(helper.config)
       client.once('event', event => {
-        expect(event.name).to.be('nodeAdded')
+        expect(event.name).to.equal('nodeAdded')
         client.close()
         done()
       })
@@ -179,7 +179,7 @@ describe('Client', function () {
       // trying to send a command to a client that is not connected will trigger a client error
       var client = Aerospike.client()
       var errorCheck = function (err) {
-        expect(err).to.be.an(Error)
+        expect(err).to.be.instanceof(Error)
         expect(err.message).to.equal('Not connected.')
       }
       assertErrorCbAsync(client, errorCheck, done)
@@ -191,7 +191,7 @@ describe('Client', function () {
       Aerospike.connect(config, function (err, client) {
         if (err) throw err
         var errorCheck = function (err) {
-          expect(err).to.be.an(Error)
+          expect(err).to.be.instanceof(Error)
           expect(err.code).to.equal(Aerospike.status.ERR_NO_MORE_CONNECTIONS)
         }
         assertErrorCbAsync(client, errorCheck, done)

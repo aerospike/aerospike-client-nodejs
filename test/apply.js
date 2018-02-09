@@ -21,6 +21,8 @@
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
+const AerospikeError = Aerospike.AerospikeError
+
 const keygen = helper.keygen
 
 describe('client.apply()', function () {
@@ -71,7 +73,7 @@ describe('client.apply()', function () {
   it('should return an error if the user-defined function does not exist', function (done) {
     var udfArgs = { module: 'udf', funcname: 'not-such-function' }
     client.apply(key, udfArgs, function (error, result) {
-      expect(error.code).to.equal(Aerospike.status.ERR_UDF)
+      expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_UDF)
       done()
     })
   })
@@ -79,7 +81,7 @@ describe('client.apply()', function () {
   it('should return an error if the UDF arguments are invalid', function (done) {
     var udfArgs = { module: 'udf', funcname: 'noop', args: 42 } // args should always be an array
     client.apply(key, udfArgs, function (error, result) {
-      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+      expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_PARAM)
       done()
     })
   })
@@ -88,6 +90,6 @@ describe('client.apply()', function () {
     var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
 
     return client.apply(key, udfArgs)
-      .then(result => expect(result).to.be(1))
+      .then(result => expect(result).to.equal(1))
   })
 })

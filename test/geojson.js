@@ -30,21 +30,20 @@ describe('Aerospike.GeoJSON', function () {
 
     describe('constructor', function () {
       it('returns a new GeoJSON value when called as an Object constructor', function () {
-        expect(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+        expect(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.instanceof(GeoJSON)
       })
 
       it('returns a new GeoJSON value when called as function', function () {
-        expect(GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.a(GeoJSON)
+        expect(GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.instanceof(GeoJSON)
       })
 
       it('parses a GeoJSON string', function () {
-        expect(new GeoJSON('{"type": "Point", "coordinates": [103.913, 1.308]}')).to.be.a(GeoJSON)
+        expect(new GeoJSON('{"type": "Point", "coordinates": [103.913, 1.308]}')).to.be.instanceof(GeoJSON)
       })
 
       it('throws a type error if passed an invalid GeoJSON value', function () {
         let fn = () => new GeoJSON(45)
-        expect(fn).to.throwException(ex =>
-          expect(ex).to.be.a(TypeError))
+        expect(fn).to.throw(TypeError)
       })
     })
 
