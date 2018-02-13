@@ -26,6 +26,8 @@ const AerospikeError = Aerospike.AerospikeError
 const maps = Aerospike.maps
 const status = Aerospike.status
 
+let eql = require('deep-eql')
+
 describe('client.operate() - CDT Map operations', function () {
   var client = helper.client
 
@@ -105,6 +107,12 @@ describe('client.operate() - CDT Map operations', function () {
   function assertResultEql (expected) {
     return function (state) {
       return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
+    }
+  }
+
+  function assertResultSatisfy (matcher) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
     }
   }
 
@@ -314,7 +322,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
         .then(operate(maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)))
-        .then(assertResultEql({ map: [1, 3] }))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
         .then(assertRecordEql({ map: {b: 2} }))
         .then(cleanup())
     })
@@ -323,7 +331,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
         .then(operate(maps.removeByKeyList('map', ['a', 'x', 'y', 'z', 'c'], maps.returnType.VALUE)))
-        .then(assertResultEql({ map: [1, 3] }))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
         .then(assertRecordEql({ map: {b: 2} }))
         .then(cleanup())
     })
@@ -595,7 +603,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
         .then(operate(maps.getByValueRange('map', 2, null, maps.returnType.VALUE)))
-        .then(assertResultEql({ map: [2, 3] }))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [2, 3])))
         .then(cleanup())
     })
 
