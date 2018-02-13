@@ -25,7 +25,7 @@ describe('Aerospike', function () {
   describe('Aerospike.client() #noserver', function () {
     it('instantiates a new client instance', function (done) {
       var client = Aerospike.client(helper.config)
-      expect(client).to.be.a(Aerospike.Client)
+      expect(client).to.be.instanceof(Aerospike.Client)
       done()
     })
   })
@@ -34,7 +34,7 @@ describe('Aerospike', function () {
     it('instantiates a new client instance and connects to the cluster', function (done) {
       Aerospike.connect(helper.config, (error, client) => {
         if (error) throw error
-        expect(client).to.be.a(Aerospike.Client)
+        expect(client).to.be.instanceof(Aerospike.Client)
         client.infoAny(error => {
           if (error) throw error
           client.close(false)
@@ -46,7 +46,7 @@ describe('Aerospike', function () {
     it('returns a Promise that resolves to a client', function () {
       return Aerospike.connect(helper.config)
         .then(client => {
-          expect(client).to.be.a(Aerospike.Client)
+          expect(client).to.be.instanceof(Aerospike.Client)
           return client
         })
         .then(client => client.close(false))

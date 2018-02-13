@@ -23,9 +23,10 @@ const Query = require('../lib/query')
 const Job = require('../lib/job')
 const helper = require('./test_helper')
 
-const filter = Aerospike.filter
+const AerospikeError = Aerospike.AerospikeError
 const GeoJSON = Aerospike.GeoJSON
 const Key = Aerospike.Key
+const filter = Aerospike.filter
 
 const NUMERIC = Aerospike.indexDataType.NUMERIC
 const STRING = Aerospike.indexDataType.STRING
@@ -134,21 +135,21 @@ describe('Queries', function () {
       }
       var query = client.query(namespace, set, options)
 
-      expect(query).to.be.a(Query)
+      expect(query).to.be.instanceof(Query)
       expect(query.ns).to.equal('test')
       expect(query.set).to.equal('demo')
       expect(query.selected).to.eql(['a', 'b', 'c'])
-      expect(query.nobins).to.equal(false)
-      expect(query.filters).to.be.an(Array)
+      expect(query.nobins).to.be.false()
+      expect(query.filters).to.be.instanceof(Array)
       expect(query.filters.length).to.equal(1)
     })
 
     it('creates a query without specifying the set', function () {
       var namespace = 'test'
       var query = client.query(namespace, { select: ['i'] })
-      expect(query).to.be.a(Query)
+      expect(query).to.be.instanceof(Query)
       expect(query.ns).to.equal('test')
-      expect(query.set).to.be(null)
+      expect(query.set).to.be.null()
       expect(query.selected).to.eql(['i'])
     })
   })
@@ -209,7 +210,7 @@ describe('Queries', function () {
         var count = 0
         stream.on('data', record => {
           expect(++count).to.equal(1)
-          expect(record.key).to.be.a(Key)
+          expect(record.key).to.be.instanceof(Key)
           expect(record.key.key).to.equal(uniqueKey)
         })
         stream.on('end', done)
@@ -252,7 +253,7 @@ describe('Queries', function () {
       let stream = query.foreach(invalidPolicy)
       // if error is raised synchronously we will never reach here
       stream.on('error', error => {
-        expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_PARAM)
         done()
       })
     })
@@ -267,7 +268,7 @@ describe('Queries', function () {
         },
         (error) => { throw error },
         () => {
-          expect(dataHandlerCalled).to.be(true)
+          expect(dataHandlerCalled).to.be.true()
           done()
         })
     })
@@ -286,8 +287,7 @@ describe('Queries', function () {
 
         it('throws a type error if the comparison value is of invalid type', function () {
           let fn = () => filter.equal('str', { foo: 'bar' })
-          expect(fn).to.throwException(ex =>
-            expect(ex).to.be.a(TypeError))
+          expect(fn).to.throw(TypeError)
         })
       })
 
@@ -336,8 +336,7 @@ describe('Queries', function () {
 
         it('throws a type error if the comparison value is of invalid type', function () {
           let fn = () => filter.contains('list', { foo: 'bar' }, LIST)
-          expect(fn).to.throwException(ex =>
-            expect(ex).to.be.a(TypeError))
+          expect(fn).to.throw(TypeError)
         })
       })
 
@@ -462,7 +461,7 @@ describe('Queries', function () {
       var query = client.query(helper.namespace, testSet, args)
       query.background('udf', 'noop', function (error, job) {
         if (error) throw error
-        expect(job).to.be.a(Job)
+        expect(job).to.be.instanceof(Job)
         done()
       })
     })
@@ -474,7 +473,7 @@ describe('Queries', function () {
       let query = client.query(helper.namespace, testSet, args)
       return query.background('udf', 'noop')
         .then(job => {
-          expect(job).to.be.a(Job)
+          expect(job).to.be.instanceof(Job)
         })
     })
   })
@@ -491,7 +490,7 @@ describe('Queries', function () {
         }
       })
       stream.on('end', () => {
-        expect(recordsReceived).to.be(5)
+        expect(recordsReceived).to.equal(5)
         done()
       })
     })
@@ -502,7 +501,7 @@ describe('Queries', function () {
       it('should throw an exception if the query options contain key "' + key + '"', function () {
         var args = {}
         args[key] = 'foo'
-        expect(client.query.bind(client)).withArgs(helper.namespace, testSet, args).to.throwException()
+        expect(() => client.query(helper.namespace, testSet, args)).to.throw('Invalid query arguments')
       })
     })
   })

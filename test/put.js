@@ -27,6 +27,7 @@ const recgen = helper.recgen
 const valgen = helper.valgen
 
 const status = Aerospike.status
+const AerospikeError = Aerospike.AerospikeError
 const Double = Aerospike.Double
 const GeoJSON = Aerospike.GeoJSON
 
@@ -366,7 +367,7 @@ describe('client.put()', function () {
     }
 
     client.put(key, bins, meta, error => {
-      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+      expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_PARAM)
       done()
     })
   })
@@ -379,7 +380,7 @@ describe('client.put()', function () {
     }
 
     client.put(key, bins, meta, error => {
-      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
+      expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_PARAM)
       done()
     })
   })
@@ -465,9 +466,9 @@ describe('client.put()', function () {
         })
 
         return client.put(key, {i: 49}, {}, policy)
-          .catch(error => expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
+          .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
           .then(() => client.exists(key))
-          .then(exists => expect(exists).to.be(false))
+          .then(exists => expect(exists).to.be.false())
       })
     })
 
@@ -480,9 +481,9 @@ describe('client.put()', function () {
 
         return client.put(key, {i: 49}, {}, policy)
           .then(() => client.put(key, {i: 50}, {}, policy))
-          .catch(error => expect(error.code).to.be(status.ERR_RECORD_EXISTS))
+          .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_EXISTS))
           .then(() => client.get(key))
-          .then(record => expect(record.bins.i).to.be(49))
+          .then(record => expect(record.bins.i).to.equal(49))
       })
     })
   })
@@ -496,12 +497,12 @@ describe('client.put()', function () {
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
-        .then(record => expect(record.gen).to.be(1))
+        .then(record => expect(record.gen).to.equal(1))
         .then(() => client.put(key, { i: 2 }, { gen: 1 }, policy))
         .then(() => client.get(key))
         .then(record => {
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.gen).to.be(2)
+          expect(record.gen).to.equal(2)
         })
         .then(() => client.remove(key))
     })
@@ -514,13 +515,13 @@ describe('client.put()', function () {
 
       return client.put(key, { i: 1 })
         .then(() => client.get(key))
-        .then(record => expect(record.gen).to.be(1))
+        .then(record => expect(record.gen).to.equal(1))
         .then(() => client.put(key, { i: 2 }, { gen: 99 }, policy))
-        .catch(err => expect(err.code).to.be(status.ERR_RECORD_GENERATION))
+        .catch(err => expect(err.code).to.equal(status.ERR_RECORD_GENERATION))
         .then(() => client.get(key))
         .then(record => {
           expect(record.bins).to.eql({ i: 1 })
-          expect(record.gen).to.be(1)
+          expect(record.gen).to.equal(1)
         })
         .then(() => client.remove(key))
     })

@@ -30,7 +30,7 @@ describe('client.exists()', function () {
 
       return client.put(key, {str: 'abcde'})
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be(true))
+        .then(result => expect(result).to.be.true())
         .then(() => client.remove(key))
     })
 
@@ -38,7 +38,7 @@ describe('client.exists()', function () {
       let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/exists/'})()
 
       return client.exists(key)
-        .then(result => expect(result).to.be(false))
+        .then(result => expect(result).to.be.false())
     })
   })
 
@@ -50,7 +50,7 @@ describe('client.exists()', function () {
         if (error) throw error
         client.exists(key, (error, result) => {
           if (error) throw error
-          expect(result).to.be(true)
+          expect(result).to.be.true()
           client.remove(key, error => {
             if (error) throw error
             done()
@@ -64,7 +64,7 @@ describe('client.exists()', function () {
 
       client.exists(key, (error, result) => {
         if (error) throw error
-        expect(result).to.be(false)
+        expect(result).to.be.false()
         done()
       })
     })

@@ -85,13 +85,13 @@ describe('utils.parseHostString() #noserver', function () {
   it('throws an error if it cannot parse the string', function () {
     expect(function () {
       utils.parseHostString('not a valid host')
-    }).to.throwException('Invalid host address')
+    }).to.throw('Invalid host address')
   })
 })
 
 describe('utils.parseHostsString() #noserver', function () {
   it('parses a comma separate list of hosts', function () {
     var hosts = utils.parseHostsString('aero.local:aero.tls:3000,192.168.33.10:3000,[fde4:8dba:82e1::c4]')
-    expect(hosts.length).to.be(3)
+    expect(hosts.length).to.equal(3)
   })
 })

@@ -64,12 +64,12 @@ context('Scans', function () {
       }
       var scan = client.scan(namespace, set, options)
 
-      expect(scan).to.be.a(Scan)
+      expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal('test')
       expect(scan.set).to.equal('demo')
-      expect(scan.concurrent).to.equal(true)
+      expect(scan.concurrent).to.be.true()
       expect(scan.selected).to.eql(['a', 'b', 'c'])
-      expect(scan.nobins).to.equal(false)
+      expect(scan.nobins).to.be.false()
       expect(scan.percent).to.equal(50)
       expect(scan.priority).to.equal(Aerospike.scanPriority.HIGH)
     })
@@ -77,9 +77,9 @@ context('Scans', function () {
     it('creates a scan without specifying the set', function () {
       var namespace = 'test'
       var scan = client.scan(namespace, { select: ['i'] })
-      expect(scan).to.be.a(Scan)
+      expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal('test')
-      expect(scan.set).to.be(null)
+      expect(scan.set).to.be.null()
       expect(scan.selected).to.eql(['i'])
     })
   })
@@ -105,7 +105,7 @@ context('Scans', function () {
       var stream = scan.foreach()
       stream.on('data', () => recordsReceived++)
       stream.on('end', () => {
-        expect(recordsReceived).to.be(numberOfRecords)
+        expect(recordsReceived).to.equal(numberOfRecords)
         done()
       })
     })
@@ -115,7 +115,7 @@ context('Scans', function () {
       var scan = client.scan(helper.namespace, testSet)
       var stream = scan.foreach()
       stream.on('data', record => {
-        expect(record.key).to.be.a(Key)
+        expect(record.key).to.be.instanceof(Key)
         expect(record.key.key).to.not.be.empty()
         stream.abort()
       })
@@ -132,7 +132,7 @@ context('Scans', function () {
         },
         (error) => { throw error },
         () => {
-          expect(dataHandlerCalled).to.be(true)
+          expect(dataHandlerCalled).to.be.true()
           done()
         })
     })
@@ -178,7 +178,7 @@ context('Scans', function () {
         scan.select('i')
         var stream = scan.foreach()
         stream.on('data', record => {
-          expect(record.bins).to.only.have.keys('i')
+          expect(record.bins).to.have.all.keys('i')
           stream.abort()
         })
         stream.on('end', done)
@@ -242,7 +242,7 @@ context('Scans', function () {
       let backgroundScan = client.scan(helper.namespace, testSet)
       return backgroundScan.background('udf', 'noop')
         .then(job => {
-          expect(job).to.be.a(Job)
+          expect(job).to.be.instanceof(Job)
         })
     })
   })
@@ -259,7 +259,7 @@ context('Scans', function () {
         }
       })
       stream.on('end', () => {
-        expect(recordsReceived).to.be(5)
+        expect(recordsReceived).to.equal(5)
         done()
       })
     })

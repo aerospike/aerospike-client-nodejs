@@ -76,15 +76,15 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('policies')
 
       let policies = config.policies
-      expect(policies.apply).to.be.an(Aerospike.ApplyPolicy)
-      expect(policies.batch).to.be.an(Aerospike.BatchPolicy)
-      expect(policies.info).to.be.an(Aerospike.InfoPolicy)
-      expect(policies.operate).to.be.an(Aerospike.OperatePolicy)
-      expect(policies.query).to.be.an(Aerospike.QueryPolicy)
-      expect(policies.read).to.be.an(Aerospike.ReadPolicy)
-      expect(policies.remove).to.be.an(Aerospike.RemovePolicy)
-      expect(policies.scan).to.be.an(Aerospike.ScanPolicy)
-      expect(policies.write).to.be.an(Aerospike.WritePolicy)
+      expect(policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
+      expect(policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(policies.info).to.be.instanceof(Aerospike.InfoPolicy)
+      expect(policies.operate).to.be.instanceof(Aerospike.OperatePolicy)
+      expect(policies.query).to.be.instanceof(Aerospike.QueryPolicy)
+      expect(policies.read).to.be.instanceof(Aerospike.ReadPolicy)
+      expect(policies.remove).to.be.instanceof(Aerospike.RemovePolicy)
+      expect(policies.scan).to.be.instanceof(Aerospike.ScanPolicy)
+      expect(policies.write).to.be.instanceof(Aerospike.WritePolicy)
     })
 
     it('initializes default policies', function () {
@@ -103,15 +103,15 @@ describe('Config #noserver', function () {
       }
       let config = new Config(settings)
 
-      expect(config.policies.apply).to.be.an(Aerospike.ApplyPolicy)
-      expect(config.policies.batch).to.be.an(Aerospike.BatchPolicy)
-      expect(config.policies.info).to.be.an(Aerospike.InfoPolicy)
-      expect(config.policies.operate).to.be.an(Aerospike.OperatePolicy)
-      expect(config.policies.query).to.be.an(Aerospike.QueryPolicy)
-      expect(config.policies.read).to.be.an(Aerospike.ReadPolicy)
-      expect(config.policies.remove).to.be.an(Aerospike.RemovePolicy)
-      expect(config.policies.scan).to.be.an(Aerospike.ScanPolicy)
-      expect(config.policies.write).to.be.an(Aerospike.WritePolicy)
+      expect(config.policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
+      expect(config.policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(config.policies.info).to.be.instanceof(Aerospike.InfoPolicy)
+      expect(config.policies.operate).to.be.instanceof(Aerospike.OperatePolicy)
+      expect(config.policies.query).to.be.instanceof(Aerospike.QueryPolicy)
+      expect(config.policies.read).to.be.instanceof(Aerospike.ReadPolicy)
+      expect(config.policies.remove).to.be.instanceof(Aerospike.RemovePolicy)
+      expect(config.policies.scan).to.be.instanceof(Aerospike.ScanPolicy)
+      expect(config.policies.write).to.be.instanceof(Aerospike.WritePolicy)
     })
 
     it('ignores invalid config properties', function () {
@@ -140,8 +140,7 @@ describe('Config #noserver', function () {
           totalTimeout: 1000
         }
       }
-      expect(() => new Config(settings)).to.throwException(e =>
-        expect(e).to.be.a(TypeError))
+      expect(() => new Config(settings)).to.throw(TypeError)
     })
 
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {

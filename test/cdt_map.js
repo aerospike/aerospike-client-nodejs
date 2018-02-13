@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -16,16 +16,20 @@
 
 'use strict'
 
-/* global expect, describe, context, it, beforeEach */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
+const AerospikeError = Aerospike.AerospikeError
 const maps = Aerospike.maps
+const status = Aerospike.status
+
+let eql = require('deep-eql')
 
 describe('client.operate() - CDT Map operations', function () {
   var client = helper.client
-  var key = null
 
   beforeEach(function () {
     if (!helper.cluster.supports_feature('cdt-map')) {
@@ -33,89 +37,153 @@ describe('client.operate() - CDT Map operations', function () {
     }
   })
 
-  function setup (bins, done) {
-    key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
-    let meta = { ttl: 600 }
-    let policy = new Aerospike.WritePolicy({
-      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
-    })
-    client.put(key, bins, meta, policy, function (err) {
-      if (err) throw err
-      done()
-    })
-  }
-
-  function teardown (done) {
-    client.remove(key, done)
-  }
-
-  // Helper method to execute a single operation on the given record and verify:
-  // 1) The results returned by the operation,
-  // 2) The contents of the record after the operation.
-  function verifyOperation (record, ops, expectedResult, expectedBinsPostOp, done) {
-    setup(record, function () {
-      if (!Array.isArray(ops)) {
-        ops = [ops]
-      }
-      client.operate(key, ops, function (err, result) {
-        if (err) return done(err)
-        expect(result.bins).to.eql(expectedResult)
-        client.get(key, function (err, record) {
-          if (err) throw err
-          expect(record.bins).to.eql(expectedBinsPostOp)
-          teardown(done)
+  class State {
+    enrich (name, promise) {
+      if (this._expectError) {
+        return promise.catch(error => {
+          this['error'] = error
+          return this
         })
+      } else {
+        return promise.then(value => {
+          this[name] = value
+          return this
+        })
+      }
+    }
+
+    passthrough (promise) {
+      return promise.then(() => this)
+    }
+
+    resolve (value) {
+      return Promise.resolve(value).then(() => this)
+    }
+
+    expectError () {
+      this._expectError = true
+      return this
+    }
+  }
+
+  function initState () {
+    return Promise.resolve(new State())
+  }
+
+  function expectError () {
+    return function (state) {
+      return state.expectError()
+    }
+  }
+
+  function createRecord (bins) {
+    return function (state) {
+      let key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
+      let meta = { ttl: 600 }
+      let policy = new Aerospike.WritePolicy({
+        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
       })
-    })
+      return state.enrich('key', client.put(key, bins, meta, policy))
+    }
+  }
+
+  function setMapPolicy (bin, policyValues) {
+    return function (state) {
+      let policy = new maps.MapPolicy(policyValues)
+      let ops = [maps.setPolicy(bin, policy)]
+      return state.passthrough(client.operate(state.key, ops))
+    }
+  }
+
+  function operate (ops) {
+    if (!Array.isArray(ops)) {
+      ops = [ops]
+    }
+    return function (state) {
+      return state.enrich('result', client.operate(state.key, ops))
+    }
+  }
+
+  function assertResultEql (expected) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
+    }
+  }
+
+  function assertResultSatisfy (matcher) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
+    }
+  }
+
+  function assertRecordEql (expected) {
+    return function (state) {
+      return state.passthrough(client.get(state.key)
+        .then(record => expect(record.bins).to.eql(expected, 'record bins after operation')))
+    }
+  }
+
+  function assertError (code) {
+    return function (state) {
+      return state.resolve(
+        expect(state.error, 'error raised by operate command')
+          .to.be.instanceof(AerospikeError)
+          .with.property('code', code))
+    }
+  }
+
+  function cleanup () {
+    return function (state) {
+      return state.passthrough(client.remove(state.key))
+    }
   }
 
   describe('maps.setPolicy', function () {
-    it('changes the map order', function (done) {
-      let record = { map: {c: 1, b: 2, a: 3} }
-      let policy = new maps.MapPolicy({
-        order: maps.order.KEY_ORDERED
-      })
-      let operations = [
-        maps.setPolicy('map', policy),
-        maps.getByKeyRange('map', 'a', 'z', maps.returnType.KEY)
-      ]
-      let expectedResult = { map: ['a', 'b', 'c'] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('changes the map order', function () {
+      return initState()
+        .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+        .then(setMapPolicy('map', { order: maps.order.KEY_ORDERED }))
+        .then(operate(maps.getByKeyRange('map', 'a', 'z', maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['a', 'b', 'c'] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.put', function () {
-    it('adds the item to the map and returns the size of the map', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.put('map', 'd', 99)
-      var expectedResult = { map: 4 }
-      var expectedRecord = { map: {a: 1, b: 2, c: 3, d: 99} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('adds the item to the map and returns the size of the map', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.put('map', 'd', 99)))
+        .then(assertResultEql({ map: 4 }))
+        .then(assertRecordEql({ map: { a: 1, b: 2, c: 3, d: 99 } }))
+        .then(cleanup())
     })
 
-    it('replaces the item and returns the size of the map', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.put('map', 'b', 99)
-      var expectedResult = { map: 3 }
-      var expectedRecord = { map: {a: 1, b: 99, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('replaces the item and returns the size of the map', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.put('map', 'b', 99)))
+        .then(assertResultEql({ map: 3 }))
+        .then(assertRecordEql({ map: {a: 1, b: 99, c: 3} }))
+        .then(cleanup())
     })
 
-    it('creates a new map if it does not exist yet', function (done) {
-      var record = { i: 1 }
-      var operation = maps.put('map', 'a', 1)
-      var expectedResult = { map: 1 }
-      var expectedRecord = { i: 1, map: {a: 1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('creates a new map if it does not exist yet', function () {
+      return initState()
+        .then(createRecord({ i: 1 }))
+        .then(operate(maps.put('map', 'a', 1)))
+        .then(assertResultEql({ map: 1 }))
+        .then(assertRecordEql({ i: 1, map: {a: 1} }))
+        .then(cleanup())
     })
 
-    it('fails if the bin does not contain a map', function (done) {
-      var record = { map: 'this is not a map' }
-      var operation = maps.put('map', 'a', 1)
-      verifyOperation(record, operation, null, null, function (err) {
-        expect(err.code).to.equal(Aerospike.status.ERR_BIN_INCOMPATIBLE_TYPE)
-        teardown(done)
-      })
+    it('fails if the bin does not contain a map', function () {
+      return initState()
+        .then(createRecord({ map: 'this is not a map' }))
+        .then(expectError())
+        .then(operate(maps.put('map', 'a', 1)))
+        .then(assertError(status.ERR_BIN_INCOMPATIBLE_TYPE))
+        .then(cleanup())
     })
 
     context('update-only write mode', function () {
@@ -123,21 +191,22 @@ describe('client.operate() - CDT Map operations', function () {
         writeMode: maps.writeMode.UPDATE_ONLY
       })
 
-      it('overwrites an existing key', function (done) {
-        var record = { map: {a: 1, b: 2, c: 3} }
-        var operation = maps.put('map', 'b', 99, updateOnlyPolicy)
-        var expectedResult = { map: 3 }
-        var expectedRecord = { map: {a: 1, b: 99, c: 3} }
-        verifyOperation(record, operation, expectedResult, expectedRecord, done)
+      it('overwrites an existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(operate(maps.put('map', 'b', 99, updateOnlyPolicy)))
+          .then(assertResultEql({ map: 3 }))
+          .then(assertRecordEql({ map: {a: 1, b: 99, c: 3} }))
+          .then(cleanup())
       })
 
-      it('fails to write a non-existing key', function (done) {
-        var record = { map: {a: 1, b: 2, c: 3} }
-        var operation = maps.put('map', 'd', 99, updateOnlyPolicy)
-        verifyOperation(record, operation, null, null, function (err) {
-          expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_NOT_FOUND)
-          teardown(done)
-        })
+      it('fails to write a non-existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(expectError())
+          .then(operate(maps.put('map', 'd', 99, updateOnlyPolicy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_NOT_FOUND))
+          .then(cleanup())
       })
     })
 
@@ -146,113 +215,125 @@ describe('client.operate() - CDT Map operations', function () {
         writeMode: maps.writeMode.CREATE_ONLY
       })
 
-      it('fails to overwrite an existing key', function (done) {
-        var record = { map: {a: 1, b: 2, c: 3} }
-        var operation = maps.put('map', 'b', 99, createOnlyPolicy)
-        verifyOperation(record, operation, null, null, function (err) {
-          expect(err.code).to.equal(Aerospike.status.ERR_FAIL_ELEMENT_EXISTS)
-          teardown(done)
-        })
+      it('fails to overwrite an existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(expectError())
+          .then(operate(maps.put('map', 'b', 99, createOnlyPolicy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
+          .then(cleanup())
       })
 
-      it('creates a new key if it does not exist', function (done) {
-        var record = { map: {a: 1, b: 2, c: 3} }
-        var operation = maps.put('map', 'd', 99, createOnlyPolicy)
-        var expectedResult = { map: 4 }
-        var expectedRecord = { map: {a: 1, b: 2, c: 3, d: 99} }
-        verifyOperation(record, operation, expectedResult, expectedRecord, done)
+      it('creates a new key if it does not exist', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(operate(maps.put('map', 'd', 99, createOnlyPolicy)))
+          .then(assertResultEql({ map: 4 }))
+          .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 99} }))
+          .then(cleanup())
       })
     })
   })
 
   describe('maps.putItems', function () {
-    it('adds each item to the map and returns the size of the map', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.putItems('map', { c: 99, d: 100 })
-      var expectedResult = { map: 4 }
-      var expectedRecord = { map: {a: 1, b: 2, c: 99, d: 100} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('adds each item to the map and returns the size of the map', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.putItems('map', { c: 99, d: 100 })))
+        .then(assertResultEql({ map: 4 }))
+        .then(assertRecordEql({ map: {a: 1, b: 2, c: 99, d: 100} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.increment', function () {
-    it('increments the value of the entry and returns the final value', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.increment('map', 'b', 10)
-      var expectedResult = { map: 12 }
-      var expectedRecord = { map: {a: 1, b: 12, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('increments the value of the entry and returns the final value', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.increment('map', 'b', 10)))
+        .then(assertResultEql({ map: 12 }))
+        .then(assertRecordEql({ map: {a: 1, b: 12, c: 3} }))
+        .then(cleanup())
     })
 
-    it('creates a new entry if the key does not exist yet', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.increment('map', 'd', 10)
-      var expectedResult = { map: 10 }
-      var expectedRecord = { map: {a: 1, b: 2, c: 3, d: 10} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('creates a new entry if the key does not exist yet', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.increment('map', 'd', 10)))
+        .then(assertResultEql({ map: 10 }))
+        .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 10} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.decrement', function () {
-    it('decrements the value of the entry and returns the final value', function (done) {
-      var record = { map: {a: 1, b: 12, c: 3} }
-      var operation = maps.decrement('map', 'b', 10)
-      var expectedResult = { map: 2 }
-      var expectedRecord = { map: {a: 1, b: 2, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('decrements the value of the entry and returns the final value', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 12, c: 3} }))
+        .then(operate(maps.decrement('map', 'b', 10)))
+        .then(assertResultEql({ map: 2 }))
+        .then(assertRecordEql({ map: {a: 1, b: 2, c: 3} }))
+        .then(cleanup())
     })
 
-    it('creates a new entry if the key does not exist yet', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.decrement('map', 'd', 1)
-      var expectedResult = { map: -1 }
-      var expectedRecord = { map: {a: 1, b: 2, c: 3, d: -1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('creates a new entry if the key does not exist yet', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.decrement('map', 'd', 1)))
+        .then(assertResultEql({ map: -1 }))
+        .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: -1} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.clear', function () {
-    it('removes all entries from the map', function (done) {
-      var record = { map: {a: 1, b: 12, c: 3} }
-      var operation = maps.clear('map')
-      var expectedResult = { map: null }
-      var expectedRecord = { map: { } }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all entries from the map', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 12, c: 3} }))
+        .then(operate(maps.clear('map')))
+        .then(assertResultEql({ map: null }))
+        .then(assertRecordEql({ map: { } }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByKey', function () {
-    it('removes a map entry identified by key', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByKey('map', 'b', maps.returnType.VALUE)
-      var expectedResult = { map: 2 }
-      var expectedRecord = { map: {a: 1, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes a map entry identified by key', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByKey('map', 'b', maps.returnType.VALUE)))
+        .then(assertResultEql({ map: 2 }))
+        .then(assertRecordEql({ map: {a: 1, c: 3} }))
+        .then(cleanup())
     })
 
-    it('does not fail when removing a non-existing key', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByKey('map', 'd', maps.returnType.VALUE)
-      var expectedResult = { map: null }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('does not fail when removing a non-existing key', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByKey('map', 'd', maps.returnType.VALUE)))
+        .then(assertResultEql({ map: null }))
+        .then(assertRecordEql({ map: {a: 1, b: 2, c: 3} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByKeyList', function () {
-    it('removes map entries identified by one or more keys', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)
-      var expectedResult = { map: [1, 3] }
-      var expectedRecord = { map: {b: 2} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes map entries identified by one or more keys', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
+        .then(assertRecordEql({ map: {b: 2} }))
+        .then(cleanup())
     })
 
-    it('skips non-existent keys', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByKeyList('map', ['a', 'x', 'y', 'z', 'c'], maps.returnType.VALUE)
-      var expectedResult = { map: [1, 3] }
-      var expectedRecord = { map: {b: 2} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('skips non-existent keys', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByKeyList('map', ['a', 'x', 'y', 'z', 'c'], maps.returnType.VALUE)))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
+        .then(assertRecordEql({ map: {b: 2} }))
+        .then(cleanup())
     })
   })
 
@@ -261,194 +342,209 @@ describe('client.operate() - CDT Map operations', function () {
       order: maps.order.KEY_ORDERED
     })
 
-    it('removes map entries identified by key range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3, d: 4} }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.removeByKeyRange('map', 'b', 'd', maps.returnType.VALUE)
-      ]
-      var expectedResult = { map: [2, 3] }
-      var expectedRecord = { map: {a: 1, d: 4} }
-      verifyOperation(record, operations, expectedResult, expectedRecord, done)
+    it('removes map entries identified by key range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.removeByKeyRange('map', 'b', 'd', maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 3] }))
+        .then(assertRecordEql({ map: {a: 1, d: 4} }))
+        .then(cleanup())
     })
 
-    it('removes all keys from the specified start key until the end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3, d: 4} }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.removeByKeyRange('map', 'b', null, maps.returnType.VALUE)
-      ]
-      var expectedResult = { map: [2, 3, 4] }
-      var expectedRecord = { map: {a: 1} }
-      verifyOperation(record, operations, expectedResult, expectedRecord, done)
+    it('removes all keys from the specified start key until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.removeByKeyRange('map', 'b', null, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 3, 4] }))
+        .then(assertRecordEql({ map: {a: 1} }))
+        .then(cleanup())
     })
 
-    it('removes all keys from the start to the specified end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3, d: 4} }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.removeByKeyRange('map', null, 'b', maps.returnType.VALUE)
-      ]
-      var expectedResult = { map: [1] }
-      var expectedRecord = { map: {b: 2, c: 3, d: 4} }
-      verifyOperation(record, operations, expectedResult, expectedRecord, done)
+    it('removes all keys from the start to the specified end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.removeByKeyRange('map', null, 'b', maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [1] }))
+        .then(assertRecordEql({ map: {b: 2, c: 3, d: 4} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByValue', function () {
-    it('removes a map entry identified by value', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByValue('map', 2, maps.returnType.RANK)
-      var expectedResult = { map: [1] }
-      var expectedRecord = { map: {a: 1, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes a map entry identified by value', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByValue('map', 2, maps.returnType.RANK)))
+        .then(assertResultEql({ map: [1] }))
+        .then(assertRecordEql({ map: {a: 1, c: 3} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByValueList', function () {
-    it('removes map entries identified by one or more values', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByValueList('map', [1, 3], maps.returnType.RANK)
-      var expectedResult = { map: [0, 2] }
-      var expectedRecord = { map: {b: 2} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes map entries identified by one or more values', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByValueList('map', [1, 3], maps.returnType.RANK)))
+        .then(assertResultEql({ map: [0, 2] }))
+        .then(assertRecordEql({ map: {b: 2} }))
+        .then(cleanup())
     })
 
-    it('skips non-existent values', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByValueList('map', [1, 99, 3], maps.returnType.RANK)
-      var expectedResult = { map: [0, 2] }
-      var expectedRecord = { map: {b: 2} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('skips non-existent values', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByValueList('map', [1, 99, 3], maps.returnType.RANK)))
+        .then(assertResultEql({ map: [0, 2] }))
+        .then(assertRecordEql({ map: {b: 2} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByValueRange', function () {
-    it('removes map entries identified by value range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 2, d: 3} }
-      var operation = maps.removeByValueRange('map', 2, 3, maps.returnType.RANK)
-      var expectedResult = { map: [1, 2] }
-      var expectedRecord = { map: {a: 1, d: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes map entries identified by value range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 2, d: 3} }))
+        .then(operate(maps.removeByValueRange('map', 2, 3, maps.returnType.RANK)))
+        .then(assertResultEql({ map: [1, 2] }))
+        .then(assertRecordEql({ map: {a: 1, d: 3} }))
+        .then(cleanup())
     })
 
-    it('removes all keys from the specified start value until the end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByValueRange('map', 2, null, maps.returnType.RANK)
-      var expectedResult = { map: [1, 2] }
-      var expectedRecord = { map: {a: 1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all keys from the specified start value until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByValueRange('map', 2, null, maps.returnType.RANK)))
+        .then(assertResultEql({ map: [1, 2] }))
+        .then(assertRecordEql({ map: {a: 1} }))
+        .then(cleanup())
     })
 
-    it('removes all keys from the start to the specified end value', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByValueRange('map', null, 2, maps.returnType.RANK)
-      var expectedResult = { map: [0] }
-      var expectedRecord = { map: {b: 2, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all keys from the start to the specified end value', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByValueRange('map', null, 2, maps.returnType.RANK)))
+        .then(assertResultEql({ map: [0] }))
+        .then(assertRecordEql({ map: {b: 2, c: 3} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByIndex', function () {
-    it('removes a map entry identified by index', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByIndex('map', 1, maps.returnType.KEY)
-      var expectedResult = { map: 'b' }
-      var expectedRecord = { map: {a: 1, c: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes a map entry identified by index', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByIndex('map', 1, maps.returnType.KEY)))
+        .then(assertResultEql({ map: 'b' }))
+        .then(assertRecordEql({ map: {a: 1, c: 3} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByIndexRange', function () {
-    it('removes map entries identified by index range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 2, d: 3} }
-      var operation = maps.removeByIndexRange('map', 1, 2, maps.returnType.KEY)
-      var expectedResult = { map: ['b', 'c'] }
-      var expectedRecord = { map: {a: 1, d: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes map entries identified by index range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 2, d: 3} }))
+        .then(operate(maps.removeByIndexRange('map', 1, 2, maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['b', 'c'] }))
+        .then(assertRecordEql({ map: {a: 1, d: 3} }))
+        .then(cleanup())
     })
 
-    it('removes all map entries starting at the specified index if count is null', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByIndexRange('map', 1, null, maps.returnType.KEY)
-      var expectedResult = { map: ['b', 'c'] }
-      var expectedRecord = { map: {a: 1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all map entries starting at the specified index if count is null', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByIndexRange('map', 1, null, maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['b', 'c'] }))
+        .then(assertRecordEql({ map: {a: 1} }))
+        .then(cleanup())
     })
 
-    it('removes all map entries starting at the specified index if count is undefined', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.removeByIndexRange('map', 1)
-      var expectedResult = { map: null }
-      var expectedRecord = { map: {a: 1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all map entries starting at the specified index if count is undefined', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.removeByIndexRange('map', 1)))
+        .then(assertResultEql({ map: null }))
+        .then(assertRecordEql({ map: {a: 1} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByRank', function () {
-    it('removes a map entry identified by rank', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.removeByRank('map', 0, maps.returnType.VALUE)
-      var expectedResult = { map: 1 }
-      var expectedRecord = { map: {a: 3, b: 2} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes a map entry identified by rank', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.removeByRank('map', 0, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: 1 }))
+        .then(assertRecordEql({ map: {a: 3, b: 2} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.removeByRankRange', function () {
-    it('removes map entries identified by rank range', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.removeByRankRange('map', 0, 2, maps.returnType.VALUE)
-      var expectedResult = { map: [1, 2] }
-      var expectedRecord = { map: {a: 3} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes map entries identified by rank range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.removeByRankRange('map', 0, 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [1, 2] }))
+        .then(assertRecordEql({ map: {a: 3} }))
+        .then(cleanup())
     })
 
-    it('removes all map entries starting at the specified rank until the end', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.removeByRankRange('map', 1, null, maps.returnType.VALUE)
-      var expectedResult = { map: [2, 3] }
-      var expectedRecord = { map: {c: 1} }
-      verifyOperation(record, operation, expectedResult, expectedRecord, done)
+    it('removes all map entries starting at the specified rank until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.removeByRankRange('map', 1, null, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 3] }))
+        .then(assertRecordEql({ map: {c: 1} }))
+        .then(cleanup())
     })
   })
 
   describe('maps.size', function () {
-    it('returns the size of the map', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.size('map')
-      var expectedResult = { map: 3 }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('returns the size of the map', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.size('map')))
+        .then(assertResultEql({ map: 3 }))
+        .then(cleanup())
     })
 
-    it('returns zero if the map is empty', function (done) {
-      var record = { map: { } }
-      var operation = maps.size('map')
-      var expectedResult = { map: 0 }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('returns zero if the map is empty', function () {
+      return initState()
+        .then(createRecord({ map: { } }))
+        .then(operate(maps.size('map')))
+        .then(assertResultEql({ map: 0 }))
+        .then(cleanup())
     })
 
-    it('returns null if the map does not exist', function (done) {
-      var record = { i: 1 }
-      var operation = maps.size('map')
-      var expectedResult = { map: null }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('returns null if the map does not exist', function () {
+      return initState()
+        .then(createRecord({ i: 1 }))
+        .then(operate(maps.size('map')))
+        .then(assertResultEql({ map: null }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByKey', function () {
-    it('fetches a map entry identified by key', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByKey('map', 'b', maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['b', 2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by key', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByKey('map', 'b', maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2] }))
+        .then(cleanup())
     })
 
-    it('does not fail if the key does not exist', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByKey('map', 'z', maps.returnType.KEY_VALUE)
-      var expectedResult = { map: {} }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('does not fail if the key does not exist', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByKey('map', 'z', maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [] }))
+        .then(cleanup())
     })
   })
 
@@ -457,141 +553,154 @@ describe('client.operate() - CDT Map operations', function () {
       order: maps.order.KEY_ORDERED
     })
 
-    it('fetches map entries identified by key range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3, d: 4} }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKeyRange('map', 'b', 'd', maps.returnType.KEY)
-      ]
-      var expectedResult = { map: ['b', 'c'] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('fetches map entries identified by key range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKeyRange('map', 'b', 'd', maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['b', 'c'] }))
+        .then(cleanup())
     })
 
-    it('fetches all keys from the specified start key until the end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3, d: 4} }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKeyRange('map', 'b', null, maps.returnType.KEY)
-      ]
-      var expectedResult = { map: ['b', 'c', 'd'] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('fetches all keys from the specified start key until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKeyRange('map', 'b', null, maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['b', 'c', 'd'] }))
+        .then(cleanup())
     })
 
-    it('fetches all keys from the start to the specified end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByKeyRange('map', null, 'b', maps.returnType.KEY)
-      var expectedResult = { map: ['a'] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches all keys from the start to the specified end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByKeyRange('map', null, 'b', maps.returnType.KEY)))
+        .then(assertResultEql({ map: ['a'] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByValue', function () {
-    it('fetches a map entry identified by value', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByValue('map', 2, maps.returnType.VALUE)
-      var expectedResult = { map: [2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by value', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByValue('map', 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByValueRange', function () {
-    it('fetches map entries identified by value range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 2, d: 3} }
-      var operation = maps.getByValueRange('map', 2, 3, maps.returnType.VALUE)
-      var expectedResult = { map: [2, 2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches map entries identified by value range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 2, d: 3} }))
+        .then(operate(maps.getByValueRange('map', 2, 3, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 2] }))
+        .then(cleanup())
     })
 
-    it('fetches all values from the specified start value until the end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByValueRange('map', 2, null, maps.returnType.VALUE)
-      var expectedResult = { map: [2, 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches all values from the specified start value until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByValueRange('map', 2, null, maps.returnType.VALUE)))
+        .then(assertResultSatisfy(result => eql(result.map.sort(), [2, 3])))
+        .then(cleanup())
     })
 
-    it('fetches all values from the start to the specified end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByValueRange('map', null, 2, maps.returnType.VALUE)
-      var expectedResult = { map: [1] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches all values from the start to the specified end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByValueRange('map', null, 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [1] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByIndex', function () {
-    it('fetches a map entry identified by index', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByIndex('map', 1, maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['b', 2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by index', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByIndex('map', 1, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2] }))
+        .then(cleanup())
     })
 
-    it('fetches a map entry identified by negative index', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByIndex('map', -1, maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['c', 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by negative index', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByIndex('map', -1, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['c', 3] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByIndexRange', function () {
-    it('fetches map entries identified by index range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 2, d: 3} }
-      var operation = maps.getByIndexRange('map', 1, 2, maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['b', 2, 'c', 2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches map entries identified by index range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 2, d: 3} }))
+        .then(operate(maps.getByIndexRange('map', 1, 2, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 2] }))
+        .then(cleanup())
     })
 
-    it('fetches map entries identified by negative index range', function (done) {
-      var record = { map: {a: 1, b: 2, c: 2, d: 3} }
-      var operation = maps.getByIndexRange('map', -2, 2, maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['c', 2, 'd', 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches map entries identified by negative index range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 2, d: 3} }))
+        .then(operate(maps.getByIndexRange('map', -2, 2, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['c', 2, 'd', 3] }))
+        .then(cleanup())
     })
 
-    it('fetches all map entries starting from the specified index until the end', function (done) {
-      var record = { map: {a: 1, b: 2, c: 3} }
-      var operation = maps.getByIndexRange('map', 1, null, maps.returnType.KEY_VALUE)
-      var expectedResult = { map: ['b', 2, 'c', 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches all map entries starting from the specified index until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+        .then(operate(maps.getByIndexRange('map', 1, null, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 3] }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByRank', function () {
-    it('fetches a map entry identified by rank', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.getByRank('map', 0, maps.returnType.VALUE)
-      var expectedResult = { map: 1 }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by rank', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.getByRank('map', 0, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: 1 }))
+        .then(cleanup())
     })
 
-    it('fetches a map entry identified by negative rank', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.getByRank('map', -1, maps.returnType.VALUE)
-      var expectedResult = { map: 3 }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches a map entry identified by negative rank', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.getByRank('map', -1, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: 3 }))
+        .then(cleanup())
     })
   })
 
   describe('maps.getByRankRange', function () {
-    it('fetches map entries identified by rank range', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.getByRankRange('map', 0, 2, maps.returnType.VALUE)
-      var expectedResult = { map: [1, 2] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches map entries identified by rank range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.getByRankRange('map', 0, 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [1, 2] }))
+        .then(cleanup())
     })
 
-    it('fetches map entries identified by negative rank range', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.getByRankRange('map', -2, 2, maps.returnType.VALUE)
-      var expectedResult = { map: [2, 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches map entries identified by negative rank range', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.getByRankRange('map', -2, 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 3] }))
+        .then(cleanup())
     })
 
-    it('fetches all map entries starting at the specified rank until the end', function (done) {
-      var record = { map: {a: 3, b: 2, c: 1} }
-      var operation = maps.getByRankRange('map', 1, null, maps.returnType.VALUE)
-      var expectedResult = { map: [2, 3] }
-      verifyOperation(record, operation, expectedResult, record, done)
+    it('fetches all map entries starting at the specified rank until the end', function () {
+      return initState()
+        .then(createRecord({ map: {a: 3, b: 2, c: 1} }))
+        .then(operate(maps.getByRankRange('map', 1, null, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [2, 3] }))
+        .then(cleanup())
     })
   })
 
@@ -600,124 +709,112 @@ describe('client.operate() - CDT Map operations', function () {
       order: maps.order.KEY_ORDERED
     })
 
-    it('returns nothing', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKey('map', 'b', maps.returnType.NONE)
-      ]
-      var expectedResult = { map: null }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns nothing', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKey('map', 'b', maps.returnType.NONE)))
+        .then(assertResultEql({ map: null }))
+        .then(cleanup())
     })
 
-    it('returns index', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKey('map', 'a', maps.returnType.INDEX)
-      ]
-      var expectedResult = { map: 0 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns index', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKey('map', 'a', maps.returnType.INDEX)))
+        .then(assertResultEql({ map: 0 }))
+        .then(cleanup())
     })
 
-    it('returns reverse index', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKey('map', 'a', maps.returnType.REVERSE_INDEX)
-      ]
-      var expectedResult = { map: 2 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns reverse index', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKey('map', 'a', maps.returnType.REVERSE_INDEX)))
+        .then(assertResultEql({ map: 2 }))
+        .then(cleanup())
     })
 
-    it('returns value order (rank)', function (done) {
-      var record = { map: { a: 3, b: 2, c: 1 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKey('map', 'a', maps.returnType.RANK)
-      ]
-      var expectedResult = { map: 2 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns value order (rank)', function () {
+      return initState()
+        .then(createRecord({ map: { a: 3, b: 2, c: 1 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKey('map', 'a', maps.returnType.RANK)))
+        .then(assertResultEql({ map: 2 }))
+        .then(cleanup())
     })
 
-    it('returns reverse value order (reverse rank)', function (done) {
-      var record = { map: { a: 3, b: 2, c: 1 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKey('map', 'a', maps.returnType.REVERSE_RANK)
-      ]
-      var expectedResult = { map: 0 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns reverse value order (reverse rank)', function () {
+      return initState()
+        .then(createRecord({ map: { a: 3, b: 2, c: 1 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKey('map', 'a', maps.returnType.REVERSE_RANK)))
+        .then(assertResultEql({ map: 0 }))
+        .then(cleanup())
     })
 
-    it('returns count of items selected', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByKeyRange('map', 'a', 'c', maps.returnType.COUNT)
-      ]
-      var expectedResult = { map: 2 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns count of items selected', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByKeyRange('map', 'a', 'c', maps.returnType.COUNT)))
+        .then(assertResultEql({ map: 2 }))
+        .then(cleanup())
     })
 
-    it('returns key for a single read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndex('map', 0, maps.returnType.KEY)
-      ]
-      var expectedResult = { map: 'a' }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns key for a single read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndex('map', 0, maps.returnType.KEY)))
+        .then(assertResultEql({ map: 'a' }))
+        .then(cleanup())
     })
 
-    it('returns keys for range read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndexRange('map', 0, 2, maps.returnType.KEY)
-      ]
-      var expectedResult = { map: [ 'a', 'b' ] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns keys for range read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY)))
+        .then(assertResultEql({ map: [ 'a', 'b' ] }))
+        .then(cleanup())
     })
 
-    it('returns value for a single read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndex('map', 0, maps.returnType.VALUE)
-      ]
-      var expectedResult = { map: 1 }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns value for a single read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndex('map', 0, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: 1 }))
+        .then(cleanup())
     })
 
-    it('returns values for range read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndexRange('map', 0, 2, maps.returnType.VALUE)
-      ]
-      var expectedResult = { map: [ 1, 2 ] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns values for range read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.VALUE)))
+        .then(assertResultEql({ map: [ 1, 2 ] }))
+        .then(cleanup())
     })
 
-    it('returns key/value for a single read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndex('map', 0, maps.returnType.KEY_VALUE)
-      ]
-      var expectedResult = { map: [ 'a', 1 ] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns key/value for a single read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndex('map', 0, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [ 'a', 1 ] }))
+        .then(cleanup())
     })
 
-    it('returns key/value for a range read', function (done) {
-      var record = { map: { a: 1, b: 2, c: 3 } }
-      var operations = [
-        maps.setPolicy('map', keyOrderedPolicy),
-        maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)
-      ]
-      var expectedResult = { map: [ 'a', 1, 'b', 2 ] }
-      verifyOperation(record, operations, expectedResult, record, done)
+    it('returns key/value for a range read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [ 'a', 1, 'b', 2 ] }))
+        .then(cleanup())
     })
   })
 })

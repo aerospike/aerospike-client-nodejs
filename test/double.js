@@ -28,19 +28,18 @@ describe('Aerospike.Double #noserver', function () {
     it('returns a new Double value', function () {
       var subject = new Double(3.1415)
 
-      expect(subject).to.be.a(Double)
-      expect(subject.Double).to.be(3.1415)
+      expect(subject).to.be.instanceof(Double)
+      expect(subject.Double).to.equal(3.1415)
     })
 
     it('throws an error if not passed a number', function () {
       let fn = () => new Double('four point nine')
-      expect(fn).to.throwException(ex =>
-        expect(ex).to.be.a(TypeError))
+      expect(fn).to.throw(TypeError)
     })
 
     it('throws an error if called without `new`', function () {
       let fn = () => Double(3.1415)
-      expect(fn).to.throwException(/Invalid use of Double constructor/)
+      expect(fn).to.throw('Invalid use of Double constructor')
     })
   })
 
@@ -48,7 +47,7 @@ describe('Aerospike.Double #noserver', function () {
     var subject = new Double(3.1415)
 
     it('returns the double value', function () {
-      expect(subject.value()).to.be(3.1415)
+      expect(subject.value()).to.equal(3.1415)
     })
   })
 })

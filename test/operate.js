@@ -26,6 +26,7 @@ const helper = require('./test_helper')
 const keygen = helper.keygen
 
 const status = Aerospike.status
+const AerospikeError = Aerospike.AerospikeError
 const op = Aerospike.operations
 
 context('Operations', function () {
@@ -141,7 +142,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
+          .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_PARAM))
       })
     })
 
@@ -164,7 +165,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
+          .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_PARAM))
       })
     })
 
@@ -187,7 +188,7 @@ context('Operations', function () {
         ]
 
         return client.operate(key, ops)
-          .catch(error => expect(error.code).to.equal(status.ERR_PARAM))
+          .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_PARAM))
       })
     })
 
@@ -253,9 +254,9 @@ context('Operations', function () {
           })
 
           return client.operate(notExistentKey, ops, {}, policy)
-            .catch(error => expect(error.code).to.be(status.ERR_RECORD_NOT_FOUND))
+            .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
             .then(() => client.exists(notExistentKey))
-            .then(exists => expect(exists).to.be(false))
+            .then(exists => expect(exists).to.be.false())
         })
       })
     })
@@ -273,7 +274,7 @@ context('Operations', function () {
 
       client.operate(key, ops, meta, policy)
         .catch(error => {
-          expect(error.code).to.be(Aerospike.status.ERR_RECORD_GENERATION)
+          expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_GENERATION)
           return Promise.resolve(true)
         })
     })
