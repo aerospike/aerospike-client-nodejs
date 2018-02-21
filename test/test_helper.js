@@ -178,7 +178,7 @@ exports.fail = function fail (message) {
 exports.runInNewProcess = function (fn, timeout) {
   let env = {
     NODE_PATH: path.join(process.cwd(), 'node_modules'),
-    AEROSPIKE_HOSTS: client.config.hosts
+    AEROSPIKE_HOSTS: utils.hostsToString(client.config.hosts)
   }
   return runInNewProcessFn(fn, timeout, env)
 }
