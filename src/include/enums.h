@@ -28,6 +28,7 @@ v8::Local<v8::Object> indexType();
 v8::Local<v8::Object> jobStatus();
 v8::Local<v8::Object> key_policy_values();
 v8::Local<v8::Object> languages();
+v8::Local<v8::Object> list_enum_values();
 v8::Local<v8::Object> log_enum_values();
 v8::Local<v8::Object> map_enum_values();
 v8::Local<v8::Object> opcode_values();

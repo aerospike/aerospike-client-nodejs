@@ -112,6 +112,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	export("indexType", indexType());
 	export("jobStatus", jobStatus());
 	export("language", languages());
+	export("lists", list_enum_values());
 	export("maps", map_enum_values());
 	export("predicates", predicates());
 	export("scanPriority", scanPriority());

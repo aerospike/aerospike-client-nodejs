@@ -21,8 +21,10 @@
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
-const status = Aerospike.status
+const AerospikeError = Aerospike.AerospikeError
 const lists = Aerospike.lists
+const ops = Aerospike.operations
+const status = Aerospike.status
 
 describe('client.operate() - CDT List operations', function () {
   var client = helper.client
@@ -44,6 +46,99 @@ describe('client.operate() - CDT List operations', function () {
     client.remove(key, done)
   }
 
+  class State {
+    enrich (name, promise) {
+      if (this._expectError) {
+        return promise.catch(error => {
+          this['error'] = error
+          return this
+        })
+      } else {
+        return promise.then(value => {
+          this[name] = value
+          return this
+        })
+      }
+    }
+
+    passthrough (promise) {
+      return promise.then(() => this)
+    }
+
+    resolve (value) {
+      return Promise.resolve(value).then(() => this)
+    }
+
+    expectError () {
+      this._expectError = true
+      return this
+    }
+  }
+
+  function initState () {
+    return Promise.resolve(new State())
+  }
+
+  function expectError () {
+    return function (state) {
+      return state.expectError()
+    }
+  }
+
+  function createRecord (bins) {
+    return function (state) {
+      let key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
+      let meta = { ttl: 600 }
+      let policy = new Aerospike.WritePolicy({
+        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+      })
+      return state.enrich('key', client.put(key, bins, meta, policy))
+    }
+  }
+
+  function operate (ops) {
+    if (!Array.isArray(ops)) {
+      ops = [ops]
+    }
+    return function (state) {
+      return state.enrich('result', client.operate(state.key, ops))
+    }
+  }
+
+  function assertResultEql (expected) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
+    }
+  }
+
+  function assertResultSatisfy (matcher) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
+    }
+  }
+
+  function assertRecordEql (expected) {
+    return function (state) {
+      return state.passthrough(client.get(state.key)
+        .then(record => expect(record.bins).to.eql(expected, 'record bins after operation')))
+    }
+  }
+
+  function assertError (code) {
+    return function (state) {
+      return state.resolve(
+        expect(state.error, 'error raised by operate command')
+          .to.be.instanceof(AerospikeError)
+          .with.property('code', code))
+    }
+  }
+
+  function cleanup () {
+    return function (state) {
+      return state.passthrough(client.remove(state.key))
+    }
+  }
+
   // Helper method to execute a single operation on the given record and verify:
   // 1) The results returned by the operation,
   // 2) The contents of the record after the operation.
@@ -60,6 +155,43 @@ describe('client.operate() - CDT List operations', function () {
       })
     })
   }
+
+  describe('lists.setOrder', function () {
+    it('changes the list order', function () {
+      return initState()
+        .then(createRecord({ list: [ 3, 1, 2 ] }))
+        .then(operate([
+          lists.setOrder('list', lists.order.ORDERED),
+          ops.read('list')
+        ]))
+        .then(assertResultEql({ list: [1, 2, 3] }))
+        .then(cleanup())
+    })
+  })
+
+  describe('lists.sort', function () {
+    it('sorts the map', function () {
+      return initState()
+        .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
+        .then(operate([
+          lists.sort('list', lists.sortFlags.DEFAULT),
+          ops.read('list')
+        ]))
+        .then(assertResultEql({ list: [1, 1, 2, 3] }))
+        .then(cleanup())
+    })
+
+    it('sorts the map and drops duplicates', function () {
+      return initState()
+        .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
+        .then(operate([
+          lists.sort('list', lists.sortFlags.DROP_DUPLICATES),
+          ops.read('list')
+        ]))
+        .then(assertResultEql({ list: [1, 2, 3] }))
+        .then(cleanup())
+    })
+  })
 
   describe('lists.append', function () {
     it('appends an item to the list and returns the list size', function (done) {

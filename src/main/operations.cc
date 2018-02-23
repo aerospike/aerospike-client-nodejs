@@ -30,6 +30,62 @@ extern "C" {
 
 using namespace v8;
 
+int get_list_policy(as_list_policy* policy, Local<Object> obj, LogInfo* log)
+{
+	Nan::HandleScope scope;
+	as_list_policy_init(policy);
+	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	if (maybe_policy_obj->IsUndefined()) {
+		as_v8_detail(log, "No list policy set - using default policy");
+		return AS_NODE_PARAM_OK;
+	} else if (!maybe_policy_obj->IsObject()) {
+		as_v8_error(log, "Type error: policy should be an Object");
+		return AS_NODE_PARAM_ERR;
+	}
+	Local<Object> policy_obj = maybe_policy_obj->ToObject();
+
+	as_list_order order;
+	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
+	if (value->IsNumber()) {
+		order = (as_list_order) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		order = AS_LIST_UNORDERED;
+	} else {
+		as_v8_error(log, "Type error: order should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_write_flags write_flags;
+	value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
+	if (value->IsNumber()) {
+		write_flags = (as_list_write_flags) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		write_flags = AS_LIST_WRITE_DEFAULT;
+	} else {
+		as_v8_error(log, "Type error: writeFlags should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_policy_set(policy, order, write_flags);
+	return AS_NODE_PARAM_OK;
+}
+
+int get_list_return_type(as_list_return_type* return_type, Local<Object> obj, LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
+	if (value->IsNumber()) {
+		(*return_type) = (as_list_return_type) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		(*return_type) = AS_LIST_RETURN_NONE;
+	} else {
+		as_v8_error(log, "Type error: returnType should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+	as_v8_detail(log, "List return type: %i", (*return_type));
+	return AS_NODE_PARAM_OK;
+}
+
 int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
@@ -62,7 +118,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 	} else if (value->IsUndefined()) {
 		write_mode = AS_MAP_UPDATE;
 	} else {
-		as_v8_error(log, "Type error: write_mode should be integer");
+		as_v8_error(log, "Type error: writeMode should be integer");
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -79,7 +135,7 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 	} else if (value->IsUndefined()) {
 		(*return_type) = AS_MAP_RETURN_NONE;
 	} else {
-		as_v8_error(log, "Type error: return_type should be integer");
+		as_v8_error(log, "Type error: returnType should be integer");
 		return AS_NODE_PARAM_ERR;
 	}
 	as_v8_detail(log, "Map return type: %i", (*return_type));
@@ -266,6 +322,40 @@ int add_touch_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	as_operations_add_touch(ops);
 	as_v8_debug(log, "Touch operation is set");
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_set_order_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_order order;
+	if (get_int64_property((int64_t *) &order, op, "order", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_set_order(ops, binName, order);
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_sort_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_sort_flags flags;
+	if (get_int64_property((int64_t *) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_sort(ops, binName, flags);
+	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1223,6 +1313,8 @@ const ops_table_entry ops_table[] = {
 	{ "PREPEND", add_prepend_op },
 	{ "APPEND", add_append_op },
 	{ "TOUCH", add_touch_op },
+	{ "LIST_SET_ORDER", add_list_set_order_op },
+	{ "LIST_SORT", add_list_sort_op },
 	{ "LIST_APPEND", add_list_append_op },
 	{ "LIST_APPEND_ITEMS", add_list_append_items_op },
 	{ "LIST_INSERT", add_list_insert_op },
