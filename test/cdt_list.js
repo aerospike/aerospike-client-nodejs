@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it, beforeEach */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -162,6 +163,17 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertRecordEql({ list: [1, 2, 3, 4, 5, 99] }))
         .then(cleanup)
     })
+
+    context('add-unique policy', function () {
+      it('does not append an item that already exists in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.append('list', 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(assertResultEql({ }))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.appendItems', function () {
@@ -182,6 +194,17 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertError(status.ERR_PARAM))
         .then(cleanup)
     })
+
+    context('add-unique policy', function () {
+      it('does not append items that already exist in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.appendItems('list', [3, 6], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(assertResultEql({ list: 6 }))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5, 6] }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.insert', function () {
@@ -192,6 +215,17 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertResultEql({ list: 6 }))
         .then(assertRecordEql({ list: [1, 2, 99, 3, 4, 5] }))
         .then(cleanup)
+    })
+
+    context.only('add-unique policy', function () {
+      it('does not insert an item that already exists in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.insert('list', 2, 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(assertResultEql({ }))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+          .then(cleanup)
+      })
     })
   })
 
@@ -212,6 +246,17 @@ describe('client.operate() - CDT List operations', function () {
         .then(operate(lists.insertItems('list', 2, 99)))
         .then(assertError(status.ERR_PARAM))
         .then(cleanup)
+    })
+
+    context('add-unique policy', function () {
+      it('does not insert items that already exist in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.insert('list', 2, [3, 99], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(assertResultEql({ list: 6 }))
+          .then(assertRecordEql({ list: [1, 2, 3, 99, 4, 5] }))
+          .then(cleanup)
+      })
     })
   })
 
@@ -368,6 +413,17 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertResultEql({ list: 4 }))
         .then(assertRecordEql({ list: [1, 2, 4, 4, 5] }))
         .then(cleanup)
+    })
+
+    context('add-unique policy', function () {
+      it('fails with an error if the incremented number already exists in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.increment('list', 2, 1, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
+          .then(cleanup)
+      })
     })
   })
 
