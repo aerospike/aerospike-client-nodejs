@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ describe('client.operate() - CDT List operations', function () {
 
   function createRecord (bins) {
     return function (state) {
-      let key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_map/'})()
+      let key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_list/'})()
       let meta = { ttl: 600 }
       let policy = new Aerospike.WritePolicy({
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE
@@ -131,7 +131,7 @@ describe('client.operate() - CDT List operations', function () {
   })
 
   describe('lists.sort', function () {
-    it('sorts the map', function () {
+    it('sorts the list', function () {
       return initState()
         .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
         .then(operate([
@@ -142,7 +142,7 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup())
     })
 
-    it('sorts the map and drops duplicates', function () {
+    it('sorts the list and drops duplicates', function () {
       return initState()
         .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
         .then(operate([
@@ -165,12 +165,12 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('add-unique policy', function () {
-      it('does not append an item that already exists in the list', function () {
+      it('returns an error when trying to append a non-unique element', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
           .then(operate(lists.append('list', 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
-          .then(assertResultEql({ }))
-          .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
       })
     })
@@ -217,13 +217,13 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-    context.only('add-unique policy', function () {
-      it('does not insert an item that already exists in the list', function () {
+    context('add-unique policy', function () {
+      it('returns an error when trying to insert a non-unique element', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
           .then(operate(lists.insert('list', 2, 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
-          .then(assertResultEql({ }))
-          .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
       })
     })
@@ -252,9 +252,9 @@ describe('client.operate() - CDT List operations', function () {
       it('does not insert items that already exist in the list', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
-          .then(operate(lists.insert('list', 2, [3, 99], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.insertItems('list', 2, [3, 99], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
           .then(assertResultEql({ list: 6 }))
-          .then(assertRecordEql({ list: [1, 2, 3, 99, 4, 5] }))
+          .then(assertRecordEql({ list: [1, 2, 99, 3, 4, 5] }))
           .then(cleanup)
       })
     })
