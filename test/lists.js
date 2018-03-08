@@ -415,6 +415,20 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
+    context('ordered lists', function () {
+      let orderList = bin => operate(lists.setOrder(bin, lists.order.ORDERED))
+
+      it('reorders the list with the incremented value', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(orderList('list'))
+          .then(operate(lists.increment('list', 2, 10)))
+          .then(assertResultEql({ list: 13 }))
+          .then(assertRecordEql({ list: [1, 2, 4, 5, 13] }))
+          .then(cleanup)
+      })
+    })
+
     context('add-unique policy', function () {
       it('fails with an error if the incremented number already exists in the list', function () {
         return initState()
