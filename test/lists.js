@@ -199,9 +199,9 @@ describe('client.operate() - CDT List operations', function () {
       it('does not append items that already exist in the list', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
           .then(operate(lists.appendItems('list', [3, 6], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
-          .then(assertResultEql({ list: 6 }))
-          .then(assertRecordEql({ list: [1, 2, 3, 4, 5, 6] }))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
       })
     })
@@ -252,9 +252,9 @@ describe('client.operate() - CDT List operations', function () {
       it('does not insert items that already exist in the list', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
           .then(operate(lists.insertItems('list', 2, [3, 99], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
-          .then(assertResultEql({ list: 6 }))
-          .then(assertRecordEql({ list: [1, 2, 99, 3, 4, 5] }))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
       })
     })
