@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
-    "choma": "^1.1.0",
+    "choma": "^1.2.1",
     "codecov": "^2.3.0",
     "deep-eql": "^3.0.1",
     "dirty-chai": "^2.0.1",
