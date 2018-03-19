@@ -1,3 +1,2 @@
---require ./test/util/seedrandom
 --require choma
 --require mocha-clean
