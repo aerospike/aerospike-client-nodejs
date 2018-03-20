@@ -27,6 +27,8 @@ const lists = Aerospike.lists
 const ops = Aerospike.operations
 const status = Aerospike.status
 
+const eql = require('deep-eql')
+
 describe('client.operate() - CDT List operations', function () {
   let client = helper.client
 
@@ -92,6 +94,12 @@ describe('client.operate() - CDT List operations', function () {
   function assertResultEql (expected) {
     return function (state) {
       return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
+    }
+  }
+
+  function assertResultSatisfy (matcher) {
+    return function (state) {
+      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
     }
   }
 
@@ -319,6 +327,116 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertResultEql({ list: 3 }))
         .then(assertRecordEql({ list: [1, 2] }))
         .then(cleanup)
+    })
+  })
+
+  describe('lists.removeByIndex', function () {
+    context('returnType=VALUE', function () {
+      it('removes the item at the specified index and returns the value', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.removeByIndex('list', 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: 3 }))
+          .then(assertRecordEql({ list: [1, 2, 4, 5] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByIndexRange', function () {
+    context('returnType=VALUE', function () {
+      it('removes the items in the specified range and returns the values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.removeByIndexRange('list', 2, 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [3, 4] }))
+          .then(assertRecordEql({ list: [1, 2, 5] }))
+          .then(cleanup)
+      })
+
+      it('removes the items starting from the specified index and returns the values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.removeByIndexRange('list', 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [3, 4, 5] }))
+          .then(assertRecordEql({ list: [1, 2] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByValue', function () {
+    context('returnType=INDEX', function () {
+      it('removes all items with the specified value and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.removeByValue('list', 3).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [2, 5] }))
+          .then(assertRecordEql({ list: [1, 2, 1, 2] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByValueList', function () {
+    context('returnType=INDEX', function () {
+      it('removes all items with the specified values and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.removeByValueList('list', [1, 3]).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [0, 2, 3, 5] }))
+          .then(assertRecordEql({ list: [2, 2] }))
+          .then(cleanup)
+      })
+    })
+
+    context('inverted', function () {
+      it('removes all items except with the specified values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.removeByValueList('list', [1, 3]).inverted()))
+          .then(assertRecordEql({ list: [1, 3, 1, 3] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByValueRange', function () {
+    context('returnType=INDEX', function () {
+      it('removes all items in the specified range of values and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.removeByValueRange('list', 2, 5).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [1, 2, 3] }))
+          .then(assertRecordEql({ list: [1, 5] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByRank', function () {
+    context('returnType=VALUE', function () {
+      it('removes the item with the specified list rank and returns the value', function () {
+        return initState()
+          .then(createRecord({ list: [3, 1, 2, 4] }))
+          .then(operate(lists.removeByRank('list', 1).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: 2 }))
+          .then(assertRecordEql({ list: [3, 1, 4] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.removeByRankRange', function () {
+    context('returnType=VALUE', function () {
+      it('removes the item with the specified list rank and returns the value', function () {
+        return initState()
+          .then(createRecord({ list: [3, 1, 2, 5, 4] }))
+          .then(operate(lists.removeByRankRange('list', 1, 3).andReturn(lists.returnType.VALUE)))
+          .then(assertResultSatisfy(result => eql(result.list.sort(), [2, 3, 4])))
+          .then(assertRecordEql({ list: [1, 5] }))
+          .then(cleanup)
+      })
     })
   })
 
