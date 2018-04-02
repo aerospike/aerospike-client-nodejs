@@ -1,12 +1,16 @@
 {
-  "name" : "aerospike-client-examples",
-  "description" : "Aerospike Client Library Examples",
+  "name": "aerospike-client-examples",
+  "description": "Aerospike Client Library Examples",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aerospike/aerospike-client-nodejs"
+  },
   "engines": {
     "node": ">=4"
   },
   "dependencies": {
-    "aerospike": "*",
-    "yargs": ">=1.2.1",
-    "deasync": "^0.1.4"
+    "aerospike": "file:..",
+    "yargs": "^10.1.1"
   }
 }
