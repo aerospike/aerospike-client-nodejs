@@ -88,7 +88,7 @@ int get_list_return_type(as_list_return_type* return_type, Local<Object> obj, Lo
 
 	bool inverted_defined = false;
 	bool inverted = false;
-	if (get_optional_bool_property(&inverted, &inverted_defined, obj, "_inverted", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_bool_property(&inverted, &inverted_defined, obj, "inverted", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 	if (inverted_defined && inverted) {

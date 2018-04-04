@@ -390,11 +390,11 @@ describe('client.operate() - CDT List operations', function () {
       })
     })
 
-    context('inverted', function () {
+    context('invert results', function () {
       it('removes all items except with the specified values', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
-          .then(operate(lists.removeByValueList('list', [1, 3]).inverted()))
+          .then(operate(lists.removeByValueList('list', [1, 3]).invertResults()))
           .then(assertRecordEql({ list: [1, 3, 1, 3] }))
           .then(cleanup)
       })
