@@ -29,11 +29,8 @@ NAN_METHOD(AerospikeClient::ExistsAsync)
 	TYPE_CHECK_REQ(info[2], IsFunction, "callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AsyncCommand* cmd = new AsyncCommand(client, info[2].As<Function>());
 	LogInfo* log = client->log;
-
-	CallbackData* data = new CallbackData();
-	data->client = client;
-	data->callback.Reset(info[2].As<Function>());
 
 	as_key key;
 	bool key_initalized = false;
@@ -44,7 +41,7 @@ NAN_METHOD(AerospikeClient::ExistsAsync)
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(&err, data);
+		invoke_error_callback(&err, cmd);
 		goto Cleanup;
 	}
 	key_initalized = true;
@@ -52,16 +49,16 @@ NAN_METHOD(AerospikeClient::ExistsAsync)
 	if (info[1]->IsObject()) {
 		if (readpolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
 			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(&err, data);
+			invoke_error_callback(&err, cmd);
 			goto Cleanup;
 		}
 		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Sending async exists command\n");
-	status = aerospike_key_exists_async(client->as, &err, p_policy, &key, async_record_listener, data, NULL, NULL);
+	status = aerospike_key_exists_async(client->as, &err, p_policy, &key, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(&err, data);
+		invoke_error_callback(&err, cmd);
 	}
 
 Cleanup:

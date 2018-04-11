@@ -27,12 +27,6 @@ extern "C" {
 
 #include "client.h"
 
-typedef struct CallbackData {
-	AerospikeClient * client;
-	Nan::Persistent<v8::Function> callback;
-	void* data;
-} CallbackData;
-
 class AsyncCommand : public Nan::AsyncResource {
 	public:
 		AsyncCommand(AerospikeClient* client_, v8::Local<v8::Function> callback_)
@@ -50,7 +44,7 @@ class AsyncCommand : public Nan::AsyncResource {
 
 		AerospikeClient* client;
 		Nan::Persistent<v8::Function> callback;
-		as_error* error;
+		as_error* error = NULL;
 };
 
 /**
@@ -71,8 +65,7 @@ v8::Local<v8::Value> async_invoke(
 /**
  * Asynchronously invoke callback function with the given error.
  */
-void invoke_error_callback(as_error* error, CallbackData* data);
-void invoke_error_callbackNew(as_error* error, AsyncCommand* cmd);
+void invoke_error_callback(as_error* error, AsyncCommand* cmd);
 
 // implements the as_async_record_listener interface
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
