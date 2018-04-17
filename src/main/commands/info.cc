@@ -40,19 +40,31 @@ using namespace v8;
  *  running asynchronous functions. We create a data structure to hold the
  *  data we need during and after async work.
  */
-typedef struct InfoCmd {
-	aerospike* as;
-	bool param_err;
-	as_error err;
-	as_policy_info policy;
-	as_policy_info* p_policy;
-	char* req;
-	char* res;
-	char* addr;
-	uint16_t port;
-	LogInfo* log;
-	Nan::Persistent<Function> callback;
-} InfoCmd;
+class InfoCommand : public Nan::AsyncResource {
+	public:
+		InfoCommand(AerospikeClient* client, Local<Function> callback_)
+			: Nan::AsyncResource("aerospike:InfoCommand")
+			, as(client->as)
+			, log(client->log) {
+				callback.Reset(callback_);
+			}
+
+		~InfoCommand() {
+			callback.Reset();
+		}
+
+		aerospike* as;
+		bool param_err = false;
+		as_error err;
+		as_policy_info policy;
+		as_policy_info* p_policy = NULL;
+		char* req = NULL;
+		char* res = NULL;
+		char* addr = NULL;
+		uint16_t port = 0;
+		LogInfo* log;
+		Nan::Persistent<Function> callback;
+};
 
 
 /*******************************************************************************
@@ -69,13 +81,8 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	InfoCommand* cmd = new InfoCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
-
-	InfoCmd* cmd = new InfoCmd();
-	cmd->param_err = false;
-	cmd->as = client->as;
-	cmd->log = client->log;
-	cmd->callback.Reset(info[3].As<Function>());
 
 	Local<Value> maybe_request = info[0];
 	Local<Value> maybe_host = info[1];
@@ -120,7 +127,7 @@ Return:
  */
 static void execute(uv_work_t* req)
 {
-	InfoCmd* cmd = reinterpret_cast<InfoCmd*>(req->data);
+	InfoCommand* cmd = reinterpret_cast<InfoCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
 	if (cmd->param_err) {
@@ -146,7 +153,7 @@ static void execute(uv_work_t* req)
 static void respond(uv_work_t * req, int status)
 {
 	Nan::HandleScope scope;
-	InfoCmd* cmd = reinterpret_cast<InfoCmd*>(req->data);
+	InfoCommand* cmd = reinterpret_cast<InfoCommand*>(req->data);
 	char* response = cmd->res;
 	LogInfo* log = cmd->log;
 
@@ -167,13 +174,13 @@ static void respond(uv_work_t * req, int status)
 	}
 
 	Nan::TryCatch try_catch;
+	Local<Object> target = Nan::New<Object>();
 	Local<Function> cb = Nan::New<Function>(cmd->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+	cmd->runInAsyncScope(target, cb, argc, argv);
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
 
-	cmd->callback.Reset();
 	delete cmd;
 	delete req;
 }
