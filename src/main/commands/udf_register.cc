@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -36,7 +37,7 @@ using namespace v8;
 class UdfRegisterCommand : public AerospikeCommand {
 	public:
 		UdfRegisterCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("UdfRegister", client, callback_) {}
+			: AerospikeCommand("UdfRegister", client, callback_) { }
 
 		~UdfRegisterCommand() {
 			if (policy != NULL) cf_free(policy);
@@ -118,8 +119,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		return cmd;
 	}
 
-	strncpy(cmd->filename, as_string_get(&filename), filesize);
-	cmd->filename[filesize+1] = '\0';
+	strlcpy(cmd->filename, as_string_get(&filename), filesize + 1);
 	//Wrap the local buffer as an as_bytes object.
 	as_bytes_init_wrap(&cmd->content, file_content, size, true);
 

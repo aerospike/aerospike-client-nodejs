@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -57,11 +58,11 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	IndexCreateCommand* cmd = new IndexCreateCommand(client, info[7].As<Function>());
 	LogInfo* log = client->log;
 
-	strncpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
+	strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
 	if (info[1]->IsString()) {
-		strncpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE);
+		strlcpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE);
 	}
-	strncpy(cmd->bin, *String::Utf8Value(info[2]->ToString()), AS_BIN_NAME_MAX_LEN);
+	strlcpy(cmd->bin, *String::Utf8Value(info[2]->ToString()), AS_BIN_NAME_MAX_LEN);
 	cmd->index = strdup(*String::Utf8Value(info[3]->ToString()));
 	cmd->itype = (as_index_type) info[4]->ToInteger()->Value();
 	cmd->dtype = (as_index_datatype) info[5]->ToInteger()->Value();

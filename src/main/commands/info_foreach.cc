@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -63,7 +64,7 @@ aerospike_info_callback(const as_error* error, const as_node* node, const char* 
 
 	if (strlen(node->name) > 0) {
 		as_v8_debug(log, "Response from node %s", node->name);
-		strncpy(result.node, node->name, AS_NODE_NAME_SIZE);
+		strlcpy(result.node, node->name, AS_NODE_NAME_SIZE);
 	} else {
 		result.node[0] = '\0';
 		as_v8_debug(log, "No host name from cluster");
@@ -71,8 +72,7 @@ aerospike_info_callback(const as_error* error, const as_node* node, const char* 
 
 	if (response != NULL) {
 		as_v8_debug(log, "Response is %s", response);
-		result.info = (char*) cf_malloc(strlen(response) + 1);
-		strncpy(result.info, response, strlen(response) + 1);
+		result.info = strdup(response);
 	} else {
 		result.info = NULL;
 		as_v8_debug(log, "No response from cluster");
@@ -94,7 +94,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[0]->IsString()) {
 		cmd->request = (char*) malloc(INFO_REQUEST_LEN);
 		String::Utf8Value request(info[0]->ToString());
-		strncpy(cmd->request, *request, INFO_REQUEST_LEN);
+		strlcpy(cmd->request, *request, INFO_REQUEST_LEN);
 	} else {
 		cmd->request = (char*) "";
 	}

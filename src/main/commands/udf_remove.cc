@@ -33,7 +33,7 @@ using namespace v8;
 class UdfRemoveCommand : public AerospikeCommand {
 	public:
 		UdfRemoveCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("UdfRemove", client, callback_) {}
+			: AerospikeCommand("UdfRemove", client, callback_) { }
 
 		~UdfRemoveCommand() {
 			if (policy != NULL) cf_free(policy);

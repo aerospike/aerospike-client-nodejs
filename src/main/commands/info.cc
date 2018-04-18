@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -60,9 +61,9 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	if (info[0]->IsString()) {
 		cmd->request = (char*) cf_malloc(INFO_REQUEST_LEN);
 		String::Utf8Value request(info[0]->ToString());
-		strncpy(cmd->request, *request, INFO_REQUEST_LEN);
+		strlcpy(cmd->request, *request, INFO_REQUEST_LEN);
 	} else {
-		cmd->req = (char*) "";
+		cmd->request = (char*) "";
 	}
 
 	if (info[1]->IsObject()) {

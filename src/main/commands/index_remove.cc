@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -52,7 +53,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	IndexRemoveCommand* cmd = new IndexRemoveCommand(client, info[3].As<Function>());
 	LogInfo* log = cmd->log = client->log;
 
-	strncpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
+	strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
 	cmd->index = strdup(*String::Utf8Value(info[1]->ToString()));
 
 	if (info[2]->IsObject()) {

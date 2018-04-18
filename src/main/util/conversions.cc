@@ -50,6 +50,7 @@ extern "C" {
 #include "conversions.h"
 #include "log.h"
 #include "enums.h"
+#include "string.h"
 
 using namespace node;
 using namespace v8;
@@ -516,7 +517,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
     // and populate the error object.
     if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL) {
         char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
-        strncpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
+        strlcpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
         char *ptr;
         ptr = strtok(err_message, ":");
         if(ptr != NULL) {
@@ -533,7 +534,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
         }
 
         if(ptr != NULL) {
-            strncpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
+            strlcpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
             ptr = strtok(NULL, ":");
         }
 
@@ -1127,7 +1128,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
     if (ns_obj->IsString()) {
-        strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+        strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
         if (strlen(ns) == 0) {
             as_v8_error(log, "The key namespace must not be empty");
             return AS_NODE_PARAM_ERR;
@@ -1140,7 +1141,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
     if (set_obj->IsString()) {
-        strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+        strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
         if (strlen(set) == 0) {
             as_v8_debug(log, "Key set passed is empty string");
         }
@@ -1239,7 +1240,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
         goto Ret_Err;
     }
     if ( ns_obj->IsString() ) {
-        strncpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+        strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
     }
     else {
         goto Ret_Err;
@@ -1250,7 +1251,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
     }
 
     if ( set_obj->IsString() ) {
-        strncpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+        strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
     }
     else {
         goto Ret_Err;
@@ -1344,7 +1345,7 @@ int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const 
     for( int i = 0; i < arr_length; i++) {
         Local<Value> bname = arr->Get(i);
         c_bins[i] = (char*)cf_malloc(AS_BIN_NAME_MAX_SIZE);
-        strncpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+        strlcpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
         as_v8_detail(log, "name of the bin %s", c_bins[i]);
     }
     // The last entry should be NULL because we are passing to select API calls.
@@ -1388,7 +1389,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
             if (*filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
-            strncpy(*filename, *String::Utf8Value(module), size);
+            strlcpy(*filename, *String::Utf8Value(module), size);
             as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
         } else {
             as_v8_error(log, "UDF module name should be string");
@@ -1407,7 +1408,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
             if (*funcname == NULL) {
                 *funcname = (char*) cf_malloc(sizeof(char) * size);
             }
-            strncpy(*funcname, *String::Utf8Value(v8_funcname), size);
+            strlcpy(*funcname, *String::Utf8Value(v8_funcname), size);
             as_v8_detail(log, "The function name in the UDF args set to %s", *funcname);
         } else {
             as_v8_error(log, "UDF function name should be string");
