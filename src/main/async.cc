@@ -41,32 +41,35 @@ Local<Object> err_ok()
  *  Setup an asynchronous invocation of a function using uv worker threads.
  */
 Local<Value> async_invoke(
-    const Nan::FunctionCallbackInfo<v8::Value> &args,
-    void* (* prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
-    void  (* execute)(uv_work_t* req),
-    void  (* respond)(uv_work_t* req, int status)
-    )
+		const Nan::FunctionCallbackInfo<v8::Value> &args,
+		void* (* prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
+		void  (* execute)(uv_work_t* req),
+		void  (* respond)(uv_work_t* req, int status)
+		)
 {
-    // Create an async work request and prepare the command
-    uv_work_t * req = new uv_work_t;
-    req->data = prepare(args);
+	Nan::HandleScope scope;
 
-    // Pass the work request to libuv to be run when a
-    // worker-thread is available to process it.
-    uv_queue_work(
-        uv_default_loop(),  // event loop
-        req,                // work token
-        execute,            // execute work
-        respond             // respond to callback
-    );
+	// Create an async work request and prepare the command
+	uv_work_t * req = new uv_work_t;
+	req->data = prepare(args);
 
-    // Return value for the function. Because we are async, we will
-    // return an `undefined`.
-    return Nan::Undefined();
+	// Pass the work request to libuv to be run when a
+	// worker-thread is available to process it.
+	uv_queue_work(
+			uv_default_loop(),  // event loop
+			req,                // work token
+			execute,            // execute work
+			respond             // respond to callback
+			);
+
+	// Return value for the function. Because we are async, we will
+	// return an `undefined`.
+	return Nan::Undefined();
 }
 
 void release_uv_timer(uv_handle_t* handle)
 {
+	Nan::HandleScope scope;
 	uv_timer_t* timer = (uv_timer_t*) handle;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(timer->data);
 	cf_free(timer);
@@ -112,12 +115,7 @@ void invoke_error_callback(as_error* error, AsyncCommand* cmd)
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
-
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	if (!cmd) {
-		return Nan::ThrowError("Missing callback data - cannot process record callback");
-	}
-
 	const AerospikeClient* client = cmd->client;
 	const LogInfo* log = client->log;
 

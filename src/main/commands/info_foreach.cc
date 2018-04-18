@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "command.h"
 #include "async.h"
 #include "conversions.h"
 #include "policy.h"
@@ -30,44 +31,34 @@ extern "C" {
 
 using namespace v8;
 
-/*******************************************************************************
- *  TYPES
- ******************************************************************************/
-
 typedef struct node_info_s {
 	char* info;
 	char node[AS_NODE_NAME_SIZE];
 } node_info;
 
-/**
- *  InfoForeachCmd — Data to be used in async calls.
- *
- *  libuv allows us to pass around a pointer to an arbitraty object when
- *  running asynchronous functions. We create a data structure to hold the
- *  data we need during and after async work.
- */
-typedef struct InfoForeachCmd {
-	aerospike* as;
-	bool param_err;
-	as_error err;
-	as_policy_info policy;
-	as_policy_info* p_policy;
-	char* req;
-	as_vector* res;
-	LogInfo* log;
-	Nan::Persistent<Function> callback;
-} InfoForeachCmd;
+class InfoForeachCommand : public AerospikeCommand {
+	public:
+		InfoForeachCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("InfoForeach", client, callback_) {
+				results = as_vector_create(sizeof(node_info), 4);
+			}
 
+		~InfoForeachCommand() {
+			if (policy != NULL) cf_free(policy);
+			if (request != NULL) cf_free(request);
+			as_vector_destroy(results);
+		}
 
-/*******************************************************************************
- *  FUNCTIONS
- ******************************************************************************/
+		as_policy_info* policy = NULL;
+		char* request = NULL;
+		as_vector* results;
+};
 
-bool aerospike_info_callback(const as_error* error, const as_node* node, const char* info_req, char* response, void* udata)
+bool
+aerospike_info_callback(const as_error* error, const as_node* node, const char* info_req, char* response, void* udata)
 {
-	InfoForeachCmd* cmd = reinterpret_cast<InfoForeachCmd*>(udata);
+	InfoForeachCommand* cmd = reinterpret_cast<InfoForeachCommand*>(udata);
 	LogInfo* log = cmd->log;
-	as_vector* results = cmd->res;
 	node_info result;
 
 	if (strlen(node->name) > 0) {
@@ -87,94 +78,65 @@ bool aerospike_info_callback(const as_error* error, const as_node* node, const c
 		as_v8_debug(log, "No response from cluster");
 	}
 
-	as_vector_append(results, (void*) &result);
+	as_vector_append(cmd->results, (void*) &result);
 
 	return true;
 }
 
-/**
- *  prepare() — Function to prepare InfoForeachCmd, for use in `execute()` and `respond()`.
- *
- *  This should only keep references to V8 or V8 structures for use in
- *  `respond()`, because it is unsafe for use in `execute()`.
- */
-static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+static void*
+prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	InfoForeachCommand* cmd = new InfoForeachCommand(client, info[2].As<Function>());
 	LogInfo* log = client->log;
 
-	InfoForeachCmd* cmd = new InfoForeachCmd();
-	cmd->param_err = false;
-	cmd->as = client->as;
-	cmd->log = client->log;
-	cmd->res = as_vector_create(sizeof(node_info), 4);
-	cmd->callback.Reset(info[2].As<Function>());
-
-	Local<Value> maybe_request = info[0];
-	Local<Value> maybe_policy = info[1];
-
-	if (maybe_request->IsString()) {
-		cmd->req = (char*) malloc(INFO_REQUEST_LEN);
-		String::Utf8Value request(maybe_request->ToString());
-		strncpy(cmd->req, *request, INFO_REQUEST_LEN);
+	if (info[0]->IsString()) {
+		cmd->request = (char*) malloc(INFO_REQUEST_LEN);
+		String::Utf8Value request(info[0]->ToString());
+		strncpy(cmd->request, *request, INFO_REQUEST_LEN);
 	} else {
-		cmd->req = (char*) "";
+		cmd->request = (char*) "";
 	}
 
-	if (maybe_policy->IsObject()) {
-		if (infopolicy_from_jsobject(&cmd->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK ) {
-			as_v8_debug(log, "policy parameter is invalid");
-			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-			cmd->param_err = true;
-			goto Return;
+	if (info[1]->IsObject()) {
+		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
-		cmd->p_policy = &cmd->policy;
 	}
 
-Return:
 	return cmd;
 }
 
-/**
- *  execute() — Function to execute inside the worker-thread.
- *
- *  It is not safe to access V8 or V8 data structures here, so everything
- *  we need for input and output should be in the InfoForeachCmd structure.
- */
-static void execute(uv_work_t* req)
+static void
+execute(uv_work_t* req)
 {
-	InfoForeachCmd* cmd = reinterpret_cast<InfoForeachCmd*>(req->data);
+	InfoForeachCommand* cmd = reinterpret_cast<InfoForeachCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
-	if (cmd->param_err) {
-		as_v8_debug(log, "Parameter error in info command");
-	} else {
-		as_v8_debug(log, "Sending info command \"%s\" to all cluster hosts", cmd->req);
-		aerospike_info_foreach(cmd->as, &cmd->err, cmd->p_policy, cmd->req, aerospike_info_callback, (void*)cmd);
+	if (!cmd->CanExecute()) {
+		return;
 	}
+
+	as_v8_debug(log, "Sending info command \"%s\" to all cluster hosts", cmd->request);
+	aerospike_info_foreach(cmd->as, &cmd->err, cmd->policy, cmd->request, aerospike_info_callback, (void*)cmd);
 }
 
-/**
- *  AfterWork — Function to execute when the Work is complete
- *
- *  This function will be run inside the main event loop so it is safe to use
- *  V8 again. This is where you will convert the results into V8 types, and
- *  call the callback function with those results.
- */
-static void respond(uv_work_t* req, int status)
+static void
+respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	InfoForeachCmd* cmd = reinterpret_cast<InfoForeachCmd *>(req->data);
+	InfoForeachCommand* cmd = reinterpret_cast<InfoForeachCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
-	if (cmd->err.code != AEROSPIKE_OK) {
+	if (cmd->IsError()) {
 		argv[0] = error_to_jsobject(&cmd->err, log);
 		argv[1] = Nan::Null();
 	} else {
-		as_vector* results = cmd->res;
+		as_vector* results = cmd->results;
 		Local<Array> v8Results = Nan::New<Array>(results->size);
 		as_v8_debug(log, "num of responses %d", results->size);
 		for (uint32_t i = 0 ; i < results->size; i++) {
@@ -205,22 +167,11 @@ static void respond(uv_work_t* req, int status)
 		argv[1] = v8Results;
 	}
 
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(cmd->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	cmd->Callback(argc, argv);
 
-	as_vector_destroy(cmd->res);
-	cmd->callback.Reset();
 	delete cmd;
 	delete req;
 }
-
-/*******************************************************************************
- *  OPERATION
- ******************************************************************************/
 
 NAN_METHOD(AerospikeClient::InfoForeach)
 {

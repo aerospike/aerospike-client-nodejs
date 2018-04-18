@@ -17,9 +17,9 @@
 #pragma once
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_batch.h>
-	#include <aerospike/as_event.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_batch.h>
+#include <aerospike/as_event.h>
 }
 
 #include <nan.h>
