@@ -64,7 +64,9 @@ aerospike_info_callback(const as_error* error, const as_node* node, const char* 
 
 	if (strlen(node->name) > 0) {
 		as_v8_debug(log, "Response from node %s", node->name);
-		strlcpy(result.node, node->name, AS_NODE_NAME_SIZE);
+		if (as_strlcpy(result.node, node->name, AS_NODE_NAME_SIZE) > AS_NODE_NAME_SIZE) {
+			as_v8_info(log, "Node name exceeds max. length (%d)", AS_NODE_NAME_SIZE);
+		}
 	} else {
 		result.node[0] = '\0';
 		as_v8_debug(log, "No host name from cluster");
@@ -93,8 +95,9 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	if (info[0]->IsString()) {
 		cmd->request = (char*) malloc(INFO_REQUEST_LEN);
-		String::Utf8Value request(info[0]->ToString());
-		strlcpy(cmd->request, *request, INFO_REQUEST_LEN);
+		if (as_strlcpy(cmd->request, *String::Utf8Value(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
+		}
 	} else {
 		cmd->request = (char*) "";
 	}
@@ -102,7 +105,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[1]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
 		if (infopolicy_from_jsobject(cmd->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 

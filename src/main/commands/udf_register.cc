@@ -59,8 +59,6 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	UdfRegisterCommand* cmd = new UdfRegisterCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
-	memset(cmd->filename, 0, MAX_FILENAME_LEN);
-
 	char* filepath = strdup(*String::Utf8Value(info[0]->ToString()));
 	FILE * file = fopen(filepath, "r");
 	if (!file) {
@@ -108,18 +106,17 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	as_string filename;
 	as_basename(&filename, filepath);
-	size_t filesize = as_string_len(&filename);
 	if (as_string_get(&filename) == NULL) {
 		cmd->SetError(AEROSPIKE_ERR, "Cannot determine UDF file basename");
 		if (filepath != NULL) cf_free(filepath);
 		return cmd;
-	} else if (filesize > MAX_FILENAME_LEN) {
-		cmd->SetError(AEROSPIKE_ERR, "UDF filename is too long (> %d)", MAX_FILENAME_LEN);
+	}
+	if (as_strlcpy(cmd->filename, as_string_get(&filename), MAX_FILENAME_LEN) > MAX_FILENAME_LEN) {
+		cmd->SetError(AEROSPIKE_ERR, "UDF filename exceeds max. length (> %d)", MAX_FILENAME_LEN);
 		if (filepath != NULL) cf_free(filepath);
 		return cmd;
 	}
 
-	strlcpy(cmd->filename, as_string_get(&filename), filesize + 1);
 	//Wrap the local buffer as an as_bytes object.
 	as_bytes_init_wrap(&cmd->content, file_content, size, true);
 

@@ -96,18 +96,18 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	Local<Array> keys = Local<Array>::Cast(info[0]);
 	if (batch_from_jsarray(&cmd->batch, keys, log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch keys parameter invalid");
+		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch keys parameter invalid");
 	}
 
 	Local<Array> bins = Local<Array>::Cast(info[1]);
 	if (bins_from_jsarray(&cmd->bins, &cmd->numbins, bins, log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch bins parameter invalid");
+		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch bins parameter invalid");
 	}
 
 	if (info[2]->IsObject() ) {
 		cmd->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
 		if (batchpolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch policy parameter invalid");
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch policy parameter invalid");
 		}
 	}
 

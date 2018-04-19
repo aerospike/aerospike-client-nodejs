@@ -20,7 +20,6 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
-#include "string.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -58,11 +57,20 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	IndexCreateCommand* cmd = new IndexCreateCommand(client, info[7].As<Function>());
 	LogInfo* log = client->log;
 
-	strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
-	if (info[1]->IsString()) {
-		strlcpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE);
+	if (as_strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 	}
-	strlcpy(cmd->bin, *String::Utf8Value(info[2]->ToString()), AS_BIN_NAME_MAX_LEN);
+
+	if (info[1]->IsString()) {
+		if (as_strlcpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+		}
+	}
+
+	if (as_strlcpy(cmd->bin, *String::Utf8Value(info[2]->ToString()), AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
+		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Bin name exceeds max. length (%d)", AS_BIN_NAME_MAX_LEN);
+	}
+
 	cmd->index = strdup(*String::Utf8Value(info[3]->ToString()));
 	cmd->itype = (as_index_type) info[4]->ToInteger()->Value();
 	cmd->dtype = (as_index_datatype) info[5]->ToInteger()->Value();
@@ -70,7 +78,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[6]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
 		if (infopolicy_from_jsobject(cmd->policy, info[6]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 
@@ -116,7 +124,7 @@ NAN_METHOD(AerospikeClient::IndexCreate)
 	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
 	TYPE_CHECK_REQ(info[2], IsString, "bin must be a string");
 	TYPE_CHECK_REQ(info[3], IsString, "index_name must be a string");
-	TYPE_CHECK_REQ(info[4], IsNumber, "index_type must be an integer");
+	TYPE_CHECK_OPT(info[4], IsNumber, "index_type must be an integer");
 	TYPE_CHECK_REQ(info[5], IsNumber, "index_datatype must be an integer");
 	TYPE_CHECK_OPT(info[6], IsObject, "policy must be an object");
 	TYPE_CHECK_REQ(info[7], IsFunction, "callback must be a function");

@@ -45,6 +45,7 @@ class QueryForeachCommand : public AerospikeCommand {
 			}
 
 		~QueryForeachCommand() {
+			fprintf(stderr, "-> ~QueryForeachCommand()\n");
 			if (policy != NULL) cf_free(policy);
 			if (results != NULL) {
 				as_queue_mt_destroy(results);
@@ -157,7 +158,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
 		if (querypolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 

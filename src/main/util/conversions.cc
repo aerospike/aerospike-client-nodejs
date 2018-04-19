@@ -517,7 +517,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
     // and populate the error object.
     if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL) {
         char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
-        strlcpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
+        as_strlcpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
         char *ptr;
         ptr = strtok(err_message, ":");
         if(ptr != NULL) {
@@ -534,7 +534,7 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
         }
 
         if(ptr != NULL) {
-            strlcpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
+            as_strlcpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
             ptr = strtok(NULL, ":");
         }
 
@@ -1128,7 +1128,10 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
     if (ns_obj->IsString()) {
-        strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+        if (as_strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+            as_v8_error(log, "The key namespace is too long (max. %d)", AS_NAMESPACE_MAX_SIZE);
+            return AS_NODE_PARAM_ERR;
+        }
         if (strlen(ns) == 0) {
             as_v8_error(log, "The key namespace must not be empty");
             return AS_NODE_PARAM_ERR;
@@ -1141,7 +1144,10 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
     if (set_obj->IsString()) {
-        strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+        if (as_strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+            as_v8_error(log, "The key set is too long (max. %d)", AS_SET_MAX_SIZE);
+            return AS_NODE_PARAM_ERR;
+        }
         if (strlen(set) == 0) {
             as_v8_debug(log, "Key set passed is empty string");
         }
@@ -1240,7 +1246,9 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
         goto Ret_Err;
     }
     if ( ns_obj->IsString() ) {
-        strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE);
+        if (as_strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+            goto Ret_Err;
+        }
     }
     else {
         goto Ret_Err;
@@ -1251,7 +1259,9 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
     }
 
     if ( set_obj->IsString() ) {
-        strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE);
+        if (as_strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+            goto Ret_Err;
+        }
     }
     else {
         goto Ret_Err;
@@ -1345,7 +1355,7 @@ int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const 
     for( int i = 0; i < arr_length; i++) {
         Local<Value> bname = arr->Get(i);
         c_bins[i] = (char*)cf_malloc(AS_BIN_NAME_MAX_SIZE);
-        strlcpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+        as_strlcpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
         as_v8_detail(log, "name of the bin %s", c_bins[i]);
     }
     // The last entry should be NULL because we are passing to select API calls.
@@ -1385,11 +1395,14 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
     if (obj->Has(Nan::New("module").ToLocalChecked())) {
         Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
         if (module->IsString()) {
-            int size = module->ToString()->Length() + 1;
+            size_t size = module->ToString()->Length() + 1;
             if (*filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
-            strlcpy(*filename, *String::Utf8Value(module), size);
+            if (as_strlcpy(*filename, *String::Utf8Value(module), size) > size) {
+                as_v8_error(log, "UDF module name is too long (> %d)", size);
+                return AS_NODE_PARAM_ERR;
+            }
             as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
         } else {
             as_v8_error(log, "UDF module name should be string");
@@ -1404,11 +1417,14 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
     if (obj->Has(Nan::New("funcname").ToLocalChecked())) {
         Local<Value> v8_funcname = obj->Get(Nan::New("funcname").ToLocalChecked());
         if (v8_funcname->IsString()) {
-            int size = v8_funcname->ToString()->Length() + 1;
+            size_t size = v8_funcname->ToString()->Length() + 1;
             if (*funcname == NULL) {
                 *funcname = (char*) cf_malloc(sizeof(char) * size);
             }
-            strlcpy(*funcname, *String::Utf8Value(v8_funcname), size);
+            if (as_strlcpy(*funcname, *String::Utf8Value(v8_funcname), size) > size) {
+                as_v8_error(log, "UDF function name is too long (> %d)", size);
+                return AS_NODE_PARAM_ERR;
+            }
             as_v8_detail(log, "The function name in the UDF args set to %s", *funcname);
         } else {
             as_v8_error(log, "UDF function name should be string");
@@ -1431,4 +1447,16 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
         return AS_NODE_PARAM_ERR;
     }
     return AS_NODE_PARAM_OK;
+}
+
+// Like strncpy but does not 0 fill the buffer and always null
+// terminates. bufsize is the size of the destination buffer.
+size_t as_strlcpy(char *d, const char *s, size_t bufsize)
+{
+    size_t len = strlen(s);
+    size_t ret = len;
+    if (len >= bufsize) len = bufsize-1;
+    memcpy(d, s, len);
+    d[len] = 0;
+    return ret;
 }

@@ -31,16 +31,18 @@ class AerospikeCommand : public Nan::AsyncResource {
 
 		~AerospikeCommand() {
 			Nan::HandleScope scope;
-			as_v8_detail(log, "Destroying %s command", cmd.c_str());
 			callback.Reset();
 		}
 
-		void SetError(as_status code, const char* fmt, ...) {
+		AerospikeCommand* SetError(as_status code, const char* fmt, ...) {
+			char msg[1024];
 			va_list args;
 			va_start(args, fmt);
-			as_v8_error(log, ("Error in " + cmd + " command: " + fmt).c_str(), args);
-			as_error_update(&err, code, fmt, args);
+			vsnprintf(msg, 1024, fmt, args);
+			as_v8_error(log, "Error in %s command: %s", cmd.c_str(), msg);
+			as_error_set_message(&err, code, msg);
 			va_end(args);
+			return this;
 		}
 
 		bool IsError() {
@@ -49,12 +51,12 @@ class AerospikeCommand : public Nan::AsyncResource {
 
 		bool CanExecute() {
 			if (IsError()) {
-				as_v8_info(log, "Cannot execute %s command because of error %d", cmd.c_str(), err.code);
+				as_v8_info(log, "Skipping execution of %s command because an error occurred", cmd.c_str());
 				return false;
 			}
 
 			if (as->cluster == NULL) {
-				as_v8_info(log, "Cannot execute %s command because client is invalid", cmd.c_str());
+				as_v8_info(log, "Skipping execution of %s command because client is invalid", cmd.c_str());
 				return false;
 			}
 
