@@ -107,9 +107,11 @@ NAN_METHOD(AerospikeClient::Connect)
 		as_v8_debug(client->log, "Connecting to Cluster: Success");
 	}
 
+	Nan::AsyncResource* resource = new Nan::AsyncResource("aerospike:Connect");
+	Local<Object> target = Nan::New<Object>();
 	const int argc = 1;
 	Local<Value> argv[argc] = { error_to_jsobject(&err, client->log) };
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, argc, argv);
+	resource->runInAsyncScope(target, callback, argc, argv);
 }
 
 /**

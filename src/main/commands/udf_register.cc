@@ -45,7 +45,7 @@ class UdfRegisterCommand : public AerospikeCommand {
 		}
 
 	as_policy_info* policy = NULL;
-	char filename[MAX_FILENAME_LEN] = "";
+	char filename[MAX_FILENAME_LEN] = { '\0' };
 	as_bytes content;
 	as_udf_type type;
 };
