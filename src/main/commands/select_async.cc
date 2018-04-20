@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "async.h"
+#include "command.h"
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
@@ -30,7 +31,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand(client, info[3].As<Function>());
+	AsyncCommand* cmd = new AsyncCommand("Select", client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
 	as_key key;
@@ -39,35 +40,34 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	uint32_t num_bins = 0;
 	as_policy_read policy;
 	as_policy_read* p_policy = NULL;
-	as_error err;
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(&err, cmd);
+		cmd->SetError(AEROSPIKE_ERR_PARAM, "Key object invalid");
+		invoke_error_callback(cmd);
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (bins_from_jsarray(&bins, &num_bins, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bins array invalid");
-		invoke_error_callback(&err, cmd);
+		cmd->SetError(AEROSPIKE_ERR_PARAM, "Bins array invalid");
+		invoke_error_callback(cmd);
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
 		if (readpolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(&err, cmd);
+			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(cmd);
 			goto Cleanup;
 		}
 		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Sending async select command\n");
-	status = aerospike_key_select_async(client->as, &err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
+	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(&err, cmd);
+		invoke_error_callback(cmd);
 	}
 
 Cleanup:

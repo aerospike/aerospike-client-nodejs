@@ -19,6 +19,7 @@
 #include <uv.h>
 
 #include "async.h"
+#include "command.h"
 #include "client.h"
 #include "conversions.h"
 #include "log.h"
@@ -80,8 +81,8 @@ void async_error_callback(uv_timer_t* timer)
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(timer->data);
-	const LogInfo* log = cmd->client->log;
-	as_error* error = cmd->error;
+	const LogInfo* log = cmd->log;
+	as_error* error = &cmd->err;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
@@ -99,13 +100,9 @@ void async_error_callback(uv_timer_t* timer)
 	uv_close((uv_handle_t*) timer, release_uv_timer);
 }
 
-void invoke_error_callback(as_error* error, AsyncCommand* cmd)
+void invoke_error_callback(AsyncCommand* cmd)
 {
 	Nan::HandleScope scope;
-	as_error* err = (as_error*) cf_malloc(sizeof(as_error));
-	as_error_setall(err, error->code, error->message, error->func,
-			error->file, error->line);
-	cmd->error = err;
 	uv_timer_t* timer = (uv_timer_t*) cf_malloc(sizeof(uv_timer_t));
 	uv_timer_init(uv_default_loop(), timer);
 	timer->data = cmd;
@@ -116,8 +113,7 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	const AerospikeClient* client = cmd->client;
-	const LogInfo* log = client->log;
+	const LogInfo* log = cmd->log;
 
 	const int argc = 3;
 	Local<Value> argv[argc];
@@ -132,14 +128,7 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 		argv[2] = recordmeta_to_jsobject(record, log);
 	}
 
-	as_v8_debug(log, "Invoking JS callback function");
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	cmd->runInAsyncScope(target, callback, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -147,14 +136,8 @@ void async_record_listener(as_error* err, as_record* record, void* udata, as_eve
 void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
-
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	if (!cmd) {
-		return Nan::ThrowError("Missing callback data - cannot process write callback");
-	}
-
-	const AerospikeClient* client = cmd->client;
-	const LogInfo* log = client->log;
+	const LogInfo* log = cmd->log;
 
 	const int argc = 1;
 	Local<Value> argv[argc];
@@ -165,14 +148,7 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 		argv[0] = err_ok();
 	}
 
-	as_v8_debug(log, "Invoking JS callback function");
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	cmd->runInAsyncScope(target, callback, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -180,14 +156,8 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 void async_value_listener(as_error* err, as_val* value, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
-
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	if (!cmd) {
-		return Nan::ThrowError("Missing callback data - cannot process value callback");
-	}
-
-	const AerospikeClient* client = cmd->client;
-	const LogInfo* log = client->log;
+	const LogInfo* log = cmd->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
@@ -200,14 +170,7 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 		argv[1] = val_to_jsvalue(value, log);
 	}
 
-	as_v8_debug(log, "Invoking JS callback function");
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	cmd->runInAsyncScope(target, callback, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -215,14 +178,8 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
-
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	if (!cmd) {
-		return Nan::ThrowError("Missing callback data - cannot process record callback");
-	}
-
-	const AerospikeClient* client = cmd->client;
-	const LogInfo* log = client->log;
+	const LogInfo* log = cmd->log;
 
 	const int argc = 2;
 	Local<Value> argv[argc];
@@ -236,14 +193,7 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 	}
 	free_batch_records(records);
 
-	as_v8_debug(log, "Invoking JS callback function");
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	cmd->runInAsyncScope(target, callback, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -251,15 +201,8 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
-
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	if (!cmd) {
-		Nan::ThrowError("Missing callback data - cannot process record callback");
-		return false;
-	}
-
-	const AerospikeClient* client = cmd->client;
-	const LogInfo* log = client->log;
+	const LogInfo* log = cmd->log;
 
 	const int argc = 4;
 	bool reached_end = false;
@@ -283,24 +226,17 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 		argv[3] = Nan::Null();
 	}
 
-	as_v8_debug(log, "Invoking JS callback function");
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	Local<Value> cb_result = cmd->runInAsyncScope(target, callback, argc, argv).ToLocalChecked();
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
+	Local<Value> result = cmd->Callback(argc, argv);
 
 	if (reached_end) {
 		delete cmd;
 		return false;
-	} else {
-		bool continue_scan = true;
-		if (cb_result->IsBoolean()) {
-			continue_scan = cb_result->ToBoolean()->Value();
-			as_v8_debug(log, "Async scan callback returned: %s", continue_scan ? "true" : "false");
-		}
-		return continue_scan;
 	}
+
+	bool continue_scan = true;
+	if (result->IsBoolean()) {
+		continue_scan = result->ToBoolean()->Value();
+		as_v8_debug(log, "Async scan callback returned: %s", continue_scan ? "true" : "false");
+	}
+	return continue_scan;
 }

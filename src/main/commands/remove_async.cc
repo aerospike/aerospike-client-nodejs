@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "async.h"
+#include "command.h"
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
@@ -29,36 +30,35 @@ NAN_METHOD(AerospikeClient::RemoveAsync)
 	TYPE_CHECK_REQ(info[2], IsFunction, "callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand(client, info[2].As<Function>());
+	AsyncCommand* cmd = new AsyncCommand("Remove", client, info[2].As<Function>());
 	LogInfo* log = client->log;
 
 	as_key key;
 	bool key_initalized = false;
 	as_policy_remove policy;
 	as_policy_remove* p_policy = NULL;
-	as_error err;
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(&err, cmd);
+		cmd->SetError(AEROSPIKE_ERR_PARAM, "Key object invalid");
+		invoke_error_callback(cmd);
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (info[1]->IsObject()) {
 		if (removepolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(&err, cmd);
+			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(cmd);
 			goto Cleanup;
 		}
 		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Sending async remove command");
-	status = aerospike_key_remove_async(client->as, &err, p_policy, &key, async_write_listener, cmd, NULL, NULL);
+	status = aerospike_key_remove_async(client->as, &cmd->err, p_policy, &key, async_write_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(&err, cmd);
+		invoke_error_callback(cmd);
 	}
 
 Cleanup:

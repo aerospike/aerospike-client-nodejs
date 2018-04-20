@@ -45,7 +45,6 @@ class QueryForeachCommand : public AerospikeCommand {
 			}
 
 		~QueryForeachCommand() {
-			fprintf(stderr, "-> ~QueryForeachCommand()\n");
 			if (policy != NULL) cf_free(policy);
 			if (results != NULL) {
 				as_queue_mt_destroy(results);

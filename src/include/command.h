@@ -14,6 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
+#pragma once
+
 #include <string>
 #include "log.h"
 
@@ -63,16 +65,18 @@ class AerospikeCommand : public Nan::AsyncResource {
 			return true;
 		}
 
-		void Callback(const int argc, v8::Local<v8::Value> argv[]) {
-			Nan::HandleScope scope;
+		v8::Local<v8::Value> Callback(const int argc, v8::Local<v8::Value> argv[]) {
+			Nan::EscapableHandleScope scope;
 			as_v8_debug(log, "Executing JS callback for %s command", cmd.c_str());
 			Nan::TryCatch try_catch;
 			v8::Local<v8::Object> target = Nan::New<v8::Object>();
 			v8::Local<v8::Function> cb = Nan::New<v8::Function>(callback);
-			runInAsyncScope(target, cb, argc, argv);
+			v8::Local<v8::Value> result = runInAsyncScope(target, cb, argc, argv)
+				.FromMaybe(Nan::Undefined().As<v8::Value>());
 			if (try_catch.HasCaught()) {
 				Nan::FatalException(try_catch);
 			}
+			return scope.Escape(result);
 		}
 
 		std::string cmd;
@@ -80,4 +84,10 @@ class AerospikeCommand : public Nan::AsyncResource {
 		as_error err;
 		LogInfo* log;
 		Nan::Persistent<v8::Function> callback;
+};
+
+class AsyncCommand : public AerospikeCommand {
+	public:
+		AsyncCommand(std::string name, AerospikeClient* client, v8::Local<v8::Function> callback)
+			: AerospikeCommand(name, client, callback) {}
 };

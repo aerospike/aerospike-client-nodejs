@@ -16,6 +16,7 @@
 
 #include "client.h"
 #include "async.h"
+#include "command.h"
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
@@ -41,22 +42,21 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	TYPE_CHECK_REQ(info[5], IsFunction, "callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand(client, info[5].As<Function>());
+	AsyncCommand* cmd = new AsyncCommand("Scan", client, info[5].As<Function>());
 	LogInfo* log = client->log;
 
 	as_scan scan;
 	uint64_t scan_id = 0;
 	as_policy_scan policy;
 	as_policy_scan* p_policy = NULL;
-	as_error err;
 	as_status status;
 
 	setup_scan(&scan, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
 		if (scanpolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(&err, cmd);
+			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			invoke_error_callback(cmd);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -68,9 +68,9 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	}
 
 	as_v8_debug(log, "Sending async scan command");
-	status = aerospike_scan_async(client->as, &err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
+	status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(&err, cmd);
+		invoke_error_callback(cmd);
 	}
 
 Cleanup:
