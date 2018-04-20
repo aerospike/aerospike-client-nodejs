@@ -26,11 +26,11 @@ using namespace v8;
 
 NAN_METHOD(AerospikeClient::OperateAsync)
 {
-	TYPE_CHECK_REQ(info[0], IsObject, "key must be an object");
-	TYPE_CHECK_REQ(info[1], IsArray, "operations must be an array");
-	TYPE_CHECK_OPT(info[2], IsObject, "metadata must be an object");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[4], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsObject, "Key must be an object");
+	TYPE_CHECK_REQ(info[1], IsArray, "Operations must be an array");
+	TYPE_CHECK_OPT(info[2], IsObject, "Metadata must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand* cmd = new AsyncCommand("Operate", client, info[4].As<Function>());
@@ -45,15 +45,13 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(cmd);
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (operations_from_jsarray(&operations, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Operations array invalid");
-		invoke_error_callback(cmd);
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Operations array invalid");
 		goto Cleanup;
 	}
 	operations_initalized = true;
@@ -66,8 +64,7 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 
 	if (info[3]->IsObject()) {
 		if (operatepolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(cmd);
+			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -76,7 +73,7 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	as_v8_debug(log, "Sending async operate command\n");
 	status = aerospike_key_operate_async(client->as, &cmd->err, p_policy, &key, &operations, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(cmd);
+		cmd->ErrorCallback();
 	}
 
 Cleanup:

@@ -25,10 +25,10 @@ using namespace v8;
 
 NAN_METHOD(AerospikeClient::SelectAsync)
 {
-	TYPE_CHECK_REQ(info[0], IsObject, "key must be an object");
-	TYPE_CHECK_REQ(info[1], IsArray, "bins must be a string array");
-	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsObject, "Key must be an object");
+	TYPE_CHECK_REQ(info[1], IsArray, "Bins must be a string array");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand* cmd = new AsyncCommand("Select", client, info[3].As<Function>());
@@ -43,22 +43,19 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	as_status status;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Key object invalid");
-		invoke_error_callback(cmd);
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (bins_from_jsarray(&bins, &num_bins, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
-		cmd->SetError(AEROSPIKE_ERR_PARAM, "Bins array invalid");
-		invoke_error_callback(cmd);
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Bins array invalid");
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
 		if (readpolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(cmd);
+			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -67,7 +64,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	as_v8_debug(log, "Sending async select command\n");
 	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(cmd);
+		cmd->ErrorCallback();
 	}
 
 Cleanup:

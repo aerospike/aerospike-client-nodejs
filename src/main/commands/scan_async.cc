@@ -34,12 +34,12 @@ using namespace v8;
 
 NAN_METHOD(AerospikeClient::ScanAsync)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_OPT(info[2], IsObject, "options must be an object");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_OPT(info[4], IsNumber, "scan_id must be a number");
-	TYPE_CHECK_REQ(info[5], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_OPT(info[4], IsNumber, "Scan_id must be a number");
+	TYPE_CHECK_REQ(info[5], IsFunction, "Callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand* cmd = new AsyncCommand("Scan", client, info[5].As<Function>());
@@ -55,8 +55,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 
 	if (info[3]->IsObject()) {
 		if (scanpolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			invoke_error_callback(cmd);
+			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -70,7 +69,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	as_v8_debug(log, "Sending async scan command");
 	status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
 	if (status != AEROSPIKE_OK) {
-		invoke_error_callback(cmd);
+		cmd->ErrorCallback();
 	}
 
 Cleanup:

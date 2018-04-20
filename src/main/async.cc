@@ -68,67 +68,28 @@ Local<Value> async_invoke(
 	return Nan::Undefined();
 }
 
-void release_uv_timer(uv_handle_t* handle)
-{
-	Nan::HandleScope scope;
-	uv_timer_t* timer = (uv_timer_t*) handle;
-	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(timer->data);
-	cf_free(timer);
-	delete cmd;
-}
-
-void async_error_callback(uv_timer_t* timer)
-{
-	Nan::HandleScope scope;
-	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(timer->data);
-	const LogInfo* log = cmd->log;
-	as_error* error = &cmd->err;
-
-	const int argc = 1;
-	Local<Value> argv[argc];
-	argv[0] = error_to_jsobject(error, log);
-
-	as_v8_debug(log, "Invoking JS error callback function: %d %s", error->code, error->message);
-	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> callback = Nan::New(cmd->callback);
-	cmd->runInAsyncScope(target, callback, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-
-	uv_close((uv_handle_t*) timer, release_uv_timer);
-}
-
 void invoke_error_callback(AsyncCommand* cmd)
 {
 	Nan::HandleScope scope;
-	uv_timer_t* timer = (uv_timer_t*) cf_malloc(sizeof(uv_timer_t));
-	uv_timer_init(uv_default_loop(), timer);
-	timer->data = cmd;
-	uv_timer_start(timer, async_error_callback, 0, 0);
+	cmd->ErrorCallback();
+	delete cmd;
 }
 
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	const LogInfo* log = cmd->log;
 
-	const int argc = 3;
-	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Nan::Null();
-		argv[2] = Nan::Null();
+		cmd->ErrorCallback(err);
 	} else {
-		argv[0] = err_ok();
-		argv[1] = recordbins_to_jsobject(record, log);
-		argv[2] = recordmeta_to_jsobject(record, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			recordbins_to_jsobject(record, cmd->log),
+			recordmeta_to_jsobject(record, cmd->log)
+		};
+		cmd->Callback(3, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -137,18 +98,13 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	const LogInfo* log = cmd->log;
 
-	const int argc = 1;
-	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
-		argv[0] = error_to_jsobject(err, log);
+		cmd->ErrorCallback(err);
 	} else {
-		argv[0] = err_ok();
+		Local<Value> argv[] = {};
+		cmd->Callback(0, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -157,20 +113,16 @@ void async_value_listener(as_error* err, as_val* value, void* udata, as_event_lo
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	const LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Nan::Null();
+		cmd->ErrorCallback(err);
 	} else {
-		argv[0] = err_ok();
-		argv[1] = val_to_jsvalue(value, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			val_to_jsvalue(value, cmd->log)
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 }
@@ -179,22 +131,18 @@ void async_batch_listener(as_error* err, as_batch_read_records* records, void* u
 {
 	Nan::HandleScope scope;
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
-	const LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Nan::Null();
+		cmd->ErrorCallback(err);
 	} else {
-		argv[0] = err_ok();
-		argv[1] = batch_records_to_jsarray(records, log);
+		Local<Value> argv[] {
+			Nan::Null(),
+			batch_records_to_jsarray(records, cmd->log)
+		};
+		cmd->Callback(2, argv);
 	}
+
 	free_batch_records(records);
-
-	cmd->Callback(argc, argv);
-
 	delete cmd;
 }
 
@@ -204,31 +152,19 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 	AsyncCommand* cmd = reinterpret_cast<AsyncCommand*>(udata);
 	const LogInfo* log = cmd->log;
 
-	const int argc = 4;
-	bool reached_end = false;
-	Local<Value> argv[argc];
+	Local<Value> result;
 	if (err) {
-		as_v8_debug(log, "Command failed: %d %s", err->code, err->message);
-		argv[0] = error_to_jsobject(err, log);
-		argv[1] = Nan::Null();
-		argv[2] = Nan::Null();
-		argv[3] = Nan::Null();
+		result = cmd->ErrorCallback(err);
 	} else if (record) {
-		argv[0] = err_ok();
-		argv[1] = recordbins_to_jsobject(record, log);
-		argv[2] = recordmeta_to_jsobject(record, log);
-		argv[3] = key_to_jsobject(&record->key, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			recordbins_to_jsobject(record, cmd->log),
+			recordmeta_to_jsobject(record, cmd->log),
+			key_to_jsobject(&record->key, cmd->log)
+		};
+		result = cmd->Callback(4, argv);
 	} else {
-		reached_end = true;
-		argv[0] = err_ok();
-		argv[1] = Nan::Null();
-		argv[2] = Nan::Null();
-		argv[3] = Nan::Null();
-	}
-
-	Local<Value> result = cmd->Callback(argc, argv);
-
-	if (reached_end) {
+		cmd->Callback(0, {});
 		delete cmd;
 		return false;
 	}

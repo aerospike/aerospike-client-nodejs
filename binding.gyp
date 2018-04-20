@@ -54,6 +54,7 @@
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/async.cc',
+        'src/main/command.cc',
         'src/main/commands/apply_async.cc',
         'src/main/commands/batch_exists.cc',
         'src/main/commands/batch_get.cc',

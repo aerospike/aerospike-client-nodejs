@@ -16,19 +16,21 @@
 
 #pragma once
 
-#include <string>
+#include "client.h"
 #include "log.h"
+
+#define CmdErrorCallback(__cmd, __code, __fmt, ...) \
+	__cmd->ErrorCallback(__code, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);
 
 class AerospikeCommand : public Nan::AsyncResource {
 	public:
 		AerospikeCommand(std::string name, AerospikeClient* client, v8::Local<v8::Function> callback_)
 			: Nan::AsyncResource(("aerospike:" + name + "Command").c_str())
-			, cmd(name)
 			, as(client->as)
-			, log(client->log) {
+			, log(client->log)
+			, cmd(name) {
 				as_error_init(&err);
 				callback.Reset(callback_);
-				as_v8_detail(log, "Initialized %s command", cmd.c_str());
 			}
 
 		~AerospikeCommand() {
@@ -36,53 +38,21 @@ class AerospikeCommand : public Nan::AsyncResource {
 			callback.Reset();
 		}
 
-		AerospikeCommand* SetError(as_status code, const char* fmt, ...) {
-			char msg[1024];
-			va_list args;
-			va_start(args, fmt);
-			vsnprintf(msg, 1024, fmt, args);
-			as_v8_error(log, "Error in %s command: %s", cmd.c_str(), msg);
-			as_error_set_message(&err, code, msg);
-			va_end(args);
-			return this;
-		}
+		AerospikeCommand* SetError(as_status code, const char* fmt, ...);
+		bool IsError();
+		bool CanExecute();
 
-		bool IsError() {
-			return err.code != AEROSPIKE_OK;
-		}
+		v8::Local<v8::Value> Callback(const int argc, v8::Local<v8::Value> argv[]);
+		v8::Local<v8::Value> ErrorCallback();
+		v8::Local<v8::Value> ErrorCallback(as_error* err);
+		v8::Local<v8::Value> ErrorCallback(as_status code, const char* func, const char* file, uint32_t line, const char* fmt, ...);
 
-		bool CanExecute() {
-			if (IsError()) {
-				as_v8_info(log, "Skipping execution of %s command because an error occurred", cmd.c_str());
-				return false;
-			}
-
-			if (as->cluster == NULL) {
-				as_v8_info(log, "Skipping execution of %s command because client is invalid", cmd.c_str());
-				return false;
-			}
-
-			return true;
-		}
-
-		v8::Local<v8::Value> Callback(const int argc, v8::Local<v8::Value> argv[]) {
-			Nan::EscapableHandleScope scope;
-			as_v8_debug(log, "Executing JS callback for %s command", cmd.c_str());
-			Nan::TryCatch try_catch;
-			v8::Local<v8::Object> target = Nan::New<v8::Object>();
-			v8::Local<v8::Function> cb = Nan::New<v8::Function>(callback);
-			v8::Local<v8::Value> result = runInAsyncScope(target, cb, argc, argv)
-				.FromMaybe(Nan::Undefined().As<v8::Value>());
-			if (try_catch.HasCaught()) {
-				Nan::FatalException(try_catch);
-			}
-			return scope.Escape(result);
-		}
-
-		std::string cmd;
 		aerospike* as;
 		as_error err;
 		LogInfo* log;
+
+	private:
+		std::string cmd;
 		Nan::Persistent<v8::Function> callback;
 };
 

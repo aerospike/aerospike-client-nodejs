@@ -98,8 +98,6 @@ static void
 async_queue_process(QueryForeachCommand* cmd)
 {
 	Nan::HandleScope scope;
-	Local<Function> callback = Nan::New<Function>(cmd->callback);
-	Local<Object> target = Nan::New<Object>();
 
 	const int argc = 2;
 	as_val* val = NULL;
@@ -108,7 +106,7 @@ async_queue_process(QueryForeachCommand* cmd)
 			Local<Value> argv[argc];
 			argv[0] = err_ok();
 			argv[1] = val_to_jsvalue(val, cmd->log);
-			cmd->runInAsyncScope(target, callback, argc, argv);
+			cmd->Callback(argc, argv);
 			as_val_destroy(val);
 		}
 	}
