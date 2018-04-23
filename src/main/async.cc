@@ -60,13 +60,6 @@ Local<Value> async_invoke(
 	return Nan::Undefined();
 }
 
-void invoke_error_callback(AsyncCommand* cmd)
-{
-	Nan::HandleScope scope;
-	cmd->ErrorCallback();
-	delete cmd;
-}
-
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop)
 {
 	Nan::HandleScope scope;

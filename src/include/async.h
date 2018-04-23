@@ -38,11 +38,6 @@ v8::Local<v8::Value> async_invoke(
     void  (* respond)(uv_work_t* req, int status)
     );
 
-/**
- * Asynchronously invoke callback function with the given error.
- */
-void invoke_error_callback(AsyncCommand* cmd);
-
 // implements the as_async_record_listener interface
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
 
