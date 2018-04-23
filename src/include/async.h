@@ -29,11 +29,6 @@ extern "C" {
 #include "command.h"
 
 /**
- * Creates a new as_error struct with status code set to AEROSPIKE_ERR_OK.
- */
-v8::Local<v8::Object> err_ok();
-
-/**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
 v8::Local<v8::Value> async_invoke(

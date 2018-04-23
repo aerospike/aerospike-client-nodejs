@@ -103,10 +103,11 @@ async_queue_process(QueryForeachCommand* cmd)
 	as_val* val = NULL;
 	while (cmd->results && !as_queue_mt_empty(cmd->results)) {
 		if (as_queue_mt_pop(cmd->results, &val, AS_QUEUE_FOREVER)) {
-			Local<Value> argv[argc];
-			argv[0] = err_ok();
-			argv[1] = val_to_jsvalue(val, cmd->log);
-			cmd->Callback(argc, argv);
+			Local<Value> argv[argc] = {
+				Nan::Null(),
+				val_to_jsvalue(val, cmd->log)
+			};
+			cmd->Callback(2, argv);
 			as_val_destroy(val);
 		}
 	}
@@ -188,22 +189,15 @@ respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
 	QueryForeachCommand* cmd = reinterpret_cast<QueryForeachCommand*>(req->data);
-	LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (cmd->IsError()) {
-		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
 		if (cmd->results && !as_queue_mt_empty(cmd->results)) {
 			async_queue_process(cmd);
 		}
+		cmd->Callback(0, {});
 	}
-	argv[1] = Nan::Null();
-
-	cmd->Callback(argc, argv);
 
 	uv_close((uv_handle_t*) &cmd->async_handle, release_handle);
 

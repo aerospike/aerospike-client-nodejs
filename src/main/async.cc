@@ -30,14 +30,6 @@ extern "C" {
 
 using namespace v8;
 
-Local<Object> err_ok()
-{
-	Nan::EscapableHandleScope scope;
-	Local<Object> err = Nan::New<Object>();
-	err->Set(Nan::New("code").ToLocalChecked(), Nan::New(AEROSPIKE_OK));
-	return scope.Escape(err);
-}
-
 /**
  *  Setup an asynchronous invocation of a function using uv worker threads.
  */

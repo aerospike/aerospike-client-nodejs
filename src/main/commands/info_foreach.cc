@@ -133,11 +133,8 @@ respond(uv_work_t* req, int status)
 	InfoForeachCommand* cmd = reinterpret_cast<InfoForeachCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (cmd->IsError()) {
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+		cmd->ErrorCallback();
 	} else {
 		as_vector* results = cmd->results;
 		Local<Array> v8Results = Nan::New<Array>(results->size);
@@ -166,11 +163,12 @@ respond(uv_work_t* req, int status)
 			v8Results->Set(i, v8Result);
 		}
 
-		argv[0] = err_ok();
-		argv[1] = v8Results;
+		Local<Value> argv[] = {
+			Nan::Null(),
+			v8Results
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;

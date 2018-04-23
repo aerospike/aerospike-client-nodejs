@@ -87,17 +87,15 @@ respond(uv_work_t* req, int status)
 	JobInfoCommand* cmd = reinterpret_cast<JobInfoCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (cmd->IsError()) {
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
-		argv[1] = jobinfo_to_jsobject(&cmd->job_info, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			jobinfo_to_jsobject(&cmd->job_info, log)
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;

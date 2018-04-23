@@ -96,20 +96,16 @@ respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
 	QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(req->data);
-	LogInfo* log = cmd->log;
 
-	const int argc = 2;
-	Local<Value> argv[argc];
 	if (cmd->IsError()) {
-		as_v8_info(log, "QueryApply command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
-		argv[1] = val_to_jsvalue(cmd->val, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			val_to_jsvalue(cmd->val, cmd->log)
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;

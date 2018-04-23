@@ -90,18 +90,12 @@ respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
 	ScanBackgroundCommand* cmd = reinterpret_cast<ScanBackgroundCommand*>(req->data);
-	LogInfo* log = cmd->log;
 
-	const int argc = 1;
-	Local<Value> argv[argc];
 	if (cmd->IsError()) {
-		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
+		cmd->Callback(0, {});
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;
