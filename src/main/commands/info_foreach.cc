@@ -46,7 +46,7 @@ class InfoForeachCommand : public AerospikeCommand {
 
 		~InfoForeachCommand() {
 			if (policy != NULL) cf_free(policy);
-			if (request != NULL) cf_free(request);
+			if (request != NULL && strlen(request) > 0) cf_free(request);
 			as_vector_destroy(results);
 		}
 

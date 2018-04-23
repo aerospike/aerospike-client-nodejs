@@ -38,7 +38,7 @@ class InfoCommand : public AerospikeCommand {
 
 		~InfoCommand() {
 			if (policy != NULL) cf_free(policy);
-			if (request != NULL) cf_free(request);
+			if (request != NULL && strlen(request) > 0) cf_free(request);
 			if (response != NULL) cf_free(response);
 			if (addr != NULL) cf_free(addr);
 		}
