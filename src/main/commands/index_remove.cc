@@ -89,13 +89,12 @@ respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
 	IndexRemoveCommand* cmd = reinterpret_cast<IndexRemoveCommand*>(req->data);
-	LogInfo* log = cmd->log;
 
-	const int argc = 1;
-	Local<Value> argv[1];
-	argv[0] = error_to_jsobject(&cmd->err, log);
-
-	cmd->Callback(argc, argv);
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
+	} else {
+		cmd->Callback(0, {});
+	}
 
 	delete cmd;
 	delete req;
