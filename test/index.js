@@ -56,7 +56,7 @@ context('secondary indexes', function () {
       let options = {
         ns: helper.namespace,
         set: helper.set,
-        bin: testIndex.bin + 'slkfjslkdfjslkdfjlskdfjslf',
+        bin: testIndex.bin,
         index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }

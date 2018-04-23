@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "command.h"
 #include "async.h"
 #include "conversions.h"
 #include "policy.h"
@@ -22,49 +23,44 @@
 #include "scan.h"
 
 extern "C" {
-	#include <aerospike/aerospike_scan.h>
-	#include <aerospike/as_error.h>
-	#include <aerospike/as_policy.h>
-	#include <aerospike/as_scan.h>
-	#include <aerospike/as_status.h>
+#include <aerospike/aerospike_scan.h>
+#include <aerospike/as_error.h>
+#include <aerospike/as_policy.h>
+#include <aerospike/as_scan.h>
+#include <aerospike/as_status.h>
 }
 
 using namespace v8;
 
-typedef struct ScanBackgroundCmd {
-    bool param_err;
-    aerospike* as;
-    as_error err;
-    as_policy_scan policy;
-    as_policy_scan* p_policy;
-    uint64_t scan_id;
-    as_scan scan;
-    LogInfo* log;
-    Nan::Persistent<Function> callback;
-} ScanBackgroundCmd;
+class ScanBackgroundCommand : public AerospikeCommand {
+	public:
+		ScanBackgroundCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("ScanBackground", client, callback_) {}
 
-static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+		~ScanBackgroundCommand() {
+			if (policy != NULL) cf_free(policy);
+			as_scan_destroy(&scan);
+		}
+
+		as_policy_scan* policy = NULL;
+		uint64_t scan_id = 0;
+		as_scan scan;
+};
+
+static void*
+prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	ScanBackgroundCommand* cmd = new ScanBackgroundCommand(client, info[5].As<Function>());
 	LogInfo* log = client->log;
-
-	ScanBackgroundCmd* cmd = new ScanBackgroundCmd();
-	cmd->param_err = false;
-	cmd->as = client->as;
-	cmd->log = client->log;
-	cmd->scan_id = 0;
-	cmd->callback.Reset(info[5].As<Function>());
 
 	setup_scan(&cmd->scan, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (scanpolicy_from_jsobject(&cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing of scan policy from object failed");
-			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-			cmd->param_err = true;
-			goto Return;
+		cmd->policy = (as_policy_scan*) cf_malloc(sizeof(as_policy_scan));
+		if (scanpolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
-		cmd->p_policy = &cmd->policy;
 	}
 
 	if (info[4]->IsNumber()) {
@@ -72,59 +68,47 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 		as_v8_info(log, "Using scan ID %lli for background scan.", cmd->scan_id);
 	}
 
-Return:
 	return cmd;
 }
 
-static void execute(uv_work_t* req)
+static void
+execute(uv_work_t* req)
 {
-	ScanBackgroundCmd* cmd = reinterpret_cast<ScanBackgroundCmd*>(req->data);
+	ScanBackgroundCommand* cmd = reinterpret_cast<ScanBackgroundCommand*>(req->data);
 	LogInfo* log = cmd->log;
-	if (cmd->param_err) {
-		as_v8_debug(log, "Parameter error in the scan options");
-	} else {
-		as_v8_debug(log, "Sending scan_background command");
-		aerospike_scan_background(cmd->as, &cmd->err, cmd->p_policy, &cmd->scan, &cmd->scan_id);
+
+	if (!cmd->CanExecute()) {
+		return;
 	}
-	as_scan_destroy(&cmd->scan);
+
+	as_v8_debug(log, "Sending scan_background command");
+	aerospike_scan_background(cmd->as, &cmd->err, cmd->policy, &cmd->scan, &cmd->scan_id);
 }
 
-static void respond(uv_work_t* req, int status)
+static void
+respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	ScanBackgroundCmd* cmd = reinterpret_cast<ScanBackgroundCmd*>(req->data);
-	LogInfo* log = cmd->log;
+	ScanBackgroundCommand* cmd = reinterpret_cast<ScanBackgroundCommand*>(req->data);
 
-	const int argc = 1;
-	Local<Value> argv[argc];
-	if (cmd->err.code != AEROSPIKE_OK) {
-		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
+		cmd->Callback(0, {});
 	}
 
-	as_v8_detail(log, "Invoking JS callback for scan_background");
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(cmd->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-
-	cmd->callback.Reset();
 	delete cmd;
 	delete req;
 }
 
 NAN_METHOD(AerospikeClient::ScanBackground)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_OPT(info[2], IsObject, "options must be an object");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_OPT(info[4], IsNumber, "scan_id must be a number");
-	TYPE_CHECK_REQ(info[5], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_OPT(info[4], IsNumber, "Scan ID must be a number");
+	TYPE_CHECK_REQ(info[5], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

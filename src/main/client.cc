@@ -16,6 +16,7 @@
 
 #include <node.h>
 #include "client.h"
+#include "command.h"
 #include "conversions.h"
 #include "config.h"
 #include "events.h"
@@ -90,26 +91,18 @@ NAN_METHOD(AerospikeClient::Connect)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-
-	Local<Function> callback;
-	if (info.Length() > 0 && info[0]->IsFunction()) {
-		callback = Local<Function>::Cast(info[0]);
-	} else {
-		as_v8_error(client->log, "Callback function required");
-		return Nan::ThrowError("Callback function required");
-	}
+	Local<Function> callback = info[0].As<Function>();
+	AerospikeCommand* cmd = new AerospikeCommand("Connect", client, callback);
 
 	as_error err;
-	aerospike_connect(client->as, &err);
-	if (err.code != AEROSPIKE_OK) {
-		as_v8_error(client->log, "Connecting to Cluster Failed: %s (%d)", err.message, err.code);
+	if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+		cmd->ErrorCallback(&err);
 	} else {
-		as_v8_debug(client->log, "Connecting to Cluster: Success");
+		as_v8_debug(client->log, "Successfully connected to cluster: Enjoy your cake!");
+		cmd->Callback(0, {});
 	}
 
-	const int argc = 1;
-	Local<Value> argv[argc] = { error_to_jsobject(&err, client->log) };
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), callback, argc, argv);
+	delete cmd;
 }
 
 /**

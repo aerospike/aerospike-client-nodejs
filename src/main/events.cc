@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,12 @@ using namespace v8;
 // Typedefs & constants.
 //
 
-typedef struct EventQueue {
+class EventQueue : public Nan::AsyncResource {
 	public:
-		explicit EventQueue(Local<Function> cb, LogInfo *p_log) {
+		EventQueue(Local<Function> cb, LogInfo *p_log)
+			: Nan::AsyncResource("aerospike:EventQueue") {
 			as_queue_mt_init(&events, sizeof(as_cluster_event), 4);
-			callback.SetFunction(cb);
+			callback.Reset(cb);
 			log = p_log;
 		}
 
@@ -56,7 +57,9 @@ typedef struct EventQueue {
 			while (as_queue_mt_pop(&events, &event, 0)) {
 				Nan::TryCatch try_catch;
 				Local<Value> argv[] = { convert(&event) };
-				callback.Call(1, argv);
+				Local<Function> cb = Nan::New<Function>(callback);
+				Local<Object> target = Nan::New<Object>();
+				runInAsyncScope(target, cb, 1, argv);
 				if (try_catch.HasCaught()) {
 					Nan::FatalException(try_catch);
 				}
@@ -65,7 +68,7 @@ typedef struct EventQueue {
 
 	private:
 		as_queue_mt events;
-		Nan::Callback callback;
+		Nan::Persistent<Function> callback;
 		LogInfo *log;
 
 		Local<Value> convert(as_cluster_event *event) {
@@ -91,7 +94,7 @@ typedef struct EventQueue {
 					Nan::New(event->node_address).ToLocalChecked());
 			return scope.Escape(jsEvent);
 		}
-} EventQueue;
+};
 
 //==========================================================
 // Globals.
@@ -146,7 +149,7 @@ static void
 cluster_event_callback(as_cluster_event *event)
 {
 	uv_async_t *handle = (uv_async_t *) event->udata;
-	EventQueue *queue = (EventQueue *) handle->data;
+	EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
 	queue->push(event);
 	uv_async_send(handle);
 }
@@ -155,6 +158,6 @@ static void
 cluster_event_async(uv_async_t *handle)
 {
 	Nan::HandleScope scope;
-	EventQueue *queue = (EventQueue *) handle->data;
+	EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
 	queue->process();
 }

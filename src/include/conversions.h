@@ -109,3 +109,5 @@ void free_batch_records(as_batch_read_records* records);
 // Functions to set metadata of the record.
 int setTTL(v8::Local<v8::Object> obj, uint32_t* ttl, const LogInfo* log);
 int setGeneration(v8::Local<v8::Object> obj, uint16_t* generation, const LogInfo* log);
+
+size_t as_strlcpy(char *d, const char *s, size_t bufsize);

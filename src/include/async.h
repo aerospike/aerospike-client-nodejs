@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,16 @@
 #pragma once
 
 extern "C" {
-	#include <aerospike/aerospike.h>
-	#include <aerospike/aerospike_batch.h>
-	#include <aerospike/as_event.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_batch.h>
+#include <aerospike/as_event.h>
 }
 
 #include <nan.h>
 #include <node.h>
 
 #include "client.h"
-
-typedef struct CallbackData {
-	AerospikeClient * client;
-	Nan::Persistent<v8::Function> callback;
-	void* data;
-} CallbackData;
-
-/**
- * Creates a new as_error struct with status code set to AEROSPIKE_ERR_OK.
- */
-v8::Local<v8::Object> err_ok();
+#include "command.h"
 
 /**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
@@ -47,11 +37,6 @@ v8::Local<v8::Value> async_invoke(
     void  (* execute)(uv_work_t* req),
     void  (* respond)(uv_work_t* req, int status)
     );
-
-/**
- * Asynchronously invoke callback function with the given error.
- */
-void invoke_error_callback(as_error* error, CallbackData* data);
 
 // implements the as_async_record_listener interface
 void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);

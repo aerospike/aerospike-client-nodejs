@@ -22,6 +22,7 @@
 #include "conversions.h"
 #include "log.h"
 #include "scan.h"
+#include "string.h"
 
 extern "C" {
 #include <aerospike/as_scan.h>
@@ -34,10 +35,18 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
     as_namespace as_ns  = {'\0'};
     as_set       as_set = {'\0'};
 
-	strncpy(as_ns, *String::Utf8Value(ns), AS_NAMESPACE_MAX_SIZE);
-	if (set->IsString()) {
-		strncpy(as_set, *String::Utf8Value(set), AS_SET_MAX_SIZE);
+	if (as_strlcpy(as_ns, *String::Utf8Value(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+		as_v8_error(log, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
+		// TODO: Return param error
 	}
+
+	if (set->IsString()) {
+		if (as_strlcpy(as_set, *String::Utf8Value(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+			// TODO: Return param error
+		}
+	}
+
 	as_scan_init(scan, as_ns, as_set);
 
 	if (!maybe_options->IsObject()) {

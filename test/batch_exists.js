@@ -64,4 +64,9 @@ describe('client.batchExists()', function () {
       done()
     })
   })
+
+  it('returns an empty array when no keys are passed', () => {
+    client.batchExists([])
+      .then(results => expect(results).to.eql([]))
+  })
 })

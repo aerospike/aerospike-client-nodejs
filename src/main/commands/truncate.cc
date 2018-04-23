@@ -15,45 +15,49 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "command.h"
 #include "async.h"
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
-	#include <aerospike/aerospike.h>
+#include <aerospike/aerospike.h>
 }
 
 using namespace v8;
 
-typedef struct TruncateCmd {
-	bool param_err;
-	aerospike* as;
-	as_error err;
-	as_policy_info policy;
-	as_policy_info* p_policy;
+class TruncateCommand : public AerospikeCommand {
+	public:
+		TruncateCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("Truncate", client, callback_) {}
+
+		~TruncateCommand() {
+			if (policy != NULL) cf_free(policy);
+		}
+
+	as_policy_info* policy = NULL;
 	as_namespace ns;
 	as_set set;
-	uint64_t before_nanos;
-	LogInfo* log;
-	Nan::Persistent<Function> callback;
-} TruncateCmd;
+	uint64_t before_nanos = 0;
+};
 
-
-static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+static void*
+prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	TruncateCommand* cmd = new TruncateCommand(client, info[4].As<Function>());
 	LogInfo* log = client->log;
 
-	TruncateCmd* cmd = new TruncateCmd();
-	cmd->param_err = false;
-	cmd->as = client->as;
-	cmd->log = client->log;
-	cmd->callback.Reset(info[4].As<Function>());
-	strncpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE);
+	if (as_strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
+	}
 
 	if (info[1]->IsString()) {
-		strncpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE);
+		if (as_strlcpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+		}
 	}
 
 	if (info[2]->IsNumber()) {
@@ -61,65 +65,52 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	if (info[3]->IsObject()) {
-		if (infopolicy_from_jsobject(&cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing of info policy from object failed");
-			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-			cmd->param_err = true;
-			goto Return;
+		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
-		cmd->p_policy = &cmd->policy;
 	}
 
-Return:
 	return cmd;
 }
 
-static void execute(uv_work_t* req)
+static void
+execute(uv_work_t* req)
 {
-	TruncateCmd* cmd = reinterpret_cast<TruncateCmd*>(req->data);
+	TruncateCommand* cmd = reinterpret_cast<TruncateCommand*>(req->data);
 	LogInfo* log = cmd->log;
-	if (cmd->param_err) {
-		as_v8_debug(log, "Parameter error in the truncate options");
-	} else {
-		as_v8_debug(log, "Invoking aerospike truncate");
-		aerospike_truncate(cmd->as, &cmd->err, cmd->p_policy, cmd->ns, cmd->set, cmd->before_nanos);
+
+	if (!cmd->CanExecute()) {
+		return;
 	}
+
+	as_v8_debug(log, "Executing Truncate command: ns=%s, set=%s, before_nanos=%d", cmd->ns, cmd->set, cmd->before_nanos);
+	aerospike_truncate(cmd->as, &cmd->err, cmd->policy, cmd->ns, cmd->set, cmd->before_nanos);
 }
 
-static void respond(uv_work_t* req, int status)
+static void
+respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	TruncateCmd* cmd = reinterpret_cast<TruncateCmd*>(req->data);
-	LogInfo* log = cmd->log;
+	TruncateCommand* cmd = reinterpret_cast<TruncateCommand*>(req->data);
 
-	const int argc = 1;
-	Local<Value> argv[argc];
-	if (cmd->err.code != AEROSPIKE_OK) {
-		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
+		cmd->Callback(0, {});
 	}
 
-	as_v8_detail(log, "Invoking JS callback for truncate");
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(cmd->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-
-	cmd->callback.Reset();
 	delete cmd;
 	delete req;
 }
 
 NAN_METHOD(AerospikeClient::Truncate)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_REQ(info[2], IsNumber, "before_nanos must be a number");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[4], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_REQ(info[2], IsNumber, "Before nanos must be a number");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
+
 	async_invoke(info, prepare, execute, respond);
 }

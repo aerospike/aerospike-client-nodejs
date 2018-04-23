@@ -15,312 +15,167 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "command.h"
 #include "async.h"
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "string.h"
 
 extern "C" {
-    #include <aerospike/aerospike.h>
-    #include <aerospike/aerospike_udf.h>
-    #include <aerospike/as_udf.h>
-    #include <aerospike/as_config.h>
-    #include <aerospike/as_string.h>
+#include <aerospike/aerospike.h>
+#include <aerospike/aerospike_udf.h>
+#include <aerospike/as_udf.h>
+#include <aerospike/as_config.h>
+#include <aerospike/as_string.h>
 }
 
-#define FILESIZE 255
+#define MAX_FILENAME_LEN 255
 
 using namespace v8;
 
-/*******************************************************************************
- *  TYPES
- ******************************************************************************/
+class UdfRegisterCommand : public AerospikeCommand {
+	public:
+		UdfRegisterCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("UdfRegister", client, callback_) { }
 
-/**
- *  UdfRegisterCmd — Data to be used in async calls.
- *
- *  libuv allows us to pass around a pointer to an arbitraty object when
- *  running asynchronous functions. We create a data structure to hold the
- *  data we need during and after async work.
- */
-typedef struct UdfRegisterCmd {
-    aerospike * as;
-    int param_err;
-    as_error err;
-    as_policy_info* policy;
-    char filename[FILESIZE];
-    as_bytes content;
-    as_udf_type type;
-    LogInfo * log;
-    Nan::Persistent<Function> callback;
-} UdfRegisterCmd;
+		~UdfRegisterCommand() {
+			if (policy != NULL) cf_free(policy);
+			as_bytes_destroy(&content);
+		}
+
+	as_policy_info* policy = NULL;
+	char filename[MAX_FILENAME_LEN] = { '\0' };
+	as_bytes content;
+	as_udf_type type;
+};
 
 
-/*******************************************************************************
- *  FUNCTIONS
- ******************************************************************************/
-
-/**
- *  prepare() — Function to prepare UdfRegisterCmd, for use in `execute()` and `respond()`.
- *
- *  This should only keep references to V8 or V8 structures for use in
- *  `respond()`, because it is unsafe for use in `execute()`.
- */
-static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+static void*
+prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
+	Nan::HandleScope scope;
+	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	UdfRegisterCommand* cmd = new UdfRegisterCommand(client, info[3].As<Function>());
+	LogInfo* log = client->log;
 
-    Nan::HandleScope scope;
+	char* filepath = strdup(*String::Utf8Value(info[0]->ToString()));
+	FILE * file = fopen(filepath, "r");
+	if (!file) {
+		cmd->SetError(AEROSPIKE_ERR, "Cannot open file: %s", filepath);
+		if (filepath != NULL) cf_free(filepath);
+		return cmd;
+	}
 
-    AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	// Determine the file size.
+	int rv = fseek(file, 0, SEEK_END);
+	if (rv != 0) {
+		cmd->SetError(AEROSPIKE_ERR_CLIENT, "Cannot determine file size: fseek returned %d", rv);
+		if (filepath != NULL) cf_free(filepath);
+		fclose(file);
+		return cmd;
+	}
 
-    UdfRegisterCmd* cmd = new UdfRegisterCmd();
-    cmd->as = client->as;
-    cmd->param_err = 0;
-    cmd->policy = NULL;
-    LogInfo* log = cmd->log = client->log;
+	int file_size = ftell(file);
+	if (file_size < 0) {
+		cmd->SetError(AEROSPIKE_ERR, "Cannot determine file size: ftell returned %d", file_size);
+		if (filepath != NULL) cf_free(filepath);
+		fclose(file);
+		return cmd;
+	}
 
-    memset(cmd->filename, 0, FILESIZE);
+	//Read the file's content into local buffer.
+	rewind(file);
+	uint8_t* file_content = (uint8_t*) cf_malloc(sizeof(uint8_t) * file_size);
+	if (file_content == NULL) {
+		cmd->SetError(AEROSPIKE_ERR, "Memory allocation for UDF buffer failed");
+		fclose(file);
+		return cmd;
+	}
 
-    char* filepath              = NULL;
+	uint8_t* p_write = file_content;
+	int read = fread(p_write, 1, 512, file);
+	int size = 0;
 
-    Local<Value> maybe_filename = info[0];
-    Local<Value> maybe_type = info[1];
-    Local<Value> maybe_policy = info[2];
-    Local<Value> maybe_callback = info[3];
+	while (read) {
+		size += read;
+		p_write += read;
+		read = fread(p_write, 1, 512, file);
+	}
+	fclose(file);
 
-    if (maybe_callback->IsFunction()) {
-        cmd->callback.Reset(maybe_callback.As<Function>());
-        as_v8_detail(log, "Node.js Callback Registered");
-    } else {
-        as_v8_error(log, "No callback to register");
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-        cmd->param_err = 1;
-        return cmd;
-    }
+	as_string filename;
+	as_basename(&filename, filepath);
+	if (as_string_get(&filename) == NULL) {
+		cmd->SetError(AEROSPIKE_ERR, "Cannot determine UDF file basename");
+		if (filepath != NULL) cf_free(filepath);
+		return cmd;
+	}
+	if (as_strlcpy(cmd->filename, as_string_get(&filename), MAX_FILENAME_LEN) > MAX_FILENAME_LEN) {
+		cmd->SetError(AEROSPIKE_ERR, "UDF filename exceeds max. length (> %d)", MAX_FILENAME_LEN);
+		if (filepath != NULL) cf_free(filepath);
+		return cmd;
+	}
 
-    if (maybe_filename->IsString()) {
-        int length = maybe_filename->ToString()->Length() + 1;
-        filepath = (char*) cf_malloc( sizeof(char) * length);
-        strcpy(filepath, *String::Utf8Value(maybe_filename->ToString()));
-        filepath[length-1] = '\0';
-    } else {
-        as_v8_error(log, "UDF file name should be string");
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-        cmd->param_err = 1;
-        return cmd;
-    }
+	//Wrap the local buffer as an as_bytes object.
+	as_bytes_init_wrap(&cmd->content, file_content, size, true);
 
-    FILE * file = fopen(filepath, "r");
-    if (!file) {
-        as_v8_debug(log, "Cannot open file %s", filepath);
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR);
-        cmd->param_err = 1;
-        if (filepath != NULL) {
-            cf_free(filepath);
-        }
-        return cmd;
-    }
+	if (info[1]->IsNumber()) {
+		cmd->type = (as_udf_type) info[1]->IntegerValue();
+	} else {
+		cmd->type = AS_UDF_TYPE_LUA;
+	}
 
-    // Determine the file size.
-    int rv = fseek(file, 0, SEEK_END);
-    if (rv != 0) {
-        as_v8_error(log, "file-seek operation failed with error : %d", rv);
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR);
-        cmd->param_err = 1;
-        if (filepath != NULL) {
-            cf_free(filepath);
-        }
-        fclose(file);
-        return cmd;
-    }
+	if (info[2]->IsObject()) {
+		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			if (filepath != NULL) cf_free(filepath);
+			return cmd;
+		}
+	}
 
-    int file_size = ftell(file);
-    if (file_size == -1L) {
-        as_v8_error(log, "ftell operation failed with error %d ",file_size);
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR);
-        cmd->param_err = 1;
-        if(filepath != NULL) {
-            cf_free(filepath);
-        }
-        fclose(file);
-        return cmd;
-    }
+	if (filepath != NULL) cf_free(filepath);
 
-    //Read the file's content into local buffer.
-    rewind(file);
-    uint8_t * file_content = (uint8_t*)cf_malloc(sizeof(uint8_t) * file_size);
-    if (file_content == NULL) {
-        as_v8_error(log, "UDF buffer - memory allocation failed ");
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR);
-        cmd->param_err = 1;
-        fclose(file);
-        return cmd;
-    }
-
-    uint8_t* p_write = file_content;
-    int read = fread(p_write, 1, 512, file);
-    int size = 0;
-
-    while (read) {
-        size += read;
-        p_write += read;
-        read = fread( p_write, 1, 512, file);
-    }
-    fclose(file);
-
-    as_string filename;
-    as_basename(&filename, filepath);
-    size_t filesize = as_string_len(&filename);
-    if (as_string_get(&filename) == NULL) {
-        as_v8_error(log, "Filename could not be parsed from path");
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-        cmd->param_err = 1;
-        if(filepath != NULL) {
-            cf_free(filepath);
-        }
-        return cmd;
-    } else if (filesize > FILESIZE) {
-        as_v8_error(log, "Filename length is greater than allowed size(255)");
-        COPY_ERR_MESSAGE( cmd->err, AEROSPIKE_ERR_PARAM);
-        cmd->param_err = 1;
-        if (filepath != NULL) {
-            cf_free(filepath);
-        }
-        return cmd;
-    }
-
-    strncpy(cmd->filename, as_string_get(&filename), filesize);
-    cmd->filename[filesize+1] = '\0';
-    //Wrap the local buffer as an as_bytes object.
-    as_bytes_init_wrap(&cmd->content, file_content, size, true);
-
-    if (maybe_type->IsNumber()) {
-        cmd->type = (as_udf_type) maybe_type->IntegerValue();
-    } else {
-        cmd->type = AS_UDF_TYPE_LUA;
-        as_v8_detail(log, "UDF type not an argument using default value(LUA)");
-    }
-
-    if (maybe_policy->IsObject()) {
-        cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-        if (infopolicy_from_jsobject(cmd->policy, maybe_policy->ToObject(), log) != AS_NODE_PARAM_OK) {
-            as_v8_error(log, "infopolicy shoule be an object");
-            COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-            cmd->param_err = 1;
-            if (filepath != NULL) {
-                cf_free(filepath);
-            }
-            return cmd;
-        }
-    }
-
-    if (filepath != NULL) {
-        cf_free(filepath);
-    }
-
-    return cmd;
+	return cmd;
 }
 
-/**
- *  execute() — Function to execute inside the worker-thread.
- *
- *  It is not safe to access V8 or V8 data structures here, so everything
- *  we need for input and output should be in the UdfRegisterCmd structure.
- */
-static void execute(uv_work_t * req)
+static void
+execute(uv_work_t* req)
 {
-    // Fetch the UdfRegisterCmd structure
-    UdfRegisterCmd* cmd = reinterpret_cast<UdfRegisterCmd*>(req->data);
-    aerospike* as = cmd->as;
-    as_error* err = &cmd->err;
-    as_policy_info* policy = cmd->policy;
-    LogInfo* log = cmd->log;
+	UdfRegisterCommand* cmd = reinterpret_cast<UdfRegisterCommand*>(req->data);
+	LogInfo* log = cmd->log;
 
-    // Invoke the blocking call.
-    // The error is handled in the calling JS code.
-    if (as->cluster == NULL) {
-        cmd->param_err = 1;
-        COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-        as_v8_error(log, "Not connected to cluster to put record");
-    }
+	if (!cmd->CanExecute()) {
+		return;
+	}
 
-    if (cmd->param_err == 0) {
-        as_v8_debug(log, "Invoking aerospike udf register ");
-        aerospike_udf_put(as, err, policy, cmd->filename, cmd->type, &cmd->content);
-    } else {
-        return;
-    }
+	as_v8_debug(log, "Executing UdfRegister command: %s", cmd->filename);
+	aerospike_udf_put(cmd->as, &cmd->err, cmd->policy, cmd->filename, cmd->type, &cmd->content);
 }
 
-/**
- *  AfterWork — Function to execute when the Work is complete
- *
- *  This function will be run inside the main event loop so it is safe to use
- *  V8 again. This is where you will convert the results into V8 types, and
- *  call the callback function with those results.
- */
-static void respond(uv_work_t * req, int status)
+static void
+respond(uv_work_t* req, int status)
 {
+	Nan::HandleScope scope;
+	UdfRegisterCommand* cmd = reinterpret_cast<UdfRegisterCommand*>(req->data);
 
-    Nan::HandleScope scope;
-    // Fetch the UdfRegisterCmd structure
-    UdfRegisterCmd* cmd = reinterpret_cast<UdfRegisterCmd*>(req->data);
-    as_error* err = &cmd->err;
-    LogInfo* log = cmd->log;
-    as_v8_debug(log, "UDF register operation : response is");
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
+	} else {
+		cmd->Callback(0, {});
+	}
 
-    Local<Value> argv[1];
-    // Build the arguments array for the callback
-    if (cmd->param_err == 0) {
-        argv[0] = error_to_jsobject(err, log);
-    } else {
-        err->func = NULL;
-        as_v8_debug(log, "Parameter error for put operation");
-        argv[0] = error_to_jsobject(err, log);
-    }
-
-    // Surround the callback in a try/catch for safety
-    Nan::TryCatch try_catch;
-
-    Local<Function> cb = Nan::New<Function>(cmd->callback);
-
-    // Execute the callback.
-    if (!cb->IsNull()) {
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, 1, argv);
-        as_v8_debug(log, "Invoked Put callback");
-    }
-
-    // Process the exception, if any
-    if (try_catch.HasCaught()) {
-        Nan::FatalException(try_catch);
-    }
-
-    // Dispose the Persistent handle so the callback
-    // function can be garbage-collected
-    cmd->callback.Reset();
-
-    // clean up any memory we allocated
-
-    if (cmd->param_err == 0) {
-        as_bytes_destroy( &cmd->content);
-        if(cmd->policy != NULL) {
-            cf_free(cmd->policy);
-        }
-        as_v8_debug(log, "Cleaned up all the structures");
-    }
-
-    delete cmd;
-    delete req;
+	delete cmd;
+	delete req;
 }
 
-/*******************************************************************************
- *  OPERATION
- ******************************************************************************/
-
-/**
- *  The 'put()' Operation
- */
 NAN_METHOD(AerospikeClient::Register)
 {
-    async_invoke(info, prepare, execute, respond);
+	TYPE_CHECK_REQ(info[0], IsString, "Filename must be a string");
+	TYPE_CHECK_OPT(info[1], IsNumber, "Type must be an integer");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
+
+	async_invoke(info, prepare, execute, respond);
 }

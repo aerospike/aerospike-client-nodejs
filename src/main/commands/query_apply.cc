@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "command.h"
 #include "async.h"
 #include "conversions.h"
 #include "policy.h"
@@ -22,112 +23,101 @@
 #include "query.h"
 
 extern "C" {
-	#include <aerospike/aerospike_query.h>
-	#include <aerospike/as_error.h>
-	#include <aerospike/as_policy.h>
-	#include <aerospike/as_query.h>
-	#include <aerospike/as_status.h>
+#include <aerospike/aerospike_query.h>
+#include <aerospike/as_error.h>
+#include <aerospike/as_policy.h>
+#include <aerospike/as_query.h>
+#include <aerospike/as_status.h>
 }
 
 using namespace v8;
 
-typedef struct QueryApplyCmd {
-	bool param_err;
-	aerospike* as;
-	as_error err;
-	as_policy_query policy;
-	as_policy_query* p_policy;
-	as_query query;
-	as_val* val;
-	LogInfo* log;
-	Nan::Persistent<Function> callback;
-} QueryApplyCmd;
+class QueryApplyCommand : public AerospikeCommand {
+	public:
+		QueryApplyCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("QueryApply", client, callback_) {}
 
-static bool query_foreach_callback(const as_val* val, void* udata) {
+		~QueryApplyCommand() {
+			if (policy != NULL) cf_free(policy);
+			if (val != NULL) cf_free(val);
+			as_query_destroy(&query);
+		}
+
+		as_policy_query* policy = NULL;
+		as_query query;
+		as_val* val = NULL;
+};
+
+static bool
+query_foreach_callback(const as_val* val, void* udata) {
 	if (val) {
-		QueryApplyCmd* cmd = reinterpret_cast<QueryApplyCmd*>(udata);
+		QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(udata);
 		cmd->val = asval_clone(val, cmd->log);
 	}
 	return false;
 }
 
-static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+static void*
+prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
+	Nan::HandleScope scope;
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	QueryApplyCommand* cmd = new QueryApplyCommand(client, info[4].As<Function>());
 	LogInfo* log = client->log;
-
-	QueryApplyCmd* cmd = new QueryApplyCmd();
-	cmd->param_err = false;
-	cmd->as = client->as;
-	cmd->log = client->log;
-	cmd->callback.Reset(info[4].As<Function>());
 
 	setup_query(&cmd->query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (querypolicy_from_jsobject(&cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing of query policy from object failed");
-			COPY_ERR_MESSAGE(cmd->err, AEROSPIKE_ERR_PARAM);
-			cmd->param_err = true;
-			goto Return;
+		cmd->policy = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
+		if (querypolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
-		cmd->p_policy = &cmd->policy;
 	}
 
-Return:
 	return cmd;
 }
 
-static void execute(uv_work_t* req)
+static void
+execute(uv_work_t* req)
 {
-	QueryApplyCmd* cmd = reinterpret_cast<QueryApplyCmd*>(req->data);
+	QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(req->data);
 	LogInfo* log = cmd->log;
-	if (cmd->param_err) {
-		as_v8_debug(log, "Parameter error in the query options");
-	} else {
-		as_v8_debug(log, "Sending query command with stream UDF");
-		aerospike_query_foreach(cmd->as, &cmd->err, cmd->p_policy, &cmd->query, query_foreach_callback, (void*) cmd);
+
+	if (!cmd->CanExecute()) {
+		return;
 	}
-	as_query_destroy(&cmd->query);
+
+	as_v8_debug(log, "Sending query command with stream UDF");
+	aerospike_query_foreach(cmd->as, &cmd->err, cmd->policy, &cmd->query, query_foreach_callback, cmd);
 }
 
-static void respond(uv_work_t* req, int status)
+static void
+respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	QueryApplyCmd* cmd = reinterpret_cast<QueryApplyCmd*>(req->data);
-	LogInfo* log = cmd->log;
+	QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(req->data);
 
-	const int argc = 2;
-	Local<Value> argv[argc];
-	if (cmd->err.code != AEROSPIKE_OK) {
-		as_v8_info(log, "Command failed: %d %s\n", cmd->err.code, cmd->err.message);
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
 	} else {
-		argv[0] = err_ok();
-		argv[1] = val_to_jsvalue(cmd->val, log);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			val_to_jsvalue(cmd->val, cmd->log)
+		};
+		cmd->Callback(2, argv);
 	}
 
-	as_v8_detail(log, "Invoking JS callback for query_apply");
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New<Function>(cmd->callback);
-	Nan::MakeCallback(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-
-	cmd->callback.Reset();
 	delete cmd;
 	delete req;
 }
 
 NAN_METHOD(AerospikeClient::QueryApply)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_OPT(info[2], IsObject, "options must be an object");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[4], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }
