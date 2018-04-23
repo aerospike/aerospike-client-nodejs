@@ -54,9 +54,11 @@ describe('Config #noserver', function () {
           write: new Aerospike.WritePolicy({ totalTimeout: 1000 })
         },
         connTimeoutMs: 1000,
+        loginTimeoutMs: 2000,
         tenderInterval: 1000,
         user: 'admin',
         password: 'sekret',
+        authMode: Aerospike.auth.EXTERNAL_INSECURE,
         sharedMemory: { key: 1234 },
         modlua: { systemPath: '/system/path', userPath: '/user/path' },
         port: 3333
@@ -67,9 +69,11 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
       expect(config).to.have.property('connTimeoutMs')
+      expect(config).to.have.property('loginTimeoutMs')
       expect(config).to.have.property('tenderInterval')
       expect(config).to.have.property('user')
       expect(config).to.have.property('password')
+      expect(config).to.have.property('authMode')
       expect(config).to.have.property('sharedMemory')
       expect(config).to.have.property('modlua')
       expect(config).to.have.property('port')

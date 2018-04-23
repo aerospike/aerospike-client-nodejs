@@ -80,7 +80,6 @@
         'src/main/commands/udf_register.cc',
         'src/main/commands/udf_remove.cc',
         'src/main/enums/predicates.cc',
-        'src/main/enums/log_enum.cc',
         'src/main/enums/maps.cc',
         'src/main/enums/index.cc',
         'src/main/enums/policy_enum.cc',
@@ -89,6 +88,7 @@
         'src/main/enums/job_status.cc',
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
+        'src/main/enums/config_enum.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
       ],

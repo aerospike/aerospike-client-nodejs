@@ -47,6 +47,10 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		return rc;
 	}
 
+	if ((rc = get_optional_uint32_property((uint32_t*) &config->auth_mode, NULL, configObj, "authMode", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+
 	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
 	if (maybe_hosts->IsString()) {
 		String::Utf8Value hosts(maybe_hosts);
@@ -218,6 +222,9 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	}
 
 	if ((rc = get_optional_uint32_property(&config->conn_timeout_ms, NULL, configObj, "connTimeoutMs", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&config->login_timeout_ms, NULL, configObj, "loginTimeoutMs", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property(&config->tender_interval, NULL, configObj, "tendInterval", log)) != AS_NODE_PARAM_OK) {

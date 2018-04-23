@@ -115,11 +115,12 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	export("maps", map_enum_values());
 	export("predicates", predicates());
 	export("scanPriority", scanPriority());
-	export("log", log());
+	export("log", log_enum_values());
 	export("operations", opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());
+	export("auth", auth_mode_enum_values());
 }
 
 NODE_MODULE(aerospike, Aerospike)

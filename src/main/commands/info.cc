@@ -85,6 +85,8 @@ static void* prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 		cmd->req = (char*) cf_malloc(INFO_REQUEST_LEN);
 		String::Utf8Value request(maybe_request->ToString());
 		strncpy(cmd->req, *request, INFO_REQUEST_LEN);
+	} else {
+		cmd->req = (char*) "";
 	}
 
 	if (maybe_host->IsObject()) {
