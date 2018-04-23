@@ -40,7 +40,7 @@ class BatchSelectCommand : public AerospikeCommand {
 		~BatchSelectCommand() {
 			if (policy != NULL) cf_free(policy);
 			if (results != NULL) cf_free(results);
-			for (uint32_t i = 0; i < numbins; i++) {
+			for (uint32_t i = 0; i < bins_len; i++) {
 				cf_free(bins[i]);
 			}
 			cf_free(bins);
@@ -49,9 +49,9 @@ class BatchSelectCommand : public AerospikeCommand {
 	as_policy_batch* policy = NULL;
 	as_batch batch;
 	as_batch_read* results = NULL;
-	uint32_t n = 0;
-	uint32_t numbins = 0;
+	uint32_t results_len = 0;
 	char** bins = NULL;
+	uint32_t bins_len = 0;
 };
 
 bool
@@ -60,19 +60,18 @@ batch_select_callback(const as_batch_read* results, uint32_t n, void* udata)
 	BatchSelectCommand* cmd = reinterpret_cast<BatchSelectCommand*>(udata);
 	LogInfo* log = cmd->log;
 
+	as_v8_debug(log, "BatchSelect callback invoked with %d batch results", n);
+
 	if (results == NULL) {
-		as_v8_info(log, "Brigde callback for batch called with no batch results");
-		cmd->n = 0;
 		cmd->results = NULL;
+		cmd->results_len = 0;
 		return false;
 	}
 
 	// Copy the batch result to the shared data structure BatchSelectCommand,
 	// so that response can send it back to nodejs layer.
-	as_v8_debug(log, "Bridge callback invoked for the batch request of %d records ", n);
-	cmd->n = n;
 	cmd->results = (as_batch_read*) cf_calloc(n, sizeof(as_batch_read));
-
+	cmd->results_len = n;
 	for (uint32_t i = 0; i < n; i++) {
 		cmd->results[i].result = results[i].result;
 		key_clone(results[i].key, (as_key**) &cmd->results[i].key, log);
@@ -100,7 +99,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	Local<Array> bins = info[1].As<Array>();
-	if (bins_from_jsarray(&cmd->bins, &cmd->numbins, bins, log) != AS_NODE_PARAM_OK) {
+	if (bins_from_jsarray(&cmd->bins, &cmd->bins_len, bins, log) != AS_NODE_PARAM_OK) {
 		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch bins parameter invalid");
 	}
 
@@ -124,10 +123,10 @@ execute(uv_work_t* req)
 		return;
 	}
 
-	as_v8_debug(log, "Submitting batch request to server with %d keys", cmd->batch.keys.size);
-	if (aerospike_batch_get_bins(cmd->as, &cmd->err, cmd->policy, &cmd->batch, (const char**) cmd->bins, cmd->numbins, batch_select_callback, cmd) != AEROSPIKE_OK) {
+	as_v8_debug(log, "Executing BatchSelect command for %d keys", cmd->batch.keys.size);
+	if (aerospike_batch_get_bins(cmd->as, &cmd->err, cmd->policy, &cmd->batch, (const char**) cmd->bins, cmd->bins_len, batch_select_callback, cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
-		cmd->n = 0;
+		cmd->results_len = 0;
 	}
 	as_batch_destroy(&cmd->batch);
 }
@@ -138,22 +137,16 @@ respond(uv_work_t* req, int status)
 	Nan::HandleScope scope;
 	BatchSelectCommand* cmd = reinterpret_cast<BatchSelectCommand*>(req->data);
 	LogInfo* log = cmd->log;
-	uint32_t num_rec = cmd->n;
-	as_batch_read* batch_results = cmd->results;
 
-	const int argc = 2;
-	Local<Value> argv[2];
-	if (cmd->IsError() || num_rec == 0 || batch_results == NULL) {
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
 	} else {
-		int rec_found = 0;
-
-		Local<Array> results = Nan::New<Array>(num_rec);
-		for (uint32_t i = 0; i< num_rec; i++) {
+		as_batch_read* batch_results = cmd->results;
+		Local<Array> results = Nan::New<Array>(cmd->results_len);
+		for (uint32_t i = 0; i< cmd->results_len; i++) {
 			as_status status = batch_results[i].result;
-			as_record * record = &batch_results[i].record;
-			const as_key * key = batch_results[i].key;
+			as_record* record = &batch_results[i].record;
+			const as_key* key = batch_results[i].key;
 
 			Local<Object> result = Nan::New<Object>();
 			result->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
@@ -162,9 +155,8 @@ respond(uv_work_t* req, int status)
 			if (batch_results[i].result == AEROSPIKE_OK) {
 				result->Set(Nan::New("meta").ToLocalChecked(), recordmeta_to_jsobject(record, log));
 				result->Set(Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
-				rec_found++;
 			} else {
-				as_v8_debug(log, "Record[%d] not returned by server ", i);
+				as_v8_debug(log, "Record [%d] not returned by server ", i);
 			}
 
 			as_key_destroy((as_key*) key);
@@ -172,12 +164,12 @@ respond(uv_work_t* req, int status)
 			results->Set(i, result);
 		}
 
-		as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = (results);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			results
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;

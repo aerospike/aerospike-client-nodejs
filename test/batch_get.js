@@ -64,4 +64,9 @@ describe('client.batchGet()', function () {
       done()
     })
   })
+
+  it('returns an empty array when no keys are passed', () => {
+    client.batchGet([])
+      .then(results => expect(results).to.eql([]))
+  })
 })

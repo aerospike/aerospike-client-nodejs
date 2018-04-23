@@ -1292,25 +1292,17 @@ Ret_Err:
 
 int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log)
 {
+	uint32_t len = arr->Length();
+	as_batch_init(batch, len);
+	for (uint32_t i = 0; i < len; i++) {
+		Local<Object> key = arr->Get(i)->ToObject();
+		if (key_from_jsobject(as_batch_keyat(batch, i), key, log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing batch key [%d] failed\n", i);
+			return AS_NODE_PARAM_ERR;
+		}
+	}
 
-    uint32_t capacity = arr->Length();
-
-    if(capacity > 0) {
-        as_batch_init(batch, capacity);
-    }
-    else {
-        return AS_NODE_PARAM_ERR;
-    }
-    for ( uint32_t i=0; i < capacity; i++) {
-        Local<Object> key = arr->Get(i)->ToObject();
-        int status = key_from_jsobject(as_batch_keyat(batch, i), key, log);
-        if(status != AS_NODE_PARAM_OK) {
-            as_v8_error(log, "Parsing batch keys failed \n");
-            return AS_NODE_PARAM_ERR;
-        }
-    }
-
-    return AS_NODE_PARAM_OK;
+	return AS_NODE_PARAM_OK;
 }
 
 int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array> arr, const LogInfo* log)

@@ -45,7 +45,7 @@ class BatchGetCommand : public AerospikeCommand {
 		as_policy_batch* policy = NULL;
 		as_batch batch;
 		as_batch_read* results = NULL;
-		uint32_t n = 0;
+		uint32_t results_len = 0;
 };
 
 bool
@@ -54,21 +54,19 @@ batch_callback(const as_batch_read* results, uint32_t n, void* udata)
 	BatchGetCommand* cmd = reinterpret_cast<BatchGetCommand*>(udata);
 	LogInfo* log = cmd->log;
 
+	as_v8_debug(log, "BatchGet callback invoked with %d batch results", n);
+
 	if (results == NULL) {
-		as_v8_info(log, "Brigde callback for batch called with no batch results");
-		cmd->n = 0;
 		cmd->results = NULL;
+		cmd->results_len = 0;
 		return false;
 	}
 
-	//copy the batch result to the shared data structure BatchGetCmd,
-	//so that response can send it back to nodejs layer
-	//as_batch_read* batch_result = &cmd->results;
-	as_v8_debug(log, "Bridge callback invoked for the a batch request of %d records ", n);
-	cmd->n = n;
+	// Copy the batch result to the shared data structure BatchGetCommand, so
+	// that the response can send it back to nodejs layer.
 	cmd->results = (as_batch_read*) calloc(n, sizeof(as_batch_read));
-
-	for ( uint32_t i = 0; i < n; i++ ) {
+	cmd->results_len = n;
+	for (uint32_t i = 0; i < n; i++) {
 		cmd->results[i].result = results[i].result;
 		key_clone(results[i].key, (as_key**) &cmd->results[i].key, log);
 		if (results[i].result == AEROSPIKE_OK) {
@@ -114,10 +112,10 @@ execute(uv_work_t * req)
 		return;
 	}
 
-	as_v8_debug(log, "Submitting batch request to server with %d keys", cmd->batch.keys.size);
+	as_v8_debug(log, "Executing BatchGet command for %d keys", cmd->batch.keys.size);
 	if (aerospike_batch_get(cmd->as, &cmd->err, cmd->policy, &cmd->batch, batch_callback, cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
-		cmd->n = 0;
+		cmd->results_len = 0;
 	}
 	as_batch_destroy(&cmd->batch);
 }
@@ -128,22 +126,16 @@ respond(uv_work_t* req, int status)
 	Nan::HandleScope scope;
 	BatchGetCommand* cmd = reinterpret_cast<BatchGetCommand*>(req->data);
 	LogInfo* log = cmd->log;
-	uint32_t num_rec = cmd->n;
-	as_batch_read* batch_results = cmd->results;
 
-	const int argc = 2;
-	Local<Value> argv[2];
-	if (cmd->IsError() || num_rec == 0 || batch_results == NULL) {
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = Nan::Null();
+	if (cmd->IsError()) {
+		cmd->ErrorCallback();
 	} else {
-		int rec_found = 0;
-
-		Local<Array> results = Nan::New<Array>(num_rec);
-		for (uint32_t i = 0; i< num_rec; i++) {
+		as_batch_read* batch_results = cmd->results;
+		Local<Array> results = Nan::New<Array>(cmd->results_len);
+		for (uint32_t i = 0; i< cmd->results_len; i++) {
 			as_status status = batch_results[i].result;
-			as_record * record = &batch_results[i].record;
-			const as_key * key = batch_results[i].key;
+			as_record* record = &batch_results[i].record;
+			const as_key* key = batch_results[i].key;
 
 			Local<Object> result = Nan::New<Object>();
 			result->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
@@ -152,9 +144,8 @@ respond(uv_work_t* req, int status)
 			if (batch_results[i].result == AEROSPIKE_OK) {
 				result->Set(Nan::New("meta").ToLocalChecked(), recordmeta_to_jsobject(record, log));
 				result->Set(Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
-				rec_found++;
 			} else {
-				as_v8_debug(log, "Record[%d] not returned by server", i);
+				as_v8_debug(log, "Record [%d] not returned by server", i);
 			}
 
 			as_key_destroy((as_key*) key);
@@ -163,12 +154,12 @@ respond(uv_work_t* req, int status)
 			results->Set(i, result);
 		}
 
-		as_v8_debug(log, "%d record objects are present in the batch array",  rec_found);
-		argv[0] = error_to_jsobject(&cmd->err, log);
-		argv[1] = (results);
+		Local<Value> argv[] = {
+			Nan::Null(),
+			results
+		};
+		cmd->Callback(2, argv);
 	}
-
-	cmd->Callback(argc, argv);
 
 	delete cmd;
 	delete req;
