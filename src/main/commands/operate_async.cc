@@ -50,7 +50,7 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	}
 	key_initalized = true;
 
-	if (operations_from_jsarray(&operations, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
+	if (operations_from_jsarray(&operations, info[1].As<Array>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Operations array invalid");
 		goto Cleanup;
 	}

@@ -38,7 +38,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	as_policy_batch* p_policy = NULL;
 	as_status status;
 
-	if (batch_read_records_from_jsarray(&records, Local<Array>::Cast(info[0]), log) != AS_NODE_PARAM_OK) {
+	if (batch_read_records_from_jsarray(&records, info[0].As<Array>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Records array invalid");
 		return;
 	}

@@ -94,12 +94,12 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	BatchSelectCommand* cmd = new BatchSelectCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
-	Local<Array> keys = Local<Array>::Cast(info[0]);
+	Local<Array> keys = info[0].As<Array>();
 	if (batch_from_jsarray(&cmd->batch, keys, log) != AS_NODE_PARAM_OK) {
 		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch keys parameter invalid");
 	}
 
-	Local<Array> bins = Local<Array>::Cast(info[1]);
+	Local<Array> bins = info[1].As<Array>();
 	if (bins_from_jsarray(&cmd->bins, &cmd->numbins, bins, log) != AS_NODE_PARAM_OK) {
 		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch bins parameter invalid");
 	}

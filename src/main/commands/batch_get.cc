@@ -89,7 +89,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	BatchGetCommand* cmd = new BatchGetCommand(client, info[2].As<Function>());
 	LogInfo* log = client->log;
 
-	Local<Array> keys = Local<Array>::Cast(info[0]);
+	Local<Array> keys = info[0].As<Array>();
 	if (batch_from_jsarray(&cmd->batch, keys, log) != AS_NODE_PARAM_OK) {
 		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Batch keys parameter invalid");
 	}

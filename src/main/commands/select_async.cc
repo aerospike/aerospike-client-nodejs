@@ -48,7 +48,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	}
 	key_initalized = true;
 
-	if (bins_from_jsarray(&bins, &num_bins, Local<Array>::Cast(info[1]), log) != AS_NODE_PARAM_OK) {
+	if (bins_from_jsarray(&bins, &num_bins, info[1].As<Array>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Bins array invalid");
 		goto Cleanup;
 	}
