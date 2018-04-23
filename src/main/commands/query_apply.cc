@@ -113,11 +113,11 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::QueryApply)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_OPT(info[2], IsObject, "options must be an object");
-	TYPE_CHECK_OPT(info[3], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[4], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

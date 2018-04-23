@@ -25,9 +25,9 @@ using namespace v8;
 
 NAN_METHOD(AerospikeClient::GetAsync)
 {
-	TYPE_CHECK_REQ(info[0], IsObject, "key must be an object");
-	TYPE_CHECK_OPT(info[1], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[2], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsObject, "Key must be an object");
+	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
 
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand* cmd = new AsyncCommand("Get", client, info[2].As<Function>());

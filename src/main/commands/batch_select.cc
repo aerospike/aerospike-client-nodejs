@@ -185,10 +185,10 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::BatchSelect)
 {
-	TYPE_CHECK_REQ(info[0], IsArray, "keys must be a array");
-	TYPE_CHECK_REQ(info[1], IsArray, "bins must be a array");
-	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsArray, "Keys must be a array");
+	TYPE_CHECK_REQ(info[1], IsArray, "Bins must be a array");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

@@ -103,10 +103,10 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::JobInfo)
 {
-	TYPE_CHECK_REQ(info[0], IsNumber, "job_id must be a number");
-	TYPE_CHECK_REQ(info[1], IsString, "module must be a string");
-	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsNumber, "Job ID must be a number");
+	TYPE_CHECK_REQ(info[1], IsString, "Module must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

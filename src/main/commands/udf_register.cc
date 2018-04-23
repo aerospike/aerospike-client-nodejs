@@ -173,10 +173,10 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::Register)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "filename must be a string");
-	TYPE_CHECK_OPT(info[1], IsNumber, "type must be an integer");
-	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Filename must be a string");
+	TYPE_CHECK_OPT(info[1], IsNumber, "Type must be an integer");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

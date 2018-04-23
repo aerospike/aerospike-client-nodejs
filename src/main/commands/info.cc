@@ -130,10 +130,10 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::Info)
 {
-	TYPE_CHECK_OPT(info[0], IsString, "request must be a string");
-	TYPE_CHECK_OPT(info[1], IsObject, "host must be an object");
-	TYPE_CHECK_OPT(info[2], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "callback must be a function");
+	TYPE_CHECK_OPT(info[0], IsString, "Request must be a string");
+	TYPE_CHECK_OPT(info[1], IsObject, "Host must be an object");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

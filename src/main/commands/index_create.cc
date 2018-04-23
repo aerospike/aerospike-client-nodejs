@@ -120,14 +120,14 @@ respond(uv_work_t* req, int status)
 
 NAN_METHOD(AerospikeClient::IndexCreate)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "namespace must be a string");
-	TYPE_CHECK_OPT(info[1], IsString, "set must be a string");
-	TYPE_CHECK_REQ(info[2], IsString, "bin must be a string");
-	TYPE_CHECK_REQ(info[3], IsString, "index_name must be a string");
-	TYPE_CHECK_OPT(info[4], IsNumber, "index_type must be an integer");
-	TYPE_CHECK_REQ(info[5], IsNumber, "index_datatype must be an integer");
-	TYPE_CHECK_OPT(info[6], IsObject, "policy must be an object");
-	TYPE_CHECK_REQ(info[7], IsFunction, "callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
+	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
+	TYPE_CHECK_REQ(info[2], IsString, "Bin must be a string");
+	TYPE_CHECK_REQ(info[3], IsString, "Index name must be a string");
+	TYPE_CHECK_OPT(info[4], IsNumber, "Index type must be an integer");
+	TYPE_CHECK_REQ(info[5], IsNumber, "Index datatype must be an integer");
+	TYPE_CHECK_OPT(info[6], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[7], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }
