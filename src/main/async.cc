@@ -87,8 +87,7 @@ void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop)
 	if (err) {
 		cmd->ErrorCallback(err);
 	} else {
-		Local<Value> argv[] = {};
-		cmd->Callback(0, argv);
+		cmd->Callback(0, {});
 	}
 
 	delete cmd;
