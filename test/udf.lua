@@ -36,6 +36,20 @@ function count(stream)
   return stream : map(mapper) : reduce(reducer)
 end
 
+function countGreaterThan(stream, binName, value)
+  local function mapper(rec)
+    if rec[binName] > value then
+      return 1
+    else
+      return 0
+    end
+  end
+  local function reducer(v1, v2)
+    return v1 + v2
+  end
+  return stream : map(mapper) : reduce(reducer)
+end
+
 function even(stream, bin)
   local function filt(rec)
     return rec.value % 2 == 0

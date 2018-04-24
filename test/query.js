@@ -441,6 +441,18 @@ describe('Queries', function () {
       })
     })
 
+    it('should apply a user defined function with arguments and aggregate the results', function (done) {
+      var args = {
+        filters: [filter.equal('name', 'aggregate')]
+      }
+      var query = client.query(helper.namespace, testSet, args)
+      query.apply('udf', 'countGreaterThan', ['value', 15], function (error, result) {
+        if (error) throw error
+        expect(result).to.equal(2)
+        done()
+      })
+    })
+
     it('returns a Promise that resolves to the result of the aggregation', function () {
       let args = {
         filters: [filter.equal('name', 'aggregate')]
