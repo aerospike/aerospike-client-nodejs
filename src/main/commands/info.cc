@@ -61,7 +61,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	if (info[0]->IsString()) {
 		cmd->request = (char*) cf_malloc(INFO_REQUEST_LEN);
 		if (as_strlcpy(cmd->request, *String::Utf8Value(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
-			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
 		}
 	} else {
 		cmd->request = (char*) "";
@@ -69,14 +69,14 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[1]->IsObject()) {
 		if (host_from_jsobject(info[1]->ToObject(), &cmd->addr, &cmd->port, log) != AS_NODE_PARAM_OK) {
-			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Host parameter is invalid");
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Host parameter is invalid");
 		}
 	}
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
 		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK ) {
-			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 

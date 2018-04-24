@@ -59,7 +59,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
 		if (writepolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 

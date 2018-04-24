@@ -57,9 +57,8 @@ class EventQueue : public Nan::AsyncResource {
 			while (as_queue_mt_pop(&events, &event, 0)) {
 				Nan::TryCatch try_catch;
 				Local<Value> argv[] = { convert(&event) };
-				Local<Function> cb = Nan::New<Function>(callback);
-				Local<Object> target = Nan::New<Object>();
-				runInAsyncScope(target, cb, 1, argv);
+				Local<Function> cb = Nan::New(callback);
+				runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, 1, argv);
 				if (try_catch.HasCaught()) {
 					Nan::FatalException(try_catch);
 				}

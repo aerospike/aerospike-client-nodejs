@@ -62,7 +62,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	char* filepath = strdup(*String::Utf8Value(info[0]->ToString()));
 	FILE * file = fopen(filepath, "r");
 	if (!file) {
-		cmd->SetError(AEROSPIKE_ERR, "Cannot open file: %s", filepath);
+		CmdSetError(cmd, AEROSPIKE_ERR, "Cannot open file: %s", filepath);
 		if (filepath != NULL) cf_free(filepath);
 		return cmd;
 	}
@@ -70,7 +70,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	// Determine the file size.
 	int rv = fseek(file, 0, SEEK_END);
 	if (rv != 0) {
-		cmd->SetError(AEROSPIKE_ERR_CLIENT, "Cannot determine file size: fseek returned %d", rv);
+		CmdSetError(cmd, AEROSPIKE_ERR_CLIENT, "Cannot determine file size: fseek returned %d", rv);
 		if (filepath != NULL) cf_free(filepath);
 		fclose(file);
 		return cmd;
@@ -78,7 +78,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	int file_size = ftell(file);
 	if (file_size < 0) {
-		cmd->SetError(AEROSPIKE_ERR, "Cannot determine file size: ftell returned %d", file_size);
+		CmdSetError(cmd, AEROSPIKE_ERR, "Cannot determine file size: ftell returned %d", file_size);
 		if (filepath != NULL) cf_free(filepath);
 		fclose(file);
 		return cmd;
@@ -88,7 +88,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	rewind(file);
 	uint8_t* file_content = (uint8_t*) cf_malloc(sizeof(uint8_t) * file_size);
 	if (file_content == NULL) {
-		cmd->SetError(AEROSPIKE_ERR, "Memory allocation for UDF buffer failed");
+		CmdSetError(cmd, AEROSPIKE_ERR, "Memory allocation for UDF buffer failed");
 		fclose(file);
 		return cmd;
 	}
@@ -107,12 +107,12 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	as_string filename;
 	as_basename(&filename, filepath);
 	if (as_string_get(&filename) == NULL) {
-		cmd->SetError(AEROSPIKE_ERR, "Cannot determine UDF file basename");
+		CmdSetError(cmd, AEROSPIKE_ERR, "Cannot determine UDF file basename");
 		if (filepath != NULL) cf_free(filepath);
 		return cmd;
 	}
 	if (as_strlcpy(cmd->filename, as_string_get(&filename), MAX_FILENAME_LEN) > MAX_FILENAME_LEN) {
-		cmd->SetError(AEROSPIKE_ERR, "UDF filename exceeds max. length (> %d)", MAX_FILENAME_LEN);
+		CmdSetError(cmd, AEROSPIKE_ERR, "UDF filename exceeds max. length (> %d)", MAX_FILENAME_LEN);
 		if (filepath != NULL) cf_free(filepath);
 		return cmd;
 	}
@@ -129,7 +129,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
 		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 			if (filepath != NULL) cf_free(filepath);
 			return cmd;
 		}

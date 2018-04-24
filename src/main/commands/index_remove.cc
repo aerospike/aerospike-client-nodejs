@@ -54,7 +54,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	LogInfo* log = cmd->log = client->log;
 
 	if (as_strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
-		return cmd->SetError(AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
+		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 	}
 
 	cmd->index = strdup(*String::Utf8Value(info[1]->ToString()));
@@ -62,7 +62,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
 		if(infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
-			return cmd->SetError(AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 

@@ -19,6 +19,8 @@
 #include "client.h"
 #include "log.h"
 
+#define CmdSetError(__cmd, __code, __fmt, ...) \
+	__cmd->SetError(__code, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);
 #define CmdErrorCallback(__cmd, __code, __fmt, ...) \
 	__cmd->ErrorCallback(__code, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);
 
@@ -38,7 +40,7 @@ class AerospikeCommand : public Nan::AsyncResource {
 			callback.Reset();
 		}
 
-		AerospikeCommand* SetError(as_status code, const char* fmt, ...);
+		AerospikeCommand* SetError(as_status code, const char* func, const char* file, uint32_t line, const char* fmt, ...);
 		bool IsError();
 		bool CanExecute();
 

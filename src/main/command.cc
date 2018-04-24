@@ -27,14 +27,12 @@ extern "C" {
 using namespace v8;
 
 AerospikeCommand*
-AerospikeCommand::SetError(as_status code, const char* fmt, ...)
+AerospikeCommand::SetError(as_status code, const char* func, const char* file,
+		uint32_t line, const char* fmt, ...)
 {
-	char msg[1024];
 	va_list args;
 	va_start(args, fmt);
-	vsnprintf(msg, 1024, fmt, args);
-	as_v8_error(log, "Error in %s command: %s", cmd.c_str(), msg);
-	as_error_set_message(&err, code, msg);
+	as_error_setallv(&err, code, func, file, line, fmt, args);
 	va_end(args);
 	return this;
 }
@@ -68,10 +66,8 @@ AerospikeCommand::Callback(const int argc, Local<Value> argv[])
 	as_v8_debug(log, "Executing JS callback for %s command", cmd.c_str());
 
 	Nan::TryCatch try_catch;
-	Local<Object> target = Nan::New<Object>();
-	Local<Function> cb = Nan::New<Function>(callback);
-	Local<Value> result = runInAsyncScope(target, cb, argc, argv)
-		.FromMaybe(Nan::Undefined().As<Value>());
+	Local<Function> cb = Nan::New(callback);
+	Local<Value> result = runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv).ToLocalChecked();
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
@@ -84,7 +80,11 @@ AerospikeCommand::ErrorCallback()
 {
 	Nan::HandleScope scope;
 
-	as_v8_error(log, "Error in %s command: %s [%d]", cmd.c_str(), err.message, err.code);
+	if (err.code <= AEROSPIKE_ERR_CLIENT) {
+		as_v8_error(log, "Client error in %s command: %s [%d]", cmd.c_str(), err.message, err.code);
+	} else {
+		as_v8_debug(log, "Server error in %s command: %s [%d]", cmd.c_str(), err.message, err.code);
+	}
 
 	Local<Value> args[] = { error_to_jsobject(&err, log) };
 	return Callback(1, args);
@@ -101,8 +101,8 @@ AerospikeCommand::ErrorCallback(as_error* error)
 }
 
 Local<Value>
-AerospikeCommand::ErrorCallback(as_status code, const char * func, const char * file,
-		uint32_t line, const char * fmt, ...)
+AerospikeCommand::ErrorCallback(as_status code, const char* func, const char* file,
+		uint32_t line, const char* fmt, ...)
 {
 	Nan::HandleScope scope;
 
