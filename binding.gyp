@@ -104,7 +104,7 @@
             '../aerospike-client-c/lib/libaerospike.a',
             '-lz'
           ],
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive'],
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
         }],
         ['OS=="mac"',{
           'libraries': [
