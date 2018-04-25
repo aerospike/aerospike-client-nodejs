@@ -60,7 +60,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[0]->IsString()) {
 		cmd->request = (char*) cf_malloc(INFO_REQUEST_LEN);
-		if (as_strlcpy(cmd->request, *String::Utf8Value(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
+		if (as_strlcpy(cmd->request, *Nan::Utf8String(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
 		}
 	} else {

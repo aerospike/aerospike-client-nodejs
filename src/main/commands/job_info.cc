@@ -54,7 +54,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	LogInfo* log = client->log;
 
 	cmd->job_id = info[0]->ToInteger()->Value();
-	cmd->module = strdup(*String::Utf8Value(info[1]->ToString()));
+	cmd->module = strdup(*Nan::Utf8String(info[1]->ToString()));
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));

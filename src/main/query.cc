@@ -34,13 +34,13 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
     as_namespace as_ns  = {'\0'};
     as_set       as_set = {'\0'};
 
-	if (as_strlcpy(as_ns, *String::Utf8Value(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
 		as_v8_error(log, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 		// TODO: Return param error
 	}
 
 	if (set->IsString()) {
-		if (as_strlcpy(as_set, *String::Utf8Value(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
 			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 			// TODO: Return param error
 		}
@@ -67,7 +67,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				as_v8_error(log, "Bin value must be string");
 				Nan::ThrowError("Bin value is not a string");
 			}
-			const char* bin_name = strdup(*String::Utf8Value(bin));
+			const char* bin_name = strdup(*Nan::Utf8String(bin));
 			as_predicate_type predicate = (as_predicate_type) filter->Get(Nan::New("predicate").ToLocalChecked())->ToObject()->IntegerValue();
 			as_index_type type = (as_index_type) filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
 			as_index_datatype datatype = (as_index_datatype) filter->Get(Nan::New("datatype").ToLocalChecked())->ToObject()->IntegerValue();
@@ -93,7 +93,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								as_v8_error(log, "The region value passed must be a GeoJSON string");
 								Nan::ThrowError("The region value passed is not a GeoJSON string");
 							}
-							const char* bin_val = strdup(*String::Utf8Value(value));
+							const char* bin_val = strdup(*Nan::Utf8String(value));
 							as_query_where(query, bin_name, predicate, type, datatype, bin_val);
 							as_v8_debug(log, "Geo range predicate %s", bin_val);
 						}
@@ -117,7 +117,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								as_v8_error(log, "querying a string index with equal predicate - value must be a string");
 								Nan::ThrowError("Querying a string index with equal predicate - value is not a string");
 							}
-							const char* bin_val = strdup(*String::Utf8Value(value));
+							const char* bin_val = strdup(*Nan::Utf8String(value));
 							as_query_where(query, bin_name, predicate, type, datatype, bin_val);
 							as_v8_debug(log, "String equality predicate %s", bin_val);
 						}
@@ -140,8 +140,8 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
 			}
-			as_query_select(query, *String::Utf8Value(bin));
-			as_v8_detail(log, "bin %d = %s", i, *String::Utf8Value(bin));
+			as_query_select(query, *Nan::Utf8String(bin));
+			as_v8_detail(log, "bin %d = %s", i, *Nan::Utf8String(bin));
 		}
 	}
 

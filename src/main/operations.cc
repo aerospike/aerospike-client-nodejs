@@ -109,7 +109,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 			rc = AS_NODE_PARAM_ERR;
 		}
 	} else if (v8val->IsString()) {
-		char* binVal = strdup(*String::Utf8Value(v8val));
+		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_detail(log, "String value to be written %s", binVal);
 		if (!as_operations_add_write_strp(ops, binName, binVal, true)) {
 			rc = AS_NODE_PARAM_ERR;
@@ -208,7 +208,7 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 
 	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
 	if (v8val->IsString()) {
-		char* binVal = strdup(*String::Utf8Value(v8val));
+		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_detail(log, "prepending string %s", binVal);
 		as_operations_add_prepend_strp(ops, binName, binVal, true);
 		if (binName != NULL) free(binName);
@@ -240,7 +240,7 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_v8_detail(log, "append operation on bin :%s", binName);
 	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
 	if (v8val->IsString()) {
-		char* binVal = strdup(*String::Utf8Value(v8val));
+		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_detail(log, "appending string %s", binVal);
 		as_operations_add_append_strp(ops, binName, binVal,true);
 		if (binName != NULL) free(binName);

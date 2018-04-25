@@ -50,12 +50,12 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	TruncateCommand* cmd = new TruncateCommand(client, info[4].As<Function>());
 	LogInfo* log = client->log;
 
-	if (as_strlcpy(cmd->ns, *String::Utf8Value(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
 		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 	}
 
 	if (info[1]->IsString()) {
-		if (as_strlcpy(cmd->set, *String::Utf8Value(info[1]->ToString()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+		if (as_strlcpy(cmd->set, *Nan::Utf8String(info[1]->ToString()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 		}
 	}

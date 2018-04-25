@@ -59,7 +59,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	UdfRegisterCommand* cmd = new UdfRegisterCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
-	char* filepath = strdup(*String::Utf8Value(info[0]->ToString()));
+	char* filepath = strdup(*Nan::Utf8String(info[0]->ToString()));
 	FILE * file = fopen(filepath, "r");
 	if (!file) {
 		CmdSetError(cmd, AEROSPIKE_ERR, "Cannot open file: %s", filepath);

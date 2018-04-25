@@ -35,13 +35,13 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
     as_namespace as_ns  = {'\0'};
     as_set       as_set = {'\0'};
 
-	if (as_strlcpy(as_ns, *String::Utf8Value(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
 		as_v8_error(log, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 		// TODO: Return param error
 	}
 
 	if (set->IsString()) {
-		if (as_strlcpy(as_set, *String::Utf8Value(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
 			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 			// TODO: Return param error
 		}
@@ -67,8 +67,8 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
 			}
-			as_scan_select(scan, *String::Utf8Value(bin));
-			as_v8_detail(log, "bin %d = %s", i, *String::Utf8Value(bin));
+			as_scan_select(scan, *Nan::Utf8String(bin));
+			as_v8_detail(log, "bin %d = %s", i, *Nan::Utf8String(bin));
 		}
 	}
 

@@ -70,7 +70,7 @@ int get_string_property(char** strp, Local<Object> obj, char const* prop, const 
 		as_v8_error(log, "Type error: %s property should be string", prop);
 		return AS_NODE_PARAM_ERR;
 	}
-	(*strp) = strdup(*String::Utf8Value(value));
+	(*strp) = strdup(*Nan::Utf8String(value));
 	as_v8_detail(log, "%s => \"%s\"", prop, *strp);
 	return AS_NODE_PARAM_OK;
 }
@@ -81,7 +81,7 @@ int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, 
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
 	if (value->IsString()) {
 		if (defined != NULL) (*defined) = true;
-		(*strp) = strdup(*String::Utf8Value(value));
+		(*strp) = strdup(*Nan::Utf8String(value));
 		as_v8_detail(log, "%s => \"%s\"", prop, *strp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -232,7 +232,7 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
         Local<Value> addrVal = obj->Get(Nan::New("addr").ToLocalChecked());
         if ( addrVal->IsString() ) {
             *addr = (char*) malloc (HOST_ADDRESS_SIZE);
-            strcpy(*addr, *String::Utf8Value(addrVal->ToString()));
+            strcpy(*addr, *Nan::Utf8String(addrVal->ToString()));
             as_v8_detail(log, "host addr : %s", (*addr));
         }
         else {
@@ -760,7 +760,7 @@ bool instanceof(Local<Value> value, const char * type)
 {
 	if (value->IsObject()) {
 		Local<String> ctor_name = value->ToObject()->GetConstructorName();
-		String::Utf8Value cn(ctor_name);
+		Nan::Utf8String cn(ctor_name);
 		return 0 == strncmp(*cn, type, strlen(type));
 	} else {
 		return false;
@@ -806,7 +806,7 @@ bool is_geojson_value(Local<Value> value)
 char* geojson_as_string(Local<Value> value)
 {
 	Local<Value> strval = value->ToObject()->Get(Nan::New("str").ToLocalChecked());
-	return strdup(*String::Utf8Value(strval));
+	return strdup(*Nan::Utf8String(strval));
 }
 
 int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
@@ -849,7 +849,7 @@ int map_from_jsobject(as_map** map, Local<Object> obj, const LogInfo* log)
         if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
-        as_stringmap_set(*map, *String::Utf8Value(name), val);
+        as_stringmap_set(*map, *Nan::Utf8String(name), val);
     }
     return AS_NODE_PARAM_OK;
 }
@@ -869,7 +869,7 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
     } else if (v8value->IsBoolean()) {
         *value = (as_val*) as_boolean_new(v8value->BooleanValue());
     } else if (v8value->IsString()) {
-        *value = (as_val*) as_string_new(strdup(*String::Utf8Value(v8value)), true);
+        *value = (as_val*) as_string_new(strdup(*Nan::Utf8String(v8value)), true);
     } else if (v8value->IsInt32() || v8value->IsUint32()) {
         *value = (as_val*) as_integer_new(v8value->IntegerValue());
     } else if (is_double_value(v8value)) {
@@ -914,11 +914,11 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
         // can be an undefined value.
         // If a bin is undefined, it must error out at the earliest.
         if( value->IsUndefined()) {
-            as_v8_error(log, "Bin value 'undefined' not supported: %s", *String::Utf8Value(name));
+            as_v8_error(log, "Bin value 'undefined' not supported: %s", *Nan::Utf8String(name));
             return AS_NODE_PARAM_ERR;
         }
 
-        String::Utf8Value n(name);
+        Nan::Utf8String n(name);
         if( strlen(*n) > AS_BIN_NAME_MAX_SIZE ) {
             as_v8_error(log, "Bin name length exceeded (max. 14): %s", *n);
             return AS_NODE_PARAM_ERR;
@@ -1128,7 +1128,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> ns_obj = obj->Get(Nan::New("ns").ToLocalChecked());
     if (ns_obj->IsString()) {
-        if (as_strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+        if (as_strlcpy(ns, *Nan::Utf8String(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
             as_v8_error(log, "The key namespace is too long (max. %d)", AS_NAMESPACE_MAX_SIZE);
             return AS_NODE_PARAM_ERR;
         }
@@ -1144,7 +1144,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 
     Local<Value> set_obj = obj->Get(Nan::New("set").ToLocalChecked());
     if (set_obj->IsString()) {
-        if (as_strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+        if (as_strlcpy(set, *Nan::Utf8String(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
             as_v8_error(log, "The key set is too long (max. %d)", AS_SET_MAX_SIZE);
             return AS_NODE_PARAM_ERR;
         }
@@ -1162,7 +1162,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     bool has_value = false;
     Local<Value> val_obj = obj->Get(Nan::New("key").ToLocalChecked());
     if (val_obj->IsString()) {
-        char* value = strdup(*String::Utf8Value(val_obj));
+        char* value = strdup(*Nan::Utf8String(val_obj));
         as_key_init(key, ns, set, value);
         as_v8_detail(log, "key.key = \"%s\"", value);
         ((as_string*) key->valuep)->free = true;
@@ -1246,7 +1246,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
         goto Ret_Err;
     }
     if ( ns_obj->IsString() ) {
-        if (as_strlcpy(ns, *String::Utf8Value(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+        if (as_strlcpy(ns, *Nan::Utf8String(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
             goto Ret_Err;
         }
     }
@@ -1259,7 +1259,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
     }
 
     if ( set_obj->IsString() ) {
-        if (as_strlcpy(set, *String::Utf8Value(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+        if (as_strlcpy(set, *Nan::Utf8String(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
             goto Ret_Err;
         }
     }
@@ -1272,7 +1272,7 @@ int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
     }
 
     if ( val_obj->IsString() ) {
-        char * value = strdup(*String::Utf8Value(val_obj));
+        char * value = strdup(*Nan::Utf8String(val_obj));
         as_key_init(key, ns, set, value);
         ((as_string *) key->valuep)->free = true;
         goto Ret_Ok;
@@ -1347,7 +1347,7 @@ int bins_from_jsarray(char*** bins, uint32_t* num_bins, Local<Array> arr, const 
     for( int i = 0; i < arr_length; i++) {
         Local<Value> bname = arr->Get(i);
         c_bins[i] = (char*)cf_malloc(AS_BIN_NAME_MAX_SIZE);
-        as_strlcpy(c_bins[i], *String::Utf8Value(bname), AS_BIN_NAME_MAX_SIZE);
+        as_strlcpy(c_bins[i], *Nan::Utf8String(bname), AS_BIN_NAME_MAX_SIZE);
         as_v8_detail(log, "name of the bin %s", c_bins[i]);
     }
     // The last entry should be NULL because we are passing to select API calls.
@@ -1391,7 +1391,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
             if (*filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
-            if (as_strlcpy(*filename, *String::Utf8Value(module), size) > size) {
+            if (as_strlcpy(*filename, *Nan::Utf8String(module), size) > size) {
                 as_v8_error(log, "UDF module name is too long (> %d)", size);
                 return AS_NODE_PARAM_ERR;
             }
@@ -1413,7 +1413,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
             if (*funcname == NULL) {
                 *funcname = (char*) cf_malloc(sizeof(char) * size);
             }
-            if (as_strlcpy(*funcname, *String::Utf8Value(v8_funcname), size) > size) {
+            if (as_strlcpy(*funcname, *Nan::Utf8String(v8_funcname), size) > size) {
                 as_v8_error(log, "UDF function name is too long (> %d)", size);
                 return AS_NODE_PARAM_ERR;
             }

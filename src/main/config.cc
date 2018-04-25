@@ -53,7 +53,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
 	if (maybe_hosts->IsString()) {
-		String::Utf8Value hosts(maybe_hosts);
+		Nan::Utf8String hosts(maybe_hosts);
 		as_v8_detail(log, "setting seed hosts: \"%s\"", *hosts);
 		if (as_config_add_hosts(config, *hosts, default_port) == false) {
 			as_v8_error(log, "invalid hosts string: \"%s\"", *hosts);
@@ -77,7 +77,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 			}
 
 			if (maybe_addr->IsString()) {
-				String::Utf8Value addr(maybe_addr);
+				Nan::Utf8String addr(maybe_addr);
 				as_config_add_host(config, *addr, port);
 				as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
 			} else {

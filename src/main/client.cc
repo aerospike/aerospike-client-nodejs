@@ -159,7 +159,7 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
-	String::Utf8Value hostname(info[0]->ToString());
+	Nan::Utf8String hostname(info[0]->ToString());
 	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
 
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
@@ -176,7 +176,7 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
-	String::Utf8Value hostname(info[0]->ToString());
+	Nan::Utf8String hostname(info[0]->ToString());
 	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
 
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);
