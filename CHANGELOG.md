@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Bug Fixes**
+  * Command queue tests fail if cluster address is specified using host/port cli options [#247](https://github.com/aerospike/aerospike-client-nodejs/issues/247)
+  * Query fails if one or more cluster nodes do not have records in the set [#253](https://github.com/aerospike/aerospike-client-nodejs/issues/253)
+  * TypeError: domain.enter is not a function using Node.js 9.6 or later in interactive mode [#254](https://github.com/aerospike/aerospike-client-nodejs/issues/254)
+
+* **New Features**
+  * Support for Async Hooks in Node.js 9/10 [#255](https://github.com/aerospike/aerospike-client-nodejs/pull/255)
+
+* **Updates**
+  * Tests: Upgrade to Mocha v5, Choma v1.2 & replace expect.js with Chai
+  * Update C client library to [v4.3.11](http://www.aerospike.com/download/client/c/notes.html#4.3.11).
+
 ## [3.2.0] - 2018-02-08
 
 * **Bug Fixes**
