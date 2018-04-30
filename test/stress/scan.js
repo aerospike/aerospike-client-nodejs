@@ -51,7 +51,7 @@ describe('client.scan()', function () {
       var heapUsed = Math.round(memUsage.heapUsed / mega)
       var heapTotal = Math.round(memUsage.heapTotal / mega)
       console.log('%d ms: %d records received (%d rps; mem: %d MB, heap: %d / %d MB)',
-          ms, received, throughput, rss, heapUsed, heapTotal)
+        ms, received, throughput, rss, heapUsed, heapTotal)
     })
 
     stream.on('error', function (err) { throw err })
@@ -123,7 +123,7 @@ describe('client.scan()', function () {
       var heapUsed = Math.round(memUsage.heapUsed / mega)
       var heapTotal = Math.round(memUsage.heapTotal / mega)
       console.log('%d ms: %d records processed (%d rps; mem: %d MB, heap: %d / %d MB)',
-          ms, processed, throughput, rss, heapUsed, heapTotal)
+        ms, processed, throughput, rss, heapUsed, heapTotal)
     })
     var worker = function (record, meta, key) {
       threadPool.any.eval('doWork()', function (err) {

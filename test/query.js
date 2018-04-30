@@ -121,8 +121,8 @@ describe('Queries', function () {
   })
 
   after(() => helper.udf.remove('udf.lua')
-      .then(() => Promise.all(indexes.map(idx =>
-        helper.index.remove(idx[0])))))
+    .then(() => Promise.all(indexes.map(idx =>
+      helper.index.remove(idx[0])))))
 
   describe('client.query()', function () {
     it('creates a new Query instance and sets up it\'s properties', function () {

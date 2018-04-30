@@ -44,7 +44,7 @@
   "devDependencies": {
     "chai": "^4.1.2",
     "choma": "^1.2.1",
-    "codecov": "^2.3.0",
+    "codecov": "^3.0.0",
     "deep-eql": "^3.0.1",
     "dirty-chai": "^2.0.1",
     "ink-docstrap": "^1.3.0",
@@ -52,7 +52,7 @@
     "mocha": "^5.0.0",
     "mocha-clean": "^1.0.0",
     "nyc": "^11.2.1",
-    "standard": "^10.0",
+    "standard": "^11.0",
     "tmp": "^0.0.33",
     "yargs": "^1.3.3"
   },

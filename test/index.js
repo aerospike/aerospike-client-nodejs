@@ -163,7 +163,7 @@ context('secondary indexes', function () {
 
   describe('Client#indexRemove()', function () {
     beforeEach(() => helper.index.create(testIndex.name, helper.set, testIndex.bin,
-          Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT))
+      Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT))
 
     it('should drop an index', function (done) {
       client.indexRemove(helper.namespace, testIndex.name, function (err) {
