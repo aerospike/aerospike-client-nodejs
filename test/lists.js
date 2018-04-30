@@ -394,7 +394,7 @@ describe('client.operate() - CDT List operations', function () {
       it('removes all items except with the specified values', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
-          .then(operate(lists.removeByValueList('list', [1, 3]).invertResults()))
+          .then(operate(lists.removeByValueList('list', [1, 3]).invertSelection()))
           .then(assertRecordEql({ list: [1, 3, 1, 3] }))
           .then(cleanup)
       })
@@ -505,6 +505,108 @@ describe('client.operate() - CDT List operations', function () {
         .then(operate(lists.getRange('list', 1)))
         .then(assertResultEql({ list: [2, 3, 4, 5] }))
         .then(cleanup)
+    })
+  })
+
+  describe('lists.getByIndex', function () {
+    context('returnType=VALUE', function () {
+      it('fetches the item at the specified index and returns its value', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.getByIndex('list', 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: 3 }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByIndexRange', function () {
+    context('returnType=VALUE', function () {
+      it('fetches the items in the specified range and returns the values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.getByIndexRange('list', 2, 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [3, 4] }))
+          .then(cleanup)
+      })
+
+      it('fetches the items starting from the specified index and returns the values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.getByIndexRange('list', 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [3, 4, 5] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByValue', function () {
+    context('returnType=INDEX', function () {
+      it('fetches all items with the specified value and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.getByValue('list', 3).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [2, 5] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByValueList', function () {
+    context('returnType=INDEX', function () {
+      it('fetches all items with the specified values and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.getByValueList('list', [1, 3]).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [0, 2, 3, 5] }))
+          .then(cleanup)
+      })
+    })
+
+    context('invert results', function () {
+      it('fetches all items except with the specified values', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.getByValueList('list', [1, 3]).invertSelection().andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [1, 4] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByValueRange', function () {
+    context('returnType=INDEX', function () {
+      it('fetches all items in the specified range of values and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.getByValueRange('list', 2, 5).andReturn(lists.returnType.INDEX)))
+          .then(assertResultEql({ list: [1, 2, 3] }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByRank', function () {
+    context('returnType=VALUE', function () {
+      it('fetches the item with the specified list rank and returns the value', function () {
+        return initState()
+          .then(createRecord({ list: [3, 1, 2, 4] }))
+          .then(operate(lists.getByRank('list', 1).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: 2 }))
+          .then(cleanup)
+      })
+    })
+  })
+
+  describe('lists.getByRankRange', function () {
+    context('returnType=VALUE', function () {
+      it('fetches the item with the specified list rank and returns the value', function () {
+        return initState()
+          .then(createRecord({ list: [3, 1, 2, 5, 4] }))
+          .then(operate(lists.getByRankRange('list', 1, 3).andReturn(lists.returnType.VALUE)))
+          .then(assertResultSatisfy(result => eql(result.list.sort(), [2, 3, 4])))
+          .then(cleanup)
+      })
     })
   })
 
