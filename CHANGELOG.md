@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.3.0] - 2018-04-30
+
 * **Bug Fixes**
   * Command queue tests fail if cluster address is specified using host/port cli options [#247](https://github.com/aerospike/aerospike-client-nodejs/issues/247)
   * Query fails if one or more cluster nodes do not have records in the set [#253](https://github.com/aerospike/aerospike-client-nodejs/issues/253)
