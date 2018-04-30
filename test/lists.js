@@ -670,4 +670,13 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
   })
+
+  describe('ListOperation', function () {
+    describe('#invertSelection', function () {
+      it('throws an error if the operation is not invertible', function () {
+        const op = lists.size('lists')
+        expect(() => op.invertSelection()).to.throw(AerospikeError, 'List operation cannot be inverted')
+      })
+    })
+  })
 })
