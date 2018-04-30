@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
   * TypeError: domain.enter is not a function using Node.js 9.6 or later in interactive mode [#254](https://github.com/aerospike/aerospike-client-nodejs/issues/254)
 
 * **New Features**
+  * Support authentication mode (Config#authMode). When user authentication is enabled, the mode specifies internal server authentication or external (e.g. LDAP) authentication.
+  * Support separate login timeout (Config#loginTimeoutMs) when authentication is enabled.
   * Support for Async Hooks in Node.js 9/10 [#255](https://github.com/aerospike/aerospike-client-nodejs/pull/255)
 
 * **Updates**
