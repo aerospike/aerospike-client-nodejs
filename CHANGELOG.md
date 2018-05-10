@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * Change default log level from INFO to WARN; rename log level DETAIL to TRACE
+
 ## [3.3.0] - 2018-04-30
 
 * **Bug Fixes**

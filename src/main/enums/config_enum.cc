@@ -19,6 +19,7 @@
 
 extern "C" {
 #include <aerospike/as_config.h>
+#include <aerospike/as_log.h>
 }
 
 using namespace v8;
@@ -29,12 +30,13 @@ Local<Object> log_enum_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "OFF",    -1);
-	set(obj, "ERROR",   0);
-	set(obj, "WARN",    1);
-	set(obj, "INFO",    2);
-	set(obj, "DEBUG",   3);
-	set(obj, "DETAIL",  4);
+	set(obj, "OFF", -1);
+	set(obj, "ERROR", AS_LOG_LEVEL_ERROR);
+	set(obj, "WARN", AS_LOG_LEVEL_WARN);
+	set(obj, "INFO", AS_LOG_LEVEL_INFO);
+	set(obj, "DEBUG", AS_LOG_LEVEL_DEBUG);
+	set(obj, "TRACE", AS_LOG_LEVEL_TRACE);
+	set(obj, "DETAIL", AS_LOG_LEVEL_TRACE); // renamed in v3.4 - keep old name for backwards compatibility
 	return scope.Escape(obj);
 }
 
