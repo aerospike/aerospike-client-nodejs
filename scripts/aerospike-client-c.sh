@@ -161,16 +161,16 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
         "debian"* )
           PKG_FORMAT="deb"
           ;;
-        "ubuntu12" )
-          DISTRO="ubuntu12.04"
-          PKG_FORMAT="deb"
-          ;;
         "ubuntu14" )
           DISTRO="ubuntu14.04"
           PKG_FORMAT="deb"
           ;;
-        "ubuntu"* )
+        "ubuntu16"* )
           DISTRO="ubuntu16.04"
+          PKG_FORMAT="deb"
+          ;;
+        "ubuntu"* )
+          DISTRO="ubuntu18.04"
           PKG_FORMAT="deb"
           ;;
         "ami"* )
