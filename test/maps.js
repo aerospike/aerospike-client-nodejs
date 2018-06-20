@@ -26,7 +26,7 @@ const AerospikeError = Aerospike.AerospikeError
 const maps = Aerospike.maps
 const status = Aerospike.status
 
-let eql = require('deep-eql')
+const eql = require('deep-eql')
 
 describe('client.operate() - CDT Map operations', function () {
   var client = helper.client

@@ -30,6 +30,76 @@ extern "C" {
 
 using namespace v8;
 
+int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Object> obj, LogInfo* log)
+{
+	Nan::HandleScope scope;
+	as_list_policy_init(policy);
+	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	if (maybe_policy_obj->IsUndefined()) {
+		if (has_policy != NULL) (*has_policy) = false;
+		as_v8_detail(log, "No list policy set - using default policy");
+		return AS_NODE_PARAM_OK;
+	} else if (!maybe_policy_obj->IsObject()) {
+		as_v8_error(log, "Type error: policy should be an Object");
+		return AS_NODE_PARAM_ERR;
+	}
+	if (has_policy != NULL) (*has_policy) = true;
+	Local<Object> policy_obj = maybe_policy_obj->ToObject();
+
+	as_list_order order;
+	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
+	if (value->IsNumber()) {
+		order = (as_list_order) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		order = AS_LIST_UNORDERED;
+	} else {
+		as_v8_error(log, "Type error: order should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_write_flags write_flags;
+	value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
+	if (value->IsNumber()) {
+		write_flags = (as_list_write_flags) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		write_flags = AS_LIST_WRITE_DEFAULT;
+	} else {
+		as_v8_error(log, "Type error: writeFlags should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_detail(log, "Setting list policy with order %i and write flags %i", order, write_flags);
+	as_list_policy_set(policy, order, write_flags);
+	return AS_NODE_PARAM_OK;
+}
+
+int get_list_return_type(as_list_return_type* return_type, Local<Object> obj, LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
+	if (value->IsNumber()) {
+		(*return_type) = (as_list_return_type) value->IntegerValue();
+	} else if (value->IsUndefined()) {
+		(*return_type) = AS_LIST_RETURN_NONE;
+	} else {
+		as_v8_error(log, "Type error: returnType should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool inverted_defined = false;
+	bool inverted = false;
+	if (get_optional_bool_property(&inverted, &inverted_defined, obj, "inverted", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+	if (inverted_defined && inverted) {
+		as_v8_detail(log, "Inverting list operation");
+		(*return_type) = (as_list_return_type) ((*return_type) | AS_LIST_RETURN_INVERTED);
+	}
+
+	as_v8_detail(log, "List return type: %i", (*return_type));
+	return AS_NODE_PARAM_OK;
+}
+
 int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
@@ -62,7 +132,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 	} else if (value->IsUndefined()) {
 		write_mode = AS_MAP_UPDATE;
 	} else {
-		as_v8_error(log, "Type error: write_mode should be integer");
+		as_v8_error(log, "Type error: writeMode should be integer");
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -79,7 +149,7 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 	} else if (value->IsUndefined()) {
 		(*return_type) = AS_MAP_RETURN_NONE;
 	} else {
-		as_v8_error(log, "Type error: return_type should be integer");
+		as_v8_error(log, "Type error: returnType should be integer");
 		return AS_NODE_PARAM_ERR;
 	}
 	as_v8_detail(log, "Map return type: %i", (*return_type));
@@ -269,80 +339,158 @@ int add_touch_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	return AS_NODE_PARAM_OK;
 }
 
-int add_list_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_list_set_order_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_order order;
+	if (get_int64_property((int64_t *) &order, op, "order", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_set_order(ops, binName, order);
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_sort_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_sort_flags flags;
+	if (get_int64_property((int64_t *) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_sort(ops, binName, flags);
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_append_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* val;
-	if (get_asval_property(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&val, op, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_operations_add_list_append(ops, binName, val);
+	bool with_policy;
+	as_list_policy policy;
+	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (with_policy) {
+		as_operations_add_list_append_with_policy(ops, binName, &policy, val);
+	} else {
+		as_operations_add_list_append(ops, binName, val);
+	}
+
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
-int add_list_append_items_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_list_append_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_list* list;
-	if (get_list_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_operations_add_list_append_items(ops, binName, list);
+	bool with_policy;
+	as_list_policy policy;
+	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (with_policy) {
+		as_operations_add_list_append_items_with_policy(ops, binName, &policy, list);
+	} else {
+		as_operations_add_list_append_items(ops, binName, list);
+	}
+
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
-int add_list_insert_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_list_insert_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	int64_t index;
-	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_val* val;
-	if (get_asval_property(&val, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_asval_property(&val, op, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_operations_add_list_insert(ops, binName, index, val);
+	bool with_policy;
+	as_list_policy policy;
+	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (with_policy) {
+		as_operations_add_list_insert_with_policy(ops, binName, &policy, index, val);
+	} else {
+		as_operations_add_list_insert(ops, binName, index, val);
+	}
+
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
-int add_list_insert_items_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_list_insert_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	int64_t index;
-	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_list* list;
-	if (get_list_property(&list, obj, "list", log) != AS_NODE_PARAM_OK) {
+	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_operations_add_list_insert_items(ops, binName, index, list);
+	bool with_policy;
+	as_list_policy policy;
+	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (with_policy) {
+		as_operations_add_list_insert_items_with_policy(ops, binName, &policy, index, list);
+	} else {
+		as_operations_add_list_insert_items(ops, binName, index, list);
+	}
+
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
@@ -430,6 +578,192 @@ int add_list_remove_range_op(as_operations* ops, Local<Object> obj, LogInfo* log
 		as_operations_add_list_remove_range(ops, binName, index, count);
 	} else {
 		as_operations_add_list_remove_range_from(ops, binName, index);
+	}
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_index_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_remove_by_index(ops, binName, index, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_index_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_operations_add_list_remove_by_index_range(ops, binName, index, count, return_type);
+	} else {
+		as_operations_add_list_remove_by_index_range_to_end(ops, binName, index, return_type);
+	}
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_value_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_remove_by_value(ops, binName, value, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_value_list_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list* values;
+	if (get_list_property(&values, op, "values", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_remove_by_value_list(ops, binName, values, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_value_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool begin_defined;
+	as_val* begin = NULL;
+	if (get_optional_asval_property(&begin, &begin_defined, op, "begin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool end_defined;
+	as_val* end = NULL;
+	if (get_optional_asval_property(&end, &end_defined, op, "end", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_remove_by_value_range(ops, binName, begin, end, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_rank_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_remove_by_rank(ops, binName, rank, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_remove_by_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_operations_add_list_remove_by_rank_range(ops, binName, rank, count, return_type);
+	} else {
+		as_operations_add_list_remove_by_rank_range_to_end(ops, binName, rank, return_type);
 	}
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
@@ -535,25 +869,222 @@ int add_list_get_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	return AS_NODE_PARAM_OK;
 }
 
-int add_list_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_list_get_by_index_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	int64_t index;
-	if (get_int64_property(&index, obj, "index", log) != AS_NODE_PARAM_OK) {
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_get_by_index(ops, binName, index, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_index_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_operations_add_list_get_by_index_range(ops, binName, index, count, return_type);
+	} else {
+		as_operations_add_list_get_by_index_range_to_end(ops, binName, index, return_type);
+	}
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_value_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_get_by_value(ops, binName, value, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_value_list_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list* values;
+	if (get_list_property(&values, op, "values", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_get_by_value_list(ops, binName, values, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_value_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool begin_defined;
+	as_val* begin = NULL;
+	if (get_optional_asval_property(&begin, &begin_defined, op, "begin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool end_defined;
+	as_val* end = NULL;
+	if (get_optional_asval_property(&end, &end_defined, op, "end", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_get_by_value_range(ops, binName, begin, end, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_rank_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_operations_add_list_get_by_rank(ops, binName, rank, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_operations_add_list_get_by_rank_range(ops, binName, rank, count, return_type);
+	} else {
+		as_operations_add_list_get_by_rank_range_to_end(ops, binName, rank, return_type);
+	}
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_increment_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool value_defined;
 	as_val* value = NULL;
-	if (get_optional_asval_property(&value, &value_defined, obj, "value", log) != AS_NODE_PARAM_OK) {
+	if (get_optional_asval_property(&value, &value_defined, op, "value", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_operations_add_list_increment(ops, binName, index, value);
+	bool with_policy;
+	as_list_policy policy;
+	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (with_policy) {
+		as_operations_add_list_increment_with_policy(ops, binName, &policy, index, value);
+	} else {
+		as_operations_add_list_increment(ops, binName, index, value);
+	}
+
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
 }
@@ -570,15 +1101,15 @@ int add_list_size_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	return AS_NODE_PARAM_OK;
 }
 
-int add_map_set_policy_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+int add_map_set_policy_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
-	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_map_policy policy;
-	if (get_map_policy(&policy, obj, log) != AS_NODE_PARAM_OK) {
+	if (get_map_policy(&policy, op, log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -1223,6 +1754,8 @@ const ops_table_entry ops_table[] = {
 	{ "PREPEND", add_prepend_op },
 	{ "APPEND", add_append_op },
 	{ "TOUCH", add_touch_op },
+	{ "LIST_SET_ORDER", add_list_set_order_op },
+	{ "LIST_SORT", add_list_sort_op },
 	{ "LIST_APPEND", add_list_append_op },
 	{ "LIST_APPEND_ITEMS", add_list_append_items_op },
 	{ "LIST_INSERT", add_list_insert_op },
@@ -1231,11 +1764,25 @@ const ops_table_entry ops_table[] = {
 	{ "LIST_POP_RANGE", add_list_pop_range_op },
 	{ "LIST_REMOVE", add_list_remove_op },
 	{ "LIST_REMOVE_RANGE", add_list_remove_range_op },
+	{ "LIST_REMOVE_BY_INDEX", add_list_remove_by_index_op },
+	{ "LIST_REMOVE_BY_INDEX_RANGE", add_list_remove_by_index_range_op },
+	{ "LIST_REMOVE_BY_VALUE", add_list_remove_by_value_op },
+	{ "LIST_REMOVE_BY_VALUE_LIST", add_list_remove_by_value_list_op },
+	{ "LIST_REMOVE_BY_VALUE_RANGE", add_list_remove_by_value_range_op },
+	{ "LIST_REMOVE_BY_RANK", add_list_remove_by_rank_op },
+	{ "LIST_REMOVE_BY_RANK_RANGE", add_list_remove_by_rank_range_op },
 	{ "LIST_CLEAR", add_list_clear_op },
 	{ "LIST_SET", add_list_set_op },
 	{ "LIST_TRIM", add_list_trim_op },
 	{ "LIST_GET", add_list_get_op },
 	{ "LIST_GET_RANGE", add_list_get_range_op },
+	{ "LIST_GET_BY_INDEX", add_list_get_by_index_op },
+	{ "LIST_GET_BY_INDEX_RANGE", add_list_get_by_index_range_op },
+	{ "LIST_GET_BY_VALUE", add_list_get_by_value_op },
+	{ "LIST_GET_BY_VALUE_LIST", add_list_get_by_value_list_op },
+	{ "LIST_GET_BY_VALUE_RANGE", add_list_get_by_value_range_op },
+	{ "LIST_GET_BY_RANK", add_list_get_by_rank_op },
+	{ "LIST_GET_BY_RANK_RANGE", add_list_get_by_rank_range_op },
 	{ "LIST_INCREMENT", add_list_increment_op },
 	{ "LIST_SIZE", add_list_size_op },
 	{ "MAP_SET_POLICY", add_map_set_policy_op },
