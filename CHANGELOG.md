@@ -5,8 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **Updates**
-  * Update C client library to [v4.3.12](http://www.aerospike.com/download/client/c/notes.html#4.3.12).
+  * Update C client library to [v4.3.13](http://www.aerospike.com/download/client/c/notes.html#4.3.12).
   * Change default log level from INFO to WARN; rename log level DETAIL to TRACE
+  * Add support for failOnClusterChange flag in Query policy. (Requires Aerospike Server v4.2.0.2 or later.)
   * Add support for Ubuntu 18.04
   * Remove support for Ubuntu 12.04
 
