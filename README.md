@@ -13,7 +13,7 @@ An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js v4.x (LTS), v6.x (LTS), v8.x (LTS) and
 v9.x. It supports the following operating systems: CentOS/RHEL 6/7, Debian
-7/8/9, Ubuntu 12.04/14.04/16.04, as well as many Linux destributions compatible
+7/8/9, Ubuntu 14.04/16.04/18.04, as well as many Linux destributions compatible
 with one of these OS releases. macOS and Windows are also supported.
 
 - [Usage](#Usage)
@@ -122,7 +122,7 @@ The package has the following compile time/run time dependencies:
 | libssl | openssl | |
 | libcrypto | openssl | Required for RIPEMD160 hash function. |
 
-### CentOS/RHEL 6+
+### CentOS/RHEL
 
 To install library prerequisites via `yum`:
 
@@ -136,7 +136,7 @@ update the gcc tool chain you can install a recent version of the
  [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
 or a compatible devtoolset version for CentOS.
 
-### Debian 7+
+### Debian
 
 To install library prerequisites via `apt-get`:
 
@@ -144,18 +144,13 @@ To install library prerequisites via `apt-get`:
 sudo apt-get install g++ libssl1.0.0 libssl-dev
 ```
 
-### Ubuntu 12.04+
+### Ubuntu
 
 To install library prerequisites via `apt-get`:
 
 ```bash
 sudo apt-get install g++ libssl1.0.0 libssl-dev
 ```
-
-Note: The `gcc` tool chain included in Ubuntu 12.04 is gcc-4.6. To build the
-Aerospike addon using Node.js v4 or later, gcc-4.8 or later is required. To
-update the gcc tool chain you can install a more recent version of gcc
-toolchain using several available PPA repositories.
 
 ### Mac OS X
 

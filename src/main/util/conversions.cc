@@ -573,6 +573,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
                 as_v8_detail(log, "value = %lld ", data);
                 return scope.Escape(Nan::New((double)data));
             }
+            break;
         }
         case AS_DOUBLE : {
             as_double* dval = as_double_fromval(val);
@@ -581,6 +582,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
                 as_v8_detail(log, "value = %lf ",d);
                 return scope.Escape(Nan::New((double)d));
             }
+            break;
         }
         case AS_STRING : {
             as_string * sval = as_string_fromval(val);
@@ -589,6 +591,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
                 as_v8_detail(log, "value = \"%s\"", data);
                 return scope.Escape(Nan::New(data).ToLocalChecked());
             }
+            break;
         }
         case AS_BYTES : {
             as_bytes * bval = as_bytes_fromval(val);
@@ -609,6 +612,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 
                 return scope.Escape(buff);
             }
+            break;
         }
         case AS_LIST : {
             as_arraylist* listval = (as_arraylist*) as_list_fromval((as_val*)val);
@@ -644,6 +648,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
                 as_v8_detail(log, "geojson = \"%s\"", data);
                 return scope.Escape(Nan::New<String>(data).ToLocalChecked());
             }
+            break;
         }
         default:
             break;

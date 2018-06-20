@@ -51,7 +51,7 @@ NAN_METHOD(register_as_event_loop)
 	as_error err;
 	as_status status = as_set_external_event_loop(&err, &policy, uv_default_loop(), &loop);
 	if (status != AEROSPIKE_OK) {
-		char errmsg[128];
+		char errmsg[128 + AS_ERROR_MESSAGE_MAX_SIZE];
 		snprintf(errmsg, sizeof(errmsg), "Unable to register default event loop: %s [%i]", err.message, err.code);
 		return Nan::ThrowError(errmsg);
 	}
