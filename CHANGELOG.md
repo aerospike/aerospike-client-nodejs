@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.4.0] - 2018-06-20
+
 * **New Features**
   * Add CDT List operations for Ordered Lists [#250](https://github.com/aerospike/aerospike-client-nodejs/pull/250)
-  * Support scan/query consistency validation using cluster key. Set failOnClusterChange to true in ScanPolicy/QueryPolicy to enable this validation. (Requires Aerospike Server v4.2.0.2 or later.) [#260](https://github.com/aerospike/aerospike-client-nodejs/pull/260)
+  * Support scan/query consistency validation using cluster key. Set failOnClusterChange to true in ScanPolicy/QueryPolicy to enable this validation. (Requires Aerospike Server v4.2 or later.) [#260](https://github.com/aerospike/aerospike-client-nodejs/pull/260)
 
 * **Updates**
   * Update C client library to [v4.3.13](http://www.aerospike.com/download/client/c/notes.html#4.3.12) [#260](https://github.com/aerospike/aerospike-client-nodejs/pull/260)
