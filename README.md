@@ -117,23 +117,24 @@ further information.
 
 The package has the following compile time/run time dependencies:
 
-| Library Name | .rpm Package | Description |
-| --- | --- | --- |
-| libssl | openssl | |
-| libcrypto | openssl | Required for RIPEMD160 hash function. |
+| Library Name | Description |
+| --- | --- |
+| libssl | |
+| libcrypto | Required for RIPEMD160 hash function. |
+| libz | Required for (optional) command compression. |
 
 ### CentOS/RHEL
 
 To install library prerequisites via `yum`:
 
 ```bash
-sudo yum install gcc-c++ openssl-devel
+sudo yum install gcc-c++ openssl-devel zlib-devel
 ```
 
-Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. To build the
-Aerospike add-on using Node.js v4 or later, gcc-4.8 or later is required. To
-update the gcc tool chain you can install a recent version of the
- [Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
+Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. Building the
+Aerospike add-on using Node.js v4 or later, requires gcc-4.8 or later. To
+update the gcc tool chain, you can install a recent version of the
+[Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
 or a compatible devtoolset version for CentOS.
 
 ### Debian
@@ -141,7 +142,7 @@ or a compatible devtoolset version for CentOS.
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
 ```
 
 ### Ubuntu
@@ -149,7 +150,7 @@ sudo apt-get install g++ libssl1.0.0 libssl-dev
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
 ```
 
 ### Mac OS X
