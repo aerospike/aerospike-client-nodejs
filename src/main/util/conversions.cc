@@ -1315,7 +1315,7 @@ int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log)
 	for (uint32_t i = 0; i < len; i++) {
 		Local<Object> key = arr->Get(i)->ToObject();
 		if (key_from_jsobject(as_batch_keyat(batch, i), key, log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing batch key [%d] failed\n", i);
+			as_v8_error(log, "Parsing batch key [%d] failed", i);
 			return AS_NODE_PARAM_ERR;
 		}
 	}
@@ -1333,7 +1333,7 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 
 		Local<Object> key = obj->Get(Nan::New("key").ToLocalChecked())->ToObject();
 		if (key_from_jsobject(&record->key, key, log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing batch keys failed\n");
+			as_v8_error(log, "Parsing batch keys failed");
 			return AS_NODE_PARAM_ERR;
 		}
 
@@ -1342,7 +1342,7 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 			char** bin_names;
 			uint32_t n_bin_names;
 			if (bins_from_jsarray(&bin_names, &n_bin_names, Local<Array>::Cast(maybe_bins), log) != AS_NODE_PARAM_OK) {
-				as_v8_error(log, "Parsing batch bin names failed\n");
+				as_v8_error(log, "Parsing batch bin names failed");
 				return AS_NODE_PARAM_ERR;
 			}
 			record->bin_names = bin_names;

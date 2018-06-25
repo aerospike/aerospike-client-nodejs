@@ -53,7 +53,7 @@ NAN_METHOD(AerospikeClient::GetAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async get command\n");
+	as_v8_debug(log, "Sending async get command");
 	status = aerospike_key_get_async(client->as, &cmd->err, p_policy, &key, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

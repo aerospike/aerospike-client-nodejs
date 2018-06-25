@@ -61,7 +61,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async select command\n");
+	as_v8_debug(log, "Sending async select command");
 	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

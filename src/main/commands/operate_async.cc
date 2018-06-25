@@ -70,7 +70,7 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async operate command\n");
+	as_v8_debug(log, "Sending async operate command");
 	status = aerospike_key_operate_async(client->as, &cmd->err, p_policy, &key, &operations, async_record_listener, cmd, NULL, NULL);
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
