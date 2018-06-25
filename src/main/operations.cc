@@ -347,7 +347,7 @@ int add_list_set_order_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	as_list_order order;
-	if (get_int64_property((int64_t *) &order, op, "order", log) != AS_NODE_PARAM_OK) {
+	if (get_int_property((int*) &order, op, "order", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -364,7 +364,7 @@ int add_list_sort_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	as_list_sort_flags flags;
-	if (get_int64_property((int64_t *) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
+	if (get_int_property((int*) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 

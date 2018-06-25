@@ -92,6 +92,19 @@ int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, 
 	return AS_NODE_PARAM_OK;
 }
 
+int get_int_property(int* intp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!value->IsNumber()) {
+		as_v8_error(log, "Type error: %s property should be integer", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	(*intp) = value->IntegerValue();
+	as_v8_detail(log, "%s => (int) %d", prop, *intp);
+	return AS_NODE_PARAM_OK;
+}
+
 int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const LogInfo* log)
 {
 	Nan::HandleScope scope;
