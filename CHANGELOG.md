@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.4.1] - 2018-06-25
+
+* **Bug Fixes**
+  * Fix Set Order/Sort List operations broken on some platforms [#261](https://github.com/aerospike/aerospike-client-nodejs/issues/261)
+
 ## [3.4.0] - 2018-06-20
 
 * **New Features**
