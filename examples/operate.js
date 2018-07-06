@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -13,156 +14,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
-// *****************************************************************************
-// Perform multiple operations on a single record.
-// *****************************************************************************
-
+//
 const Aerospike = require('aerospike')
-const fs = require('fs')
-const yargs = require('yargs')
-const iteration = require('./iteration')
+const shared = require('./shared')
+const op = Aerospike.operations
+const lists = Aerospike.lists
 
-const operations = Aerospike.operations
+shared.cli.checkMainRunner(module)
 
-// *****************************************************************************
-// Options parsing
-// *****************************************************************************
-
-var argp = yargs
-  .usage('$0 [options] key')
-  .options({
-    help: {
-      boolean: true,
-      describe: 'Display this message.'
-    },
-    quiet: {
-      alias: 'q',
-      boolean: true,
-      describe: 'Do not display content.'
-    },
-    host: {
-      alias: 'h',
-      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
-      describe: 'Aerospike database address.'
-    },
-    timeout: {
-      alias: 't',
-      default: 1000,
-      describe: 'Timeout in milliseconds.'
-    },
-    'log-level': {
-      alias: 'l',
-      default: Aerospike.log.INFO,
-      describe: 'Log level [0-5]'
-    },
-    'log-file': {
-      default: undefined,
-      describe: 'Path to a file send log messages to.'
-    },
-    namespace: {
-      alias: 'n',
-      default: 'test',
-      describe: 'Namespace for the keys.'
-    },
-    set: {
-      alias: 's',
-      default: 'demo',
-      describe: 'Set for the keys.'
-    },
-    user: {
-      alias: 'U',
-      default: null,
-      describe: 'Username to connect to secured cluster'
-    },
-    password: {
-      alias: 'P',
-      default: null,
-      describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
-    }
-  })
-
-var argv = argp.argv
-var keyv = argv._.shift()
-
-if (argv.help === true) {
-  argp.showHelp()
-  process.exit(0)
+function randomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max))
 }
 
-if (!keyv) {
-  console.error('Error: Please provide a key for the operation')
-  console.error()
-  argp.showHelp()
-  process.exit(1)
-}
-
-iteration.setLimit(argv.iterations)
-
-// *****************************************************************************
-// Establish a connection to the cluster.
-// *****************************************************************************
-
-var config = {
-  hosts: argv.host,
-  log: {
-    level: argv['log-level'],
-    file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
-  },
-  policies: {
-    timeout: argv.timeout
-  },
-  user: argv.user,
-  password: argv.password
-}
-
-// *****************************************************************************
-// Perform the operation
-// *****************************************************************************
-
-function run (client, done) {
-  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
-
-  var ops = [
-    operations.touch(1000),
-    operations.incr('i', 1),
-    operations.write('s', 'some_val'),
-    operations.read('i'),
-    operations.read('s')
+async function operate (client, argv) {
+  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
+  const i = randomInt(10)
+  let ops = [
+    lists.append('values', i),
+    op.read('values'),
+    op.incr('sum', i),
+    op.read('sum')
   ]
-
-  client.operate(key, ops, function (err, bins, metadata) {
-    if (!err) {
-      var record = {}
-      if (!argv['no-key']) {
-        record.key = key
-      }
-      if (!argv['no-metadata']) {
-        record.metadata = metadata
-      }
-      if (!argv['no-bins']) {
-        record.bins = bins
-      }
-      !argv.quiet && console.log('Found key ' + key.key + '.')
-      !argv.quiet && console.log(JSON.stringify(record, null, '    '))
-    } else if (err.code === Aerospike.status.ERR_RECORD_NOT_FOUND) {
-      !argv.quiet && console.log('Key ' + key.key + ' not found.')
-    } else {
-      throw err
-    }
-
-    iteration.next(run, client, done)
-  })
+  const results = await client.operate(key, ops)
+  console.info(results)
 }
 
-Aerospike.connect(config, function (err, client) {
-  if (err) throw err
-  run(client, function () {
-    client.close()
-  })
-})
+exports.command = 'operate <key>'
+exports.describe = 'Perform multiple operations on a single record'
+exports.handler = shared.run(operate)

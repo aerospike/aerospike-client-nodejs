@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -13,157 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
-// *****************************************************************************
-// Select bins of a record.
-// *****************************************************************************
+//
 const Aerospike = require('aerospike')
-const fs = require('fs')
-const yargs = require('yargs')
-const iteration = require('./iteration')
+const shared = require('./shared')
 
-// *****************************************************************************
-// Options parsing
-// *****************************************************************************
+shared.cli.checkMainRunner(module)
 
-var argp = yargs
-  .usage('$0 [options] key bin [bin ...]')
-  .options({
-    help: {
-      boolean: true,
-      describe: 'Display this message.'
-    },
-    quiet: {
-      alias: 'q',
-      boolean: true,
-      describe: 'Do not display content.'
-    },
-    host: {
-      alias: 'h',
-      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
-      describe: 'Aerospike database address.'
-    },
-    timeout: {
-      alias: 't',
-      default: 1000,
-      describe: 'Timeout in milliseconds.'
-    },
-    'log-level': {
-      alias: 'l',
-      default: Aerospike.log.INFO,
-      describe: 'Log level [0-5]'
-    },
-    'log-file': {
-      default: undefined,
-      describe: 'Path to a file send log messages to.'
-    },
-    namespace: {
-      alias: 'n',
-      default: 'test',
-      describe: 'Namespace for the keys.'
-    },
-    set: {
-      alias: 's',
-      default: 'demo',
-      describe: 'Set for the keys.'
-    },
-    'key': {
-      boolean: true,
-      default: true,
-      describe: "Display the record's key."
-    },
-    'metadata': {
-      boolean: true,
-      default: true,
-      describe: "Display the record's metadata."
-    },
-    'bins': {
-      boolean: true,
-      default: true,
-      describe: "Display the record's bins."
-    },
-    user: {
-      alias: 'U',
-      default: null,
-      describe: 'Username to connect to secured cluster'
-    },
-    password: {
-      alias: 'P',
-      default: null,
-      describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
-    }
-  })
-
-var argv = argp.argv
-var keyv = argv._.shift()
-var bins = argv._
-
-if (argv.help === true) {
-  argp.showHelp()
-  process.exit(0)
+async function select (client, argv) {
+  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
+  const bins = await client.select(key, argv.binNames)
+  console.info(bins)
 }
 
-if (!keyv) {
-  console.error('Error: Please provide a key for the operation')
-  console.error()
-  argp.showHelp()
-  process.exit(1)
-}
-
-if (bins.length === 0) {
-  console.error('Error: Please provide one or more bins to select.')
-  console.error()
-  argp.showHelp()
-  process.exit(1)
-}
-
-iteration.setLimit(argv.iterations)
-
-// *****************************************************************************
-// Configure the client.
-// *****************************************************************************
-
-var config = {
-  hosts: argv.host,
-  log: {
-    level: argv['log-level'],
-    file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
-  },
-  policies: {
-    timeout: argv.timeout
-  },
-  user: argv.user,
-  password: argv.password
-}
-
-// *****************************************************************************
-// Perform the operation
-// *****************************************************************************
-
-function run (client, done) {
-  var key = new Aerospike.Key(argv.namespace, argv.set, keyv + iteration.current())
-
-  client.select(key, bins, function (err, record) {
-    if (!err) {
-      !argv.quiet && console.log('Found key ' + key.key + '.')
-      !argv.quiet && console.log(JSON.stringify(record, null, '    '))
-    } else if (err.code === Aerospike.status.ERR_RECORD_NOT_FOUND) {
-      !argv.quiet && console.log('Key ' + key.key + ' does not exist.')
-    } else {
-      throw err
-    }
-    iteration.next(run, client, done)
-  })
-}
-
-Aerospike.connect(config, function (err, client) {
-  if (err) throw err
-  run(client, function () {
-    client.close()
-  })
-})
+exports.command = 'select <key> <binNames...>'
+exports.describe = 'Fetch specified bins for a record from the database'
+exports.handler = shared.run(select)

@@ -1,22 +1,32 @@
+#!/usr/bin/env node
+// *****************************************************************************
+// Copyright 2013-2018 Aerospike, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License")
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// *****************************************************************************
+
 const Aerospike = require('aerospike')
 const shared = require('./shared')
 
+shared.cli.checkMainRunner(module)
+
 async function put (client, argv) {
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  const bins = parseBins(argv.bins)
+  const bins = shared.cli.parseBins(argv.bins)
   const meta = buildMeta(argv)
   const policy = buildPolicy(argv)
   console.info(key, bins, meta, policy)
   await client.put(key, bins, meta, policy)
-}
-
-// @param { String[] } binStrs - list of "<name>=<value>" pairs
-function parseBins (binStrs) {
-  return binStrs.reduce((bins, current) => {
-    let [name, value] = current.split('=')
-    bins[name] = value
-    return bins
-  }, {})
 }
 
 function buildMeta (argv) {
@@ -42,7 +52,7 @@ function buildPolicy (argv) {
 }
 
 exports.command = 'put <key> <bins...>'
-exports.describe = 'Write a record to the database. <bins> should be a list of one or more "<bin>=<value>" pairs, e.g. `node . put <key> s=foo i=42`.'
+exports.describe = 'Write a record to the database.'
 exports.handler = shared.run(put)
 exports.builder = {
   'time-to-live': {

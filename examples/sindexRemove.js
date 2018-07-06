@@ -14,18 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
+//
 const Aerospike = require('aerospike')
 const shared = require('./shared')
 
 shared.cli.checkMainRunner(module)
 
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+async function sindexRemove (client, argv) {
+  await client.indexRemove(argv.namespace, argv.index)
+  console.info(`Removing index "${argv.index}"`)
 }
 
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)
+exports.command = 'sindexRemove <index>'
+exports.describe = 'Remove a secondary index'
+exports.handler = shared.run(sindexRemove)

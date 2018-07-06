@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // *****************************************************************************
 // Copyright 2018 Aerospike, Inc.
 //
@@ -19,10 +20,18 @@ const path = require('path')
 const yargs = require('yargs')
 
 const VERSION = require('../package.json')['version']
-const commands = [ 'get', 'put' ]
+const commands = [ 'add', 'get', 'put', 'remove', 'exists', 'operate',
+  'append', 'prepend', 'info', 'select', 'sindexCreate', 'sindexRemove' ]
+
+const squish = (str) => str.replace(/(^\ +|\ +$)/gm, '').trim()
 
 const argv = yargs
-  .usage('To run one of the provided examples, execute `node . <example>`. To get more help for a specific example, execute `node . <example> --help`')
+  .usage(squish(`
+    To execute one of the provided examples, run "node run <example>".
+    To get more help for a specific example, run "node run <example> --help"
+
+    Commands that take <bins>, expect one or <name>=<value> pairs, e.g. "node run put myKey s=foo i=42 f=1.69".
+    `))
   .option('quiet', {
     alias: 'q',
     describe: 'Do not display content',
@@ -89,6 +98,13 @@ const argv = yargs
     describe: 'Enable more informative stacktraces in case of an error',
     default: true
   })
+
+  .example(
+    'put joe name=Joe age=42',
+    'Creates/updates a record under the key "joe" with two bins "name" and "age".')
+  .example(
+    'put --update joe name=Joe age=42',
+    'Updates an existing record under the key "joe"; fails if the record does not exist.')
 
   .commandDir('./', {
     include: filename => commands.some(cmd => cmd === path.basename(filename, '.js'))

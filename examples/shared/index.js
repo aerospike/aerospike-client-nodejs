@@ -16,3 +16,4 @@
 
 exports.client = require('./client')
 exports.run = require('./run')
+exports.cli = require('./cli')

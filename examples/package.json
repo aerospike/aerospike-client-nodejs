@@ -9,6 +9,7 @@
   "engines": {
     "node": ">=4"
   },
+  "main": "run.js",
   "dependencies": {
     "aerospike": "file:..",
     "yargs": "^10.1.1"
