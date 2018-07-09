@@ -16,7 +16,7 @@
 
 'use strict'
 
-/* global describe, it, beforeEach */
+/* eslint-env mocha */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -32,13 +32,9 @@ const recgen = helper.recgen
 const putgen = helper.putgen
 
 describe('client.truncate()', function () {
-  var client = helper.client
+  helper.cluster.skip_unless_version('3.12.0', this)
 
-  beforeEach(function () {
-    if (!helper.cluster.build_gte('3.12.0')) {
-      this.skip('truncate ns/set feature not supported')
-    }
-  })
+  var client = helper.client
 
   // Generates a number of records; the callback function is called with a list
   // of the record keys.

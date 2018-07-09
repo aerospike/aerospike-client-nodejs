@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it, beforeEach, before, after, context */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const Query = require('../lib/query')
@@ -218,11 +219,7 @@ describe('Queries', function () {
     })
 
     context('with nobins set to true', function () {
-      beforeEach(function () {
-        if (!helper.cluster.build_gte('3.15.0')) {
-          this.skip('query with nobins flag not supported')
-        }
-      })
+      helper.cluster.skip_unless_version('3.15.0', this)
 
       it('should return only meta data', function (done) {
         var query = client.query(helper.namespace, testSet)

@@ -30,6 +30,8 @@ const status = Aerospike.status
 const eql = require('deep-eql')
 
 describe('client.operate() - CDT List operations', function () {
+  helper.cluster.skip_unless_supports_feature('cdt-list', this)
+
   let client = helper.client
 
   class State {
@@ -89,6 +91,10 @@ describe('client.operate() - CDT List operations', function () {
     return function (state) {
       return state.enrich('result', client.operate(state.key, ops))
     }
+  }
+
+  function orderList (bin) {
+    return operate(lists.setOrder(bin, lists.order.ORDERED))
   }
 
   function assertResultEql (expected) {
@@ -414,6 +420,34 @@ describe('client.operate() - CDT List operations', function () {
     })
   })
 
+  describe('lists.removeByValueRelRankRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('removes all items nearest to value and greater, by relative rank', function () {
+        return initState()
+          .then(createRecord({ list: [0, 4, 5, 9, 11, 15] }))
+          .then(orderList('list'))
+          .then(operate(lists.removeByValueRelRankRange('list', 5, 0, 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [5, 9] }))
+          .then(assertRecordEql({ list: [0, 4, 11, 15] }))
+          .then(cleanup)
+      })
+    })
+
+    context('without count', function () {
+      it('removes all items nearest to value and greater, by relative rank', function () {
+        return initState()
+          .then(createRecord({ list: [0, 4, 5, 9, 11, 15] }))
+          .then(orderList('list'))
+          .then(operate(lists.removeByValueRelRankRange('list', 5, 0).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [5, 9, 11, 15] }))
+          .then(assertRecordEql({ list: [0, 4] }))
+          .then(cleanup)
+      })
+    })
+  })
+
   describe('lists.removeByRank', function () {
     context('returnType=VALUE', function () {
       it('removes the item with the specified list rank and returns the value', function () {
@@ -586,6 +620,31 @@ describe('client.operate() - CDT List operations', function () {
     })
   })
 
+  describe('lists.getByValueRelRankRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('fetches all items nearest to value and greater, by relative rank', function () {
+        return initState()
+          .then(createRecord({ list: [0, 4, 5, 9, 11, 15] }))
+          .then(orderList('list'))
+          .then(operate(lists.getByValueRelRankRange('list', 5, 0, 2).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [5, 9] }))
+          .then(cleanup)
+      })
+    })
+    context('without count', function () {
+      it('fetches all items nearest to value and greater, by relative rank', function () {
+        return initState()
+          .then(createRecord({ list: [0, 4, 5, 9, 11, 15] }))
+          .then(orderList('list'))
+          .then(operate(lists.getByValueRelRankRange('list', 5, 0).andReturn(lists.returnType.VALUE)))
+          .then(assertResultEql({ list: [5, 9, 11, 15] }))
+          .then(cleanup)
+      })
+    })
+  })
+
   describe('lists.getByRank', function () {
     context('returnType=VALUE', function () {
       it('fetches the item with the specified list rank and returns the value', function () {
@@ -611,11 +670,7 @@ describe('client.operate() - CDT List operations', function () {
   })
 
   describe('lists.increment', function () {
-    beforeEach(function () {
-      if (!helper.cluster.build_gte('3.15.0')) {
-        this.skip('list increment operation not supported')
-      }
-    })
+    helper.cluster.skip_unless_version('3.15.0', this)
 
     it('increments the element at the specified index and returns the final value', function () {
       return initState()
@@ -636,8 +691,6 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('ordered lists', function () {
-      let orderList = bin => operate(lists.setOrder(bin, lists.order.ORDERED))
-
       it('reorders the list with the incremented value', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))

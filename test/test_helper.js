@@ -112,16 +112,32 @@ function ServerInfoHelper () {
   this.cluster = []
 }
 
-ServerInfoHelper.prototype.supports_feature = function (feature) {
-  return this.features.has(feature)
+ServerInfoHelper.prototype.skip_unless_supports_feature = function (feature, ctx) {
+  let cluster = this
+  ctx.beforeEach(function () {
+    if (!cluster.features.has(feature)) {
+      this.skip('requires server feature "' + feature + '"')
+    }
+  })
 }
 
-ServerInfoHelper.prototype.is_enterprise = function () {
-  return this.edition.match('Enterprise')
+ServerInfoHelper.prototype.skip_unless_enterprise = function (ctx) {
+  let cluster = this
+  ctx.beforeEach(function () {
+    if (!cluster.edition.match('Enterprise')) {
+      this.skip('requires enterprise edition')
+    }
+  })
 }
 
-ServerInfoHelper.prototype.build_gte = function (minVer) {
-  return semver.compare(this.build, minVer) >= 0
+ServerInfoHelper.prototype.skip_unless_version = function (minVer, ctx) {
+  let cluster = this
+  ctx.beforeEach(function () {
+    let build = process.env.AEROSPIKE_VERSION_OVERRIDE || cluster.build
+    if (semver.compare(build, minVer) < 0) {
+      this.skip('requires server version ' + minVer + ' or later')
+    }
+  })
 }
 
 ServerInfoHelper.prototype.fetch_info = function () {
