@@ -41,6 +41,14 @@ Local<Object> map_enum_values()
 	set(write_mode, "UPDATE_ONLY",		AS_MAP_UPDATE_ONLY);
 	set(write_mode, "CREATE_ONLY",		AS_MAP_CREATE_ONLY);
 
+	// as_map_write_flags
+	Local<Object> write_flags = Nan::New<Object>();
+	set(write_flags, "DEFAULT",			AS_MAP_WRITE_DEFAULT);
+	set(write_flags, "CREATE_ONLY",		AS_MAP_WRITE_CREATE_ONLY);
+	set(write_flags, "UPDATE_ONLY",		AS_MAP_WRITE_UPDATE_ONLY);
+	set(write_flags, "NO_FAIL",			AS_MAP_WRITE_NO_FAIL);
+	set(write_flags, "PARTIAL",			AS_MAP_WRITE_PARTIAL);
+
 	// as_map_return_type
 	Local<Object> return_type = Nan::New<Object>();
 	set(return_type, "NONE",			AS_MAP_RETURN_NONE);
@@ -56,6 +64,7 @@ Local<Object> map_enum_values()
 	Local<Object> enums = Nan::New<Object>();
 	enums->Set(Nan::New("order").ToLocalChecked(), order);
 	enums->Set(Nan::New("writeMode").ToLocalChecked(), write_mode);
+	enums->Set(Nan::New("writeFlags").ToLocalChecked(), write_flags);
 	enums->Set(Nan::New("returnType").ToLocalChecked(), return_type);
 	return scope.Escape(enums);
 }

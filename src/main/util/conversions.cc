@@ -105,6 +105,23 @@ int get_int_property(int* intp, Local<Object> obj, char const* prop, const LogIn
 	return AS_NODE_PARAM_OK;
 }
 
+int get_optional_int_property(int* intp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (value->IsNumber()) {
+		if (defined != NULL) (*defined) = true;
+		(*intp) = value->IntegerValue();
+		as_v8_detail(log, "%s => (int) %d", prop, *intp);
+	} else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL) (*defined) = false;
+	} else {
+		as_v8_error(log, "Type error: %s property should be integer", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const LogInfo* log)
 {
 	Nan::HandleScope scope;
