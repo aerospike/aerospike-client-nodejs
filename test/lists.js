@@ -319,6 +319,38 @@ describe('client.operate() - CDT List operations', function () {
         })
       })
     })
+
+    context('with insert-bounded flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new Aerospike.ListPolicy({
+        writeFlags: lists.writeFlags.INSERT_BOUNDED
+      })
+
+      it('returns an error when trying to insert an item outside the current bounds of the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.insert('list', 10, 99, policy)))
+          .then(assertError(status.ERR_REQUEST_INVALID))
+          .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new Aerospike.ListPolicy({
+          writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
+        })
+
+        it('does not insert an item outside bounds, but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insert('list', 10, 99, policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
+      })
+    })
   })
 
   describe('lists.insertItems', function () {
@@ -383,6 +415,38 @@ describe('client.operate() - CDT List operations', function () {
               .then(assertRecordEql({ list: [1, 2, 99, 3, 4, 5] }))
               .then(cleanup)
           })
+        })
+      })
+    })
+
+    context('with insert-bounded flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new Aerospike.ListPolicy({
+        writeFlags: lists.writeFlags.INSERT_BOUNDED
+      })
+
+      it('returns an error when trying to insert items outside the current bounds of the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.insertItems('list', 10, [99, 100], policy)))
+          .then(assertError(status.ERR_REQUEST_INVALID))
+          .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new Aerospike.ListPolicy({
+          writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
+        })
+
+        it('does not insert the items outside bounds, but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insertItems('list', 10, [99, 100], policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
         })
       })
     })
