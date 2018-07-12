@@ -212,6 +212,47 @@ describe('client.operate() - CDT Map operations', function () {
       })
     })
 
+    context('with update-only flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new maps.MapPolicy({
+        writeFlags: maps.writeFlags.UPDATE_ONLY
+      })
+
+      it('overwrites an existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(operate(maps.put('map', 'b', 99, policy)))
+          .then(assertResultEql({ map: 3 }))
+          .then(assertRecordEql({ map: {a: 1, b: 99, c: 3} }))
+          .then(cleanup())
+      })
+
+      it('fails to write a non-existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(expectError())
+          .then(operate(maps.put('map', 'd', 99, policy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_NOT_FOUND))
+          .then(cleanup())
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new maps.MapPolicy({
+          writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
+        })
+
+        it('does not add the item but returns ok', function () {
+          return initState()
+            .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+            .then(operate(maps.put('map', 'd', 99, policy)))
+            .then(assertResultEql({ map: 3 }))
+            .then(assertRecordEql({ map: {a: 1, b: 2, c: 3} }))
+            .then(cleanup())
+        })
+      })
+    })
+
     context('create-only write mode', function () {
       let createOnlyPolicy = new maps.MapPolicy({
         writeMode: maps.writeMode.CREATE_ONLY
@@ -235,6 +276,47 @@ describe('client.operate() - CDT Map operations', function () {
           .then(cleanup())
       })
     })
+
+    context('with create-only flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new maps.MapPolicy({
+        writeFlags: maps.writeFlags.CREATE_ONLY
+      })
+
+      it('fails to overwrite an existing key', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(expectError())
+          .then(operate(maps.put('map', 'b', 99, policy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
+          .then(cleanup())
+      })
+
+      it('creates a new key if it does not exist', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+          .then(operate(maps.put('map', 'd', 99, policy)))
+          .then(assertResultEql({ map: 4 }))
+          .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 99} }))
+          .then(cleanup())
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new maps.MapPolicy({
+          writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
+        })
+
+        it('does not update the item but returns ok', function () {
+          return initState()
+            .then(createRecord({ map: {a: 1, b: 2, c: 3} }))
+            .then(operate(maps.put('map', 'b', 99, policy)))
+            .then(assertResultEql({ map: 3 }))
+            .then(assertRecordEql({ map: {a: 1, b: 2, c: 3} }))
+            .then(cleanup())
+        })
+      })
+    })
   })
 
   describe('maps.putItems', function () {
@@ -245,6 +327,100 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: 4 }))
         .then(assertRecordEql({ map: {a: 1, b: 2, c: 99, d: 100} }))
         .then(cleanup())
+    })
+
+    context('with update-only flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new maps.MapPolicy({
+        writeFlags: maps.writeFlags.UPDATE_ONLY
+      })
+
+      it('fails if any of the items do not yet exist in the map', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+          .then(expectError())
+          .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_NOT_FOUND))
+          .then(cleanup())
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new maps.MapPolicy({
+          writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
+        })
+
+        it('does not update the map but returns ok', function () {
+          return initState()
+            .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+            .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+            .then(assertResultEql({ map: 5 }))
+            .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+            .then(cleanup())
+        })
+
+        context('with partial flag', function () {
+          let policy = new maps.MapPolicy({
+            writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
+          })
+
+          it('updates only the existing items', function () {
+            return initState()
+              .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+              .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+              .then(assertResultEql({ map: 5 }))
+              .then(assertRecordEql({ map: {a: 1, b: 2, c: 10, d: 4, e: 5} }))
+              .then(cleanup())
+          })
+        })
+      })
+    })
+
+    context('with create-only flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new maps.MapPolicy({
+        writeFlags: maps.writeFlags.CREATE_ONLY
+      })
+
+      it('fails if any of the items already exist in the map', function () {
+        return initState()
+          .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+          .then(expectError())
+          .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
+          .then(cleanup())
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new maps.MapPolicy({
+          writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
+        })
+
+        it('does not update the map but returns ok', function () {
+          return initState()
+            .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+            .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+            .then(assertResultEql({ map: 5 }))
+            .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+            .then(cleanup())
+        })
+
+        context('with partial flag', function () {
+          let policy = new maps.MapPolicy({
+            writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
+          })
+
+          it('adds only the keys that do not exist yet', function () {
+            return initState()
+              .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4, e: 5} }))
+              .then(operate(maps.putItems('map', { c: 10, x: 100 }, policy)))
+              .then(assertResultEql({ map: 6 }))
+              .then(assertRecordEql({ map: {a: 1, b: 2, c: 3, d: 4, e: 5, x: 100} }))
+              .then(cleanup())
+          })
+        })
+      })
     })
   })
 

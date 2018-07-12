@@ -114,29 +114,31 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 	}
 	Local<Object> policy_obj = maybe_policy_obj->ToObject();
 
-	as_map_order order;
-	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
-	if (value->IsNumber()) {
-		order = (as_map_order) value->IntegerValue();
-	} else if (value->IsUndefined()) {
-		order = AS_MAP_UNORDERED;
-	} else {
-		as_v8_error(log, "Type error: order should be integer");
+	as_map_order order = AS_MAP_UNORDERED;
+	bool order_set = false;
+	if (get_optional_int_property((int *) &order, &order_set, policy_obj, "order", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_map_write_mode write_mode;
-	value = policy_obj->Get(Nan::New("writeMode").ToLocalChecked());
-	if (value->IsNumber()) {
-		write_mode = (as_map_write_mode) value->IntegerValue();
-	} else if (value->IsUndefined()) {
-		write_mode = AS_MAP_UPDATE;
-	} else {
-		as_v8_error(log, "Type error: writeMode should be integer");
+	as_map_write_mode write_mode = AS_MAP_UPDATE;
+	bool write_mode_set = false;
+	if (get_optional_int_property((int *) &write_mode, &write_mode_set, policy_obj, "writeMode", log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_map_policy_set(policy, order, write_mode);
+	uint32_t write_flags = AS_MAP_WRITE_DEFAULT;
+	bool write_flags_set = false;
+	if (get_optional_uint32_property(&write_flags, &write_flags_set, policy_obj, "writeFlags", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (write_flags_set) {
+		as_v8_detail(log, "Setting map policy from write flags: order=%i, flags=%i", order, write_flags);
+		as_map_policy_set_flags(policy, order, write_flags);
+	} else {
+		as_v8_detail(log, "Setting map policy from write mode: order=%i, mode=%i", order, write_mode);
+		as_map_policy_set(policy, order, write_mode);
+	}
 	return AS_NODE_PARAM_OK;
 }
 

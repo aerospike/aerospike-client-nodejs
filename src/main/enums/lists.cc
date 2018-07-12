@@ -44,6 +44,8 @@ Local<Object> list_enum_values()
 	set(write_flags, "DEFAULT", AS_LIST_WRITE_DEFAULT);
 	set(write_flags, "ADD_UNIQUE", AS_LIST_WRITE_ADD_UNIQUE);
 	set(write_flags, "INSERT_BOUNDED", AS_LIST_WRITE_INSERT_BOUNDED);
+	set(write_flags, "NO_FAIL", AS_LIST_WRITE_NO_FAIL);
+	set(write_flags, "PARTIAL", AS_LIST_WRITE_PARTIAL);
 
 	// as_list_return_type
 	Local<Object> return_type = Nan::New<Object>();

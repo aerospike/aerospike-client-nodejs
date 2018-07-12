@@ -178,14 +178,35 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-    context('add-unique policy', function () {
+    context('with add-unique flag', function () {
+      let policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
       it('returns an error when trying to append a non-unique element', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
           .then(expectError())
-          .then(operate(lists.append('list', 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.append('list', 3, policy)))
           .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.cluster.skip_unless_version('4.3.0', this)
+
+        let policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('returns an error when trying to append a non-unique element', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.append('list', 3, policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -209,14 +230,50 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-    context('add-unique policy', function () {
-      it('does not append items that already exist in the list', function () {
+    context('with add-unique flag', function () {
+      let policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
+      it('returns an error when appending duplicate items', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
           .then(expectError())
-          .then(operate(lists.appendItems('list', [3, 6], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.appendItems('list', [3, 6], policy)))
           .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.cluster.skip_unless_version('4.3.0', this)
+
+        let policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('does not append any items but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.appendItems('list', [3, 6], policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
+
+        context('with partial flag', function () {
+          let policy = {
+            writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL | lists.writeFlags.PARTIAL
+          }
+
+          it('appends only the unique items', function () {
+            return initState()
+              .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+              .then(operate(lists.appendItems('list', [3, 6], policy)))
+              .then(assertResultEql({ list: 6 }))
+              .then(assertRecordEql({ list: [1, 2, 3, 4, 5, 6] }))
+              .then(cleanup)
+          })
+        })
       })
     })
   })
@@ -231,14 +288,67 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-    context('add-unique policy', function () {
+    context('with add-unique flag', function () {
+      let policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
       it('returns an error when trying to insert a non-unique element', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
           .then(expectError())
-          .then(operate(lists.insert('list', 2, 3, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.insert('list', 2, 3, policy)))
           .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.cluster.skip_unless_version('4.3.0', this)
+
+        let policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('does not insert the item but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insert('list', 2, 3, policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
+      })
+    })
+
+    context('with insert-bounded flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new Aerospike.ListPolicy({
+        writeFlags: lists.writeFlags.INSERT_BOUNDED
+      })
+
+      it('returns an error when trying to insert an item outside the current bounds of the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.insert('list', 10, 99, policy)))
+          .then(assertError(status.ERR_REQUEST_INVALID))
+          .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new Aerospike.ListPolicy({
+          writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
+        })
+
+        it('does not insert an item outside bounds, but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insert('list', 10, 99, policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -262,14 +372,82 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-    context('add-unique policy', function () {
-      it('does not insert items that already exist in the list', function () {
+    context('with add-unique flag', function () {
+      let policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
+      it('returns an error when trying to insert items that already exist in the list', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
           .then(expectError())
-          .then(operate(lists.insertItems('list', 2, [3, 99], { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.insertItems('list', 2, [3, 99], policy)))
           .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.cluster.skip_unless_version('4.3.0', this)
+
+        let policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('does not insert any items but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insertItems('list', 2, [3, 99], policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
+
+        context('with partial flag', function () {
+          let policy = {
+            writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL | lists.writeFlags.PARTIAL
+          }
+
+          it('inserts only the unique items', function () {
+            return initState()
+              .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+              .then(operate(lists.insertItems('list', 2, [3, 99], policy)))
+              .then(assertResultEql({ list: 6 }))
+              .then(assertRecordEql({ list: [1, 2, 99, 3, 4, 5] }))
+              .then(cleanup)
+          })
+        })
+      })
+    })
+
+    context('with insert-bounded flag', function () {
+      helper.cluster.skip_unless_version('4.3.0', this)
+
+      let policy = new Aerospike.ListPolicy({
+        writeFlags: lists.writeFlags.INSERT_BOUNDED
+      })
+
+      it('returns an error when trying to insert items outside the current bounds of the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.insertItems('list', 10, [99, 100], policy)))
+          .then(assertError(status.ERR_REQUEST_INVALID))
+          .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        let policy = new Aerospike.ListPolicy({
+          writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
+        })
+
+        it('does not insert the items outside bounds, but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.insertItems('list', 10, [99, 100], policy)))
+            .then(assertResultEql({ list: 5 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -702,14 +880,37 @@ describe('client.operate() - CDT List operations', function () {
       })
     })
 
-    context('add-unique policy', function () {
+    context('with add-unique flag', function () {
+      let policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
       it('fails with an error if the incremented number already exists in the list', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 4, 5] }))
           .then(expectError())
-          .then(operate(lists.increment('list', 2, 1, { writeFlags: lists.writeFlags.ADD_UNIQUE })))
+          .then(operate(lists.increment('list', 2, 1, policy)))
           .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
           .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.cluster.skip_unless_version('4.3.0', this)
+
+        let policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('does not increment the item but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.increment('list', 2, 1, policy)))
+            // Note: Operation returns post-increment value even though
+            // operation was not executed due to add-unique constraint!
+            .then(assertResultEql({ list: 4 }))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
       })
     })
   })
