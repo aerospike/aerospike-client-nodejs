@@ -33,8 +33,9 @@ exports.parseBins = function (binStrs) {
 // (./index.js); if directly, invoke the runner instead and pass the command
 // line arguments.
 exports.checkMainRunner = function (mod) {
-  if (require.main !== mod)
+  if (require.main !== mod) {
     return
+  }
 
   let example = process.argv[1]
   let runner = path.join(example, '../run.js')

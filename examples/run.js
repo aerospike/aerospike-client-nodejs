@@ -15,7 +15,6 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
 const path = require('path')
 const yargs = require('yargs')
 
@@ -23,9 +22,9 @@ const VERSION = require('../package.json')['version']
 const commands = [ 'add', 'get', 'put', 'remove', 'exists', 'operate',
   'append', 'prepend', 'info', 'select', 'sindexCreate', 'sindexRemove' ]
 
-const squish = (str) => str.replace(/(^\ +|\ +$)/gm, '').trim()
+const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()
 
-const argv = yargs
+yargs
   .usage(squish(`
     To execute one of the provided examples, run "node run <example>".
     To get more help for a specific example, run "node run <example> --help"
@@ -38,9 +37,9 @@ const argv = yargs
     boolean: true
   })
 
-  //================================================================
+  // ================================================================
   // 'Connection' options
-  //================================================================
+  // ================================================================
   .option('hosts', {
     alias: 'h',
     describe: 'List of cluster seed hosts',
@@ -56,12 +55,12 @@ const argv = yargs
   .option('user', {
     alias: 'u',
     describe: 'Username to connect to secured cluster',
-    group: 'Connect:',
+    group: 'Connect:'
   })
   .option('password', {
     alias: 'P',
     describe: 'Password to connect to secured clsuter',
-    group: 'Connect:',
+    group: 'Connect:'
   })
   .option('timeout', {
     alias: 't',
@@ -70,9 +69,9 @@ const argv = yargs
     default: 1000
   })
 
-  //================================================================
+  // ================================================================
   // 'Database' options
-  //================================================================
+  // ================================================================
   .option('namespace', {
     alias: 'n',
     describe: 'Aerospike database namespace for the keys',
@@ -86,9 +85,9 @@ const argv = yargs
     default: 'demo'
   })
 
-  //================================================================
+  // ================================================================
   // 'Debug' options
-  //================================================================
+  // ================================================================
   .option('verbose', {
     alias: 'v',
     describe: 'Enable more verbose logging',

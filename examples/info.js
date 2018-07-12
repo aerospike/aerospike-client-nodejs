@@ -15,7 +15,6 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
 const shared = require('./shared')
 
 shared.cli.checkMainRunner(module)

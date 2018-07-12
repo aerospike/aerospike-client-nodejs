@@ -33,16 +33,16 @@ async function sindexCreate (client, argv) {
     case 'NUMERIC':
     case 'INTEGER':
     case 'DOUBLE':
-      type = "NUMERIC"
+      type = 'NUMERIC'
       options.datatype = Aerospike.indexDataType.NUMERIC
       break
     case 'STRING':
-      type = "STRING"
+      type = 'STRING'
       options.datatype = Aerospike.indexDataType.STRING
       break
     case 'GEO':
     case 'GEO2DSPHERE':
-      type = "GEO2DSPHERE"
+      type = 'GEO2DSPHERE'
       options.datatype = Aerospike.indexDataType.GEO2DSPHERE
       break
     default:

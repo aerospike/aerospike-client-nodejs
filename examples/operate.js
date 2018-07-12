@@ -22,7 +22,7 @@ const lists = Aerospike.lists
 
 shared.cli.checkMainRunner(module)
 
-function randomInt(max) {
+function randomInt (max) {
   return Math.floor(Math.random() * Math.floor(max))
 }
 
