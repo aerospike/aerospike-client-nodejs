@@ -82,29 +82,20 @@ describe('client.remove()', function () {
     })
   })
 
-  it('should apply the durable delete policy', function (done) {
-    if (!helper.cluster.is_enterprise()) {
-      return this.skip('durable delete requires enterprise edition')
-    }
-    let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
-    let meta = { ttl: 1000 }
-    let record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
-    let policy = new Aerospike.RemovePolicy({
-      durableDelete: true
-    })
+  context('with durable delete policy', function () {
+    helper.cluster.skip_unless_enterprise(this)
 
-    client.put(key, record, meta, function (err) {
-      if (err) throw err
-
-      client.remove(key, policy, function (err) {
-        if (err) throw err
-
-        client.exists(key, function (error, result) {
-          if (error) throw error
-          expect(result).to.be.false()
-          done()
-        })
+    it('should apply the durable delete policy', function () {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
+      let record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+      let policy = new Aerospike.RemovePolicy({
+        durableDelete: true
       })
+
+      return client.put(key, record)
+        .then(() => client.remove(key, policy))
+        .then(() => client.exists(key))
+        .then(result => expect(result).to.be.false())
     })
   })
 })

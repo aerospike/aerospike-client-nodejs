@@ -29,13 +29,9 @@ const status = Aerospike.status
 const eql = require('deep-eql')
 
 describe('client.operate() - CDT Map operations', function () {
-  var client = helper.client
+  helper.cluster.skip_unless_supports_feature('cdt-map', this)
 
-  beforeEach(function () {
-    if (!helper.cluster.supports_feature('cdt-map')) {
-      this.skip('cdt-maps feature not supported')
-    }
-  })
+  let client = helper.client
 
   class State {
     enrich (name, promise) {
@@ -87,14 +83,6 @@ describe('client.operate() - CDT Map operations', function () {
     }
   }
 
-  function setMapPolicy (bin, policyValues) {
-    return function (state) {
-      let policy = new maps.MapPolicy(policyValues)
-      let ops = [maps.setPolicy(bin, policy)]
-      return state.passthrough(client.operate(state.key, ops))
-    }
-  }
-
   function operate (ops) {
     if (!Array.isArray(ops)) {
       ops = [ops]
@@ -102,6 +90,20 @@ describe('client.operate() - CDT Map operations', function () {
     return function (state) {
       return state.enrich('result', client.operate(state.key, ops))
     }
+  }
+
+  function orderByKey (bin) {
+    let policy = new maps.MapPolicy({
+      order: maps.order.KEY_ORDERED
+    })
+    return operate(maps.setPolicy(bin, policy))
+  }
+
+  function orderByKeyValue (bin) {
+    let policy = new maps.MapPolicy({
+      order: maps.order.KEY_VALUE_ORDERED
+    })
+    return operate(maps.setPolicy(bin, policy))
   }
 
   function assertResultEql (expected) {
@@ -142,7 +144,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('changes the map order', function () {
       return initState()
         .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
-        .then(setMapPolicy('map', { order: maps.order.KEY_ORDERED }))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKeyRange('map', 'a', 'z', maps.returnType.KEY)))
         .then(assertResultEql({ map: ['a', 'b', 'c'] }))
         .then(cleanup())
@@ -338,14 +340,10 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.removeByKeyRange', function () {
-    let keyOrderedPolicy = new maps.MapPolicy({
-      order: maps.order.KEY_ORDERED
-    })
-
     it('removes map entries identified by key range', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.removeByKeyRange('map', 'b', 'd', maps.returnType.VALUE)))
         .then(assertResultEql({ map: [2, 3] }))
         .then(assertRecordEql({ map: {a: 1, d: 4} }))
@@ -355,7 +353,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('removes all keys from the specified start key until the end', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.removeByKeyRange('map', 'b', null, maps.returnType.VALUE)))
         .then(assertResultEql({ map: [2, 3, 4] }))
         .then(assertRecordEql({ map: {a: 1} }))
@@ -365,11 +363,39 @@ describe('client.operate() - CDT Map operations', function () {
     it('removes all keys from the start to the specified end', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.removeByKeyRange('map', null, 'b', maps.returnType.VALUE)))
         .then(assertResultEql({ map: [1] }))
         .then(assertRecordEql({ map: {b: 2, c: 3, d: 4} }))
         .then(cleanup())
+    })
+  })
+
+  describe('maps.removeByKeyRelIndexRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('removes map entries nearest to key and greater, by index', function () {
+        return initState()
+          .then(createRecord({ map: {a: 17, e: 2, f: 15, j: 10} }))
+          .then(orderByKey('map'))
+          .then(operate(maps.removeByKeyRelIndexRange('map', 'f', 0, 1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['f'] }))
+          .then(assertRecordEql({ map: {a: 17, e: 2, j: 10} }))
+          .then(cleanup())
+      })
+    })
+
+    context('without count', function () {
+      it('removes map entries nearest to key and greater, by index', function () {
+        return initState()
+          .then(createRecord({ map: {a: 17, e: 2, f: 15, j: 10} }))
+          .then(orderByKey('map'))
+          .then(operate(maps.removeByKeyRelIndexRange('map', 'f', 0).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['f', 'j'] }))
+          .then(assertRecordEql({ map: {a: 17, e: 2} }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -430,6 +456,34 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: [0] }))
         .then(assertRecordEql({ map: {b: 2, c: 3} }))
         .then(cleanup())
+    })
+  })
+
+  describe('maps.removeByValueRelRankRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('removes map entries nearest to value and greater by relative rank', function () {
+        return initState()
+          .then(createRecord({ map: {e: 2, j: 10, f: 15, a: 17} }))
+          .then(orderByKeyValue('map'))
+          .then(operate(maps.removeByValueRelRankRange('map', 11, 1, 1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['a'] }))
+          .then(assertRecordEql({ map: {e: 2, j: 10, f: 15} }))
+          .then(cleanup())
+      })
+    })
+
+    context('without count', function () {
+      it('removes map entries nearest to value and greater by relative rank', function () {
+        return initState()
+          .then(createRecord({ map: {e: 2, j: 10, f: 15, a: 17} }))
+          .then(orderByKeyValue('map'))
+          .then(operate(maps.removeByValueRelRankRange('map', 11, -1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['j', 'f', 'a'] }))
+          .then(assertRecordEql({ map: {e: 2} }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -549,14 +603,10 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.getByKeyRange', function () {
-    let keyOrderedPolicy = new maps.MapPolicy({
-      order: maps.order.KEY_ORDERED
-    })
-
     it('fetches map entries identified by key range', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKeyRange('map', 'b', 'd', maps.returnType.KEY)))
         .then(assertResultEql({ map: ['b', 'c'] }))
         .then(cleanup())
@@ -565,7 +615,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('fetches all keys from the specified start key until the end', function () {
       return initState()
         .then(createRecord({ map: {a: 1, b: 2, c: 3, d: 4} }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKeyRange('map', 'b', null, maps.returnType.KEY)))
         .then(assertResultEql({ map: ['b', 'c', 'd'] }))
         .then(cleanup())
@@ -577,6 +627,32 @@ describe('client.operate() - CDT Map operations', function () {
         .then(operate(maps.getByKeyRange('map', null, 'b', maps.returnType.KEY)))
         .then(assertResultEql({ map: ['a'] }))
         .then(cleanup())
+    })
+  })
+
+  describe('maps.getByKeyRelIndexRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('retrieves map entries nearest to key and greater, by index', function () {
+        return initState()
+          .then(createRecord({ map: {a: 17, e: 2, f: 15, j: 10} }))
+          .then(orderByKey('map'))
+          .then(operate(maps.getByKeyRelIndexRange('map', 'f', 0, 1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['f'] }))
+          .then(cleanup())
+      })
+    })
+
+    context('without count', function () {
+      it('retrieves map entries nearest to key and greater, by index', function () {
+        return initState()
+          .then(createRecord({ map: {a: 17, e: 2, f: 15, j: 10} }))
+          .then(orderByKey('map'))
+          .then(operate(maps.getByKeyRelIndexRange('map', 'f', 0).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['f', 'j'] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -613,6 +689,32 @@ describe('client.operate() - CDT Map operations', function () {
         .then(operate(maps.getByValueRange('map', null, 2, maps.returnType.VALUE)))
         .then(assertResultEql({ map: [1] }))
         .then(cleanup())
+    })
+  })
+
+  describe('maps.getByValueRelRankRange', function () {
+    helper.cluster.skip_unless_version('4.3.0', this)
+
+    context('with count', function () {
+      it('retrieves map entries nearest to value and greater by relative rank', function () {
+        return initState()
+          .then(createRecord({ map: {e: 2, j: 10, f: 15, a: 17} }))
+          .then(orderByKeyValue('map'))
+          .then(operate(maps.getByValueRelRankRange('map', 11, 1, 1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['a'] }))
+          .then(cleanup())
+      })
+    })
+
+    context('without count', function () {
+      it('retrieves map entries nearest to value and greater by relative rank', function () {
+        return initState()
+          .then(createRecord({ map: {e: 2, j: 10, f: 15, a: 17} }))
+          .then(orderByKeyValue('map'))
+          .then(operate(maps.getByValueRelRankRange('map', 11, -1).andReturn(maps.returnType.KEY)))
+          .then(assertResultEql({ map: ['j', 'f', 'a'] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -705,14 +807,10 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   context('returnTypes', function () {
-    let keyOrderedPolicy = new maps.MapPolicy({
-      order: maps.order.KEY_ORDERED
-    })
-
     it('returns nothing', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKey('map', 'b', maps.returnType.NONE)))
         .then(assertResultEql({ map: null }))
         .then(cleanup())
@@ -721,7 +819,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns index', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKey('map', 'a', maps.returnType.INDEX)))
         .then(assertResultEql({ map: 0 }))
         .then(cleanup())
@@ -730,7 +828,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns reverse index', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKey('map', 'a', maps.returnType.REVERSE_INDEX)))
         .then(assertResultEql({ map: 2 }))
         .then(cleanup())
@@ -739,7 +837,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns value order (rank)', function () {
       return initState()
         .then(createRecord({ map: { a: 3, b: 2, c: 1 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKey('map', 'a', maps.returnType.RANK)))
         .then(assertResultEql({ map: 2 }))
         .then(cleanup())
@@ -748,7 +846,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns reverse value order (reverse rank)', function () {
       return initState()
         .then(createRecord({ map: { a: 3, b: 2, c: 1 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKey('map', 'a', maps.returnType.REVERSE_RANK)))
         .then(assertResultEql({ map: 0 }))
         .then(cleanup())
@@ -757,7 +855,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns count of items selected', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByKeyRange('map', 'a', 'c', maps.returnType.COUNT)))
         .then(assertResultEql({ map: 2 }))
         .then(cleanup())
@@ -766,7 +864,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key for a single read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndex('map', 0, maps.returnType.KEY)))
         .then(assertResultEql({ map: 'a' }))
         .then(cleanup())
@@ -775,7 +873,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns keys for range read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY)))
         .then(assertResultEql({ map: [ 'a', 'b' ] }))
         .then(cleanup())
@@ -784,7 +882,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns value for a single read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndex('map', 0, maps.returnType.VALUE)))
         .then(assertResultEql({ map: 1 }))
         .then(cleanup())
@@ -793,7 +891,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns values for range read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.VALUE)))
         .then(assertResultEql({ map: [ 1, 2 ] }))
         .then(cleanup())
@@ -802,7 +900,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key/value for a single read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndex('map', 0, maps.returnType.KEY_VALUE)))
         .then(assertResultEql({ map: [ 'a', 1 ] }))
         .then(cleanup())
@@ -811,7 +909,7 @@ describe('client.operate() - CDT Map operations', function () {
     it('returns key/value for a range read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
-        .then(setMapPolicy('map', keyOrderedPolicy))
+        .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)))
         .then(assertResultEql({ map: [ 'a', 1, 'b', 2 ] }))
         .then(cleanup())

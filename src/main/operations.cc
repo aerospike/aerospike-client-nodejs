@@ -733,6 +733,46 @@ int add_list_remove_by_value_range_op(as_operations* ops, Local<Object> op, LogI
 	return AS_NODE_PARAM_OK;
 }
 
+int add_list_remove_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value = NULL;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, as_val_tostring(value), rank, count, return_type);
+		as_operations_add_list_remove_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, as_val_tostring(value), rank, return_type);
+		as_operations_add_list_remove_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+	}
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
 int add_list_remove_by_rank_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
@@ -1029,6 +1069,46 @@ int add_list_get_by_value_range_op(as_operations* ops, Local<Object> op, LogInfo
 
 	as_v8_debug(log, "bin=%s, begin=%s, end=%s, return_type=%i", binName, as_val_tostring(begin), as_val_tostring(end), return_type);
 	as_operations_add_list_get_by_value_range(ops, binName, begin, end, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_list_get_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value = NULL;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_list_return_type return_type;
+	if (get_list_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, as_val_tostring(value), rank, count, return_type);
+		as_operations_add_list_get_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, as_val_tostring(value), rank, return_type);
+		as_operations_add_list_get_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+	}
 
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
@@ -1370,6 +1450,46 @@ int add_map_remove_by_key_range_op(as_operations* ops, Local<Object> obj, LogInf
 	return AS_NODE_PARAM_OK;
 }
 
+int add_map_remove_by_key_rel_index_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName = NULL;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* key;
+	if (get_asval_property(&key, op, "key", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_map_return_type return_type;
+	if (get_map_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, key=%s, index=%i, count=%i, return_type=%i", binName, as_val_tostring(key), index, count, return_type);
+		as_operations_add_map_remove_by_key_rel_index_range(ops, binName, key, index, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, key=%s, index=%i, return_type=%i", binName, as_val_tostring(key), index, return_type);
+		as_operations_add_map_remove_by_key_rel_index_range_to_end(ops, binName, key, index, return_type);
+	}
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
 int add_map_remove_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName = NULL;
@@ -1444,6 +1564,46 @@ int add_map_remove_by_value_range_op(as_operations* ops, Local<Object> obj, LogI
 
 	as_v8_debug(log, "bin=%s, begin=%s, end=%s, return_type=%i", binName, as_val_tostring(begin), as_val_tostring(end), return_type);
 	as_operations_add_map_remove_by_value_range(ops, binName, begin, end, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_map_remove_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName = NULL;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value = NULL;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_map_return_type return_type;
+	if (get_map_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, as_val_tostring(value), rank, count, return_type);
+		as_operations_add_map_remove_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, as_val_tostring(value), rank, return_type);
+		as_operations_add_map_remove_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+	}
 
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
@@ -1636,6 +1796,46 @@ int add_map_get_by_key_range_op(as_operations* ops, Local<Object> obj, LogInfo* 
 	return AS_NODE_PARAM_OK;
 }
 
+int add_map_get_by_key_rel_index_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName = NULL;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* key;
+	if (get_asval_property(&key, op, "key", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t index;
+	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_map_return_type return_type;
+	if (get_map_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, key=%s, index=%i, count=%i, return_type=%i", binName, as_val_tostring(key), index, count, return_type);
+		as_operations_add_map_get_by_key_rel_index_range(ops, binName, key, index, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, key=%s, index=%i, return_type=%i", binName, as_val_tostring(key), index, return_type);
+		as_operations_add_map_get_by_key_rel_index_range_to_end(ops, binName, key, index, return_type);
+	}
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
 int add_map_get_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName = NULL;
@@ -1686,6 +1886,46 @@ int add_map_get_by_value_range_op(as_operations* ops, Local<Object> obj, LogInfo
 
 	as_v8_debug(log, "bin=%s, begin=%s, end=%s, return_type=%i", binName, as_val_tostring(begin), as_val_tostring(end), return_type);
 	as_operations_add_map_get_by_value_range(ops, binName, begin, end, return_type);
+
+	if (binName != NULL) free(binName);
+	return AS_NODE_PARAM_OK;
+}
+
+int add_map_get_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op, LogInfo* log)
+{
+	char* binName = NULL;
+	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_val* value = NULL;
+	if (get_asval_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	int64_t rank;
+	if (get_int64_property(&rank, op, "rank", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	bool count_defined;
+	int64_t count;
+	if (get_optional_int64_property(&count, &count_defined, op, "count", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_map_return_type return_type;
+	if (get_map_return_type(&return_type, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (count_defined) {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, as_val_tostring(value), rank, count, return_type);
+		as_operations_add_map_get_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+	} else {
+		as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, as_val_tostring(value), rank, return_type);
+		as_operations_add_map_get_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+	}
 
 	if (binName != NULL) free(binName);
 	return AS_NODE_PARAM_OK;
@@ -1838,6 +2078,7 @@ const ops_table_entry ops_table[] = {
 	{ "LIST_REMOVE_BY_VALUE", add_list_remove_by_value_op },
 	{ "LIST_REMOVE_BY_VALUE_LIST", add_list_remove_by_value_list_op },
 	{ "LIST_REMOVE_BY_VALUE_RANGE", add_list_remove_by_value_range_op },
+	{ "LIST_REMOVE_BY_VALUE_REL_RANK_RANGE", add_list_remove_by_value_rel_rank_range_op },
 	{ "LIST_REMOVE_BY_RANK", add_list_remove_by_rank_op },
 	{ "LIST_REMOVE_BY_RANK_RANGE", add_list_remove_by_rank_range_op },
 	{ "LIST_CLEAR", add_list_clear_op },
@@ -1850,6 +2091,7 @@ const ops_table_entry ops_table[] = {
 	{ "LIST_GET_BY_VALUE", add_list_get_by_value_op },
 	{ "LIST_GET_BY_VALUE_LIST", add_list_get_by_value_list_op },
 	{ "LIST_GET_BY_VALUE_RANGE", add_list_get_by_value_range_op },
+	{ "LIST_GET_BY_VALUE_REL_RANK_RANGE", add_list_get_by_value_rel_rank_range_op },
 	{ "LIST_GET_BY_RANK", add_list_get_by_rank_op },
 	{ "LIST_GET_BY_RANK_RANGE", add_list_get_by_rank_range_op },
 	{ "LIST_INCREMENT", add_list_increment_op },
@@ -1863,9 +2105,11 @@ const ops_table_entry ops_table[] = {
 	{ "MAP_REMOVE_BY_KEY", add_map_remove_by_key_op },
 	{ "MAP_REMOVE_BY_KEY_LIST", add_map_remove_by_key_list_op },
 	{ "MAP_REMOVE_BY_KEY_RANGE", add_map_remove_by_key_range_op },
+	{ "MAP_REMOVE_BY_KEY_REL_INDEX_RANGE", add_map_remove_by_key_rel_index_range_op },
 	{ "MAP_REMOVE_BY_VALUE", add_map_remove_by_value_op },
 	{ "MAP_REMOVE_BY_VALUE_LIST", add_map_remove_by_value_list_op },
 	{ "MAP_REMOVE_BY_VALUE_RANGE", add_map_remove_by_value_range_op },
+	{ "MAP_REMOVE_BY_VALUE_REL_RANK_RANGE", add_map_remove_by_value_rel_rank_range_op },
 	{ "MAP_REMOVE_BY_INDEX", add_map_remove_by_index_op },
 	{ "MAP_REMOVE_BY_INDEX_RANGE", add_map_remove_by_index_range_op },
 	{ "MAP_REMOVE_BY_RANK", add_map_remove_by_rank_op },
@@ -1873,8 +2117,10 @@ const ops_table_entry ops_table[] = {
 	{ "MAP_SIZE", add_map_size_op },
 	{ "MAP_GET_BY_KEY", add_map_get_by_key_op },
 	{ "MAP_GET_BY_KEY_RANGE", add_map_get_by_key_range_op },
+	{ "MAP_GET_BY_KEY_REL_INDEX_RANGE", add_map_get_by_key_rel_index_range_op },
 	{ "MAP_GET_BY_VALUE", add_map_get_by_value_op },
 	{ "MAP_GET_BY_VALUE_RANGE", add_map_get_by_value_range_op },
+	{ "MAP_GET_BY_VALUE_REL_RANK_RANGE", add_map_get_by_value_rel_rank_range_op },
 	{ "MAP_GET_BY_INDEX", add_map_get_by_index_op },
 	{ "MAP_GET_BY_INDEX_RANGE", add_map_get_by_index_range_op },
 	{ "MAP_GET_BY_RANK", add_map_get_by_rank_op },
