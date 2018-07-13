@@ -14,8 +14,6 @@
 // limitations under the License.
 // *****************************************************************************
 
-const path = require('path')
-
 function str2num (value) {
   return isNaN(value) ? value : +value
 }
@@ -27,22 +25,4 @@ exports.parseBins = function (binStrs) {
     bins[name] = str2num(value)
     return bins
   }, {})
-}
-
-// Check whether example has been executed directly or via the runner
-// (./index.js); if directly, invoke the runner instead and pass the command
-// line arguments.
-exports.checkMainRunner = function (mod) {
-  if (require.main !== mod) {
-    return
-  }
-
-  let example = process.argv[1]
-  let runner = path.join(example, '../run.js')
-  let cmd = path.basename(example, '.js')
-
-  process.argv.splice(1, 1, runner, cmd)
-  delete require.cache[require.resolve(example)]
-
-  require(runner)
 }

@@ -18,7 +18,7 @@
 const Aerospike = require('aerospike')
 const shared = require('./shared')
 
-shared.cli.checkMainRunner(module)
+shared.runner()
 
 async function exists (client, argv) {
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)

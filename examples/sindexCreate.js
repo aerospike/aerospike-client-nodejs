@@ -18,7 +18,7 @@
 const Aerospike = require('aerospike')
 const shared = require('./shared')
 
-shared.cli.checkMainRunner(module)
+shared.runner()
 
 async function sindexCreate (client, argv) {
   const options = {

@@ -14,18 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
-const Aerospike = require('aerospike')
+//
 const shared = require('./shared')
 
 shared.runner()
 
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+async function udfRegister (client, argv) {
+  let job = await client.udfRegister(argv.file)
+  await job.waitUntilDone()
+  console.info('UDF module registered successfully')
 }
 
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)
+exports.command = 'udfRegister <file>'
+exports.describe = 'Register a UDF with the cluster'
+exports.handler = shared.run(udfRegister)

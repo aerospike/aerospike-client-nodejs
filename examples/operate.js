@@ -20,7 +20,7 @@ const shared = require('./shared')
 const op = Aerospike.operations
 const lists = Aerospike.lists
 
-shared.cli.checkMainRunner(module)
+shared.runner()
 
 function randomInt (max) {
   return Math.floor(Math.random() * Math.floor(max))

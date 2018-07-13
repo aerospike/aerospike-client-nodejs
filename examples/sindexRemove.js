@@ -17,7 +17,7 @@
 //
 const shared = require('./shared')
 
-shared.cli.checkMainRunner(module)
+shared.runner()
 
 async function sindexRemove (client, argv) {
   await client.indexRemove(argv.namespace, argv.index)

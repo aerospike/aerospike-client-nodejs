@@ -20,7 +20,9 @@ const yargs = require('yargs')
 
 const VERSION = require('../package.json')['version']
 const commands = [ 'add', 'get', 'put', 'remove', 'exists', 'operate',
-  'append', 'prepend', 'info', 'select', 'sindexCreate', 'sindexRemove' ]
+  'append', 'prepend', 'info', 'select', 'sindexCreate', 'sindexRemove',
+  'apply', 'udfRegister', 'udfRemove', 'batchRead',
+  'query' ]
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()
 
@@ -104,6 +106,9 @@ yargs
   .example(
     'put --update joe name=Joe age=42',
     'Updates an existing record under the key "joe"; fails if the record does not exist.')
+  .example(
+    'info version',
+    'Query a random cluster node for it\'s build version')
 
   .commandDir('./', {
     include: filename => commands.some(cmd => cmd === path.basename(filename, '.js'))
