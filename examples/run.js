@@ -21,7 +21,7 @@ const yargs = require('yargs')
 const VERSION = require('../package.json')['version']
 const commands = [ 'add', 'get', 'put', 'remove', 'exists', 'operate',
   'append', 'prepend', 'info', 'select', 'sindex',
-  'apply', 'udf', 'batchRead', 'query' ]
+  'apply', 'udf', 'batchRead', 'query', 'scan' ]
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()
 

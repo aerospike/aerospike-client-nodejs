@@ -19,6 +19,7 @@ const path = require('path')
 exports.client = require('./client')
 exports.run = require('./run')
 exports.cli = require('./cli')
+exports.streams = require('./streams')
 
 // Check whether example has been executed directly or via the runner
 // (./run.js); if directly, invoke the runner instead and pass the command

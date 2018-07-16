@@ -17,16 +17,8 @@
 
 const Aerospike = require('aerospike')
 const shared = require('./shared')
-const util = require('util')
 
 shared.runner()
-
-function consume (stream) {
-  return new Promise(function (resolve, reject) {
-    stream.on('error', reject)
-    stream.on('end', resolve)
-  })
-}
 
 function selectBins (query, argv) {
   if (argv.bins) {
@@ -59,11 +51,6 @@ function udfParams (argv) {
   return udf
 }
 
-function printRecord (record) {
-  let key = record.key.key || record.key.digest.toString('hex')
-  console.info('%s: %s', key, util.inspect(record.bins))
-}
-
 async function query (client, argv) {
   const query = client.query(argv.namespace, argv.set)
   selectBins(query, argv)
@@ -81,8 +68,8 @@ async function query (client, argv) {
 
 async function queryForeach (query) {
   const stream = query.foreach()
-  stream.on('data', printRecord)
-  await consume(stream)
+  stream.on('data', shared.cli.printRecord)
+  await shared.streams.consume(stream)
 }
 
 async function queryBackground (query, udf) {
@@ -122,7 +109,7 @@ exports.builder = {
     type: 'array'
   },
   'background': {
-    desc: 'Run the query in the background (while applying UDF)',
+    desc: 'Run the query in the background (with Record UDF)',
     group: 'Command:',
     type: 'boolean'
   }

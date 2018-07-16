@@ -14,6 +14,8 @@
 // limitations under the License.
 // *****************************************************************************
 
+const util = require('util')
+
 function str2num (value) {
   return isNaN(value) ? value : +value
 }
@@ -25,4 +27,9 @@ exports.parseBins = function (binStrs) {
     bins[name] = str2num(value)
     return bins
   }, {})
+}
+
+exports.printRecord = function (record) {
+  let key = record.key.key || record.key.digest.toString('hex')
+  console.info('%s: %s', key, util.inspect(record.bins))
 }
