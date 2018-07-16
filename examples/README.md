@@ -48,6 +48,6 @@ The following are the included examples:
   - operate - perform multiple operations on a record
   - info - get cluster state information
 - **Batch & Query Operations**
-  - batchRead - read a batch of records
+  - batch - read a batch of records
   - query - run a query to fetch records matching a filter
   - scan - run a scan on an entire namespace or set

@@ -42,7 +42,7 @@ async function batchRead (client, argv) {
   }
 }
 
-exports.command = 'batchRead <keys..>'
+exports.command = 'batch <keys..>'
 exports.describe = 'Fetch multiple records from the database in a batch'
 exports.handler = shared.run(batchRead)
 exports.builder = {
