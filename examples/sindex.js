@@ -28,19 +28,15 @@ async function sindexCreate (client, argv) {
     index: argv.index
   }
 
-  let type
-  switch (argv.type.toUpperCase()) {
+  let type = argv.type.toUpperCase()
+  switch (type) {
     case 'NUMERIC':
-    case 'INTEGER':
-    case 'DOUBLE':
-      type = 'NUMERIC'
       options.datatype = Aerospike.indexDataType.NUMERIC
       break
     case 'STRING':
       type = 'STRING'
       options.datatype = Aerospike.indexDataType.STRING
       break
-    case 'GEO':
     case 'GEO2DSPHERE':
       type = 'GEO2DSPHERE'
       options.datatype = Aerospike.indexDataType.GEO2DSPHERE
@@ -53,11 +49,29 @@ async function sindexCreate (client, argv) {
   console.info(`Creating ${type} index "${options.index}" on bin "${options.bin}"`)
 }
 
-exports.command = 'sindexCreate <bin> <index> <type>'
-exports.describe = 'Create a secondary index'
-exports.handler = shared.run(sindexCreate)
-exports.builder = {
-  'type': {
-    choices: ['numeric', 'integer', 'double', 'string', 'geo', 'geo2dsphere']
-  }
+async function sindexRemove (client, argv) {
+  await client.indexRemove(argv.namespace, argv.index)
+  console.info(`Removing index "${argv.index}"`)
+}
+
+exports.command = 'sindex <command>'
+exports.describe = 'Manage secondary indexes'
+exports.builder = yargs => {
+  return yargs
+    .command({
+      command: 'create <bin> <index> <type>',
+      desc: 'Create a secondary index',
+      handler: shared.run(sindexCreate),
+      builder: {
+        'type': {
+          choices: ['numeric', 'string', 'geo2dsphere'],
+          hidden: true
+        }
+      }
+    })
+    .command({
+      command: 'remove <index>',
+      desc: 'Remove a secondary index',
+      handler: shared.run(sindexRemove)
+    })
 }

@@ -62,5 +62,3 @@ end
 function count_numbers(stream)
 	return stream : aggregate(map(), parse_numbers) : reduce(map_merge)
 end
-
-
