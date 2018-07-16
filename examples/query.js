@@ -17,6 +17,7 @@
 
 const Aerospike = require('aerospike')
 const shared = require('./shared')
+const util = require('util')
 
 shared.runner()
 
@@ -46,9 +47,21 @@ function applyFilter (query, argv) {
   }
 }
 
+function udfParams (argv) {
+  if (!argv.udf) {
+    return
+  }
+
+  let udf = {}
+  udf.module = argv.udf.shift()
+  udf.func = argv.udf.shift()
+  udf.args = argv.udf
+  return udf
+}
+
 function printRecord (record) {
-  let key = record.key.key || record.key.digest
-  console.info(key, ':', record.bins)
+  let key = record.key.key || record.key.digest.toString('hex')
+  console.info('%s: %s', key, util.inspect(record.bins))
 }
 
 async function query (client, argv) {
@@ -56,9 +69,30 @@ async function query (client, argv) {
   selectBins(query, argv)
   applyFilter(query, argv)
 
+  let udf = udfParams(argv)
+  if (udf && argv.background) {
+    await queryBackground(query, udf)
+  } else if (udf) {
+    await queryApply(query, udf)
+  } else {
+    await queryForeach(query)
+  }
+}
+
+async function queryForeach (query) {
   const stream = query.foreach()
   stream.on('data', printRecord)
   await consume(stream)
+}
+
+async function queryBackground (query, udf) {
+  let job = await query.background(udf.module, udf.func, udf.args)
+  console.info('Running query in background - Job ID:', job.jobID)
+}
+
+async function queryApply (query, udf) {
+  let result = await query.apply(udf.module, udf.func, udf.args)
+  console.info('Query result:', result)
 }
 
 exports.command = 'query'
@@ -81,5 +115,15 @@ exports.builder = {
     group: 'Command:',
     nargs: 3,
     conflicts: ['equal']
+  },
+  'udf': {
+    desc: 'UDF module, function & arguments to apply to the query',
+    group: 'Command:',
+    type: 'array'
+  },
+  'background': {
+    desc: 'Run the query in the background (while applying UDF)',
+    group: 'Command:',
+    type: 'boolean'
   }
 }

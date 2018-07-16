@@ -101,14 +101,14 @@ yargs
   })
 
   .example(
-    'put joe name=Joe age=42',
-    'Creates/updates a record under the key "joe" with two bins "name" and "age".')
-  .example(
     'put --update joe name=Joe age=42',
     'Updates an existing record under the key "joe"; fails if the record does not exist.')
   .example(
     'info version',
     'Query a random cluster node for it\'s build version')
+  .example(
+    'query --background --range x 1 5 --udf scan increment 2',
+    'Run a background query over the records in the specified range (1 <= x < 5) and apply the scan:increment UDF on the records')
 
   .commandDir('./', {
     include: filename => commands.some(cmd => cmd === path.basename(filename, '.js'))
