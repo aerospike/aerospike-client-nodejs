@@ -16,9 +16,10 @@
 
 const path = require('path')
 
-exports.client = require('./client')
-exports.run = require('./run')
 exports.cli = require('./cli')
+exports.client = require('./client')
+exports.random = require('./random')
+exports.run = require('./run')
 exports.streams = require('./streams')
 
 // Check whether example has been executed directly or via the runner

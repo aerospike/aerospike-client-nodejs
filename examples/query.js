@@ -28,14 +28,23 @@ function selectBins (query, argv) {
 
 function applyFilter (query, argv) {
   if (argv.equal) {
-    let bin = argv.equal[0]
-    let value = argv.equal[1]
+    const filter = argv.equal
+    const bin = filter[0]
+    const value = filter[1]
     query.where(Aerospike.filter.equal(bin, value))
   } else if (argv.range) {
-    let bin = argv.range[0]
-    let start = argv.range[1]
-    let end = argv.range[2]
+    const filter = argv.range
+    const bin = filter[0]
+    const start = filter[1]
+    const end = filter[2]
     query.where(Aerospike.filter.range(bin, start, end))
+  } else if (argv.geoWithinRadius) {
+    const filter = argv.geoWithinRadius
+    const bin = filter[0]
+    const lng = filter[1]
+    const lat = filter[2]
+    const radius = filter[3]
+    query.where(Aerospike.filter.geoWithinRadius(bin, lng, lat, radius))
   }
 }
 
@@ -95,13 +104,19 @@ exports.builder = {
     desc: 'Applies an equal filter to the query',
     group: 'Command:',
     nargs: 2,
-    conflicts: ['range']
+    conflicts: ['range', 'geoWithinRadius']
   },
   'range': {
     desc: 'Applies a range filter to the query',
     group: 'Command:',
     nargs: 3,
-    conflicts: ['equal']
+    conflicts: ['equal', 'geoWithinRadius']
+  },
+  'geoWithinRadius': {
+    desc: 'Applies a geospatial "within-radius" filter to the query',
+    group: 'Command:',
+    nargs: 4,
+    conflicts: ['equal', 'range']
   },
   'udf': {
     desc: 'UDF module, function & arguments to apply to the query',

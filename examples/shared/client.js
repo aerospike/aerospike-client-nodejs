@@ -15,6 +15,9 @@
 // *****************************************************************************
 
 const Aerospike = require('aerospike')
+const path = require('path')
+
+const UDF_USERDIR = path.normalize(path.join(__dirname, '..', 'lua'))
 
 module.exports = exports = function (argv) {
   const config = defaultConfig(argv)
@@ -41,6 +44,9 @@ function defaultConfig (argv) {
       remove: defaultPolicy,
       scan: defaultPolicy,
       write: defaultPolicy
+    },
+    modlua: {
+      userPath: UDF_USERDIR
     },
     log: {
       level: Aerospike.log.WARN + argv.verbose
