@@ -19,9 +19,23 @@ const path = require('path')
 const yargs = require('yargs')
 
 const VERSION = require('../package.json')['version']
-const commands = [ 'add', 'get', 'put', 'remove', 'exists', 'operate',
-  'append', 'prepend', 'info', 'select', 'sindex', 'apply', 'udf', 'batch',
-  'query', 'scan', 'geospatialMonteCarlo' ]
+const commands = [
+  'add',
+  'append',
+  'apply',
+  'batch',
+  'exists',
+  'geospatialMonteCarlo',
+  'get',
+  'info',
+  'operate',
+  'put',
+  'query',
+  'remove',
+  'scan',
+  'sindex',
+  'udf'
+]
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()
 

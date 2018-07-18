@@ -40,14 +40,22 @@ Each example also provides more detailed usage information via a `--help` flag:
 The following are the included examples:
 
 - **Single Key Operations**
-  - exists - check the existence of a record
-  - get - read a record
-  - select - read specific bins of a record
-  - put - write a record
-  - remove - remove a record
-  - operate - perform multiple operations on a record
-  - info - get cluster state information
-- **Batch & Query Operations**
-  - batch - read a batch of records
-  - query - run a query to fetch records matching a filter
-  - scan - run a scan on an entire namespace or set
+  - add - Increment the value of a single bin
+  - append - Append a string or bytes to a single bin
+  - apply - Apply a UDF to a single record
+  - exists - Check the existence of a record
+  - get - Read a record
+  - operate - Perform multiple operations on a record
+  - put - Write a record
+  - remove - Remove a record
+- **Advanced Operations**
+  - info - Get cluster state information
+  - batch - Read a batch of records in a single transaction
+  - query - Run a query to fetch records matching a filter, optionally
+    performing aggregation using UDFs
+  - scan - Run a scan on an entire namespace or set
+  - sindex - Manage secondary indexes (create/remove index)
+  - udf - Manage User-Defined Functions (create/remove module)
+- **Complex Examples**
+  - geospatialMonteCarlo - Performs a Monte Carlo simulation to approximate PI
+    using Aerospike's geospatial indexing and query functionality

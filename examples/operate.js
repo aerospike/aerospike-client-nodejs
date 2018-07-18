@@ -22,13 +22,9 @@ const lists = Aerospike.lists
 
 shared.runner()
 
-function randomInt (max) {
-  return Math.floor(Math.random() * Math.floor(max))
-}
-
 async function operate (client, argv) {
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  const i = randomInt(10)
+  const i = shared.random.int(1, 10)
   let ops = [
     lists.append('values', i),
     op.read('values'),
