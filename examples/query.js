@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -14,137 +15,117 @@
 // limitations under the License.
 // *****************************************************************************
 
-// *****************************************************************************
-// Write a record.
-// *****************************************************************************
-
 const Aerospike = require('aerospike')
-const fs = require('fs')
-const yargs = require('yargs')
-const iteration = require('./iteration')
+const shared = require('./shared')
 
-var filter = Aerospike.filter
+shared.runner()
 
-// *****************************************************************************
-// Options parsing
-// *****************************************************************************
-
-var argp = yargs
-  .usage('$0 [options] key')
-  .options({
-    help: {
-      boolean: true,
-      describe: 'Display this message.'
-    },
-    quiet: {
-      alias: 'q',
-      boolean: true,
-      describe: 'Do not display content.'
-    },
-    host: {
-      alias: 'h',
-      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
-      describe: 'Aerospike database address.'
-    },
-    timeout: {
-      alias: 't',
-      default: 1000,
-      describe: 'Timeout in milliseconds.'
-    },
-    'log-level': {
-      alias: 'l',
-      default: Aerospike.log.INFO,
-      describe: 'Log level [0-5]'
-    },
-    'log-file': {
-      default: undefined,
-      describe: 'Path to a file send log messages to.'
-    },
-    namespace: {
-      alias: 'n',
-      default: 'test',
-      describe: 'Namespace for the keys.'
-    },
-    set: {
-      alias: 's',
-      default: 'demo',
-      describe: 'Set for the keys.'
-    },
-    user: {
-      alias: 'U',
-      default: null,
-      describe: 'Username to connect to secured cluster'
-    },
-    password: {
-      alias: 'P',
-      default: null,
-      describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
-    }
-  })
-
-var argv = argp.argv
-
-if (argv.help === true) {
-  argp.showHelp()
-  process.exit()
+function selectBins (query, argv) {
+  if (argv.bins) {
+    query.select(argv.bins)
+  }
 }
 
-iteration.setLimit(argv.iterations)
-
-// *****************************************************************************
-// Configure the client.
-// *****************************************************************************
-
-var config = {
-  hosts: argv.host,
-  log: {
-    level: argv['log-level'],
-    file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
-  },
-  policies: {
-    timeout: argv.timeout
-  },
-  modlua: {
-    userPath: __dirname
-  },
-  user: argv.user,
-  password: argv.password
+function applyFilter (query, argv) {
+  if (argv.equal) {
+    const filter = argv.equal
+    const bin = filter[0]
+    const value = filter[1]
+    query.where(Aerospike.filter.equal(bin, value))
+  } else if (argv.range) {
+    const filter = argv.range
+    const bin = filter[0]
+    const start = filter[1]
+    const end = filter[2]
+    query.where(Aerospike.filter.range(bin, start, end))
+  } else if (argv.geoWithinRadius) {
+    const filter = argv.geoWithinRadius
+    const bin = filter[0]
+    const lng = filter[1]
+    const lat = filter[2]
+    const radius = filter[3]
+    query.where(Aerospike.filter.geoWithinRadius(bin, lng, lat, radius))
+  }
 }
 
-// *****************************************************************************
-// Perform the operation
-// *****************************************************************************
-
-function run (client, done) {
-  var options = {
-    filters: [filter.range('i', 100, 500)]
+function udfParams (argv) {
+  if (!argv.udf) {
+    return
   }
 
-  var query = client.query(argv.namespace, argv.set, options)
-  var stream = query.foreach()
-
-  stream.on('data', function (rec) {
-    !argv.quiet && console.log(JSON.stringify(rec, null, '    '))
-  })
-
-  stream.on('error', function (err) {
-    console.error(err)
-    process.exit(1)
-  })
-
-  stream.on('end', function () {
-    iteration.next(run, client, done)
-  })
+  let udf = {}
+  udf.module = argv.udf.shift()
+  udf.func = argv.udf.shift()
+  udf.args = argv.udf
+  return udf
 }
 
-Aerospike.connect(config, function (err, client) {
-  if (err) throw err
-  run(client, function () {
-    client.close()
-  })
-})
+async function query (client, argv) {
+  const query = client.query(argv.namespace, argv.set)
+  selectBins(query, argv)
+  applyFilter(query, argv)
+
+  let udf = udfParams(argv)
+  if (udf && argv.background) {
+    await queryBackground(query, udf)
+  } else if (udf) {
+    await queryApply(query, udf)
+  } else {
+    await queryForeach(query)
+  }
+}
+
+async function queryForeach (query) {
+  const stream = query.foreach()
+  stream.on('data', shared.cli.printRecord)
+  await shared.streams.consume(stream)
+}
+
+async function queryBackground (query, udf) {
+  let job = await query.background(udf.module, udf.func, udf.args)
+  console.info('Running query in background - Job ID:', job.jobID)
+}
+
+async function queryApply (query, udf) {
+  let result = await query.apply(udf.module, udf.func, udf.args)
+  console.info('Query result:', result)
+}
+
+exports.command = 'query'
+exports.describe = 'Execute a query and print the results'
+exports.handler = shared.run(query)
+exports.builder = {
+  'bins': {
+    describe: 'List of bins to fetch for each record',
+    type: 'array',
+    group: 'Command:'
+  },
+  'equal': {
+    desc: 'Applies an equal filter to the query',
+    group: 'Command:',
+    nargs: 2,
+    conflicts: ['range', 'geoWithinRadius']
+  },
+  'range': {
+    desc: 'Applies a range filter to the query',
+    group: 'Command:',
+    nargs: 3,
+    conflicts: ['equal', 'geoWithinRadius']
+  },
+  'geoWithinRadius': {
+    desc: 'Applies a geospatial "within-radius" filter to the query',
+    group: 'Command:',
+    nargs: 4,
+    conflicts: ['equal', 'range']
+  },
+  'udf': {
+    desc: 'UDF module, function & arguments to apply to the query',
+    group: 'Command:',
+    type: 'array'
+  },
+  'background': {
+    desc: 'Run the query in the background (with Record UDF)',
+    group: 'Command:',
+    type: 'boolean'
+  }
+}

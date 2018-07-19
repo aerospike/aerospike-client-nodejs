@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -15,17 +14,22 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
-const shared = require('./shared')
+const util = require('util')
 
-shared.runner()
-
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+function str2num (value) {
+  return isNaN(value) ? value : +value
 }
 
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)
+// @param { String[] } binStrs - list of "<name>=<value>" pairs
+exports.parseBins = function (binStrs) {
+  return binStrs.reduce((bins, current) => {
+    let [name, value] = current.split('=')
+    bins[name] = str2num(value)
+    return bins
+  }, {})
+}
+
+exports.printRecord = function (record) {
+  let key = record.key.key || record.key.digest.toString('hex')
+  console.info('%s: %s', key, util.inspect(record.bins))
+}

@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -15,17 +14,17 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
-const shared = require('./shared')
+const shared = require('./')
 
-shared.runner()
-
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+module.exports = exports = function (handler) {
+  return async function (argv) {
+    const client = shared.client(argv)
+    try {
+      await client.connect()
+      await handler(client, argv)
+    } catch (error) {
+      console.error(error)
+    }
+    client.close()
+  }
 }
-
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)

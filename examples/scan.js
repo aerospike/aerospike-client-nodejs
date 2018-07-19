@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2018 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -14,132 +15,112 @@
 // limitations under the License.
 // *****************************************************************************
 
-// *****************************************************************************
-// Write a record.
-// *****************************************************************************
-
 const Aerospike = require('aerospike')
-const fs = require('fs')
-const yargs = require('yargs')
-const iteration = require('./iteration')
+const shared = require('./shared')
 
-// *****************************************************************************
-// Options parsing
-// *****************************************************************************
+shared.runner()
 
-var argp = yargs
-  .usage('$0 [options] key')
-  .options({
-    help: {
-      boolean: true,
-      describe: 'Display this message.'
-    },
-    quiet: {
-      alias: 'q',
-      boolean: true,
-      describe: 'Do not display content.'
-    },
-    host: {
-      alias: 'h',
-      default: process.env.AEROSPIKE_HOSTS || 'localhost:3000',
-      describe: 'Aerospike database address.'
-    },
-    timeout: {
-      alias: 't',
-      default: 1000,
-      describe: 'Timeout in milliseconds.'
-    },
-    'log-level': {
-      alias: 'l',
-      default: Aerospike.log.INFO,
-      describe: 'Log level [0-5]'
-    },
-    'log-file': {
-      default: undefined,
-      describe: 'Path to a file send log messages to.'
-    },
-    namespace: {
-      alias: 'n',
-      default: 'test',
-      describe: 'Namespace for the keys.'
-    },
-    set: {
-      alias: 's',
-      default: 'demo',
-      describe: 'Set for the keys.'
-    },
-    user: {
-      alias: 'U',
-      default: null,
-      describe: 'Username to connect to secured cluster'
-    },
-    password: {
-      alias: 'P',
-      default: null,
-      describe: 'Password to connect to secured cluster'
-    },
-    iterations: {
-      alias: 'I',
-      default: 1,
-      describe: 'Number of iterations'
-    }
-  })
-
-var argv = argp.argv
-
-if (argv.help === true) {
-  argp.showHelp()
-  process.exit()
-}
-
-iteration.setLimit(argv.iterations)
-
-// *****************************************************************************
-// Configure the client.
-// *****************************************************************************
-
-var config = {
-  hosts: argv.host,
-  log: {
-    level: argv['log-level'],
-    file: argv['log-file'] ? fs.openSync(argv['log-file'], 'a') : 2
-  },
-  policies: {
-    timeout: argv.timeout
-  },
-  user: argv.user,
-  password: argv.password
-}
-
-// *****************************************************************************
-// Perform the operation
-// *****************************************************************************
-
-function run (client, done) {
-  var options = {
-    nobins: false,
-    concurrent: true
+function udfParams (argv) {
+  if (!argv.udf) {
+    return
   }
 
-  var stream = client.scan(argv.namespace, argv.set, options).execute()
-
-  stream.on('data', function (rec) {
-    !argv.quiet && console.log(JSON.stringify(rec, null, '    '))
-  })
-
-  stream.on('error', function (err) {
-    console.error(err)
-    process.exit(1)
-  })
-
-  stream.on('end', function () {
-    iteration.next(run, client, done)
-  })
+  let udf = {}
+  udf.module = argv.udf.shift()
+  udf.func = argv.udf.shift()
+  udf.args = argv.udf
+  return udf
 }
 
-Aerospike.connect(config, function (err, client) {
-  if (err) throw err
-  run(client, function () {
-    client.close()
-  })
-})
+function buildScanOptions (argv) {
+  let options = {
+    percent: argv.percent,
+    concurrent: argv.concurrent
+  }
+
+  let priority
+  switch ((argv.priority || '').toUpperCase()) {
+    case 'LOW':
+      priority = Aerospike.scanPriority.LOW
+      break
+    case 'MEDIUM':
+      priority = Aerospike.scanPriority.MEDIUM
+      break
+    case 'HIGH':
+      priority = Aerospike.scanPriority.HIGH
+      break
+    case 'auto':
+      priority = Aerospike.scanPriority.AUTO
+      break
+  }
+  if (priority) {
+    options.priority = priority
+  }
+
+  console.info(options)
+  return options
+}
+
+async function scan (client, argv) {
+  let options = buildScanOptions(argv)
+  const scan = client.scan(argv.namespace, argv.set, options)
+  if (argv.bins) {
+    scan.select(argv.bins)
+  }
+
+  let udf = udfParams(argv)
+  if (udf && argv.background) {
+    await scanBackground(scan, udf)
+  } else {
+    await scanForeach(scan)
+  }
+}
+
+async function scanForeach (scan) {
+  const stream = scan.foreach()
+  stream.on('data', shared.cli.printRecord)
+  await shared.streams.consume(stream)
+}
+
+async function scanBackground (query, udf) {
+  let job = await scan.background(udf.module, udf.func, udf.args)
+  console.info('Running scan in background - Job ID:', job.jobID)
+}
+
+exports.command = 'scan'
+exports.describe = 'Execute a scan and print the results'
+exports.handler = shared.run(scan)
+exports.builder = {
+  'bins': {
+    describe: 'List of bins to fetch for each record',
+    type: 'array',
+    group: 'Command:'
+  },
+  'priority': {
+    describe: 'Scan priority',
+    choices: ['auto', 'low', 'medium', 'high'],
+    group: 'Command:'
+  },
+  'percent': {
+    describe: 'Run scan on given percentage of records',
+    type: 'number',
+    group: 'Command:',
+    default: 100
+  },
+  'concurrent': {
+    describe: 'Scan all cluster nodes in parallel',
+    type: 'boolean',
+    group: 'Command:',
+    default: true
+  },
+  'udf': {
+    desc: 'UDF module, function & arguments to apply to the query',
+    group: 'Command:',
+    type: 'array'
+  },
+  'background': {
+    desc: 'Run the scan in the background (with Record UDF)',
+    group: 'Command:',
+    type: 'boolean'
+  }
+}

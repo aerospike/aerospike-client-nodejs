@@ -14,18 +14,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
-
+//
 const Aerospike = require('aerospike')
 const shared = require('./shared')
 
 shared.runner()
 
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+async function batchRead (client, argv) {
+  const batch = argv.keys.map(key => {
+    let request = {
+      key: new Aerospike.Key(argv.namespace, argv.set, key)
+    }
+    if (argv.bins) {
+      request.bins = argv.bins
+    } else {
+      request.read_all_bins = true
+    }
+    return request
+  })
+
+  const batchResults = await client.batchRead(batch)
+
+  for (let result of batchResults) {
+    let record = result.record
+    console.info(record.key.key, ':', result.status === Aerospike.status.OK
+      ? record.bins : 'NOT FOUND')
+  }
 }
 
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)
+exports.command = 'batch <keys..>'
+exports.describe = 'Fetch multiple records from the database in a batch'
+exports.handler = shared.run(batchRead)
+exports.builder = {
+  'bins': {
+    describe: 'List of bins to fetch for each record',
+    type: 'array',
+    group: 'Command:'
+  }
+}
