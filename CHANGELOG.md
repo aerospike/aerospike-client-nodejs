@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * **New Features**
   * Support list/map nearest key/value get/remove operations (relative rank range). Requires server version v4.3.0 or later. [#264](https://github.com/aerospike/aerospike-client-nodejs/pull/264)
   * Support list write flags NO_FAIL and PARTIAL. Add new map write flags, including NO_FAIL and PARTIAL. Requires server version v4.3.0 or later. [#265](https://github.com/aerospike/aerospike-client-nodejs/pull/265)
+  * Rewrote examples to use latest client APIs, ES2017 async functions, and reduce yargs boilerplate code [#266](https://github.com/aerospike/aerospike-client-nodejs/pull/266)
 
 * **Updates**
   * Update C client library to [v4.3.14](http://www.aerospike.com/download/client/c/notes.html#4.3.14) [#263](https://github.com/aerospike/aerospike-client-nodejs/pull/263)
