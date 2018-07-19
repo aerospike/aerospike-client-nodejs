@@ -110,7 +110,7 @@ yargs
   })
   .option('debugStacktraces', {
     describe: 'Enable more informative stacktraces in case of an error',
-    default: true
+    default: false
   })
 
   .example(

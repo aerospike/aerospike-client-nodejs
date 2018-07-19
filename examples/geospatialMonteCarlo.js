@@ -53,13 +53,13 @@ shared.runner()
 async function monteCarlo (client, argv) {
   const game = {
     client: client,
-    noDarts: argv.darts || 10000, // number of darts to throw
+    noDarts: argv.darts, // number of darts to throw
+    maxInFlight: argv.maxInFlight,
     maxLatLng: 10, // pick coordinates between (-10, -10) and (10, 10)
     ns: argv.namespace,
     set: shared.random.identifier(),
     bin: 'geo',
-    idx: shared.random.identifier(),
-    maxInFlight: 200
+    idx: shared.random.identifier()
   }
 
   await setup(game)
@@ -71,9 +71,8 @@ async function monteCarlo (client, argv) {
   const piEstimate = calculatePi(hits, game.noDarts)
   console.info(`${hits} ÷ ${game.noDarts} × 4 = ${piEstimate}`)
 
-  const accuracy = 100.0 - Math.abs(Math.PI - piEstimate) / Math.PI * 100.0
   console.info()
-  console.info('𝛑 is estimated to be %s. (%f%% accurate.)', piEstimate, accuracy.toFixed(3))
+  console.info(`𝛑 is estimated to be ${piEstimate}.`)
 
   await cleanUp(game)
 }
@@ -108,13 +107,16 @@ async function cleanUp (game) {
 
 async function throwDarts (game) {
   console.info(`Simulating throwing of ${game.noDarts} darts.`)
+  const start = process.hrtime()
 
   let current = 0
   let inflight = 0
 
   return new Promise((resolve, reject) => {
     const cb = (err) => {
-      if (err) throw err
+      if (err) {
+        throw err
+      }
       process.stdout.write(`\r${current}`)
       inflight--
       if (current < game.noDarts) {
@@ -122,6 +124,9 @@ async function throwDarts (game) {
         inflight++
         throwDart(game, current, cb)
       } else if (inflight === 0) {
+        const elapsed = process.hrtime(start)
+        const elapsedSecs = (elapsed[0] + elapsed[1] / 1e9).toFixed(1)
+        console.info(`\rFinished simulating ${current} dart throws in ${elapsedSecs} seconds.`)
         process.stdout.write('\r              \n')
         resolve()
       }
@@ -185,6 +190,13 @@ exports.builder = {
   darts: {
     desc: 'Number of darts to throw',
     group: 'Command:',
-    type: 'number'
+    type: 'number',
+    default: 10000
+  },
+  maxInFlight: {
+    desc: 'Max. number of darts to throw in parallel',
+    group: 'Command:',
+    type: 'number',
+    default: 150
   }
 }
