@@ -60,7 +60,7 @@ describe('Config #noserver', function () {
         password: 'sekret',
         authMode: Aerospike.auth.EXTERNAL_INSECURE,
         sharedMemory: { key: 1234 },
-        modlua: { systemPath: '/system/path', userPath: '/user/path' },
+        modlua: { userPath: '/user/path' },
         port: 3333
       }
 
