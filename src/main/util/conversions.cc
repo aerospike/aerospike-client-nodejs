@@ -189,19 +189,6 @@ int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> ob
 	return AS_NODE_PARAM_OK;
 }
 
-int get_bool_property(bool* boolp, Local<Object> obj, char const* prop, const LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (!value->IsBoolean()) {
-		as_v8_error(log, "Type error: %s property should be boolean", prop);
-		return AS_NODE_PARAM_ERR;
-	}
-	(*boolp) = value->BooleanValue();
-	as_v8_detail(log, "%s => (bool) %d", prop, *boolp);
-	return AS_NODE_PARAM_OK;
-}
-
 int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
 {
 	Nan::HandleScope scope;
