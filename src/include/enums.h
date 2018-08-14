@@ -31,7 +31,6 @@ v8::Local<v8::Object> languages();
 v8::Local<v8::Object> list_enum_values();
 v8::Local<v8::Object> log_enum_values();
 v8::Local<v8::Object> map_enum_values();
-v8::Local<v8::Object> opcode_values();
 v8::Local<v8::Object> policy();
 v8::Local<v8::Object> predicates();
 v8::Local<v8::Object> retry_policy_values();

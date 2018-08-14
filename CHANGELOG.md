@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Support query filtering with predicate expressions. Requires server version v3.12 or later. [#269](https://github.com/aerospike/aerospike-client-nodejs/pull/269)
+
 * **Updates**
-  * Update C client library to [v4.3.16](http://www.aerospike.com/download/client/c/notes.html#4.3.16)
-  * Removed modlua.systemPath config entry
+  * Update C client library to [v4.3.16](http://www.aerospike.com/download/client/c/notes.html#4.3.16) [#271](https://github.com/aerospike/aerospike-client-nodejs/pull/271)
+  * Remove modlua.systemPath config entry
+  * Remove lua-core submodule; system lua code is now loaded directly from C strings instead of files
 
 ## [3.5.0] - 2018-07-19
 

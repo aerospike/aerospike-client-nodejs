@@ -20,11 +20,13 @@
 #include "async.h"
 #include "client.h"
 #include "conversions.h"
+#include "predexp.h"
 #include "log.h"
 #include "query.h"
 
 extern "C" {
 #include <aerospike/as_query.h>
+#include <aerospike/as_predexp.h>
 }
 
 using namespace v8;
@@ -123,6 +125,21 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 						}
 						break;
 					}
+			}
+		}
+	}
+
+	Local<Value> predexp_val = options->Get(Nan::New("predexp").ToLocalChecked());
+	TYPE_CHECK_OPT(predexp_val, IsArray, "predexp must be an array");
+	if (predexp_val->IsArray()) {
+		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
+		int size = predexp_ary->Length();
+		if (size > 0) {
+			as_query_predexp_init(query, size);
+			for (int i = 0; i < size; i++) {
+				Local<Object> predexpObj = predexp_ary->Get(i)->ToObject();
+				as_predexp_base* predexp = convert_predexp(predexpObj);
+				as_query_predexp_add(query, predexp);
 			}
 		}
 	}
