@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2018 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 #pragma once
 
-extern "C" {
-#include <aerospike/as_operations.h>
-}
-
 #include <node.h>
 
-#include "log.h"
+extern "C" {
+#include <aerospike/as_std.h>
+#include <aerospike/as_predexp.h>
+}
 
-int operations_from_jsarray(as_operations* ops, v8::Local<v8::Array> arr, LogInfo* log);
+as_predexp_base* convert_predexp(v8::Local<v8::Object> predexp);
 
-v8::Local<v8::Object> opcode_values();
+v8::Local<v8::Object> predexp_codes();

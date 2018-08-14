@@ -18,6 +18,7 @@
 #include "enums.h"
 #include "policy.h"
 #include "operations.h"
+#include "predexp.h"
 #include "log.h"
 #include "conversions.h"
 
@@ -115,6 +116,7 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	export("lists", list_enum_values());
 	export("maps", map_enum_values());
 	export("predicates", predicates());
+	export("predexp", predexp_codes());
 	export("scanPriority", scanPriority());
 	export("log", log_enum_values());
 	export("operations", opcode_values());
