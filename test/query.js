@@ -425,6 +425,18 @@ describe('Queries', function () {
     })
   })
 
+  describe('query.results()', function () {
+    it('returns a Promise that resolves into the query results', function () {
+      let query = client.query(helper.namespace, testSet)
+      query.where(filter.equal('i', 5))
+
+      return query.results().then(records => {
+        expect(records.length).to.eq(1)
+        expect(records[0].bins.name).to.eq('int match')
+      })
+    })
+  })
+
   describe('query.apply()', function () {
     it('should apply a user defined function and aggregate the results', function (done) {
       var args = {
