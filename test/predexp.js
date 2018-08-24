@@ -20,6 +20,7 @@
 /* global expect */
 
 const Aerospike = require('../lib/aerospike')
+const AerospikeError = Aerospike.AerospikeError
 const GeoJSON = Aerospike.GeoJSON
 const predexp = Aerospike.predexp
 
@@ -51,14 +52,8 @@ describe('Aerospike.predexp', function () {
     { name: 'point non-match', g: GeoJSON.Point(-122.101, 37.421) },
     { name: 'point list match', lg: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] },
     { name: 'point list non-match', lg: [GeoJSON.Point(-122.101, 37.421), GeoJSON.Point(-120.101, 39.421)] },
-    { name: 'point map match', mg: {a: GeoJSON.Point(103.913, 1.308), b: GeoJSON.Point(105.913, 3.308)} },
-    { name: 'point map non-match', mg: {a: GeoJSON.Point(-122.101, 37.421), b: GeoJSON.Point(-120.101, 39.421)} },
     { name: 'region match', g: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) },
-    { name: 'region non-match', g: GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421]) },
-    { name: 'region list match', lg: [GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])] },
-    { name: 'region list non-match', lg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
-    { name: 'region map match', mg: {a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])} },
-    { name: 'region map non-match', mg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] }
+    { name: 'region non-match', g: GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421]) }
   ]
 
   before(() => {
@@ -69,20 +64,66 @@ describe('Aerospike.predexp', function () {
     return putgen.put(samples.length, kgen, rgen, mgen)
   })
 
-  function collectResults (query) {
-    return new Promise((resolve, reject) => {
-      let records = []
-      let stream = query.foreach()
-      stream.on('error', reject)
-      stream.on('data', record => records.push(record))
-      stream.on('end', () => resolve(records))
-    })
-  }
-
   function timeNanos (diff) {
     diff |= 0
     return (Date.now() + diff * 1e3) * 1e6
   }
+
+  context('invalid predicate expressions', function () {
+    it('raises a server error if passed multiple top-level predexps', function () {
+      const query = client.query(helper.namespace, testSet)
+      query.where([
+        predexp.integerBin('i'),
+        predexp.integerValue(5),
+        predexp.integerEqual(),
+        predexp.stringBin('s'),
+        predexp.stringValue('banana'),
+        predexp.stringEqual()
+      ])
+
+      return query.results()
+        .then(() => 'no error raised')
+        .catch(error => error)
+        .then(error => {
+          expect(error)
+            .to.be.instanceof(AerospikeError)
+            .with.property('code', Aerospike.status.ERR_REQUEST_INVALID)
+        })
+    })
+
+    it('raises a server error if passed a top-level predexp value node', function () {
+      const query = client.query(helper.namespace, testSet)
+      query.where([
+        predexp.integerBin('i')
+      ])
+
+      return query.results()
+        .then(() => 'no error raised')
+        .catch(error => error)
+        .then(error => {
+          expect(error)
+            .to.be.instanceof(AerospikeError)
+            .with.property('code', Aerospike.status.ERR_REQUEST_INVALID)
+        })
+    })
+
+    it('raises a server error if passed a missed child predexp', function () {
+      const query = client.query(helper.namespace, testSet)
+      query.where([
+        predexp.integerBin('i'),
+        predexp.integerEqual()
+      ])
+
+      return query.results()
+        .then(() => 'no error raised')
+        .catch(error => error)
+        .then(error => {
+          expect(error)
+            .to.be.instanceof(AerospikeError)
+            .with.property('code', Aerospike.status.ERR_REQUEST_INVALID)
+        })
+    })
+  })
 
   describe('.integerEqual', function () {
     it('matches an integer bin to an integer value', function () {
@@ -93,7 +134,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerEqual()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('int match')
       })
@@ -109,7 +150,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerUnequal()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(!results.some(rec => rec.bins.i === 5)).to.be.true()
       })
@@ -125,7 +166,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerGreater()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(results.every(rec => rec.bins.i > 5)).to.be.true()
       })
@@ -141,7 +182,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerGreaterEq()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(results.every(rec => rec.bins.i >= 5)).to.be.true()
       })
@@ -157,7 +198,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerLess()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(results.every(rec => rec.bins.i < 500)).to.be.true()
       })
@@ -173,7 +214,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerLessEq()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(results.every(rec => rec.bins.i <= 500)).to.be.true()
       })
@@ -189,7 +230,7 @@ describe('Aerospike.predexp', function () {
         predexp.stringEqual()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('string match')
       })
@@ -205,7 +246,7 @@ describe('Aerospike.predexp', function () {
         predexp.stringUnequal()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(!results.some(rec => rec.bins.s === 'banana')).to.true()
       })
@@ -221,7 +262,7 @@ describe('Aerospike.predexp', function () {
         predexp.stringRegex(Aerospike.regex.EXTENDED | Aerospike.regex.ICASE)
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.s).to.eq('banana')
       })
@@ -233,11 +274,11 @@ describe('Aerospike.predexp', function () {
       const query = client.query(helper.namespace, testSet)
       query.where([
         predexp.geojsonBin('g'),
-        predexp.geojsonValue(new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})),
+        predexp.geojsonValue(GeoJSON.Polygon([103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3])),
         predexp.geojsonWithin()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('point match')
       })
@@ -249,11 +290,11 @@ describe('Aerospike.predexp', function () {
       const query = client.query(helper.namespace, testSet)
       query.where([
         predexp.geojsonBin('g'),
-        predexp.geojsonValue(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})),
+        predexp.geojsonValue(GeoJSON.Point(103.913, 1.308)),
         predexp.geojsonContains()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('region match')
       })
@@ -261,19 +302,37 @@ describe('Aerospike.predexp', function () {
   })
 
   describe('.listIterateOr', function () {
-    it('matches any list element', function () {
+    it('matches any list element using integer equality', function () {
       const query = client.query(helper.namespace, testSet)
       query.where([
-        predexp.stringValue('banana'),
-        predexp.stringVar('item'),
-        predexp.stringEqual(),
-        predexp.listBin('ls'),
-        predexp.listIterateOr('item')
+        predexp.integerVar('element'),
+        predexp.integerValue(5),
+        predexp.integerEqual(),
+        predexp.listBin('li'),
+        predexp.listIterateOr('element')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
-        expect(results[0].bins.name).to.eq('string list match')
+        expect(results[0].bins.name).to.eq('int list match')
+      })
+    })
+
+    it('matches any list element using point-in-region', function () {
+      this.skip('AER-5867 - not supported by server')
+
+      const query = client.query(helper.namespace, testSet)
+      query.where([
+        predexp.geojsonVar('point'),
+        predexp.geojsonValue(GeoJSON.Circle(103.913, 1.308, 30000)),
+        predexp.geojsonWithin(),
+        predexp.listBin('lg'),
+        predexp.listIterateOr('point')
+      ])
+
+      return query.results().then(results => {
+        expect(results.length).to.eq(1)
+        expect(results[0].bins.name).to.eq('point list match')
       })
     })
   })
@@ -289,7 +348,7 @@ describe('Aerospike.predexp', function () {
         predexp.listIterateAnd('item')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('string list match')
       })
@@ -300,16 +359,16 @@ describe('Aerospike.predexp', function () {
     it('matches any map element by value', function () {
       const query = client.query(helper.namespace, testSet)
       query.where([
-        predexp.stringValue('banana'),
-        predexp.stringVar('item'),
-        predexp.stringEqual(),
-        predexp.mapBin('ms'),
+        predexp.integerValue(5),
+        predexp.integerVar('item'),
+        predexp.integerEqual(),
+        predexp.mapBin('mi'),
         predexp.mapValIterateOr('item')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
-        expect(results[0].bins.name).to.eq('string map match')
+        expect(results[0].bins.name).to.eq('int map match')
       })
     })
   })
@@ -325,7 +384,7 @@ describe('Aerospike.predexp', function () {
         predexp.mapValIterateAnd('item')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('string map match')
       })
@@ -343,7 +402,7 @@ describe('Aerospike.predexp', function () {
         predexp.mapKeyIterateOr('item')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('string mapkeys match')
       })
@@ -361,7 +420,7 @@ describe('Aerospike.predexp', function () {
         predexp.mapKeyIterateAnd('item')
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('string mapkeys match')
       })
@@ -377,7 +436,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerGreaterEq()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
       })
     })
@@ -399,7 +458,7 @@ describe('Aerospike.predexp', function () {
         predexp.and(2)
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(samples.length)
       })
     })
@@ -421,7 +480,7 @@ describe('Aerospike.predexp', function () {
         predexp.and(2)
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(samples.length)
       })
     })
@@ -439,7 +498,7 @@ describe('Aerospike.predexp', function () {
         predexp.integerEqual()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         let digests = results.map(rec => rec.key.digest)
         expect(digests.every(
           // modulo is calculated from the last 4 bytes of the digest
@@ -462,7 +521,7 @@ describe('Aerospike.predexp', function () {
         predexp.and(2)
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(1)
         expect(results[0].bins.name).to.eq('int match')
       })
@@ -482,7 +541,7 @@ describe('Aerospike.predexp', function () {
         predexp.or(2)
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results.length).to.eq(2)
         expect(results.map(rec => rec.bins.name).sort()).to.eql(['int match', 'string match'])
       })
@@ -499,7 +558,7 @@ describe('Aerospike.predexp', function () {
         predexp.not()
       ])
 
-      return collectResults(query).then(results => {
+      return query.results().then(results => {
         expect(results).to.not.be.empty()
         expect(!results.some(rec => rec.bins.i === 5)).to.be.true()
       })
