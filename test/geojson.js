@@ -78,6 +78,13 @@ describe('Aerospike.GeoJSON', function () {
         expect(GeoJSON.Polygon([103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408])).to.eql(polygon)
       })
     })
+
+    describe('GeoJSON.Circle()', function () {
+      it('creates a GeoJSON circle representation', function () {
+        let circle = new GeoJSON({type: 'AeroCircle', coordinates: [[-122.250629, 37.871022], 300]})
+        expect(GeoJSON.Circle(-122.250629, 37.871022, 300)).to.eql(circle)
+      })
+    })
   })
 
   describe('putting and getting GeoJSON values', function () {
