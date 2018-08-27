@@ -49,7 +49,7 @@
     "dirty-chai": "^2.0.1",
     "ink-docstrap": "^1.3.0",
     "jsdoc": "^3.5.5",
-    "mocha": "^5.0.0",
+    "mocha": "^5.2.0",
     "mocha-clean": "^1.0.0",
     "nyc": "^11.2.1",
     "standard": "^11.0",
