@@ -20,21 +20,23 @@ database clusters.
 
 The main modules included in the `aerospike` package are:
 
-* {@link module:aerospike} - The aerospike module contains the core classes
-  that make up the Client API, such as the Client, Query and Scan classes. It
-  provides module level functions to connect to an Aerospike cluster.
-* {@link module:aerospike/policy} - The policy module defines policies and
-  policy values that define the behavior of database operations.
-* {@link module:aerospike/filter} - The filter module is a submodule containing
-  predicate helpers for use with the Query class.
-* {@link module:aerospike/operations}, {@link module:aerospike/lists},
-  {@link module:aerospike/maps} - These three modules define the operations on
-  scalar, list and map values that can be executed with the {@link
-  Client#operate} command.
-* {@link module:aerospike/info} - The info protocol provides access to
-  configuration and statistics for the Aerospike server. This module
-  includes utility functions for parsing the info data returned by the
-  Aerospike server.
+* The {@link module:aerospike|aerospike module} contains the core classes
+  that make up the Client API, such as the {@link Client}, {@link Record},
+  {@link Query} classes, etc. It provides module level functions to connect to
+  an Aerospike cluster.
+* The {@link module:aerospike/policy|policy module} defines policies and policy
+  values that define the behavior of database operations.
+* The {@link module:aerospike/filter|filter module} and {@link
+  module:aerospike/predexp|predexp module} define secondary index filters and
+  predicate expressions that can be used to limit the scope of query
+  operations.
+* The {@link module:aerospike/operations|operations}, {@link
+  module:aerospike/lists|lists} and {@link module:aerospike/maps|maps} modules
+  define the operations on scalar, list and map values that can be executed
+  with the {@link Client#operate} command.
+* The info protocol provides access to configuration and statistics for the
+  Aerospike server. The {@link module:aerospike/info|info module} includes
+  utility functions for parsing the info data returned by the Aerospike cluster.
 
 ### Classes
 
@@ -101,7 +103,7 @@ Aerospike.connect(config, (error, client) => {
     s: 'hello',
     b: new Buffer('world'),
     d: new Double(3.1415),
-    g: new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+    g: GeoJSON.Point(103.913, 1.308),
     l: [1, 'a', {x: 'y'}],
     m: {foo: 4, bar: 7}
   }
@@ -122,7 +124,7 @@ Aerospike.connect(config, (error, client) => {
 
     client.operate(key, ops, (error, result) => {
       if (error) throw error
-      console.log(result)   // => { c: 4, i: 124 }
+      console.log(result)   // => { i: 124 }
 
       client.get(key, (error, record, meta) => {
         if (error) throw error
