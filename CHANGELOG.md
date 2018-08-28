@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.6.0] - 2018-08-28
+
 * **New Features**
   * Support query filtering with predicate expressions. Requires server version v3.12 or later. [#269](https://github.com/aerospike/aerospike-client-nodejs/pull/269)
+  * Add missing replica.sequence policy value [#270](https://github.com/aerospike/aerospike-client-nodejs/issue/270)
 
 * **Updates**
   * Update C client library to [v4.3.16](http://www.aerospike.com/download/client/c/notes.html#4.3.16) [#271](https://github.com/aerospike/aerospike-client-nodejs/pull/271)
