@@ -71,6 +71,7 @@ Local<Object> replica_policy_values()
 	Local<Object> obj = Nan::New<Object>();
 	set(obj, "MASTER", AS_POLICY_REPLICA_MASTER);
 	set(obj, "ANY", AS_POLICY_REPLICA_ANY);
+	set(obj, "SEQUENCE", AS_POLICY_REPLICA_SEQUENCE);
 	return scope.Escape(obj);
 }
 
