@@ -165,16 +165,6 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	if (configObj->Has(Nan::New("modlua").ToLocalChecked())) {
 		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked())->ToObject();
 
-		char* system_path;
-		bool syspath_set = false;
-		if ((rc = get_optional_string_property(&system_path, &syspath_set, modlua, "systemPath", log)) != AS_NODE_PARAM_OK) {
-			return rc;
-		} else if (syspath_set) {
-			strcpy(config->lua.system_path, system_path);
-		} else {
-			as_v8_debug(log, "Using default Lua system path: %s", AS_CONFIG_LUA_SYSTEM_PATH);
-		}
-
 		char* user_path;
 		bool usrpath_set = false;
 		if ((rc = get_optional_string_property(&user_path, &usrpath_set, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {

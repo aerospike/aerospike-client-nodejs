@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * Update C client library to [v4.3.16](http://www.aerospike.com/download/client/c/notes.html#4.3.16)
+  * Removed modlua.systemPath config entry
+
 ## [3.5.0] - 2018-07-19
 
 * **New Features**
