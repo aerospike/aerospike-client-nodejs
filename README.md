@@ -38,30 +38,30 @@ record using the Aerospike database.
 ```js
 const Aerospike = require('aerospike')
 
-let config = {
+const config = {
   hosts: '192.168.33.10:3000'
 }
-let key = new Aerospike.Key('test', 'demo', 'demo')
+const key = new Aerospike.Key('test', 'demo', 'demo')
 
 Aerospike.connect(config)
   .then(client => {
-    let bins = {
+    const bins = {
       i: 123,
       s: 'hello',
       b: Buffer.from('world'),
       d: new Aerospike.Double(3.1415),
-      g: new Aerospike.GeoJSON({type: 'Point', coordinates: [103.913, 1.308]}),
+      g: Aerospike.GeoJSON.Point(103.913, 1.308),
       l: [1, 'a', {x: 'y'}],
       m: {foo: 4, bar: 7}
     }
-    let meta = { ttl: 10000 }
-    let policy = new Aerospike.WritePolicy({
+    const meta = { ttl: 10000 }
+    const policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE
     })
 
     return client.put(key, bins, meta, policy)
       .then(() => {
-        let ops = [
+        const ops = [
           Aerospike.operations.incr('i', 1),
           Aerospike.operations.read('i'),
           Aerospike.lists.append('l', 'z'),
@@ -71,7 +71,7 @@ Aerospike.connect(config)
         return client.operate(key, ops)
       })
       .then(result => {
-        console.log(result.bins)   // => { c: 4, i: 124, m: null }
+        console.log(result.bins)   // => { i: 124, l: 4, m: null }
 
         return client.get(key)
       })
