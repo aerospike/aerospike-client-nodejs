@@ -20,7 +20,6 @@
 #include "predexp.h"
 
 extern "C" {
-#include <aerospike/as_std.h>
 #include <aerospike/as_predexp.h>
 }
 
