@@ -246,6 +246,36 @@ describe('client.put()', function () {
     })
   })
 
+  context.only('bin names', function () {
+    helper.cluster.skip_unless_version('4.2.0', this)
+
+    it('should write a bin with a name of max. length 15', function () {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      let bins = { 'bin-name-len-15': 'bin name with 15 chars' }
+
+      return client.put(key, bins)
+        .then(() => client.get(key))
+        .then(record => {
+          expect(record.bins).to.eql({
+            'bin-name-len-15': 'bin name with 15 chars'
+          })
+        }).then(() => client.remove(key))
+    })
+
+    it('should return a parameter error when bin length exceeds 15 chars', function () {
+      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      let bins = { 'bin-name-size-16': 'bin name with 16 chars' }
+
+      return client.put(key, bins)
+        .then(() => 'no error')
+        .catch(error => error)
+        .then(error => {
+          expect(error).to.be.instanceof(AerospikeError)
+            .that.has.property('code', Aerospike.status.ERR_REQUEST_INVALID)
+        })
+    })
+  })
+
   it('should delete a bin when writing null to it', function (done) {
     var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
     var record = { bin1: 123, bin2: 456 }
