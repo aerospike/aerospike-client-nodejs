@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.6.1] - 2018-09-04
+
 * **Updates**
   * Change max. bin name length to 15 (was 14). Requires server version 4.2 or later.
-  * Update C client library to [v4.3.17](http://www.aerospike.com/download/client/c/notes.html#4.3.17).
+  * Update C client library to [v4.3.17](http://www.aerospike.com/download/client/c/notes.html#4.3.17). [#273](https://github.com/aerospike/aerospike-client-nodejs/pull/273)
 
 ## [3.6.0] - 2018-08-28
 
