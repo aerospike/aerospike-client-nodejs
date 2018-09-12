@@ -46,6 +46,11 @@ class EventQueue : public Nan::AsyncResource {
 			log = p_log;
 		}
 
+		~EventQueue() {
+			as_queue_mt_destroy(&events);
+			callback.Reset();
+		}
+
 		void push(as_cluster_event *event) {
 			as_queue_mt_push(&events, event);
 			as_v8_debug(log, "Cluster event %d triggered by node \"%s\" (%s)",
@@ -130,8 +135,12 @@ void
 events_callback_close(as_config *config)
 {
 	Nan::HandleScope scope;
-	uv_handle_t *async = (uv_handle_t *)config->event_callback_udata;
-	uv_close(async, events_async_close);
+	uv_handle_t* handle = (uv_handle_t *)config->event_callback_udata;
+	// EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
+	// delete queue;
+	config->event_callback_udata = NULL;
+	handle->data = NULL;
+	uv_close(handle, events_async_close);
 }
 
 //==========================================================
@@ -147,16 +156,20 @@ events_async_close(uv_handle_t *handle)
 static void
 cluster_event_callback(as_cluster_event *event)
 {
-	uv_async_t *handle = (uv_async_t *) event->udata;
-	EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
-	queue->push(event);
-	uv_async_send(handle);
+	uv_async_t* handle = (uv_async_t *) event->udata;
+	if (handle->data) {
+		EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
+		queue->push(event);
+		uv_async_send(handle);
+	}
 }
 
 static void
 cluster_event_async(uv_async_t *handle)
 {
 	Nan::HandleScope scope;
-	EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
-	queue->process();
+	if (handle->data) {
+		EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
+		queue->process();
+	}
 }

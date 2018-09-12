@@ -1222,7 +1222,10 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     }
 
     if (has_value) {
-        Local<Object> buff = Nan::CopyBuffer((char*)as_key_digest(key)->value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
+        // Copy the digest back to the JS key object
+        as_digest* digest = as_key_digest(key);
+        uint8_t* bytes = digest->value;
+        Local<Object> buff = Nan::CopyBuffer((char*) bytes, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     } else {
         Local<Value> digest_value = obj->Get(Nan::New("digest").ToLocalChecked());
@@ -1343,14 +1346,14 @@ free_batch_records(as_batch_read_records* records)
 
 int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, const LogInfo* log)
 {
-    if(obj->IsNull()) {
+    if (obj->IsNull()) {
         as_v8_error(log, "Object passed is NULL");
         return AS_NODE_PARAM_ERR;
     }
 
     // Extract UDF module name
     if (obj->Has(Nan::New("module").ToLocalChecked())) {
-        Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
+        Local<Value> module = obj->Get(Nan::New("module").ToLocalChecked());
         if (module->IsString()) {
             size_t size = module->ToString()->Length() + 1;
             if (*filename == NULL) {

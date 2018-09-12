@@ -226,7 +226,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		rc = AS_NODE_PARAM_ERR;
 	}
 
-	if (binName != NULL) free(binName);
+	if (binName) free(binName);
 	return rc;
 }
 
@@ -265,6 +265,7 @@ int add_incr_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_OK;
 	} else {
 		as_v8_debug(log, "Type error in incr operation");
+		if (binName != NULL) free (binName);
 		return AS_NODE_PARAM_ERR;
 	}
 }
@@ -273,6 +274,7 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName;
 	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -281,7 +283,7 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_debug(log, "bin=%s, value=%s", binName, binVal);
 		as_operations_add_prepend_strp(ops, binName, binVal, true);
-		if (binName != NULL) free(binName);
+		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val->ToObject();
@@ -292,10 +294,11 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		}
 		as_v8_debug(log, "bin=%s, value=<rawp>, len=%i", binName, len);
 		as_operations_add_prepend_rawp(ops, binName, data, len, true);
-		if (binName != NULL) free(binName);
+		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else {
 		as_v8_debug(log, "Type error in prepend operation");
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 }
@@ -304,6 +307,7 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName;
 	if (get_string_property(&binName, obj, "bin", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -312,7 +316,7 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_debug(log, "bin=%s, value=%s", binName, binVal);
 		as_operations_add_append_strp(ops, binName, binVal,true);
-		if (binName != NULL) free(binName);
+		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val->ToObject();
@@ -323,10 +327,11 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		}
 		as_v8_debug(log, "bin=%s, value=<rawp>, len=%i", binName, len);
 		as_operations_add_append_rawp(ops, binName, data, len, true);
-		if (binName != NULL) free(binName);
+		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else {
 		as_v8_debug(log, "Type error in append operation");
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 }
@@ -408,17 +413,22 @@ int add_list_append_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
 	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_list* list;
 	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
+		if (list) as_list_destroy(list);
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool with_policy;
 	as_list_policy policy;
 	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
+		if (list) as_list_destroy(list);
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -430,7 +440,7 @@ int add_list_append_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 		as_operations_add_list_append_items(ops, binName, list);
 	}
 
-	if (binName != NULL) free(binName);
+	if (binName) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -473,22 +483,28 @@ int add_list_insert_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName;
 	if (get_string_property(&binName, op, "bin", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 
 	int64_t index;
 	if (get_int64_property(&index, op, "index", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
 		return AS_NODE_PARAM_ERR;
 	}
 
 	as_list* list;
 	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
+		if (list) as_list_destroy(list);
 		return AS_NODE_PARAM_ERR;
 	}
 
 	bool with_policy;
 	as_list_policy policy;
 	if (get_optional_list_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
+		if (binName) free(binName);
+		if (list) as_list_destroy(list);
 		return AS_NODE_PARAM_ERR;
 	}
 
@@ -500,7 +516,7 @@ int add_list_insert_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 		as_operations_add_list_insert_items(ops, binName, index, list);
 	}
 
-	if (binName != NULL) free(binName);
+	if (binName) free(binName);
 	return AS_NODE_PARAM_OK;
 }
 

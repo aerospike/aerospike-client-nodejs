@@ -38,6 +38,7 @@ class JobInfoCommand : public AerospikeCommand {
 
 		~JobInfoCommand() {
 			if (policy != NULL) cf_free(policy);
+			if (module) free(module);
 		}
 
 		as_policy_info* policy = NULL;

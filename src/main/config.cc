@@ -33,31 +33,37 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 {
 	bool defined;
 	int rc;
+	uint32_t default_port = DEFAULT_PORT;
+	char* cluster_name = NULL;
+	char* user = NULL;
+	char* password = NULL;
+	char* user_path = NULL;
 
-	char* cluster_name;
+	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
+	Local<Value> policies_val = configObj->Get(Nan::New("policies").ToLocalChecked());
+
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj, "clusterName", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	} else if (defined) {
 		as_v8_detail(log, "Setting Cluster Name: \"%s\"", cluster_name);
 		as_config_set_cluster_name(config, cluster_name);
 	}
 
-	uint32_t default_port = DEFAULT_PORT;
 	if ((rc = get_optional_uint32_property(&default_port, NULL, configObj, "port", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 
 	if ((rc = get_optional_uint32_property((uint32_t*) &config->auth_mode, NULL, configObj, "authMode", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 
-	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
 	if (maybe_hosts->IsString()) {
 		Nan::Utf8String hosts(maybe_hosts);
 		as_v8_detail(log, "setting seed hosts: \"%s\"", *hosts);
 		if (as_config_add_hosts(config, *hosts, default_port) == false) {
 			as_v8_error(log, "invalid hosts string: \"%s\"", *hosts);
-			return AS_NODE_PARAM_ERR;
+			rc = AS_NODE_PARAM_ERR;
+			goto Cleanup;
 		}
 	} else if (maybe_hosts->IsArray()) {
 		Local<Array> host_list = Local<Array>::Cast(maybe_hosts);
@@ -73,7 +79,8 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 				// use default value
 			} else {
 				as_v8_error(log, "host[%d].port should be an integer", i);
-				return AS_NODE_PARAM_ERR;
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
 			}
 
 			if (maybe_addr->IsString()) {
@@ -82,15 +89,16 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 				as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
 			} else {
 				as_v8_error(log, "host[%d].addr should be a string", i);
-				return AS_NODE_PARAM_ERR;
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
 			}
 		}
 	} else {
 		as_v8_error(log, "'host' config must be a string or an array");
-		return AS_NODE_PARAM_ERR;
+		rc = AS_NODE_PARAM_ERR;
+		goto Cleanup;
 	}
 
-	Local<Value> policies_val = configObj->Get(Nan::New("policies").ToLocalChecked());
 	if (policies_val->IsObject()) {
 		Local<Object> policies_obj = policies_val->ToObject();
 		as_policies *policies = &config->policies;
@@ -98,63 +106,63 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		Local<Value> policy_val = policies_obj->Get(Nan::New("apply").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = applypolicy_from_jsobject(&policies->apply, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("batch").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = batchpolicy_from_jsobject(&policies->batch, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("info").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = infopolicy_from_jsobject(&policies->info, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("operate").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = operatepolicy_from_jsobject(&policies->operate, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("read").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = readpolicy_from_jsobject(&policies->read, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("remove").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = removepolicy_from_jsobject(&policies->remove, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("scan").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = scanpolicy_from_jsobject(&policies->scan, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("query").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = querypolicy_from_jsobject(&policies->query, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("write").ToLocalChecked());
 		if (policy_val->IsObject()) {
 			if ((rc = writepolicy_from_jsobject(&policies->write, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
-				return rc;
+				goto Cleanup;
 			}
 		}
 
@@ -164,29 +172,25 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	// If modlua path is passed in config object, set those values here
 	if (configObj->Has(Nan::New("modlua").ToLocalChecked())) {
 		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked())->ToObject();
-
-		char* user_path;
-		bool usrpath_set = false;
-		if ((rc = get_optional_string_property(&user_path, &usrpath_set, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {
-			return rc;
-		} else if (usrpath_set) {
+		if ((rc = get_optional_string_property(&user_path, &defined, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		} else if (defined) {
 			strcpy(config->lua.user_path, user_path);
 		} else {
 			as_v8_debug(log, "Using default Lua user path: %s", AS_CONFIG_LUA_USER_PATH);
 		}
 	}
 
-	char* user;
 	if ((rc = get_optional_string_property(&user, &defined, configObj, "user", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	} else if (defined) {
-		char* password;
 		if ((rc = get_string_property(&password, configObj, "password", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		} else {
 			if (!as_config_set_user(config, user, password)) {
 				as_v8_error(log, "Failed to set user");
-				return AS_NODE_PARAM_ERR;
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
 			}
 		}
 	}
@@ -195,37 +199,42 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		Local<Object> shmConfigObj = configObj->Get(Nan::New("sharedMemory").ToLocalChecked())->ToObject();
 		config->use_shm = true;
 		if ((rc = get_optional_bool_property(&config->use_shm, NULL, shmConfigObj, "enable", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		}
 		if ((rc = get_optional_uint32_property((uint32_t*) &config->shm_key, NULL, shmConfigObj, "key", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		}
 		if ((rc = get_optional_uint32_property(&config->shm_max_nodes, NULL, shmConfigObj, "maxNodes", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		}
 		if ((rc = get_optional_uint32_property(&config->shm_max_namespaces, NULL, shmConfigObj, "maxNamespaces", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		}
 		if ((rc = get_optional_uint32_property(&config->shm_takeover_threshold_sec, NULL, shmConfigObj, "takeoverThresholdSeconds", log)) != AS_NODE_PARAM_OK) {
-			return rc;
+			goto Cleanup;
 		}
 	}
 
 	if ((rc = get_optional_uint32_property(&config->conn_timeout_ms, NULL, configObj, "connTimeoutMs", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->login_timeout_ms, NULL, configObj, "loginTimeoutMs", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->tender_interval, NULL, configObj, "tendInterval", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->async_max_conns_per_node, NULL, configObj, "maxConnsPerNode", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->max_conns_per_node, NULL, configObj, "maxConnsPerNodeSync", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+		goto Cleanup;
 	}
 
-	return AS_NODE_PARAM_OK;
+Cleanup:
+	if (cluster_name) free(cluster_name);
+	if (user) free(user);
+	if (password) free(password);
+	if (user_path) free(user_path);
+	return rc;
 }
