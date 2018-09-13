@@ -1255,63 +1255,6 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     return AS_NODE_PARAM_OK;
 }
 
-int key_from_jsarray(as_key* key, Local<Array> arr, const LogInfo* log)
-{
-    as_namespace ns = { '\0' };
-    as_set set = { '\0' };
-
-
-    Local<Value> ns_obj = arr->Get(0);
-    Local<Value> set_obj = arr->Get(1);
-    Local<Value> val_obj = arr->Get(2);
-    if ( arr->Length() != 3 ) {
-        goto Ret_Err;
-    }
-    if ( ns_obj->IsString() ) {
-        if (as_strlcpy(ns, *Nan::Utf8String(ns_obj), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
-            goto Ret_Err;
-        }
-    }
-    else {
-        goto Ret_Err;
-    }
-
-    if ( strlen(ns) == 0 ) {
-        goto Ret_Err;
-    }
-
-    if ( set_obj->IsString() ) {
-        if (as_strlcpy(set, *Nan::Utf8String(set_obj), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
-            goto Ret_Err;
-        }
-    }
-    else {
-        goto Ret_Err;
-    }
-
-    if ( strlen(set) == 0 ) {
-        goto Ret_Err;
-    }
-
-    if ( val_obj->IsString() ) {
-        char * value = strdup(*Nan::Utf8String(val_obj));
-        as_key_init(key, ns, set, value);
-        ((as_string *) key->valuep)->free = true;
-        goto Ret_Ok;
-    }
-    else if ( val_obj->IsNumber() ) {
-        int64_t value = val_obj->IntegerValue();
-        as_key_init_int64(key, ns, set, value);
-        goto Ret_Ok;
-    }
-
-Ret_Ok:
-    return AS_NODE_PARAM_OK;
-
-Ret_Err:
-    return AS_NODE_PARAM_ERR;
-}
-
 int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log)
 {
 	uint32_t len = arr->Length();

@@ -90,7 +90,6 @@ int log_from_jsobject(LogInfo* log, v8::Local<v8::Object> obj);
 int recordbins_from_jsobject(as_record* rec, v8::Local<v8::Object> obj, const LogInfo* log);
 int recordmeta_from_jsobject(as_record* rec, v8::Local<v8::Object> obj, const LogInfo* log);
 int key_from_jsobject(as_key* key, v8::Local<v8::Object> obj, const LogInfo* log);
-int key_from_jsarray(as_key* key, v8::Local<v8::Array> arr, const LogInfo* log);
 int bins_from_jsarray(char*** bins, uint32_t* num_bins, v8::Local<v8::Array> arr, const LogInfo* log);
 int batch_from_jsarray(as_batch* batch, v8::Local<v8::Array> arr, const LogInfo* log);
 int batch_read_records_from_jsarray(as_batch_read_records** batch, v8::Local<v8::Array> arr, const LogInfo* log);
