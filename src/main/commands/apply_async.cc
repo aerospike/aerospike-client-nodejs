@@ -68,11 +68,14 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	as_v8_debug(log, "Sending async apply command");
 	status = aerospike_key_apply_async(client->as, &cmd->err, p_policy, &key,
 			udf_module, udf_function, udf_args, async_value_listener, cmd, NULL, NULL);
-	if (status != AEROSPIKE_OK) {
+	if (status == AEROSPIKE_OK) {
+		cmd = NULL; // async callback responsible for deleting the command
+	} else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
+	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
 	if (udf_module) cf_free(udf_module);
 	if (udf_function) cf_free(udf_function);

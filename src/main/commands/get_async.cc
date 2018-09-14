@@ -37,7 +37,7 @@ NAN_METHOD(AerospikeClient::GetAsync)
 	bool key_initalized = false;
 	as_policy_read policy;
 	as_policy_read* p_policy = NULL;
-	as_status status;
+	as_status status = AEROSPIKE_ERR;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
@@ -55,10 +55,13 @@ NAN_METHOD(AerospikeClient::GetAsync)
 
 	as_v8_debug(log, "Sending async get command");
 	status = aerospike_key_get_async(client->as, &cmd->err, p_policy, &key, async_record_listener, cmd, NULL, NULL);
-	if (status != AEROSPIKE_OK) {
+	if (status == AEROSPIKE_OK) {
+		cmd = NULL; // async callback responsible for deleting the command
+	} else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
+	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
 }
