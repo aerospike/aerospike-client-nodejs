@@ -918,7 +918,14 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
             return AS_NODE_PARAM_ERR;
         }
     }
-    as_v8_detail(log, "type: %d, string value: %s", as_val_type(*value), as_val_tostring(*value));
+
+    if (as_v8_detail_enabled(log)) {
+        auto val_type = as_val_type(*value);
+        char* val_str = as_val_tostring(*value);
+        as_v8_detail(log, "type: %d, string value: %s", val_type, val_str);
+        cf_free(val_str);
+    }
+
     return AEROSPIKE_OK;
 }
 

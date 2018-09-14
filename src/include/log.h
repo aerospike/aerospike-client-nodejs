@@ -36,14 +36,20 @@ extern LogInfo g_log_info;
  *  MACROS
  ******************************************************************************/
 
+#define as_v8_detail_enabled( __log ) \
+	( (__log) && AS_LOG_LEVEL_TRACE <= (__log)->level )
+
 #define as_v8_detail( __log, __fmt, ...) \
-	if ( (__log) && AS_LOG_LEVEL_TRACE <= (__log)->level ) {\
-		as_v8_log_function( __log, AS_LOG_LEVEL_TRACE,__func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__); \
+	if (as_v8_detail_enabled( __log )) {\
+		as_v8_log_function(__log, AS_LOG_LEVEL_TRACE, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__); \
 	}
 
+#define as_v8_debug_enabled( __log ) \
+	( (__log) && AS_LOG_LEVEL_DEBUG <= (__log)->level )
+
 #define as_v8_debug( __log, __fmt, ...) \
-	if ( (__log) && AS_LOG_LEVEL_DEBUG <= (__log)->level ) {\
-		as_v8_log_function( __log, AS_LOG_LEVEL_DEBUG, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);\
+	if (as_v8_debug_enabled(__log)) {\
+		as_v8_log_function(__log, AS_LOG_LEVEL_DEBUG, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);\
 	}
 
 #define as_v8_info( __log, __fmt, ...)  \
