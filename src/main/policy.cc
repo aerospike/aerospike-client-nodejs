@@ -191,6 +191,9 @@ int readpolicy_from_jsobject(as_policy_read* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail(log, "Parsing read policy: success");
 	return AS_NODE_PARAM_OK;
 }
