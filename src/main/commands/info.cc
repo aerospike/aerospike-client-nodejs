@@ -27,7 +27,7 @@ extern "C" {
 #include <aerospike/aerospike_info.h>
 }
 
-#define INFO_REQUEST_LEN  50
+#define MAX_INFO_REQUEST_LEN  256
 
 using namespace v8;
 
@@ -59,9 +59,11 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	LogInfo* log = client->log;
 
 	if (info[0]->IsString()) {
-		cmd->request = (char*) cf_malloc(INFO_REQUEST_LEN);
-		if (as_strlcpy(cmd->request, *Nan::Utf8String(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
+		cmd->request = (char*) cf_malloc(MAX_INFO_REQUEST_LEN);
+		size_t reqlen = as_strlcpy(cmd->request, *Nan::Utf8String(info[0]->ToString()), MAX_INFO_REQUEST_LEN);
+		if (reqlen > MAX_INFO_REQUEST_LEN) {
+			as_v8_info(log, "Info request exceeds max. length (%zu > %i): \"%s...\"", reqlen, MAX_INFO_REQUEST_LEN, cmd->request);
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length");
 		}
 	} else {
 		cmd->request = (char*) "";
