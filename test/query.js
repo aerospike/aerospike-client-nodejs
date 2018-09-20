@@ -435,6 +435,25 @@ describe('Queries', function () {
         expect(records[0].bins.name).to.eq('int match')
       })
     })
+
+    context('with QueryPolicy', function () {
+      context('with deserialize: false', function () {
+        const policy = new Aerospike.QueryPolicy({
+          deserialize: false
+        })
+
+        it('returns lists and maps as byte buffers', function () {
+          const query = client.query(helper.namespace, testSet)
+          query.where(filter.equal('name', 'int list match'))
+
+          return query.results(policy)
+            .then(records => {
+              expect(records.length).to.eq(1)
+              expect(records[0].bins.li).to.eql(Buffer.from([0x93, 0x01, 0x05, 0x09]))
+            })
+        })
+      })
+    })
   })
 
   describe('query.apply()', function () {

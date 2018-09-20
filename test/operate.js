@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global beforeEach, afterEach, expect, context, describe, it */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const Double = Aerospike.Double
@@ -244,39 +245,74 @@ context('Operations', function () {
       })
     })
 
-    context('exists policy', function () {
-      context('policy.exists.UPDATE', function () {
-        it('does not create a key that does not exist yet', function () {
-          let notExistentKey = keygen.string(helper.namespace, helper.set, {prefix: 'test/operate/doesNotExist'})()
-          let ops = [op.write('i', 49)]
-          let policy = new Aerospike.policy.OperatePolicy({
+    context('with OperatePolicy', function () {
+      context('exists policy', function () {
+        context('policy.exists.UPDATE', function () {
+          const policy = new Aerospike.policy.OperatePolicy({
             exists: Aerospike.policy.exists.UPDATE
           })
 
-          return client.operate(notExistentKey, ops, {}, policy)
-            .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
-            .then(() => client.exists(notExistentKey))
-            .then(exists => expect(exists).to.be.false())
+          it('does not create a key that does not exist yet', function () {
+            const notExistentKey = keygen.string(helper.namespace, helper.set, {prefix: 'test/operate/doesNotExist'})()
+            const ops = [ op.write('i', 49) ]
+
+            return client.operate(notExistentKey, ops, {}, policy)
+              .then(() => 'error expected')
+              .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
+              .then(() => client.exists(notExistentKey))
+              .then(exists => expect(exists).to.be.false())
+          })
         })
       })
-    })
 
-    it('sends meta data and applies an operate policy', function () {
-      let ops = [
-        op.add('int', 42)
-      ]
-      let meta = {
-        gen: 12345
-      }
-      let policy = new Aerospike.OperatePolicy({
-        gen: Aerospike.policy.gen.EQ
+      context('gen policy', function () {
+        context('policy.gen.EQ', function () {
+          const policy = new Aerospike.OperatePolicy({
+            gen: Aerospike.policy.gen.EQ
+          })
+
+          it('executes the operation if the generation matches', function () {
+            const ops = [ op.add('int', 7) ]
+            const meta = { gen: 1 }
+
+            return client.operate(key, ops, meta, policy)
+              .then(() => client.get(key))
+              .then(record => expect(record.bins.int).to.equal(130))
+          })
+
+          it('rejects the operation if the generation does not match', function () {
+            const ops = [ op.add('int', 7) ]
+            const meta = { gen: 99 }
+
+            return client.operate(key, ops, meta, policy)
+              .then(() => 'error expected')
+              .catch(error => {
+                expect(error).to.be.instanceof(AerospikeError)
+                  .with.property('code', status.ERR_RECORD_GENERATION)
+                return Promise.resolve(true)
+              })
+              .then(() => client.get(key))
+              .then(record => expect(record.bins.int).to.equal(123))
+          })
+        })
       })
 
-      client.operate(key, ops, meta, policy)
-        .catch(error => {
-          expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_GENERATION)
-          return Promise.resolve(true)
+      context('with deserialize: false', function () {
+        const policy = new Aerospike.OperatePolicy({
+          deserialize: false
         })
+
+        it('returns list and map bins as byte buffers', function () {
+          const ops = [ op.read('int'), op.read('list'), op.read('map') ]
+
+          return client.operate(key, ops, null, policy)
+            .then(record => {
+              expect(record.bins.int).to.equal(123)
+              expect(record.bins.list).to.eql(Buffer.from([0x93, 0x01, 0x02, 0x03]))
+              expect(record.bins.map).to.eql(Buffer.from([0x83, 0xa2, 0x03, 0x63, 0x03, 0xa2, 0x03, 0x61, 0x01, 0xa2, 0x03, 0x62, 0x02]))
+            })
+        })
+      })
     })
 
     it('calls the callback function with the results of the operation', function (done) {

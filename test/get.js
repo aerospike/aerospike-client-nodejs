@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -56,19 +57,31 @@ describe('client.get()', function () {
     })
   })
 
-  it('should read the record using a read policy', function () {
-    let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})()
-    let meta = metagen.constant({ttl: 1000})()
-    let bins = recgen.constant({i: 123, s: 'abc'})()
-    let policy = new Aerospike.ReadPolicy({
-      totalTimeout: 1000,
-      key: Aerospike.policy.key.SEND,
-      consistencyLevel: Aerospike.policy.consistencyLevel.ALL
-    })
+  context('with ReadPolicy', function () {
+    context('with deserialize: false', function () {
+      it('should return lists and maps as raw bytes', function () {
+        let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/get/'})()
+        let bins = {
+          i: 123,
+          s: 'abc',
+          l: [1, 2, 3],
+          m: { a: 1, b: 2, c: 3 }
+        }
+        let policy = new Aerospike.ReadPolicy({
+          deserialize: false
+        })
 
-    return client.put(key, bins, meta)
-      .then(() => client.get(key, policy))
-      .then(() => client.remove(key))
+        return client.put(key, bins)
+          .then(() => client.get(key, policy))
+          .then(record => {
+            let bins = record.bins
+            expect(bins.i).to.eql(123)
+            expect(bins.s).to.eql('abc')
+            expect(bins.l).to.eql(Buffer.from([0x93, 0x01, 0x02, 0x03]))
+            expect(bins.m).to.eql(Buffer.from([0x83, 0xa2, 0x03, 0x63, 0x03, 0xa2, 0x03, 0x61, 0x01, 0xa2, 0x03, 0x62, 0x02]))
+          })
+      })
+    })
   })
 
   it('should return the TTL for a never expiring record as Aerospike.ttl.NEVER_EXPIRE', function (done) {

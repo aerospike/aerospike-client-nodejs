@@ -113,6 +113,9 @@ int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, co
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -131,6 +134,9 @@ int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const 
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->allow_inline, NULL, obj, "allowInline", log)) != AS_NODE_PARAM_OK) {
@@ -186,6 +192,9 @@ int readpolicy_from_jsobject(as_policy_read* policy, Local<Object> obj, const Lo
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
@@ -258,6 +267,9 @@ int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const 
 	int rc = 0;
 	as_policy_query_init(policy);
 	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {

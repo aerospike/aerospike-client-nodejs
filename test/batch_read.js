@@ -16,7 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it, before */
+/* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -33,10 +34,15 @@ describe('client.batchRead()', function () {
   var client = helper.client
 
   before(function () {
-    var nrecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_read/', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+    const nrecords = 10
+    const kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_read/', random: false})
+    const mgen = metagen.constant({ttl: 1000})
+    const rgen = recgen.record({
+      i: valgen.integer(),
+      s: valgen.string(),
+      l: () => [1, 2, 3],
+      m: () => { return { a: 1, b: 2, c: 3 } }
+    })
     return putgen.put(nrecords, kgen, rgen, mgen)
   })
 
@@ -112,7 +118,7 @@ describe('client.batchRead()', function () {
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
-        expect(result.record.bins).to.have.keys('i', 's')
+        expect(result.record.bins).to.have.keys('i', 's', 'l', 'm')
         expect(result.record.gen).to.be.ok()
         expect(result.record.ttl).to.be.ok()
       })
@@ -134,7 +140,7 @@ describe('client.batchRead()', function () {
         let record = result.record
         switch (record.key.key) {
           case 'test/batch_read/1':
-            expect(record.bins).to.have.all.keys('i', 's')
+            expect(record.bins).to.have.all.keys('i', 's', 'l', 'm')
             break
           case 'test/batch_read/3':
             expect(record.bins).to.have.all.keys('i')
@@ -147,6 +153,30 @@ describe('client.batchRead()', function () {
         }
       })
       done()
+    })
+  })
+
+  context('with BatchPolicy', function () {
+    context('with deserialize: false', function () {
+      const policy = new Aerospike.BatchPolicy({
+        deserialize: false
+      })
+
+      it('returns list and map bins as byte buffers', function () {
+        const batch = [{
+          key: new Key(helper.namespace, helper.set, 'test/batch_read/1'),
+          read_all_bins: true
+        }]
+
+        return client.batchRead(batch, policy)
+          .then(results => {
+            let bins = results[0].record.bins
+            expect(bins.i).to.be.a('number')
+            expect(bins.s).to.be.a('string')
+            expect(bins.l).to.be.instanceof(Buffer)
+            expect(bins.m).to.be.instanceof(Buffer)
+          })
+      })
     })
   })
 
