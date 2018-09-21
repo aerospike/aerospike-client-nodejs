@@ -1117,7 +1117,7 @@ Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
         as_v8_detail(log, "Key value is NULL");
     }
 
-    if(key->digest.init == true) {
+    if (key->digest.init == true) {
         Local<Object> buff = Nan::CopyBuffer((char*)key->digest.value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     }
@@ -1147,6 +1147,7 @@ Local<Object> jobinfo_to_jsobject(const as_job_info* info, const LogInfo* log)
 
 int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 {
+    Nan::EscapableHandleScope scope;
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
@@ -1232,7 +1233,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
         // Copy the digest back to the JS key object
         as_digest* digest = as_key_digest(key);
         uint8_t* bytes = digest->value;
-        Local<Object> buff = Nan::CopyBuffer((char*) bytes, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
+        Local<Object> buff = scope.Escape(Nan::CopyBuffer((char*) bytes, AS_DIGEST_VALUE_SIZE).ToLocalChecked());
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     } else {
         Local<Value> digest_value = obj->Get(Nan::New("digest").ToLocalChecked());
