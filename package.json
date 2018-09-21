@@ -35,7 +35,8 @@
     "codecov": "codecov",
     "prepush": "npm test",
     "apidocs": "jsdoc -c jsdoc.json",
-    "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/"
+    "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
+    "valgrind": "valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i"
   },
   "dependencies": {
     "bindings": "^1.3.0",

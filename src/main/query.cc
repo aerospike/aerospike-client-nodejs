@@ -69,7 +69,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				as_v8_error(log, "Bin value must be string");
 				Nan::ThrowError("Bin value is not a string");
 			}
-			const char* bin_name = strdup(*Nan::Utf8String(bin));
+			const char* bin_name = *Nan::Utf8String(bin);
 			as_predicate_type predicate = (as_predicate_type) filter->Get(Nan::New("predicate").ToLocalChecked())->ToObject()->IntegerValue();
 			as_index_type type = (as_index_type) filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
 			as_index_datatype datatype = (as_index_datatype) filter->Get(Nan::New("datatype").ToLocalChecked())->ToObject()->IntegerValue();

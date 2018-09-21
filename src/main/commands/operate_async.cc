@@ -72,11 +72,14 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 
 	as_v8_debug(log, "Sending async operate command");
 	status = aerospike_key_operate_async(client->as, &cmd->err, p_policy, &key, &operations, async_record_listener, cmd, NULL, NULL);
-	if (status != AEROSPIKE_OK) {
+	if (status == AEROSPIKE_OK) {
+		cmd = NULL; // async callback responsible for deleting the command
+	} else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
+	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
 	if (operations_initalized) as_operations_destroy(&operations);
 }

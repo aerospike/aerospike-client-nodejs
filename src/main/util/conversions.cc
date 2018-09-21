@@ -918,7 +918,14 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
             return AS_NODE_PARAM_ERR;
         }
     }
-    as_v8_detail(log, "type: %d, string value: %s", as_val_type(*value), as_val_tostring(*value));
+
+    if (as_v8_detail_enabled(log)) {
+        auto val_type = as_val_type(*value);
+        char* val_str = as_val_tostring(*value);
+        as_v8_detail(log, "type: %d, string value: %s", val_type, val_str);
+        cf_free(val_str);
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -1110,7 +1117,7 @@ Local<Object> key_to_jsobject(const as_key* key, const LogInfo* log)
         as_v8_detail(log, "Key value is NULL");
     }
 
-    if(key->digest.init == true) {
+    if (key->digest.init == true) {
         Local<Object> buff = Nan::CopyBuffer((char*)key->digest.value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     }
@@ -1140,6 +1147,7 @@ Local<Object> jobinfo_to_jsobject(const as_job_info* info, const LogInfo* log)
 
 int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 {
+    Nan::EscapableHandleScope scope;
     as_namespace ns = {'\0'};
     as_set set = {'\0'};
 
@@ -1222,7 +1230,10 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     }
 
     if (has_value) {
-        Local<Object> buff = Nan::CopyBuffer((char*)as_key_digest(key)->value, AS_DIGEST_VALUE_SIZE).ToLocalChecked();
+        // Copy the digest back to the JS key object
+        as_digest* digest = as_key_digest(key);
+        uint8_t* bytes = digest->value;
+        Local<Object> buff = scope.Escape(Nan::CopyBuffer((char*) bytes, AS_DIGEST_VALUE_SIZE).ToLocalChecked());
         obj->Set(Nan::New("digest").ToLocalChecked(), buff);
     } else {
         Local<Value> digest_value = obj->Get(Nan::New("digest").ToLocalChecked());
@@ -1343,14 +1354,14 @@ free_batch_records(as_batch_read_records* records)
 
 int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Local<Object> obj, const LogInfo* log)
 {
-    if(obj->IsNull()) {
+    if (obj->IsNull()) {
         as_v8_error(log, "Object passed is NULL");
         return AS_NODE_PARAM_ERR;
     }
 
     // Extract UDF module name
     if (obj->Has(Nan::New("module").ToLocalChecked())) {
-        Local<Value> module = obj->Get( Nan::New("module").ToLocalChecked());
+        Local<Value> module = obj->Get(Nan::New("module").ToLocalChecked());
         if (module->IsString()) {
             size_t size = module->ToString()->Length() + 1;
             if (*filename == NULL) {

@@ -41,12 +41,12 @@ class UdfRegisterCommand : public AerospikeCommand {
 
 		~UdfRegisterCommand() {
 			if (policy != NULL) cf_free(policy);
-			as_bytes_destroy(&content);
+			if (content.type != 0) as_bytes_destroy(&content);
 		}
 
 	as_policy_info* policy = NULL;
 	char filename[MAX_FILENAME_LEN] = { '\0' };
-	as_bytes content;
+	as_bytes content = {};
 	as_udf_type type;
 };
 

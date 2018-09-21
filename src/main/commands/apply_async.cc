@@ -45,7 +45,6 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	as_list* udf_args = NULL;
 	char* udf_module = NULL;
 	char* udf_function = NULL;
-	bool udf_params_initialized = false;
 
 	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
@@ -57,7 +56,6 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "UDF args object invalid");
 		goto Cleanup;
 	}
-	udf_params_initialized = true;
 
 	if (info[2]->IsObject()) {
 		if (applypolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
@@ -70,15 +68,16 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	as_v8_debug(log, "Sending async apply command");
 	status = aerospike_key_apply_async(client->as, &cmd->err, p_policy, &key,
 			udf_module, udf_function, udf_args, async_value_listener, cmd, NULL, NULL);
-	if (status != AEROSPIKE_OK) {
+	if (status == AEROSPIKE_OK) {
+		cmd = NULL; // async callback responsible for deleting the command
+	} else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
+	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
-	if (udf_params_initialized) {
-		as_list_destroy(udf_args);
-		cf_free(udf_module);
-		cf_free(udf_function);
-	}
+	if (udf_module) cf_free(udf_module);
+	if (udf_function) cf_free(udf_function);
+	if (udf_args) as_list_destroy(udf_args);
 }
