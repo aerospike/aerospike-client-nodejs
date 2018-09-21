@@ -29,7 +29,7 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const putgen = helper.putgen
 
-describe('Aerospike.predexp', function () {
+describe('Aerospike.predexp #slow', function () {
   const client = helper.client
 
   const testSet = 'test/predexp-' + Math.floor(Math.random() * 100000)
