@@ -140,10 +140,23 @@ context('Info commands', function () {
       expect(infoHash['version']).to.be.a('number')
     })
 
+    it('should be able to handle an empty info response', function () {
+      var infoStr = 'foo\n'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash).to.eql({ foo: undefined })
+    })
+
     it('should be able to handle an empty string', function () {
       var infoStr = ''
       var infoHash = info.parse(infoStr)
       expect(infoHash).to.eql({})
+    })
+
+    it('does not split the response if no separators are specified', function () {
+      info.separators['test-foo'] = []
+      var infoStr = 'test-foo\ta=1;b=2\n'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['test-foo']).to.eql('a=1;b=2')
     })
 
     it('should parse the udf-list info key', function () {
