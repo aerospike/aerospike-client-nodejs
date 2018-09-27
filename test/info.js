@@ -155,6 +155,12 @@ context('Info commands', function () {
       ])
     })
 
+    it('should parse empty udf-list info key and return empty array', function () {
+      var infoStr = 'udf-list\t'
+      var infoHash = info.parse(infoStr)
+      expect(infoHash['udf-list']).to.eql([])
+    })
+
     it('should parse the bins info key', function () {
       let infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
       let infoHash = info.parse(infoStr)
@@ -165,6 +171,18 @@ context('Info commands', function () {
         }
       }
       expect(infoHash['bins']).to.deep.equal(expected)
+    })
+
+    it('should pick the right separators to parse based on the key pattern', function () {
+      let infoStr = 'sets/test/foo/bar\tobjects=0:tombstones=0:truncate_lut=275452156000:disable-eviction=false;'
+      let infoHash = info.parse(infoStr)
+      let expected = {
+        objects: 0,
+        tombstones: 0,
+        truncate_lut: 275452156000,
+        'disable-eviction': 'false'
+      }
+      expect(infoHash['sets/test/foo/bar']).to.deep.equal(expected)
     })
   })
 })
