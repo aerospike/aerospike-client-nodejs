@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.7.0] - 2018-10-02
+
 * **New Features**
   * Support "deserealize" policy setting. [#278](https://github.com/aerospike/aerospike-client-nodejs/pull/278)
   * Add getter for client instance to AerospikeError.
