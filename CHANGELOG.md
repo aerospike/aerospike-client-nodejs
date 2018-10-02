@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Support "deserealize" policy setting. [#278](https://github.com/aerospike/aerospike-client-nodejs/pull/278)
+  * Add getter for client instance to AerospikeError.
+
+* **Bug Fixes**
+  * Fix memory leaks detected by Valgrind. [#279](https://github.com/aerospike/aerospike-client-nodejs/pull/279)
+  * Increase max. info request length from 50 to 256. [#280](https://github.com/aerospike/aerospike-client-nodejs/issues/280)
+  * Fix parsing of sets/ns/set info response. [#282](https://github.com/aerospike/aerospike-client-nodejs/pull/282)
+
 * **Updates**
-  * Update C client library to [v4.3.18](http://www.aerospike.com/download/client/c/notes.html#4.3.18)
-  * Update nan and chai to latest versions
+  * Update C client library to [v4.3.18](http://www.aerospike.com/download/client/c/notes.html#4.3.18).
+  * Update nan and chai to latest versions.
 
 ## [3.6.1] - 2018-09-04
 
