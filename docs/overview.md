@@ -118,7 +118,7 @@ Aerospike.connect(config)
         return client.operate(key, ops)
       })
       .then(result => {
-        console.log(result.bins)   // => { i: 124, l: 4, m: null }
+        console.log(result.bins) // => { i: 124, l: 4, m: null }
 
         return client.get(key)
       })
@@ -132,12 +132,13 @@ Aerospike.connect(config)
                                  //      m: { foo: 4 } }
       })
       .then(() => client.close())
-      .catch(error => {
-        client.close()
-        return Promise.reject(error)
-      })
   })
-  .catch(error => console.log(error))
+  .catch(error => {
+    console.error('Error: %s [%i]', error.message, error.code)
+    if (error.client) {
+      error.client.close()
+    }
+  })
 ```
 
 ## Tutorials
