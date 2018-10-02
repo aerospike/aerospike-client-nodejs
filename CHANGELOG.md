@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * **Updates**
   * Update C client library to [v4.3.18](http://www.aerospike.com/download/client/c/notes.html#4.3.18)
+  * Update nan and chai to latest versions
 
 ## [3.6.1] - 2018-09-04
 
