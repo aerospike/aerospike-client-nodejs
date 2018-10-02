@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Bug Fixes**
+  * Support using alternate-access-address. [#267](https://github.com/aerospike/aerospike-client-nodejs/issue/267)
+
 ## [3.7.0] - 2018-10-02
 
 * **New Features**
