@@ -20,33 +20,34 @@ const childProcess = require('child_process')
 const tmp = require('tmp')
 const fs = require('fs')
 
-function generateTestSource (fn, timeout) {
+function generateTestSource (fn, data) {
   return `'use strict'
   const Aerospike = require(process.cwd())
   let fn = ${fn.toString()}
+  let data = JSON.parse(\`${JSON.stringify(data)}\`)
   let finish = (msg) => process.send(msg, () => process.exit())
   try {
-    fn(Aerospike, result => finish({ result: result }))
+    fn(Aerospike, data, result => finish({ result: result }))
   } catch (error) {
     finish({ error: error })
   }`
 }
 
-function createTempFile (fn, timeout) {
-  let source = generateTestSource(fn, timeout)
+function createTempFile (fn, data) {
+  let source = generateTestSource(fn, data)
   let temp = tmp.fileSync({ postfix: '.js' })
   fs.writeSync(temp.fd, source)
   return temp.name
 }
 
-function forkAndRun (fn, timeout, env) {
-  let temp = createTempFile(fn, timeout)
+function forkAndRun (fn, env, data) {
+  let temp = createTempFile(fn, data)
   return childProcess.fork(temp, { env: env })
 }
 
-module.exports = function runInNewProcess (fn, timeout, env) {
+module.exports = function runInNewProcess (fn, env, data) {
   return new Promise((resolve, reject) => {
-    let child = forkAndRun(fn, timeout, env)
+    let child = forkAndRun(fn, env, data)
     child.on('message', message => {
       child.disconnect()
       if (message.error) {

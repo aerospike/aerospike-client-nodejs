@@ -191,12 +191,14 @@ exports.fail = function fail (message) {
   expect().fail(message)
 }
 
-exports.runInNewProcess = function (fn, timeout) {
-  let env = {
-    NODE_PATH: path.join(process.cwd(), 'node_modules'),
-    AEROSPIKE_HOSTS: utils.hostsToString(client.config.hosts)
+exports.runInNewProcess = function (fn, data) {
+  if (data === undefined) {
+    data = null
   }
-  return runInNewProcessFn(fn, timeout, env)
+  let env = {
+    NODE_PATH: path.join(process.cwd(), 'node_modules')
+  }
+  return runInNewProcessFn(fn, env, data)
 }
 
 if (process.env.GLOBAL_CLIENT !== 'false') {

@@ -23,9 +23,9 @@ const helper = require('./test_helper')
 
 describe('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', function () {
-    let test = function (Aerospike, done) {
+    let test = function (Aerospike, config, done) {
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
-      Aerospike.connect()
+      Aerospike.connect(config)
         .then(client => {
           let cmds = Array.from({ length: 10 }, (_, i) =>
             client.put(new Aerospike.Key('test', 'test', i), {i: i}))
@@ -34,14 +34,15 @@ describe('Command Queue #slow', function () {
             .then(() => client.close())
         })
     }
-    return helper.runInNewProcess(test, this.timeout())
+    return helper.runInNewProcess(test, helper.config)
       .then(result => expect(result).to.equal(10))
   })
 
   it('rejects commands it cannot queue', function () {
-    let test = function (Aerospike, done) {
+    let test = function (Aerospike, config, done) {
+      config = Object.assign(config, { log: { level: Aerospike.log.OFF } }) // disable logging for this test to suppress C client error messages
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 1 })
-      Aerospike.connect()
+      Aerospike.connect(config)
         .then(client => {
           let cmds = Array.from({ length: 10 }, (_, i) =>
             client.put(new Aerospike.Key('test', 'test', i), {i: i}))
@@ -51,13 +52,13 @@ describe('Command Queue #slow', function () {
             .then(() => client.close())
         })
     }
-    return helper.runInNewProcess(test, this.timeout())
+    return helper.runInNewProcess(test, helper.config)
       .then(error => expect(error).to.match(/Async delay queue full/))
   })
 
   it('throws an error when trying to configure command queue after client connect', function () {
-    let test = function (Aerospike, done) {
-      Aerospike.connect()
+    let test = function (Aerospike, config, done) {
+      Aerospike.connect(config)
         .then(client => {
           try {
             Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 1 })
@@ -68,7 +69,7 @@ describe('Command Queue #slow', function () {
           client.close()
         })
     }
-    return helper.runInNewProcess(test, this.timeout())
+    return helper.runInNewProcess(test, helper.config)
       .then(error => expect(error).to.match(/Command queue has already been initialized!/))
   })
 })
