@@ -230,6 +230,9 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	if ((rc = get_optional_uint32_property(&config->max_conns_per_node, NULL, configObj, "maxConnsPerNodeSync", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
+	if ((rc = get_optional_bool_property(&config->use_services_alternate, NULL, configObj, "useAlternateAccessAddress", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
 
 Cleanup:
 	if (cluster_name) free(cluster_name);
