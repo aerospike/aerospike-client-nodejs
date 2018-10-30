@@ -58,13 +58,13 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
-		if (writepolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (writepolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 
 	if (info[4]->IsNumber()) {
-		cmd->query_id = info[4]->ToInteger()->Value();
+		cmd->query_id = Nan::To<int64_t>(info[4]).FromJust();
 		as_v8_info(log, "Using query ID %lli for background query.", cmd->query_id);
 	}
 

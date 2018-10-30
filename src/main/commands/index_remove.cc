@@ -53,15 +53,15 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	IndexRemoveCommand* cmd = new IndexRemoveCommand(client, info[3].As<Function>());
 	LogInfo* log = cmd->log = client->log;
 
-	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
 		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 	}
 
-	cmd->index = strdup(*Nan::Utf8String(info[1]->ToString()));
+	cmd->index = strdup(*Nan::Utf8String(info[1].As<String>()));
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*)cf_malloc(sizeof(as_policy_info));
-		if(infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if(infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

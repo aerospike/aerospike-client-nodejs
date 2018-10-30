@@ -57,27 +57,27 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	IndexCreateCommand* cmd = new IndexCreateCommand(client, info[7].As<Function>());
 	LogInfo* log = client->log;
 
-	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0]->ToString()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
 		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 	}
 
 	if (info[1]->IsString()) {
-		if (as_strlcpy(cmd->set, *Nan::Utf8String(info[1]->ToString()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+		if (as_strlcpy(cmd->set, *Nan::Utf8String(info[1].As<String>()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 		}
 	}
 
-	if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2]->ToString()), AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
+	if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2].As<String>()), AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
 		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Bin name exceeds max. length (%d)", AS_BIN_NAME_MAX_LEN);
 	}
 
-	cmd->index = strdup(*Nan::Utf8String(info[3]->ToString()));
-	cmd->itype = (as_index_type) info[4]->ToInteger()->Value();
-	cmd->dtype = (as_index_datatype) info[5]->ToInteger()->Value();
+	cmd->index = strdup(*Nan::Utf8String(info[3].As<String>()));
+	cmd->itype = (as_index_type) Nan::To<int>(info[4]).FromJust();
+	cmd->dtype = (as_index_datatype) Nan::To<int>(info[5]).FromJust();
 
 	if (info[6]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[6]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (infopolicy_from_jsobject(cmd->policy, info[6].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

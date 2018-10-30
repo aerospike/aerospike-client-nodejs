@@ -54,12 +54,12 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	JobInfoCommand* cmd = new JobInfoCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
-	cmd->job_id = info[0]->ToInteger()->Value();
-	cmd->module = strdup(*Nan::Utf8String(info[1]->ToString()));
+	cmd->job_id = Nan::To<int64_t>(info[0]).FromJust();
+	cmd->module = strdup(*Nan::Utf8String(info[1].As<String>()));
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

@@ -155,7 +155,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
-		if (querypolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (querypolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

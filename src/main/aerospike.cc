@@ -46,7 +46,7 @@ NAN_METHOD(register_as_event_loop)
 
 	as_policy_event policy;
 	as_policy_event_init(&policy);
-	eventpolicy_from_jsobject(&policy, info[0]->ToObject(), &g_log_info);
+	eventpolicy_from_jsobject(&policy, info[0].As<Object>(), &g_log_info);
 
 	as_event_loop* loop;
 	as_error err;
@@ -76,7 +76,7 @@ NAN_METHOD(setDefaultLogging)
 {
 	Nan::HandleScope();
 	if (info[0]->IsObject()){
-		if (log_from_jsobject(&g_log_info, info[0]->ToObject()) == AS_NODE_PARAM_OK) {
+		if (log_from_jsobject(&g_log_info, info[0].As<Object>()) == AS_NODE_PARAM_OK) {
 			if (g_log_info.level < 0) {
 				// common logging does not support log level "OFF"
 				as_log_set_level(AS_LOG_LEVEL_ERROR);

@@ -68,13 +68,13 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	} else if (maybe_hosts->IsArray()) {
 		Local<Array> host_list = Local<Array>::Cast(maybe_hosts);
 		for (uint32_t i = 0; i < host_list->Length(); i++) {
-			Local<Object> host = host_list->Get(i)->ToObject();
+			Local<Object> host = host_list->Get(i).As<Object>();
 			Local<Value> maybe_addr = host->Get(Nan::New("addr").ToLocalChecked());
 			Local<Value> maybe_port = host->Get(Nan::New("port").ToLocalChecked());
 
 			uint16_t port = default_port;
 			if (maybe_port->IsNumber()) {
-				port = (uint16_t) maybe_port->IntegerValue();
+				port = (uint16_t) Nan::To<uint32_t>(maybe_port).FromJust();
 			} else if (maybe_port->IsUndefined()) {
 				// use default value
 			} else {
@@ -100,68 +100,68 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	}
 
 	if (policies_val->IsObject()) {
-		Local<Object> policies_obj = policies_val->ToObject();
+		Local<Object> policies_obj = policies_val.As<Object>();
 		as_policies *policies = &config->policies;
 
 		Local<Value> policy_val = policies_obj->Get(Nan::New("apply").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = applypolicy_from_jsobject(&policies->apply, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = applypolicy_from_jsobject(&policies->apply, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("batch").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = batchpolicy_from_jsobject(&policies->batch, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = batchpolicy_from_jsobject(&policies->batch, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("info").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = infopolicy_from_jsobject(&policies->info, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = infopolicy_from_jsobject(&policies->info, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("operate").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = operatepolicy_from_jsobject(&policies->operate, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = operatepolicy_from_jsobject(&policies->operate, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("read").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = readpolicy_from_jsobject(&policies->read, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = readpolicy_from_jsobject(&policies->read, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("remove").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = removepolicy_from_jsobject(&policies->remove, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = removepolicy_from_jsobject(&policies->remove, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("scan").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = scanpolicy_from_jsobject(&policies->scan, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = scanpolicy_from_jsobject(&policies->scan, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("query").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = querypolicy_from_jsobject(&policies->query, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = querypolicy_from_jsobject(&policies->query, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
 		policy_val = policies_obj->Get(Nan::New("write").ToLocalChecked());
 		if (policy_val->IsObject()) {
-			if ((rc = writepolicy_from_jsobject(&policies->write, policy_val->ToObject(), log)) != AS_NODE_PARAM_OK) {
+			if ((rc = writepolicy_from_jsobject(&policies->write, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
@@ -171,7 +171,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 	// If modlua path is passed in config object, set those values here
 	if (configObj->Has(Nan::New("modlua").ToLocalChecked())) {
-		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked())->ToObject();
+		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked()).As<Object>();
 		if ((rc = get_optional_string_property(&user_path, &defined, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		} else if (defined) {
@@ -196,7 +196,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	}
 
 	if (configObj->Has(Nan::New("sharedMemory").ToLocalChecked())) {
-		Local<Object> shmConfigObj = configObj->Get(Nan::New("sharedMemory").ToLocalChecked())->ToObject();
+		Local<Object> shmConfigObj = configObj->Get(Nan::New("sharedMemory").ToLocalChecked()).As<Object>();
 		config->use_shm = true;
 		if ((rc = get_optional_bool_property(&config->use_shm, NULL, shmConfigObj, "enable", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;

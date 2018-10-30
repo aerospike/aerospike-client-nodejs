@@ -43,27 +43,27 @@ NAN_METHOD(AerospikeClient::PutAsync)
 	as_policy_write* p_policy = NULL;
 	as_status status;
 
-	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
-	if (recordbins_from_jsobject(&record, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (recordbins_from_jsobject(&record, info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Record object invalid");
 		goto Cleanup;
 	}
 	record_initalized = true;
 
 	if (info[2]->IsObject()) {
-		if (recordmeta_from_jsobject(&record, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (recordmeta_from_jsobject(&record, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Meta object invalid");
 			goto Cleanup;
 		}
 	}
 
 	if (info[3]->IsObject()) {
-		if (writepolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (writepolicy_from_jsobject(&policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}

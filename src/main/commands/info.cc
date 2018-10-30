@@ -60,7 +60,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[0]->IsString()) {
 		cmd->request = (char*) cf_malloc(MAX_INFO_REQUEST_LEN);
-		size_t reqlen = as_strlcpy(cmd->request, *Nan::Utf8String(info[0]->ToString()), MAX_INFO_REQUEST_LEN);
+		size_t reqlen = as_strlcpy(cmd->request, *Nan::Utf8String(info[0].As<String>()), MAX_INFO_REQUEST_LEN);
 		if (reqlen > MAX_INFO_REQUEST_LEN) {
 			as_v8_info(log, "Info request exceeds max. length (%zu > %i): \"%s...\"", reqlen, MAX_INFO_REQUEST_LEN, cmd->request);
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length");
@@ -70,14 +70,14 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	if (info[1]->IsObject()) {
-		if (host_from_jsobject(info[1]->ToObject(), &cmd->addr, &cmd->port, log) != AS_NODE_PARAM_OK) {
+		if (host_from_jsobject(info[1].As<Object>(), &cmd->addr, &cmd->port, log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Host parameter is invalid");
 		}
 	}
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK ) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

@@ -64,18 +64,16 @@ NAN_METHOD(AerospikeClient::New)
 	as_config config;
 	as_config_init(&config);
 
-	if (info[0]->IsObject()) {
-		Local<Value> v8_log_info = info[0]->ToObject()->Get(Nan::New("log").ToLocalChecked()) ;
-		if (v8_log_info->IsObject()) {
-			log_from_jsobject(client->log, v8_log_info->ToObject());
-		}
+	Local<Object> v8Config = info[0].As<Object>();
+
+	Local<Value> v8LogInfo = v8Config->Get(Nan::New("log").ToLocalChecked()) ;
+	if (v8LogInfo->IsObject()) {
+		log_from_jsobject(client->log, v8LogInfo.As<Object>());
 	}
 
-	if (info[0]->IsObject()) {
-		int result = config_from_jsobject(&config, info[0]->ToObject(), client->log);
-		if (result != AS_NODE_PARAM_OK) {
-			Nan::ThrowError("Invalid client configuration");
-		}
+	int result = config_from_jsobject(&config, v8Config, client->log);
+	if (result != AS_NODE_PARAM_OK) {
+		Nan::ThrowError("Invalid client configuration");
 	}
 
 	aerospike_init(client->as, &config);
@@ -159,8 +157,8 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
-	Nan::Utf8String hostname(info[0]->ToString());
-	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+	Nan::Utf8String hostname(info[0].As<String>());
+	uint16_t port = (uint16_t) Nan::To<uint32_t>(info[1]).FromJust();
 
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
 }
@@ -176,8 +174,8 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
-	Nan::Utf8String hostname(info[0]->ToString());
-	uint16_t port = (uint16_t) info[1]->ToInteger()->Value();
+	Nan::Utf8String hostname(info[0].As<String>());
+	uint16_t port = (uint16_t) Nan::To<uint32_t>(info[1]).FromJust();
 
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);
 }
@@ -186,7 +184,7 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 {
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
 	if (info[0]->IsObject()) {
-		log_from_jsobject(client->log, info[0]->ToObject());
+		log_from_jsobject(client->log, info[0].As<Object>());
 	}
 	info.GetReturnValue().Set(info.Holder());
 }

@@ -52,7 +52,7 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 	setup_query(&query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (querypolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}

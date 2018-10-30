@@ -59,7 +59,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	UdfRegisterCommand* cmd = new UdfRegisterCommand(client, info[3].As<Function>());
 	LogInfo* log = client->log;
 
-	char* filepath = strdup(*Nan::Utf8String(info[0]->ToString()));
+	char* filepath = strdup(*Nan::Utf8String(info[0].As<String>()));
 	FILE * file = fopen(filepath, "r");
 	if (!file) {
 		CmdSetError(cmd, AEROSPIKE_ERR, "Cannot open file: %s", filepath);
@@ -121,14 +121,14 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	as_bytes_init_wrap(&cmd->content, file_content, size, true);
 
 	if (info[1]->IsNumber()) {
-		cmd->type = (as_udf_type) info[1]->IntegerValue();
+		cmd->type = (as_udf_type) Nan::To<int>(info[1]).FromJust();
 	} else {
 		cmd->type = AS_UDF_TYPE_LUA;
 	}
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 			if (filepath != NULL) cf_free(filepath);
 			return cmd;
