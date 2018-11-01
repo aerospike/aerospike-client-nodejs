@@ -104,7 +104,8 @@
         ['OS=="linux"',{
           'libraries': [
             '../aerospike-client-c/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lssl',
           ],
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
         }],
