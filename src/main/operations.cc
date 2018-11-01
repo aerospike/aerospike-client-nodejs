@@ -44,12 +44,12 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 		return AS_NODE_PARAM_ERR;
 	}
 	if (has_policy != NULL) (*has_policy) = true;
-	Local<Object> policy_obj = maybe_policy_obj->ToObject();
+	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
 
 	as_list_order order;
 	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
 	if (value->IsNumber()) {
-		order = (as_list_order) value->IntegerValue();
+		order = (as_list_order) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
 		order = AS_LIST_UNORDERED;
 	} else {
@@ -60,7 +60,7 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 	as_list_write_flags write_flags;
 	value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
 	if (value->IsNumber()) {
-		write_flags = (as_list_write_flags) value->IntegerValue();
+		write_flags = (as_list_write_flags) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
 		write_flags = AS_LIST_WRITE_DEFAULT;
 	} else {
@@ -78,7 +78,7 @@ int get_list_return_type(as_list_return_type* return_type, Local<Object> obj, Lo
 	Nan::HandleScope scope;
 	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
 	if (value->IsNumber()) {
-		(*return_type) = (as_list_return_type) value->IntegerValue();
+		(*return_type) = (as_list_return_type) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
 		(*return_type) = AS_LIST_RETURN_NONE;
 	} else {
@@ -112,7 +112,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 		as_v8_error(log, "Type error: policy should be an Object");
 		return AS_NODE_PARAM_ERR;
 	}
-	Local<Object> policy_obj = maybe_policy_obj->ToObject();
+	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
 
 	as_map_order order = AS_MAP_UNORDERED;
 	bool order_set = false;
@@ -147,7 +147,7 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 	Nan::HandleScope scope;
 	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
 	if (value->IsNumber()) {
-		(*return_type) = (as_map_return_type) value->IntegerValue();
+		(*return_type) = (as_map_return_type) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
 		(*return_type) = AS_MAP_RETURN_NONE;
 	} else {
@@ -174,7 +174,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 			rc = AS_NODE_PARAM_ERR;
 		}
 	} else if (v8val->IsNumber()) {
-		int64_t val = v8val->IntegerValue();
+		int64_t val = Nan::To<int64_t>(v8val).FromJust();
 		as_v8_debug(log, "bin=%s, value=%i", binName, val);
 		if (!as_operations_add_write_int64(ops, binName, val)) {
 			rc = AS_NODE_PARAM_ERR;
@@ -188,7 +188,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	} else if (node::Buffer::HasInstance(v8val)) {
 		int len ;
 		uint8_t* data ;
-		if ((rc = extract_blob_from_jsobject(&data, &len, v8val->ToObject(), log)) == AS_NODE_PARAM_OK) {
+		if ((rc = extract_blob_from_jsobject(&data, &len, v8val.As<Object>(), log)) == AS_NODE_PARAM_OK) {
 			as_v8_debug(log, "bin=%s, value=<rawp>, len=%i", binName, len);
 			if (!as_operations_add_write_rawp(ops, binName, data, len, true)) {
 				rc = AS_NODE_PARAM_ERR;
@@ -266,7 +266,7 @@ int add_incr_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		if (binName != NULL) free (binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsNumber()) {
-		int64_t binValue = v8val->IntegerValue();
+		int64_t binValue = Nan::To<int64_t>(v8val).FromJust();
 		as_v8_debug(log, "bin=%s, value=%i", binName, binValue);
 		as_operations_add_incr(ops, binName, binValue);
 		if (binName != NULL) free (binName);
@@ -294,7 +294,7 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsObject()) {
-		Local<Object> binObj = v8val->ToObject();
+		Local<Object> binObj = v8val.As<Object>();
 		int len;
 		uint8_t* data;
 		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
@@ -327,7 +327,7 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		if (binName) free(binName);
 		return AS_NODE_PARAM_OK;
 	} else if (v8val->IsObject()) {
-		Local<Object> binObj = v8val->ToObject();
+		Local<Object> binObj = v8val.As<Object>();
 		int len ;
 		uint8_t* data ;
 		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
@@ -1402,7 +1402,7 @@ int add_map_put_items_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		as_v8_error(log, "Type error: items property should be an Object");
 		return AS_NODE_PARAM_ERR;
 	}
-	if (map_from_jsobject(&items, v8items->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (map_from_jsobject(&items, v8items.As<Object>(), log) != AS_NODE_PARAM_OK) {
 		as_v8_error(log, "Type error: items property should be an Object");
 		return AS_NODE_PARAM_ERR;
 	}
@@ -2351,7 +2351,7 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 	int result = AS_NODE_PARAM_OK;
 	int64_t op;
 	for (uint32_t i = 0; i < capacity; i++) {
-		Local<Object> obj = arr->Get(i)->ToObject();
+		Local<Object> obj = arr->Get(i).As<Object>();
 		setTTL(obj, &ops->ttl, log);
 		result = get_int64_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {

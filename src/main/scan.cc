@@ -52,7 +52,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	Local<Object> options = maybe_options->ToObject();
+	Local<Object> options = maybe_options.As<Object>();
 
 	Local<Value> selected = options->Get(Nan::New("selected").ToLocalChecked());
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
@@ -75,25 +75,25 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	Local<Value> nobins = options->Get(Nan::New("nobins").ToLocalChecked());
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
-		as_scan_set_nobins(scan, nobins->ToBoolean()->Value());
+		as_scan_set_nobins(scan, Nan::To<bool>(nobins).FromJust());
 	}
 
 	Local<Value> concurrent = options->Get(Nan::New("concurrent").ToLocalChecked());
 	TYPE_CHECK_OPT(concurrent, IsBoolean, "concurrent must be a boolean");
 	if (concurrent->IsBoolean()) {
-		as_scan_set_concurrent(scan, concurrent->ToBoolean()->Value());
+		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
 	}
 
 	Local<Value> percent = options->Get(Nan::New("percent").ToLocalChecked());
 	TYPE_CHECK_OPT(percent, IsNumber, "percent must be a number");
 	if (percent->IsNumber()) {
-		as_scan_set_percent(scan, (uint8_t) percent->IntegerValue());
+		as_scan_set_percent(scan, (uint8_t) Nan::To<uint32_t>(percent).FromJust());
 	}
 
 	Local<Value> priority = options->Get(Nan::New("priority").ToLocalChecked());
 	TYPE_CHECK_OPT(priority, IsNumber, "prioriy must be a number");
 	if (priority->IsNumber()) {
-		as_scan_set_priority(scan, (as_scan_priority) priority->IntegerValue());
+		as_scan_set_priority(scan, (as_scan_priority) Nan::To<int>(priority).FromJust());
 	}
 
 	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());
@@ -104,7 +104,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 		char* filename = module;
 		char* funcname = func;
 		as_list* arglist = NULL;
-		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf->ToObject(), log);
+		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf.As<Object>(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for scan object failed");
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");

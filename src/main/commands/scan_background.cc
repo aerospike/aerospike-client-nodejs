@@ -58,13 +58,13 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_scan*) cf_malloc(sizeof(as_policy_scan));
-		if (scanpolicy_from_jsobject(cmd->policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (scanpolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
 
 	if (info[4]->IsNumber()) {
-		cmd->scan_id = info[4]->ToInteger()->Value();
+		cmd->scan_id = Nan::To<int64_t>(info[4]).FromJust();
 		as_v8_info(log, "Using scan ID %lli for background scan.", cmd->scan_id);
 	}
 

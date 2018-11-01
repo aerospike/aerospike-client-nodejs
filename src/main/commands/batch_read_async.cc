@@ -44,7 +44,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	}
 
 	if (info[1]->IsObject()) {
-		if (batchpolicy_from_jsobject(&policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (batchpolicy_from_jsobject(&policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			free_batch_records(records);
 			goto Cleanup;

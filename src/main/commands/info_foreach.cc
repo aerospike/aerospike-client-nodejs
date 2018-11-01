@@ -95,7 +95,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	if (info[0]->IsString()) {
 		cmd->request = (char*) malloc(INFO_REQUEST_LEN);
-		if (as_strlcpy(cmd->request, *Nan::Utf8String(info[0]->ToString()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
+		if (as_strlcpy(cmd->request, *Nan::Utf8String(info[0].As<String>()), INFO_REQUEST_LEN) > INFO_REQUEST_LEN) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Info request exceeds max. length (%d)", INFO_REQUEST_LEN);
 		}
 	} else {
@@ -104,7 +104,7 @@ prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	if (info[1]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+		if (infopolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK ) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}

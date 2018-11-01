@@ -54,7 +54,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	setup_scan(&scan, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		if (scanpolicy_from_jsobject(&policy, info[3]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (scanpolicy_from_jsobject(&policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
@@ -62,7 +62,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	}
 
 	if (info[4]->IsNumber()) {
-		scan_id = info[4]->ToInteger()->Value();
+		scan_id = Nan::To<int64_t>(info[4]).FromJust();
 		as_v8_info(log, "Using scan ID %lli for async scan.", scan_id);
 	}
 

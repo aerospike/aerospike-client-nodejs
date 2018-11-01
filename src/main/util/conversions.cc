@@ -100,7 +100,7 @@ int get_int_property(int* intp, Local<Object> obj, char const* prop, const LogIn
 		as_v8_error(log, "Type error: %s property should be integer", prop);
 		return AS_NODE_PARAM_ERR;
 	}
-	(*intp) = (int) value->IntegerValue();
+	(*intp) = Nan::To<int>(value).FromJust();
 	as_v8_detail(log, "%s => (int) %d", prop, *intp);
 	return AS_NODE_PARAM_OK;
 }
@@ -111,7 +111,7 @@ int get_optional_int_property(int* intp, bool* defined, Local<Object> obj, char 
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
 	if (value->IsNumber()) {
 		if (defined != NULL) (*defined) = true;
-		(*intp) = (int) value->IntegerValue();
+		(*intp) = Nan::To<int>(value).FromJust();
 		as_v8_detail(log, "%s => (int) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -130,7 +130,7 @@ int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const
 		as_v8_error(log, "Type error: %s property should be integer", prop);
 		return AS_NODE_PARAM_ERR;
 	}
-	(*intp) = value->IntegerValue();
+	(*intp) = Nan::To<int64_t>(value).FromJust();
 	as_v8_detail(log, "%s => (int64) %d", prop, *intp);
 	return AS_NODE_PARAM_OK;
 }
@@ -141,7 +141,7 @@ int get_optional_int64_property(int64_t* intp, bool* defined, Local<Object> obj,
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
 	if (value->IsNumber()) {
 		if (defined != NULL) (*defined) = true;
-		(*intp) = value->IntegerValue();
+		(*intp) = Nan::To<int64_t>(value).FromJust();
 		as_v8_detail(log, "%s => (int64) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -157,9 +157,9 @@ int get_optional_int32_property(int32_t* intp, bool* defined, Local<Object> obj,
 {
 	Nan::HandleScope scope;
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (value->IsInt32()) {
+	if (value->IsNumber()) {
 		if (defined != NULL) (*defined) = true;
-		(*intp) = value->Int32Value();
+		(*intp) = Nan::To<int32_t>(value).FromJust();
 		as_v8_detail(log, "%s => (uint32) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -175,9 +175,9 @@ int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> ob
 {
 	Nan::HandleScope scope;
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
-	if (value->IsUint32()) {
+	if (value->IsNumber()) {
 		if (defined != NULL) (*defined) = true;
-		(*intp) = value->Uint32Value();
+		(*intp) = Nan::To<uint32_t>(value).FromJust();
 		as_v8_detail(log, "%s => (uint32) %d", prop, *intp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -195,7 +195,7 @@ int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, ch
 	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
 	if (value->IsBoolean()) {
 		if (defined != NULL) (*defined) = true;
-		(*boolp) = value->BooleanValue();
+		(*boolp) = Nan::To<bool>(value).FromJust();
 		as_v8_detail(log, "%s => (bool) %d", prop, *boolp);
 	} else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL) (*defined) = false;
@@ -249,7 +249,7 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
         Local<Value> addrVal = obj->Get(Nan::New("addr").ToLocalChecked());
         if ( addrVal->IsString() ) {
             *addr = (char*) malloc (HOST_ADDRESS_SIZE);
-            strcpy(*addr, *Nan::Utf8String(addrVal->ToString()));
+            strcpy(*addr, *Nan::Utf8String(addrVal.As<String>()));
             as_v8_detail(log, "host addr : %s", (*addr));
         }
         else {
@@ -260,7 +260,7 @@ int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const Log
     if ( obj->Has(Nan::New("port").ToLocalChecked()) ){
         Local<Value> portVal = obj->Get(Nan::New("port").ToLocalChecked());
         if ( portVal->IsNumber() ) {
-            *port = (uint16_t) portVal->IntegerValue();
+            *port = (uint16_t) Nan::To<uint32_t>(portVal).FromJust();
         }
         else {
             return AS_NODE_PARAM_ERR;
@@ -277,13 +277,13 @@ int log_from_jsobject(LogInfo* log, Local<Object> obj)
     FILE* fd = log->fd;
 
     if (obj->IsObject()) {
-        Local<Object> v8_log = obj->ToObject();
+        Local<Object> v8_log = obj.As<Object>();
 
         // `level` is optional
         if (v8_log->Has(Nan::New("level").ToLocalChecked())) {
             Local<Value> v8_log_level = v8_log->Get(Nan::New("level").ToLocalChecked());
             if (v8_log_level->IsNumber()){
-                level = (as_log_level) v8_log_level->IntegerValue();
+                level = (as_log_level) Nan::To<int>(v8_log_level).FromJust();
             } else if (v8_log_level->IsNull() || v8_log_level->IsUndefined()){
                 // `null` and `undefined` imply the value should not change.
             } else {
@@ -296,7 +296,7 @@ int log_from_jsobject(LogInfo* log, Local<Object> obj)
         if (rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("file").ToLocalChecked())) {
             Local<Value> v8_file = obj->Get(Nan::New("file").ToLocalChecked());
             if (v8_file->IsNumber()) {
-                int fildes = (int) v8_file->IntegerValue();
+                int fildes = Nan::To<int>(v8_file).FromJust();
 #if !defined(_MSC_VER)
                 fd = fdopen(fildes, "a");
 #else
@@ -781,7 +781,7 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, cons
 bool instanceof(Local<Value> value, const char * type)
 {
 	if (value->IsObject()) {
-		Local<String> ctor_name = value->ToObject()->GetConstructorName();
+		Local<String> ctor_name = value.As<Object>()->GetConstructorName();
 		Nan::Utf8String cn(ctor_name);
 		return 0 == strncmp(*cn, type, strlen(type));
 	} else {
@@ -805,8 +805,8 @@ bool instanceof(Local<Value> value, const char * type)
 bool is_double_value(Local<Value> value)
 {
     if (value->IsNumber()) {
-        int64_t i = value->IntegerValue();
-        double d = value->NumberValue();
+        int64_t i = Nan::To<int64_t>(value).FromJust();
+        double d = Nan::To<double>(value).FromJust();
         return d != (double)i;
     }
     return instanceof(value, DoubleType);
@@ -815,9 +815,9 @@ bool is_double_value(Local<Value> value)
 double double_value(Local<Value> value)
 {
     if (instanceof(value, DoubleType)) {
-        value = value->ToObject()->Get(Nan::New<String>("Double").ToLocalChecked());
+        value = value.As<Object>()->Get(Nan::New<String>("Double").ToLocalChecked());
     }
-    return (double) value->NumberValue();
+    return Nan::To<double>(value).FromJust();
 }
 
 bool is_geojson_value(Local<Value> value)
@@ -827,7 +827,7 @@ bool is_geojson_value(Local<Value> value)
 
 char* geojson_as_string(Local<Value> value)
 {
-	Local<Value> strval = value->ToObject()->Get(Nan::New("str").ToLocalChecked());
+	Local<Value> strval = value.As<Object>()->Get(Nan::New("str").ToLocalChecked());
 	return strdup(*Nan::Utf8String(strval));
 }
 
@@ -854,7 +854,7 @@ int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
 
 int map_from_jsobject(as_map** map, Local<Object> obj, const LogInfo* log)
 {
-    const Local<Array> props = obj->ToObject()->GetOwnPropertyNames();
+    const Local<Array> props = obj.As<Object>()->GetOwnPropertyNames();
     const uint32_t capacity = props->Length();
     as_v8_detail(log, "Creating new as_hashmap with capacity %d", capacity);
     as_hashmap* hashmap = as_hashmap_new(capacity);
@@ -889,19 +889,21 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         as_v8_detail(log, "Object passed is undefined");
         *value = (as_val*) &as_nil;
     } else if (v8value->IsBoolean()) {
-        *value = (as_val*) as_boolean_new(v8value->BooleanValue());
+        *value = (as_val*) as_boolean_new(Nan::To<bool>(v8value).FromJust());
     } else if (v8value->IsString()) {
         *value = (as_val*) as_string_new(strdup(*Nan::Utf8String(v8value)), true);
-    } else if (v8value->IsInt32() || v8value->IsUint32()) {
-        *value = (as_val*) as_integer_new(v8value->IntegerValue());
+    } else if (v8value->IsInt32()) {
+        *value = (as_val*) as_integer_new(Nan::To<int32_t>(v8value).FromJust());
+    } else if (v8value->IsUint32()) {
+        *value = (as_val*) as_integer_new(Nan::To<uint32_t>(v8value).FromJust());
     } else if (is_double_value(v8value)) {
         *value = (as_val*) as_double_new(double_value(v8value));
     } else if (v8value->IsNumber()) {
-        *value = (as_val*) as_integer_new(v8value->IntegerValue());
+        *value = (as_val*) as_integer_new(Nan::To<int64_t>(v8value).FromJust());
     } else if (node::Buffer::HasInstance(v8value)) {
         int size;
         uint8_t* data;
-        if (extract_blob_from_jsobject(&data, &size, v8value->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if (extract_blob_from_jsobject(&data, &size, v8value.As<Object>(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Extractingb blob from a js object failed");
             return AS_NODE_PARAM_ERR;
         }
@@ -914,7 +916,7 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         char* jsonstr = geojson_as_string(v8value);
         *value = (as_val*) as_geojson_new(jsonstr, true);
     } else { // generic object - treat as map
-        if (map_from_jsobject((as_map**) value, v8value->ToObject(), log) != AS_NODE_PARAM_OK) {
+        if (map_from_jsobject((as_map**) value, v8value.As<Object>(), log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
     }
@@ -1030,7 +1032,7 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
         as_v8_detail(log, "Setting ttl from JS object");
         Local<Value> v8ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
         if (v8ttl->IsNumber()) {
-            (*ttl) = (uint32_t) v8ttl->IntegerValue();
+            (*ttl) = Nan::To<uint32_t>(v8ttl).FromJust();
             as_v8_detail(log, "TTL: %d", (*ttl));
         } else if (v8ttl->IsNull() || v8ttl->IsUndefined()) {
             // noop - ttl may not be specified
@@ -1047,7 +1049,7 @@ int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
     if (obj->Has(Nan::New("gen").ToLocalChecked()) ) {
         Local<Value> v8gen = obj->Get(Nan::New("gen").ToLocalChecked());
         if (v8gen->IsNumber()) {
-            (*generation) = (uint16_t) v8gen->IntegerValue();
+            (*generation) = (uint16_t) Nan::To<uint32_t>(v8gen).FromJust();
             as_v8_detail(log, "Generation: %d", (*generation));
         } else if (v8gen->IsNull() || v8gen->IsUndefined()) {
             // noop - gen may not be specified
@@ -1201,12 +1203,12 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
         as_v8_error(log, "Invalid key value: double - only string, integer and Buffer are supported");
         return AS_NODE_PARAM_ERR;
     } else if (val_obj->IsNumber()) {
-        int64_t value = val_obj->IntegerValue();
+        int64_t value = Nan::To<int64_t>(val_obj).FromJust();
         as_key_init_int64(key, ns, set, value);
         as_v8_detail(log, "key.key = %d", value);
         has_value = true;
     } else if (val_obj->IsObject()) {
-        Local<Object> obj = val_obj->ToObject();
+        Local<Object> obj = val_obj.As<Object>();
         int size ;
         uint8_t* data ;
         if (extract_blob_from_jsobject(&data, &size, obj, log) != AS_NODE_PARAM_OK) {
@@ -1238,7 +1240,7 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
     } else {
         Local<Value> digest_value = obj->Get(Nan::New("digest").ToLocalChecked());
         if (digest_value->IsObject()) {
-            Local<Object> digest_obj = digest_value->ToObject();
+            Local<Object> digest_obj = digest_value.As<Object>();
             int size;
             uint8_t* data;
             if (extract_blob_from_jsobject(&data, &size, digest_obj, log) != AS_NODE_PARAM_OK) {
@@ -1271,7 +1273,7 @@ int batch_from_jsarray(as_batch* batch, Local<Array> arr, const LogInfo* log)
 	uint32_t len = arr->Length();
 	as_batch_init(batch, len);
 	for (uint32_t i = 0; i < len; i++) {
-		Local<Object> key = arr->Get(i)->ToObject();
+		Local<Object> key = arr->Get(i).As<Object>();
 		if (key_from_jsobject(as_batch_keyat(batch, i), key, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing batch key [%d] failed", i);
 			return AS_NODE_PARAM_ERR;
@@ -1287,9 +1289,9 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 	*records = as_batch_read_create(no_records);
 	for (uint32_t i = 0; i < no_records; i++) {
 		as_batch_read_record* record = as_batch_read_reserve(*records);
-		Local<Object> obj = arr->Get(i)->ToObject();
+		Local<Object> obj = arr->Get(i).As<Object>();
 
-		Local<Object> key = obj->Get(Nan::New("key").ToLocalChecked())->ToObject();
+		Local<Object> key = obj->Get(Nan::New("key").ToLocalChecked()).As<Object>();
 		if (key_from_jsobject(&record->key, key, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing batch keys failed");
 			return AS_NODE_PARAM_ERR;
@@ -1309,7 +1311,7 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 
 		Local<Value> maybe_read_all_bins = obj->Get(Nan::New("read_all_bins").ToLocalChecked());
 		if (maybe_read_all_bins->IsBoolean()) {
-			record->read_all_bins = maybe_read_all_bins->ToBoolean()->Value();
+			record->read_all_bins = Nan::To<bool>(maybe_read_all_bins).FromJust();
 		}
 	}
 	return AS_NODE_PARAM_OK;
@@ -1363,7 +1365,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
     if (obj->Has(Nan::New("module").ToLocalChecked())) {
         Local<Value> module = obj->Get(Nan::New("module").ToLocalChecked());
         if (module->IsString()) {
-            size_t size = module->ToString()->Length() + 1;
+            size_t size = module.As<String>()->Length() + 1;
             if (*filename == NULL) {
                 *filename = (char*) cf_malloc(sizeof(char) * size);
             }
@@ -1385,7 +1387,7 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
     if (obj->Has(Nan::New("funcname").ToLocalChecked())) {
         Local<Value> v8_funcname = obj->Get(Nan::New("funcname").ToLocalChecked());
         if (v8_funcname->IsString()) {
-            size_t size = v8_funcname->ToString()->Length() + 1;
+            size_t size = v8_funcname.As<String>()->Length() + 1;
             if (*funcname == NULL) {
                 *funcname = (char*) cf_malloc(sizeof(char) * size);
             }

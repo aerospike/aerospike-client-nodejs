@@ -155,7 +155,7 @@ bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event
 
 	bool continue_scan = true;
 	if (result->IsBoolean()) {
-		continue_scan = result->ToBoolean()->Value();
+		continue_scan = Nan::To<bool>(result).FromJust();
 		as_v8_debug(log, "Async scan callback returned: %s", continue_scan ? "true" : "false");
 	}
 	return continue_scan;

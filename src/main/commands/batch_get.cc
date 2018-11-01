@@ -94,7 +94,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[1]->IsObject() ) {
 		cmd->policy = (as_policy_batch*) cf_malloc(sizeof(as_policy_batch));
-		if (batchpolicy_from_jsobject(cmd->policy, info[1]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (batchpolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Batch policy parameter invalid");
 		}
 	}

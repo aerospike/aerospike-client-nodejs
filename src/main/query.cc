@@ -53,7 +53,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	Local<Object> options = maybe_options->ToObject();
+	Local<Object> options = maybe_options.As<Object>();
 
 	Local<Value> filters_val = options->Get(Nan::New("filters").ToLocalChecked());
 	TYPE_CHECK_OPT(filters_val, IsArray, "filters must be an array");
@@ -63,16 +63,16 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		as_v8_detail(log, "Number of filters in query: %d", size);
 		as_query_where_init(query, size);
 		for (int i = 0; i < size; i++) {
-			Local<Object> filter = filters->Get(i)->ToObject();
+			Local<Object> filter = filters->Get(i).As<Object>();
 			Local<Value> bin = filter->Get(Nan::New("bin").ToLocalChecked());
 			if (!bin->IsString()) {
 				as_v8_error(log, "Bin value must be string");
 				Nan::ThrowError("Bin value is not a string");
 			}
 			const char* bin_name = *Nan::Utf8String(bin);
-			as_predicate_type predicate = (as_predicate_type) filter->Get(Nan::New("predicate").ToLocalChecked())->ToObject()->IntegerValue();
-			as_index_type type = (as_index_type) filter->Get(Nan::New("type").ToLocalChecked())->ToObject()->IntegerValue();
-			as_index_datatype datatype = (as_index_datatype) filter->Get(Nan::New("datatype").ToLocalChecked())->ToObject()->IntegerValue();
+			as_predicate_type predicate = (as_predicate_type) Nan::To<int>(filter->Get(Nan::New("predicate").ToLocalChecked())).FromJust();
+			as_index_type type = (as_index_type) Nan::To<int>(filter->Get(Nan::New("type").ToLocalChecked())).FromJust();
+			as_index_datatype datatype = (as_index_datatype) Nan::To<int>(filter->Get(Nan::New("datatype").ToLocalChecked())).FromJust();
 			as_v8_debug(log, "Building filter on predicate type %d, index type %d, data type %d, bin name '%s'", predicate, type, datatype, bin_name);
 			switch(predicate) {
 				case AS_PREDICATE_RANGE:
@@ -81,8 +81,8 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 							Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
 							Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
 							if (v8min->IsNumber() && v8max->IsNumber()) {
-								const int64_t min = v8min->IntegerValue();
-								const int64_t max = v8max->IntegerValue();
+								const int64_t min = Nan::To<int64_t>(v8min).FromJust();
+								const int64_t max = Nan::To<int64_t>(v8max).FromJust();
 								as_query_where(query, bin_name, predicate, type, datatype, min, max);
 								as_v8_debug(log, "Integer range predicate from %llu to %llu", min, max);
 							} else {
@@ -106,7 +106,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 						if (datatype == AS_INDEX_NUMERIC) {
 							Local<Value> value = filter->Get(Nan::New("val").ToLocalChecked());
 							if (value->IsNumber()) {
-								const int64_t val = value->IntegerValue();
+								const int64_t val = Nan::To<int64_t>(value).FromJust();
 								as_query_where(query, bin_name, predicate, type, datatype, val);
 								as_v8_debug(log, "Integer equality predicate %d", val);
 							} else {
@@ -137,7 +137,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		if (size > 0) {
 			as_query_predexp_init(query, size);
 			for (int i = 0; i < size; i++) {
-				Local<Object> predexpObj = predexp_ary->Get(i)->ToObject();
+				Local<Object> predexpObj = predexp_ary->Get(i).As<Object>();
 				as_predexp_base* predexp = convert_predexp(predexpObj);
 				as_query_predexp_add(query, predexp);
 			}
@@ -165,7 +165,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 	Local<Value> nobins = options->Get(Nan::New("nobins").ToLocalChecked());
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
-		query->no_bins = nobins->ToBoolean()->Value();
+		query->no_bins = Nan::To<bool>(nobins).FromJust();
 	}
 
 	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());
@@ -176,7 +176,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		char* filename = module;
 		char* funcname = func;
 		as_list* arglist = NULL;
-		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf->ToObject(), log);
+		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf.As<Object>(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for query object failed");
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");

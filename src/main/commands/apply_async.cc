@@ -46,19 +46,19 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	char* udf_module = NULL;
 	char* udf_function = NULL;
 
-	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
-	if (udfargs_from_jsobject(&udf_module, &udf_function, &udf_args, info[1]->ToObject(), log) != AS_NODE_PARAM_OK ) {
+	if (udfargs_from_jsobject(&udf_module, &udf_function, &udf_args, info[1].As<Object>(), log) != AS_NODE_PARAM_OK ) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "UDF args object invalid");
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
-		if (applypolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (applypolicy_from_jsobject(&policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}

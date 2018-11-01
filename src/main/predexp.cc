@@ -92,7 +92,7 @@ const predex_table_entry predex_table[] = {
 as_predexp_base*
 convert_predexp(Local<Object> predexp)
 {
-	int code = (int) predexp->Get(Nan::New("code").ToLocalChecked())->ToObject()->IntegerValue();
+	int code = Nan::To<int>(predexp->Get(Nan::New("code").ToLocalChecked())).FromJust();
 	const predex_table_entry *entry = &predex_table[code];
 	if (!entry) {
 		return NULL;
@@ -111,13 +111,13 @@ convert_predexp(Local<Object> predexp)
 				return res;
 			}
 		case INT32_ARG:
-			return entry->conv.fint32((int32_t) arg->IntegerValue());
+			return entry->conv.fint32(Nan::To<int32_t>(arg).FromJust());
 		case INT64_ARG:
-			return entry->conv.fint64(arg->IntegerValue());
+			return entry->conv.fint64(Nan::To<int64_t>(arg).FromJust());
 		case UINT16_ARG:
-			return entry->conv.fuint16((uint16_t) arg->IntegerValue());
+			return entry->conv.fuint16(Nan::To<uint32_t>(arg).FromJust());
 		case UINT32_ARG:
-			return entry->conv.fuint32((uint32_t) arg->IntegerValue());
+			return entry->conv.fuint32(Nan::To<uint32_t>(arg).FromJust());
 		default:
 			return NULL;
 	}

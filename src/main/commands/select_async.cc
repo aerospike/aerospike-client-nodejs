@@ -42,7 +42,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	as_policy_read* p_policy = NULL;
 	as_status status;
 
-	if (key_from_jsobject(&key, info[0]->ToObject(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
@@ -54,7 +54,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	}
 
 	if (info[2]->IsObject()) {
-		if (readpolicy_from_jsobject(&policy, info[2]->ToObject(), log) != AS_NODE_PARAM_OK) {
+		if (readpolicy_from_jsobject(&policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
