@@ -66,6 +66,7 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	}
 
 	as_v8_debug(log, "Sending async apply command");
+	_debug_update_time();
 	status = aerospike_key_apply_async(client->as, &cmd->err, p_policy, &key,
 			udf_module, udf_function, udf_args, async_value_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {

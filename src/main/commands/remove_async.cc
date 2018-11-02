@@ -54,6 +54,7 @@ NAN_METHOD(AerospikeClient::RemoveAsync)
 	}
 
 	as_v8_debug(log, "Sending async remove command");
+	_debug_update_time();
 	status = aerospike_key_remove_async(client->as, &cmd->err, p_policy, &key, async_write_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command

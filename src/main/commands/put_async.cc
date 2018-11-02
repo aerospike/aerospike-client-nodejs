@@ -71,6 +71,7 @@ NAN_METHOD(AerospikeClient::PutAsync)
 	}
 
 	as_v8_debug(log, "Sending async put command");
+	_debug_update_time();
 	status = aerospike_key_put_async(client->as, &cmd->err, p_policy, &key, &record, async_write_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command

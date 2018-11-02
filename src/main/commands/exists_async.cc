@@ -54,6 +54,7 @@ NAN_METHOD(AerospikeClient::ExistsAsync)
 	}
 
 	as_v8_debug(log, "Sending async exists command");
+	_debug_update_time();
 	status = aerospike_key_exists_async(client->as, &cmd->err, p_policy, &key, async_record_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command

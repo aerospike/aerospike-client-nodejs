@@ -67,6 +67,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	}
 
 	as_v8_debug(log, "Sending async scan command");
+	_debug_update_time();
 	status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command

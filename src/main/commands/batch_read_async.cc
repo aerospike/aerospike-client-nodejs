@@ -53,6 +53,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	}
 
 	as_v8_debug(log, "Sending async batch read command");
+	_debug_update_time();
 	status = aerospike_batch_read_async(client->as, &cmd->err, p_policy,
 			records, async_batch_listener, cmd, NULL);
 	if (status == AEROSPIKE_OK) {

@@ -24,6 +24,12 @@
 #define CmdErrorCallback(__cmd, __code, __fmt, ...) \
 	__cmd->ErrorCallback(__code, __func__, __FILE__, __LINE__, __fmt, ##__VA_ARGS__);
 
+#ifdef _DEBUG
+#define _debug_update_time() uv_update_time(uv_default_loop())
+#else
+#define _debug_update_time() do { } while(0)
+#endif
+
 class AerospikeCommand : public Nan::AsyncResource {
 	public:
 		AerospikeCommand(std::string name, AerospikeClient* client, v8::Local<v8::Function> callback_)

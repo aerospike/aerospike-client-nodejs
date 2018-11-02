@@ -62,6 +62,7 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	}
 
 	as_v8_debug(log, "Sending async select command");
+	_debug_update_time();
 	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
