@@ -20,9 +20,22 @@
 /* global expect */
 
 const Aerospike = require('../lib/aerospike')
+const BasePolicy = require('../lib/policies/base_policy')
 require('./test_helper')
 
 context('Client Policies #noserver', function () {
+  describe('BasePolicy', function () {
+    describe('new BasePolicy', function () {
+      it('sets totalTimeout to zero', function () {
+        let subject = new BasePolicy({
+          totalTimeout: 0
+        })
+
+        expect(subject.totalTimeout).to.equal(0)
+      })
+    })
+  })
+
   describe('ApplyPolicy', function () {
     describe('new ApplyPolicy', function () {
       it('sets the policy values from a value object', function () {
