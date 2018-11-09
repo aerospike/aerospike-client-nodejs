@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.7.2] - 2018-11-09
+
+* **Bug Fixes**
+  * Fix Alpine Linux builds [#286](https://github.com/aerospike/aerospike-client-nodejs/issues/286)
+  * Fix policies constructor to support setting totalTimeout to zero [#289](https://github.com/aerospike/aerospike-client-nodejs/issues/289)
+  * Fix segfault in predexp unit tests on Node.js 11
+
+* **Updates**
+  * Update C client library to [v4.3.20](http://www.aerospike.com/download/client/c/notes.html#4.3.20).
+  * Replace V8 conversion functions deprecated in Node.js 10.12/11
+  * Suppress compiler deprecation warnings for Release builds
+  * Add Node.js 10 back to Travis CI test matrix
+
 ## [3.7.1] - 2018-10-03
 
 * **Bug Fixes**
