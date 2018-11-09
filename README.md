@@ -11,8 +11,8 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js v4.x (LTS), v6.x (LTS), v8.x (LTS) and
-v10.x. It supports the following operating systems: CentOS/RHEL 6/7, Debian
+This module is compatible with Node.js v4.x, v6.x (LTS), v8.x (LTS) and
+v10.x (LTS). It supports the following operating systems: CentOS/RHEL 6/7, Debian
 7/8/9, Ubuntu 14.04/16.04/18.04, as well as many Linux destributions compatible
 with one of these OS releases. macOS and Windows are also supported.
 
