@@ -207,7 +207,8 @@ if (process.env.GLOBAL_CLIENT !== 'false') {
     .then(() => serverInfoHelper.fetch_info())
     .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
     .catch(error => {
-      console.error(error)
+      console.error('ERROR:', error)
+      console.error('CONFIG:', client.config)
       throw error
     })
   )
