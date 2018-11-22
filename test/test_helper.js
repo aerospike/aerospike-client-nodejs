@@ -206,6 +206,10 @@ if (process.env.GLOBAL_CLIENT !== 'false') {
   before(() => client.connect()
     .then(() => serverInfoHelper.fetch_info())
     .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
+    .catch(error => {
+      console.error(error)
+      throw error
+    })
   )
 }
 
