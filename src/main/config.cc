@@ -233,6 +233,12 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	if ((rc = get_optional_bool_property(&config->use_services_alternate, NULL, configObj, "useAlternateAccessAddress", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
+	if ((rc = get_optional_bool_property(&config->rack_aware, NULL, configObj, "rackAware", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = get_optional_int_property(&config->rack_id, NULL, configObj, "rack_id", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
 
 Cleanup:
 	if (cluster_name) free(cluster_name);

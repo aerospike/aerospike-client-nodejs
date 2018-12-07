@@ -61,7 +61,9 @@ describe('Config #noserver', function () {
         authMode: Aerospike.auth.EXTERNAL_INSECURE,
         sharedMemory: { key: 1234 },
         modlua: { userPath: '/user/path' },
-        port: 3333
+        port: 3333,
+        rackAware: true,
+        rackId: 42
       }
 
       let config = new Config(settings)
@@ -78,6 +80,8 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('modlua')
       expect(config).to.have.property('port')
       expect(config).to.have.property('policies')
+      expect(config).to.have.property('rackAware')
+      expect(config).to.have.property('rackId')
 
       let policies = config.policies
       expect(policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
@@ -126,7 +130,8 @@ describe('Config #noserver', function () {
         tenderInterval: '1000',
         user: {name: 'admin'},
         password: 12345,
-        sharedMemory: true
+        sharedMemory: true,
+        rackId: 'myRack'
       }
       var config = new Config(obj)
       expect(config).to.not.have.property('log')
@@ -135,6 +140,7 @@ describe('Config #noserver', function () {
       expect(config).to.not.have.property('user')
       expect(config).to.not.have.property('password')
       expect(config).to.not.have.property('sharedMemory')
+      expect(config).to.not.have.property('rackId')
       expect(config.policies).to.be.empty()
     })
 

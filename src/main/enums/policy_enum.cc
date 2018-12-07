@@ -72,6 +72,7 @@ Local<Object> replica_policy_values()
 	set(obj, "MASTER", AS_POLICY_REPLICA_MASTER);
 	set(obj, "ANY", AS_POLICY_REPLICA_ANY);
 	set(obj, "SEQUENCE", AS_POLICY_REPLICA_SEQUENCE);
+	set(obj, "PREFER_RACK", AS_POLICY_REPLICA_PREFER_RACK);
 	return scope.Escape(obj);
 }
 
