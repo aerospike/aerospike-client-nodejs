@@ -48,6 +48,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 		aerospike* as;
 		LogInfo* log;
 		uv_async_t asyncEventCb;
+		bool closed = false;
 
 
 	/***************************************************************************
@@ -80,6 +81,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 		static NAN_METHOD(Connect);
 		static NAN_METHOD(ExistsAsync);
 		static NAN_METHOD(GetAsync);
+		static NAN_METHOD(GetStats);
 		static NAN_METHOD(HasPendingAsyncCommands);
 		static NAN_METHOD(Info);
 		static NAN_METHOD(InfoForeach);

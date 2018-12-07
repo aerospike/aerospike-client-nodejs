@@ -118,6 +118,7 @@ NAN_METHOD(AerospikeClient::Close)
 	aerospike_destroy(client->as);
 	free(client->as);
 	free(client->log);
+	client->closed = true;
 }
 
 /**
@@ -247,6 +248,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "connect", Connect);
 	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
+	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
 	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);

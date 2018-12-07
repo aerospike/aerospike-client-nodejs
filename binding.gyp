@@ -92,6 +92,7 @@
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
         'src/main/enums/config_enum.cc',
+        'src/main/stats.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
       ],
