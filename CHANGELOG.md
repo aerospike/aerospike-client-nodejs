@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Add support for rack-aware clients
+  * Add client run-time stats
+
+* **Updates**
+  * Update C client library to [v4.4.0](http://www.aerospike.com/download/client/c/notes.html#4.4.0).
+  * Remove unused error codes
+  * Improve global command queue docs
+
 ## [3.7.2] - 2018-11-09
 
 * **Bug Fixes**
