@@ -94,11 +94,6 @@ Aerospike.connect(config)
   })
 ```
 
-More examples illustrating the use of the API are located in the
-[`examples`](examples) directory.
-
-Details about the API are available in the [`docs`](docs) directory.
-
 <a name="Prerequisites"></a>
 ## Prerequisites
 
@@ -340,7 +335,8 @@ The API docs also contain a few basic tutorials:
 A variety of additional example applications are provided in the
 [`examples`](examples) directory of this repository.
 
-The list of [backward incompatible API changes](docs/api-changes.md) by release.
+Backward incompatible API changes by release are documented at
+https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html.
 
 ### API Versioning
 
