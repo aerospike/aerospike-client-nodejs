@@ -4,14 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.8.0] - 2018-12-14
+
 * **New Features**
-  * Add support for rack-aware clients
-  * Add client run-time stats
+  * Add support for rack-aware clients.
+  * Add client run-time stats.
 
 * **Updates**
   * Update C client library to [v4.4.0](http://www.aerospike.com/download/client/c/notes.html#4.4.0).
-  * Remove unused error codes
-  * Improve global command queue docs
+  * Remove unused error codes.
+  * Improve global command queue docs.
+  * Shared memory layout has changed. The default Config#sharedMemory.key has changed to 0xA8000000 so old client applications do not mix shared memory with new client applications. If you are using shared memory clients with a custom shared memory key, it's critical that you change the key when upgrading to this version.
 
 ## [3.7.2] - 2018-11-09
 
