@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * Update C client library to [v4.4.1](http://www.aerospike.com/download/client/c/notes.html#4.4.1).
+  * Update nan to [v2.12.1](https://github.com/nodejs/nan/blob/master/CHANGELOG.md).
+
 ## [3.8.0] - 2018-12-14
 
 * **New Features**
