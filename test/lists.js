@@ -30,7 +30,7 @@ const status = Aerospike.status
 const eql = require('deep-eql')
 
 describe('client.operate() - CDT List operations', function () {
-  helper.cluster.skip_unless_supports_feature('cdt-list', this)
+  helper.skipUnlessSupportsFeature('cdt-list', this)
 
   let client = helper.client
 
@@ -193,7 +193,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        helper.cluster.skip_unless_version('4.3.0', this)
+        helper.skipUnlessVersion('>= 4.3.0', this)
 
         let policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
@@ -245,7 +245,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        helper.cluster.skip_unless_version('4.3.0', this)
+        helper.skipUnlessVersion('>= 4.3.0', this)
 
         let policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
@@ -303,7 +303,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        helper.cluster.skip_unless_version('4.3.0', this)
+        helper.skipUnlessVersion('>= 4.3.0', this)
 
         let policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
@@ -321,7 +321,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with insert-bounded flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new Aerospike.ListPolicy({
         writeFlags: lists.writeFlags.INSERT_BOUNDED
@@ -387,7 +387,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        helper.cluster.skip_unless_version('4.3.0', this)
+        helper.skipUnlessVersion('>= 4.3.0', this)
 
         let policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
@@ -420,7 +420,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with insert-bounded flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new Aerospike.ListPolicy({
         writeFlags: lists.writeFlags.INSERT_BOUNDED
@@ -599,7 +599,7 @@ describe('client.operate() - CDT List operations', function () {
   })
 
   describe('lists.removeByValueRelRankRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('removes all items nearest to value and greater, by relative rank', function () {
@@ -799,7 +799,7 @@ describe('client.operate() - CDT List operations', function () {
   })
 
   describe('lists.getByValueRelRankRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('fetches all items nearest to value and greater, by relative rank', function () {
@@ -848,7 +848,7 @@ describe('client.operate() - CDT List operations', function () {
   })
 
   describe('lists.increment', function () {
-    helper.cluster.skip_unless_version('3.15.0', this)
+    helper.skipUnlessVersion('>= 3.15.0', this)
 
     it('increments the element at the specified index and returns the final value', function () {
       return initState()
@@ -895,7 +895,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        helper.cluster.skip_unless_version('4.3.0', this)
+        helper.skipUnlessVersion('>= 4.3.0', this)
 
         let policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL

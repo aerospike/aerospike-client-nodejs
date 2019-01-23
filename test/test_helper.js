@@ -20,8 +20,7 @@ const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
 const utils = require('../lib/utils')
 const options = require('./util/options')
-const semver = require('./util/semver')
-const util = require('util')
+const semver = require('semver')
 const path = require('path')
 const runInNewProcessFn = require('./util/run_in_new_process')
 
@@ -112,35 +111,21 @@ function ServerInfoHelper () {
   this.cluster = []
 }
 
-ServerInfoHelper.prototype.skip_unless_supports_feature = function (feature, ctx) {
-  let cluster = this
-  ctx.beforeEach(function () {
-    if (!cluster.features.has(feature)) {
-      this.skip('requires server feature "' + feature + '"')
-    }
-  })
+ServerInfoHelper.prototype.hasFeature = function (feature) {
+  return this.features.has(feature)
 }
 
-ServerInfoHelper.prototype.skip_unless_enterprise = function (ctx) {
-  let cluster = this
-  ctx.beforeEach(function () {
-    if (!cluster.edition.match('Enterprise')) {
-      this.skip('requires enterprise edition')
-    }
-  })
+ServerInfoHelper.prototype.isEnterprise = function () {
+  return this.edition.match('Enterprise')
 }
 
-ServerInfoHelper.prototype.skip_unless_version = function (minVer, ctx) {
-  let cluster = this
-  ctx.beforeEach(function () {
-    let build = process.env.AEROSPIKE_VERSION_OVERRIDE || cluster.build
-    if (semver.compare(build, minVer) < 0) {
-      this.skip('requires server version ' + minVer + ' or later')
-    }
-  })
+ServerInfoHelper.prototype.isVersionInRange = function (versionRange) {
+  let version = process.env.AEROSPIKE_VERSION_OVERRIDE || this.build
+  version = semver.coerce(version) // truncate a build number like "4.3.0.2-28-gdd9f506" to just "4.3.0"
+  return semver.satisfies(version, versionRange)
 }
 
-ServerInfoHelper.prototype.fetch_info = function () {
+ServerInfoHelper.prototype.fetchInfo = function () {
   return client.infoAll('build\nedition\nfeatures')
     .then(results => {
       results.forEach(response => {
@@ -155,7 +140,7 @@ ServerInfoHelper.prototype.fetch_info = function () {
     })
 }
 
-ServerInfoHelper.prototype.fetch_namespace_config = function (ns) {
+ServerInfoHelper.prototype.fetchNamespaceConfig = function (ns) {
   let nsKey = 'namespace/' + ns
   return client.infoAny(nsKey)
     .then(results => {
@@ -184,13 +169,6 @@ exports.udf = udfHelper
 exports.index = indexHelper
 exports.cluster = serverInfoHelper
 
-exports.fail = function fail (message) {
-  if (typeof message !== 'string') {
-    message = util.inspect(message)
-  }
-  expect().fail(message)
-}
-
 exports.runInNewProcess = function (fn, data) {
   if (data === undefined) {
     data = null
@@ -201,11 +179,31 @@ exports.runInNewProcess = function (fn, data) {
   return runInNewProcessFn(fn, env, data)
 }
 
+function skipConditional (ctx, condition, message) {
+  ctx.beforeEach(function () {
+    if (condition()) {
+      this.skip(message)
+    }
+  })
+}
+
+exports.skipUnlessSupportsFeature = function (feature, ctx) {
+  skipConditional(ctx, () => !this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
+}
+
+exports.skipUnlessEnterprise = function (ctx) {
+  skipConditional(ctx, () => !this.cluster.isEnterprise(), 'requires enterprise edition')
+}
+
+exports.skipUnlessVersion = function (versionRange, ctx) {
+  skipConditional(ctx, () => !this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+}
+
 if (process.env.GLOBAL_CLIENT !== 'false') {
   /* global before */
   before(() => client.connect()
-    .then(() => serverInfoHelper.fetch_info())
-    .then(() => serverInfoHelper.fetch_namespace_config(options.namespace))
+    .then(() => serverInfoHelper.fetchInfo())
+    .then(() => serverInfoHelper.fetchNamespaceConfig(options.namespace))
     .catch(error => {
       console.error('ERROR:', error)
       console.error('CONFIG:', client.config)

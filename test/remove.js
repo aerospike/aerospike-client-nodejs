@@ -83,7 +83,7 @@ describe('client.remove()', function () {
   })
 
   context('with durable delete policy', function () {
-    helper.cluster.skip_unless_enterprise(this)
+    helper.skipUnlessEnterprise(this)
 
     it('should apply the durable delete policy', function () {
       let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()

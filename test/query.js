@@ -219,7 +219,7 @@ describe('Queries', function () {
     })
 
     context('with nobins set to true', function () {
-      helper.cluster.skip_unless_version('3.15.0', this)
+      helper.skipUnlessVersion('>= 3.15.0', this)
 
       it('should return only meta data', function (done) {
         var query = client.query(helper.namespace, testSet)

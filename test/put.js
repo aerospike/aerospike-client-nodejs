@@ -247,7 +247,7 @@ describe('client.put()', function () {
   })
 
   context('bin names', function () {
-    helper.cluster.skip_unless_version('4.2.0', this)
+    helper.skipUnlessVersion('>= 4.2.0', this)
 
     it('should write a bin with a name of max. length 15', function () {
       let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()

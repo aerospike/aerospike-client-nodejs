@@ -32,7 +32,7 @@ const recgen = helper.recgen
 const putgen = helper.putgen
 
 describe('client.truncate()', function () {
-  helper.cluster.skip_unless_version('3.12.0', this)
+  helper.skipUnlessVersion('>= 3.12.0', this)
 
   var client = helper.client
 

@@ -29,7 +29,7 @@ const status = Aerospike.status
 const eql = require('deep-eql')
 
 describe('client.operate() - CDT Map operations', function () {
-  helper.cluster.skip_unless_supports_feature('cdt-map', this)
+  helper.skipUnlessSupportsFeature('cdt-map', this)
 
   let client = helper.client
 
@@ -213,7 +213,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('with update-only flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
@@ -278,7 +278,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('with create-only flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
@@ -330,7 +330,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('with update-only flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
@@ -377,7 +377,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('with create-only flag', function () {
-      helper.cluster.skip_unless_version('4.3.0', this)
+      helper.skipUnlessVersion('>= 4.3.0', this)
 
       let policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
@@ -548,7 +548,7 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.removeByKeyRelIndexRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('removes map entries nearest to key and greater, by index', function () {
@@ -636,7 +636,7 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.removeByValueRelRankRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('removes map entries nearest to value and greater by relative rank', function () {
@@ -807,7 +807,7 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.getByKeyRelIndexRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('retrieves map entries nearest to key and greater, by index', function () {
@@ -869,7 +869,7 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.getByValueRelRankRange', function () {
-    helper.cluster.skip_unless_version('4.3.0', this)
+    helper.skipUnlessVersion('>= 4.3.0', this)
 
     context('with count', function () {
       it('retrieves map entries nearest to value and greater by relative rank', function () {
