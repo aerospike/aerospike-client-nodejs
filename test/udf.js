@@ -115,13 +115,13 @@ context('registering/unregistering UDF modules', function () {
     })
 
     context('removing a non-existent module', function () {
-      context('server version 4.6 and later', function () {
-        helper.skipUnlessVersion('>= 4.6.0', this)
+      // context('server version 4.6 and later', function () {
+      //   helper.skipUnlessVersion('>= 4.6.0', this)
 
-        it('should not fail when removing a non-existent module', function () {
-          return client.udfRemove('no-such-udf.lua')
-        })
-      })
+      //   it('should not fail when removing a non-existent module', function () {
+      //     return client.udfRemove('no-such-udf.lua')
+      //   })
+      // })
 
       context('server version 4.5 and earlier', function () {
         helper.skipUnlessVersion('< 4.6.0', this)
