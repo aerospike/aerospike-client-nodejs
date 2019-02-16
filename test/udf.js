@@ -115,20 +115,20 @@ context('registering/unregistering UDF modules', function () {
     })
 
     context('removing a non-existent module', function () {
-      // context('server version 4.6 and later', function () {
-      //   helper.skipUnlessVersion('>= 4.6.0', this)
+      context('server version 4.5.1 and later', function () {
+        helper.skipUnlessVersion('>= 4.5.1', this)
 
-      //   it('should not fail when removing a non-existent module', function () {
-      //     return client.udfRemove('no-such-udf.lua')
-      //   })
-      // })
+        it('should not fail when removing a non-existent module', function () {
+          return client.udfRemove('no-such-udf.lua').then(job => job.waitUntilDone())
+        })
+      })
 
-      context('server version 4.5 and earlier', function () {
-        helper.skipUnlessVersion('< 4.6.0', this)
+      context('server version 4.5.0 and earlier', function () {
+        helper.skipUnlessVersion('< 4.5.1', this)
 
         it('should return an error when removing a non-existent module', function (done) {
           client.udfRemove('no-such-udf.lua', function (error) {
-            expect(error).to.have.property('code', Aerospike.status.ERR_UDF)
+            expect(error).to.exist().and.have.property('code', Aerospike.status.ERR_UDF)
             done()
           })
         })

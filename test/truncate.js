@@ -89,12 +89,13 @@ describe('client.truncate()', function () {
   })
 
   it('deletes all records with an older update timestamp', function (done) {
+    this.timeout(5000)
     const ns = helper.namespace
     const set = setgen()
     const noRecordsToDelete = 5
     const noRecordsToRemain = 2
     const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
-    const allowanceMs = 200 // Test will fail if client and server clocks differ by more than this many ms!
+    const allowanceMs = 2000 // Test will fail if client and server clocks differ by more than this many ms!
 
     var kgen = keygen.string(ns, set, {prefix: 'test/trunc/del/', random: false})
     genRecords(kgen, noRecordsToDelete, function (batchToDelete) {
