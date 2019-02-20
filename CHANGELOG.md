@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **Updates**
-  * Update C client library to [v4.4.1](http://www.aerospike.com/download/client/c/notes.html#4.4.1).
+  * Update C client library to [v4.5.0](http://www.aerospike.com/download/client/c/notes.html#4.5.0).
   * Update nan to [v2.12.1](https://github.com/nodejs/nan/blob/master/CHANGELOG.md).
   * Update nyc to v13.3 to address multiple potential vulnerabilities in nyc dependencies.
   * Update docs for udfRemove function to document changes in server behavior when trying to delete a UDF module that does not exist.
