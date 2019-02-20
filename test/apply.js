@@ -27,10 +27,10 @@ const keygen = helper.keygen
 
 describe('client.apply()', function () {
   let client = helper.client
-  let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
+  let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/apply/' })()
 
   before(() => helper.udf.register('udf.lua')
-    .then(() => client.put(key, {'foo': 'bar'}, {ttl: 1000})))
+    .then(() => client.put(key, { 'foo': 'bar' }, { ttl: 1000 })))
 
   after(() => helper.udf.remove('udf.lua')
     .then(() => client.remove(key)))

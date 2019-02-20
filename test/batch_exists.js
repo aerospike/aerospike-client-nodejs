@@ -32,9 +32,9 @@ describe('client.batchExists()', function () {
 
   it('should successfully find 10 records', function () {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/10/', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_exists/10/', random: false })
+    var mgen = metagen.constant({ ttl: 1000 })
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
 
     return putgen.put(numberOfRecords, kgen, rgen, mgen)
       .then(records => {
@@ -52,7 +52,7 @@ describe('client.batchExists()', function () {
 
   it('should fail finding 10 records', function (done) {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_exists/fail/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_exists/fail/', random: false })
     var keys = keygen.range(kgen, numberOfRecords)
 
     client.batchExists(keys, function (err, results) {

@@ -167,8 +167,8 @@ function printEnvTable (print, prefix) {
     style: TABLE_STYLE
   })
 
-  envTable.push({'Node.js Version': process.versions.node})
-  envTable.push({'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || '-'})
+  envTable.push({ 'Node.js Version': process.versions.node })
+  envTable.push({ 'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || '-' })
 
   printTable(envTable, print, prefix)
 }
@@ -179,11 +179,11 @@ function printConfigTable (config, print, prefix) {
     style: TABLE_STYLE
   })
 
-  configTable.push({'operations': config.operations})
-  configTable.push({'iterations': config.iterations === undefined ? 'undefined' : config.iterations})
-  configTable.push({'processes': config.processes})
-  configTable.push({'promises': !!config.promises})
-  configTable.push({'time': config.time === undefined ? 'undefined' : timeUnits(config.time)})
+  configTable.push({ 'operations': config.operations })
+  configTable.push({ 'iterations': config.iterations === undefined ? 'undefined' : config.iterations })
+  configTable.push({ 'processes': config.processes })
+  configTable.push({ 'promises': !!config.promises })
+  configTable.push({ 'time': config.time === undefined ? 'undefined' : timeUnits(config.time) })
 
   printTable(configTable, print, prefix)
 }
@@ -205,22 +205,22 @@ function printTransactions (transactions, print, prefix) {
   var row = columns.map(function (col) {
     return numberFormat(transactions[col]['count'], 0)
   })
-  table.push({'Total': row})
+  table.push({ 'Total': row })
 
   row = columns.map(function (col) {
     return numberFormat(transactions[col]['tps'], 0)
   })
-  table.push({'TPS': row})
+  table.push({ 'TPS': row })
 
   row = columns.map(function (col) {
     return numberFormat(transactions[col]['min_tps'], 0)
   })
-  table.push({'Min TPS': row})
+  table.push({ 'Min TPS': row })
 
   row = columns.map(function (col) {
     return numberFormat(transactions[col]['max_tps'], 0)
   })
-  table.push({'Max TPS': row})
+  table.push({ 'Max TPS': row })
 
   printTable(table, print, prefix)
 }

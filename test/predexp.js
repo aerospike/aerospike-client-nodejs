@@ -38,16 +38,16 @@ describe('Aerospike.predexp #slow', function () {
     { name: 'int non-match', i: 500 },
     { name: 'int list match', li: [1, 5, 9] },
     { name: 'int list non-match', li: [500, 501, 502] },
-    { name: 'int map match', mi: {a: 1, b: 5, c: 9} },
-    { name: 'int map non-match', mi: {a: 500, b: 501, c: 502} },
+    { name: 'int map match', mi: { a: 1, b: 5, c: 9 } },
+    { name: 'int map non-match', mi: { a: 500, b: 501, c: 502 } },
     { name: 'string match', s: 'banana' },
     { name: 'string non-match', s: 'tomato' },
     { name: 'string list match', ls: ['banana', 'blueberry'] },
     { name: 'string list non-match', ls: ['tomato', 'cuccumber'] },
-    { name: 'string map match', ms: {a: 'banana', b: 'blueberry'} },
-    { name: 'string map non-match', ms: {a: 'tomato', b: 'cuccumber'} },
-    { name: 'string mapkeys match', mks: {'banana': 1, 'blueberry': 2} },
-    { name: 'string mapkeys non-match', mks: {'tomato': 3, 'cuccumber': 4} },
+    { name: 'string map match', ms: { a: 'banana', b: 'blueberry' } },
+    { name: 'string map non-match', ms: { a: 'tomato', b: 'cuccumber' } },
+    { name: 'string mapkeys match', mks: { 'banana': 1, 'blueberry': 2 } },
+    { name: 'string mapkeys non-match', mks: { 'tomato': 3, 'cuccumber': 4 } },
     { name: 'point match', g: GeoJSON.Point(103.913, 1.308) },
     { name: 'point non-match', g: GeoJSON.Point(-122.101, 37.421) },
     { name: 'point list match', lg: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] },
@@ -59,7 +59,7 @@ describe('Aerospike.predexp #slow', function () {
   before(() => {
     let entries = samples.entries()
     let rgen = () => entries.next().value[1]
-    let kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/predexp/', random: false})
+    let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/predexp/', random: false })
     let mgen = metagen.constant({ ttl: 300 })
     return putgen.put(samples.length, kgen, rgen, mgen)
   })

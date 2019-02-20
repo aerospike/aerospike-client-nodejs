@@ -215,24 +215,24 @@ context('Plain Object Keys (for backward compatibility)', function () {
   var client = helper.client
 
   it('accepts plain objects as user keys', function (done) {
-    var key = {ns: helper.namespace, set: helper.set, key: 1234}
-    client.put(key, {foo: 'bar'}, function (err) {
+    var key = { ns: helper.namespace, set: helper.set, key: 1234 }
+    client.put(key, { foo: 'bar' }, function (err) {
       expect(err).to.not.be.ok()
       done()
     })
   })
 
   it('returns an error for an unsupported float user key', function (done) {
-    var key = {ns: helper.namespace, set: helper.set, key: 3.1415}
-    client.put(key, {foo: 'bar'}, function (err) {
+    var key = { ns: helper.namespace, set: helper.set, key: 3.1415 }
+    client.put(key, { foo: 'bar' }, function (err) {
       expect(err.code).to.equal(status.ERR_PARAM)
       done()
     })
   })
 
   it('returns an error for an invalid user key', function (done) {
-    var key = {ns: helper.namespace, set: helper.set, key: {a: 1, b: 2, c: 3}}
-    client.put(key, {foo: 'bar'}, function (err) {
+    var key = { ns: helper.namespace, set: helper.set, key: { a: 1, b: 2, c: 3 } }
+    client.put(key, { foo: 'bar' }, function (err) {
       expect(err.code).to.equal(status.ERR_PARAM)
       done()
     })

@@ -26,15 +26,15 @@ const helper = require('./test_helper')
 
 describe('Aerospike.GeoJSON', function () {
   context('GeoJSON class #noserver', function () {
-    let subject = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+    let subject = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
 
     describe('constructor', function () {
       it('returns a new GeoJSON value when called as an Object constructor', function () {
-        expect(new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.instanceof(GeoJSON)
+        expect(new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })).to.be.instanceof(GeoJSON)
       })
 
       it('returns a new GeoJSON value when called as function', function () {
-        expect(GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})).to.be.instanceof(GeoJSON)
+        expect(GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })).to.be.instanceof(GeoJSON)
       })
 
       it('parses a GeoJSON string', function () {
@@ -49,13 +49,13 @@ describe('Aerospike.GeoJSON', function () {
 
     describe('#value()', function () {
       it('returns the value as a JSON object', function () {
-        expect(subject.value()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
+        expect(subject.value()).to.eql({ type: 'Point', coordinates: [103.913, 1.308] })
       })
     })
 
     describe('#toJSON()', function () {
       it('returns the GeoJSON value as a JSON object', function () {
-        expect(subject.toJSON()).to.eql({type: 'Point', coordinates: [103.913, 1.308]})
+        expect(subject.toJSON()).to.eql({ type: 'Point', coordinates: [103.913, 1.308] })
       })
     })
 
@@ -67,21 +67,21 @@ describe('Aerospike.GeoJSON', function () {
 
     describe('GeoJSON.Point()', function () {
       it('returns the lat, lng as a GeoJSON point value', function () {
-        var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+        var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
         expect(GeoJSON.Point(103.913, 1.308)).to.eql(point)
       })
     })
 
     describe('GeoJSON.Polygon()', function () {
       it('returns the coordinates as a GeoJSON polygon value', function () {
-        var polygon = new GeoJSON({type: 'Polygon', coordinates: [[[103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408]]]})
+        var polygon = new GeoJSON({ type: 'Polygon', coordinates: [[[103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408]]] })
         expect(GeoJSON.Polygon([103.913, 1.308], [104.913, 1.308], [104.913, 1.408], [103.913, 1.408], [103.913, 1.408])).to.eql(polygon)
       })
     })
 
     describe('GeoJSON.Circle()', function () {
       it('creates a GeoJSON circle representation', function () {
-        let circle = new GeoJSON({type: 'AeroCircle', coordinates: [[-122.250629, 37.871022], 300]})
+        let circle = new GeoJSON({ type: 'AeroCircle', coordinates: [[-122.250629, 37.871022], 300] })
         expect(GeoJSON.Circle(-122.250629, 37.871022, 300)).to.eql(circle)
       })
     })
@@ -92,13 +92,13 @@ describe('Aerospike.GeoJSON', function () {
     const point = JSON.stringify({ type: 'Point', coordinates: [103.9139, 1.3030] })
     const geojson = GeoJSON(point)
     const key = new Key(helper.namespace, helper.set, 'test/geojson')
-    const meta = {ttl: 1000}
+    const meta = { ttl: 1000 }
     const policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE
     })
 
     it('can put/get a GeoJSON bin value', function (done) {
-      const record = {location: geojson}
+      const record = { location: geojson }
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
 
@@ -111,7 +111,7 @@ describe('Aerospike.GeoJSON', function () {
     })
 
     it('can put/get a GeoJSON value in a list bin', function (done) {
-      const record = {locations: [geojson, geojson]}
+      const record = { locations: [geojson, geojson] }
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
 
@@ -124,7 +124,7 @@ describe('Aerospike.GeoJSON', function () {
     })
 
     it('can put/get a GeoJSON value in a map bin', function (done) {
-      const record = {map: {location: geojson}}
+      const record = { map: { location: geojson } }
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
 

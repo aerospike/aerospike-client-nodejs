@@ -51,7 +51,7 @@ function setupAlertSystem (alert) {
   } else {
     winston = require('winston')
     if (alert.mode === 'FILE') {
-      winston.add(winston.transports.file, {filename: alert.filename})
+      winston.add(winston.transports.file, { filename: alert.filename })
       winston.remove(winston.transports.Console)
     }
     alertMode = alert.mode

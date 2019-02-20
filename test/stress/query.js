@@ -88,7 +88,7 @@ describe('client.query()', function () {
             setTimeout(function () {
               job.waitUntilDone(function () {
                 console.timeEnd('creating secondary index')
-                client.put(idxKey, {norec: numberOfRecords, set: testSet}, done)
+                client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
               })
             }, 5000)
           })

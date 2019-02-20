@@ -32,9 +32,9 @@ describe('client.batchSelect()', function () {
 
   it('should successfully read bins from 10 records', function () {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/success', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/success', random: false })
+    var mgen = metagen.constant({ ttl: 1000 })
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
 
     return putgen.put(numberOfRecords, kgen, rgen, mgen)
       .then(records => {
@@ -52,7 +52,7 @@ describe('client.batchSelect()', function () {
 
   it('should fail reading bins from non-existent records', function (done) {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/fail', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/fail', random: false })
     var keys = keygen.range(kgen, numberOfRecords)
     var bins = ['i', 's']
     client.batchSelect(keys, bins, function (err, results) {

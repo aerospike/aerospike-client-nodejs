@@ -88,7 +88,7 @@ let config = {
 }
 
 if (argv.host) {
-  config.hosts = [{addr: argv.host, port: argv.port || 3000}]
+  config.hosts = [{ addr: argv.host, port: argv.port || 3000 }]
 }
 
 if (argv.user !== null) {
@@ -233,9 +233,9 @@ function run (options) {
 
   while (writeOps > 0 || readOps > 0) {
     var k = keygen(options.keyRange.min, options.keyRange.max)
-    var key = {ns: options.namespace, set: options.set, key: k}
+    var key = { ns: options.namespace, set: options.set, key: k }
     var record = recordgen(k, options.binSpec)
-    var ops = {key: key, record: record}
+    var ops = { key: key, record: record }
     if (writeOps > 0) {
       writeOps--
       if (usePromises) {

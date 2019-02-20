@@ -77,7 +77,7 @@ describe('client.scan()', function () {
         perfdata.generate(helper.namespace, testSet, numberOfRecords, recordSize, function (recordsGenerated) {
           console.timeEnd('generating performance test data')
           numberOfRecords = recordsGenerated // might be slightly less due to duplciate keys
-          client.put(idxKey, {norec: numberOfRecords, set: testSet}, done)
+          client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
         })
       } else {
         // perf test data already exists

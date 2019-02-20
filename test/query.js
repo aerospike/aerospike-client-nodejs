@@ -49,27 +49,27 @@ describe('Queries', function () {
     { name: 'int non-match', i: 500 },
     { name: 'int list match', li: [1, 5, 9] },
     { name: 'int list non-match', li: [500, 501, 502] },
-    { name: 'int map match', mi: {a: 1, b: 5, c: 9} },
-    { name: 'int map non-match', mi: {a: 500, b: 501, c: 502} },
+    { name: 'int map match', mi: { a: 1, b: 5, c: 9 } },
+    { name: 'int map non-match', mi: { a: 500, b: 501, c: 502 } },
     { name: 'string match', s: 'banana' },
     { name: 'string non-match', s: 'tomato' },
     { name: 'string list match', ls: ['banana', 'blueberry'] },
     { name: 'string list non-match', ls: ['tomato', 'cuccumber'] },
-    { name: 'string map match', ms: {a: 'banana', b: 'blueberry'} },
-    { name: 'string map non-match', ms: {a: 'tomato', b: 'cuccumber'} },
-    { name: 'string mapkeys match', mks: {'banana': 1, 'blueberry': 2} },
-    { name: 'string mapkeys non-match', mks: {'tomato': 3, 'cuccumber': 4} },
+    { name: 'string map match', ms: { a: 'banana', b: 'blueberry' } },
+    { name: 'string map non-match', ms: { a: 'tomato', b: 'cuccumber' } },
+    { name: 'string mapkeys match', mks: { 'banana': 1, 'blueberry': 2 } },
+    { name: 'string mapkeys non-match', mks: { 'tomato': 3, 'cuccumber': 4 } },
     { name: 'point match', g: GeoJSON.Point(103.913, 1.308) },
     { name: 'point non-match', g: GeoJSON.Point(-122.101, 37.421) },
     { name: 'point list match', lg: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] },
     { name: 'point list non-match', lg: [GeoJSON.Point(-122.101, 37.421), GeoJSON.Point(-120.101, 39.421)] },
-    { name: 'point map match', mg: {a: GeoJSON.Point(103.913, 1.308), b: GeoJSON.Point(105.913, 3.308)} },
-    { name: 'point map non-match', mg: {a: GeoJSON.Point(-122.101, 37.421), b: GeoJSON.Point(-120.101, 39.421)} },
+    { name: 'point map match', mg: { a: GeoJSON.Point(103.913, 1.308), b: GeoJSON.Point(105.913, 3.308) } },
+    { name: 'point map non-match', mg: { a: GeoJSON.Point(-122.101, 37.421), b: GeoJSON.Point(-120.101, 39.421) } },
     { name: 'region match', g: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) },
     { name: 'region non-match', g: GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421]) },
     { name: 'region list match', lg: [GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])] },
     { name: 'region list non-match', lg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
-    { name: 'region map match', mg: {a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])} },
+    { name: 'region map match', mg: { a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } },
     { name: 'region map non-match', mg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
     { name: 'aggregate', value: 10 },
     { name: 'aggregate', value: 20 },
@@ -111,7 +111,7 @@ describe('Queries', function () {
 
   before(() => {
     let sampleGen = () => samples.pop()
-    let kgen = keygen.string(helper.namespace, testSet, {prefix: 'test/query/', random: false})
+    let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false })
     let mgen = metagen.constant({ ttl: 300 })
     return Promise.all([
       putgen.put(numberOfSamples, kgen, sampleGen, mgen)
@@ -339,25 +339,25 @@ describe('Queries', function () {
 
       describe('filter.geoWithinGeoJSONRegion()', function () {
         it('should match locations within a GeoJSON region', function (done) {
-          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
           var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
           verifyQueryResults(args, 'point match', done)
         })
 
         it('should match locations in a list within a GeoJSON region', function (done) {
-          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
           var args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
           verifyQueryResults(args, 'point list match', done)
         })
 
         it('should match locations in a map within a GeoJSON region', function (done) {
-          var region = new GeoJSON({type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]})
+          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
           var args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
           verifyQueryResults(args, 'point map match', done)
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
-          var region = {type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]]}
+          var region = { type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] }
           var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
           verifyQueryResults(args, 'point match', done)
         })
@@ -382,25 +382,25 @@ describe('Queries', function () {
 
       describe('filter.geoContainsGeoJSONPoint()', function () {
         it('should match regions that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
           var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
           verifyQueryResults(args, 'region match', done)
         })
 
         it('should match regions in a list that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
           var args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
           verifyQueryResults(args, 'region list match', done)
         })
 
         it('should match regions in a map that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({type: 'Point', coordinates: [103.913, 1.308]})
+          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
           var args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
           verifyQueryResults(args, 'region map match', done)
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
-          var point = {type: 'Point', coordinates: [103.913, 1.308]}
+          var point = { type: 'Point', coordinates: [103.913, 1.308] }
           var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
           verifyQueryResults(args, 'region match', done)
         })

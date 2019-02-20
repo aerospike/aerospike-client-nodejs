@@ -128,7 +128,7 @@ describe('Config #noserver', function () {
         policies: 1000,
         connTimeoutMs: 1.5,
         tenderInterval: '1000',
-        user: {name: 'admin'},
+        user: { name: 'admin' },
         password: 12345,
         sharedMemory: true,
         rackId: 'myRack'

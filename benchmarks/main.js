@@ -77,7 +77,7 @@ if (argv.time !== undefined) {
   argv.iterations = undefined
 }
 
-var alert = {mode: argv.alert, filename: argv.filename}
+var alert = { mode: argv.alert, filename: argv.filename }
 alerts.setupAlertSystem(alert)
 
 // *****************************************************************************

@@ -160,7 +160,7 @@ function map () {
     var num = integer()
     var str = string()
     var uint = bytes()
-    var map = {itype: num(), stype: str(), btyte: uint()}
+    var map = { itype: num(), stype: str(), btyte: uint() }
     return map
   }
 }
