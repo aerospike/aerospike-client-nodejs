@@ -11,7 +11,7 @@ and suitable for application prototyping and development.
 
 * Windows 7 or later
 * Visual C++ 2015 Build Tools or later
-* Node.js v4.x (LTS) or later
+* Node.js v6.x (LTS) or later
 
 The package includes a native add-on. To compile the add-on, Microsoft's Visual
 C++ Build Tools 2015 are required. The easiest way to install the build tools,
