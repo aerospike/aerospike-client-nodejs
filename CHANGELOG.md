@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
   * Update nan to [v2.12.1](https://github.com/nodejs/nan/blob/master/CHANGELOG.md).
   * Update nyc to v13.3 to address multiple potential vulnerabilities in nyc dependencies.
   * Update docs for udfRemove function to document changes in server behavior when trying to delete a UDF module that does not exist.
+  * Drop Node.js v4 from the test matrix. The client still runs on Node.js v4 for now, but not all of its dev dependencies do.
 
 ## [3.8.0] - 2018-12-14
 
