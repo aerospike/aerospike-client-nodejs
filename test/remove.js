@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -32,16 +32,16 @@ describe('client.remove()', function () {
   let client = helper.client
 
   it('removes an existing record', function () {
-    let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+    let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/' })()
 
-    return client.put(key, {str: 'abcde'})
+    return client.put(key, { str: 'abcde' })
       .then(() => client.remove(key))
       .then(() => client.exists(key))
       .then(result => expect(result).to.be.false())
   })
 
   it('returns an error when trying to remove a non-existing key', function () {
-    let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+    let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/' })()
 
     return client.remove(key)
       .catch(error =>
@@ -50,13 +50,13 @@ describe('client.remove()', function () {
 
   context('with generation policy value', function () {
     it('should remove the record if the generation matches', function () {
-      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/' })()
       let policy = new Aerospike.RemovePolicy({
         gen: Aerospike.policy.gen.EQ,
         generation: 1
       })
 
-      return client.put(key, {str: 'abcde'})
+      return client.put(key, { str: 'abcde' })
         .then(() => {
           return client.remove(key, policy)
         })
@@ -65,13 +65,13 @@ describe('client.remove()', function () {
     })
 
     it('should not remove the record if the generation does not match', function () {
-      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/'})()
+      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/' })()
       let policy = new Aerospike.RemovePolicy({
         gen: Aerospike.policy.gen.EQ,
         generation: 1
       })
 
-      return client.put(key, {str: 'abcde'})
+      return client.put(key, { str: 'abcde' })
         .then(() => {
           return client.remove(key, policy)
             .catch(error =>
@@ -86,8 +86,8 @@ describe('client.remove()', function () {
     helper.skipUnlessEnterprise(this)
 
     it('should apply the durable delete policy', function () {
-      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/remove/gen/'})()
-      let record = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})()
+      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/gen/' })()
+      let record = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
       let policy = new Aerospike.RemovePolicy({
         durableDelete: true
       })

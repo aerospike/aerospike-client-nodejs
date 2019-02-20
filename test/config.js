@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -128,7 +128,7 @@ describe('Config #noserver', function () {
         policies: 1000,
         connTimeoutMs: 1.5,
         tenderInterval: '1000',
-        user: {name: 'admin'},
+        user: { name: 'admin' },
         password: 12345,
         sharedMemory: true,
         rackId: 'myRack'

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ describe('client.query()', function () {
             setTimeout(function () {
               job.waitUntilDone(function () {
                 console.timeEnd('creating secondary index')
-                client.put(idxKey, {norec: numberOfRecords, set: testSet}, done)
+                client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
               })
             }, 5000)
           })

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ describe('client.truncate()', function () {
     const noRecords = 5
     const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
 
-    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/', random: false})
+    var kgen = keygen.string(ns, set, { prefix: 'test/trunc/', random: false })
     genRecords(kgen, noRecords, function (records) {
       setTimeout(function () {
         client.truncate(ns, set, 0, function (err) {
@@ -97,12 +97,12 @@ describe('client.truncate()', function () {
     const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
     const allowanceMs = 2000 // Test will fail if client and server clocks differ by more than this many ms!
 
-    var kgen = keygen.string(ns, set, {prefix: 'test/trunc/del/', random: false})
+    var kgen = keygen.string(ns, set, { prefix: 'test/trunc/del/', random: false })
     genRecords(kgen, noRecordsToDelete, function (batchToDelete) {
       setTimeout(function () {
         var timeNanos = new Date().getTime() * 1000000
         setTimeout(function () {
-          var kgen = keygen.string(ns, set, {prefix: 'test/trunc/rem/', random: false})
+          var kgen = keygen.string(ns, set, { prefix: 'test/trunc/rem/', random: false })
           genRecords(kgen, noRecordsToRemain, function (batchToRemain) {
             setTimeout(function () {
               client.truncate(ns, set, timeNanos, function (err) {

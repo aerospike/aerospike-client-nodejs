@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ describe('client.operate() - CDT List operations', function () {
 
   function createRecord (bins) {
     return function (state) {
-      let key = helper.keygen.string(helper.namespace, helper.set, {prefix: 'cdt_list/'})()
+      let key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_list/' })()
       let meta = { ttl: 600 }
       let policy = new Aerospike.WritePolicy({
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE

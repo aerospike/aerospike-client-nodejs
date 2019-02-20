@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ context('Scans', function () {
 
   describe('scan.background()', function () {
     it('applies a UDF to every record', function (done) {
-      var token = valgen.string({length: {min: 10, max: 10}})()
+      var token = valgen.string({ length: { min: 10, max: 10 } })()
       var backgroundScan = client.scan(helper.namespace, testSet)
       backgroundScan.background('udf', 'updateRecord', ['x', token], function (err, job) {
         if (err) throw err
@@ -267,7 +267,7 @@ context('Scans', function () {
 
   describe('job.info()', function () {
     it('returns the scan status and progress', function (done) {
-      var scan = client.scan(helper.namespace, testSet, {percent: 10})
+      var scan = client.scan(helper.namespace, testSet, { percent: 10 })
       scan.background('udf', 'noop', function (error, job) {
         if (error) throw error
         job.info(function (error, info) {

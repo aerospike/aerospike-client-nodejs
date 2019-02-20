@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -119,13 +119,13 @@ context('Info commands', function () {
     it('should parse key-value pairs from an info string', function () {
       var infoStr = 'version\t1\nedition\tCommunity Edition\n'
       var infoHash = info.parse(infoStr)
-      expect(infoHash).to.eql({version: 1, edition: 'Community Edition'})
+      expect(infoHash).to.eql({ version: 1, edition: 'Community Edition' })
     })
 
     it('should parse nested key-value pairs', function () {
       var infoStr = 'statistics\tmem=10;req=20\n'
       var infoHash = info.parse(infoStr)
-      expect(infoHash['statistics']).to.eql({mem: 10, req: 20})
+      expect(infoHash['statistics']).to.eql({ mem: 10, req: 20 })
     })
 
     it('should parse list values', function () {

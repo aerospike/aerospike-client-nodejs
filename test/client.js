@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ describe('Client', function () {
 
   describe('#close', function () {
     it('should be a no-op if close is called after connection error #noserver', function (done) {
-      const client = new Client({hosts: '127.0.0.1:0'})
+      const client = new Client({ hosts: '127.0.0.1:0' })
       client.connect(error => {
         expect(error.message).to.match(/Failed to connect/)
         client.close(false)

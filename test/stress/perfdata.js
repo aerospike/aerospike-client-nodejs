@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ function interval (duration, callback) {
 function generate (ns, set, numberOfRecords, recordSize, done) {
   var numBinsPerRecord = recordSize[0]
   var sizePerBin = recordSize[1]
-  var kgen = keygen.string(ns, set, {length: {min: 20, max: 20}})
-  var bins = { id: valgen.integer({random: false, min: 0}) }
+  var kgen = keygen.string(ns, set, { length: { min: 20, max: 20 } })
+  var bins = { id: valgen.integer({ random: false, min: 0 }) }
   for (var i = 0; i < numBinsPerRecord; i++) {
-    bins['b' + i] = valgen.bytes({length: {min: sizePerBin, max: sizePerBin}})
+    bins['b' + i] = valgen.bytes({ length: { min: sizePerBin, max: sizePerBin } })
   }
   var rgen = recgen.record(bins)
   var mgen = metagen.constant({})

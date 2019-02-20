@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ describe('client.batchGet()', function () {
 
   it('should successfully read 10 records', function () {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/success', random: false})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/success', random: false })
+    var mgen = metagen.constant({ ttl: 1000 })
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
 
     return putgen.put(numberOfRecords, kgen, rgen, mgen)
       .then(records => {
@@ -53,7 +53,7 @@ describe('client.batchGet()', function () {
 
   it('should fail reading 10 records', function (done) {
     var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/batch_get/fail/', random: false})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/fail/', random: false })
     var keys = keygen.range(kgen, numberOfRecords)
     client.batchGet(keys, function (err, results) {
       expect(err).not.to.be.ok()

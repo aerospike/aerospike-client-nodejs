@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ const keygen = helper.keygen
 
 describe('client.apply()', function () {
   let client = helper.client
-  let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/apply/'})()
+  let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/apply/' })()
 
   before(() => helper.udf.register('udf.lua')
-    .then(() => client.put(key, {'foo': 'bar'}, {ttl: 1000})))
+    .then(() => client.put(key, { 'foo': 'bar' }, { ttl: 1000 })))
 
   after(() => helper.udf.remove('udf.lua')
     .then(() => client.remove(key)))

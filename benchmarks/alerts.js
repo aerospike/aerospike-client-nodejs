@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ function setupAlertSystem (alert) {
   } else {
     winston = require('winston')
     if (alert.mode === 'FILE') {
-      winston.add(winston.transports.file, {filename: alert.filename})
+      winston.add(winston.transports.file, { filename: alert.filename })
       winston.remove(winston.transports.Console)
     }
     alertMode = alert.mode

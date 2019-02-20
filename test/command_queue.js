@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2018 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ describe('Command Queue #slow', function () {
       Aerospike.connect(config)
         .then(client => {
           let cmds = Array.from({ length: 10 }, (_, i) =>
-            client.put(new Aerospike.Key('test', 'test', i), {i: i}))
+            client.put(new Aerospike.Key('test', 'test', i), { i: i }))
           Promise.all(cmds)
             .then(results => done(results.length))
             .then(() => client.close())
@@ -45,7 +45,7 @@ describe('Command Queue #slow', function () {
       Aerospike.connect(config)
         .then(client => {
           let cmds = Array.from({ length: 10 }, (_, i) =>
-            client.put(new Aerospike.Key('test', 'test', i), {i: i}))
+            client.put(new Aerospike.Key('test', 'test', i), { i: i }))
           Promise.all(cmds)
             .then(() => done('All commands processed successfully'))
             .catch(error => done(error.message))

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ options.getConfig = function () {
     }
   }
   if (options.host !== null) {
-    config.hosts = [{addr: options.host, port: options.port || 3000}]
+    config.hosts = [{ addr: options.host, port: options.port || 3000 }]
   } else if (process.env['AEROSPIKE_HOSTS']) {
     config.hosts = process.env['AEROSPIKE_HOSTS']
   }

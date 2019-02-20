@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ describe('client.put()', function () {
   var client = helper.client
 
   it('should write and validate records', function (done) {
-    var meta = {ttl: 1000}
+    var meta = { ttl: 1000 }
     var putAndGet = function (key, bins, cb) {
       client.put(key, bins, meta, function (err) {
         if (err) throw err
@@ -51,7 +51,7 @@ describe('client.put()', function () {
       prefix: 'test/put/putAndGet/',
       random: false
     })
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string(), b: valgen.bytes()})
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
     var total = 50
     var count = 0
 
@@ -67,8 +67,8 @@ describe('client.put()', function () {
 
   context('records with various key types', function () {
     it('should write a record w/ string key', function (done) {
-      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
-      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
+      var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err) {
         if (err) throw err
@@ -82,7 +82,7 @@ describe('client.put()', function () {
 
     it('should write a record w/ integer key', function (done) {
       var key = keygen.integer(helper.namespace, helper.set)()
-      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
+      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err) {
         if (err) throw err
@@ -96,7 +96,7 @@ describe('client.put()', function () {
 
     it('should write a record w/ byte array key', function (done) {
       var key = keygen.bytes(helper.namespace, helper.set)()
-      var record = recgen.record({i: valgen.integer(), s: valgen.string()})()
+      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err, key) {
         if (err) throw err
@@ -116,7 +116,7 @@ describe('client.put()', function () {
     })
 
     function putGetVerify (bins, expected, done) {
-      var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
       client.put(key, bins, meta, policy, function (err) {
         if (err) throw err
         client.get(key, function (err, record) {
@@ -217,7 +217,7 @@ describe('client.put()', function () {
 
     context('invalid bin values', function () {
       it('should fail with a parameter error when trying to write an undefined bin value', function (done) {
-        var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+        var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
         var record = { valid: 123, invalid: undefined }
 
         client.put(key, record, function (err) {
@@ -231,7 +231,7 @@ describe('client.put()', function () {
       })
 
       it('should fail with a parameter error when trying to write a boolean bin value', function (done) {
-        var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+        var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
         var record = { valid: 'true', invalid: true }
 
         client.put(key, record, function (err) {
@@ -250,7 +250,7 @@ describe('client.put()', function () {
     helper.skipUnlessVersion('>= 4.2.0', this)
 
     it('should write a bin with a name of max. length 15', function () {
-      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
       let bins = { 'bin-name-len-15': 'bin name with 15 chars' }
 
       return client.put(key, bins)
@@ -263,7 +263,7 @@ describe('client.put()', function () {
     })
 
     it('should return a parameter error when bin length exceeds 15 chars', function () {
-      let key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
       let bins = { 'bin-name-size-16': 'bin name with 16 chars' }
 
       return client.put(key, bins)
@@ -277,7 +277,7 @@ describe('client.put()', function () {
   })
 
   it('should delete a bin when writing null to it', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
     var record = { bin1: 123, bin2: 456 }
     client.put(key, record, function (err) {
       if (err) throw err
@@ -301,9 +301,9 @@ describe('client.put()', function () {
   })
 
   it('should write, read, write, and check gen', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    var mgen = metagen.constant({ ttl: 1000 })
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
 
     var key = kgen()
     var meta = mgen(key)
@@ -342,9 +342,9 @@ describe('client.put()', function () {
   })
 
   it('should write, read, remove, read, write, and check gen', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
-    var rgen = recgen.record({i: valgen.integer(), s: valgen.string()})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    var mgen = metagen.constant({ ttl: 1000 })
+    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
 
     var key = kgen()
     var meta = mgen(key)
@@ -390,8 +390,8 @@ describe('client.put()', function () {
   })
 
   it('should fail with a parameter error if gen is invalid', function (done) {
-    const key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
-    const bins = recgen.record({i: valgen.integer(), s: valgen.string()})()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+    const bins = recgen.record({ i: valgen.integer(), s: valgen.string() })()
     const meta = {
       gen: 'generation1'
     }
@@ -403,8 +403,8 @@ describe('client.put()', function () {
   })
 
   it('should fail with a parameter error if ttl is invalid', function (done) {
-    const key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
-    const bins = recgen.record({i: valgen.integer(), s: valgen.string()})()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+    const bins = recgen.record({ i: valgen.integer(), s: valgen.string() })()
     const meta = {
       ttl: 'time-to-live'
     }
@@ -417,12 +417,12 @@ describe('client.put()', function () {
 
   it('should write null for bins with empty list and map', function (done) {
     // generators
-    var kgen = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})
-    var mgen = metagen.constant({ttl: 1000})
+    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    var mgen = metagen.constant({ ttl: 1000 })
     var rgen = recgen.record({
       l: valgen.constant([1, 2, 3]),
       le: valgen.constant([]),
-      m: valgen.constant({a: 1, b: 2}),
+      m: valgen.constant({ a: 1, b: 2 }),
       me: valgen.constant({})
     })
 
@@ -451,7 +451,7 @@ describe('client.put()', function () {
 
   it('should write a key without set name', function (done) {
     var noSet = null
-    var key = keygen.string(helper.namespace, noSet, {prefix: 'test/put/'})()
+    var key = keygen.string(helper.namespace, noSet, { prefix: 'test/put/' })()
     var record = { bin1: 123, bin2: 456 }
 
     client.put(key, record, function (err) {
@@ -465,10 +465,10 @@ describe('client.put()', function () {
   })
 
   it('should write a map with undefined entry and verify the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, {prefix: 'test/put/'})()
+    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
     var record = {
       list: [1, 2, 3, undefined],
-      map: {a: 1, b: 2, c: undefined}
+      map: { a: 1, b: 2, c: undefined }
     }
 
     client.put(key, record, function (err) {
@@ -476,7 +476,7 @@ describe('client.put()', function () {
 
       client.get(key, function (err, record) {
         if (err) throw err
-        expect(record.bins.map).to.eql({a: 1, b: 2, c: null})
+        expect(record.bins.map).to.eql({ a: 1, b: 2, c: null })
         expect(record.bins.list).to.eql([1, 2, 3, null])
 
         client.remove(key, function (err) {
@@ -495,7 +495,7 @@ describe('client.put()', function () {
           exists: Aerospike.policy.exists.UPDATE
         })
 
-        return client.put(key, {i: 49}, {}, policy)
+        return client.put(key, { i: 49 }, {}, policy)
           .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
           .then(() => client.exists(key))
           .then(exists => expect(exists).to.be.false())
@@ -509,8 +509,8 @@ describe('client.put()', function () {
           exists: Aerospike.policy.exists.CREATE
         })
 
-        return client.put(key, {i: 49}, {}, policy)
-          .then(() => client.put(key, {i: 50}, {}, policy))
+        return client.put(key, { i: 49 }, {}, policy)
+          .then(() => client.put(key, { i: 50 }, {}, policy))
           .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_EXISTS))
           .then(() => client.get(key))
           .then(record => expect(record.bins.i).to.equal(49))
