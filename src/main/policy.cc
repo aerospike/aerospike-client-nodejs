@@ -110,16 +110,16 @@ int operatepolicy_from_jsobject(as_policy_operate* policy, Local<Object> obj, co
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->replica, NULL, obj, "replica", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_ap, NULL, obj, "readModeAP", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_sc, NULL, obj, "readModeSC", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail(log, "Parsing operate policy: success");
@@ -133,7 +133,10 @@ int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const 
 	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_ap, NULL, obj, "readModeAP", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_sc, NULL, obj, "readModeSC", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
@@ -143,9 +146,6 @@ int batchpolicy_from_jsobject(as_policy_batch* policy, Local<Object> obj, const 
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->send_set_name, NULL, obj, "sendSetName", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail(log, "Parsing batch policy: success");
@@ -191,13 +191,13 @@ int readpolicy_from_jsobject(as_policy_read* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->replica, NULL, obj, "replica", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t*) &policy->consistency_level, NULL, obj, "consistencyLevel", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_ap, NULL, obj, "readModeAP", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->read_mode_sc, NULL, obj, "readModeSC", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail(log, "Parsing read policy: success");
@@ -253,9 +253,6 @@ int applypolicy_from_jsobject(as_policy_apply* policy, Local<Object> obj, const 
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->linearize_read, NULL, obj, "linearizeRead", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail( log, "Parsing apply policy: success");
