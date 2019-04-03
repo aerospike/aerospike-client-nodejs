@@ -76,12 +76,23 @@ Local<Object> replica_policy_values()
 	return scope.Escape(obj);
 }
 
-Local<Object> consistency_level_policy_values()
+Local<Object> read_mode_ap_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "ONE", AS_POLICY_CONSISTENCY_LEVEL_ONE);
-	set(obj, "ALL", AS_POLICY_CONSISTENCY_LEVEL_ALL);
+	set(obj, "ONE", AS_POLICY_READ_MODE_AP_ONE);
+	set(obj, "ALL", AS_POLICY_READ_MODE_AP_ALL);
+	return scope.Escape(obj);
+}
+
+Local<Object> read_mode_sc_policy_values()
+{
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "SESSION", AS_POLICY_READ_MODE_SC_SESSION);
+	set(obj, "LINEARIZE", AS_POLICY_READ_MODE_SC_LINEARIZE);
+	set(obj, "ALLOW_REPLICA", AS_POLICY_READ_MODE_SC_ALLOW_REPLICA);
+	set(obj, "ALLOW_UNAVAILABLE", AS_POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE);
 	return scope.Escape(obj);
 }
 
@@ -104,7 +115,8 @@ Local<Object> policy()
 	obj->Set(Nan::New("gen").ToLocalChecked(), generation_policy_values());
 	obj->Set(Nan::New("exists").ToLocalChecked(), exists_policy_values());
 	obj->Set(Nan::New("replica").ToLocalChecked(), replica_policy_values());
-	obj->Set(Nan::New("consistencyLevel").ToLocalChecked(), consistency_level_policy_values());
+	obj->Set(Nan::New("readModeAP").ToLocalChecked(), read_mode_ap_policy_values());
+	obj->Set(Nan::New("readModeSC").ToLocalChecked(), read_mode_sc_policy_values());
 	obj->Set(Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
 
 	return scope.Escape(obj);
