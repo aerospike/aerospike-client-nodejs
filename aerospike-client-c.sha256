@@ -9,3 +9,13 @@ f748f43bbbf4b562198e5c6d099655f9007e275d865debd61c731a27ec30e708  aerospike-clie
 bcd45346a82b1b6e8be5321050d1db30271196cf3b0524c2dac574a2e9fdff66  aerospike-client-c-libuv-4.6.0.ubuntu16.04.x86_64.tgz
 7a57349a841a1216fd3317a4b62c7308c783d454fac31404a603f2a8e8f4e70b  aerospike-client-c-libuv-4.6.0.ubuntu18.04.x86_64.tgz
 9fe57a7850332aaca75cab9a86396d3aaf8216b52a485f2b1a9b46ec501a3b7f  aerospike-client-c-src-4.6.0.zip
+98295884b67b39df58a94f4284edc71a1333afd7816077dca45260cbc8c0d252  aerospike-client-c-libuv-4.6.1.debian7.x86_64.tgz
+64486b14ffd0c4fb9f7c3542edea41aedcff1497848fe538502899292af792e0  aerospike-client-c-libuv-4.6.1.debian8.x86_64.tgz
+13ed87c808379803a7cd75932e6886151db77f9c0a189e74bae3af33b6f47fb9  aerospike-client-c-libuv-4.6.1.debian9.x86_64.tgz
+0e094625e8667ac8ab685ba61bd600a12d4f485a77dd79fb28ab84b8770fffc0  aerospike-client-c-libuv-4.6.1.el6.x86_64.tgz
+11c0e302719b485a945a3b50a55931151f5276472fae57df311cbf85896de20d  aerospike-client-c-libuv-4.6.1.el7.x86_64.tgz
+da08b0fef017bdce65520b307d866f77f3eb54f1f184d1c401fddce83472700f  aerospike-client-c-libuv-4.6.1.mac.x86_64.tgz
+eb1dcb7af91f27e39f01b3393b7831fb098b09dcefa8561967a1a58f2930539c  aerospike-client-c-libuv-4.6.1.ubuntu14.04.x86_64.tgz
+bb5f6406f14ce4802d52aba37193ae985c6e2a80e70676bc396e4d944f03c834  aerospike-client-c-libuv-4.6.1.ubuntu16.04.x86_64.tgz
+7a65cf443c553f8df0b31b5d68dd04455f316def8f68db4522d4de8673fc7fad  aerospike-client-c-libuv-4.6.1.ubuntu18.04.x86_64.tgz
+fd0d2134b47a5fc080052ee81b72c26dcd1272b88b40f4c7763f58a7c49a2e01  aerospike-client-c-src-4.6.1.zip
