@@ -99,7 +99,8 @@ context('Client Policies #noserver', function () {
           maxRetries: 1,
           key: Aerospike.policy.key.SEND,
           replica: Aerospike.policy.replica.MASTER,
-          consistencyLevel: Aerospike.policy.consistencyLevel.ONE
+          readModeAP: Aerospike.policy.readModeAP.ONE,
+          readModeSC: Aerospike.policy.readModeSC.SESSION
         })
 
         expect(subject.socketTimeout).to.equal(1000)
@@ -107,7 +108,8 @@ context('Client Policies #noserver', function () {
         expect(subject.maxRetries).to.equal(1)
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.replica).to.equal(Aerospike.policy.replica.MASTER)
-        expect(subject.consistencyLevel).to.equal(Aerospike.policy.consistencyLevel.ONE)
+        expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
+        expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
       })
     })
   })
@@ -119,7 +121,8 @@ context('Client Policies #noserver', function () {
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
-          consistencyLevel: Aerospike.policy.consistencyLevel.ONE,
+          readModeAP: Aerospike.policy.readModeAP.ONE,
+          readModeSC: Aerospike.policy.readModeSC.SESSION,
           allowInline: false,
           sendSetName: true
         })
@@ -127,7 +130,8 @@ context('Client Policies #noserver', function () {
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.totalTimeout).to.equal(2000)
         expect(subject.maxRetries).to.equal(1)
-        expect(subject.consistencyLevel).to.equal(Aerospike.policy.consistencyLevel.ONE)
+        expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
+        expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
         expect(subject.allowInline).to.be.false()
         expect(subject.sendSetName).to.be.true()
       })
@@ -186,7 +190,8 @@ context('Client Policies #noserver', function () {
           key: Aerospike.policy.key.SEND,
           gen: Aerospike.policy.gen.EQ,
           replica: Aerospike.policy.replica.MASTER,
-          consistencyLevel: Aerospike.policy.consistencyLevel.ONE,
+          readModeAP: Aerospike.policy.readModeAP.ONE,
+          readModeSC: Aerospike.policy.readModeSC.SESSION,
           commitLevel: 2,
           durableDelete: true
         })
@@ -196,7 +201,8 @@ context('Client Policies #noserver', function () {
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
         expect(subject.replica).to.equal(Aerospike.policy.replica.MASTER)
-        expect(subject.consistencyLevel).to.equal(Aerospike.policy.consistencyLevel.ONE)
+        expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
+        expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
         expect(subject.commitLevel).to.equal(2)
         expect(subject.durableDelete).to.be.true()
       })
