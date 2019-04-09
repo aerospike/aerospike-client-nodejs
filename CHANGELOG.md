@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 * **Updates**
   * *BREAKING*: Read consistency level changes - see [Incompatible API Changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-3-10-0) for details.
   * Update C client library to [v4.6.1](http://www.aerospike.com/download/client/c/notes.html#4.6.1).
-  * Update nan to [v2.12.1](https://github.com/nodejs/nan/blob/master/CHANGELOG.md).
+  * Update nan to [v2.13.2](https://github.com/nodejs/nan/blob/master/CHANGELOG.md).
   * Update mocha, codecov & other dev dependencies to latest version.
 
 ## [3.9.0] - 2019-02-20
