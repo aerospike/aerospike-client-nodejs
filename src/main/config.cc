@@ -41,6 +41,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
 	Local<Value> policies_val = configObj->Get(Nan::New("policies").ToLocalChecked());
+	Local<Value> maybe_tls_config = configObj->Get(Nan::New("tls").ToLocalChecked());
 
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj, "clusterName", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
@@ -97,6 +98,68 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		as_v8_error(log, "'host' config must be a string or an array");
 		rc = AS_NODE_PARAM_ERR;
 		goto Cleanup;
+	}
+
+	if (maybe_tls_config->IsObject()) {
+		Local<Object> v8_tls_config = maybe_tls_config->ToObject();
+		config->tls.enable = true;
+
+		if ((rc = get_optional_bool_property(&config->tls.enable, NULL, v8_tls_config, "enable", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.cafile, &defined, v8_tls_config, "cafile", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.capath, &defined, v8_tls_config, "capath", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.protocols, &defined, v8_tls_config, "protocols", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.cipher_suite, &defined, v8_tls_config, "cipherSuite", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.cert_blacklist, &defined, v8_tls_config, "certBlacklist", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.keyfile, &defined, v8_tls_config, "keyfile", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, v8_tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_string_property(&config->tls.certfile, &defined, v8_tls_config, "certfile", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_bool_property(&config->tls.crl_check, NULL, v8_tls_config, "crlCheck", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_bool_property(&config->tls.crl_check_all, NULL, v8_tls_config, "crlCheckAll", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_bool_property(&config->tls.log_session_info, NULL, v8_tls_config, "logSessionInfo", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+		if ((rc = get_optional_bool_property(&config->tls.for_login_only, NULL, v8_tls_config, "forLoginOnly", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+	} else if (maybe_tls_config->IsUndefined()) {
+		// ignore
+	} else {
+		as_v8_error(log, "'tls' config must be an object");
+		return AS_NODE_PARAM_ERR;
 	}
 
 	if (policies_val->IsObject()) {
@@ -245,5 +308,6 @@ Cleanup:
 	if (user) free(user);
 	if (password) free(password);
 	if (user_path) free(user_path);
+	as_v8_debug(log, "Built as_config instance from JS config object");
 	return rc;
 }

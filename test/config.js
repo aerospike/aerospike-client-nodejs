@@ -61,6 +61,7 @@ describe('Config #noserver', function () {
         authMode: Aerospike.auth.EXTERNAL_INSECURE,
         sharedMemory: { key: 1234 },
         modlua: { userPath: '/user/path' },
+        tls: { enable: true, encryptOnly: true },
         port: 3333,
         rackAware: true,
         rackId: 42
@@ -78,6 +79,7 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('authMode')
       expect(config).to.have.property('sharedMemory')
       expect(config).to.have.property('modlua')
+      expect(config).to.have.property('tls')
       expect(config).to.have.property('port')
       expect(config).to.have.property('policies')
       expect(config).to.have.property('rackAware')
