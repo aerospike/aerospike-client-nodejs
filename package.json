@@ -62,7 +62,7 @@
   "standard": {
     "ignore": [
       "apidocs",
-      "tmp-*.js" // sometimes created by test/util/run_in_new_process.js
+      "tmp-*.js"
     ]
   },
   "files": [
