@@ -45,7 +45,7 @@ Local<Object> auth_mode_enum_values()
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
 	set(obj, "INTERNAL", AS_AUTH_INTERNAL);
-	// set(obj, "EXTERNAL", AS_AUTH_EXTERNAL); // Not supported - requires TLS support
+	set(obj, "EXTERNAL", AS_AUTH_EXTERNAL);
 	set(obj, "EXTERNAL_INSECURE", AS_AUTH_EXTERNAL_INSECURE);
 	return scope.Escape(obj);
 }
