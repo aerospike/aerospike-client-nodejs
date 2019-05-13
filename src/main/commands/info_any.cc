@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,23 +31,20 @@ extern "C" {
 
 using namespace v8;
 
-class InfoCommand : public AerospikeCommand {
+class InfoAnyCommand : public AerospikeCommand {
 	public:
-		InfoCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("Info", client, callback_) {}
+		InfoAnyCommand(AerospikeClient* client, Local<Function> callback_)
+			: AerospikeCommand("InfoAny", client, callback_) {}
 
-		~InfoCommand() {
+		~InfoAnyCommand() {
 			if (policy != NULL) cf_free(policy);
 			if (request != NULL && strlen(request) > 0) cf_free(request);
 			if (response != NULL) cf_free(response);
-			if (addr != NULL) cf_free(addr);
 		}
 
 		as_policy_info* policy = NULL;
 		char* request = NULL;
 		char* response = NULL;
-		char* addr = NULL;
-		uint16_t port = 0;
 };
 
 static void*
@@ -55,7 +52,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	InfoCommand* cmd = new InfoCommand(client, info[3].As<Function>());
+	InfoAnyCommand* cmd = new InfoAnyCommand(client, info[2].As<Function>());
 	LogInfo* log = client->log;
 
 	if (info[0]->IsString()) {
@@ -70,14 +67,8 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	if (info[1]->IsObject()) {
-		if (host_from_jsobject(info[1].As<Object>(), &cmd->addr, &cmd->port, log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Host parameter is invalid");
-		}
-	}
-
-	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK ) {
+		if (infopolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK ) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
 		}
 	}
@@ -88,27 +79,22 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 static void
 execute(uv_work_t* req)
 {
-	InfoCommand* cmd = reinterpret_cast<InfoCommand*>(req->data);
+	InfoAnyCommand* cmd = reinterpret_cast<InfoAnyCommand*>(req->data);
 	LogInfo* log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
-	if (cmd->addr == NULL) {
-		as_v8_debug(log, "Sending info command \"%s\" to random cluster host", cmd->request);
-		aerospike_info_any(cmd->as, &cmd->err, cmd->policy, cmd->request, &cmd->response);
-	} else {
-		as_v8_debug(log, "Sending info command \"%s\" to cluster host %s:%d", cmd->request, cmd->addr, cmd->port);
-		aerospike_info_host(cmd->as, &cmd->err, cmd->policy, cmd->addr, cmd->port, cmd->request, &cmd->response);
-	}
+	as_v8_debug(log, "Sending info command \"%s\" to random cluster host", cmd->request);
+	aerospike_info_any(cmd->as, &cmd->err, cmd->policy, cmd->request, &cmd->response);
 }
 
 static void
 respond(uv_work_t* req, int status)
 {
 	Nan::HandleScope scope;
-	InfoCommand* cmd = reinterpret_cast<InfoCommand*>(req->data);
+	InfoAnyCommand* cmd = reinterpret_cast<InfoAnyCommand*>(req->data);
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
@@ -130,12 +116,11 @@ respond(uv_work_t* req, int status)
 	delete req;
 }
 
-NAN_METHOD(AerospikeClient::Info)
+NAN_METHOD(AerospikeClient::InfoAny)
 {
 	TYPE_CHECK_OPT(info[0], IsString, "Request must be a string");
-	TYPE_CHECK_OPT(info[1], IsObject, "Host must be an object");
-	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }
