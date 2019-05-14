@@ -24,6 +24,7 @@ const helper = require('./test_helper')
 describe('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', function () {
     let test = function (Aerospike, config, done) {
+      config = Object.assign(config, { log: { level: Aerospike.log.OFF } })
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
       Aerospike.connect(config)
         .then(client => {
@@ -58,6 +59,7 @@ describe('Command Queue #slow', function () {
 
   it('throws an error when trying to configure command queue after client connect', function () {
     let test = function (Aerospike, config, done) {
+      config = Object.assign(config, { log: { level: Aerospike.log.OFF } })
       Aerospike.connect(config)
         .then(client => {
           try {

@@ -245,26 +245,21 @@ int get_optional_asval_property(as_val** value, bool* defined, Local<Object> obj
 
 int host_from_jsobject(Local<Object> obj, char** addr, uint16_t* port, const LogInfo* log)
 {
-    if (obj->Has(Nan::New("addr").ToLocalChecked()) ) {
-        Local<Value> addrVal = obj->Get(Nan::New("addr").ToLocalChecked());
-        if ( addrVal->IsString() ) {
-            *addr = (char*) malloc (HOST_ADDRESS_SIZE);
-            strcpy(*addr, *Nan::Utf8String(addrVal.As<String>()));
-            as_v8_detail(log, "host addr : %s", (*addr));
-        }
-        else {
-            return AS_NODE_PARAM_ERR;
-        }
+    Local<Value> v8_addr = obj->Get(Nan::New("addr").ToLocalChecked());
+    Local<Value> v8_port = obj->Get(Nan::New("port").ToLocalChecked());
+
+    if (v8_addr->IsString()) {
+        *addr = (char*) malloc(HOST_ADDRESS_SIZE);
+        strcpy(*addr, *Nan::Utf8String(v8_addr.As<String>()));
+        as_v8_detail(log, "host addr : %s", (*addr));
+    } else {
+        return AS_NODE_PARAM_ERR;
     }
 
-    if ( obj->Has(Nan::New("port").ToLocalChecked()) ){
-        Local<Value> portVal = obj->Get(Nan::New("port").ToLocalChecked());
-        if ( portVal->IsNumber() ) {
-            *port = (uint16_t) Nan::To<uint32_t>(portVal).FromJust();
-        }
-        else {
-            return AS_NODE_PARAM_ERR;
-        }
+    if (v8_port->IsNumber()) {
+        *port = (uint16_t) Nan::To<uint32_t>(v8_port).FromJust();
+    } else {
+        return AS_NODE_PARAM_ERR;
     }
 
     return AS_NODE_PARAM_OK;
@@ -278,23 +273,21 @@ int log_from_jsobject(LogInfo* log, Local<Object> obj)
 
     if (obj->IsObject()) {
         Local<Object> v8_log = obj.As<Object>();
+        Local<Value> v8_level = v8_log->Get(Nan::New("level").ToLocalChecked());
+        Local<Value> v8_file = v8_log->Get(Nan::New("file").ToLocalChecked());
 
         // `level` is optional
-        if (v8_log->Has(Nan::New("level").ToLocalChecked())) {
-            Local<Value> v8_log_level = v8_log->Get(Nan::New("level").ToLocalChecked());
-            if (v8_log_level->IsNumber()){
-                level = (as_log_level) Nan::To<int>(v8_log_level).FromJust();
-            } else if (v8_log_level->IsNull() || v8_log_level->IsUndefined()){
-                // `null` and `undefined` imply the value should not change.
-            } else {
-                // Any other value is a bad parameter
-                rc = AS_NODE_PARAM_ERR;
-            }
+        if (v8_level->IsNumber()){
+            level = (as_log_level) Nan::To<int>(v8_level).FromJust();
+        } else if (v8_level->IsNull() || v8_level->IsUndefined()){
+            // `null` and `undefined` imply the value should not change.
+        } else {
+            // Any other value is a bad parameter
+            rc = AS_NODE_PARAM_ERR;
         }
 
         // `file` is optional
-        if (rc == AS_NODE_PARAM_OK && v8_log->Has(Nan::New("file").ToLocalChecked())) {
-            Local<Value> v8_file = obj->Get(Nan::New("file").ToLocalChecked());
+        if (rc == AS_NODE_PARAM_OK) {
             if (v8_file->IsNumber()) {
                 int fildes = Nan::To<int>(v8_file).FromJust();
 #if !defined(_MSC_VER)
@@ -854,7 +847,7 @@ int list_from_jsarray(as_list** list, Local<Array> array, const LogInfo* log)
 
 int map_from_jsobject(as_map** map, Local<Object> obj, const LogInfo* log)
 {
-    const Local<Array> props = obj.As<Object>()->GetOwnPropertyNames();
+    const Local<Array> props = Nan::GetOwnPropertyNames(obj.As<Object>()).ToLocalChecked();
     const uint32_t capacity = props->Length();
     as_v8_detail(log, "Creating new as_hashmap with capacity %d", capacity);
     as_hashmap* hashmap = as_hashmap_new(capacity);
@@ -933,7 +926,7 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
 
 int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* log)
 {
-    const Local<Array> props = obj->GetOwnPropertyNames();
+    const Local<Array> props = Nan::GetOwnPropertyNames(obj).ToLocalChecked();
     const uint32_t count = props->Length();
     as_record_init(rec, count);
     for ( uint32_t i = 0; i < count; i++ ) {
@@ -1028,17 +1021,14 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, cons
 
 int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 {
-    if (obj->Has(Nan::New("ttl").ToLocalChecked())) {
-        as_v8_detail(log, "Setting ttl from JS object");
-        Local<Value> v8ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
-        if (v8ttl->IsNumber()) {
-            (*ttl) = Nan::To<uint32_t>(v8ttl).FromJust();
-            as_v8_detail(log, "TTL: %d", (*ttl));
-        } else if (v8ttl->IsNull() || v8ttl->IsUndefined()) {
-            // noop - ttl may not be specified
-        } else {
-            return AS_NODE_PARAM_ERR;
-        }
+    Local<Value> v8_ttl = obj->Get(Nan::New("ttl").ToLocalChecked()) ;
+    if (v8_ttl->IsNumber()) {
+        (*ttl) = Nan::To<uint32_t>(v8_ttl).FromJust();
+        as_v8_detail(log, "TTL: %d", (*ttl));
+    } else if (v8_ttl->IsNull() || v8_ttl->IsUndefined()) {
+        // noop - ttl may not be specified
+    } else {
+        return AS_NODE_PARAM_ERR;
     }
 
     return AS_NODE_PARAM_OK;
@@ -1046,17 +1036,15 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
 
 int setGeneration(Local<Object> obj, uint16_t* generation, const LogInfo* log)
 {
-    if (obj->Has(Nan::New("gen").ToLocalChecked()) ) {
-        Local<Value> v8gen = obj->Get(Nan::New("gen").ToLocalChecked());
-        if (v8gen->IsNumber()) {
-            (*generation) = (uint16_t) Nan::To<uint32_t>(v8gen).FromJust();
-            as_v8_detail(log, "Generation: %d", (*generation));
-        } else if (v8gen->IsNull() || v8gen->IsUndefined()) {
-            // noop - gen may not be specified
-        } else {
-            as_v8_error(log, "Generation should be an integer");
-            return AS_NODE_PARAM_ERR;
-        }
+    Local<Value> v8_gen = obj->Get(Nan::New("gen").ToLocalChecked());
+    if (v8_gen->IsNumber()) {
+        (*generation) = (uint16_t) Nan::To<uint32_t>(v8_gen).FromJust();
+        as_v8_detail(log, "Generation: %d", (*generation));
+    } else if (v8_gen->IsNull() || v8_gen->IsUndefined()) {
+        // noop - gen may not be specified
+    } else {
+        as_v8_error(log, "Generation should be an integer");
+        return AS_NODE_PARAM_ERR;
     }
 
     return AS_NODE_PARAM_OK;
@@ -1297,11 +1285,11 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 			return AS_NODE_PARAM_ERR;
 		}
 
-		Local<Value> maybe_bins = obj->Get(Nan::New("bins").ToLocalChecked());
-		if (maybe_bins->IsArray()) {
+		Local<Value> v8_bins = obj->Get(Nan::New("bins").ToLocalChecked());
+		if (v8_bins->IsArray()) {
 			char** bin_names;
 			uint32_t n_bin_names;
-			if (bins_from_jsarray(&bin_names, &n_bin_names, Local<Array>::Cast(maybe_bins), log) != AS_NODE_PARAM_OK) {
+			if (bins_from_jsarray(&bin_names, &n_bin_names, Local<Array>::Cast(v8_bins), log) != AS_NODE_PARAM_OK) {
 				as_v8_error(log, "Parsing batch bin names failed");
 				return AS_NODE_PARAM_ERR;
 			}
@@ -1309,9 +1297,9 @@ int batch_read_records_from_jsarray(as_batch_read_records** records, Local<Array
 			record->n_bin_names = n_bin_names;
 		}
 
-		Local<Value> maybe_read_all_bins = obj->Get(Nan::New("read_all_bins").ToLocalChecked());
-		if (maybe_read_all_bins->IsBoolean()) {
-			record->read_all_bins = Nan::To<bool>(maybe_read_all_bins).FromJust();
+		Local<Value> v8_read_all_bins = obj->Get(Nan::New("read_all_bins").ToLocalChecked());
+		if (v8_read_all_bins->IsBoolean()) {
+			record->read_all_bins = Nan::To<bool>(v8_read_all_bins).FromJust();
 		}
 	}
 	return AS_NODE_PARAM_OK;
@@ -1362,46 +1350,36 @@ int udfargs_from_jsobject(char** filename, char** funcname, as_list** args, Loca
     }
 
     // Extract UDF module name
-    if (obj->Has(Nan::New("module").ToLocalChecked())) {
-        Local<Value> module = obj->Get(Nan::New("module").ToLocalChecked());
-        if (module->IsString()) {
-            size_t size = module.As<String>()->Length() + 1;
-            if (*filename == NULL) {
-                *filename = (char*) cf_malloc(sizeof(char) * size);
-            }
-            if (as_strlcpy(*filename, *Nan::Utf8String(module), size) > size) {
-                as_v8_error(log, "UDF module name is too long (> %d)", size);
-                return AS_NODE_PARAM_ERR;
-            }
-            as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
-        } else {
-            as_v8_error(log, "UDF module name should be string");
+    Local<Value> v8_module = obj->Get(Nan::New("module").ToLocalChecked());
+    if (v8_module->IsString()) {
+        size_t size = v8_module.As<String>()->Length() + 1;
+        if (*filename == NULL) {
+            *filename = (char*) cf_malloc(sizeof(char) * size);
+        }
+        if (as_strlcpy(*filename, *Nan::Utf8String(v8_module), size) > size) {
+            as_v8_error(log, "UDF module name is too long (> %d)", size);
             return AS_NODE_PARAM_ERR;
         }
+        as_v8_detail(log, "Filename in the udf args is set to %s", *filename);
     } else {
-        as_v8_error(log, "UDF module name should be passed to execute UDF");
+        as_v8_error(log, "UDF module name should be string");
         return AS_NODE_PARAM_ERR;
     }
 
     // Extract UDF function name
-    if (obj->Has(Nan::New("funcname").ToLocalChecked())) {
-        Local<Value> v8_funcname = obj->Get(Nan::New("funcname").ToLocalChecked());
-        if (v8_funcname->IsString()) {
-            size_t size = v8_funcname.As<String>()->Length() + 1;
-            if (*funcname == NULL) {
-                *funcname = (char*) cf_malloc(sizeof(char) * size);
-            }
-            if (as_strlcpy(*funcname, *Nan::Utf8String(v8_funcname), size) > size) {
-                as_v8_error(log, "UDF function name is too long (> %d)", size);
-                return AS_NODE_PARAM_ERR;
-            }
-            as_v8_detail(log, "The function name in the UDF args set to %s", *funcname);
-        } else {
-            as_v8_error(log, "UDF function name should be string");
+    Local<Value> v8_funcname = obj->Get(Nan::New("funcname").ToLocalChecked());
+    if (v8_funcname->IsString()) {
+        size_t size = v8_funcname.As<String>()->Length() + 1;
+        if (*funcname == NULL) {
+            *funcname = (char*) cf_malloc(sizeof(char) * size);
+        }
+        if (as_strlcpy(*funcname, *Nan::Utf8String(v8_funcname), size) > size) {
+            as_v8_error(log, "UDF function name is too long (> %d)", size);
             return AS_NODE_PARAM_ERR;
         }
+        as_v8_detail(log, "The function name in the UDF args set to %s", *funcname);
     } else {
-        as_v8_error(log, "UDF function name should be passed to execute UDF");
+        as_v8_error(log, "UDF function name should be string");
         return AS_NODE_PARAM_ERR;
     }
 

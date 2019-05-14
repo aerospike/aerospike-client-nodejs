@@ -28,7 +28,7 @@ extern "C" {
 #include <aerospike/as_async_proto.h>
 }
 
-#define export(__name, __value) exports->Set(Nan::New(__name).ToLocalChecked(), __value)
+#define export(__name, __value) target->Set(Nan::New(__name).ToLocalChecked(), __value)
 
 using namespace v8;
 
@@ -99,14 +99,17 @@ NAN_METHOD(client)
 /**
  *  aerospike object.
  */
-void Aerospike(Handle<Object> exports, Handle<Object> module)
+NAN_MODULE_INIT(Aerospike)
 {
+	Nan::HandleScope scope;
+
 	AerospikeClient::Init();
-	export("client", Nan::New<FunctionTemplate>(client)->GetFunction());
-	export("get_cluster_count", Nan::New<FunctionTemplate>(get_cluster_count)->GetFunction());
-	export("register_as_event_loop", Nan::New<FunctionTemplate>(register_as_event_loop)->GetFunction());
-	export("release_as_event_loop", Nan::New<FunctionTemplate>(release_as_event_loop)->GetFunction());
-	export("setDefaultLogging", Nan::New<FunctionTemplate>(setDefaultLogging)->GetFunction());
+
+	NAN_EXPORT(target, client);
+	NAN_EXPORT(target, get_cluster_count);
+	NAN_EXPORT(target, register_as_event_loop);
+	NAN_EXPORT(target, release_as_event_loop);
+	NAN_EXPORT(target, setDefaultLogging);
 
 	// enumerations
 	export("indexDataType", indexDataType());
@@ -126,4 +129,4 @@ void Aerospike(Handle<Object> exports, Handle<Object> module)
 	export("auth", auth_mode_enum_values());
 }
 
-NODE_MODULE(aerospike, Aerospike)
+NODE_MODULE(aerospike, Aerospike);

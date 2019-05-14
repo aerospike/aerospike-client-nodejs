@@ -39,9 +39,11 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	char* password = NULL;
 	char* user_path = NULL;
 
-	Local<Value> maybe_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
+	Local<Value> v8_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
 	Local<Value> policies_val = configObj->Get(Nan::New("policies").ToLocalChecked());
-	Local<Value> maybe_tls_config = configObj->Get(Nan::New("tls").ToLocalChecked());
+	Local<Value> v8_tls_config = configObj->Get(Nan::New("tls").ToLocalChecked());
+	Local<Value> v8_modlua = configObj->Get(Nan::New("modlua").ToLocalChecked());
+	Local<Value> v8_sharedMemory = configObj->Get(Nan::New("sharedMemory").ToLocalChecked());
 
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj, "clusterName", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
@@ -58,25 +60,25 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		goto Cleanup;
 	}
 
-	if (maybe_hosts->IsString()) {
-		Nan::Utf8String hosts(maybe_hosts);
+	if (v8_hosts->IsString()) {
+		Nan::Utf8String hosts(v8_hosts);
 		as_v8_detail(log, "setting seed hosts: \"%s\"", *hosts);
 		if (as_config_add_hosts(config, *hosts, default_port) == false) {
 			as_v8_error(log, "invalid hosts string: \"%s\"", *hosts);
 			rc = AS_NODE_PARAM_ERR;
 			goto Cleanup;
 		}
-	} else if (maybe_hosts->IsArray()) {
-		Local<Array> host_list = Local<Array>::Cast(maybe_hosts);
+	} else if (v8_hosts->IsArray()) {
+		Local<Array> host_list = Local<Array>::Cast(v8_hosts);
 		for (uint32_t i = 0; i < host_list->Length(); i++) {
 			Local<Object> host = host_list->Get(i).As<Object>();
-			Local<Value> maybe_addr = host->Get(Nan::New("addr").ToLocalChecked());
-			Local<Value> maybe_port = host->Get(Nan::New("port").ToLocalChecked());
+			Local<Value> v8_addr = host->Get(Nan::New("addr").ToLocalChecked());
+			Local<Value> v8_port = host->Get(Nan::New("port").ToLocalChecked());
 
 			uint16_t port = default_port;
-			if (maybe_port->IsNumber()) {
-				port = (uint16_t) Nan::To<uint32_t>(maybe_port).FromJust();
-			} else if (maybe_port->IsUndefined()) {
+			if (v8_port->IsNumber()) {
+				port = (uint16_t) Nan::To<uint32_t>(v8_port).FromJust();
+			} else if (v8_port->IsUndefined()) {
 				// use default value
 			} else {
 				as_v8_error(log, "host[%d].port should be an integer", i);
@@ -84,8 +86,8 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 				goto Cleanup;
 			}
 
-			if (maybe_addr->IsString()) {
-				Nan::Utf8String addr(maybe_addr);
+			if (v8_addr->IsString()) {
+				Nan::Utf8String addr(v8_addr);
 				as_config_add_host(config, *addr, port);
 				as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
 			} else {
@@ -100,62 +102,62 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		goto Cleanup;
 	}
 
-	if (maybe_tls_config->IsObject()) {
-		Local<Object> v8_tls_config = maybe_tls_config->ToObject();
+	if (v8_tls_config->IsObject()) {
+		Local<Object> tls_config = v8_tls_config.As<Object>();
 		config->tls.enable = true;
 
-		if ((rc = get_optional_bool_property(&config->tls.enable, NULL, v8_tls_config, "enable", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_bool_property(&config->tls.enable, NULL, tls_config, "enable", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.cafile, &defined, v8_tls_config, "cafile", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.cafile, &defined, tls_config, "cafile", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.capath, &defined, v8_tls_config, "capath", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.capath, &defined, tls_config, "capath", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.protocols, &defined, v8_tls_config, "protocols", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.protocols, &defined, tls_config, "protocols", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.cipher_suite, &defined, v8_tls_config, "cipherSuite", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.cipher_suite, &defined, tls_config, "cipherSuite", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.cert_blacklist, &defined, v8_tls_config, "certBlacklist", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.cert_blacklist, &defined, tls_config, "certBlacklist", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.keyfile, &defined, v8_tls_config, "keyfile", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.keyfile, &defined, tls_config, "keyfile", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, v8_tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.certfile, &defined, v8_tls_config, "certfile", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_string_property(&config->tls.certfile, &defined, tls_config, "certfile", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_bool_property(&config->tls.crl_check, NULL, v8_tls_config, "crlCheck", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_bool_property(&config->tls.crl_check, NULL, tls_config, "crlCheck", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_bool_property(&config->tls.crl_check_all, NULL, v8_tls_config, "crlCheckAll", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_bool_property(&config->tls.crl_check_all, NULL, tls_config, "crlCheckAll", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_bool_property(&config->tls.log_session_info, NULL, v8_tls_config, "logSessionInfo", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_bool_property(&config->tls.log_session_info, NULL, tls_config, "logSessionInfo", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_bool_property(&config->tls.for_login_only, NULL, v8_tls_config, "forLoginOnly", log)) != AS_NODE_PARAM_OK) {
+		if ((rc = get_optional_bool_property(&config->tls.for_login_only, NULL, tls_config, "forLoginOnly", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		}
-	} else if (maybe_tls_config->IsUndefined()) {
+	} else if (v8_tls_config->IsUndefined()) {
 		// ignore
 	} else {
 		as_v8_error(log, "'tls' config must be an object");
@@ -233,8 +235,8 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	}
 
 	// If modlua path is passed in config object, set those values here
-	if (configObj->Has(Nan::New("modlua").ToLocalChecked())) {
-		Local<Object> modlua = configObj->Get(Nan::New("modlua").ToLocalChecked()).As<Object>();
+	if (v8_modlua->IsObject()) {
+		Local<Object> modlua = v8_modlua.As<Object>();
 		if ((rc = get_optional_string_property(&user_path, &defined, modlua, "userPath", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
 		} else if (defined) {
@@ -258,8 +260,8 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		}
 	}
 
-	if (configObj->Has(Nan::New("sharedMemory").ToLocalChecked())) {
-		Local<Object> shmConfigObj = configObj->Get(Nan::New("sharedMemory").ToLocalChecked()).As<Object>();
+	if (v8_sharedMemory->IsObject()) {
+		Local<Object> shmConfigObj = v8_sharedMemory.As<Object>();
 		config->use_shm = true;
 		if ((rc = get_optional_bool_property(&config->use_shm, NULL, shmConfigObj, "enable", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
