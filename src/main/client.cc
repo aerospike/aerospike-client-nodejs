@@ -155,29 +155,25 @@ NAN_METHOD(AerospikeClient::GetNodes)
 	Nan::HandleScope scope;
 	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-	int n_nodes;
-	char* node_names;
-	as_cluster_get_node_names(client->as->cluster, &n_nodes, &node_names);
+	as_nodes* nodes = as_nodes_reserve(client->as->cluster);
+	Local<Array> v8_nodes = Nan::New<Array>(nodes->size);
 
-	Local<Array> nodes = Nan::New<Array>(n_nodes);
-	char* nptr = node_names;
-	for (uint32_t i = 0; i < (uint32_t)n_nodes; i++) {
-		as_v8_debug(client->log, "Fetching info about node \"%s\"", nptr);
-		as_node* node = as_node_get_by_name(client->as->cluster, nptr);
-		if (node) {
-			Local<Object> node_obj = Nan::New<Object>();
-			node_obj->Set(Nan::New("name").ToLocalChecked(),
-					Nan::New<String>(nptr).ToLocalChecked());
-			node_obj->Set(Nan::New("address").ToLocalChecked(),
-					Nan::New<String>(as_node_get_address_string(node))
-					.ToLocalChecked());
-			nodes->Set(i, node_obj);
-		}
-		nptr += AS_NODE_NAME_SIZE;
+	for (uint32_t i = 0; i < nodes->size; i++) {
+		as_node* node = nodes->array[i];
+		// reserve node if it will be for a significant period of time.
+		as_node_reserve(node);
+		Local<Object> node_obj = Nan::New<Object>();
+		node_obj->Set(Nan::New("name").ToLocalChecked(),
+				Nan::New<String>(node->name).ToLocalChecked());
+		node_obj->Set(Nan::New("address").ToLocalChecked(),
+				Nan::New<String>(as_node_get_address_string(node))
+				.ToLocalChecked());
+		v8_nodes->Set(i, node_obj);
 		as_node_release(node);
 	}
 
-	info.GetReturnValue().Set(nodes);
+	as_nodes_release(nodes);
+	info.GetReturnValue().Set(v8_nodes);
 }
 
 /**
