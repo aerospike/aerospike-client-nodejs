@@ -21,6 +21,7 @@
 const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
 const helper = require('./test_helper')
+const utils = require('../lib/utils')
 
 const AerospikeError = Aerospike.AerospikeError
 
@@ -28,10 +29,13 @@ context('Info commands', function () {
   let client = helper.client
 
   describe('Client#info()', function () {
+    let node = null
     let host = null
 
-    before(() => helper.cluster.randomNode()
-      .then(randomHost => { host = randomHost }))
+    before(() => {
+      node = helper.cluster.randomNode()
+      host = utils.parseHostString(node.address)
+    })
 
     it('sends status query to a specific cluster node', function (done) {
       client.info('status', host, (error, response) => {
@@ -42,8 +46,7 @@ context('Info commands', function () {
     })
 
     it('accepts a string with the host address', function (done) {
-      let hostAddress = host.addr + ':' + host.port
-      client.info('status', hostAddress, (error, response) => {
+      client.info('status', node.address, (error, response) => {
         if (error) throw error
         expect(response).to.equal('status\tok\n')
         done()
@@ -61,6 +64,34 @@ context('Info commands', function () {
 
     it('should return a client error if the client is not connected', function (done) {
       Aerospike.client(helper.config).info('status', host, error => {
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
+        done()
+      })
+    })
+  })
+
+  describe('Client#infoNode()', function () {
+    let node = null
+
+    before(() => {
+      node = helper.cluster.randomNode()
+    })
+
+    it('sends status query to a specific cluster node', function () {
+      return client.infoNode('status', node)
+        .then(response => expect(response).to.equal('status\tok\n'))
+    })
+
+    it('fetches all info if no request is passed', function () {
+      return client.infoNode(null, node)
+        .then(response => {
+          expect(response).to.contain('\nversion\t')
+          expect(response).to.contain('\nedition\t')
+        })
+    })
+
+    it('should return a client error if the client is not connected', function (done) {
+      Aerospike.client(helper.config).infoNode('status', node, error => {
         expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
         done()
       })

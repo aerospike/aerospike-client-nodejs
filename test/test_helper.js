@@ -18,7 +18,6 @@
 
 const Aerospike = require('../lib/aerospike')
 const Info = require('../lib/info')
-const utils = require('../lib/utils')
 const options = require('./util/options')
 const semver = require('semver')
 const path = require('path')
@@ -150,15 +149,9 @@ ServerInfoHelper.prototype.fetchNamespaceConfig = function (ns) {
 }
 
 ServerInfoHelper.prototype.randomNode = function () {
-  return client.infoAny('service')
-    .then(response => {
-      let service = Info.parse(response).service
-      if (Array.isArray(service)) {
-        service = service.pop()
-      }
-      let host = utils.parseHostString(service)
-      return host
-    })
+  const nodes = client.getNodes()
+  const i = Math.floor(Math.random() * nodes.length)
+  return nodes[i]
 }
 
 var udfHelper = new UDFHelper(client)
