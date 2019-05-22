@@ -25,7 +25,7 @@ const path = require('path')
 //  Options parsing
 // *****************************************************************************
 
-var parser = yargs
+const parser = yargs
   .usage('$0 [options]')
   .options({
     help: {
@@ -76,10 +76,36 @@ var parser = yargs
       alias: 'P',
       default: null,
       describe: 'Password to connect to a secure cluster'
+    },
+    clusterName: {
+      describe: 'Name of the cluster to join'
+    },
+    cafile: {
+      describe: 'Path to a trusted CA certificate file'
+    },
+    keyfile: {
+      describe: 'Path to the client\'s key for mutual auth'
+    },
+    keyfilePassword: {
+      describe: 'Decryption password for the client\'s key file'
+    },
+    certfile: {
+      describe: 'Path to the client\'s certificate chain file for mutual auth'
     }
   })
 
-var options = process.env['OPTIONS'] ? parser.parse(process.env['OPTIONS'].trim().split(' ')) : parser.argv
+let options
+if (process.env['OPTIONS']) {
+  options = process.env['OPTIONS'].trim().split(' ')
+  options = parser.parse(options)
+} else {
+  options = parser.argv
+}
+
+if (options.help === true) {
+  parser.showHelp()
+  process.exit(0)
+}
 
 // enable debug stacktraces
 process.env['AEROSPIKE_DEBUG_STACKTRACES'] = process.env['AEROSPIKE_DEBUG_STACKTRACES'] || true
@@ -89,10 +115,10 @@ function testDir () {
 }
 
 options.getConfig = function () {
-  let defaultPolicy = {
+  const defaultPolicy = {
     totalTimeout: options.timeout
   }
-  let config = {
+  const config = {
     log: {
       level: options.log,
       file: options.log_file
@@ -112,22 +138,39 @@ options.getConfig = function () {
       userPath: testDir()
     }
   }
+
   if (options.host !== null) {
-    config.hosts = [{ addr: options.host, port: options.port || 3000 }]
+    const host = {
+      addr: options.host,
+      port: options.port || 3000
+    }
+    config.hosts = [host]
   } else if (process.env['AEROSPIKE_HOSTS']) {
     config.hosts = process.env['AEROSPIKE_HOSTS']
   }
+
   if (options.user !== null) {
     config.user = options.user
   }
   if (options.password !== null) {
     config.password = options.password
   }
+
+  if (options.clusterName) {
+    config.clusterName = options.clusterName
+  }
+
+  if (options.cafile) {
+    config.tls = {
+      enable: true,
+      cafile: options.cafile,
+      certfile: options.certfile,
+      keyfile: options.keyfile,
+      keyfilePassword: options.keyfilePassword
+    }
+  }
+
   return config
-}
-if (options.help === true) {
-  parser.showHelp()
-  process.exit(0)
 }
 
 module.exports = options
