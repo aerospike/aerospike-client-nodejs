@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.11.0] - 2019-05-22
+
+* **New Features**
+  * TLS support - Linux only, macOS & Windows not supported for now. [#298](https://github.com/aerospike/aerospike-client-nodejs/pull/298)
+  * Add new infoNode & getNodes functions. [#196](https://github.com/aerospike/aerospike-client-nodejs/pull/196)
+  * Support for Node.js 12 [#295](https://github.com/aerospike/aerospike-client-nodejs/pull/295)
+
+* **Updates**
+  * Update C client library to [v4.6.3](http://www.aerospike.com/download/client/c/notes.html#4.6.3). [#297](https://github.com/aerospike/aerospike-client-nodejs/pull/297)
+
 ## [3.10.0] - 2019-04-08
 
 * **New Features**
