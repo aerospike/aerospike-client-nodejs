@@ -21,7 +21,7 @@ RUN wget https://artifacts.aerospike.com/aerospike-client-c/${AS_C_VERSION}/aero
     && make EVENT_LIB=libuv
 
 # Stage 2: Build Aerospike Node.js client
-FROM node:9-alpine as node-builder
+FROM node:10-alpine as node-builder
 WORKDIR /src
 
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/include/ aerospike-client-c/include/
