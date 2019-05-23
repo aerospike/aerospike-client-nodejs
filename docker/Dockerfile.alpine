@@ -44,4 +44,9 @@ RUN npm install aerospike@${AS_NODEJS_VERSION}
 # Stage 3: Aerospike Node.js Runtime
 FROM node:10-alpine
 WORKDIR /src
+
+RUN apk add --no-cache \
+      zlib \
+      openssl
+
 COPY --from=node-builder /src/node_modules/ node_modules/
