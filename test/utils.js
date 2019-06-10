@@ -21,43 +21,6 @@
 require('./test_helper')
 const utils = require('../lib/utils')
 
-describe('utils.hostsToString() #noserver', function () {
-  it('returns a hosts string unmodified', function () {
-    let hosts = utils.hostsToString('localhost:3000')
-    expect(hosts).to.equal('localhost:3000')
-  })
-
-  it('converts a single host name & port to a string', function () {
-    let hosts = utils.hostsToString([{ addr: 'localhost', port: 3000 }])
-    expect(hosts).to.equal('localhost:3000')
-  })
-
-  it('converts a single IPv4 & port to a string', function () {
-    let hosts = utils.hostsToString([{ addr: '127.0.0.1', port: 3000 }])
-    expect(hosts).to.equal('127.0.0.1:3000')
-  })
-
-  it('encloses IPv6 addresses in brackets', function () {
-    let hosts = utils.hostsToString([{ addr: '2001::1000', port: 3000 }])
-    expect(hosts).to.equal('[2001::1000]:3000')
-  })
-
-  it('omits the port number if missing from the address', function () {
-    let hosts = utils.hostsToString([{ addr: 'localhost' }])
-    expect(hosts).to.equal('localhost')
-  })
-
-  it('concatenates an array of host addresses into a comma-separated list', function () {
-    let hosts = utils.hostsToString([{ addr: 'node1', port: 3000 }, { addr: 'node2', port: 3000 }])
-    expect(hosts).to.equal('node1:3000,node2:3000')
-  })
-
-  it('handles mixed addresses with hostnames, IPv4 & IPv6 addresses', function () {
-    let hosts = utils.hostsToString([{ addr: 'localhost', port: 3000 }, { addr: '127.0.0.1', port: 3100 }, { addr: '2001::1000', port: 3200 }, { addr: 'foo' }])
-    expect(hosts).to.equal('localhost:3000,127.0.0.1:3100,[2001::1000]:3200,foo')
-  })
-})
-
 describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {
     var host = utils.parseHostString('aero.local')
@@ -123,12 +86,5 @@ describe('utils.parseHostString() #noserver', function () {
     expect(function () {
       utils.parseHostString('not a valid host')
     }).to.throw('Invalid host address')
-  })
-})
-
-describe('utils.parseHostsString() #noserver', function () {
-  it('parses a comma separate list of hosts', function () {
-    var hosts = utils.parseHostsString('aero.local:aero.tls:3000,192.168.33.10:3000,[fde4:8dba:82e1::c4]')
-    expect(hosts.length).to.equal(3)
   })
 })
