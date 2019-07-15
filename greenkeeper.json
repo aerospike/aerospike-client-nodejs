@@ -1,11 +1,15 @@
 {
   "groups": {
-    "default": {
+    "client": {
       "packages": [
-        "benchmarks/package.json",
-        "examples/package.json",
         "package.json"
       ]
-    }
+    },
+    "support": {
+      "packages": [
+        "benchmarks/package.json",
+        "examples/package.json"
+      ]
+    }    
   }
 }
