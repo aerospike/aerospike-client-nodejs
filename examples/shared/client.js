@@ -28,7 +28,7 @@ module.exports = exports = function (argv) {
 }
 
 function defaultConfig (argv) {
-  let defaultPolicy = {
+  const defaultPolicy = {
     totalTimeout: argv.timeout
   }
   return {

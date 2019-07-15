@@ -38,12 +38,12 @@ describe('client.batchGet()', function () {
 
     return putgen.put(numberOfRecords, kgen, rgen, mgen)
       .then(records => {
-        let keys = records.map(record => record.key)
+        const keys = records.map(record => record.key)
         return client.batchGet(keys)
           .then(results => {
             expect(results.length).to.equal(numberOfRecords)
             results.forEach(result => {
-              let putRecord = records.find(record => record.key.key === result.record.key.key)
+              const putRecord = records.find(record => record.key.key === result.record.key.key)
               expect(result.status).to.equal(Aerospike.status.OK)
               expect(result.record.bins).to.eql(putRecord.bins)
             })

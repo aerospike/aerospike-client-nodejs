@@ -38,9 +38,9 @@ describe('Config #noserver', function () {
 
   describe('new Config', function () {
     it('copies config values from the passed Object', function () {
-      let settings = {
+      const settings = {
         clusterName: 'testCluster',
-        hosts: [ { addr: 'localhost', port: 3000 } ],
+        hosts: [{ addr: 'localhost', port: 3000 }],
         log: { level: 1, file: 2 },
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
@@ -67,7 +67,7 @@ describe('Config #noserver', function () {
         rackId: 42
       }
 
-      let config = new Config(settings)
+      const config = new Config(settings)
       expect(config).to.have.property('clusterName')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
@@ -85,7 +85,7 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('rackAware')
       expect(config).to.have.property('rackId')
 
-      let policies = config.policies
+      const policies = config.policies
       expect(policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
       expect(policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
       expect(policies.info).to.be.instanceof(Aerospike.InfoPolicy)
@@ -98,7 +98,7 @@ describe('Config #noserver', function () {
     })
 
     it('initializes default policies', function () {
-      let settings = {
+      const settings = {
         policies: {
           apply: { totalTimeout: 1000 },
           batch: { totalTimeout: 1000 },
@@ -111,7 +111,7 @@ describe('Config #noserver', function () {
           write: { totalTimeout: 1000 }
         }
       }
-      let config = new Config(settings)
+      const config = new Config(settings)
 
       expect(config.policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
       expect(config.policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
@@ -147,7 +147,7 @@ describe('Config #noserver', function () {
     })
 
     it('throws a TypeError if invalid policy values are passed', function () {
-      let settings = {
+      const settings = {
         policies: {
           totalTimeout: 1000
         }

@@ -26,7 +26,7 @@ const utils = require('../lib/utils')
 const AerospikeError = Aerospike.AerospikeError
 
 context('Info commands', function () {
-  let client = helper.client
+  const client = helper.client
 
   describe('Client#info()', function () {
     let node = null
@@ -206,9 +206,9 @@ context('Info commands', function () {
     })
 
     it('should parse the bins info key', function () {
-      let infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
-      let infoHash = info.parse(infoStr)
-      let expected = {
+      const infoStr = 'bins\ttest:bin_names=2,bin_names_quota=32768,bin1,bin2;'
+      const infoHash = info.parse(infoStr)
+      const expected = {
         test: {
           names: ['bin1', 'bin2'],
           stats: { bin_names: 2, bin_names_quota: 32768 }
@@ -218,9 +218,9 @@ context('Info commands', function () {
     })
 
     it('should pick the right separators to parse based on the key pattern', function () {
-      let infoStr = 'sets/test/foo/bar\tobjects=0:tombstones=0:truncate_lut=275452156000:disable-eviction=false;'
-      let infoHash = info.parse(infoStr)
-      let expected = {
+      const infoStr = 'sets/test/foo/bar\tobjects=0:tombstones=0:truncate_lut=275452156000:disable-eviction=false;'
+      const infoHash = info.parse(infoStr)
+      const expected = {
         objects: 0,
         tombstones: 0,
         truncate_lut: 275452156000,

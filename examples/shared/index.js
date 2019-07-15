@@ -32,9 +32,9 @@ exports.runner = function () {
   }
   started = true
 
-  let example = process.argv[1]
-  let runner = path.join(example, '../run.js')
-  let cmd = path.basename(example, '.js')
+  const example = process.argv[1]
+  const runner = path.join(example, '../run.js')
+  const cmd = path.basename(example, '.js')
 
   process.argv.splice(1, 1, runner, cmd)
   delete require.cache[require.resolve(example)]

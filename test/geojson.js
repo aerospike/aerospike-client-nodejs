@@ -26,7 +26,7 @@ const helper = require('./test_helper')
 
 describe('Aerospike.GeoJSON', function () {
   context('GeoJSON class #noserver', function () {
-    let subject = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+    const subject = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
 
     describe('constructor', function () {
       it('returns a new GeoJSON value when called as an Object constructor', function () {
@@ -42,7 +42,7 @@ describe('Aerospike.GeoJSON', function () {
       })
 
       it('throws a type error if passed an invalid GeoJSON value', function () {
-        let fn = () => new GeoJSON(45)
+        const fn = () => new GeoJSON(45)
         expect(fn).to.throw(TypeError)
       })
     })
@@ -81,7 +81,7 @@ describe('Aerospike.GeoJSON', function () {
 
     describe('GeoJSON.Circle()', function () {
       it('creates a GeoJSON circle representation', function () {
-        let circle = new GeoJSON({ type: 'AeroCircle', coordinates: [[-122.250629, 37.871022], 300] })
+        const circle = new GeoJSON({ type: 'AeroCircle', coordinates: [[-122.250629, 37.871022], 300] })
         expect(GeoJSON.Circle(-122.250629, 37.871022, 300)).to.eql(circle)
       })
     })

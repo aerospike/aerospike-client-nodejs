@@ -31,12 +31,12 @@ const AerospikeError = Aerospike.AerospikeError
 const op = Aerospike.operations
 
 context('Operations', function () {
-  let client = helper.client
+  const client = helper.client
   let key = null
 
   beforeEach(() => {
     key = keygen.string(helper.namespace, helper.set, { prefix: 'test/operate' })()
-    let bins = {
+    const bins = {
       string: 'abc',
       int: 123,
       double1: 1.23,
@@ -46,10 +46,10 @@ context('Operations', function () {
       list: [1, 2, 3],
       map: { a: 1, b: 2, c: 3 }
     }
-    let policy = new Aerospike.WritePolicy({
+    const policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE
     })
-    let meta = { ttl: 60 }
+    const meta = { ttl: 60 }
     return client.put(key, bins, meta, policy)
   })
 
@@ -58,7 +58,7 @@ context('Operations', function () {
   describe('Client#operate()', function () {
     describe('operations.write()', function () {
       it('writes a new value to a bin', function () {
-        let ops = [
+        const ops = [
           op.write('string', 'def'),
           op.write('int', 432),
           op.write('double1', 2.34),
@@ -86,7 +86,7 @@ context('Operations', function () {
       })
 
       it('deletes a bin by writing null to it', function () {
-        let ops = [
+        const ops = [
           op.write('string', null)
         ]
 
@@ -100,7 +100,7 @@ context('Operations', function () {
 
     describe('operations.add()', function () {
       it('adds an integer value to a bin', function () {
-        let ops = [
+        const ops = [
           op.add('int', 432)
         ]
 
@@ -112,7 +112,7 @@ context('Operations', function () {
       })
 
       it('adds a double value to a bin', function () {
-        let ops = [
+        const ops = [
           op.add('double1', 3.45),
           op.add('double2', new Double(3.14159))
         ]
@@ -126,7 +126,7 @@ context('Operations', function () {
       })
 
       it('can be called using the "incr" alias', function () {
-        let ops = [
+        const ops = [
           op.incr('int', 432)
         ]
 
@@ -138,7 +138,7 @@ context('Operations', function () {
       })
 
       it('returns a parameter error when trying to add a string value', function () {
-        let ops = [
+        const ops = [
           op.add('int', 'abc')
         ]
 
@@ -149,7 +149,7 @@ context('Operations', function () {
 
     describe('operations.append()', function () {
       it('appends a string value to a string bin', function () {
-        let ops = [
+        const ops = [
           op.append('string', 'def')
         ]
 
@@ -161,7 +161,7 @@ context('Operations', function () {
       })
 
       it('returns a parameter error when trying to append a numeric value', function () {
-        let ops = [
+        const ops = [
           op.append('string', 123)
         ]
 
@@ -172,7 +172,7 @@ context('Operations', function () {
 
     describe('operations.prepend()', function () {
       it('prepends a string value to a string bin', function () {
-        let ops = [
+        const ops = [
           op.prepend('string', 'def')
         ]
 
@@ -184,7 +184,7 @@ context('Operations', function () {
       })
 
       it('returns a parameter error when trying to prepend a numeric value', function () {
-        let ops = [
+        const ops = [
           op.prepend('string', 123)
         ]
 
@@ -210,9 +210,9 @@ context('Operations', function () {
         //   clocks are not synchronous between server and client, the ttl client calculates may not
         //   be accurate to the user. Nevertheless server expires the record in the correct time.
 
-        let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/operate/ttl' })()
-        let bins = { i: 123, s: 'abc' }
-        let meta = { ttl: 1000 }
+        const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/operate/ttl' })()
+        const bins = { i: 123, s: 'abc' }
+        const meta = { ttl: 1000 }
 
         client.put(key, bins, meta, function (err) {
           if (err) throw err
@@ -254,7 +254,7 @@ context('Operations', function () {
 
           it('does not create a key that does not exist yet', function () {
             const notExistentKey = keygen.string(helper.namespace, helper.set, { prefix: 'test/operate/doesNotExist' })()
-            const ops = [ op.write('i', 49) ]
+            const ops = [op.write('i', 49)]
 
             return client.operate(notExistentKey, ops, {}, policy)
               .then(() => 'error expected')
@@ -272,7 +272,7 @@ context('Operations', function () {
           })
 
           it('executes the operation if the generation matches', function () {
-            const ops = [ op.add('int', 7) ]
+            const ops = [op.add('int', 7)]
             const meta = { gen: 1 }
 
             return client.operate(key, ops, meta, policy)
@@ -281,7 +281,7 @@ context('Operations', function () {
           })
 
           it('rejects the operation if the generation does not match', function () {
-            const ops = [ op.add('int', 7) ]
+            const ops = [op.add('int', 7)]
             const meta = { gen: 99 }
 
             return client.operate(key, ops, meta, policy)
@@ -303,7 +303,7 @@ context('Operations', function () {
         })
 
         it('returns list and map bins as byte buffers', function () {
-          const ops = [ op.read('int'), op.read('list'), op.read('map') ]
+          const ops = [op.read('int'), op.read('list'), op.read('map')]
 
           return client.operate(key, ops, null, policy)
             .then(record => {
@@ -316,7 +316,7 @@ context('Operations', function () {
     })
 
     it('calls the callback function with the results of the operation', function (done) {
-      let ops = [
+      const ops = [
         op.read('int')
       ]
 

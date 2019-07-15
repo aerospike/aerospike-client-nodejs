@@ -85,11 +85,11 @@ describe('client.select()', function () {
   })
 
   it('should read the record w/ a key send policy', function (done) {
-    let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
-    let meta = { ttl: 1000 }
-    let bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
-    let selected = ['i', 's']
-    let policy = new Aerospike.ReadPolicy({
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
+    const meta = { ttl: 1000 }
+    const bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
+    const selected = ['i', 's']
+    const policy = new Aerospike.ReadPolicy({
       key: Aerospike.policy.key.SEND
     })
 

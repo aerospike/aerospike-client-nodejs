@@ -46,8 +46,8 @@ describe('Aerospike.predexp #slow', function () {
     { name: 'string list non-match', ls: ['tomato', 'cuccumber'] },
     { name: 'string map match', ms: { a: 'banana', b: 'blueberry' } },
     { name: 'string map non-match', ms: { a: 'tomato', b: 'cuccumber' } },
-    { name: 'string mapkeys match', mks: { 'banana': 1, 'blueberry': 2 } },
-    { name: 'string mapkeys non-match', mks: { 'tomato': 3, 'cuccumber': 4 } },
+    { name: 'string mapkeys match', mks: { banana: 1, blueberry: 2 } },
+    { name: 'string mapkeys non-match', mks: { tomato: 3, cuccumber: 4 } },
     { name: 'point match', g: GeoJSON.Point(103.913, 1.308) },
     { name: 'point non-match', g: GeoJSON.Point(-122.101, 37.421) },
     { name: 'point list match', lg: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] },
@@ -57,10 +57,10 @@ describe('Aerospike.predexp #slow', function () {
   ]
 
   before(() => {
-    let entries = samples.entries()
-    let rgen = () => entries.next().value[1]
-    let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/predexp/', random: false })
-    let mgen = metagen.constant({ ttl: 300 })
+    const entries = samples.entries()
+    const rgen = () => entries.next().value[1]
+    const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/predexp/', random: false })
+    const mgen = metagen.constant({ ttl: 300 })
     return putgen.put(samples.length, kgen, rgen, mgen)
   })
 
@@ -444,8 +444,8 @@ describe('Aerospike.predexp #slow', function () {
 
   describe('.recLastUpdate', function () {
     it('matches the record last update time', function () {
-      let t1 = timeNanos(300)
-      let t2 = timeNanos(-300)
+      const t1 = timeNanos(300)
+      const t2 = timeNanos(-300)
 
       const query = client.query(helper.namespace, testSet)
       query.where([
@@ -466,8 +466,8 @@ describe('Aerospike.predexp #slow', function () {
 
   describe('.recVoidTime', function () {
     it('matches the record void time time', function () {
-      let t1 = timeNanos()
-      let t2 = timeNanos(600)
+      const t1 = timeNanos()
+      const t2 = timeNanos(600)
 
       const query = client.query(helper.namespace, testSet)
       query.where([
@@ -488,8 +488,8 @@ describe('Aerospike.predexp #slow', function () {
 
   describe('.recDigestModulo', function () {
     it('matches the record void time time', function () {
-      let mod = 5
-      let rem = 3
+      const mod = 5
+      const rem = 3
 
       const query = client.query(helper.namespace, testSet)
       query.where([
@@ -499,7 +499,7 @@ describe('Aerospike.predexp #slow', function () {
       ])
 
       return query.results().then(results => {
-        let digests = results.map(rec => rec.key.digest)
+        const digests = results.map(rec => rec.key.digest)
         expect(digests.every(
           // modulo is calculated from the last 4 bytes of the digest
           digest => digest.readUIntLE(16, 4) % mod === rem

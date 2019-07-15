@@ -53,7 +53,7 @@ function udfParams (argv) {
     return
   }
 
-  let udf = {}
+  const udf = {}
   udf.module = argv.udf.shift()
   udf.func = argv.udf.shift()
   udf.args = argv.udf
@@ -65,7 +65,7 @@ async function query (client, argv) {
   selectBins(query, argv)
   applyFilter(query, argv)
 
-  let udf = udfParams(argv)
+  const udf = udfParams(argv)
   if (udf && argv.background) {
     await queryBackground(query, udf)
   } else if (udf) {
@@ -82,12 +82,12 @@ async function queryForeach (query) {
 }
 
 async function queryBackground (query, udf) {
-  let job = await query.background(udf.module, udf.func, udf.args)
+  const job = await query.background(udf.module, udf.func, udf.args)
   console.info('Running query in background - Job ID:', job.jobID)
 }
 
 async function queryApply (query, udf) {
-  let result = await query.apply(udf.module, udf.func, udf.args)
+  const result = await query.apply(udf.module, udf.func, udf.args)
   console.info('Query result:', result)
 }
 
@@ -95,35 +95,35 @@ exports.command = 'query'
 exports.describe = 'Execute a query and print the results'
 exports.handler = shared.run(query)
 exports.builder = {
-  'bins': {
+  bins: {
     describe: 'List of bins to fetch for each record',
     type: 'array',
     group: 'Command:'
   },
-  'equal': {
+  equal: {
     desc: 'Applies an equal filter to the query',
     group: 'Command:',
     nargs: 2,
     conflicts: ['range', 'geoWithinRadius']
   },
-  'range': {
+  range: {
     desc: 'Applies a range filter to the query',
     group: 'Command:',
     nargs: 3,
     conflicts: ['equal', 'geoWithinRadius']
   },
-  'geoWithinRadius': {
+  geoWithinRadius: {
     desc: 'Applies a geospatial "within-radius" filter to the query',
     group: 'Command:',
     nargs: 4,
     conflicts: ['equal', 'range']
   },
-  'udf': {
+  udf: {
     desc: 'UDF module, function & arguments to apply to the query',
     group: 'Command:',
     type: 'array'
   },
-  'background': {
+  background: {
     desc: 'Run the query in the background (with Record UDF)',
     group: 'Command:',
     type: 'boolean'

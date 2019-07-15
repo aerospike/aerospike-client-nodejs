@@ -63,7 +63,7 @@ exports.builder = yargs => {
       desc: 'Create a secondary index',
       handler: shared.run(sindexCreate),
       builder: {
-        'type': {
+        type: {
           choices: ['numeric', 'string', 'geo2dsphere'],
           hidden: true
         }

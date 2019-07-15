@@ -22,11 +22,11 @@ const helper = require('./test_helper')
 const keygen = helper.keygen
 
 describe('client.exists()', function () {
-  let client = helper.client
+  const client = helper.client
 
   context('Promises', function () {
     it('returns true if the record exists', function () {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
 
       return client.put(key, { str: 'abcde' })
         .then(() => client.exists(key))
@@ -35,7 +35,7 @@ describe('client.exists()', function () {
     })
 
     it('returns false if the record does not exist', function () {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
 
       return client.exists(key)
         .then(result => expect(result).to.be.false())
@@ -44,7 +44,7 @@ describe('client.exists()', function () {
 
   context('Callbacks', function () {
     it('returns true if the record exists', function (done) {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
 
       client.put(key, { str: 'abcde' }, error => {
         if (error) throw error
@@ -60,7 +60,7 @@ describe('client.exists()', function () {
     })
 
     it('returns false if the record does not exist', function (done) {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/' })()
 
       client.exists(key, (error, result) => {
         if (error) throw error

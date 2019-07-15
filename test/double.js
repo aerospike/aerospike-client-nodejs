@@ -33,12 +33,12 @@ describe('Aerospike.Double #noserver', function () {
     })
 
     it('throws an error if not passed a number', function () {
-      let fn = () => new Double('four point nine')
+      const fn = () => new Double('four point nine')
       expect(fn).to.throw(TypeError)
     })
 
     it('throws an error if called without `new`', function () {
-      let fn = () => Double(3.1415)
+      const fn = () => Double(3.1415)
       expect(fn).to.throw('Invalid use of Double constructor')
     })
   })

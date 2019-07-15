@@ -22,7 +22,7 @@ shared.runner()
 
 async function batchRead (client, argv) {
   const batch = argv.keys.map(key => {
-    let request = {
+    const request = {
       key: new Aerospike.Key(argv.namespace, argv.set, key)
     }
     if (argv.bins) {
@@ -35,8 +35,8 @@ async function batchRead (client, argv) {
 
   const batchResults = await client.batchRead(batch)
 
-  for (let result of batchResults) {
-    let record = result.record
+  for (const result of batchResults) {
+    const record = result.record
     console.info(record.key.key, ':', result.status === Aerospike.status.OK
       ? record.bins : 'NOT FOUND')
   }
@@ -46,7 +46,7 @@ exports.command = 'batch <keys..>'
 exports.describe = 'Fetch multiple records from the database in a batch'
 exports.handler = shared.run(batchRead)
 exports.builder = {
-  'bins': {
+  bins: {
     describe: 'List of bins to fetch for each record',
     type: 'array',
     group: 'Command:'

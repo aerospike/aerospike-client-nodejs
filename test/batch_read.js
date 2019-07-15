@@ -47,7 +47,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns the status whether each key was found or not', function (done) {
-    let batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1') },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/3') },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5') },
@@ -58,10 +58,10 @@ describe('client.batchRead()', function () {
     client.batchRead(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.equal(5)
-      let found = results.filter(
+      const found = results.filter(
         result => result.status === Aerospike.status.OK)
       expect(found.length).to.equal(3)
-      let notFound = results.filter(
+      const notFound = results.filter(
         result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
       expect(notFound.length).to.equal(2)
       done()
@@ -137,7 +137,7 @@ describe('client.batchRead()', function () {
       expect(err).not.to.be.ok()
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
-        let record = result.record
+        const record = result.record
         switch (record.key.key) {
           case 'test/batch_read/1':
             expect(record.bins).to.have.all.keys('i', 's', 'l', 'm')
@@ -170,7 +170,7 @@ describe('client.batchRead()', function () {
 
         return client.batchRead(batch, policy)
           .then(results => {
-            let bins = results[0].record.bins
+            const bins = results[0].record.bins
             expect(bins.i).to.be.a('number')
             expect(bins.s).to.be.a('string')
             expect(bins.l).to.be.instanceof(Buffer)

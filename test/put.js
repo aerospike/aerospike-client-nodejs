@@ -110,8 +110,8 @@ describe('client.put()', function () {
   })
 
   context('bins with various data types', function () {
-    let meta = { ttl: 600 }
-    let policy = new Aerospike.WritePolicy({
+    const meta = { ttl: 600 }
+    const policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE
     })
 
@@ -164,11 +164,11 @@ describe('client.put()', function () {
     })
 
     it('writes bin with array value as list and reads it back', function (done) {
-      var record = { list: [ 1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
-        GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 } ]
+      var record = { list: [1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
+        GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 }]
       }
-      var expected = { list: [ 1, 'foo', 1.23, 3.14, Buffer.from('bar'),
-        '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 } ]
+      var expected = { list: [1, 'foo', 1.23, 3.14, Buffer.from('bar'),
+        '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 }]
       }
       putGetVerify(record, expected, done)
     })
@@ -250,8 +250,8 @@ describe('client.put()', function () {
     helper.skipUnlessVersion('>= 4.2.0', this)
 
     it('should write a bin with a name of max. length 15', function () {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-      let bins = { 'bin-name-len-15': 'bin name with 15 chars' }
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+      const bins = { 'bin-name-len-15': 'bin name with 15 chars' }
 
       return client.put(key, bins)
         .then(() => client.get(key))
@@ -263,8 +263,8 @@ describe('client.put()', function () {
     })
 
     it('should return a parameter error when bin length exceeds 15 chars', function () {
-      let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-      let bins = { 'bin-name-size-16': 'bin name with 16 chars' }
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+      const bins = { 'bin-name-size-16': 'bin name with 16 chars' }
 
       return client.put(key, bins)
         .then(() => 'no error')
@@ -490,8 +490,8 @@ describe('client.put()', function () {
   context('exists policy', function () {
     context('policy.exists.UPDATE', function () {
       it('does not create a key that does not exist yet', function () {
-        let key = keygen.integer(helper.namespace, helper.set)()
-        let policy = new Aerospike.policy.WritePolicy({
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.policy.WritePolicy({
           exists: Aerospike.policy.exists.UPDATE
         })
 
@@ -504,8 +504,8 @@ describe('client.put()', function () {
 
     context('policy.exists.CREATE', function () {
       it('does not update a record if it already exists', function () {
-        let key = keygen.integer(helper.namespace, helper.set)()
-        let policy = new Aerospike.policy.WritePolicy({
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.policy.WritePolicy({
           exists: Aerospike.policy.exists.CREATE
         })
 
@@ -520,8 +520,8 @@ describe('client.put()', function () {
 
   context('gen policy', function () {
     it('updates record if generation matches', function () {
-      let key = keygen.integer(helper.namespace, helper.set)()
-      let policy = new Aerospike.WritePolicy({
+      const key = keygen.integer(helper.namespace, helper.set)()
+      const policy = new Aerospike.WritePolicy({
         gen: Aerospike.policy.gen.EQ
       })
 
@@ -538,8 +538,8 @@ describe('client.put()', function () {
     })
 
     it('does not update record if generation does not match', function () {
-      let key = keygen.integer(helper.namespace, helper.set)()
-      let policy = new Aerospike.WritePolicy({
+      const key = keygen.integer(helper.namespace, helper.set)()
+      const policy = new Aerospike.WritePolicy({
         gen: Aerospike.policy.gen.EQ
       })
 

@@ -38,7 +38,7 @@ describe('client.batchExists()', function () {
 
     return putgen.put(numberOfRecords, kgen, rgen, mgen)
       .then(records => {
-        let keys = records.map(record => record.key)
+        const keys = records.map(record => record.key)
         return client.batchExists(keys)
       })
       .then(results => {

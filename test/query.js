@@ -57,8 +57,8 @@ describe('Queries', function () {
     { name: 'string list non-match', ls: ['tomato', 'cuccumber'] },
     { name: 'string map match', ms: { a: 'banana', b: 'blueberry' } },
     { name: 'string map non-match', ms: { a: 'tomato', b: 'cuccumber' } },
-    { name: 'string mapkeys match', mks: { 'banana': 1, 'blueberry': 2 } },
-    { name: 'string mapkeys non-match', mks: { 'tomato': 3, 'cuccumber': 4 } },
+    { name: 'string mapkeys match', mks: { banana: 1, blueberry: 2 } },
+    { name: 'string mapkeys non-match', mks: { tomato: 3, cuccumber: 4 } },
     { name: 'point match', g: GeoJSON.Point(103.913, 1.308) },
     { name: 'point non-match', g: GeoJSON.Point(-122.101, 37.421) },
     { name: 'point list match', lg: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] },
@@ -110,9 +110,9 @@ describe('Queries', function () {
   }
 
   before(() => {
-    let sampleGen = () => samples.pop()
-    let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false })
-    let mgen = metagen.constant({ ttl: 300 })
+    const sampleGen = () => samples.pop()
+    const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false })
+    const mgen = metagen.constant({ ttl: 300 })
     return Promise.all([
       putgen.put(numberOfSamples, kgen, sampleGen, mgen)
         .then(() => Promise.all(indexes.map(idx =>
@@ -195,11 +195,11 @@ describe('Queries', function () {
     })
 
     it('returns the key if it was stored on the server', function (done) {
-      let uniqueKey = 'test/query/record_with_stored_key'
-      let key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
-      let record = { name: uniqueKey }
-      let meta = { ttl: 300 }
-      let policy = new Aerospike.WritePolicy({
+      const uniqueKey = 'test/query/record_with_stored_key'
+      const key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
+      const record = { name: uniqueKey }
+      const meta = { ttl: 300 }
+      const policy = new Aerospike.WritePolicy({
         key: Aerospike.policy.key.SEND
       })
 
@@ -242,12 +242,12 @@ describe('Queries', function () {
     })
 
     it('should raise client errors asynchronously', function (done) {
-      let invalidPolicy = new Aerospike.QueryPolicy({
+      const invalidPolicy = new Aerospike.QueryPolicy({
         totalTimeout: 'not a valid timeout'
       })
 
-      let query = client.query('test')
-      let stream = query.foreach(invalidPolicy)
+      const query = client.query('test')
+      const stream = query.foreach(invalidPolicy)
       // if error is raised synchronously we will never reach here
       stream.on('error', error => {
         expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_PARAM)
@@ -256,9 +256,9 @@ describe('Queries', function () {
     })
 
     it('attaches event handlers to the stream', function (done) {
-      let query = client.query(helper.namespace, testSet)
+      const query = client.query(helper.namespace, testSet)
       let dataHandlerCalled = false
-      let stream = query.foreach(null,
+      const stream = query.foreach(null,
         (_record) => {
           dataHandlerCalled = true
           stream.abort()
@@ -283,7 +283,7 @@ describe('Queries', function () {
         })
 
         it('throws a type error if the comparison value is of invalid type', function () {
-          let fn = () => filter.equal('str', { foo: 'bar' })
+          const fn = () => filter.equal('str', { foo: 'bar' })
           expect(fn).to.throw(TypeError)
         })
       })
@@ -332,7 +332,7 @@ describe('Queries', function () {
         })
 
         it('throws a type error if the comparison value is of invalid type', function () {
-          let fn = () => filter.contains('list', { foo: 'bar' }, LIST)
+          const fn = () => filter.contains('list', { foo: 'bar' }, LIST)
           expect(fn).to.throw(TypeError)
         })
       })
@@ -427,7 +427,7 @@ describe('Queries', function () {
 
   describe('query.results()', function () {
     it('returns a Promise that resolves into the query results', function () {
-      let query = client.query(helper.namespace, testSet)
+      const query = client.query(helper.namespace, testSet)
       query.where(filter.equal('i', 5))
 
       return query.results().then(records => {
@@ -482,10 +482,10 @@ describe('Queries', function () {
     })
 
     it('returns a Promise that resolves to the result of the aggregation', function () {
-      let args = {
+      const args = {
         filters: [filter.equal('name', 'aggregate')]
       }
-      let query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       return query.apply('udf', 'count')
         .then(result => {
           expect(result).to.equal(3)
@@ -507,10 +507,10 @@ describe('Queries', function () {
     })
 
     it('returns a Promise that resolves to a Job', function () {
-      let args = {
+      const args = {
         filters: [filter.equal('name', 'aggregate')]
       }
-      let query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       return query.background('udf', 'noop')
         .then(job => {
           expect(job).to.be.instanceof(Job)
@@ -520,8 +520,8 @@ describe('Queries', function () {
 
   describe('stream.abort()', function () {
     it('should stop the query when the stream is aborted', function (done) {
-      let query = client.query(helper.namespace, testSet)
-      let stream = query.foreach()
+      const query = client.query(helper.namespace, testSet)
+      const stream = query.foreach()
       let recordsReceived = 0
       stream.on('data', () => {
         recordsReceived++

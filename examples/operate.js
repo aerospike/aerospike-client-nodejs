@@ -25,7 +25,7 @@ shared.runner()
 async function operate (client, argv) {
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
   const i = shared.random.int(1, 10)
-  let ops = [
+  const ops = [
     lists.append('values', i),
     op.read('values'),
     op.incr('sum', i),

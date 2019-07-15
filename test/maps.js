@@ -31,7 +31,7 @@ const eql = require('deep-eql')
 describe('client.operate() - CDT Map operations', function () {
   helper.skipUnlessSupportsFeature('cdt-map', this)
 
-  let client = helper.client
+  const client = helper.client
 
   class State {
     enrich (name, promise) {
@@ -74,9 +74,9 @@ describe('client.operate() - CDT Map operations', function () {
 
   function createRecord (bins) {
     return function (state) {
-      let key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_map/' })()
-      let meta = { ttl: 600 }
-      let policy = new Aerospike.WritePolicy({
+      const key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_map/' })()
+      const meta = { ttl: 600 }
+      const policy = new Aerospike.WritePolicy({
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE
       })
       return state.enrich('key', client.put(key, bins, meta, policy))
@@ -93,14 +93,14 @@ describe('client.operate() - CDT Map operations', function () {
   }
 
   function orderByKey (bin) {
-    let policy = new maps.MapPolicy({
+    const policy = new maps.MapPolicy({
       order: maps.order.KEY_ORDERED
     })
     return operate(maps.setPolicy(bin, policy))
   }
 
   function orderByKeyValue (bin) {
-    let policy = new maps.MapPolicy({
+    const policy = new maps.MapPolicy({
       order: maps.order.KEY_VALUE_ORDERED
     })
     return operate(maps.setPolicy(bin, policy))
@@ -189,7 +189,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('update-only write mode', function () {
-      let updateOnlyPolicy = new maps.MapPolicy({
+      const updateOnlyPolicy = new maps.MapPolicy({
         writeMode: maps.writeMode.UPDATE_ONLY
       })
 
@@ -215,7 +215,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with update-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new maps.MapPolicy({
+      const policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
       })
 
@@ -238,7 +238,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new maps.MapPolicy({
+        const policy = new maps.MapPolicy({
           writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -254,7 +254,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('create-only write mode', function () {
-      let createOnlyPolicy = new maps.MapPolicy({
+      const createOnlyPolicy = new maps.MapPolicy({
         writeMode: maps.writeMode.CREATE_ONLY
       })
 
@@ -280,7 +280,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with create-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new maps.MapPolicy({
+      const policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
       })
 
@@ -303,7 +303,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new maps.MapPolicy({
+        const policy = new maps.MapPolicy({
           writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -332,7 +332,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with update-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new maps.MapPolicy({
+      const policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
       })
 
@@ -346,7 +346,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new maps.MapPolicy({
+        const policy = new maps.MapPolicy({
           writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -360,7 +360,7 @@ describe('client.operate() - CDT Map operations', function () {
         })
 
         context('with partial flag', function () {
-          let policy = new maps.MapPolicy({
+          const policy = new maps.MapPolicy({
             writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
           })
 
@@ -379,7 +379,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with create-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new maps.MapPolicy({
+      const policy = new maps.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
       })
 
@@ -393,7 +393,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new maps.MapPolicy({
+        const policy = new maps.MapPolicy({
           writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -407,7 +407,7 @@ describe('client.operate() - CDT Map operations', function () {
         })
 
         context('with partial flag', function () {
-          let policy = new maps.MapPolicy({
+          const policy = new maps.MapPolicy({
             writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
           })
 
@@ -1051,7 +1051,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY)))
-        .then(assertResultEql({ map: [ 'a', 'b' ] }))
+        .then(assertResultEql({ map: ['a', 'b'] }))
         .then(cleanup())
     })
 
@@ -1069,7 +1069,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.VALUE)))
-        .then(assertResultEql({ map: [ 1, 2 ] }))
+        .then(assertResultEql({ map: [1, 2] }))
         .then(cleanup())
     })
 
@@ -1078,7 +1078,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.getByIndex('map', 0, maps.returnType.KEY_VALUE)))
-        .then(assertResultEql({ map: [ 'a', 1 ] }))
+        .then(assertResultEql({ map: ['a', 1] }))
         .then(cleanup())
     })
 
@@ -1087,7 +1087,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)))
-        .then(assertResultEql({ map: [ 'a', 1, 'b', 2 ] }))
+        .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
         .then(cleanup())
     })
   })

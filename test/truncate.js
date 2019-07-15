@@ -89,7 +89,7 @@ describe('client.truncate()', function () {
   })
 
   it('deletes all records with an older update timestamp', function (done) {
-    this.timeout(5000)
+    this.timeout(10000)
     const ns = helper.namespace
     const set = setgen()
     const noRecordsToDelete = 5

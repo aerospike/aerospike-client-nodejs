@@ -52,7 +52,7 @@ function UDFHelper (client) {
 }
 
 UDFHelper.prototype.register = function (filename) {
-  let script = path.join(__dirname, filename)
+  const script = path.join(__dirname, filename)
   return this.client.udfRegister(script)
     .then(job => job.wait(50))
 }
@@ -72,7 +72,7 @@ function IndexHelper (client) {
 }
 
 IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType) {
-  let index = {
+  const index = {
     ns: options.namespace,
     set: setName,
     bin: binName,
@@ -128,10 +128,10 @@ ServerInfoHelper.prototype.fetchInfo = function () {
   return client.infoAll('build\nedition\nfeatures')
     .then(results => {
       results.forEach(response => {
-        let info = Info.parse(response.info)
+        const info = Info.parse(response.info)
         this.edition = info['edition']
         this.build = info['build']
-        let features = info['features']
+        const features = info['features']
         if (Array.isArray(features)) {
           features.forEach(feature => this.features.add(feature))
         }
@@ -140,10 +140,10 @@ ServerInfoHelper.prototype.fetchInfo = function () {
 }
 
 ServerInfoHelper.prototype.fetchNamespaceConfig = function (ns) {
-  let nsKey = 'namespace/' + ns
+  const nsKey = 'namespace/' + ns
   return client.infoAny(nsKey)
     .then(results => {
-      let info = Info.parse(results)
+      const info = Info.parse(results)
       this.nsconfig = info[nsKey]
     })
 }
@@ -166,7 +166,7 @@ exports.runInNewProcess = function (fn, data) {
   if (data === undefined) {
     data = null
   }
-  let env = {
+  const env = {
     NODE_PATH: path.join(process.cwd(), 'node_modules')
   }
   return runInNewProcessFn(fn, env, data)

@@ -39,29 +39,29 @@ var startTime
 var totalDuration
 
 const TABLE_CHARS = {
-  'top': '',
+  top: '',
   'top-mid': '',
   'top-left': '',
   'top-right': '',
-  'bottom': '',
+  bottom: '',
   'bottom-mid': '',
   'bottom-left': '',
   'bottom-right': '',
-  'left': '',
+  left: '',
   'left-mid': '',
-  'mid': '',
+  mid: '',
   'mid-mid': '',
-  'right': '',
+  right: '',
   'right-mid': '',
-  'middle': ''
+  middle: ''
 }
 
 const TABLE_STYLE = {
   'padding-left': 4,
   'padding-right': 0,
-  'head': ['blue'],
-  'border': ['grey'],
-  'compact': true
+  head: ['blue'],
+  border: ['grey'],
+  compact: true
 }
 
 function sum (l, r) {
@@ -96,7 +96,7 @@ function parseTimeToSecs (time) {
 function timeHistogram (operations) {
   operations
     .map(op => {
-      let elapsed = op[OPERATION_TIME_DIFF]
+      const elapsed = op[OPERATION_TIME_DIFF]
       return Math.floor(duration(elapsed))
     })
     .forEach(d => {
@@ -168,7 +168,7 @@ function printEnvTable (print, prefix) {
   })
 
   envTable.push({ 'Node.js Version': process.versions.node })
-  envTable.push({ 'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || '-' })
+  envTable.push({ UV_THREADPOOL_SIZE: process.env.UV_THREADPOOL_SIZE || '-' })
 
   printTable(envTable, print, prefix)
 }
@@ -179,11 +179,11 @@ function printConfigTable (config, print, prefix) {
     style: TABLE_STYLE
   })
 
-  configTable.push({ 'operations': config.operations })
-  configTable.push({ 'iterations': config.iterations === undefined ? 'undefined' : config.iterations })
-  configTable.push({ 'processes': config.processes })
-  configTable.push({ 'promises': !!config.promises })
-  configTable.push({ 'time': config.time === undefined ? 'undefined' : timeUnits(config.time) })
+  configTable.push({ operations: config.operations })
+  configTable.push({ iterations: config.iterations === undefined ? 'undefined' : config.iterations })
+  configTable.push({ processes: config.processes })
+  configTable.push({ promises: !!config.promises })
+  configTable.push({ time: config.time === undefined ? 'undefined' : timeUnits(config.time) })
 
   printTable(configTable, print, prefix)
 }
@@ -205,12 +205,12 @@ function printTransactions (transactions, print, prefix) {
   var row = columns.map(function (col) {
     return numberFormat(transactions[col]['count'], 0)
   })
-  table.push({ 'Total': row })
+  table.push({ Total: row })
 
   row = columns.map(function (col) {
     return numberFormat(transactions[col]['tps'], 0)
   })
-  table.push({ 'TPS': row })
+  table.push({ TPS: row })
 
   row = columns.map(function (col) {
     return numberFormat(transactions[col]['min_tps'], 0)
@@ -254,7 +254,7 @@ function start () {
 }
 
 function stop () {
-  let elapsed = process.hrtime(startTime)
+  const elapsed = process.hrtime(startTime)
   totalDuration = duration(elapsed)
 }
 
@@ -305,7 +305,7 @@ function reportFinal (argv, print) {
     var output = {
       env: {
         nodejs: process.versions.node,
-        'UV_THREADPOOL_SIZE': process.env.UV_THREADPOOL_SIZE || null
+        UV_THREADPOOL_SIZE: process.env.UV_THREADPOOL_SIZE || null
       },
       configuration: {
         operations: argv.operations,

@@ -34,20 +34,20 @@ function generateTestSource (fn, data) {
 }
 
 function createTempFile (fn, data) {
-  let source = generateTestSource(fn, data)
-  let temp = tmp.fileSync({ postfix: '.js' })
+  const source = generateTestSource(fn, data)
+  const temp = tmp.fileSync({ postfix: '.js' })
   fs.writeSync(temp.fd, source)
   return temp.name
 }
 
 function forkAndRun (fn, env, data) {
-  let temp = createTempFile(fn, data)
+  const temp = createTempFile(fn, data)
   return childProcess.fork(temp, { env: env })
 }
 
 module.exports = function runInNewProcess (fn, env, data) {
   return new Promise((resolve, reject) => {
-    let child = forkAndRun(fn, env, data)
+    const child = forkAndRun(fn, env, data)
     child.on('message', message => {
       child.disconnect()
       if (message.error) {

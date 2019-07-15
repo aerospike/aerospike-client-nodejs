@@ -20,29 +20,29 @@ var yargs = require('yargs')
 var MEM_MATCH = /(\d+(\.\d+)?) MB/
 
 var TABLE_CHARS = {
-  'top': '',
+  top: '',
   'top-mid': '',
   'top-left': '',
   'top-right': '',
-  'bottom': '',
+  bottom: '',
   'bottom-mid': '',
   'bottom-left': '',
   'bottom-right': '',
-  'left': '',
+  left: '',
   'left-mid': '',
-  'mid': '',
+  mid: '',
   'mid-mid': '',
-  'right': '',
+  right: '',
   'right-mid': '',
-  'middle': ''
+  middle: ''
 }
 
 var TABLE_STYLE = {
   'padding-left': 4,
   'padding-right': 0,
-  'head': ['blue'],
-  'border': ['grey'],
-  'compact': true
+  head: ['blue'],
+  border: ['grey'],
+  compact: true
 }
 
 var ITERATION_COUNT = 0

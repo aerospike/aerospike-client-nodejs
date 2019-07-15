@@ -32,7 +32,7 @@ const eql = require('deep-eql')
 describe('client.operate() - CDT List operations', function () {
   helper.skipUnlessSupportsFeature('cdt-list', this)
 
-  let client = helper.client
+  const client = helper.client
 
   class State {
     enrich (name, promise) {
@@ -75,9 +75,9 @@ describe('client.operate() - CDT List operations', function () {
 
   function createRecord (bins) {
     return function (state) {
-      let key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_list/' })()
-      let meta = { ttl: 600 }
-      let policy = new Aerospike.WritePolicy({
+      const key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_list/' })()
+      const meta = { ttl: 600 }
+      const policy = new Aerospike.WritePolicy({
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE
       })
       return state.enrich('key', client.put(key, bins, meta, policy))
@@ -134,7 +134,7 @@ describe('client.operate() - CDT List operations', function () {
   describe('lists.setOrder', function () {
     it('changes the list order', function () {
       return initState()
-        .then(createRecord({ list: [ 3, 1, 2 ] }))
+        .then(createRecord({ list: [3, 1, 2] }))
         .then(operate([
           lists.setOrder('list', lists.order.ORDERED),
           ops.read('list')
@@ -147,7 +147,7 @@ describe('client.operate() - CDT List operations', function () {
   describe('lists.sort', function () {
     it('sorts the list', function () {
       return initState()
-        .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
+        .then(createRecord({ list: [3, 1, 2, 1] }))
         .then(operate([
           lists.sort('list', lists.sortFlags.DEFAULT),
           ops.read('list')
@@ -158,7 +158,7 @@ describe('client.operate() - CDT List operations', function () {
 
     it('sorts the list and drops duplicates', function () {
       return initState()
-        .then(createRecord({ list: [ 3, 1, 2, 1 ] }))
+        .then(createRecord({ list: [3, 1, 2, 1] }))
         .then(operate([
           lists.sort('list', lists.sortFlags.DROP_DUPLICATES),
           ops.read('list')
@@ -179,7 +179,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with add-unique flag', function () {
-      let policy = {
+      const policy = {
         writeFlags: lists.writeFlags.ADD_UNIQUE
       }
 
@@ -195,7 +195,7 @@ describe('client.operate() - CDT List operations', function () {
       context('with no-fail flag', function () {
         helper.skipUnlessVersion('>= 4.3.0', this)
 
-        let policy = {
+        const policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
         }
 
@@ -231,7 +231,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with add-unique flag', function () {
-      let policy = {
+      const policy = {
         writeFlags: lists.writeFlags.ADD_UNIQUE
       }
 
@@ -247,7 +247,7 @@ describe('client.operate() - CDT List operations', function () {
       context('with no-fail flag', function () {
         helper.skipUnlessVersion('>= 4.3.0', this)
 
-        let policy = {
+        const policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
         }
 
@@ -261,7 +261,7 @@ describe('client.operate() - CDT List operations', function () {
         })
 
         context('with partial flag', function () {
-          let policy = {
+          const policy = {
             writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL | lists.writeFlags.PARTIAL
           }
 
@@ -289,7 +289,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with add-unique flag', function () {
-      let policy = {
+      const policy = {
         writeFlags: lists.writeFlags.ADD_UNIQUE
       }
 
@@ -305,7 +305,7 @@ describe('client.operate() - CDT List operations', function () {
       context('with no-fail flag', function () {
         helper.skipUnlessVersion('>= 4.3.0', this)
 
-        let policy = {
+        const policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
         }
 
@@ -323,7 +323,7 @@ describe('client.operate() - CDT List operations', function () {
     context('with insert-bounded flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new Aerospike.ListPolicy({
+      const policy = new Aerospike.ListPolicy({
         writeFlags: lists.writeFlags.INSERT_BOUNDED
       })
 
@@ -337,7 +337,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new Aerospike.ListPolicy({
+        const policy = new Aerospike.ListPolicy({
           writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
         })
 
@@ -373,7 +373,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with add-unique flag', function () {
-      let policy = {
+      const policy = {
         writeFlags: lists.writeFlags.ADD_UNIQUE
       }
 
@@ -389,7 +389,7 @@ describe('client.operate() - CDT List operations', function () {
       context('with no-fail flag', function () {
         helper.skipUnlessVersion('>= 4.3.0', this)
 
-        let policy = {
+        const policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
         }
 
@@ -403,7 +403,7 @@ describe('client.operate() - CDT List operations', function () {
         })
 
         context('with partial flag', function () {
-          let policy = {
+          const policy = {
             writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL | lists.writeFlags.PARTIAL
           }
 
@@ -422,7 +422,7 @@ describe('client.operate() - CDT List operations', function () {
     context('with insert-bounded flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      let policy = new Aerospike.ListPolicy({
+      const policy = new Aerospike.ListPolicy({
         writeFlags: lists.writeFlags.INSERT_BOUNDED
       })
 
@@ -436,7 +436,7 @@ describe('client.operate() - CDT List operations', function () {
       })
 
       context('with no-fail flag', function () {
-        let policy = new Aerospike.ListPolicy({
+        const policy = new Aerospike.ListPolicy({
           writeFlags: lists.writeFlags.INSERT_BOUNDED | lists.writeFlags.NO_FAIL
         })
 
@@ -881,7 +881,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('with add-unique flag', function () {
-      let policy = {
+      const policy = {
         writeFlags: lists.writeFlags.ADD_UNIQUE
       }
 
@@ -897,7 +897,7 @@ describe('client.operate() - CDT List operations', function () {
       context('with no-fail flag', function () {
         helper.skipUnlessVersion('>= 4.3.0', this)
 
-        let policy = {
+        const policy = {
           writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
         }
 

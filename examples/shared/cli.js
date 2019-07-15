@@ -23,13 +23,13 @@ function str2num (value) {
 // @param { String[] } binStrs - list of "<name>=<value>" pairs
 exports.parseBins = function (binStrs) {
   return binStrs.reduce((bins, current) => {
-    let [name, value] = current.split('=')
+    const [name, value] = current.split('=')
     bins[name] = str2num(value)
     return bins
   }, {})
 }
 
 exports.printRecord = function (record) {
-  let key = record.key.key || record.key.digest.toString('hex')
+  const key = record.key.key || record.key.digest.toString('hex')
   console.info('%s: %s', key, util.inspect(record.bins))
 }

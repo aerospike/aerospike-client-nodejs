@@ -27,7 +27,7 @@ context('Client Policies #noserver', function () {
   describe('BasePolicy', function () {
     describe('new BasePolicy', function () {
       it('sets totalTimeout to zero', function () {
-        let subject = new BasePolicy({
+        const subject = new BasePolicy({
           totalTimeout: 0
         })
 
@@ -39,7 +39,7 @@ context('Client Policies #noserver', function () {
   describe('ApplyPolicy', function () {
     describe('new ApplyPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.ApplyPolicy({
+        const subject = new Aerospike.ApplyPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -65,7 +65,7 @@ context('Client Policies #noserver', function () {
   describe('WritePolicy', function () {
     describe('new WritePolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.WritePolicy({
+        const subject = new Aerospike.WritePolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -93,7 +93,7 @@ context('Client Policies #noserver', function () {
   describe('ReadPolicy', function () {
     describe('new ReadPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.ReadPolicy({
+        const subject = new Aerospike.ReadPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -117,7 +117,7 @@ context('Client Policies #noserver', function () {
   describe('BatchPolicy', function () {
     describe('new BatchPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.BatchPolicy({
+        const subject = new Aerospike.BatchPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -141,7 +141,7 @@ context('Client Policies #noserver', function () {
   describe('InfoPolicy', function () {
     describe('new InfoPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.InfoPolicy({
+        const subject = new Aerospike.InfoPolicy({
           totalTimeout: 1000,
           sendAsIs: true,
           checkBounds: false
@@ -157,7 +157,7 @@ context('Client Policies #noserver', function () {
   describe('RemovePolicy', function () {
     describe('new RemovePolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.RemovePolicy({
+        const subject = new Aerospike.RemovePolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -183,7 +183,7 @@ context('Client Policies #noserver', function () {
   describe('OperatePolicy', function () {
     describe('new OperatePolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.OperatePolicy({
+        const subject = new Aerospike.OperatePolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -212,7 +212,7 @@ context('Client Policies #noserver', function () {
   describe('ScanPolicy', function () {
     describe('new ScanPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.ScanPolicy({
+        const subject = new Aerospike.ScanPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -232,7 +232,7 @@ context('Client Policies #noserver', function () {
   describe('QueryPolicy', function () {
     describe('new QueryPolicy', function () {
       it('sets the policy values from a value object', function () {
-        let subject = new Aerospike.QueryPolicy({
+        const subject = new Aerospike.QueryPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1

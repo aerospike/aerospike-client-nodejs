@@ -55,7 +55,7 @@ context('registering/unregistering UDF modules', function () {
   })
 
   it('should register a module with an info policy', function (done) {
-    let policy = new Aerospike.InfoPolicy({
+    const policy = new Aerospike.InfoPolicy({
       timeout: 1000,
       sendAsIs: true,
       checkBounds: false
@@ -74,7 +74,7 @@ context('registering/unregistering UDF modules', function () {
   })
 
   it('should register a module as Lua language with an info policy', function (done) {
-    let policy = new Aerospike.InfoPolicy({
+    const policy = new Aerospike.InfoPolicy({
       timeout: 1000,
       sendAsIs: true,
       checkBounds: false

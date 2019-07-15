@@ -36,9 +36,9 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
     currentRecordNo++
     if (currentRecordNo <= recordsToCreate && inFlight < maxConcurrent) {
       record = new Record(generator.key(), generator.bins(), generator.metadata())
-      let putCb = creator.bind(this, record)
-      let policy = generator.policy()
-      let meta = { ttl: record.ttl, gen: record.gen }
+      const putCb = creator.bind(this, record)
+      const policy = generator.policy()
+      const meta = { ttl: record.ttl, gen: record.gen }
       client.put(record.key, record.bins, meta, policy, putCb)
       inFlight++
     } else if (currentRecordNo > recordsToCreate && inFlight === 0) {
@@ -72,7 +72,7 @@ function put (n, keygen, recgen, metagen, policy, callback) {
     createRecords(helper.client, generator, n, 200, callback)
   } else {
     return new Promise((resolve, reject) => {
-      let records = []
+      const records = []
       createRecords(helper.client, generator, n, 200, record => {
         if (record) {
           records.push(record)

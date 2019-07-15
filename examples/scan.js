@@ -25,7 +25,7 @@ function udfParams (argv) {
     return
   }
 
-  let udf = {}
+  const udf = {}
   udf.module = argv.udf.shift()
   udf.func = argv.udf.shift()
   udf.args = argv.udf
@@ -33,7 +33,7 @@ function udfParams (argv) {
 }
 
 function buildScanOptions (argv) {
-  let options = {
+  const options = {
     percent: argv.percent,
     concurrent: argv.concurrent
   }
@@ -62,13 +62,13 @@ function buildScanOptions (argv) {
 }
 
 async function scan (client, argv) {
-  let options = buildScanOptions(argv)
+  const options = buildScanOptions(argv)
   const scan = client.scan(argv.namespace, argv.set, options)
   if (argv.bins) {
     scan.select(argv.bins)
   }
 
-  let udf = udfParams(argv)
+  const udf = udfParams(argv)
   if (udf && argv.background) {
     await scanBackground(scan, udf)
   } else {
@@ -83,7 +83,7 @@ async function scanForeach (scan) {
 }
 
 async function scanBackground (query, udf) {
-  let job = await scan.background(udf.module, udf.func, udf.args)
+  const job = await scan.background(udf.module, udf.func, udf.args)
   console.info('Running scan in background - Job ID:', job.jobID)
 }
 
@@ -91,34 +91,34 @@ exports.command = 'scan'
 exports.describe = 'Execute a scan and print the results'
 exports.handler = shared.run(scan)
 exports.builder = {
-  'bins': {
+  bins: {
     describe: 'List of bins to fetch for each record',
     type: 'array',
     group: 'Command:'
   },
-  'priority': {
+  priority: {
     describe: 'Scan priority',
     choices: ['auto', 'low', 'medium', 'high'],
     group: 'Command:'
   },
-  'percent': {
+  percent: {
     describe: 'Run scan on given percentage of records',
     type: 'number',
     group: 'Command:',
     default: 100
   },
-  'concurrent': {
+  concurrent: {
     describe: 'Scan all cluster nodes in parallel',
     type: 'boolean',
     group: 'Command:',
     default: true
   },
-  'udf': {
+  udf: {
     desc: 'UDF module, function & arguments to apply to the query',
     group: 'Command:',
     type: 'array'
   },
-  'background': {
+  background: {
     desc: 'Run the scan in the background (with Record UDF)',
     group: 'Command:',
     type: 'boolean'

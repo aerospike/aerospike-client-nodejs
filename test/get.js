@@ -60,21 +60,21 @@ describe('client.get()', function () {
   context('with ReadPolicy', function () {
     context('with deserialize: false', function () {
       it('should return lists and maps as raw bytes', function () {
-        let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
-        let bins = {
+        const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
+        const bins = {
           i: 123,
           s: 'abc',
           l: [1, 2, 3],
           m: { a: 1, b: 2, c: 3 }
         }
-        let policy = new Aerospike.ReadPolicy({
+        const policy = new Aerospike.ReadPolicy({
           deserialize: false
         })
 
         return client.put(key, bins)
           .then(() => client.get(key, policy))
           .then(record => {
-            let bins = record.bins
+            const bins = record.bins
             expect(bins.i).to.eql(123)
             expect(bins.s).to.eql('abc')
             expect(bins.l).to.eql(Buffer.from([0x93, 0x01, 0x02, 0x03]))
@@ -112,11 +112,11 @@ describe('client.get()', function () {
   })
 
   it('fetches a record given the digest', function () {
-    let key = new Aerospike.Key('test', 'test', 'digestOnly')
+    const key = new Aerospike.Key('test', 'test', 'digestOnly')
     client.put(key, { foo: 'bar' })
       .then(() => {
-        let digest = key.digest
-        let key2 = new Aerospike.Key('test', null, null, digest)
+        const digest = key.digest
+        const key2 = new Aerospike.Key('test', null, null, digest)
         return client.get(key2)
           .then(record => expect(record.bins.foo).to.equal('bar'))
       })

@@ -25,10 +25,10 @@ const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 
 context('secondary indexes', function () {
-  let client = helper.client
+  const client = helper.client
 
   // generate unique index name for each test
-  let testIndex = { name: null, bin: null, counter: 0 }
+  const testIndex = { name: null, bin: null, counter: 0 }
   beforeEach(() => {
     testIndex.counter++
     testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
@@ -36,8 +36,8 @@ context('secondary indexes', function () {
   })
 
   function verifyIndexExists (namespace, indexName) {
-    let sindex = 'sindex/' + namespace + '/' + indexName
-    let checkStatus = function () {
+    const sindex = 'sindex/' + namespace + '/' + indexName
+    const checkStatus = function () {
       return client.infoAll(sindex)
         .then(() => true)
         .catch(error => {
@@ -53,7 +53,7 @@ context('secondary indexes', function () {
 
   describe('Client#indexCreate()', function () {
     it('returns an IndexJob instance', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -67,7 +67,7 @@ context('secondary indexes', function () {
     })
 
     it('should create a complex index on list', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -81,14 +81,14 @@ context('secondary indexes', function () {
     })
 
     it('should create an integer index with info policy', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
         index: testIndex.name,
         datatype: Aerospike.indexDataType.NUMERIC
       }
-      let policy = new Aerospike.InfoPolicy({
+      const policy = new Aerospike.InfoPolicy({
         totalTimeout: 100
       })
 
@@ -97,7 +97,7 @@ context('secondary indexes', function () {
     })
 
     it('re-creating an index with identical options returns an error', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -121,7 +121,7 @@ context('secondary indexes', function () {
 
   describe('Client#createIntegerIndex()', function () {
     it('should create an integer index', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -135,7 +135,7 @@ context('secondary indexes', function () {
 
   describe('Client#createStringIndex()', function () {
     it('should create an string index', function () {
-      let args = {
+      const args = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,
@@ -149,7 +149,7 @@ context('secondary indexes', function () {
 
   describe('Client#createGeo2DSphereIndex()', function () {
     it('should create a geospatial index', function () {
-      let args = {
+      const args = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,

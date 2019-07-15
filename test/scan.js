@@ -32,16 +32,16 @@ const recgen = helper.recgen
 const valgen = helper.valgen
 
 context('Scans', function () {
-  let client = helper.client
-  let testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
-  let numberOfRecords = 100
+  const client = helper.client
+  const testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
+  const numberOfRecords = 100
 
   before(() => helper.udf.register('udf.lua')
     .then(() => {
-      let kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
-      let rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
-      let mgen = metagen.constant({ ttl: 300 })
-      let policy = new Aerospike.WritePolicy({
+      const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
+      const rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
+      const mgen = metagen.constant({ ttl: 300 })
+      const policy = new Aerospike.WritePolicy({
         totalTimeout: 1000,
         key: Aerospike.policy.key.SEND,
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE
@@ -123,9 +123,9 @@ context('Scans', function () {
     })
 
     it('attaches event handlers to the stream', function (done) {
-      let scan = client.scan(helper.namespace, testSet)
+      const scan = client.scan(helper.namespace, testSet)
       let dataHandlerCalled = false
-      let stream = scan.foreach(null,
+      const stream = scan.foreach(null,
         (_record) => {
           dataHandlerCalled = true
           stream.abort()
@@ -138,15 +138,15 @@ context('Scans', function () {
     })
 
     it('sets a scan policy', function (done) {
-      let scan = client.scan(helper.namespace, testSet)
-      let policy = new Aerospike.ScanPolicy({
+      const scan = client.scan(helper.namespace, testSet)
+      const policy = new Aerospike.ScanPolicy({
         totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
         failOnClusterChange: true
       })
 
-      let stream = scan.foreach(policy)
+      const stream = scan.foreach(policy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
         if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {
@@ -160,8 +160,8 @@ context('Scans', function () {
 
     context('with nobins set to true', function () {
       it('should return only meta data', function (done) {
-        let scan = client.scan(helper.namespace, testSet, { nobins: true })
-        let stream = scan.foreach()
+        const scan = client.scan(helper.namespace, testSet, { nobins: true })
+        const stream = scan.foreach()
         stream.on('data', record => {
           expect(record.bins).to.be.empty()
           expect(record.gen).to.be.ok()
@@ -187,7 +187,7 @@ context('Scans', function () {
 
     context('with percent sampling', function () {
       it('should only scan approx. half of the records', function (done) {
-        let scan = client.scan(helper.namespace, testSet, {
+        const scan = client.scan(helper.namespace, testSet, {
           percent: 50,
           nobins: true
         })
@@ -239,7 +239,7 @@ context('Scans', function () {
     })
 
     it('returns a Promise that resolves to a Job', function () {
-      let backgroundScan = client.scan(helper.namespace, testSet)
+      const backgroundScan = client.scan(helper.namespace, testSet)
       return backgroundScan.background('udf', 'noop')
         .then(job => {
           expect(job).to.be.instanceof(Job)
@@ -249,8 +249,8 @@ context('Scans', function () {
 
   describe('stream.abort()', function () {
     it('should stop the scan when the stream is aborted', function (done) {
-      let scan = client.scan(helper.namespace, testSet)
-      let stream = scan.foreach()
+      const scan = client.scan(helper.namespace, testSet)
+      const stream = scan.foreach()
       let recordsReceived = 0
       stream.on('data', () => {
         recordsReceived++

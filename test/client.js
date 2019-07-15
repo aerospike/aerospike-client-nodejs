@@ -148,7 +148,7 @@ describe('Client', function () {
 
   describe('Events', function () {
     it('client should emit nodeAdded events when connecting', function (done) {
-      let client = new Client(helper.config)
+      const client = new Client(helper.config)
       client.once('nodeAdded', event => {
         client.close()
         done()
@@ -157,7 +157,7 @@ describe('Client', function () {
     })
 
     it('client should emit events on cluster state changes', function (done) {
-      let client = new Client(helper.config)
+      const client = new Client(helper.config)
       client.once('event', event => {
         expect(event.name).to.equal('nodeAdded')
         client.close()

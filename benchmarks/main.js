@@ -186,10 +186,10 @@ function workerResultsInterval (worker, intervalWorkerStats) {
   }
   if (++counter % argv.processes === 0) {
     stats.interval({
-      'read': intervalStats[0],
-      'write': intervalStats[1],
-      'query': intervalStats[2],
-      'scan': intervalStats[3]
+      read: intervalStats[0],
+      write: intervalStats[1],
+      query: intervalStats[2],
+      scan: intervalStats[3]
     })
     if (!argv.silent) {
       printIntervalStats()

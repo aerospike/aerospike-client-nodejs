@@ -71,10 +71,10 @@ var logger = new (winston.Logger)({
 // Aerospike Client
 // *****************************************************************************
 
-let defaultPolicy = {
+const defaultPolicy = {
   totalTimeout: argv.timeout
 }
-let config = {
+const config = {
   policies: {
     read: defaultPolicy,
     write: defaultPolicy
@@ -161,15 +161,15 @@ function recordgen (key, binSpec) {
 }
 
 function get (key, done) {
-  let timeStart = process.hrtime()
+  const timeStart = process.hrtime()
   client.get(key, function (error) {
-    let status = (error && error.code) || 0
+    const status = (error && error.code) || 0
     done(status, process.hrtime(timeStart), READ)
   })
 }
 
 function getPromise (key, done) {
-  let timeStart = process.hrtime()
+  const timeStart = process.hrtime()
   client.get(key)
     .then(() => done(0, process.hrtime(timeStart), READ))
     .catch((err) => done(err.code, process.hrtime(timeStart), READ))
@@ -181,15 +181,15 @@ var metadata = {
 }
 
 function put (options, done) {
-  let timeStart = process.hrtime()
+  const timeStart = process.hrtime()
   client.put(options.key, options.record, metadata, function (error) {
-    let status = (error && error.code) || 0
+    const status = (error && error.code) || 0
     done(status, process.hrtime(timeStart), WRITE)
   })
 }
 
 function putPromise (options, done) {
-  let timeStart = process.hrtime()
+  const timeStart = process.hrtime()
   client.put(options.key, options.record, metadata)
     .then(() => done(0, process.hrtime(timeStart), WRITE))
     .catch((err) => done(err.code, process.hrtime(timeStart), WRITE))

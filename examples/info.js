@@ -31,7 +31,7 @@ async function info (client, argv) {
 }
 
 async function infoAny (client, request) {
-  let response = await client.infoAny(request)
+  const response = await client.infoAny(request)
   if (response) {
     console.info(response.trim())
   } else {
@@ -40,7 +40,7 @@ async function infoAny (client, request) {
 }
 
 async function infoAll (client, request) {
-  let responses = await client.infoAll(request)
+  const responses = await client.infoAll(request)
   if (responses.some((response) => response.info)) {
     responses.map((response) => {
       console.info(`${response.host.node_id}:`)
@@ -52,7 +52,7 @@ async function infoAll (client, request) {
 }
 
 async function infoHost (client, request, host) {
-  let response = await client.info(request, host)
+  const response = await client.info(request, host)
   if (response) {
     console.info(response.trim())
   } else {
@@ -64,19 +64,19 @@ exports.command = 'info <requests...>'
 exports.describe = 'Send an info request to the cluster'
 exports.handler = shared.run(info)
 exports.builder = {
-  'any': {
+  any: {
     describe: 'Send request to a single, randomly selected cluster node',
     type: 'boolean',
     group: 'Command:',
     conflicts: ['all', 'addr']
   },
-  'all': {
+  all: {
     describe: 'Send request to all cluster nodes',
     type: 'boolean',
     group: 'Command:',
     conflicts: ['any', 'addr']
   },
-  'addr': {
+  addr: {
     describe: 'Send request to specified cluster node',
     type: 'string',
     group: 'Command:',

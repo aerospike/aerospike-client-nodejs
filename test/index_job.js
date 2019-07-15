@@ -24,8 +24,8 @@ const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
 
 describe('IndexJob', function () {
-  let client = helper.client
-  let testIndex = { name: null, bin: null, counter: 0 }
+  const client = helper.client
+  const testIndex = { name: null, bin: null, counter: 0 }
   beforeEach(function () {
     testIndex.counter++
     testIndex.name = 'idx-' + testIndex.counter + '-' + Math.floor(Math.random() * 10000000)
@@ -54,7 +54,7 @@ describe('IndexJob', function () {
 
   describe('IndexJob#checkStatus()', function () {
     it('should return a boolean indicating whether the job is done or not', function () {
-      let options = {
+      const options = {
         ns: helper.namespace,
         set: helper.set,
         bin: testIndex.bin,

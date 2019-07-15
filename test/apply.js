@@ -26,11 +26,11 @@ const AerospikeError = Aerospike.AerospikeError
 const keygen = helper.keygen
 
 describe('client.apply()', function () {
-  let client = helper.client
-  let key = keygen.string(helper.namespace, helper.set, { prefix: 'test/apply/' })()
+  const client = helper.client
+  const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/apply/' })()
 
   before(() => helper.udf.register('udf.lua')
-    .then(() => client.put(key, { 'foo': 'bar' }, { ttl: 1000 })))
+    .then(() => client.put(key, { foo: 'bar' }, { ttl: 1000 })))
 
   after(() => helper.udf.remove('udf.lua')
     .then(() => client.remove(key)))
@@ -54,10 +54,10 @@ describe('client.apply()', function () {
   })
 
   it('should invoke an UDF with apply policy', function (done) {
-    let policy = new Aerospike.ApplyPolicy({
+    const policy = new Aerospike.ApplyPolicy({
       totalTimeout: 1500
     })
-    let udf = {
+    const udf = {
       module: 'udf',
       funcname: 'withArguments',
       args: [[1, 2, 3]]
