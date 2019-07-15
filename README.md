@@ -1,5 +1,7 @@
 # Aerospike Node.js Client [![travis][travis-image]][travis-url] [![codecov][codecov-image]][codecov-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/aerospike/aerospike-client-nodejs.svg)](https://greenkeeper.io/)
+
 [travis-image]: https://travis-ci.org/aerospike/aerospike-client-nodejs.svg?branch=master
 [travis-url]: https://travis-ci.org/aerospike/aerospike-client-nodejs
 [codecov-image]: https://codecov.io/gh/aerospike/aerospike-client-nodejs/branch/master/graph/badge.svg
