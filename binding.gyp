@@ -106,11 +106,11 @@
       'configurations': {
         'Release': {
             "cflags": [
-              "-Wno-deprecated-declarations",
+              "-Wno-deprecated-declarations -Wno-cast-function-type",
             ],
             "xcode_settings": {
               "OTHER_CFLAGS": [
-                "-Wno-deprecated-declarations",
+                "-Wno-deprecated-declarations -Wno-cast-function-type",
               ],
             },
             'msvs_disabled_warnings': [4996],
