@@ -13,7 +13,7 @@ An Aerospike add-on module for Node.js.
 
 This module is compatible with Node.js v6.x, v8.x (LTS), v10.x (LTS), and v12.x
 (LTS). It supports the following operating systems: CentOS/RHEL 6/7, Debian
-7/8/9, Ubuntu 14.04/16.04/18.04, as well as many Linux destributions compatible
+8/9/10, Ubuntu 14.04/16.04/18.04, as well as many Linux destributions compatible
 with one of these OS releases. macOS and Windows are also supported.
 
 - [Usage](#Usage)

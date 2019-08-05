@@ -106,7 +106,7 @@
       'configurations': {
         'Release': {
             "cflags": [
-              "-Wno-deprecated-declarations",
+              "-Wno-deprecated-declarations -Wno-cast-function-type",
             ],
             "xcode_settings": {
               "OTHER_CFLAGS": [
