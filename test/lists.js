@@ -25,6 +25,7 @@ const helper = require('./test_helper')
 const AerospikeError = Aerospike.AerospikeError
 const lists = Aerospike.lists
 const ops = Aerospike.operations
+const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
 const eql = require('deep-eql')
@@ -214,6 +215,19 @@ describe('client.operate() - CDT List operations', function () {
             .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
             .then(cleanup)
         })
+      })
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('appends a value to a nested list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, ['a', 'b', 'c'], 4, 5] }))
+          .then(operate(lists.append('list', 'd').withContext(new Context().addListIndex(2))))
+          .then(assertResultEql({ list: 4 }))
+          .then(assertRecordEql({ list: [1, 2, ['a', 'b', 'c', 'd'], 4, 5] }))
+          .then(cleanup)
       })
     })
   })
