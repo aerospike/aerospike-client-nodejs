@@ -33,9 +33,13 @@ describe('client.operate() - CDT List operations', function () {
   helper.skipUnlessSupportsFeature('cdt-list', this)
 
   const client = helper.client
-  const ListOutOfBoundsError = helper.cluster.isVersionInRange('>=4.6.0')
-    ? status.ERR_OP_NOT_APPLICABLE
-    : status.ERR_REQUEST_INVALID
+
+  let ListOutOfBoundsError
+  before(() => {
+    ListOutOfBoundsError = helper.cluster.isVersionInRange('>=4.6.0')
+      ? status.ERR_OP_NOT_APPLICABLE
+      : status.ERR_REQUEST_INVALID
+  })
 
   class State {
     enrich (name, promise) {
