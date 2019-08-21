@@ -37,7 +37,7 @@ describe('client.operate() - CDT Map operations', function () {
     enrich (name, promise) {
       if (this._expectError) {
         return promise.catch(error => {
-          this['error'] = error
+          this.error = error
           return this
         })
       } else {

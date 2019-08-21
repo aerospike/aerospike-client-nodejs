@@ -139,10 +139,11 @@ function timeUnits (v) {
 }
 
 function calculateTPS (transactions) {
-  var seconds = totalDuration / 1000
-  Object.keys(transactions).forEach(function (stat) {
-    transactions[stat]['tps'] = transactions[stat]['count'] / seconds
-  })
+  const seconds = totalDuration / 1000
+  for (const key in transactions) {
+    const stat = transactions[key]
+    stat.tps = stat.count / seconds
+  }
 }
 
 function statusHistogram (operations) {
@@ -200,27 +201,19 @@ function printTransactions (transactions, print, prefix) {
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
-  var columns = Object.keys(transactions)
+  const columns = Object.keys(transactions).map(key => transactions[key])
 
-  var row = columns.map(function (col) {
-    return numberFormat(transactions[col]['count'], 0)
-  })
-  table.push({ Total: row })
+  const totals = columns.map(col => numberFormat(col.count, 0))
+  table.push({ Total: totals })
 
-  row = columns.map(function (col) {
-    return numberFormat(transactions[col]['tps'], 0)
-  })
-  table.push({ TPS: row })
+  const avgTps = columns.map(col => numberFormat(col.tps, 0))
+  table.push({ TPS: avgTps })
 
-  row = columns.map(function (col) {
-    return numberFormat(transactions[col]['min_tps'], 0)
-  })
-  table.push({ 'Min TPS': row })
+  const minTps = columns.map(col => numberFormat(col.min_tps, 0))
+  table.push({ 'Min TPS': minTps })
 
-  row = columns.map(function (col) {
-    return numberFormat(transactions[col]['max_tps'], 0)
-  })
-  table.push({ 'Max TPS': row })
+  const maxTps = columns.map(col => numberFormat(col.max_tps, 0))
+  table.push({ 'Max TPS': maxTps })
 
   printTable(table, print, prefix)
 }
@@ -265,9 +258,9 @@ function iteration (operations) {
 
 function aggregateIntervalStats (statName, tx) {
   var stats = trans[statName] = trans[statName] || { count: 0, max_tps: 0, min_tps: Infinity }
-  stats['count'] += tx
-  if (tx > stats['max_tps']) stats['max_tps'] = tx
-  if (tx < stats['min_tps']) stats['min_tps'] = tx
+  stats.count += tx
+  if (tx > stats.max_tps) stats.max_tps = tx
+  if (tx < stats.min_tps) stats.min_tps = tx
 }
 
 function interval (intervalStats) {

@@ -232,7 +232,7 @@ context('Scans', function () {
           var validationScan = client.scan(helper.namespace, testSet)
           var stream = validationScan.foreach()
           stream.on('error', error => { throw error })
-          stream.on('data', record => expect(record.bins['x']).to.equal(token))
+          stream.on('data', record => expect(record.bins.x).to.equal(token))
           stream.on('end', done)
         })
       })

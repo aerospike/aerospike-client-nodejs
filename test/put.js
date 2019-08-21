@@ -164,53 +164,62 @@ describe('client.put()', function () {
     })
 
     it('writes bin with array value as list and reads it back', function (done) {
-      var record = { list: [1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
-        GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 }]
+      var record = {
+        list: [1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
+          GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 }]
       }
-      var expected = { list: [1, 'foo', 1.23, 3.14, Buffer.from('bar'),
-        '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 }]
+      var expected = {
+        list: [1, 'foo', 1.23, 3.14, Buffer.from('bar'),
+          '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 }]
       }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with object value as map and reads it back', function (done) {
-      var record = { map: {
-        a: 1,
-        b: 'foo',
-        c: 1.23,
-        d: new Double(3.14),
-        e: Buffer.from('bar'),
-        f: GeoJSON.Point(103.8, 1.283),
-        g: [1, 2, 3],
-        h: { a: 1, b: 2 } }
+      var record = {
+        map: {
+          a: 1,
+          b: 'foo',
+          c: 1.23,
+          d: new Double(3.14),
+          e: Buffer.from('bar'),
+          f: GeoJSON.Point(103.8, 1.283),
+          g: [1, 2, 3],
+          h: { a: 1, b: 2 }
+        }
       }
-      var expected = { map: {
-        a: 1,
-        b: 'foo',
-        c: 1.23,
-        d: 3.14,
-        e: Buffer.from('bar'),
-        f: '{"type":"Point","coordinates":[103.8,1.283]}',
-        g: [1, 2, 3],
-        h: { a: 1, b: 2 } }
+      var expected = {
+        map: {
+          a: 1,
+          b: 'foo',
+          c: 1.23,
+          d: 3.14,
+          e: Buffer.from('bar'),
+          f: '{"type":"Point","coordinates":[103.8,1.283]}',
+          g: [1, 2, 3],
+          h: { a: 1, b: 2 }
+        }
       }
       putGetVerify(record, expected, done)
     })
 
     it.skip('writes bin with Map value as map and reads it back', function (done) {
-      var record = { map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
-        ['d', new Double(3.14)], ['e', Buffer.from('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
-        ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
+      var record = {
+        map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
+          ['d', new Double(3.14)], ['e', Buffer.from('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
+          ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
       }
-      var expected = { map: {
-        a: 1,
-        b: 'foo',
-        c: 1.23,
-        d: 3.14,
-        e: Buffer.from('bar'),
-        f: '{"type":"Point","coordinates":[103.8,1.283]}',
-        g: [1, 2, 3],
-        h: { a: 1, b: 2 } }
+      var expected = {
+        map: {
+          a: 1,
+          b: 'foo',
+          c: 1.23,
+          d: 3.14,
+          e: Buffer.from('bar'),
+          f: '{"type":"Point","coordinates":[103.8,1.283]}',
+          g: [1, 2, 3],
+          h: { a: 1, b: 2 }
+        }
       }
       putGetVerify(record, expected, done)
     })

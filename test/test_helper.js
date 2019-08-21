@@ -129,9 +129,9 @@ ServerInfoHelper.prototype.fetchInfo = function () {
     .then(results => {
       results.forEach(response => {
         const info = Info.parse(response.info)
-        this.edition = info['edition']
-        this.build = info['build']
-        const features = info['features']
+        this.edition = info.edition
+        this.build = info.build
+        const features = info.features
         if (Array.isArray(features)) {
           features.forEach(feature => this.features.add(feature))
         }

@@ -95,8 +95,8 @@ const parser = yargs
   })
 
 let options
-if (process.env['OPTIONS']) {
-  options = process.env['OPTIONS'].trim().split(' ')
+if (process.env.OPTIONS) {
+  options = process.env.OPTIONS.trim().split(' ')
   options = parser.parse(options)
 } else {
   options = parser.argv
@@ -108,7 +108,7 @@ if (options.help === true) {
 }
 
 // enable debug stacktraces
-process.env['AEROSPIKE_DEBUG_STACKTRACES'] = process.env['AEROSPIKE_DEBUG_STACKTRACES'] || true
+process.env.AEROSPIKE_DEBUG_STACKTRACES = process.env.AEROSPIKE_DEBUG_STACKTRACES || true
 
 function testDir () {
   return path.resolve(__dirname, '..')
@@ -145,8 +145,8 @@ options.getConfig = function () {
       port: options.port || 3000
     }
     config.hosts = [host]
-  } else if (process.env['AEROSPIKE_HOSTS']) {
-    config.hosts = process.env['AEROSPIKE_HOSTS']
+  } else if (process.env.AEROSPIKE_HOSTS) {
+    config.hosts = process.env.AEROSPIKE_HOSTS
   }
 
   if (options.user !== null) {
