@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **Updates**
-  * Update C client library to [v4.6.5](http://www.aerospike.com/download/client/c/notes.html#4.6.5).
+  * Update C client library to [v4.6.6](http://www.aerospike.com/download/client/c/notes.html#4.6.6).
   * Support Debian 10. Drop support for Debian 7.
 
 ## [3.11.0] - 2019-05-22
