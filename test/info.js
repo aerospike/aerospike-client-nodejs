@@ -156,19 +156,19 @@ context('Info commands', function () {
     it('should parse nested key-value pairs', function () {
       var infoStr = 'statistics\tmem=10;req=20\n'
       var infoHash = info.parse(infoStr)
-      expect(infoHash['statistics']).to.eql({ mem: 10, req: 20 })
+      expect(infoHash.statistics).to.eql({ mem: 10, req: 20 })
     })
 
     it('should parse list values', function () {
       var infoStr = 'features\tgeo;double\n'
       var infoHash = info.parse(infoStr)
-      expect(infoHash['features']).to.eql(['geo', 'double'])
+      expect(infoHash.features).to.eql(['geo', 'double'])
     })
 
     it('should parse numeric strings as numbers', function () {
       var infoStr = 'version\t1'
       var infoHash = info.parse(infoStr)
-      expect(infoHash['version']).to.be.a('number')
+      expect(infoHash.version).to.be.a('number')
     })
 
     it('should be able to handle an empty info response', function () {
@@ -214,7 +214,7 @@ context('Info commands', function () {
           stats: { bin_names: 2, bin_names_quota: 32768 }
         }
       }
-      expect(infoHash['bins']).to.deep.equal(expected)
+      expect(infoHash.bins).to.deep.equal(expected)
     })
 
     it('should pick the right separators to parse based on the key pattern', function () {

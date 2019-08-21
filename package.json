@@ -30,7 +30,8 @@
   },
   "scripts": {
     "test": "mocha",
-    "posttest": "standard",
+    "lint": "standard",
+    "posttest": "npm run lint",
     "coverage": "nyc npm test && nyc --reporter=lcov report",
     "codecov": "codecov",
     "prepush": "npm test",

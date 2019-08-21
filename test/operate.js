@@ -72,16 +72,16 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['string']).to.equal('def')
-            expect(record.bins['int']).to.equal(432)
-            expect(record.bins['double1']).to.equal(2.34)
-            expect(record.bins['double2']).to.equal(2.0)
-            expect(new GeoJSON(record.bins['geo']).toJSON()).to.eql(
+            expect(record.bins.string).to.equal('def')
+            expect(record.bins.int).to.equal(432)
+            expect(record.bins.double1).to.equal(2.34)
+            expect(record.bins.double2).to.equal(2.0)
+            expect(new GeoJSON(record.bins.geo).toJSON()).to.eql(
               { type: 'Point', coordinates: [123.456, 1.308] }
             )
-            expect(record.bins['blob'].equals(Buffer.from('bar'))).to.be.ok()
-            expect(record.bins['list']).to.eql([2, 3, 4])
-            expect(record.bins['map']).to.eql({ d: 4, e: 5, f: 6 })
+            expect(record.bins.blob.equals(Buffer.from('bar'))).to.be.ok()
+            expect(record.bins.list).to.eql([2, 3, 4])
+            expect(record.bins.map).to.eql({ d: 4, e: 5, f: 6 })
           })
       })
 
@@ -107,7 +107,7 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['int']).to.equal(555)
+            expect(record.bins.int).to.equal(555)
           })
       })
 
@@ -120,8 +120,8 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['double1']).to.equal(4.68)
-            expect(record.bins['double2']).to.equal(4.14159)
+            expect(record.bins.double1).to.equal(4.68)
+            expect(record.bins.double2).to.equal(4.14159)
           })
       })
 
@@ -133,7 +133,7 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['int']).to.equal(555)
+            expect(record.bins.int).to.equal(555)
           })
       })
 
@@ -156,7 +156,7 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['string']).to.equal('abcdef')
+            expect(record.bins.string).to.equal('abcdef')
           })
       })
 
@@ -179,7 +179,7 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then(record => {
-            expect(record.bins['string']).to.equal('defabc')
+            expect(record.bins.string).to.equal('defabc')
           })
       })
 
@@ -322,7 +322,7 @@ context('Operations', function () {
 
       client.operate(key, ops, (error, result) => {
         if (error) throw error
-        expect(result.bins['int']).to.equal(123)
+        expect(result.bins.int).to.equal(123)
         done()
       })
     })
@@ -333,7 +333,7 @@ context('Operations', function () {
       return client.add(key, { int: 234 })
         .then(() => client.get(key))
         .then(record => {
-          expect(record.bins['int']).to.equal(357)
+          expect(record.bins.int).to.equal(357)
         })
     })
   })
@@ -343,7 +343,7 @@ context('Operations', function () {
       return client.incr(key, { int: 234 })
         .then(() => client.get(key))
         .then(record => {
-          expect(record.bins['int']).to.equal(357)
+          expect(record.bins.int).to.equal(357)
         })
     })
   })
@@ -353,7 +353,7 @@ context('Operations', function () {
       return client.append(key, { string: 'def' })
         .then(() => client.get(key))
         .then(record => {
-          expect(record.bins['string']).to.equal('abcdef')
+          expect(record.bins.string).to.equal('abcdef')
         })
     })
   })
@@ -363,7 +363,7 @@ context('Operations', function () {
       return client.prepend(key, { string: 'def' })
         .then(() => client.get(key))
         .then(record => {
-          expect(record.bins['string']).to.equal('defabc')
+          expect(record.bins.string).to.equal('defabc')
         })
     })
   })

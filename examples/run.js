@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2018 Aerospike, Inc.
+// Copyright 2018-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 const path = require('path')
 const yargs = require('yargs')
 
-const VERSION = require('../package.json')['version']
+const VERSION = require('../package.json').version
 const commands = [
   'add',
   'append',
