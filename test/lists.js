@@ -25,6 +25,7 @@ const helper = require('./test_helper')
 const AerospikeError = Aerospike.AerospikeError
 const lists = Aerospike.lists
 const ops = Aerospike.operations
+const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
 const eql = require('deep-eql')
@@ -100,8 +101,10 @@ describe('client.operate() - CDT List operations', function () {
     }
   }
 
-  function orderList (bin) {
-    return operate(lists.setOrder(bin, lists.order.ORDERED))
+  function orderList (bin, ctx) {
+    const setListOrder = lists.setOrder(bin, lists.order.ORDERED)
+    if (ctx) setListOrder.withContext(ctx)
+    return operate(setListOrder)
   }
 
   function assertResultEql (expected) {
@@ -833,6 +836,20 @@ describe('client.operate() - CDT List operations', function () {
           .then(cleanup)
       })
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('removes all items nearest to value and greater, by relative rank', function () {
+        const listContext = new Context().addMapKey('list')
+        return initState()
+          .then(createRecord({ map: { list: [0, 4, 5, 9, 11, 15] } }))
+          .then(orderList('map', listContext))
+          .then(operate(lists.removeByValueRelRankRange('map', 5, 0, 2).withContext(listContext)))
+          .then(assertRecordEql({ map: { list: [0, 4, 11, 15] } }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.removeByRank', function () {
@@ -843,6 +860,18 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.removeByRank('list', 1).andReturn(lists.returnType.VALUE)))
           .then(assertResultEql({ list: 2 }))
           .then(assertRecordEql({ list: [3, 1, 4] }))
+          .then(cleanup)
+      })
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('removes the item with the specified list rank', function () {
+        return initState()
+          .then(createRecord({ list: [[2, 3, 1, 4], [3, 1, 2, 4]] }))
+          .then(operate(lists.removeByRank('list', 1).withContext(ctx => ctx.addListIndex(1))))
+          .then(assertRecordEql({ list: [[2, 3, 1, 4], [3, 1, 4]] }))
           .then(cleanup)
       })
     })
@@ -859,6 +888,18 @@ describe('client.operate() - CDT List operations', function () {
           .then(cleanup)
       })
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('removes the item with the specified list rank', function () {
+        return initState()
+          .then(createRecord({ list: [[3, 1, 2, 5, 4], [1, 2, 3]] }))
+          .then(operate(lists.removeByRankRange('list', 1, 3).withContext(ctx => ctx.addListIndex(0))))
+          .then(assertRecordEql({ list: [[1, 5], [1, 2, 3]] }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.clear', function () {
@@ -868,6 +909,18 @@ describe('client.operate() - CDT List operations', function () {
         .then(operate(lists.clear('list')))
         .then(assertRecordEql({ list: [] }))
         .then(cleanup)
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('removes all elements from the list', function () {
+        return initState()
+          .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+          .then(operate(lists.clear('map').withContext(ctx => ctx.addMapKey('list'))))
+          .then(assertRecordEql({ map: { list: [] } }))
+          .then(cleanup)
+      })
     })
   })
 
@@ -879,6 +932,18 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertRecordEql({ list: [1, 2, 99, 4, 5] }))
         .then(cleanup)
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('sets the item at the specified index', function () {
+        return initState()
+          .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+          .then(operate(lists.set('map', 2, 99).withContext(ctx => ctx.addMapKey('list'))))
+          .then(assertRecordEql({ map: { list: [1, 2, 99, 4, 5] } }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.trim', function () {
@@ -889,6 +954,19 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertResultEql({ list: 2 }))
         .then(assertRecordEql({ list: [2, 3, 4] }))
         .then(cleanup)
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('removes all elements not within the specified range', function () {
+        return initState()
+          .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 4, 5]] }))
+          .then(operate(lists.trim('list', 1, 3).withContext(ctx => ctx.addListValue([1, 2, 3, 4, 5]))))
+          .then(assertResultEql({ list: 2 }))
+          .then(assertRecordEql({ list: [['a', 'b', 'c'], [2, 3, 4]] }))
+          .then(cleanup)
+      })
     })
   })
 
@@ -909,6 +987,18 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertError(ListOutOfBoundsError))
         .then(cleanup)
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('returns the item at the specified index', function () {
+        return initState()
+          .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 4, 5]] }))
+          .then(operate(lists.get('list', 2).withContext(ctx => ctx.addListIndex(1))))
+          .then(assertResultEql({ list: 3 }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.getRange', function () {
@@ -927,6 +1017,18 @@ describe('client.operate() - CDT List operations', function () {
         .then(assertResultEql({ list: [2, 3, 4, 5] }))
         .then(cleanup)
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('returns the items in the specified range', function () {
+        return initState()
+          .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+          .then(operate(lists.getRange('map', 1, 3).withContext(ctx => ctx.addMapKey('list'))))
+          .then(assertResultEql({ map: [2, 3, 4] }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.getByIndex', function () {
@@ -937,6 +1039,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.getByIndex('list', 2).andReturn(lists.returnType.VALUE)))
           .then(assertResultEql({ list: 3 }))
           .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches the item at the specified index and returns its value', function () {
+          return initState()
+            .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 4, 5]] }))
+            .then(operate(
+              lists
+                .getByIndex('list', 2)
+                .withContext(ctx => ctx.addListIndex(1))
+                .andReturn(lists.returnType.VALUE)
+            ))
+            .then(assertResultEql({ list: 3 }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -958,6 +1077,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(assertResultEql({ list: [3, 4, 5] }))
           .then(cleanup)
       })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches the items in the specified range and returns the values', function () {
+          return initState()
+            .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+            .then(operate(
+              lists
+                .getByIndexRange('map', 2, 2)
+                .withContext(ctx => ctx.addMapKey('list'))
+                .andReturn(lists.returnType.VALUE)
+            ))
+            .then(assertResultEql({ map: [3, 4] }))
+            .then(cleanup)
+        })
+      })
     })
   })
 
@@ -970,6 +1106,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(assertResultEql({ list: [2, 5] }))
           .then(cleanup)
       })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches all items with the specified value and returns the indexes', function () {
+          return initState()
+            .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 1, 2, 3]] }))
+            .then(operate(
+              lists
+                .getByValue('list', 3)
+                .withContext(ctx => ctx.addListIndex(1))
+                .andReturn(lists.returnType.INDEX)
+            ))
+            .then(assertResultEql({ list: [2, 5] }))
+            .then(cleanup)
+        })
+      })
     })
   })
 
@@ -981,6 +1134,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.getByValueList('list', [1, 3]).andReturn(lists.returnType.INDEX)))
           .then(assertResultEql({ list: [0, 2, 3, 5] }))
           .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches all items with the specified values and returns the indexes', function () {
+          return initState()
+            .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 1, 2, 3]] }))
+            .then(operate(
+              lists
+                .getByValueList('list', [1, 3])
+                .withContext(ctx => ctx.addListIndex(1))
+                .andReturn(lists.returnType.INDEX)
+            ))
+            .then(assertResultEql({ list: [0, 2, 3, 5] }))
+            .then(cleanup)
+        })
       })
     })
 
@@ -1003,6 +1173,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.getByValueRange('list', 2, 5).andReturn(lists.returnType.INDEX)))
           .then(assertResultEql({ list: [1, 2, 3] }))
           .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches all items in the specified range of values and returns the indexes', function () {
+          return initState()
+            .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+            .then(operate(
+              lists
+                .getByValueRange('map', 2, 5)
+                .withContext(ctx => ctx.addMapKey('list'))
+                .andReturn(lists.returnType.INDEX)
+            ))
+            .then(assertResultEql({ map: [1, 2, 3] }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -1030,6 +1217,25 @@ describe('client.operate() - CDT List operations', function () {
           .then(cleanup)
       })
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('fetches all items nearest to value and greater, by relative rank', function () {
+        const listContext = new Context().addMapKey('list')
+        return initState()
+          .then(createRecord({ map: { list: [0, 4, 5, 9, 11, 15] } }))
+          .then(orderList('map', listContext))
+          .then(operate(
+            lists
+              .getByValueRelRankRange('map', 5, 0, 2)
+              .withContext(listContext)
+              .andReturn(lists.returnType.VALUE)
+          ))
+          .then(assertResultEql({ map: [5, 9] }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.getByRank', function () {
@@ -1040,6 +1246,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.getByRank('list', 1).andReturn(lists.returnType.VALUE)))
           .then(assertResultEql({ list: 2 }))
           .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches the item with the specified list rank and returns the value', function () {
+          return initState()
+            .then(createRecord({ list: [[3, 1, 2, 4], ['a', 'b', 'c']] }))
+            .then(operate(
+              lists
+                .getByRank('list', 1)
+                .withContext(ctx => ctx.addListIndex(0))
+                .andReturn(lists.returnType.VALUE)
+            ))
+            .then(assertResultEql({ list: 2 }))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -1052,6 +1275,23 @@ describe('client.operate() - CDT List operations', function () {
           .then(operate(lists.getByRankRange('list', 1, 3).andReturn(lists.returnType.VALUE)))
           .then(assertResultSatisfy(result => eql(result.list.sort(), [2, 3, 4])))
           .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches the item with the specified list rank and returns the value', function () {
+          return initState()
+            .then(createRecord({ list: [[3, 1, 2, 5, 4], ['a', 'b', 'c']] }))
+            .then(operate(
+              lists
+                .getByRankRange('list', 1, 3)
+                .withContext(ctx => ctx.addListIndex(0))
+                .andReturn(lists.returnType.VALUE)
+            ))
+            .then(assertResultSatisfy(result => eql(result.list.sort(), [2, 3, 4])))
+            .then(cleanup)
+        })
       })
     })
   })
@@ -1122,6 +1362,19 @@ describe('client.operate() - CDT List operations', function () {
         })
       })
     })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('increments the element at the specified index and returns the final value', function () {
+        return initState()
+          .then(createRecord({ map: { list: [1, 2, 3, 4, 5] } }))
+          .then(operate(lists.increment('map', 1, 3).withContext(ctx => ctx.addMapKey('list'))))
+          .then(assertResultEql({ map: 5 }))
+          .then(assertRecordEql({ map: { list: [1, 5, 3, 4, 5] } }))
+          .then(cleanup)
+      })
+    })
   })
 
   describe('lists.size', function () {
@@ -1131,6 +1384,18 @@ describe('client.operate() - CDT List operations', function () {
         .then(operate(lists.size('list')))
         .then(assertResultEql({ list: 5 }))
         .then(cleanup)
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('returns the element count', function () {
+        return initState()
+          .then(createRecord({ list: [[], [1, 2, 3, 4, 5]] }))
+          .then(operate(lists.size('list').withContext(ctx => ctx.addListIndex(-1))))
+          .then(assertResultEql({ list: 5 }))
+          .then(cleanup)
+      })
     })
   })
 
