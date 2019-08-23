@@ -24,6 +24,7 @@ const helper = require('./test_helper')
 
 const AerospikeError = Aerospike.AerospikeError
 const maps = Aerospike.maps
+const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
 const eql = require('deep-eql')
@@ -92,18 +93,19 @@ describe('client.operate() - CDT Map operations', function () {
     }
   }
 
-  function orderByKey (bin) {
-    const policy = new maps.MapPolicy({
-      order: maps.order.KEY_ORDERED
-    })
-    return operate(maps.setPolicy(bin, policy))
+  function orderMap (bin, order, ctx) {
+    const policy = new maps.MapPolicy({ order })
+    const setMapPolicy = maps.setPolicy(bin, policy)
+    if (ctx) setMapPolicy.withContext(ctx)
+    return operate(setMapPolicy)
   }
 
-  function orderByKeyValue (bin) {
-    const policy = new maps.MapPolicy({
-      order: maps.order.KEY_VALUE_ORDERED
-    })
-    return operate(maps.setPolicy(bin, policy))
+  function orderByKey (bin, ctx) {
+    return orderMap(bin, maps.order.KEY_ORDERED, ctx)
+  }
+
+  function orderByKeyValue (bin, ctx) {
+    return orderMap(bin, maps.order.KEY_VALUE_ORDERED, ctx)
   }
 
   function assertResultEql (expected) {
@@ -315,6 +317,19 @@ describe('client.operate() - CDT Map operations', function () {
             .then(assertRecordEql({ map: { a: 1, b: 2, c: 3 } }))
             .then(cleanup())
         })
+      })
+    })
+
+    context('with nested map context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('adds the item to the nested map', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 1, b: 2, c: 3 }] }))
+          .then(operate(maps.put('list', 'd', 99).withContext(ctx => ctx.addListIndex(0))))
+          .then(assertResultEql({ list: 4 }))
+          .then(assertRecordEql({ list: [{ a: 1, b: 2, c: 3, d: 99 }] }))
+          .then(cleanup())
       })
     })
   })

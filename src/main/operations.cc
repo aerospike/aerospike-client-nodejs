@@ -1688,10 +1688,17 @@ int add_map_set_policy_op(as_operations* ops, Local<Object> op, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, order=%i, write_cmd=%i", binName, policy.attributes, policy.item_command);
-	as_operations_add_map_set_policy(ops, binName, &policy);
+	as_operations_map_set_policy(ops, binName, with_context ? &context : NULL, &policy);
 
 	if (binName != NULL) free(binName);
+	if (with_context) destroy_cdt_context(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1717,6 +1724,12 @@ int add_map_put_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* key_str = as_val_tostring(key);
 		char* value_str = as_val_tostring(value);
@@ -1724,9 +1737,10 @@ int add_map_put_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		cf_free(key_str);
 		cf_free(value_str);
 	}
-	as_operations_add_map_put(ops, binName, &policy, key, value);
+	as_operations_map_put(ops, binName, with_context ? &context : NULL, &policy, key, value);
 
 	if (binName != NULL) free(binName);
+	if (with_context) destroy_cdt_context(&context);
 	return AS_NODE_PARAM_OK;
 }
 
