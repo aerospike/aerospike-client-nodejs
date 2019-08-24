@@ -1748,10 +1748,17 @@ int add_map_put_items_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, order=%i, write_cmd=%i", binName, policy.attributes, policy.item_command);
-	as_operations_add_map_put_items(ops, binName, &policy, items);
+	as_operations_map_put_items(ops, binName, with_context ? &context : NULL, &policy, items);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1777,6 +1784,12 @@ int add_map_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* key_str = as_val_tostring(key);
 		char* incr_str = as_val_tostring(incr);
@@ -1784,9 +1797,10 @@ int add_map_increment_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		cf_free(key_str);
 		cf_free(incr_str);
 	}
-	as_operations_add_map_increment(ops, binName, &policy, key, incr);
+	as_operations_map_increment(ops, binName, with_context ? &context : NULL, &policy, key, incr);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1812,6 +1826,12 @@ int add_map_decrement_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* key_str = as_val_tostring(key);
 		char* decr_str = as_val_tostring(decr);
@@ -1819,9 +1839,10 @@ int add_map_decrement_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		cf_free(key_str);
 		cf_free(decr_str);
 	}
-	as_operations_add_map_decrement(ops, binName, &policy, key, decr);
+	as_operations_map_decrement(ops, binName, with_context ? &context : NULL, &policy, key, decr);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1832,10 +1853,17 @@ int add_map_clear_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s", binName);
-	as_operations_add_map_clear(ops, binName);
+	as_operations_map_clear(ops, binName, with_context ? &context : NULL);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1856,14 +1884,21 @@ int add_map_remove_by_key_op(as_operations* ops, Local<Object> obj, LogInfo* log
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* key_str = as_val_tostring(key);
 		as_v8_debug(log, "bin=%s, key=%s, return_type=%i", binName, key_str, return_type);
 		cf_free(key_str);
 	}
-	as_operations_add_map_remove_by_key(ops, binName, key, return_type);
+	as_operations_map_remove_by_key(ops, binName, with_context ? &context : NULL, key, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1884,14 +1919,21 @@ int add_map_remove_by_key_list_op(as_operations* ops, Local<Object> obj, LogInfo
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* keys_str = as_val_tostring(keys);
 		as_v8_debug(log, "bin=%s, keys=%s, return_type=%i", binName, keys_str, return_type);
 		cf_free(keys_str);
 	}
-	as_operations_add_map_remove_by_key_list(ops, binName, keys, return_type);
+	as_operations_map_remove_by_key_list(ops, binName, with_context ? &context : NULL, keys, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1919,6 +1961,12 @@ int add_map_remove_by_key_range_op(as_operations* ops, Local<Object> obj, LogInf
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* begin_str = as_val_tostring(begin);
 		char* end_str = as_val_tostring(end);
@@ -1926,9 +1974,10 @@ int add_map_remove_by_key_range_op(as_operations* ops, Local<Object> obj, LogInf
 		cf_free(begin_str);
 		cf_free(end_str);
 	}
-	as_operations_add_map_remove_by_key_range(ops, binName, begin, end, return_type);
+	as_operations_map_remove_by_key_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1960,23 +2009,30 @@ int add_map_remove_by_key_rel_index_range_op(as_operations* ops, Local<Object> o
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		if (as_v8_debug_enabled(log)) {
 			char* key_str = as_val_tostring(key);
 			as_v8_debug(log, "bin=%s, key=%s, index=%i, count=%i, return_type=%i", binName, key_str, index, count, return_type);
 			cf_free(key_str);
 		}
-		as_operations_add_map_remove_by_key_rel_index_range(ops, binName, key, index, count, return_type);
+		as_operations_map_remove_by_key_rel_index_range(ops, binName, with_context ? &context : NULL, key, index, count, return_type);
 	} else {
 		if (as_v8_debug_enabled(log)) {
 			char* key_str = as_val_tostring(key);
 			as_v8_debug(log, "bin=%s, key=%s, index=%i, return_type=%i", binName, key_str, index, return_type);
 			cf_free(key_str);
 		}
-		as_operations_add_map_remove_by_key_rel_index_range_to_end(ops, binName, key, index, return_type);
+		as_operations_map_remove_by_key_rel_index_range_to_end(ops, binName, with_context ? &context : NULL, key, index, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1997,14 +2053,21 @@ int add_map_remove_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* l
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* value_str = as_val_tostring(value);
 		as_v8_debug(log, "bin=%s, value=%s, return_type=%i", binName, value_str, return_type);
 		cf_free(value_str);
 	}
-	as_operations_add_map_remove_by_value(ops, binName, value, return_type);
+	as_operations_map_remove_by_value(ops, binName, with_context ? &context : NULL, value, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2025,14 +2088,21 @@ int add_map_remove_by_value_list_op(as_operations* ops, Local<Object> obj, LogIn
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* values_str = as_val_tostring(values);
 		as_v8_debug(log, "bin=%s, values=%s, return_type=%i", binName, values_str, return_type);
 		cf_free(values_str);
 	}
-	as_operations_add_map_remove_by_value_list(ops, binName, values, return_type);
+	as_operations_map_remove_by_value_list(ops, binName, with_context ? &context : NULL, values, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2060,6 +2130,12 @@ int add_map_remove_by_value_range_op(as_operations* ops, Local<Object> obj, LogI
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* begin_str = as_val_tostring(begin);
 		char* end_str = as_val_tostring(end);
@@ -2067,9 +2143,10 @@ int add_map_remove_by_value_range_op(as_operations* ops, Local<Object> obj, LogI
 		cf_free(begin_str);
 		cf_free(end_str);
 	}
-	as_operations_add_map_remove_by_value_range(ops, binName, begin, end, return_type);
+	as_operations_map_remove_by_value_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2101,23 +2178,30 @@ int add_map_remove_by_value_rel_rank_range_op(as_operations* ops, Local<Object> 
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		if (as_v8_debug_enabled(log)) {
 			char* value_str = as_val_tostring(value);
 			as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, value_str, rank, count, return_type);
 			cf_free(value_str);
 		}
-		as_operations_add_map_remove_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+		as_operations_map_remove_by_value_rel_rank_range(ops, binName, with_context ? &context : NULL, value, rank, count, return_type);
 	} else {
 		if (as_v8_debug_enabled(log)) {
 			char* value_str = as_val_tostring(value);
 			as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, value_str, rank, return_type);
 			cf_free(value_str);
 		}
-		as_operations_add_map_remove_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+		as_operations_map_remove_by_value_rel_rank_range_to_end(ops, binName, with_context ? &context : NULL, value, rank, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2138,10 +2222,17 @@ int add_map_remove_by_index_op(as_operations* ops, Local<Object> obj, LogInfo* l
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, index=%i, return_type=%i", binName, index, return_type);
-	as_operations_add_map_remove_by_index(ops, binName, index, return_type);
+	as_operations_map_remove_by_index(ops, binName, with_context ? &context : NULL, index, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2168,15 +2259,22 @@ int add_map_remove_by_index_range_op(as_operations* ops, Local<Object> obj, LogI
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		as_v8_debug(log, "bin=%s, index=%i, count=%i, return_type=%i", binName, index, count, return_type);
-		as_operations_add_map_remove_by_index_range(ops, binName, index, count, return_type);
+		as_operations_map_remove_by_index_range(ops, binName, with_context ? &context : NULL, index, count, return_type);
 	} else {
 		as_v8_debug(log, "bin=%s, index=%i, return_type=%i", binName, index, return_type);
-		as_operations_add_map_remove_by_index_range_to_end(ops, binName, index, return_type);
+		as_operations_map_remove_by_index_range_to_end(ops, binName, with_context ? &context : NULL, index, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2197,10 +2295,17 @@ int add_map_remove_by_rank_op(as_operations* ops, Local<Object> obj, LogInfo* lo
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, rank=%i, return_type=%i", binName, rank, return_type);
-	as_operations_add_map_remove_by_rank(ops, binName, rank, return_type);
+	as_operations_map_remove_by_rank(ops, binName, with_context ? &context : NULL, rank, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2227,15 +2332,22 @@ int add_map_remove_by_rank_range_op(as_operations* ops, Local<Object> obj, LogIn
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		as_v8_debug(log, "bin=%s, rank=%i, count=%i, return_type=%i", binName, rank, count, return_type);
-		as_operations_add_map_remove_by_rank_range(ops, binName, rank, count, return_type);
+		as_operations_map_remove_by_rank_range(ops, binName, with_context ? &context : NULL, rank, count, return_type);
 	} else {
 		as_v8_debug(log, "bin=%s, rank=%i, return_type=%i", binName, rank, return_type);
-		as_operations_add_map_remove_by_rank_range_to_end(ops, binName, rank, return_type);
+		as_operations_map_remove_by_rank_range_to_end(ops, binName, with_context ? &context : NULL, rank, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2246,10 +2358,17 @@ int add_map_size_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s", binName);
-	as_operations_add_map_size(ops, binName);
+	as_operations_map_size(ops, binName, with_context ? &context : NULL);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2270,14 +2389,21 @@ int add_map_get_by_key_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* key_str = as_val_tostring(key);
 		as_v8_debug(log, "bin=%s, key=%s, return_type=%i", binName, key_str, return_type);
 		cf_free(key_str);
 	}
-	as_operations_add_map_get_by_key(ops, binName, key, return_type);
+	as_operations_map_get_by_key(ops, binName, with_context ? &context : NULL, key, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2305,6 +2431,12 @@ int add_map_get_by_key_range_op(as_operations* ops, Local<Object> obj, LogInfo* 
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* begin_str = as_val_tostring(begin);
 		char* end_str = as_val_tostring(end);
@@ -2312,9 +2444,10 @@ int add_map_get_by_key_range_op(as_operations* ops, Local<Object> obj, LogInfo* 
 		cf_free(begin_str);
 		cf_free(end_str);
 	}
-	as_operations_add_map_get_by_key_range(ops, binName, begin, end, return_type);
+	as_operations_map_get_by_key_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2346,23 +2479,30 @@ int add_map_get_by_key_rel_index_range_op(as_operations* ops, Local<Object> op, 
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		if (as_v8_debug_enabled(log)) {
 			char* key_str = as_val_tostring(key);
 			as_v8_debug(log, "bin=%s, key=%s, index=%i, count=%i, return_type=%i", binName, key_str, index, count, return_type);
 			cf_free(key_str);
 		}
-		as_operations_add_map_get_by_key_rel_index_range(ops, binName, key, index, count, return_type);
+		as_operations_map_get_by_key_rel_index_range(ops, binName, with_context ? &context : NULL, key, index, count, return_type);
 	} else {
 		if (as_v8_debug_enabled(log)) {
 			char* key_str = as_val_tostring(key);
 			as_v8_debug(log, "bin=%s, key=%s, index=%i, return_type=%i", binName, key_str, index, return_type);
 			cf_free(key_str);
 		}
-		as_operations_add_map_get_by_key_rel_index_range_to_end(ops, binName, key, index, return_type);
+		as_operations_map_get_by_key_rel_index_range_to_end(ops, binName, with_context ? &context : NULL, key, index, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2383,14 +2523,21 @@ int add_map_get_by_value_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* value_str = as_val_tostring(value);
 		as_v8_debug(log, "bin=%s, value=%s, return_type=%i", binName, value_str, return_type);
 		cf_free(value_str);
 	}
-	as_operations_add_map_get_by_value(ops, binName, value, return_type);
+	as_operations_map_get_by_value(ops, binName, with_context ? &context : NULL, value, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2418,6 +2565,12 @@ int add_map_get_by_value_range_op(as_operations* ops, Local<Object> obj, LogInfo
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (as_v8_debug_enabled(log)) {
 		char* begin_str = as_val_tostring(begin);
 		char* end_str = as_val_tostring(end);
@@ -2425,9 +2578,10 @@ int add_map_get_by_value_range_op(as_operations* ops, Local<Object> obj, LogInfo
 		cf_free(begin_str);
 		cf_free(end_str);
 	}
-	as_operations_add_map_get_by_value_range(ops, binName, begin, end, return_type);
+	as_operations_map_get_by_value_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2459,23 +2613,30 @@ int add_map_get_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op,
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		if (as_v8_debug_enabled(log)) {
 			char* value_str = as_val_tostring(value);
 			as_v8_debug(log, "bin=%s, value=%s, rank=%i, count=%i, return_type=%i", binName, value_str, rank, count, return_type);
 			cf_free(value_str);
 		}
-		as_operations_add_map_get_by_value_rel_rank_range(ops, binName, value, rank, count, return_type);
+		as_operations_map_get_by_value_rel_rank_range(ops, binName, with_context ? &context : NULL, value, rank, count, return_type);
 	} else {
 		if (as_v8_debug_enabled(log)) {
 			char* value_str = as_val_tostring(value);
 			as_v8_debug(log, "bin=%s, value=%s, rank=%i, return_type=%i", binName, value_str, rank, return_type);
 			cf_free(value_str);
 		}
-		as_operations_add_map_get_by_value_rel_rank_range_to_end(ops, binName, value, rank, return_type);
+		as_operations_map_get_by_value_rel_rank_range_to_end(ops, binName, with_context ? &context : NULL, value, rank, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2496,10 +2657,17 @@ int add_map_get_by_index_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, index=%i, return_type=%i", binName, index, return_type);
-	as_operations_add_map_get_by_index(ops, binName, index, return_type);
+	as_operations_map_get_by_index(ops, binName, with_context ? &context : NULL, index, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2526,15 +2694,22 @@ int add_map_get_by_index_range_op(as_operations* ops, Local<Object> obj, LogInfo
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		as_v8_debug(log, "bin=%s, index=%i, count=%i, return_type=%i", binName, index, count, return_type);
-		as_operations_add_map_get_by_index_range(ops, binName, index, count, return_type);
+		as_operations_map_get_by_index_range(ops, binName, with_context ? &context : NULL, index, count, return_type);
 	} else {
 		as_v8_debug(log, "bin=%s, index=%i, return_type=%i", binName, index, return_type);
-		as_operations_add_map_get_by_index_range_to_end(ops, binName, index, return_type);
+		as_operations_map_get_by_index_range_to_end(ops, binName, with_context ? &context : NULL, index, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2555,10 +2730,17 @@ int add_map_get_by_rank_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	as_v8_debug(log, "bin=%s, rank=%i, return_type=%i", binName, rank, return_type);
-	as_operations_add_map_get_by_rank(ops, binName, rank, return_type);
+	as_operations_map_get_by_rank(ops, binName, with_context ? &context : NULL, rank, return_type);
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -2585,15 +2767,22 @@ int add_map_get_by_rank_range_op(as_operations* ops, Local<Object> obj, LogInfo*
 		return AS_NODE_PARAM_ERR;
 	}
 
+	bool with_context;
+	as_cdt_ctx context;
+	if (get_optional_cdt_context(&context, &with_context, obj, log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
 	if (count_defined) {
 		as_v8_debug(log, "bin=%s, rank=%i, count=%i, return_type=%i", binName, rank, count, return_type);
-		as_operations_add_map_get_by_rank_range(ops, binName, rank, count, return_type);
+		as_operations_map_get_by_rank_range(ops, binName, with_context ? &context : NULL, rank, count, return_type);
 	} else {
 		as_v8_debug(log, "bin=%s, rank=%i, return_type=%i", binName, rank, return_type);
-		as_operations_add_map_get_by_rank_range_to_end(ops, binName, rank, return_type);
+		as_operations_map_get_by_rank_range_to_end(ops, binName, with_context ? &context : NULL, rank, return_type);
 	}
 
 	if (binName != NULL) free(binName);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
