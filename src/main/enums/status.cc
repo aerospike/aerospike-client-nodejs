@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2019 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,8 @@ Local<Object> status()
 	set(obj, "AEROSPIKE_ERR_FAIL_FORBIDDEN", AEROSPIKE_ERR_FAIL_FORBIDDEN);
 	set(obj, "AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND", AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND);
 	set(obj, "AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS", AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS);
-	set(obj, "AEROSPIKE_ERR_FAIL_ENTERPRISE_ONLY", 25); // TODO: replace with C client enum
-	set(obj, "AEROSPIKE_ERR_OP_NOT_APPLICABLE", 26); // TODO: replace with C client enum
+	set(obj, "AEROSPIKE_ERR_ENTERPRISE_ONLY", AEROSPIKE_ERR_ENTERPRISE_ONLY);
+	set(obj, "AEROSPIKE_ERR_OP_NOT_APPLICABLE", AEROSPIKE_ERR_OP_NOT_APPLICABLE);
 	set(obj, "AEROSPIKE_QUERY_END", AEROSPIKE_QUERY_END);
 	set(obj, "AEROSPIKE_SECURITY_NOT_SUPPORTED", AEROSPIKE_SECURITY_NOT_SUPPORTED);
 	set(obj, "AEROSPIKE_SECURITY_NOT_ENABLED", AEROSPIKE_SECURITY_NOT_ENABLED);
