@@ -227,25 +227,6 @@ int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Objec
 	return AS_NODE_PARAM_OK;
 }
 
-void destroy_cdt_context(as_cdt_ctx* context)
-{
-	as_vector* list = &context->list;
-	for (uint32_t i = 0; i < list->size; i++) {
-		as_cdt_ctx_item* item = (as_cdt_ctx_item*) as_vector_get(list, i);
-		switch (item->type) {
-			case AS_CDT_CTX_LIST_VALUE:
-			case AS_CDT_CTX_MAP_KEY:
-			case AS_CDT_CTX_MAP_VALUE:
-				as_val_destroy(item->val.pval);
-				break;
-			default:
-				// no-op
-				break;
-		}
-	}
-	as_cdt_ctx_destroy(context);
-}
-
 int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName = NULL;
@@ -461,7 +442,7 @@ int add_list_set_order_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_list_set_order(ops, binName, with_context ? &context : NULL, order);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -487,7 +468,7 @@ int add_list_sort_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_list_sort(ops, binName, with_context ? &context : NULL, flags);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -532,7 +513,7 @@ int add_list_append_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -582,7 +563,7 @@ int add_list_append_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	if (binName) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -632,7 +613,7 @@ int add_list_insert_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -688,7 +669,7 @@ int add_list_insert_items_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	if (binName) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -714,7 +695,7 @@ int add_list_pop_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_pop(ops, binName, with_context ? &context : NULL, index);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -751,7 +732,7 @@ int add_list_pop_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -777,7 +758,7 @@ int add_list_remove_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_remove(ops, binName, with_context ? &context : NULL, index);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -814,7 +795,7 @@ int add_list_remove_range_op(as_operations* ops, Local<Object> obj, LogInfo* log
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -845,7 +826,7 @@ int add_list_remove_by_index_op(as_operations* ops, Local<Object> op, LogInfo* l
 	as_operations_list_remove_by_index(ops, binName, with_context ? &context : NULL, index, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -887,7 +868,7 @@ int add_list_remove_by_index_range_op(as_operations* ops, Local<Object> op, LogI
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -922,7 +903,7 @@ int add_list_remove_by_value_op(as_operations* ops, Local<Object> op, LogInfo* l
 	as_operations_list_remove_by_value(ops, binName, with_context ? &context : NULL, value, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -957,7 +938,7 @@ int add_list_remove_by_value_list_op(as_operations* ops, Local<Object> op, LogIn
 	as_operations_list_remove_by_value_list(ops, binName, with_context ? &context : NULL, values, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1001,7 +982,7 @@ int add_list_remove_by_value_range_op(as_operations* ops, Local<Object> op, LogI
 	as_operations_list_remove_by_value_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1056,7 +1037,7 @@ int add_list_remove_by_value_rel_rank_range_op(as_operations* ops, Local<Object>
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1087,7 +1068,7 @@ int add_list_remove_by_rank_op(as_operations* ops, Local<Object> op, LogInfo* lo
 	as_operations_list_remove_by_rank(ops, binName, with_context ? &context : NULL, rank, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1129,7 +1110,7 @@ int add_list_remove_by_rank_range_op(as_operations* ops, Local<Object> op, LogIn
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1150,7 +1131,7 @@ int add_list_clear_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_clear(ops, binName, with_context ? &context : NULL);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1191,7 +1172,7 @@ int add_list_set_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_set(ops, binName, with_context ? &context : NULL, with_policy ? &policy : NULL, index, val);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1222,7 +1203,7 @@ int add_list_trim_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_trim(ops, binName, with_context ? &context : NULL, index, count);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1248,7 +1229,7 @@ int add_list_get_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_get(ops, binName, with_context ? &context : NULL, index);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1285,7 +1266,7 @@ int add_list_get_range_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1316,7 +1297,7 @@ int add_list_get_by_index_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_list_get_by_index(ops, binName, with_context ? &context : NULL, index, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1358,7 +1339,7 @@ int add_list_get_by_index_range_op(as_operations* ops, Local<Object> op, LogInfo
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1393,7 +1374,7 @@ int add_list_get_by_value_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_list_get_by_value(ops, binName, with_context ? &context : NULL, value, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1428,7 +1409,7 @@ int add_list_get_by_value_list_op(as_operations* ops, Local<Object> op, LogInfo*
 	as_operations_list_get_by_value_list(ops, binName, with_context ? &context : NULL, values, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1472,7 +1453,7 @@ int add_list_get_by_value_range_op(as_operations* ops, Local<Object> op, LogInfo
 	as_operations_list_get_by_value_range(ops, binName, with_context ? &context : NULL, begin, end, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1527,7 +1508,7 @@ int add_list_get_by_value_rel_rank_range_op(as_operations* ops, Local<Object> op
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1558,7 +1539,7 @@ int add_list_get_by_rank_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_list_get_by_rank(ops, binName, with_context ? &context : NULL, rank, return_type);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1600,7 +1581,7 @@ int add_list_get_by_rank_range_op(as_operations* ops, Local<Object> op, LogInfo*
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1651,7 +1632,7 @@ int add_list_increment_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	}
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1672,7 +1653,7 @@ int add_list_size_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_list_size(ops, binName, with_context ? &context : NULL);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1698,7 +1679,7 @@ int add_map_set_policy_op(as_operations* ops, Local<Object> op, LogInfo* log)
 	as_operations_map_set_policy(ops, binName, with_context ? &context : NULL, &policy);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1740,7 +1721,7 @@ int add_map_put_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	as_operations_map_put(ops, binName, with_context ? &context : NULL, &policy, key, value);
 
 	if (binName != NULL) free(binName);
-	if (with_context) destroy_cdt_context(&context);
+	if (with_context) as_cdt_ctx_destroy(&context);
 	return AS_NODE_PARAM_OK;
 }
 
