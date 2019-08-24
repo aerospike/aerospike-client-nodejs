@@ -1020,6 +1020,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches a map entry identified by key', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 1, b: 2, c: 3 }, { b: 3 }] }))
+          .then(operate(
+            maps
+              .getByKey('list', 'b')
+              .withContext(ctx => ctx.addListIndex(0))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ list: ['b', 2] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1053,6 +1065,20 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches map entries identified by key range', function () {
+        const mapContext = new Context().addListIndex(-1)
+        return initState()
+          .then(createRecord({ list: [{ b: 3, c: 4 }, { a: 1, b: 2, c: 3, d: 4 }] }))
+          .then(orderByKey('list', mapContext))
+          .then(operate(
+            maps
+              .getByKeyRange('list', 'b', 'd')
+              .withContext(mapContext)
+              .andReturn(maps.returnType.KEY)
+          ))
+          .then(assertResultEql({ list: ['b', 'c'] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1084,6 +1110,20 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('retrieves map entries nearest to key and greater, by index', function () {
+        const mapContext = new Context().addListIndex(-1)
+        return initState()
+          .then(createRecord({ list: [{ a: 17, e: 2, f: 15, j: 10 }] }))
+          .then(orderByKey('list', mapContext))
+          .then(operate(
+            maps
+              .getByKeyRelIndexRange('list', 'f', 0)
+              .withContext(mapContext)
+              .andReturn(maps.returnType.KEY)
+          ))
+          .then(assertResultEql({ list: ['f', 'j'] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1099,6 +1139,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches a map entry identified by value', function () {
+        return initState()
+          .then(createRecord({ map: { nested: { a: 1, b: 2, c: 2 } } }))
+          .then(operate(
+            maps
+              .getByValue('map', 2)
+              .withContext(ctx => ctx.addMapKey('nested'))
+              .andReturn(maps.returnType.KEY)
+          ))
+          .then(assertResultSatisfy(result => eql(result.map.sort(), ['b', 'c'])))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1130,6 +1182,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches map entries identified by value range', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 2, b: 3, c: 4 }, { a: 1, b: 2, c: 2, d: 3 }] }))
+          .then(operate(
+            maps
+              .getByValueRange('list', 2, 3)
+              .withContext(ctx => ctx.addListIndex(1))
+              .andReturn(maps.returnType.VALUE)
+          ))
+          .then(assertResultEql({ list: [2, 2] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1161,6 +1225,20 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('retrieves map entries nearest to value and greater by relative rank', function () {
+        const mapContext = new Context().addMapKey('nested')
+        return initState()
+          .then(createRecord({ map: { nested: { e: 2, j: 10, f: 15, a: 17 } } }))
+          .then(orderByKeyValue('map', mapContext))
+          .then(operate(
+            maps
+              .getByValueRelRankRange('map', 11, 1, 1)
+              .withContext(mapContext)
+              .andReturn(maps.returnType.KEY)
+          ))
+          .then(assertResultEql({ map: ['a'] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1184,6 +1262,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches a map entry identified by index', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, { a: 1, b: 2, c: 3 }] }))
+          .then(operate(
+            maps
+              .getByIndex('list', 1)
+              .withContext(ctx => ctx.addListIndex(4))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ list: ['b', 2] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1215,6 +1305,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches map entries identified by index range', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 1, b: 2, c: 2, d: 3 }] }))
+          .then(operate(
+            maps
+              .getByIndexRange('list', 1, 2)
+              .withContext(ctx => ctx.addListIndex(0))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ list: ['b', 2, 'c', 2] }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1238,6 +1340,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches a map entry identified by rank', function () {
+        return initState()
+          .then(createRecord({ map: { nested: { a: 3, b: 2, c: 1 } } }))
+          .then(operate(
+            maps
+              .getByRank('map', 0)
+              .withContext(ctx => ctx.addMapKey('nested'))
+              .andReturn(maps.returnType.VALUE)
+          ))
+          .then(assertResultEql({ map: 1 }))
+          .then(cleanup())
+      })
     })
   })
 
@@ -1269,6 +1383,18 @@ describe('client.operate() - CDT Map operations', function () {
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
+      it('fetches map entries identified by rank range', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 3, b: 2, c: 1 }] }))
+          .then(operate(
+            maps
+              .getByRankRange('list', 0, 2)
+              .withContext(ctx => ctx.addListIndex(0))
+              .andReturn(maps.returnType.VALUE)
+          ))
+          .then(assertResultEql({ list: [1, 2] }))
+          .then(cleanup())
+      })
     })
   })
 
