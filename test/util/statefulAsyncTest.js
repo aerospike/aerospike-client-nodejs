@@ -23,29 +23,29 @@ const AerospikeError = Aerospike.AerospikeError
 const helper = require('../test_helper')
 
 class State {
-  set (name, promise) {
+  async set (name, promise) {
     if (this._expectError) {
       return promise.catch(error => {
         this.error = error
+        return this
       })
     } else {
       return promise.then(value => {
         this[name] = value
+        return this
       })
     }
   }
 
-  setExpectError () {
+  async setExpectError () {
     this._expectError = true
+    return this
   }
 }
 
 exports.initState = () => Promise.resolve(new State())
 
-exports.expectError = () => (state) => {
-  state.setExpectError()
-  return state
-}
+exports.expectError = () => (state) => state.setExpectError()
 
 exports.createRecord = (bins) => (state) => {
   const key = helper.keygen.string(helper.namespace, helper.set)()
@@ -53,14 +53,11 @@ exports.createRecord = (bins) => (state) => {
   const policy = new Aerospike.WritePolicy({
     exists: Aerospike.policy.exists.CREATE_OR_REPLACE
   })
-  state.set('key', helper.client.put(key, bins, meta, policy))
-  return state
+  return state.set('key', helper.client.put(key, bins, meta, policy))
 }
 
-exports.operate = (ops) => (state) => {
+exports.operate = (ops) => (state) =>
   state.set('result', helper.client.operate(state.key, Array.isArray(ops) ? ops : [ops]))
-  return state
-}
 
 exports.assertResultEql = (expected) => (state) => {
   expect(state.result.bins).to.eql(expected, 'result of operation does not match expectation')
@@ -85,6 +82,5 @@ exports.assertError = (code) => (state) => {
   return state
 }
 
-exports.cleanup = () => (state) => {
-  return helper.client.remove(state.key).then(() => state)
-}
+exports.cleanup = () => (state) =>
+  helper.client.remove(state.key)
