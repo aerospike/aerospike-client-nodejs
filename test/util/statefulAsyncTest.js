@@ -23,37 +23,29 @@ const AerospikeError = Aerospike.AerospikeError
 const helper = require('../test_helper')
 
 class State {
-  enrich (name, promise) {
+  set (name, promise) {
     if (this._expectError) {
       return promise.catch(error => {
         this.error = error
-        return this
       })
     } else {
       return promise.then(value => {
         this[name] = value
-        return this
       })
     }
   }
 
-  passthrough (promise) {
-    return promise.then(() => this)
-  }
-
-  resolve (value) {
-    return Promise.resolve(value).then(() => this)
-  }
-
-  expectError () {
+  setExpectError () {
     this._expectError = true
-    return this
   }
 }
 
-exports.initState = async () => new State()
+exports.initState = () => Promise.resolve(new State())
 
-exports.expectError = () => (state) => state.expectError()
+exports.expectError = () => (state) => {
+  state.setExpectError()
+  return state
+}
 
 exports.createRecord = (bins) => (state) => {
   const key = helper.keygen.string(helper.namespace, helper.set)()
@@ -61,39 +53,38 @@ exports.createRecord = (bins) => (state) => {
   const policy = new Aerospike.WritePolicy({
     exists: Aerospike.policy.exists.CREATE_OR_REPLACE
   })
-  return state.enrich('key', helper.client.put(key, bins, meta, policy))
+  state.set('key', helper.client.put(key, bins, meta, policy))
+  return state
 }
 
-exports.operate = (ops) => (state) =>
-  state.enrich('result',
-    helper.client.operate(state.key, Array.isArray(ops) ? ops : [ops])
-  )
+exports.operate = (ops) => (state) => {
+  state.set('result', helper.client.operate(state.key, Array.isArray(ops) ? ops : [ops]))
+  return state
+}
 
-exports.assertResultEql = (expected) => (state) =>
-  state.resolve(
-    expect(state.result.bins).to.eql(expected, 'result of operation does not match expectation')
-  )
+exports.assertResultEql = (expected) => (state) => {
+  expect(state.result.bins).to.eql(expected, 'result of operation does not match expectation')
+  return state
+}
 
-exports.assertResultSatisfy = (matcher) => (state) =>
-  state.resolve(
-    expect(state.result.bins).to.satisfy(matcher, 'result of operation does not satisfy expectation')
-  )
+exports.assertResultSatisfy = (matcher) => (state) => {
+  expect(state.result.bins).to.satisfy(matcher, 'result of operation does not satisfy expectation')
+  return state
+}
 
-exports.assertRecordEql = (expected) => (state) =>
-  state.passthrough(
-    helper.client.get(state.key).then(
-      (record) => expect(record.bins).to.eql(expected, 'after operation, record bins do not match expectations')
-    )
-  )
+exports.assertRecordEql = (expected) => (state) => {
+  return helper.client.get(state.key).then((record) =>
+    expect(record.bins).to.eql(expected, 'after operation, record bins do not match expectations')
+  ).then(() => state)
+}
 
-exports.assertError = (code) => (state) =>
-  state.resolve(
-    expect(state.error, `expected operation to raise exception with error code ${code}`)
-      .to.be.instanceof(AerospikeError)
-      .with.property('code', code)
-  )
+exports.assertError = (code) => (state) => {
+  expect(state.error, `expected operation to raise exception with error code ${code}`)
+    .to.be.instanceof(AerospikeError)
+    .with.property('code', code)
+  return state
+}
 
-exports.cleanup = () => (state) =>
-  state.passthrough(
-    helper.client.remove(state.key)
-  )
+exports.cleanup = () => (state) => {
+  return helper.client.remove(state.key).then(() => state)
+}
