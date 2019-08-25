@@ -30,10 +30,26 @@ const status = Aerospike.status
 
 const eql = require('deep-eql')
 
+const {
+  assertError,
+  assertRecordEql,
+  assertResultEql,
+  assertResultSatisfy,
+  cleanup,
+  createRecord,
+  expectError,
+  initState,
+  operate
+} = require('./util/statefulAsyncTest')
+
+const orderList = (bin, ctx) => {
+  const setListOrder = lists.setOrder(bin, lists.order.ORDERED)
+  if (ctx) setListOrder.withContext(ctx)
+  return operate(setListOrder)
+}
+
 describe('client.operate() - CDT List operations', function () {
   helper.skipUnlessSupportsFeature('cdt-list', this)
-
-  const client = helper.client
 
   let ListOutOfBoundsError
   before(() => {
@@ -41,105 +57,6 @@ describe('client.operate() - CDT List operations', function () {
       ? status.ERR_OP_NOT_APPLICABLE
       : status.ERR_REQUEST_INVALID
   })
-
-  class State {
-    enrich (name, promise) {
-      if (this._expectError) {
-        return promise.catch(error => {
-          this.error = error
-          return this
-        })
-      } else {
-        return promise.then(value => {
-          this[name] = value
-          return this
-        })
-      }
-    }
-
-    passthrough (promise) {
-      return promise.then(() => this)
-    }
-
-    resolve (value) {
-      return Promise.resolve(value).then(() => this)
-    }
-
-    expectError () {
-      this._expectError = true
-      return this
-    }
-  }
-
-  function initState () {
-    return Promise.resolve(new State())
-  }
-
-  function expectError () {
-    return function (state) {
-      return state.expectError()
-    }
-  }
-
-  function createRecord (bins) {
-    return function (state) {
-      const key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_list/' })()
-      const meta = { ttl: 600 }
-      const policy = new Aerospike.WritePolicy({
-        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
-      })
-      return state.enrich('key', client.put(key, bins, meta, policy))
-    }
-  }
-
-  function operate (ops) {
-    if (!Array.isArray(ops)) {
-      ops = [ops]
-    }
-    return function (state) {
-      return state.enrich('result', client.operate(state.key, ops))
-    }
-  }
-
-  function orderList (bin, ctx) {
-    const setListOrder = lists.setOrder(bin, lists.order.ORDERED)
-    if (ctx) setListOrder.withContext(ctx)
-    return operate(setListOrder)
-  }
-
-  function assertResultEql (expected) {
-    return function (state) {
-      return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
-    }
-  }
-
-  function assertResultSatisfy (matcher) {
-    return function (state) {
-      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
-    }
-  }
-
-  function assertRecordEql (expected) {
-    return function (state) {
-      return state.passthrough(client.get(state.key)
-        .then(record => expect(record.bins).to.eql(expected, 'record bins after operation')))
-    }
-  }
-
-  function assertError (code) {
-    return function (state) {
-      return state.resolve(
-        expect(state.error, 'error raised by operate command')
-          .to.be.instanceof(AerospikeError)
-          .with.property('code', code))
-    }
-  }
-
-  function cleanup () {
-    return function (state) {
-      return state.passthrough(client.remove(state.key))
-    }
-  }
 
   describe('lists.setOrder', function () {
     it('changes the list order', function () {

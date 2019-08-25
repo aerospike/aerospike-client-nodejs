@@ -17,130 +17,39 @@
 'use strict'
 
 /* eslint-env mocha */
-/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
-const AerospikeError = Aerospike.AerospikeError
 const maps = Aerospike.maps
 const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
 const eql = require('deep-eql')
 
+const {
+  assertError,
+  assertRecordEql,
+  assertResultEql,
+  assertResultSatisfy,
+  cleanup,
+  createRecord,
+  expectError,
+  initState,
+  operate
+} = require('./util/statefulAsyncTest')
+
+const orderMap = (bin, order, ctx) => {
+  const policy = new maps.MapPolicy({ order })
+  const setMapPolicy = maps.setPolicy(bin, policy)
+  if (ctx) setMapPolicy.withContext(ctx)
+  return operate(setMapPolicy)
+}
+const orderByKey = (bin, ctx) => orderMap(bin, maps.order.KEY_ORDERED, ctx)
+const orderByKeyValue = (bin, ctx) => orderMap(bin, maps.order.KEY_VALUE_ORDERED, ctx)
+
 describe('client.operate() - CDT Map operations', function () {
   helper.skipUnlessSupportsFeature('cdt-map', this)
-
-  const client = helper.client
-
-  class State {
-    enrich (name, promise) {
-      if (this._expectError) {
-        return promise.catch(error => {
-          this.error = error
-          return this
-        })
-      } else {
-        return promise.then(value => {
-          this[name] = value
-          return this
-        })
-      }
-    }
-
-    passthrough (promise) {
-      return promise.then(() => this)
-    }
-
-    resolve (value) {
-      return Promise.resolve(value).then(() => this)
-    }
-
-    expectError () {
-      this._expectError = true
-      return this
-    }
-  }
-
-  function initState () {
-    return Promise.resolve(new State())
-  }
-
-  function expectError () {
-    return function (state) {
-      return state.expectError()
-    }
-  }
-
-  function createRecord (bins) {
-    return function (state) {
-      const key = helper.keygen.string(helper.namespace, helper.set, { prefix: 'cdt_map/' })()
-      const meta = { ttl: 600 }
-      const policy = new Aerospike.WritePolicy({
-        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
-      })
-      return state.enrich('key', client.put(key, bins, meta, policy))
-    }
-  }
-
-  function operate (ops) {
-    if (!Array.isArray(ops)) {
-      ops = [ops]
-    }
-    return function (state) {
-      return state.enrich('result', client.operate(state.key, ops))
-    }
-  }
-
-  function orderMap (bin, order, ctx) {
-    const policy = new maps.MapPolicy({ order })
-    const setMapPolicy = maps.setPolicy(bin, policy)
-    if (ctx) setMapPolicy.withContext(ctx)
-    return operate(setMapPolicy)
-  }
-
-  function orderByKey (bin, ctx) {
-    return orderMap(bin, maps.order.KEY_ORDERED, ctx)
-  }
-
-  function orderByKeyValue (bin, ctx) {
-    return orderMap(bin, maps.order.KEY_VALUE_ORDERED, ctx)
-  }
-
-  function assertResultEql (expected) {
-    return function (state) {
-      return state.resolve(expect(state.result.bins).to.eql(expected, 'operate result'))
-    }
-  }
-
-  function assertResultSatisfy (matcher) {
-    return function (state) {
-      return state.resolve(expect(state.result.bins).to.satisfy(matcher, 'operate result'))
-    }
-  }
-
-  function assertRecordEql (expected) {
-    return function (state) {
-      return state.passthrough(client.get(state.key)
-        .then(record => expect(record.bins).to.eql(expected, 'record bins after operation')))
-    }
-  }
-
-  function assertError (code) {
-    return function (state) {
-      return state.resolve(
-        expect(state.error, 'error raised by operate command')
-          .to.be.instanceof(AerospikeError)
-          .with.property('code', code))
-    }
-  }
-
-  function cleanup () {
-    return function (state) {
-      return state.passthrough(client.remove(state.key))
-    }
-  }
 
   describe('maps.setPolicy', function () {
     it('changes the map order', function () {
