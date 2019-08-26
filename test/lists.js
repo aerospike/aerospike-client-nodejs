@@ -850,6 +850,38 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
+    context('with add-unique flag', function () {
+      const policy = {
+        writeFlags: lists.writeFlags.ADD_UNIQUE
+      }
+
+      it('fails with an error if the value already exists in the list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(expectError())
+          .then(operate(lists.set('list', 2, 5, policy)))
+          .then(assertError(status.ERR_FAIL_ELEMENT_EXISTS))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+          .then(cleanup)
+      })
+
+      context('with no-fail flag', function () {
+        helper.skipUnlessVersion('>= 4.3.0', this)
+
+        const policy = {
+          writeFlags: lists.writeFlags.ADD_UNIQUE | lists.writeFlags.NO_FAIL
+        }
+
+        it('does not set the value but returns ok', function () {
+          return initState()
+            .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+            .then(operate(lists.set('list', 2, 5, policy)))
+            .then(assertRecordEql({ list: [1, 2, 3, 4, 5] }))
+            .then(cleanup)
+        })
+      })
+    })
+
     context('with nested list context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
