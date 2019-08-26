@@ -23,7 +23,7 @@ const AerospikeError = Aerospike.AerospikeError
 const helper = require('../test_helper')
 
 class State {
-  async set (name, promise) {
+  set (name, promise) {
     if (this._expectError) {
       return promise.catch(error => {
         this.error = error
@@ -37,7 +37,7 @@ class State {
     }
   }
 
-  async setExpectError () {
+  setExpectError () {
     this._expectError = true
     return this
   }
