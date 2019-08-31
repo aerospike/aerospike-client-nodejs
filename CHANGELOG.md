@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.12.0] - 2019-08-31
+
 * **New Features**
   * Support for operations on nested lists & maps. Requires server version 4.6 or later. [#307](https://github.com/aerospike/aerospike-client-nodejs/pull/307)
 
 * **Updates**
   * Update C client library to [v4.6.7](http://www.aerospike.com/download/client/c/notes.html#4.6.7).
   * Support Debian 10. Drop support for Debian 7.
+  * Fix tests for certain out-of-bounds list operations due to changed error code sent by server v4.6.
+  * Update dev dependecies: standard v14, yargs v14, nyc
 
 ## [3.11.0] - 2019-05-22
 
