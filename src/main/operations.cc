@@ -160,73 +160,6 @@ int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogI
 	return AS_NODE_PARAM_OK;
 }
 
-int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> obj, LogInfo* log)
-{
-	Nan::HandleScope scope;
-	Local<Value> maybe_context_obj = obj->Get(Nan::New("context").ToLocalChecked());
-	if (maybe_context_obj->IsUndefined()) {
-		if (has_context != NULL) (*has_context) = false;
-		as_v8_detail(log, "No CDT context set");
-		return AS_NODE_PARAM_OK;
-	} else if (!maybe_context_obj->IsObject()) {
-		as_v8_error(log, "Type error: context should be an Object");
-		return AS_NODE_PARAM_ERR;
-	}
-
-	if (has_context != NULL) (*has_context) = true;
-	Local<Array> items = Local<Array>::Cast(maybe_context_obj.As<Object>()->Get(Nan::New("items").ToLocalChecked()));
-	const uint32_t length = items->Length();
-	as_cdt_ctx_init(context, length);
-	as_v8_detail(log, "Setting CDT context - depth: %d", length);
-	for (uint32_t i = 0; i < length; i++) {
-		Local<Array> item = Local<Array>::Cast(items->Get(i));
-		Local<Value> v8type = item->Get(0);
-		Local<Value> v8value = item->Get(1);
-		as_cdt_ctx_type type = (as_cdt_ctx_type) Nan::To<int>(v8type).FromJust();
-		int intValue;
-		as_val* asValue;
-		switch (type) {
-			case AS_CDT_CTX_LIST_INDEX:
-				intValue = Nan::To<int>(v8value).FromJust();
-				as_cdt_ctx_add_list_index(context, intValue);
-				as_v8_detail(log, "Adding List Index context - index: %d", intValue);
-				break;
-			case AS_CDT_CTX_LIST_RANK:
-				intValue = Nan::To<int>(v8value).FromJust();
-				as_cdt_ctx_add_list_rank(context, intValue);
-				as_v8_detail(log, "Adding List Rank context - rank: %d", intValue);
-				break;
-			case AS_CDT_CTX_LIST_VALUE:
-				asval_from_jsvalue(&asValue, v8value, log);
-				as_cdt_ctx_add_list_value(context, asValue);
-				as_v8_detail(log, "Adding List Value context");
-				break;
-			case AS_CDT_CTX_MAP_INDEX:
-				intValue = Nan::To<int>(v8value).FromJust();
-				as_cdt_ctx_add_map_index(context, intValue);
-				as_v8_detail(log, "Adding Map Index context - index: %d", intValue);
-				break;
-			case AS_CDT_CTX_MAP_RANK:
-				intValue = Nan::To<int>(v8value).FromJust();
-				as_cdt_ctx_add_map_rank(context, intValue);
-				as_v8_detail(log, "Adding Map Rank context - rank: %d", intValue);
-				break;
-			case AS_CDT_CTX_MAP_KEY:
-				asval_from_jsvalue(&asValue, v8value, log);
-				as_cdt_ctx_add_map_key(context, asValue);
-				as_v8_detail(log, "Adding Map Key context");
-				break;
-			case AS_CDT_CTX_MAP_VALUE:
-				asval_from_jsvalue(&asValue, v8value, log);
-				as_cdt_ctx_add_map_value(context, asValue);
-				as_v8_detail(log, "Adding Map Value context");
-				break;
-		}
-	}
-
-	return AS_NODE_PARAM_OK;
-}
-
 int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 {
 	char* binName = NULL;
@@ -2880,11 +2813,15 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 		setTTL(obj, &ops->ttl, log);
 		result = get_int64_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {
-			const ops_table_entry *entry = &ops_table[op];
-			if (entry) {
-				result = (entry->op_function)(ops, obj, log);
+			if ((op & BIT_OPS_OFFSET) != 0) {
+				result = add_bit_op(ops, op, obj, log);
 			} else {
-				result = AS_NODE_PARAM_ERR;
+				const ops_table_entry *entry = &ops_table[op];
+				if (entry) {
+					result = (entry->op_function)(ops, obj, log);
+				} else {
+					result = AS_NODE_PARAM_ERR;
+				}
 			}
 		}
 		if (result != AS_NODE_PARAM_OK) {

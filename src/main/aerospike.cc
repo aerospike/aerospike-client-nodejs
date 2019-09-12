@@ -123,6 +123,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("scanPriority", scanPriority());
 	export("log", log_enum_values());
 	export("operations", opcode_values());
+	export("bitOperations", bit_opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());
