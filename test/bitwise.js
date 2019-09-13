@@ -51,4 +51,24 @@ describe('client.operate() - Bitwise operations', function () {
         .then(cleanup())
     })
   })
+
+  describe('bitwise.insert', function () {
+    it('inserts value at the stated offset', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0x01, 0x02]) }))
+        .then(operate(bits.insert('bits', 1, Buffer.from([0x03, 0x04]))))
+        .then(assertRecordEql({ bits: Buffer.from([0x01, 0x03, 0x04, 0x02]) }))
+        .then(cleanup())
+    })
+
+    context('with CDT context', function () {
+      it('inserts bytes in a nested bytes value', function () {
+        return initState()
+          .then(createRecord({ list: [Buffer.from([0x01, 0x02]), Buffer.from([0x03, 0x04])] }))
+          .then(operate(bits.insert('list', 1, Buffer.from([0x03, 0x04])).withContext(ctx => ctx.addListIndex(0))))
+          .then(assertRecordEql({ list: [Buffer.from([0x01, 0x03, 0x04, 0x02]), Buffer.from([0x03, 0x04])] }))
+          .then(cleanup())
+      })
+    })
+  })
 })

@@ -232,6 +232,23 @@ int get_list_property(as_list** list, Local<Object> obj, char const* prop, const
 	return list_from_jsarray(list, Local<Array>::Cast(value), log);
 }
 
+int get_bytes_property(uint8_t** bytes, int* size, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value = obj->Get(Nan::New(prop).ToLocalChecked());
+	if (!node::Buffer::HasInstance(value)) {
+		as_v8_error(log, "Type error: %s property should be Buffer", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+
+	as_v8_debug(log, "Extracting bytes from JS Buffer");
+	if (extract_blob_from_jsobject(bytes, size, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
+		as_v8_error(log, "Extracting bytes from a JS Buffer failed");
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_asval_property(as_val** value, Local<Object> obj, const char* prop, const LogInfo* log)
 {
 	Nan::HandleScope scope;

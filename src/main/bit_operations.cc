@@ -33,28 +33,49 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 	as_bit_policy_init(policy);
 	if (has_policy != NULL) (*has_policy) = false;
 	// FIXME: convert bit policy
+	as_v8_debug(log, "Setting bit policy");
 	return AS_NODE_PARAM_OK;
 }
 
-int
+bool
 add_bit_resize_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
 {
 	uint32_t byte_size;
 	if (get_uint32_property(&byte_size, op, "byteSize", log) != AS_NODE_PARAM_OK) {
-		return AS_NODE_PARAM_ERR;
+		return false;
 	}
 
 	as_bit_resize_flags flags = AS_BIT_RESIZE_DEFAULT;
 	if (get_int_property((int*) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
-		return AS_NODE_PARAM_ERR;
+		return false;
 	}
 
 	as_v8_debug(log, "bin=%s, byte_size=%i, flags=%i", bin, byte_size, flags);
-	as_operations_bit_resize(ops, bin, context, policy, byte_size, flags);
-	return AS_NODE_PARAM_OK;
+	return as_operations_bit_resize(ops, bin, context, policy, byte_size, flags);
 }
 
-typedef int (*BitOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log);
+bool
+add_bit_insert_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	int offset;
+	if (get_int_property(&offset, op, "offset", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	uint8_t* value;
+	int size;
+	if (get_bytes_property(&value, &size, op, "value", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "bin=%s, offset=%i, size=%i", bin, offset, size);
+	bool success = as_operations_bit_insert(ops, bin, context, policy, offset, size, value);
+
+	free(value);
+	return success;
+}
+
+typedef bool (*BitOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log);
 
 typedef struct {
 	const char* op_name;
@@ -63,11 +84,13 @@ typedef struct {
 
 const ops_table_entry ops_table[] = {
 	{ "BIT_RESIZE", add_bit_resize_op },
+	{ "BIT_INSERT", add_bit_insert_op }
 };
 
 int
 add_bit_op(as_operations* ops, int64_t opcode, Local<Object> op, LogInfo* log)
 {
+	opcode = opcode ^ BIT_OPS_OFFSET;
 	const ops_table_entry *entry = &ops_table[opcode];
 	if (!entry) {
 		return AS_NODE_PARAM_ERR;
@@ -90,12 +113,14 @@ add_bit_op(as_operations* ops, int64_t opcode, Local<Object> op, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	int result = (entry->op_function)(ops, binName, with_context ? &context : NULL, with_policy ? &policy : NULL, op, log);
+	as_v8_debug(log, "Adding bitwise operation %s (opcode %i) on bin %s to operations list - context? %i, policy? %i",
+			entry->op_name, opcode, binName, with_context, with_policy);
+	bool success = (entry->op_function)(ops, binName, with_context ? &context : NULL, with_policy ? &policy : NULL, op, log);
 
 	free(binName);
 	if (with_context) as_cdt_ctx_destroy(&context);
 
-	return result;
+	return success ? AS_NODE_PARAM_OK : AS_NODE_PARAM_ERR;
 }
 
 Local<Object>

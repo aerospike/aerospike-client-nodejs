@@ -31,4 +31,5 @@ int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v
 v8::Local<v8::Object> opcode_values();
 v8::Local<v8::Object> bit_opcode_values();
 
+const uint32_t OPS_MASK = 0xF0;
 const uint32_t BIT_OPS_OFFSET = 0x30;

@@ -2797,6 +2797,21 @@ const ops_table_entry ops_table[] = {
 	{ "MAP_GET_BY_RANK_RANGE", add_map_get_by_rank_range_op }
 };
 
+int
+add_operation(as_operations* ops, int64_t opcode, Local<Object> params, LogInfo* log)
+{
+	switch (opcode & OPS_MASK) {
+		case BIT_OPS_OFFSET:
+			return add_bit_op(ops, opcode, params, log);
+	}
+
+	const ops_table_entry *entry = &ops_table[opcode];
+	if (entry) {
+		return (entry->op_function)(ops, params, log);
+	}
+	return AS_NODE_PARAM_ERR;
+}
+
 int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 {
 	uint32_t capacity = arr->Length();
@@ -2806,6 +2821,7 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 	} else {
 		return AS_NODE_PARAM_ERR;
 	}
+
 	int result = AS_NODE_PARAM_OK;
 	int64_t op;
 	for (uint32_t i = 0; i < capacity; i++) {
@@ -2813,23 +2829,14 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 		setTTL(obj, &ops->ttl, log);
 		result = get_int64_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {
-			if ((op & BIT_OPS_OFFSET) != 0) {
-				result = add_bit_op(ops, op, obj, log);
-			} else {
-				const ops_table_entry *entry = &ops_table[op];
-				if (entry) {
-					result = (entry->op_function)(ops, obj, log);
-				} else {
-					result = AS_NODE_PARAM_ERR;
-				}
-			}
+			result = add_operation(ops, op, obj, log);
 		}
 		if (result != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "invalid operation [%i] - result: %i", op, result);
-			goto Return;
+			break;
 		}
 	}
-Return:
+
 	return result;
 }
 
