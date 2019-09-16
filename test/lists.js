@@ -49,7 +49,7 @@ const orderList = (bin, ctx) => {
 }
 
 describe('client.operate() - CDT List operations', function () {
-  helper.skipUnlessSupportsFeature('cdt-list', this)
+  helper.skipUnlessSupportsFeature(Aerospike.features.CDT_LIST, this)
 
   let ListOutOfBoundsError
   before(() => {

@@ -32,7 +32,7 @@ const {
 } = require('./util/statefulAsyncTest')
 
 describe('client.operate() - Bitwise operations', function () {
-  helper.skipUnlessVersion('>= 4.6.0', this)
+  helper.skipUnlessSupportsFeature(Aerospike.features.BLOB_BITS, this)
 
   describe('bitwise.resize', function () {
     it('grows the bytes value', function () {
