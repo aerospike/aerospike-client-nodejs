@@ -40,8 +40,8 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 bool
 add_bit_resize_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
 {
-	uint32_t byte_size;
-	if (get_uint32_property(&byte_size, op, "byteSize", log) != AS_NODE_PARAM_OK) {
+	uint32_t size;
+	if (get_uint32_property(&size, op, "size", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
@@ -50,8 +50,8 @@ add_bit_resize_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_pol
 		return false;
 	}
 
-	as_v8_debug(log, "bin=%s, byte_size=%i, flags=%i", bin, byte_size, flags);
-	return as_operations_bit_resize(ops, bin, context, policy, byte_size, flags);
+	as_v8_debug(log, "bin=%s, size=%i, flags=%i", bin, size, flags);
+	return as_operations_bit_resize(ops, bin, context, policy, size, flags);
 }
 
 bool
@@ -75,6 +75,23 @@ add_bit_insert_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_pol
 	return success;
 }
 
+bool
+add_bit_remove_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	int offset;
+	if (get_int_property(&offset, op, "offset", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	uint32_t size;
+	if (get_uint32_property(&size, op, "size", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "bin=%s, offset=%i, size=%i", bin, offset, size);
+	return as_operations_bit_remove(ops, bin, context, policy, offset, size);
+}
+
 typedef bool (*BitOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log);
 
 typedef struct {
@@ -84,7 +101,8 @@ typedef struct {
 
 const ops_table_entry ops_table[] = {
 	{ "BIT_RESIZE", add_bit_resize_op },
-	{ "BIT_INSERT", add_bit_insert_op }
+	{ "BIT_INSERT", add_bit_insert_op },
+	{ "BIT_REMOVE", add_bit_remove_op }
 };
 
 int

@@ -71,4 +71,24 @@ describe('client.operate() - Bitwise operations', function () {
       })
     })
   })
+
+  describe('bitwise.remove', function () {
+    it('removes number of bytes from the stated offset', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05]) }))
+        .then(operate(bits.remove('bits', 1, 3)))
+        .then(assertRecordEql({ bits: Buffer.from([0x01, 0x05]) }))
+        .then(cleanup())
+    })
+
+    context('with CDT context', function () {
+      it('removes number of bytes from the stated offset', function () {
+        return initState()
+          .then(createRecord({ map: { data: Buffer.from([0x01, 0x02, 0x03]) } }))
+          .then(operate(bits.remove('map', 0, 2).withContext(ctx => ctx.addMapKey('data'))))
+          .then(assertRecordEql({ map: { data: Buffer.from([0x03]) } }))
+          .then(cleanup())
+      })
+    })
+  })
 })
