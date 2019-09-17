@@ -38,7 +38,7 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 }
 
 bool
-add_bit_resize_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+add_bit_resize_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
 {
 	uint32_t size;
 	if (get_uint32_property(&size, op, "size", log) != AS_NODE_PARAM_OK) {
@@ -51,11 +51,11 @@ add_bit_resize_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_pol
 	}
 
 	as_v8_debug(log, "bin=%s, size=%i, flags=%i", bin, size, flags);
-	return as_operations_bit_resize(ops, bin, context, policy, size, flags);
+	return as_operations_bit_resize(ops, bin, NULL, policy, size, flags);
 }
 
 bool
-add_bit_insert_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+add_bit_insert_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
 {
 	int offset;
 	if (get_int_property(&offset, op, "offset", log) != AS_NODE_PARAM_OK) {
@@ -69,14 +69,17 @@ add_bit_insert_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_pol
 	}
 
 	as_v8_debug(log, "bin=%s, offset=%i, size=%i", bin, offset, size);
-	bool success = as_operations_bit_insert(ops, bin, context, policy, offset, size, value);
+	bool success = as_operations_bit_insert(ops, bin, NULL, policy, offset, size, value);
 
 	free(value);
 	return success;
 }
 
+typedef bool (*AsBitWrite) (as_operations* ops, const char* bin, as_cdt_ctx* ctx, as_bit_policy* policy,
+		int byte_offset, uint32_t byte_size);
+
 bool
-add_bit_remove_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+add_bit_write_op(as_operations* ops, AsBitWrite write_op, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
 {
 	int offset;
 	if (get_int_property(&offset, op, "offset", log) != AS_NODE_PARAM_OK) {
@@ -89,10 +92,125 @@ add_bit_remove_op(as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_pol
 	}
 
 	as_v8_debug(log, "bin=%s, offset=%i, size=%i", bin, offset, size);
-	return as_operations_bit_remove(ops, bin, context, policy, offset, size);
+	return (*write_op)(ops, bin, NULL, policy, offset, size);
 }
 
-typedef bool (*BitOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, as_bit_policy* policy, Local<Object> op, LogInfo* log);
+bool
+add_bit_remove_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_write_op(ops, as_operations_bit_remove, bin, policy, op, log);
+}
+
+typedef bool (*AsBitByteMath) (as_operations* ops, const char* bin, as_cdt_ctx* ctx, as_bit_policy* policy,
+		int bit_offset, uint32_t bit_size, uint32_t value_byte_size, uint8_t* value);
+
+bool
+add_bit_byte_math_op(as_operations* ops, AsBitByteMath byte_math_op, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	int bit_offset;
+	if (get_int_property(&bit_offset, op, "bitOffset", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	uint32_t bit_size;
+	if (get_uint32_property(&bit_size, op, "bitSize", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	uint8_t* value;
+	int value_byte_size;
+	if (get_bytes_property(&value, &value_byte_size, op, "value", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "bin=%s, bit_offset=%i, bit_size=%i", bin, bit_offset, bit_size);
+	bool success = (*byte_math_op)(ops, bin, NULL, policy, bit_offset, bit_size, value_byte_size, value);
+
+	free(value);
+	return success;
+}
+
+bool
+add_bit_set_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_byte_math_op(ops, as_operations_bit_set, bin, policy, op, log);
+}
+
+bool
+add_bit_or_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_byte_math_op(ops, as_operations_bit_or, bin, policy, op, log);
+}
+
+bool
+add_bit_xor_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_byte_math_op(ops, as_operations_bit_xor, bin, policy, op, log);
+}
+
+bool
+add_bit_and_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_byte_math_op(ops, as_operations_bit_and, bin, policy, op, log);
+}
+
+bool
+add_bit_not_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_write_op(ops, as_operations_bit_not, bin, policy, op, log);
+}
+
+//TODO: add missing lshift/rshift ops
+
+typedef bool (*AsBitMath) (as_operations* ops, const char* bin, as_cdt_ctx* ctx, as_bit_policy* policy,
+		int bit_offset, uint32_t bit_size, int64_t value, bool sign, as_bit_overflow_action action);
+
+bool
+add_bit_math_op(as_operations* ops, AsBitMath math_op, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	int bit_offset;
+	if (get_int_property(&bit_offset, op, "bitOffset", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	uint32_t bit_size;
+	if (get_uint32_property(&bit_size, op, "bitSize", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	int64_t value;
+	if (get_int64_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	bool sign;
+	if (get_bool_property(&sign, op, "sign", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_bit_overflow_action action = AS_BIT_OVERFLOW_FAIL;
+	if (get_int_property((int*) &action, op, "action", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "bin=%s, bit_offset=%i, bit_size=%i, value=%i, sign=%i, action=%i", bin, bit_offset, bit_size, value, sign, action);
+	return (*math_op)(ops, bin, NULL, policy, bit_offset, bit_size, value, sign, action);
+}
+
+
+bool
+add_bit_add_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_math_op(ops, as_operations_bit_add, bin, policy, op, log);
+}
+
+bool
+add_bit_subtract_op(as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log)
+{
+	return add_bit_math_op(ops, as_operations_bit_subtract, bin, policy, op, log);
+}
+
+typedef bool (*BitOperation) (as_operations* ops, char* bin, as_bit_policy* policy, Local<Object> op, LogInfo* log);
 
 typedef struct {
 	const char* op_name;
@@ -102,7 +220,14 @@ typedef struct {
 const ops_table_entry ops_table[] = {
 	{ "BIT_RESIZE", add_bit_resize_op },
 	{ "BIT_INSERT", add_bit_insert_op },
-	{ "BIT_REMOVE", add_bit_remove_op }
+	{ "BIT_REMOVE", add_bit_remove_op },
+	{ "BIT_SET", add_bit_set_op },
+	{ "BIT_OR", add_bit_or_op },
+	{ "BIT_XOR", add_bit_xor_op },
+	{ "BIT_AND", add_bit_and_op },
+	{ "BIT_NOT", add_bit_not_op },
+	{ "BIT_ADD", add_bit_add_op },
+	{ "BIT_SUBTRACT", add_bit_subtract_op }
 };
 
 int
@@ -119,24 +244,17 @@ add_bit_op(as_operations* ops, int64_t opcode, Local<Object> op, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	bool with_context = false;
-	as_cdt_ctx context;
-	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
-		return AS_NODE_PARAM_ERR;
-	}
-
 	bool with_policy = false;
 	as_bit_policy policy;
 	if (get_optional_bit_policy(&policy, &with_policy, op, log) != AS_NODE_PARAM_OK) {
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_v8_debug(log, "Adding bitwise operation %s (opcode %i) on bin %s to operations list - context? %i, policy? %i",
-			entry->op_name, opcode, binName, with_context, with_policy);
-	bool success = (entry->op_function)(ops, binName, with_context ? &context : NULL, with_policy ? &policy : NULL, op, log);
+	as_v8_debug(log, "Adding bitwise operation %s (opcode %i) on bin %s to operations list - policy? %i",
+			entry->op_name, opcode, binName, with_policy);
+	bool success = (entry->op_function)(ops, binName, with_policy ? &policy : NULL, op, log);
 
 	free(binName);
-	if (with_context) as_cdt_ctx_destroy(&context);
 
 	return success ? AS_NODE_PARAM_OK : AS_NODE_PARAM_ERR;
 }
