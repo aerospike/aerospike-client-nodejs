@@ -17,6 +17,7 @@
 'use strict'
 
 /* eslint-env mocha */
+/* global expect */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -25,6 +26,7 @@ const bits = Aerospike.bitwise
 
 const {
   assertRecordEql,
+  assertResultEql,
   cleanup,
   createRecord,
   initState,
@@ -73,12 +75,28 @@ describe('client.operate() - Bitwise operations', function () {
   })
 
   describe('bitwise.set', function () {
-    it('sets value on bitmap at offset for size', function () {
-      return initState()
-        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
-        .then(operate(bits.set('bits', 13, 3, Buffer.from([0b11100000]))))
-        .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000111, 0b00000011, 0b00000100, 0b00000101]) }))
-        .then(cleanup())
+    context('with value as Buffer', function () {
+      it('sets value on bitmap at offset for size', function () {
+        return initState()
+          .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+          .then(operate(bits.set('bits', 13, 3, Buffer.from([0b11100000]))))
+          .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000111, 0b00000011, 0b00000100, 0b00000101]) }))
+          .then(cleanup())
+      })
+    })
+
+    context('with value as Integer', function () {
+      it('sets value on bitmap at offset for size', function () {
+        return initState()
+          .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+          .then(operate(bits.set('bits', 1, 8, 127)))
+          .then(assertRecordEql({ bits: Buffer.from([0b00111111, 0b11000010, 0b00000011, 0b0000100, 0b00000101]) }))
+          .then(cleanup())
+      })
+    })
+
+    it('throws a TypeError if passed an unsupported value type', function () {
+      expect(() => { bits.set('bin', 0, 0, 3.1416) }).to.throw(TypeError)
     })
   })
 
@@ -122,12 +140,72 @@ describe('client.operate() - Bitwise operations', function () {
     })
   })
 
+  describe('bitwise.lshift', function () {
+    it('shifts left bitmap start at offset for size', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.lshift('bits', 32, 8, 3)))
+        .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00101000]) }))
+        .then(cleanup())
+    })
+  })
+
+  describe('bitwise.rshift', function () {
+    it('shifts right bitmap start at offset for size', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.rshift('bits', 0, 9, 1)))
+        .then(assertRecordEql({ bits: Buffer.from([0b00000000, 0b11000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(cleanup())
+    })
+  })
+
   describe('bitwise.add', function () {
     it('adds value to bitmap starting at bitOffset for bitSize', function () {
       return initState()
         .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
         .then(operate(bits.add('bits', 24, 16, 128, false)))
         .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b10000101]) }))
+        .then(cleanup())
+    })
+  })
+
+  describe('bitwise.get', function () {
+    it('returns bits from bitmap starting at offset for size', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.get('bits', 9, 5)))
+        .then(assertResultEql({ bits: Buffer.from([0b10000000]) }))
+        .then(cleanup())
+    })
+  })
+
+  describe('bitwise.getInt', function () {
+    it('returns integer from bitmap starting at offset for size', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.getInt('bits', 8, 16, false)))
+        .then(assertResultEql({ bits: 16899 }))
+        .then(cleanup())
+    })
+  })
+
+  describe('bitwise.lscan', function () {
+    it('returns interger bit offset of the first specified value bit in bitmap', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.lscan('bits', 24, 8, true)))
+        .then(assertResultEql({ bits: 5 }))
+        .then(cleanup())
+    })
+  })
+
+  describe('bitwise.rscan', function () {
+    it('returns interger bit offset of the last specified value bit in bitmap', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.rscan('bits', 32, 8, true)))
+        .then(assertResultEql({ bits: 7 }))
         .then(cleanup())
     })
   })
