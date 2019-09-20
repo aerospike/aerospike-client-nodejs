@@ -21,14 +21,17 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
+const status = Aerospike.status
 
 const bits = Aerospike.bitwise
 
 const {
+  assertError,
   assertRecordEql,
   assertResultEql,
   cleanup,
   createRecord,
+  expectError,
   initState,
   operate
 } = require('./util/statefulAsyncTest')
@@ -51,6 +54,48 @@ describe('client.operate() - Bitwise operations', function () {
         .then(operate(bits.resize('bits', 2)))
         .then(assertRecordEql({ bits: Buffer.from([0x01, 0x02]) }))
         .then(cleanup())
+    })
+
+    context('with resize flags', function () {
+      context('with resize from front flag', function () {
+        const resizeFlags = bits.resizeFlags.FROM_FRONT
+
+        it('grows the value from the front', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0x01, 0x02]) }))
+            .then(operate(bits.resize('bits', 4, resizeFlags)))
+            .then(assertRecordEql({ bits: Buffer.from([0x00, 0x00, 0x01, 0x02]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('with grow only flag', function () {
+        const resizeFlags = bits.resizeFlags.GROW_ONLY
+
+        it('returns an error when trying to shrink the value', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(expectError())
+            .then(operate(bits.resize('bits', 2, resizeFlags)))
+            .then(assertError(status.ERR_REQUEST_INVALID))
+            .then(assertRecordEql({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('with shrink only flag', function () {
+        const resizeFlags = bits.resizeFlags.SHRINK_ONLY
+
+        it('returns an error when trying to grow the value', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(expectError())
+            .then(operate(bits.resize('bits', 4, resizeFlags)))
+            .then(assertError(status.ERR_REQUEST_INVALID))
+            .then(assertRecordEql({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(cleanup())
+        })
+      })
     })
   })
 

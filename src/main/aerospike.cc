@@ -112,6 +112,7 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, setDefaultLogging);
 
 	// enumerations
+	export("bitwise", bitwise_enum_values());
 	export("indexDataType", indexDataType());
 	export("indexType", indexType());
 	export("jobStatus", jobStatus());

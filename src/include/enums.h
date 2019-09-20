@@ -22,6 +22,8 @@
 #define TTL_NEVER_EXPIRE      -1
 #define TTL_DONT_UPDATE       -2
 
+v8::Local<v8::Object> auth_mode_enum_values();
+v8::Local<v8::Object> bitwise_enum_values();
 v8::Local<v8::Object> generation_policy_values();
 v8::Local<v8::Object> indexDataType();
 v8::Local<v8::Object> indexType();
@@ -37,4 +39,3 @@ v8::Local<v8::Object> retry_policy_values();
 v8::Local<v8::Object> scanPriority();
 v8::Local<v8::Object> status();
 v8::Local<v8::Object> ttl_enum_values();
-v8::Local<v8::Object> auth_mode_enum_values();
