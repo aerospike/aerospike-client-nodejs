@@ -97,6 +97,84 @@ describe('client.operate() - Bitwise operations', function () {
         })
       })
     })
+
+    context('with bitwise policy', function () {
+      context('with create-only write flag', function () {
+        const policy = {
+          writeFlags: bits.writeFlags.CREATE_ONLY
+        }
+
+        it('creates a new byte value bin and initializes it with zeros', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+            .then(assertRecordEql({ bits: Buffer.from([0x00, 0x00, 0x00, 0x00]), foo: 'bar' }))
+            .then(cleanup())
+        })
+
+        it('returns an error if the bin already exists', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(expectError())
+            .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+            .then(assertError(status.ERR_BIN_EXISTS))
+            .then(assertRecordEql({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: bits.writeFlags.CREATE_ONLY | bits.writeFlags.NO_FAIL
+          }
+
+          it('does not update the bin', function () {
+            return initState()
+              .then(createRecord({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+              .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+              .then(assertRecordEql({ bits: Buffer.from([0x01, 0x02, 0x03]) }))
+              .then(cleanup())
+          })
+        })
+      })
+
+      context('with update-only write flag', function () {
+        const policy = {
+          writeFlags: bits.writeFlags.UPDATE_ONLY
+        }
+
+        it('updates an existing byte value', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04, 0x05]) }))
+            .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+            .then(assertRecordEql({ bits: Buffer.from([0x00, 0x01, 0x02, 0x03]) }))
+            .then(cleanup())
+        })
+
+        it('returns an error if the bin does not exists', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(expectError())
+            .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+            .then(assertError(status.ERR_BIN_NOT_FOUND))
+            .then(assertRecordEql({ foo: 'bar' }))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: bits.writeFlags.UPDATE_ONLY | bits.writeFlags.NO_FAIL
+          }
+
+          it('does not create the bin', function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate(bits.resize('bits', 4).withPolicy(policy)))
+              .then(assertRecordEql({ foo: 'bar' }))
+              .then(cleanup())
+          })
+        })
+      })
+    })
   })
 
   describe('bitwise.insert', function () {

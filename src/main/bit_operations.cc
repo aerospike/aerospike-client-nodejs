@@ -32,8 +32,32 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 	Nan::HandleScope scope;
 	as_bit_policy_init(policy);
 	if (has_policy != NULL) (*has_policy) = false;
-	// FIXME: convert bit policy
-	as_v8_debug(log, "Setting bit policy");
+
+	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	if (maybe_policy_obj->IsUndefined()) {
+		if (has_policy != NULL) (*has_policy) = false;
+		as_v8_detail(log, "No bitwise policy set - using default policy");
+		return AS_NODE_PARAM_OK;
+	} else if (!maybe_policy_obj->IsObject()) {
+		as_v8_error(log, "Type error: policy should be an Object");
+		return AS_NODE_PARAM_ERR;
+	}
+	if (has_policy != NULL) (*has_policy) = true;
+	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
+
+	as_bit_write_flags write_flags;
+	Local<Value> value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
+	if (value->IsNumber()) {
+		write_flags = (as_bit_write_flags) Nan::To<int>(value).FromJust();
+	} else if (value->IsUndefined()) {
+		write_flags = AS_BIT_WRITE_DEFAULT;
+	} else {
+		as_v8_error(log, "Type error: writeFlags should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+	as_bit_policy_set_write_flags(policy, write_flags);
+
+	as_v8_debug(log, "Setting bitwise policy");
 	return AS_NODE_PARAM_OK;
 }
 
