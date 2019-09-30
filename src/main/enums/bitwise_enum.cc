@@ -45,14 +45,14 @@ Local<Object> bitwise_enum_values()
 	set(resize_flags, "SHRINK_ONLY", AS_BIT_RESIZE_SHRINK_ONLY);
 
 	// as_bit_overflow_action
-	Local<Object> overflow_action = Nan::New<Object>();
-	set(overflow_action, "FAIL", AS_BIT_OVERFLOW_FAIL);
-	set(overflow_action, "SATURATE", AS_BIT_OVERFLOW_SATURATE);
-	set(overflow_action, "WRAP", AS_BIT_OVERFLOW_WRAP);
+	Local<Object> overflow = Nan::New<Object>();
+	set(overflow, "FAIL", AS_BIT_OVERFLOW_FAIL);
+	set(overflow, "SATURATE", AS_BIT_OVERFLOW_SATURATE);
+	set(overflow, "WRAP", AS_BIT_OVERFLOW_WRAP);
 
 	Local<Object> enums = Nan::New<Object>();
 	enums->Set(Nan::New("writeFlags").ToLocalChecked(), write_flags);
 	enums->Set(Nan::New("resizeFlags").ToLocalChecked(), resize_flags);
-	enums->Set(Nan::New("overflowAction").ToLocalChecked(), overflow_action);
+	enums->Set(Nan::New("overflow").ToLocalChecked(), overflow);
 	return scope.Escape(enums);
 }

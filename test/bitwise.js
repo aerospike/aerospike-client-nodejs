@@ -221,6 +221,44 @@ describe('client.operate() - Bitwise operations', function () {
     it('throws a TypeError if passed an unsupported value type', function () {
       expect(() => { bits.set('bin', 0, 0, 3.1416) }).to.throw(TypeError)
     })
+
+    context('with bitwise policy', function () {
+      context('with no-fail flag', function () {
+        const policy = {
+          writeFlags: bits.writeFlags.UPDATE_ONLY | bits.writeFlags.NO_FAIL
+        }
+
+        it('sets value on bitmap at offset for size', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b00000000]) }))
+            .then(operate([
+              bits.set('bits', 4, 8, Buffer.from([0b10101010])).withPolicy(policy)
+            ]))
+            .then(assertRecordEql({
+              bits: Buffer.from([0b00000000])
+            }))
+            .then(cleanup())
+        })
+      })
+
+      context('with partial flag', function () {
+        const policy = {
+          writeFlags: bits.writeFlags.UPDATE_ONLY | bits.writeFlags.NO_FAIL | bits.writeFlags.PARTIAL
+        }
+
+        it('sets value on bitmap at offset for size', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b00000000]) }))
+            .then(operate([
+              bits.set('bits', 4, 8, Buffer.from([0b10101010])).withPolicy(policy)
+            ]))
+            .then(assertRecordEql({
+              bits: Buffer.from([0b00001010])
+            }))
+            .then(cleanup())
+        })
+      })
+    })
   })
 
   describe('bitwise.or', function () {
@@ -290,6 +328,96 @@ describe('client.operate() - Bitwise operations', function () {
         .then(operate(bits.add('bits', 24, 16, 128, false)))
         .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b10000101]) }))
         .then(cleanup())
+    })
+
+    context('with overflow', function () {
+      context('on overflow fail', function () {
+        const FAIL = bits.overflow.FAIL
+
+        it('returns an error if the addition overflows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b11111111]) }))
+            .then(expectError())
+            .then(operate(bits.add('bits', 0, 8, 1, false).onOverflow(FAIL)))
+            .then(assertError(status.ERR_OP_NOT_APPLICABLE))
+            .then(assertRecordEql({ bits: Buffer.from([0b11111111]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('on overflow saturate', function () {
+        const SATURATE = bits.overflow.SATURATE
+
+        it('sets max value if the addition overlows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b11111100]) }))
+            .then(operate(bits.add('bits', 0, 8, 100, false).onOverflow(SATURATE)))
+            .then(assertRecordEql({ bits: Buffer.from([0b11111111]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('on overflow wrap', function () {
+        const WRAP = bits.overflow.WRAP
+
+        it('wraps the value if the addition overflows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b11111110]) }))
+            .then(operate(bits.add('bits', 0, 8, 2, false).onOverflow(WRAP)))
+            .then(assertRecordEql({ bits: Buffer.from([0b00000000]) }))
+            .then(cleanup())
+        })
+      })
+    })
+  })
+
+  describe('bitwise.subtract', function () {
+    it('subracts value from bitmap starting at bitOffset for bitSize', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.subtract('bits', 24, 16, 128, false)))
+        .then(assertRecordEql({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000011, 0b10000101]) }))
+        .then(cleanup())
+    })
+
+    context('with underflow', function () {
+      context('on underflow fail', function () {
+        const FAIL = bits.overflow.FAIL
+
+        it('returns an error if the subtraction underflows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b00000100]) }))
+            .then(expectError())
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(FAIL)))
+            .then(assertError(status.ERR_OP_NOT_APPLICABLE))
+            .then(assertRecordEql({ bits: Buffer.from([0b00000100]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('on underflow saturate', function () {
+        const SATURATE = bits.overflow.SATURATE
+
+        it('sets min value if the subtraction underflows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b00000100]) }))
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(SATURATE)))
+            .then(assertRecordEql({ bits: Buffer.from([0b00000000]) }))
+            .then(cleanup())
+        })
+      })
+
+      context('on underflow wrap', function () {
+        const WRAP = bits.overflow.WRAP
+
+        it('wraps the value if the subtraction underflows', function () {
+          return initState()
+            .then(createRecord({ bits: Buffer.from([0b00000100]) }))
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(WRAP)))
+            .then(assertRecordEql({ bits: Buffer.from([0b11111010]) }))
+            .then(cleanup())
+        })
+      })
     })
   })
 

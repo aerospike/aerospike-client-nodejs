@@ -249,7 +249,7 @@ add_bit_math_op(as_operations* ops, AsBitMath math_op, char* bin, as_bit_policy*
 	}
 
 	as_bit_overflow_action action = AS_BIT_OVERFLOW_FAIL;
-	if (get_int_property((int*) &action, op, "action", log) != AS_NODE_PARAM_OK) {
+	if (get_int_property((int*) &action, op, "overflowAction", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
