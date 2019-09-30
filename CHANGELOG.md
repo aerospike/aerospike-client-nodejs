@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Support for bitwise operations. Requires server version 4.6 or later. [#312](https://github.com/aerospike/aerospike-client-nodejs/pull/312)
+
 ## [3.12.0] - 2019-08-31
 
 * **New Features**
