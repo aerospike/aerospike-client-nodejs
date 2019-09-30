@@ -380,40 +380,40 @@ describe('client.operate() - Bitwise operations', function () {
         .then(cleanup())
     })
 
-    context('with underflow', function () {
-      context('on underflow fail', function () {
+    context('with overflow', function () {
+      context('on overflow fail', function () {
         const FAIL = bits.overflow.FAIL
 
         it('returns an error if the subtraction underflows', function () {
           return initState()
             .then(createRecord({ bits: Buffer.from([0b00000100]) }))
             .then(expectError())
-            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(FAIL)))
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onOverflow(FAIL)))
             .then(assertError(status.ERR_OP_NOT_APPLICABLE))
             .then(assertRecordEql({ bits: Buffer.from([0b00000100]) }))
             .then(cleanup())
         })
       })
 
-      context('on underflow saturate', function () {
+      context('on overflow saturate', function () {
         const SATURATE = bits.overflow.SATURATE
 
         it('sets min value if the subtraction underflows', function () {
           return initState()
             .then(createRecord({ bits: Buffer.from([0b00000100]) }))
-            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(SATURATE)))
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onOverflow(SATURATE)))
             .then(assertRecordEql({ bits: Buffer.from([0b00000000]) }))
             .then(cleanup())
         })
       })
 
-      context('on underflow wrap', function () {
+      context('on overflow wrap', function () {
         const WRAP = bits.overflow.WRAP
 
         it('wraps the value if the subtraction underflows', function () {
           return initState()
             .then(createRecord({ bits: Buffer.from([0b00000100]) }))
-            .then(operate(bits.subtract('bits', 0, 8, 10, false).onUnderflow(WRAP)))
+            .then(operate(bits.subtract('bits', 0, 8, 10, false).onOverflow(WRAP)))
             .then(assertRecordEql({ bits: Buffer.from([0b11111010]) }))
             .then(cleanup())
         })
