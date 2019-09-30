@@ -61,9 +61,12 @@ bool is_geojson_value(v8::Local<v8::Value> value);
 char* geojson_as_string(v8::Local<v8::Value> value);
 
 // Utility functions to extract property values from V8 v8::Object instances
+int get_bool_property(bool* boolp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_bytes_property(uint8_t** bytes, int* size, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_list_property(as_list** list, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_int_property(int* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_int64_property(int64_t* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_uint32_property(uint32_t* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_asval_property(as_val** value, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 int get_string_property(char** strp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_asval_property(as_val** value, bool* defined, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);

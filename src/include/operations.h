@@ -25,5 +25,11 @@ extern "C" {
 #include "log.h"
 
 int operations_from_jsarray(as_operations* ops, v8::Local<v8::Array> arr, LogInfo* log);
+int add_bit_op(as_operations* ops, int64_t opcode, v8::Local<v8::Object> op, LogInfo* log);
+int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v8::Object> obj, LogInfo* log);
 
 v8::Local<v8::Object> opcode_values();
+v8::Local<v8::Object> bit_opcode_values();
+
+const uint32_t OPS_MASK = 0xFF00;
+const uint32_t BIT_OPS_OFFSET = 0x0300;

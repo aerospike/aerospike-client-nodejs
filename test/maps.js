@@ -49,7 +49,7 @@ const orderByKey = (bin, ctx) => orderMap(bin, maps.order.KEY_ORDERED, ctx)
 const orderByKeyValue = (bin, ctx) => orderMap(bin, maps.order.KEY_VALUE_ORDERED, ctx)
 
 describe('client.operate() - CDT Map operations', function () {
-  helper.skipUnlessSupportsFeature('cdt-map', this)
+  helper.skipUnlessSupportsFeature(Aerospike.features.CDT_MAP, this)
 
   describe('maps.setPolicy', function () {
     it('changes the map order', function () {
