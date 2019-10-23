@@ -13,6 +13,9 @@ sudo: false
 os:
 - linux
 dist: trusty
+matrix:
+  allow_failures:
+  - node_js: 'node'
 addons:
   apt:
     sources:
