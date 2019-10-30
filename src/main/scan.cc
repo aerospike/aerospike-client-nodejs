@@ -54,7 +54,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	}
 	Local<Object> options = maybe_options.As<Object>();
 
-	Local<Value> selected = options->Get(Nan::New("selected").ToLocalChecked());
+	Local<Value> selected = Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
@@ -62,7 +62,7 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 		as_v8_detail(log, "Number of bins to select in scan %d", size);
 		as_scan_select_init(scan, size);
 		for (int i=0; i < size; i++) {
-			Local<Value> bin = bins->Get(i);
+			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
 			if(!bin->IsString()) {
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
@@ -72,31 +72,31 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 		}
 	}
 
-	Local<Value> nobins = options->Get(Nan::New("nobins").ToLocalChecked());
+	Local<Value> nobins = Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		as_scan_set_nobins(scan, Nan::To<bool>(nobins).FromJust());
 	}
 
-	Local<Value> concurrent = options->Get(Nan::New("concurrent").ToLocalChecked());
+	Local<Value> concurrent = Nan::Get(options, Nan::New("concurrent").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(concurrent, IsBoolean, "concurrent must be a boolean");
 	if (concurrent->IsBoolean()) {
 		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
 	}
 
-	Local<Value> percent = options->Get(Nan::New("percent").ToLocalChecked());
+	Local<Value> percent = Nan::Get(options, Nan::New("percent").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(percent, IsNumber, "percent must be a number");
 	if (percent->IsNumber()) {
 		as_scan_set_percent(scan, (uint8_t) Nan::To<uint32_t>(percent).FromJust());
 	}
 
-	Local<Value> priority = options->Get(Nan::New("priority").ToLocalChecked());
+	Local<Value> priority = Nan::Get(options, Nan::New("priority").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(priority, IsNumber, "prioriy must be a number");
 	if (priority->IsNumber()) {
 		as_scan_set_priority(scan, (as_scan_priority) Nan::To<int>(priority).FromJust());
 	}
 
-	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());
+	Local<Value> udf = Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {
 		char module[255];

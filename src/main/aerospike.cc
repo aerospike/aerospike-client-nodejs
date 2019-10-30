@@ -28,7 +28,7 @@ extern "C" {
 #include <aerospike/as_async_proto.h>
 }
 
-#define export(__name, __value) target->Set(Nan::New(__name).ToLocalChecked(), __value)
+#define export(__name, __value) Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
 
 using namespace v8;
 

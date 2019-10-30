@@ -23,7 +23,7 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> bitwise_enum_values()
 {
@@ -51,8 +51,8 @@ Local<Object> bitwise_enum_values()
 	set(overflow, "WRAP", AS_BIT_OVERFLOW_WRAP);
 
 	Local<Object> enums = Nan::New<Object>();
-	enums->Set(Nan::New("writeFlags").ToLocalChecked(), write_flags);
-	enums->Set(Nan::New("resizeFlags").ToLocalChecked(), resize_flags);
-	enums->Set(Nan::New("overflow").ToLocalChecked(), overflow);
+	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
+	Nan::Set(enums, Nan::New("resizeFlags").ToLocalChecked(), resize_flags);
+	Nan::Set(enums, Nan::New("overflow").ToLocalChecked(), overflow);
 	return scope.Escape(enums);
 }

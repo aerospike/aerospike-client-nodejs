@@ -66,7 +66,7 @@ NAN_METHOD(AerospikeClient::New)
 
 	Local<Object> v8Config = info[0].As<Object>();
 
-	Local<Value> v8LogInfo = v8Config->Get(Nan::New("log").ToLocalChecked()) ;
+	Local<Value> v8LogInfo = Nan::Get(v8Config, Nan::New("log").ToLocalChecked()).ToLocalChecked();
 	if (v8LogInfo->IsObject()) {
 		log_from_jsobject(client->log, v8LogInfo.As<Object>());
 	}
@@ -163,12 +163,12 @@ NAN_METHOD(AerospikeClient::GetNodes)
 		// reserve node if it will be for a significant period of time.
 		as_node_reserve(node);
 		Local<Object> node_obj = Nan::New<Object>();
-		node_obj->Set(Nan::New("name").ToLocalChecked(),
+		Nan::Set(node_obj, Nan::New("name").ToLocalChecked(),
 				Nan::New<String>(node->name).ToLocalChecked());
-		node_obj->Set(Nan::New("address").ToLocalChecked(),
+		Nan::Set(node_obj, Nan::New("address").ToLocalChecked(),
 				Nan::New<String>(as_node_get_address_string(node))
 				.ToLocalChecked());
-		v8_nodes->Set(i, node_obj);
+		Nan::Set(v8_nodes, i, node_obj);
 		as_node_release(node);
 	}
 

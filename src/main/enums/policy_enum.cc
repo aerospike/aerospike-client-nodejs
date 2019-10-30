@@ -23,7 +23,7 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> key_policy_values()
 {
@@ -110,14 +110,14 @@ Local<Object> policy()
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
 
-	obj->Set(Nan::New("key").ToLocalChecked(), key_policy_values());
-	obj->Set(Nan::New("retry").ToLocalChecked(), retry_policy_values());
-	obj->Set(Nan::New("gen").ToLocalChecked(), generation_policy_values());
-	obj->Set(Nan::New("exists").ToLocalChecked(), exists_policy_values());
-	obj->Set(Nan::New("replica").ToLocalChecked(), replica_policy_values());
-	obj->Set(Nan::New("readModeAP").ToLocalChecked(), read_mode_ap_policy_values());
-	obj->Set(Nan::New("readModeSC").ToLocalChecked(), read_mode_sc_policy_values());
-	obj->Set(Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
+	Nan::Set(obj, Nan::New("key").ToLocalChecked(), key_policy_values());
+	Nan::Set(obj, Nan::New("retry").ToLocalChecked(), retry_policy_values());
+	Nan::Set(obj, Nan::New("gen").ToLocalChecked(), generation_policy_values());
+	Nan::Set(obj, Nan::New("exists").ToLocalChecked(), exists_policy_values());
+	Nan::Set(obj, Nan::New("replica").ToLocalChecked(), replica_policy_values());
+	Nan::Set(obj, Nan::New("readModeAP").ToLocalChecked(), read_mode_ap_policy_values());
+	Nan::Set(obj, Nan::New("readModeSC").ToLocalChecked(), read_mode_sc_policy_values());
+	Nan::Set(obj, Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
 
 	return scope.Escape(obj);
 }

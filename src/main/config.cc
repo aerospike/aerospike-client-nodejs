@@ -39,11 +39,11 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	char* password = NULL;
 	char* user_path = NULL;
 
-	Local<Value> v8_hosts = configObj->Get(Nan::New("hosts").ToLocalChecked());
-	Local<Value> policies_val = configObj->Get(Nan::New("policies").ToLocalChecked());
-	Local<Value> v8_tls_config = configObj->Get(Nan::New("tls").ToLocalChecked());
-	Local<Value> v8_modlua = configObj->Get(Nan::New("modlua").ToLocalChecked());
-	Local<Value> v8_sharedMemory = configObj->Get(Nan::New("sharedMemory").ToLocalChecked());
+	Local<Value> v8_hosts = Nan::Get(configObj, Nan::New("hosts").ToLocalChecked()).ToLocalChecked();
+	Local<Value> policies_val = Nan::Get(configObj, Nan::New("policies").ToLocalChecked()).ToLocalChecked();
+	Local<Value> v8_tls_config = Nan::Get(configObj, Nan::New("tls").ToLocalChecked()).ToLocalChecked();
+	Local<Value> v8_modlua = Nan::Get(configObj, Nan::New("modlua").ToLocalChecked()).ToLocalChecked();
+	Local<Value> v8_sharedMemory = Nan::Get(configObj, Nan::New("sharedMemory").ToLocalChecked()).ToLocalChecked();
 
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj, "clusterName", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
@@ -71,9 +71,9 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	} else if (v8_hosts->IsArray()) {
 		Local<Array> host_list = Local<Array>::Cast(v8_hosts);
 		for (uint32_t i = 0; i < host_list->Length(); i++) {
-			Local<Object> host = host_list->Get(i).As<Object>();
-			Local<Value> v8_addr = host->Get(Nan::New("addr").ToLocalChecked());
-			Local<Value> v8_port = host->Get(Nan::New("port").ToLocalChecked());
+			Local<Object> host = Nan::Get(host_list, i).ToLocalChecked().As<Object>();
+			Local<Value> v8_addr = Nan::Get(host, Nan::New("addr").ToLocalChecked()).ToLocalChecked();
+			Local<Value> v8_port = Nan::Get(host, Nan::New("port").ToLocalChecked()).ToLocalChecked();
 
 			uint16_t port = default_port;
 			if (v8_port->IsNumber()) {
@@ -168,63 +168,63 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		Local<Object> policies_obj = policies_val.As<Object>();
 		as_policies *policies = &config->policies;
 
-		Local<Value> policy_val = policies_obj->Get(Nan::New("apply").ToLocalChecked());
+		Local<Value> policy_val = Nan::Get(policies_obj, Nan::New("apply").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = applypolicy_from_jsobject(&policies->apply, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("batch").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("batch").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = batchpolicy_from_jsobject(&policies->batch, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("info").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("info").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = infopolicy_from_jsobject(&policies->info, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("operate").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("operate").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = operatepolicy_from_jsobject(&policies->operate, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("read").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("read").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = readpolicy_from_jsobject(&policies->read, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("remove").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("remove").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = removepolicy_from_jsobject(&policies->remove, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("scan").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("scan").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = scanpolicy_from_jsobject(&policies->scan, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("query").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("query").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = querypolicy_from_jsobject(&policies->query, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}
 
-		policy_val = policies_obj->Get(Nan::New("write").ToLocalChecked());
+		policy_val = Nan::Get(policies_obj, Nan::New("write").ToLocalChecked()).ToLocalChecked();
 		if (policy_val->IsObject()) {
 			if ((rc = writepolicy_from_jsobject(&policies->write, policy_val.As<Object>(), log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;

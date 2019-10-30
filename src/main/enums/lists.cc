@@ -23,7 +23,7 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> list_enum_values()
 {
@@ -59,9 +59,9 @@ Local<Object> list_enum_values()
 	set(return_type, "INVERTED", AS_LIST_RETURN_INVERTED);
 
 	Local<Object> enums = Nan::New<Object>();
-	enums->Set(Nan::New("order").ToLocalChecked(), order);
-	enums->Set(Nan::New("sortFlags").ToLocalChecked(), sort_flags);
-	enums->Set(Nan::New("writeFlags").ToLocalChecked(), write_flags);
-	enums->Set(Nan::New("returnType").ToLocalChecked(), return_type);
+	Nan::Set(enums, Nan::New("order").ToLocalChecked(), order);
+	Nan::Set(enums, Nan::New("sortFlags").ToLocalChecked(), sort_flags);
+	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
+	Nan::Set(enums, Nan::New("returnType").ToLocalChecked(), return_type);
 	return scope.Escape(enums);
 }

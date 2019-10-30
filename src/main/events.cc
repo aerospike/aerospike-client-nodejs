@@ -90,11 +90,11 @@ class EventQueue : public Nan::AsyncResource {
 					name = "disconnected";
 					break;
 			}
-			jsEvent->Set(Nan::New("name").ToLocalChecked(),
+			Nan::Set(jsEvent, Nan::New("name").ToLocalChecked(),
 					Nan::New(name).ToLocalChecked());
-			jsEvent->Set(Nan::New("nodeName").ToLocalChecked(),
+			Nan::Set(jsEvent, Nan::New("nodeName").ToLocalChecked(),
 					Nan::New(event->node_name).ToLocalChecked());
-			jsEvent->Set(Nan::New("nodeAddress").ToLocalChecked(),
+			Nan::Set(jsEvent, Nan::New("nodeAddress").ToLocalChecked(),
 					Nan::New(event->node_address).ToLocalChecked());
 			return scope.Escape(jsEvent);
 		}

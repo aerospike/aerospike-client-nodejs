@@ -149,19 +149,19 @@ respond(uv_work_t* req, int status)
 			const as_key* key = batch_results[i].key;
 
 			Local<Object> result = Nan::New<Object>();
-			result->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
-			result->Set(Nan::New("key").ToLocalChecked(), key_to_jsobject(key ? key : &record->key, log));
+			Nan::Set(result, Nan::New("status").ToLocalChecked(), Nan::New(status));
+			Nan::Set(result, Nan::New("key").ToLocalChecked(), key_to_jsobject(key ? key : &record->key, log));
 
 			if (batch_results[i].result == AEROSPIKE_OK) {
-				result->Set(Nan::New("meta").ToLocalChecked(), recordmeta_to_jsobject(record, log));
-				result->Set(Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
+				Nan::Set(result, Nan::New("meta").ToLocalChecked(), recordmeta_to_jsobject(record, log));
+				Nan::Set(result, Nan::New("bins").ToLocalChecked(), recordbins_to_jsobject(record, log));
 			} else {
 				as_v8_debug(log, "Record [%d] not returned by server ", i);
 			}
 
 			as_key_destroy((as_key*) key);
 			as_record_destroy(record);
-			results->Set(i, result);
+			Nan::Set(results, i, result);
 		}
 
 		Local<Value> argv[] = {
