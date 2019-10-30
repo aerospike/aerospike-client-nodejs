@@ -55,7 +55,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 	}
 	Local<Object> options = maybe_options.As<Object>();
 
-	Local<Value> filters_val = options->Get(Nan::New("filters").ToLocalChecked());
+	Local<Value> filters_val = Nan::Get(options, Nan::New("filters").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(filters_val, IsArray, "filters must be an array");
 	if (filters_val->IsArray()) {
 		Local<Array> filters = Local<Array>::Cast(filters_val);
@@ -63,23 +63,23 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		as_v8_detail(log, "Number of filters in query: %d", size);
 		as_query_where_init(query, size);
 		for (int i = 0; i < size; i++) {
-			Local<Object> filter = filters->Get(i).As<Object>();
-			Local<Value> bin = filter->Get(Nan::New("bin").ToLocalChecked());
+			Local<Object> filter = Nan::Get(filters, i).ToLocalChecked().As<Object>();
+			Local<Value> bin = Nan::Get(filter, Nan::New("bin").ToLocalChecked()).ToLocalChecked();
 			if (!bin->IsString()) {
 				as_v8_error(log, "Bin value must be string");
 				Nan::ThrowError("Bin value is not a string");
 			}
 			const char* bin_name = strdup(*Nan::Utf8String(bin));
-			as_predicate_type predicate = (as_predicate_type) Nan::To<int>(filter->Get(Nan::New("predicate").ToLocalChecked())).FromJust();
-			as_index_type type = (as_index_type) Nan::To<int>(filter->Get(Nan::New("type").ToLocalChecked())).FromJust();
-			as_index_datatype datatype = (as_index_datatype) Nan::To<int>(filter->Get(Nan::New("datatype").ToLocalChecked())).FromJust();
+			as_predicate_type predicate = (as_predicate_type) Nan::To<int>(Nan::Get(filter, Nan::New("predicate").ToLocalChecked()).ToLocalChecked()).FromJust();
+			as_index_type type = (as_index_type) Nan::To<int>(Nan::Get(filter, Nan::New("type").ToLocalChecked()).ToLocalChecked()).FromJust();
+			as_index_datatype datatype = (as_index_datatype) Nan::To<int>(Nan::Get(filter, Nan::New("datatype").ToLocalChecked()).ToLocalChecked()).FromJust();
 			as_v8_debug(log, "Building filter on predicate type %d, index type %d, data type %d, bin name '%s'", predicate, type, datatype, bin_name);
 			switch(predicate) {
 				case AS_PREDICATE_RANGE:
 					{
 						if (datatype == AS_INDEX_NUMERIC) {
-							Local<Value> v8min = filter->Get(Nan::New("min").ToLocalChecked());
-							Local<Value> v8max = filter->Get(Nan::New("max").ToLocalChecked());
+							Local<Value> v8min = Nan::Get(filter, Nan::New("min").ToLocalChecked()).ToLocalChecked();
+							Local<Value> v8max = Nan::Get(filter, Nan::New("max").ToLocalChecked()).ToLocalChecked();
 							if (v8min->IsNumber() && v8max->IsNumber()) {
 								const int64_t min = Nan::To<int64_t>(v8min).FromJust();
 								const int64_t max = Nan::To<int64_t>(v8max).FromJust();
@@ -90,7 +90,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								Nan::ThrowError("The min/max of the range value passed must both be integers.");
 							}
 						} else if (datatype == AS_INDEX_GEO2DSPHERE) {
-							Local<Value> value = filter->Get(Nan::New("val").ToLocalChecked());
+							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
 							if (!value->IsString()) {
 								as_v8_error(log, "The region value passed must be a GeoJSON string");
 								Nan::ThrowError("The region value passed is not a GeoJSON string");
@@ -104,7 +104,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				case AS_PREDICATE_EQUAL:
 					{
 						if (datatype == AS_INDEX_NUMERIC) {
-							Local<Value> value = filter->Get(Nan::New("val").ToLocalChecked());
+							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
 							if (value->IsNumber()) {
 								const int64_t val = Nan::To<int64_t>(value).FromJust();
 								as_query_where(query, bin_name, predicate, type, datatype, val);
@@ -114,7 +114,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								Nan::ThrowError("Querying an numeric index with equal predicate - value is not a number");
 							}
 						} else if (datatype == AS_INDEX_STRING) {
-							Local<Value> value = filter->Get(Nan::New("val").ToLocalChecked());
+							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
 							if (!value->IsString()) {
 								as_v8_error(log, "querying a string index with equal predicate - value must be a string");
 								Nan::ThrowError("Querying a string index with equal predicate - value is not a string");
@@ -129,7 +129,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		}
 	}
 
-	Local<Value> predexp_val = options->Get(Nan::New("predexp").ToLocalChecked());
+	Local<Value> predexp_val = Nan::Get(options, Nan::New("predexp").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(predexp_val, IsArray, "predexp must be an array");
 	if (predexp_val->IsArray()) {
 		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
@@ -137,14 +137,14 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		if (size > 0) {
 			as_query_predexp_init(query, size);
 			for (int i = 0; i < size; i++) {
-				Local<Object> predexpObj = predexp_ary->Get(i).As<Object>();
+				Local<Object> predexpObj = Nan::Get(predexp_ary, i).ToLocalChecked().As<Object>();
 				as_predexp_base* predexp = convert_predexp(predexpObj);
 				as_query_predexp_add(query, predexp);
 			}
 		}
 	}
 
-	Local<Value> selected = options->Get(Nan::New("selected").ToLocalChecked());
+	Local<Value> selected = Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
@@ -152,7 +152,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		as_v8_detail(log, "Number of bins to select in scan %d", size);
 		as_query_select_init(query, size);
 		for (int i = 0; i < size; i++) {
-			Local<Value> bin = bins->Get(i);
+			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
 			if(!bin->IsString()) {
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
@@ -162,13 +162,13 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		}
 	}
 
-	Local<Value> nobins = options->Get(Nan::New("nobins").ToLocalChecked());
+	Local<Value> nobins = Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		query->no_bins = Nan::To<bool>(nobins).FromJust();
 	}
 
-	Local<Value> udf = options->Get(Nan::New("udf").ToLocalChecked());
+	Local<Value> udf = Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {
 		char module[255];

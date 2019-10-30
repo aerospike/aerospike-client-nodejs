@@ -46,7 +46,7 @@ class InfoNodeCommand : public AerospikeCommand {
 		as_policy_info* policy = NULL;
 		char* request = NULL;
 		char* response = NULL;
-		char node_name[AS_NODE_NAME_SIZE] = {"\0"};
+		char node_name[AS_NODE_NAME_SIZE] = { '\0' };
 };
 
 static void*

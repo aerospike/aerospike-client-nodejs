@@ -30,7 +30,7 @@ int
 get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
-	Local<Value> maybe_context_obj = obj->Get(Nan::New("context").ToLocalChecked());
+	Local<Value> maybe_context_obj = Nan::Get(obj, Nan::New("context").ToLocalChecked()).ToLocalChecked();
 	if (maybe_context_obj->IsUndefined()) {
 		if (has_context != NULL) (*has_context) = false;
 		as_v8_detail(log, "No CDT context set");
@@ -41,14 +41,14 @@ get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> o
 	}
 
 	if (has_context != NULL) (*has_context) = true;
-	Local<Array> items = Local<Array>::Cast(maybe_context_obj.As<Object>()->Get(Nan::New("items").ToLocalChecked()));
+	Local<Array> items = Local<Array>::Cast(Nan::Get(maybe_context_obj.As<Object>(), Nan::New("items").ToLocalChecked()).ToLocalChecked());
 	const uint32_t length = items->Length();
 	as_cdt_ctx_init(context, length);
 	as_v8_detail(log, "Setting CDT context - depth: %d", length);
 	for (uint32_t i = 0; i < length; i++) {
-		Local<Array> item = Local<Array>::Cast(items->Get(i));
-		Local<Value> v8type = item->Get(0);
-		Local<Value> v8value = item->Get(1);
+		Local<Array> item = Local<Array>::Cast(Nan::Get(items, i).ToLocalChecked());
+		Local<Value> v8type = Nan::Get(item, 0).ToLocalChecked();
+		Local<Value> v8value = Nan::Get(item, 1).ToLocalChecked();
 		as_cdt_ctx_type type = (as_cdt_ctx_type) Nan::To<int>(v8type).FromJust();
 		int intValue;
 		as_val* asValue;

@@ -92,13 +92,13 @@ const predex_table_entry predex_table[] = {
 as_predexp_base*
 convert_predexp(Local<Object> predexp)
 {
-	int code = Nan::To<int>(predexp->Get(Nan::New("code").ToLocalChecked())).FromJust();
+	int code = Nan::To<int>(Nan::Get(predexp, Nan::New("code").ToLocalChecked()).ToLocalChecked()).FromJust();
 	const predex_table_entry *entry = &predex_table[code];
 	if (!entry) {
 		return NULL;
 	}
 
-	Local<Value> arg = predexp->Get(Nan::New("arg").ToLocalChecked());
+	Local<Value> arg = Nan::Get(predexp, Nan::New("arg").ToLocalChecked()).ToLocalChecked();
 
 	switch (entry->args) {
 		case NO_ARGS:
@@ -132,7 +132,7 @@ predexp_codes()
 	uint32_t entries = sizeof(predex_table) / sizeof(predex_table_entry);
 	for (uint32_t i = 0; i < entries; i++) {
 		predex_table_entry entry = predex_table[i];
-		map->Set(Nan::New(entry.name).ToLocalChecked(), Nan::New(i));
+		Nan::Set(map, Nan::New(entry.name).ToLocalChecked(), Nan::New(i));
 	}
 
 	return scope.Escape(map);

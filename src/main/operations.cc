@@ -36,7 +36,7 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 {
 	Nan::HandleScope scope;
 	as_list_policy_init(policy);
-	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	Local<Value> maybe_policy_obj = Nan::Get(obj, Nan::New("policy").ToLocalChecked()).ToLocalChecked();
 	if (maybe_policy_obj->IsUndefined()) {
 		if (has_policy != NULL) (*has_policy) = false;
 		as_v8_detail(log, "No list policy set - using default policy");
@@ -49,7 +49,7 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
 
 	as_list_order order;
-	Local<Value> value = policy_obj->Get(Nan::New("order").ToLocalChecked());
+	Local<Value> value = Nan::Get(policy_obj, Nan::New("order").ToLocalChecked()).ToLocalChecked();
 	if (value->IsNumber()) {
 		order = (as_list_order) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
@@ -60,7 +60,7 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 	}
 
 	as_list_write_flags write_flags;
-	value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
+	value = Nan::Get(policy_obj, Nan::New("writeFlags").ToLocalChecked()).ToLocalChecked();
 	if (value->IsNumber()) {
 		write_flags = (as_list_write_flags) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
@@ -78,7 +78,7 @@ int get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Obj
 int get_list_return_type(as_list_return_type* return_type, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
+	Local<Value> value = Nan::Get(obj, Nan::New("returnType").ToLocalChecked()).ToLocalChecked();
 	if (value->IsNumber()) {
 		(*return_type) = (as_list_return_type) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
@@ -106,7 +106,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
 	as_map_policy_init(policy);
-	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	Local<Value> maybe_policy_obj = Nan::Get(obj, Nan::New("policy").ToLocalChecked()).ToLocalChecked();
 	if (maybe_policy_obj->IsUndefined()) {
 		as_v8_detail(log, "No map policy set - using default policy");
 		return AS_NODE_PARAM_OK;
@@ -147,7 +147,7 @@ int get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
 int get_map_return_type(as_map_return_type* return_type, Local<Object> obj, LogInfo* log)
 {
 	Nan::HandleScope scope;
-	Local<Value> value = obj->Get(Nan::New("returnType").ToLocalChecked());
+	Local<Value> value = Nan::Get(obj, Nan::New("returnType").ToLocalChecked()).ToLocalChecked();
 	if (value->IsNumber()) {
 		(*return_type) = (as_map_return_type) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
@@ -168,7 +168,7 @@ int add_write_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	int rc = AS_NODE_PARAM_OK;
-	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
+	Local<Value> v8val = Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (is_double_value(v8val)) {
 		double val = double_value(v8val);
 		as_v8_debug(log, "bin=%s, value=%f", binName, val);
@@ -260,7 +260,7 @@ int add_incr_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
+	Local<Value> v8val = Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (is_double_value(v8val)) {
 		double binValue = double_value(v8val);
 		as_v8_debug(log, "bin=%s, value=%f", binName, binValue);
@@ -288,7 +288,7 @@ int add_prepend_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
+	Local<Value> v8val = Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (v8val->IsString()) {
 		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_debug(log, "bin=%s, value=%s", binName, binVal);
@@ -321,7 +321,7 @@ int add_append_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	Local<Value> v8val = obj->Get(Nan::New("value").ToLocalChecked());
+	Local<Value> v8val = Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (v8val->IsString()) {
 		char* binVal = strdup(*Nan::Utf8String(v8val));
 		as_v8_debug(log, "bin=%s, value=%s", binName, binVal);
@@ -1666,7 +1666,7 @@ int add_map_put_items_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	}
 
 	as_map* items = NULL;
-	Local<Value> v8items = obj->Get(Nan::New("items").ToLocalChecked());
+	Local<Value> v8items = Nan::Get(obj, Nan::New("items").ToLocalChecked()).ToLocalChecked();
 	if (!v8items->IsObject()) {
 		as_v8_error(log, "Type error: items property should be an Object");
 		return AS_NODE_PARAM_ERR;
@@ -2825,7 +2825,7 @@ int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 	int result = AS_NODE_PARAM_OK;
 	int64_t op;
 	for (uint32_t i = 0; i < capacity; i++) {
-		Local<Object> obj = arr->Get(i).As<Object>();
+		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
 		setTTL(obj, &ops->ttl, log);
 		result = get_int64_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {
@@ -2847,7 +2847,7 @@ Local<Object> opcode_values() {
 	uint32_t entries = sizeof(ops_table) / sizeof(ops_table_entry);
 	for (uint32_t i = 0; i < entries; i++) {
 		ops_table_entry entry = ops_table[i];
-		obj->Set(Nan::New(entry.op_name).ToLocalChecked(), Nan::New(i));
+		Nan::Set(obj, Nan::New(entry.op_name).ToLocalChecked(), Nan::New(i));
 	}
 
 	return scope.Escape(obj);

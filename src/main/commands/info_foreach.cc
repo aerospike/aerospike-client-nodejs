@@ -149,18 +149,18 @@ respond(uv_work_t* req, int status)
 
 			if (node != NULL && strlen(node) > 0) {
 				as_v8_debug(log, "Node name: %s", node);
-				v8Node->Set(Nan::New("node_id").ToLocalChecked(), Nan::New(node).ToLocalChecked());
+				Nan::Set(v8Node, Nan::New("node_id").ToLocalChecked(), Nan::New(node).ToLocalChecked());
 			}
 
-			v8Result->Set(Nan::New("host").ToLocalChecked(), v8Node);
+			Nan::Set(v8Result, Nan::New("host").ToLocalChecked(), v8Node);
 
 			if (info != NULL && strlen(info) > 0) {
 				as_v8_debug(log, "Info response: %s", info);
-				v8Result->Set(Nan::New("info").ToLocalChecked(), Nan::New(info).ToLocalChecked());
+				Nan::Set(v8Result, Nan::New("info").ToLocalChecked(), Nan::New(info).ToLocalChecked());
 				cf_free((void*) info);
 			}
 
-			v8Results->Set(i, v8Result);
+			Nan::Set(v8Results, i, v8Result);
 		}
 
 		Local<Value> argv[] = {

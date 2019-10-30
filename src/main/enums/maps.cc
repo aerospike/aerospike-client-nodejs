@@ -23,7 +23,7 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) __obj->Set(Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> map_enum_values()
 {
@@ -62,9 +62,9 @@ Local<Object> map_enum_values()
 	set(return_type, "KEY_VALUE",		AS_MAP_RETURN_KEY_VALUE);
 
 	Local<Object> enums = Nan::New<Object>();
-	enums->Set(Nan::New("order").ToLocalChecked(), order);
-	enums->Set(Nan::New("writeMode").ToLocalChecked(), write_mode);
-	enums->Set(Nan::New("writeFlags").ToLocalChecked(), write_flags);
-	enums->Set(Nan::New("returnType").ToLocalChecked(), return_type);
+	Nan::Set(enums, Nan::New("order").ToLocalChecked(), order);
+	Nan::Set(enums, Nan::New("writeMode").ToLocalChecked(), write_mode);
+	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
+	Nan::Set(enums, Nan::New("returnType").ToLocalChecked(), return_type);
 	return scope.Escape(enums);
 }

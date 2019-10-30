@@ -33,7 +33,7 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 	as_bit_policy_init(policy);
 	if (has_policy != NULL) (*has_policy) = false;
 
-	Local<Value> maybe_policy_obj = obj->Get(Nan::New("policy").ToLocalChecked());
+	Local<Value> maybe_policy_obj = Nan::Get(obj, Nan::New("policy").ToLocalChecked()).ToLocalChecked();
 	if (maybe_policy_obj->IsUndefined()) {
 		if (has_policy != NULL) (*has_policy) = false;
 		as_v8_detail(log, "No bitwise policy set - using default policy");
@@ -46,7 +46,7 @@ get_optional_bit_policy(as_bit_policy* policy, bool* has_policy, Local<Object> o
 	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
 
 	as_bit_write_flags write_flags;
-	Local<Value> value = policy_obj->Get(Nan::New("writeFlags").ToLocalChecked());
+	Local<Value> value = Nan::Get(policy_obj, Nan::New("writeFlags").ToLocalChecked()).ToLocalChecked();
 	if (value->IsNumber()) {
 		write_flags = (as_bit_write_flags) Nan::To<int>(value).FromJust();
 	} else if (value->IsUndefined()) {
@@ -447,7 +447,7 @@ bit_opcode_values()
 	uint32_t entries = sizeof(ops_table) / sizeof(ops_table_entry);
 	for (uint32_t i = 0; i < entries; i++) {
 		ops_table_entry entry = ops_table[i];
-		obj->Set(Nan::New(entry.op_name).ToLocalChecked(), Nan::New(BIT_OPS_OFFSET | i));
+		Nan::Set(obj, Nan::New(entry.op_name).ToLocalChecked(), Nan::New(BIT_OPS_OFFSET | i));
 	}
 
 	return scope.Escape(obj);
