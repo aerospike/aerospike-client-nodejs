@@ -10,13 +10,16 @@ and suitable for application prototyping and development.
 ## Prerequisites
 
 * Windows 7 or later
-* Visual C++ 2015 Build Tools or later
-* Node.js v6.x (LTS) or later
+* Windows 8.1 SDK
+* Visual C++ 2015 Build Tools
+* Node.js v8.x (LTS) or later
 
 The package includes a native add-on. To compile the add-on, Microsoft's Visual
 C++ Build Tools 2015 are required. The easiest way to install the build tools,
-is to install the [`windows-build-tools`
-](https://www.npmjs.com/package/windows-build-tools) package using npm.
+is using the the [`windows-build-tools`
+](https://www.npmjs.com/package/windows-build-tools) npm package:
+
+    npm install windows-build-tools --global --vs2015
 
 The Aerospike Node.js client depends on the Aerospike C client. During
 installation, a copy of the C client SDK is downloaded and compiled.
@@ -26,3 +29,14 @@ installed via the
 nuget package. Please refer to the [Aerospike C client
 documentation](https://github.com/aerospike/aerospike-client-c/tree/master/vs)
 for further information.
+
+<a name="FAQ"></a>
+## Frequently Asked Questions
+
+#### While installing the client, I am getting an error that "build-c-client.ps1 cannot be loaded because running scripts is disabled on this system". What do I need to do?
+
+PowerShell's execution policy prevents you from running the client's installation script. You can temporarily lift the restrictions for the current PowerShell session by running the following command:
+
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+    
+For further information, please refer to the PowerShell documentation [About Execution Policies](https://docs.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_execution_policies).
