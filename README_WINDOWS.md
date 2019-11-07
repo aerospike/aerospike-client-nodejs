@@ -16,7 +16,7 @@ and suitable for application prototyping and development.
 
 The package includes a native add-on. To compile the add-on, Microsoft's Visual
 C++ Build Tools 2015 are required. The easiest way to install the build tools,
-is using the the [`windows-build-tools`
+is using the [`windows-build-tools`
 ](https://www.npmjs.com/package/windows-build-tools) npm package:
 
     npm install windows-build-tools --global --vs2015
