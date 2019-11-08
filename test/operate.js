@@ -249,9 +249,15 @@ context('Operations', function () {
     })
 
     describe('operations.delete()', function () {
+      helper.skipUnlessVersion('>= 4.7.0', this)
+
       it('deletes the record', function () {
-        const ops = [ op.delete() ]
+        const ops = [
+          op.read('string'),
+          op.delete()
+        ]
         return client.operate(key, ops)
+          .then((result) => expect(result.bins.string).to.eq('abc'))
           .then(() => client.get(key))
           .catch((error) => {
             expect(error.code).to.eq(status.ERR_RECORD_NOT_FOUND)
