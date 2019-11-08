@@ -353,6 +353,13 @@ int add_touch_op(as_operations* ops, Local<Object> obj, LogInfo* log)
 	return AS_NODE_PARAM_OK;
 }
 
+int add_delete_op(as_operations* ops, Local<Object> obj, LogInfo* log)
+{
+	as_v8_debug(log, "<delete>");
+	as_operations_add_delete(ops);
+	return AS_NODE_PARAM_OK;
+}
+
 int add_list_set_order_op(as_operations* ops, Local<Object> op, LogInfo* log)
 {
 	char* binName = NULL;
@@ -2733,6 +2740,7 @@ const ops_table_entry ops_table[] = {
 	{ "PREPEND", add_prepend_op },
 	{ "APPEND", add_append_op },
 	{ "TOUCH", add_touch_op },
+	{ "DELETE", add_delete_op },
 	{ "LIST_SET_ORDER", add_list_set_order_op },
 	{ "LIST_SORT", add_list_sort_op },
 	{ "LIST_APPEND", add_list_append_op },

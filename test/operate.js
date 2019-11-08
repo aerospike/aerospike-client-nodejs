@@ -53,7 +53,10 @@ context('Operations', function () {
     return client.put(key, bins, meta, policy)
   })
 
-  afterEach(() => client.remove(key))
+  afterEach(() =>
+    client.remove(key)
+      .catch((error) => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
+  )
 
   describe('Client#operate()', function () {
     describe('operations.write()', function () {
@@ -242,6 +245,17 @@ context('Operations', function () {
             })
           })
         })
+      })
+    })
+
+    describe('operations.delete()', function () {
+      it('deletes the record', function () {
+        const ops = [ op.delete() ]
+        return client.operate(key, ops)
+          .then(() => client.get(key))
+          .catch((error) => {
+            expect(error.code).to.eq(status.ERR_RECORD_NOT_FOUND)
+          })
       })
     })
 
