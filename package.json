@@ -58,7 +58,7 @@
     "semver": "^6.0.0",
     "standard": "^14.0.0",
     "tmp": "^0.1",
-    "yargs": "^14.0.0"
+    "yargs": "^15.0.1"
   },
   "standard": {
     "ignore": [
