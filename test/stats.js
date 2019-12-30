@@ -24,11 +24,11 @@ const client = helper.client
 const keygen = helper.keygen.string(helper.namespace, helper.set)
 
 describe('Client#stats', function () {
-  before(async function () {
-    // Send an async command to ensure we have at least 1 async connection
-    // open. At least 1 sync connection has been opened to send some info
-    // commands.
-    await client.exists(keygen())
+  before(function (done) {
+    // Send an async command to each node ensure we have at least 1 async
+    // connection open. At least 1 sync connection has been opened to send some
+    // info commands.
+    client.scan(helper.namespace, 'noSuchSet').foreach().on('end', done)
   })
 
   it('returns command queue stats', function () {
