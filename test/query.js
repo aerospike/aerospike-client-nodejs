@@ -117,7 +117,7 @@ describe('Queries', function () {
     const mgen = metagen.constant({ ttl: 300 })
     return Promise.all([
       putgen.put(numberOfSamples, kgen, sampleGen, mgen)
-        .then((records) => keys = records.map((rec) => rec.key))
+        .then((records) => { keys = records.map((rec) => rec.key) })
         .then(() => Promise.all(indexes.map(idx =>
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])))),
       helper.udf.register('udf.lua')
@@ -524,7 +524,7 @@ describe('Queries', function () {
   describe('query.operate()', function () {
     it('should run a background query that executes the operations', async function () {
       const query = client.query(helper.namespace, testSet)
-      const ops = [ op.incr('backgroundOps', 1) ]
+      const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
       await job.waitUntilDone()
 
