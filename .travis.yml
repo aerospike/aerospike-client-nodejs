@@ -6,19 +6,15 @@ node_js:
 - '8'
 env:
   global:
-    - CXX=g++-4.8
     - AEROSPIKE_HOSTS=127.0.0.1:3000,127.0.0.1:3100
     - OPTIONS="--timeout 2000"
 sudo: false
-os:
-- linux
-dist: trusty
+os: linux
+dist: xenial
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - g++-4.8
+      - g++
       - autoconf
 before_script:
 - .travis/start_cluster.sh 2
