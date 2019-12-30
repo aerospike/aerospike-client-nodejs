@@ -11,11 +11,6 @@ env:
 sudo: false
 os: linux
 dist: xenial
-addons:
-  apt:
-    packages:
-      - g++
-      - autoconf
 before_script:
 - .travis/start_cluster.sh 2
 install:
