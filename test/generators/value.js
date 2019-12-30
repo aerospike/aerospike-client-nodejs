@@ -64,7 +64,9 @@ function string (options) {
   var seq = 0
   return function () {
     if (opt.random === true) {
-      var len = randomInt(opt.length.min, opt.length.max)
+      const lengthMin = opt.length.min || 1
+      const lengthMax = opt.length.max || lengthMin
+      var len = randomInt(lengthMin, lengthMax)
       var arr = new Array(len)
       for (var i = 0; i < len; i++) {
         arr[i] = opt.charset[randomInt(0, opt.charset.length)]

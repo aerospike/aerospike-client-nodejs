@@ -85,6 +85,9 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "retry", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj, "compress", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	return AS_NODE_PARAM_OK;
 }
 
