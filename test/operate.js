@@ -258,10 +258,8 @@ context('Operations', function () {
         ]
         return client.operate(key, ops)
           .then((result) => expect(result.bins.string).to.eq('abc'))
-          .then(() => client.get(key))
-          .catch((error) => {
-            expect(error.code).to.eq(status.ERR_RECORD_NOT_FOUND)
-          })
+          .then(() => client.exists(key))
+          .then((exists) => expect(exists).to.be.false)
       })
     })
 
