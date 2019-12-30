@@ -21,7 +21,6 @@
 
 const helper = require('./test_helper')
 const client = helper.client
-const keygen = helper.keygen.string(helper.namespace, helper.set)
 
 describe('Client#stats', function () {
   before(function (done) {
