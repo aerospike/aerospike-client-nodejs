@@ -26,12 +26,18 @@ require('./test_helper')
 context('Client Policies #noserver', function () {
   describe('BasePolicy', function () {
     describe('new BasePolicy', function () {
-      it('sets totalTimeout to zero', function () {
+      it('sets the policy values from a value object', function () {
         const subject = new BasePolicy({
-          totalTimeout: 0
+          socketTimeout: 200,
+          totalTimeout: 0,
+          maxRetries: 2,
+          compress: true
         })
 
+        expect(subject.socketTimeout).to.equal(200)
         expect(subject.totalTimeout).to.equal(0)
+        expect(subject.maxRetries).to.equal(2)
+        expect(subject.compress).to.be.true()
       })
     })
   })
