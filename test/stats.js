@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2018 Aerospike, Inc.
+// Copyright 2018-2019 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,16 @@
 
 const helper = require('./test_helper')
 const client = helper.client
+const keygen = helper.keygen.string(helper.namespace, helper.set)
 
 describe('Client#stats', function () {
+  before(async function () {
+    // Send an async command to ensure we have at least 1 async connection
+    // open. At least 1 sync connection has been opened to send some info
+    // commands.
+    await client.exists(keygen())
+  })
+
   it('returns command queue stats', function () {
     const stats = client.stats()
     expect(stats.commands).to.not.be.empty()
@@ -32,11 +40,15 @@ describe('Client#stats', function () {
 
   it('returns cluster node stats', function () {
     const stats = client.stats()
-    expect(stats.nodes).to.not.be.empty()
-    expect(stats.nodes[0].name).to.be.a('string').of.length(15)
-    expect(stats.nodes[0].syncConnections.inPool).to.be.at.least(0)
-    expect(stats.nodes[0].syncConnections.inUse).to.be.at.least(0)
-    expect(stats.nodes[0].asyncConnections.inPool).to.be.at.least(0)
-    expect(stats.nodes[0].asyncConnections.inUse).to.be.at.least(0)
+    expect(stats.nodes).to.be.an('array').that.is.not.empty()
+
+    const node = stats.nodes.pop()
+    expect(node.name).to.be.a('string').of.length(15)
+    for (const connStats of [node.syncConnections, node.asyncConnections]) {
+      expect(connStats.inPool).to.be.at.least(1)
+      expect(connStats.inUse).to.be.at.least(0)
+      expect(connStats.opened).to.be.at.least(1)
+      expect(connStats.closed).to.be.at.least(0)
+    }
   })
 })
