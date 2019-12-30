@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
+
 * **Updates**
   * Update C client library to [v4.6.9](http://www.aerospike.com/download/client/c/notes.html#4.6.9).
 
