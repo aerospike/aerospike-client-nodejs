@@ -32,8 +32,12 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
+	Local<Object> keyObj = info[0].As<Object>();
+	Local<Array> ops = info[1].As<Array>();
+	Local<Function> cb = info[4].As<Function>();
+
 	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand("Operate", client, info[4].As<Function>());
+	AsyncCommand* cmd = new AsyncCommand("Operate", client, cb);
 	LogInfo* log = client->log;
 
 	as_key key;
@@ -44,13 +48,14 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	as_policy_operate* p_policy = NULL;
 	as_status status;
 
-	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, keyObj, log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
-	if (operations_from_jsarray(&operations, info[1].As<Array>(), log) != AS_NODE_PARAM_OK) {
+	as_operations_init(&operations, ops->Length());
+	if (operations_from_jsarray(&operations, ops, log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Operations array invalid");
 		goto Cleanup;
 	}

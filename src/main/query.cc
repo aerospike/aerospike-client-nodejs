@@ -20,6 +20,7 @@
 #include "async.h"
 #include "client.h"
 #include "conversions.h"
+#include "operations.h"
 #include "predexp.h"
 #include "log.h"
 #include "query.h"
@@ -182,5 +183,17 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");
 		}
         as_query_apply(query, filename, funcname, arglist);
+	}
+
+	Local<Value> maybeOps = Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(maybeOps, IsArray, "ops must be an array");
+	if (maybeOps->IsArray()) {
+		Local<Array> ops = maybeOps.As<Array>();
+		as_v8_debug(log, "Adding operations to background query");
+		query->ops = as_operations_new(ops->Length());
+		if (operations_from_jsarray(query->ops, ops, log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing ops arguments for query object failed");
+			Nan::ThrowTypeError("Error in parsing the operations");
+		}
 	}
 }
