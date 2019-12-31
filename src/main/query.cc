@@ -158,7 +158,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
 			}
-			as_query_select(query, strdup(*Nan::Utf8String(bin)));
+			as_query_select(query, *Nan::Utf8String(bin));
 			as_v8_detail(log, "bin %d = %s", i, *Nan::Utf8String(bin));
 		}
 	}

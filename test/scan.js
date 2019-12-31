@@ -24,6 +24,7 @@ const Job = require('../lib/job')
 const helper = require('./test_helper')
 
 const Key = Aerospike.Key
+const op = Aerospike.operations
 
 const keygen = helper.keygen
 const metagen = helper.metagen
@@ -35,6 +36,7 @@ context('Scans', function () {
   const client = helper.client
   const testSet = 'test/scan-' + Math.floor(Math.random() * 100000)
   const numberOfRecords = 100
+  let keys = []
 
   before(() => helper.udf.register('udf.lua')
     .then(() => {
@@ -47,6 +49,7 @@ context('Scans', function () {
         exists: Aerospike.policy.exists.CREATE_OR_REPLACE
       })
       return putgen.put(numberOfRecords, kgen, rgen, mgen, policy)
+        .then((records) => { keys = records.map((rec) => rec.key) })
     }))
 
   after(() => helper.udf.remove('udf.lua'))
@@ -244,6 +247,20 @@ context('Scans', function () {
         .then(job => {
           expect(job).to.be.instanceof(Job)
         })
+    })
+  })
+
+  describe('scan.operate()', function () {
+    it('should perform a background scan that executes the operations', async function () {
+      this.skip('TODO: pending fix in C client v4.6.10 (?)')
+      const scan = client.scan(helper.namespace, testSet)
+      const ops = [op.write('backgroundOps', 1)]
+      const job = await scan.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.bins.backgroundOps).to.equal(1)
     })
   })
 
