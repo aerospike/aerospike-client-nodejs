@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **New Features**
-  * Support compressed commands and responses. This feature requires Aerospike Enterprise Server versions >= 4.8. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
+  * Support compressed commands and responses. Requires Aerospike Enterprise Server versions >= 4.8. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
   * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
-  * Support write operations on background scans & queries. This feature requires Aerospike Server versions >= 4.7. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
+  * Support write operations on background scans & queries. Requires Aerospike Server versions >= 4.7. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
+  * Support new records-per-second limit for scans, replacing scan priority. Requires Aerospike Server versions >= 4.7. [#339](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
 
 * **Updates**
   * Update C client library to [v4.6.9](http://www.aerospike.com/download/client/c/notes.html#4.6.9).

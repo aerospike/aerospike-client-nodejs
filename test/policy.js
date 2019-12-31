@@ -223,7 +223,8 @@ context('Client Policies #noserver', function () {
           totalTimeout: 2000,
           maxRetries: 1,
           failOnClusterChange: true,
-          durableDelete: true
+          durableDelete: true,
+          recordsPerSecond: 100
         })
 
         expect(subject.socketTimeout).to.equal(1000)
@@ -231,6 +232,7 @@ context('Client Policies #noserver', function () {
         expect(subject.maxRetries).to.equal(1)
         expect(subject.failOnClusterChange).to.be.true()
         expect(subject.durableDelete).to.be.true()
+        expect(subject.recordsPerSecond).to.equal(100)
       })
     })
   })
