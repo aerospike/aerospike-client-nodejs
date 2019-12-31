@@ -143,7 +143,8 @@ context('Scans', function () {
         totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
-        failOnClusterChange: true
+        failOnClusterChange: true,
+        recordsPerSecond: 50
       })
 
       const stream = scan.foreach(policy)
