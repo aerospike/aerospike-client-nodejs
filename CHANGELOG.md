@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **New Features**
+  * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
   * Support compressed commands and responses. This feature requires Enterprise Server versions >= 4.8. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
 
 * **Updates**
