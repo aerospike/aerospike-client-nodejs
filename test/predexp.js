@@ -564,4 +564,43 @@ describe('Aerospike.predexp #slow', function () {
       })
     })
   })
+
+  context('predexp on single-key transaction', function () {
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/predexp/single', random: true })()
+
+    it ('executes the transaction if the predex evaluates to true', async function () {
+      await client.put(key, { i: 1 })
+
+      const policy = {
+        predexp: [
+          predexp.integerBin('i'),
+          predexp.integerValue(1),
+          predexp.integerEqual()
+        ]
+      }
+      await client.put(key, { i: 3 }, {}, policy)
+
+      const record = await client.get(key)
+      expect(record.bins.i).to.equal(3)
+    })
+
+    it ('fails to execute the transaction if the predex evaluates to false', async function () {
+      await client.put(key, { i: 1 })
+
+      const policy = {
+        predexp: [
+          predexp.integerBin('i'),
+          predexp.integerValue(2),
+          predexp.integerEqual()
+        ]
+      }
+      return client.put(key, { i: 3 }, {}, policy)
+        .catch(error => error)
+        .then(error => {
+          expect(error)
+            .to.be.instanceof(AerospikeError)
+            .with.property('code', Aerospike.status.FILTERED_OUT)
+        })
+    })
+  })
 })
