@@ -32,6 +32,7 @@ RUN wget https://artifacts.aerospike.com/aerospike-client-c/${AS_C_VERSION}/aero
     && unzip aerospike-client-c-src-${AS_C_VERSION}.zip \
     && mv aerospike-client-c-src-${AS_C_VERSION} aerospike-client-c \
     && cd aerospike-client-c \
+    && rm modules/lua/src/luaconf.h \
     && make EVENT_LIB=libuv
 
 # Stage 2: Build Aerospike Node.js client
