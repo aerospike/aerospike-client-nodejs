@@ -568,7 +568,7 @@ describe('Aerospike.predexp #slow', function () {
   context('predexp on single-key transaction', function () {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/predexp/single', random: true })()
 
-    it ('executes the transaction if the predex evaluates to true', async function () {
+    it('executes the transaction if the predex evaluates to true', async function () {
       await client.put(key, { i: 1 })
 
       const policy = {
@@ -584,7 +584,7 @@ describe('Aerospike.predexp #slow', function () {
       expect(record.bins.i).to.equal(3)
     })
 
-    it ('fails to execute the transaction if the predex evaluates to false', async function () {
+    it('fails to execute the transaction if the predex evaluates to false', async function () {
       await client.put(key, { i: 1 })
 
       const policy = {
