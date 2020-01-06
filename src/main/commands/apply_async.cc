@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,4 +80,5 @@ Cleanup:
 	if (udf_module) cf_free(udf_module);
 	if (udf_function) cf_free(udf_function);
 	if (udf_args) as_list_destroy(udf_args);
+	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
 }
