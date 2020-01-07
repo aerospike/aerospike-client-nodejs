@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
   * Added predicate filter support for batch, read, write, delete, and record UDF transactions. Requires Aerospike Server versions >= 4.7. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
 
 * **Updates**
-  * Update C client library to [v4.6.9](http://www.aerospike.com/download/client/c/notes.html#4.6.9).
+  * Update C client library to [v4.6.10](http://www.aerospike.com/download/client/c/notes.html#4.6.10).
 
 ## [3.13.0] - 2019-09-30
 
