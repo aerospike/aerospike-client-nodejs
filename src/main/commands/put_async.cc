@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,4 +82,5 @@ Cleanup:
 	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
 	if (record_initalized) as_record_destroy(&record);
+	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
 }

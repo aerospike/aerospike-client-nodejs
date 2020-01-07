@@ -9,9 +9,10 @@ All notable changes to this project will be documented in this file.
   * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
   * Support write operations on background scans & queries. Requires Aerospike Server versions >= 4.7. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
   * Support new records-per-second limit for scans, replacing scan priority. Requires Aerospike Server versions >= 4.7. [#339](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
+  * Added predicate filter support for batch, read, write, delete, and record UDF transactions. Requires Aerospike Server versions >= 4.7. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
 
 * **Updates**
-  * Update C client library to [v4.6.9](http://www.aerospike.com/download/client/c/notes.html#4.6.9).
+  * Update C client library to [v4.6.10](http://www.aerospike.com/download/client/c/notes.html#4.6.10).
 
 ## [3.13.0] - 2019-09-30
 
