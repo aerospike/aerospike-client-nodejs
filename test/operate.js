@@ -53,7 +53,10 @@ context('Operations', function () {
     return client.put(key, bins, meta, policy)
   })
 
-  afterEach(() => client.remove(key))
+  afterEach(() =>
+    client.remove(key)
+      .catch((error) => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
+  )
 
   describe('Client#operate()', function () {
     describe('operations.write()', function () {
@@ -242,6 +245,28 @@ context('Operations', function () {
             })
           })
         })
+      })
+    })
+
+    describe('operations.delete()', function () {
+      helper.skipUnlessVersion('>= 4.7.0', this)
+
+      it('deletes the record', function () {
+        const ops = [op.delete()]
+        return client.operate(key, ops)
+          .then(() => client.exists(key))
+          .then((exists) => expect(exists).to.be.false)
+      })
+
+      it('performs an atomic read-and-delete', function () {
+        const ops = [
+          op.read('string'),
+          op.delete()
+        ]
+        return client.operate(key, ops)
+          .then((result) => expect(result.bins.string).to.eq('abc'))
+          .then(() => client.exists(key))
+          .then((exists) => expect(exists).to.be.false)
       })
     })
 
