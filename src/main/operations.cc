@@ -2823,12 +2823,11 @@ add_operation(as_operations* ops, int64_t opcode, Local<Object> params, LogInfo*
 int operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 {
 	uint32_t capacity = arr->Length();
-	as_v8_detail(log, "Converting operations list: size=%d", capacity);
-	if (capacity > 0) {
-		as_operations_init(ops, capacity);
-	} else {
+	if (capacity == 0) {
+		as_v8_error(log, "Operations list is empty");
 		return AS_NODE_PARAM_ERR;
 	}
+	as_v8_detail(log, "Converting operations list: size=%d", capacity);
 
 	int result = AS_NODE_PARAM_OK;
 	int64_t op;
