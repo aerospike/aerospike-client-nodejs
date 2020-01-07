@@ -85,6 +85,8 @@ build_conn_stats(as_conn_stats* conn)
 	Local<Object> stats = Nan::New<Object>();
 	Nan::Set(stats, Nan::New("inPool").ToLocalChecked(), Nan::New<Int32>(conn->in_pool));
 	Nan::Set(stats, Nan::New("inUse").ToLocalChecked(), Nan::New<Int32>(conn->in_use));
+	Nan::Set(stats, Nan::New("opened").ToLocalChecked(), Nan::New<Int32>(conn->opened));
+	Nan::Set(stats, Nan::New("closed").ToLocalChecked(), Nan::New<Int32>(conn->closed));
 	return stats;
 }
 

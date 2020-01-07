@@ -22,8 +22,6 @@ const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 const keygen = helper.keygen
-const recgen = helper.recgen
-const valgen = helper.valgen
 
 const status = Aerospike.status
 const AerospikeError = Aerospike.AerospikeError
@@ -77,23 +75,6 @@ describe('client.remove()', function () {
             .catch(error =>
               expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_GENERATION))
         })
-        .then(() => client.exists(key))
-        .then(result => expect(result).to.be.false())
-    })
-  })
-
-  context('with durable delete policy', function () {
-    helper.skipUnlessEnterprise(this)
-
-    it('should apply the durable delete policy', function () {
-      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/remove/gen/' })()
-      const record = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
-      const policy = new Aerospike.RemovePolicy({
-        durableDelete: true
-      })
-
-      return client.put(key, record)
-        .then(() => client.remove(key, policy))
         .then(() => client.exists(key))
         .then(result => expect(result).to.be.false())
     })

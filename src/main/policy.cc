@@ -19,10 +19,12 @@
 
 #include "policy.h"
 #include "conversions.h"
+#include "predexp.h"
 
 extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_event.h>
+#include <aerospike/as_predexp.h>
 }
 
 using namespace v8;
@@ -85,6 +87,24 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "retry", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj, "compress", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+
+	Local<Value> predexp_val = Nan::Get(obj, Nan::New("predexp").ToLocalChecked()).ToLocalChecked();
+	if (predexp_val->IsArray()) {
+		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
+		int size = predexp_ary->Length();
+		if (size > 0) {
+			policy->predexp = as_predexp_list_create(size);
+			for (int i = 0; i < size; i++) {
+				Local<Object> predexpObj = Nan::Get(predexp_ary, i).ToLocalChecked().As<Object>();
+				as_predexp_base* predexp = convert_predexp(predexpObj);
+				as_predexp_list_add(policy->predexp, predexp);
+			}
+		}
+	}
+
 	return AS_NODE_PARAM_OK;
 }
 
@@ -287,6 +307,9 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->records_per_second, NULL, obj, "recordsPerSecond", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail( log, "Parsing scan policy: success");

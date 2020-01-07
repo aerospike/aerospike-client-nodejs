@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -182,6 +182,8 @@ execute(uv_work_t* req)
 	// Send an async signal here. If at all there's any residual records left in the results,
 	// this signal's callback will send it to node layer.
 	uv_async_send(&cmd->async_handle);
+
+	if (cmd->policy && cmd->policy->base.predexp) as_predexp_list_destroy(cmd->policy->base.predexp);
 }
 
 static void

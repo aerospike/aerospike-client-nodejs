@@ -54,11 +54,11 @@
     "jsdoc": "^3.6.3",
     "mocha": "^6.2.2",
     "mocha-clean": "^1.0.0",
-    "nyc": "^14.1.1",
-    "semver": "^6.0.0",
+    "nyc": "^15.0.0",
+    "semver": "^7.0.0",
     "standard": "^14.0.0",
     "tmp": "^0.1",
-    "yargs": "^14.0.0"
+    "yargs": "^15.0.1"
   },
   "standard": {
     "ignore": [

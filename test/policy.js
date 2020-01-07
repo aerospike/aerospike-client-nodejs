@@ -26,12 +26,18 @@ require('./test_helper')
 context('Client Policies #noserver', function () {
   describe('BasePolicy', function () {
     describe('new BasePolicy', function () {
-      it('sets totalTimeout to zero', function () {
+      it('sets the policy values from a value object', function () {
         const subject = new BasePolicy({
-          totalTimeout: 0
+          socketTimeout: 200,
+          totalTimeout: 0,
+          maxRetries: 2,
+          compress: true
         })
 
+        expect(subject.socketTimeout).to.equal(200)
         expect(subject.totalTimeout).to.equal(0)
+        expect(subject.maxRetries).to.equal(2)
+        expect(subject.compress).to.be.true()
       })
     })
   })
@@ -217,7 +223,8 @@ context('Client Policies #noserver', function () {
           totalTimeout: 2000,
           maxRetries: 1,
           failOnClusterChange: true,
-          durableDelete: true
+          durableDelete: true,
+          recordsPerSecond: 100
         })
 
         expect(subject.socketTimeout).to.equal(1000)
@@ -225,6 +232,7 @@ context('Client Policies #noserver', function () {
         expect(subject.maxRetries).to.equal(1)
         expect(subject.failOnClusterChange).to.be.true()
         expect(subject.durableDelete).to.be.true()
+        expect(subject.recordsPerSecond).to.equal(100)
       })
     })
   })
