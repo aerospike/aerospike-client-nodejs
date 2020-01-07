@@ -252,6 +252,13 @@ context('Operations', function () {
       helper.skipUnlessVersion('>= 4.7.0', this)
 
       it('deletes the record', function () {
+        const ops = [op.delete()]
+        return client.operate(key, ops)
+          .then(() => client.exists(key))
+          .then((exists) => expect(exists).to.be.false)
+      })
+
+      it('performs an atomic read-and-delete', function () {
         const ops = [
           op.read('string'),
           op.delete()
