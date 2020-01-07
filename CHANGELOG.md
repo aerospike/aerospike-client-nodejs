@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * **New Features**
+  * Add new delete-all operation. Requires Aerospike Server versions >= 4.7.0.8 or 4.8.0.3. [#322](https://github.com/aerospike/aerospike-client-nodejs/pull/322)
   * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
   * Support compressed commands and responses. This feature requires Enterprise Server versions >= 4.8. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
   * Support new records-per-second limit for scans, replacing scan priority. Requires server version >= 4.7. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
