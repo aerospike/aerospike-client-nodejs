@@ -28,6 +28,7 @@ const AerospikeError = Aerospike.AerospikeError
 const GeoJSON = Aerospike.GeoJSON
 const Key = Aerospike.Key
 const filter = Aerospike.filter
+const op = Aerospike.operations
 
 const NUMERIC = Aerospike.indexDataType.NUMERIC
 const STRING = Aerospike.indexDataType.STRING
@@ -93,6 +94,7 @@ describe('Queries', function () {
     ['qidxGeoList', 'lg', GEO2DSPHERE, LIST],
     ['qidxGeoMap', 'mg', GEO2DSPHERE, MAPVALUES]
   ]
+  let keys = []
 
   function verifyQueryResults (queryOptions, matchName, done) {
     var query = client.query(helper.namespace, testSet, queryOptions)
@@ -115,6 +117,7 @@ describe('Queries', function () {
     const mgen = metagen.constant({ ttl: 300 })
     return Promise.all([
       putgen.put(numberOfSamples, kgen, sampleGen, mgen)
+        .then((records) => { keys = records.map((rec) => rec.key) })
         .then(() => Promise.all(indexes.map(idx =>
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])))),
       helper.udf.register('udf.lua')
@@ -515,6 +518,19 @@ describe('Queries', function () {
         .then(job => {
           expect(job).to.be.instanceof(Job)
         })
+    })
+  })
+
+  describe('query.operate()', function () {
+    it('should perform a background query that executes the operations', async function () {
+      const query = client.query(helper.namespace, testSet)
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await query.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.bins.backgroundOps).to.equal(1)
     })
   })
 

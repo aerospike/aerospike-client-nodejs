@@ -20,6 +20,7 @@
 #include "async.h"
 #include "client.h"
 #include "conversions.h"
+#include "operations.h"
 #include "log.h"
 #include "scan.h"
 #include "string.h"
@@ -110,5 +111,17 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");
 		}
         as_scan_apply_each(scan, filename, funcname, arglist);
+	}
+
+	Local<Value> maybeOps = Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(maybeOps, IsArray, "ops must be an array");
+	if (maybeOps->IsArray()) {
+		Local<Array> ops = maybeOps.As<Array>();
+		as_v8_debug(log, "Adding operations to background scan");
+		scan->ops = as_operations_new(ops->Length());
+		if (operations_from_jsarray(scan->ops, ops, log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing ops arguments for scan object failed");
+			Nan::ThrowTypeError("Error in parsing the operations");
+		}
 	}
 }
