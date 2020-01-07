@@ -253,7 +253,6 @@ context('Scans', function () {
 
   describe('scan.operate()', function () {
     it('should perform a background scan that executes the operations', async function () {
-      this.skip('TODO: pending fix in C client v4.6.10 (?)')
       const scan = client.scan(helper.namespace, testSet)
       const ops = [op.write('backgroundOps', 1)]
       const job = await scan.operate(ops)
