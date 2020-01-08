@@ -4,16 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.14.0] - 2020-01-08
+
 * **New Features**
   * Add new delete-all operation. Requires Aerospike Server versions >= 4.7.0.8 or 4.8.0.3. [#322](https://github.com/aerospike/aerospike-client-nodejs/pull/322)
   * Support compressed commands and responses. Requires Aerospike Enterprise Server versions >= 4.8. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
   * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
   * Support write operations on background scans & queries. Requires Aerospike Server versions >= 4.7. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
   * Support new records-per-second limit for scans, replacing scan priority. Requires Aerospike Server versions >= 4.7. [#339](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
-  * Added predicate filter support for batch, read, write, delete, and record UDF transactions. Requires Aerospike Server versions >= 4.7. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
+  * Add predicate filter support for batch, read, write, delete, and record UDF transactions. Requires Aerospike Server versions >= 4.7. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
 
 * **Updates**
   * Update C client library to [v4.6.10](http://www.aerospike.com/download/client/c/notes.html#4.6.10).
+  * Minor apidoc updates. [#342](https://github.com/aerospike/aerospike-client-nodejs/pull/342)
+  * Update several dev dependencies to latest version.
 
 ## [3.13.0] - 2019-09-30
 
