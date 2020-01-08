@@ -16,7 +16,7 @@
 FROM alpine:3.11 as c-builder
 WORKDIR /src
 
-ENV AS_C_VERSION 4.6.7
+ENV AS_C_VERSION 4.6.10
 
 RUN apk update
 RUN apk add --no-cache \
@@ -32,7 +32,6 @@ RUN wget https://artifacts.aerospike.com/aerospike-client-c/${AS_C_VERSION}/aero
     && unzip aerospike-client-c-src-${AS_C_VERSION}.zip \
     && mv aerospike-client-c-src-${AS_C_VERSION} aerospike-client-c \
     && cd aerospike-client-c \
-    && rm modules/lua/src/luaconf.h \
     && make EVENT_LIB=libuv
 
 # Stage 2: Build Aerospike Node.js client
@@ -42,7 +41,7 @@ WORKDIR /src
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/include/ aerospike-client-c/include/
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/lib/ aerospike-client-c/lib/
 
-ENV AS_NODEJS_VERSION 3.13.0
+ENV AS_NODEJS_VERSION 3.14.0
 ENV PREFIX=/src/aerospike-client-c
 
 RUN apk update
