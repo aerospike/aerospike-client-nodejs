@@ -7,12 +7,12 @@ All notable changes to this project will be documented in this file.
 ## [3.14.0] - 2020-01-08
 
 * **New Features**
-  * Add new delete record operation. Requires server version 4.7 or later (4.7.0.8+ or 4.8.0.3+ recommended). [#322](https://github.com/aerospike/aerospike-client-nodejs/pull/322)
+  * Add new delete record operation. Requires Aerospike Server version 4.7 or later (4.7.0.8+ or 4.8.0.3+ recommended). [#322](https://github.com/aerospike/aerospike-client-nodejs/pull/322)
   * Support compressed commands and responses. Requires Aerospike Enterprise Server version 4.8 or later. [#335](https://github.com/aerospike/aerospike-client-nodejs/pull/335)
   * Add per-node opened/closed connection stats. [#336](https://github.com/aerospike/aerospike-client-nodejs/pull/336)
-  * Support write operations on background scans & queries. Requires server version 4.7 or later. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
-  * Support new records-per-second limit for scans, replacing scan priority. Requires server version 4.7 or later. [#339](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
-  * Add predicate filter support for batch, read, write, delete, and record UDF transactions. Requires server version 4.7 or later. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
+  * Support write operations on background scans & queries. Requires Aerospike Server version 4.7 or later. [#338](https://github.com/aerospike/aerospike-client-nodejs/pull/338)
+  * Support new records-per-second limit for scans, replacing scan priority. Requires Aerospike Server version 4.7 or later. [#339](https://github.com/aerospike/aerospike-client-nodejs/pull/339)
+  * Add predicate filter support for batch, read, write, delete, and record UDF transactions. Requires Aerospike Server version 4.7 or later. [#340](https://github.com/aerospike/aerospike-client-nodejs/pull/340)
 
 * **Updates**
   * Update C client library to [v4.6.10](http://www.aerospike.com/download/client/c/notes.html#4.6.10).
