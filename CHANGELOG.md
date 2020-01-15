@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.14.1] - 2020-01-15
+
+* **Bug Fixes**
+  * Regression: Protocol error on authenticated connections. [CLIENT-1169]
+
+* **Updates**
+  * Update C client library to [v4.6.12](http://www.aerospike.com/download/client/c/notes.html#4.6.12).
+
 ## [3.14.0] - 2020-01-08
 
 * **New Features**
