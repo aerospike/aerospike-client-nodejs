@@ -16,7 +16,7 @@
 FROM alpine:3.11 as c-builder
 WORKDIR /src
 
-ENV AS_C_VERSION 4.6.10
+ENV AS_C_VERSION 4.6.12
 
 RUN apk update
 RUN apk add --no-cache \
@@ -41,7 +41,7 @@ WORKDIR /src
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/include/ aerospike-client-c/include/
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/lib/ aerospike-client-c/lib/
 
-ENV AS_NODEJS_VERSION 3.14.0
+ENV AS_NODEJS_VERSION 3.14.1
 ENV PREFIX=/src/aerospike-client-c
 
 RUN apk update
