@@ -30,6 +30,8 @@ context('Enterprise server features', function () {
   const client = helper.client
 
   context('compression', function () {
+    helper.skipUnlessVersion('>= 4.8.0', this)
+
     // Client/server requests/responses > 128 bytes should get compressed; but
     // note that the server only applies compression if it saves at least 32
     // bytes, so payloads close to the 128 byte threshold might not get

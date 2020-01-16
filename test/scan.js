@@ -101,7 +101,7 @@ context('Scans', function () {
     })
   })
 
-  describe('scan.foreach()', function () {
+  describe('scan.foreach() #slow', function () {
     it('retrieves all records in the set', function (done) {
       var scan = client.scan(helper.namespace, testSet)
       var recordsReceived = 0
@@ -252,6 +252,8 @@ context('Scans', function () {
   })
 
   describe('scan.operate()', function () {
+    helper.skipUnlessVersion('>= 4.7.0', this)
+
     it('should perform a background scan that executes the operations', async function () {
       const scan = client.scan(helper.namespace, testSet)
       const ops = [op.write('backgroundOps', 1)]

@@ -30,10 +30,12 @@ const keygen = helper.keygen
 const metagen = helper.metagen
 const putgen = helper.putgen
 
-describe('Aerospike.predexp #slow', function () {
+describe('Aerospike.predexp', function () {
   const client = helper.client
 
   context('Invalid predicate expressions', function () {
+    helper.skipUnlessVersion('>= 4.7.0', this)
+
     async function expectToThrowError (predexp) {
       const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/predexp/invalid', random: true })()
       await client.put(key, { foo: 'bar', i: 1 })
@@ -81,7 +83,7 @@ describe('Aerospike.predexp #slow', function () {
     })
   })
 
-  context('Predexp on queries', function () {
+  context('Predexp on queries #slow', function () {
     const testSet = 'test/predexp-' + Math.floor(Math.random() * 100000)
     const samples = [
       { name: 'int match', i: 5 },
@@ -561,6 +563,8 @@ describe('Aerospike.predexp #slow', function () {
   })
 
   context('Predexp on single-key transactions', function () {
+    helper.skipUnlessVersion('>= 4.7.0', this)
+
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/predexp/single', random: true })()
 
     context('Client#put', function () {
@@ -602,6 +606,8 @@ describe('Aerospike.predexp #slow', function () {
   })
 
   context('Predexp on batch transactions', function () {
+    helper.skipUnlessVersion('>= 4.7.0', this)
+
     const batchKeyGen = keygen.string(helper.namespace, helper.set, { prefix: 'test/predexp/batch', random: true })
     const countStatus = (results) =>
       results.reduce((counts, { status }) => { counts[status] = counts[status] + 1 || 1; return counts }, {})

@@ -180,7 +180,7 @@ describe('Queries', function () {
     })
   })
 
-  describe('query.foreach()', function () {
+  describe('query.foreach() #slow', function () {
     it('should apply a stream UDF to filter the results', function (done) {
       var args = {
         filters: [filter.equal('name', 'filter')]
@@ -522,6 +522,8 @@ describe('Queries', function () {
   })
 
   describe('query.operate()', function () {
+    helper.skipUnlessVersion('>= 4.7.0', this)
+
     it('should perform a background query that executes the operations', async function () {
       const query = client.query(helper.namespace, testSet)
       const ops = [op.incr('backgroundOps', 1)]
