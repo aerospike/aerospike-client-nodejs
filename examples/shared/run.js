@@ -16,7 +16,7 @@
 
 const shared = require('./')
 
-module.exports = exports = function (handler) {
+module.exports = function (handler) {
   return async function (argv) {
     const client = shared.client(argv)
     try {

@@ -19,7 +19,7 @@ const path = require('path')
 
 const UDF_USERDIR = path.normalize(path.join(__dirname, '..', 'lua'))
 
-module.exports = exports = function (argv) {
+module.exports = function (argv) {
   const config = defaultConfig(argv)
   Aerospike.setDefaultLogging(config.log)
   const client = Aerospike.client(config)
