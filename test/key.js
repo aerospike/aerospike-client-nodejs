@@ -85,6 +85,12 @@ describe('Key #noserver', function () {
         expect(new Key('ns', 'set', -1234)).to.be.ok()
       })
 
+      it('allows bigint user key', function () {
+        expect(new Key('ns', 'set', 42n)).to.be.ok()
+        expect(new Key('ns', 'set', BigInt(Number.MAX_SAFE_INTEGER) + 2n)).to.be.ok()
+        expect(new Key('ns', 'set', BigInt(Number.MIN_SAFE_INTEGER) - 2n)).to.be.ok()
+      })
+
       it('allows byte array user key', function () {
         var buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
         expect(new Key('ns', 'set', buf)).to.be.ok()
