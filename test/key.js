@@ -85,10 +85,15 @@ describe('Key #noserver', function () {
         expect(new Key('ns', 'set', -1234)).to.be.ok()
       })
 
-      it('allows bigint user key', function () {
+      it('allows BigInt user key', function () {
         expect(new Key('ns', 'set', 42n)).to.be.ok()
-        expect(new Key('ns', 'set', BigInt(Number.MAX_SAFE_INTEGER) + 2n)).to.be.ok()
-        expect(new Key('ns', 'set', BigInt(Number.MIN_SAFE_INTEGER) - 2n)).to.be.ok()
+        expect(new Key('ns', 'set', 2n ** 63n - 1n)).to.be.ok()
+        expect(new Key('ns', 'set', (-2n) ** 63n)).to.be.ok()
+      })
+
+      it('rejects BigInt user keys outside valid range', function () {
+        expect(() => { new Key('ns', 'set', 2n ** 63n) }).to.throw(TypeError, /Invalid user key/)
+        expect(() => { new Key('ns', 'set', -(2n ** 63n) - 1n) }).to.throw(TypeError, /Invalid user key/)
       })
 
       it('allows byte array user key', function () {
@@ -105,15 +110,19 @@ describe('Key #noserver', function () {
       })
 
       it('rejects empty string user key', function () {
-        expect(function () { return new Key('ns', 'set', '') }).to.throw('Key must be a string, integer, or Buffer')
+        expect(function () { return new Key('ns', 'set', '') }).to.throw(TypeError, /Invalid user key/)
       })
 
       it('rejects empty byte array user key', function () {
-        expect(function () { return new Key('ns', 'set', Buffer.from([])) }).to.throw('Key must be a string, integer, or Buffer')
+        expect(function () { return new Key('ns', 'set', Buffer.from([])) }).to.throw(TypeError, /Invalid user key/)
       })
 
       it('rejects float user key', function () {
-        expect(function () { return new Key('ns', 'set', 3.1415) }).to.throw('Key must be a string, integer, or Buffer')
+        expect(function () { return new Key('ns', 'set', 3.1415) }).to.throw(TypeError, /Invalid user key/)
+      })
+
+      it('rejects Object user key', function () {
+        expect(function () { return new Key('ns', 'set', { key: 'myKey' }) }).to.throw(TypeError, /Invalid user key/)
       })
 
       it('requires either key or digest', function () {

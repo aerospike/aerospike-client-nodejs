@@ -94,6 +94,16 @@ describe('client.put()', function () {
       })
     })
 
+    it('should write a record w/ BigInt key', async function () {
+      const key = new Aerospike.Key(helper.namespace, helper.set, 2n ** 63n - 1n)
+      const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+
+      await client.put(key, record)
+      const result = await client.get(key)
+      expect(result.bins).to.eql(record)
+      await client.remove(key)
+    })
+
     it('should write a record w/ byte array key', function (done) {
       var key = keygen.bytes(helper.namespace, helper.set)()
       var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
