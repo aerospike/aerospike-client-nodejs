@@ -64,7 +64,8 @@
   "standard": {
     "ignore": [
       "apidocs",
-      "tmp-*.js"
+      "tmp-*.js",
+      "/*.js"
     ]
   },
   "files": [

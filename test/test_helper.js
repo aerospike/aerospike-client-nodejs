@@ -172,24 +172,35 @@ exports.runInNewProcess = function (fn, data) {
   return runInNewProcessFn(fn, env, data)
 }
 
-function skipConditional (ctx, condition, message) {
+exports.skip = function (ctx, message) {
   ctx.beforeEach(function () {
-    if (condition()) {
+    this.skip(message)
+  })
+}
+
+function skipIf (ctx, condition, message) {
+  ctx.beforeEach(function () {
+    let shouldSkip = condition
+    if (typeof condition === 'function') {
+      shouldSkip = condition()
+    }
+    if (shouldSkip) {
       this.skip(message)
     }
   })
 }
+exports.skipIf = skipIf
 
 exports.skipUnlessSupportsFeature = function (feature, ctx) {
-  skipConditional(ctx, () => !this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
+  skipIf(ctx, () => !this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
 }
 
 exports.skipUnlessEnterprise = function (ctx) {
-  skipConditional(ctx, () => !this.cluster.isEnterprise(), 'requires enterprise edition')
+  skipIf(ctx, () => !this.cluster.isEnterprise(), 'requires enterprise edition')
 }
 
 exports.skipUnlessVersion = function (versionRange, ctx) {
-  skipConditional(ctx, () => !this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+  skipIf(ctx, () => !this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
 }
 
 if (process.env.GLOBAL_CLIENT !== 'false') {

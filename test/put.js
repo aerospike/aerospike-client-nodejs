@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,9 @@ const status = Aerospike.status
 const AerospikeError = Aerospike.AerospikeError
 const Double = Aerospike.Double
 const GeoJSON = Aerospike.GeoJSON
+
+const bigint = require('../lib/bigint')
+const BigInt = bigint.BigInt
 
 describe('client.put()', function () {
   var client = helper.client
@@ -94,14 +97,18 @@ describe('client.put()', function () {
       })
     })
 
-    it('should write a record w/ BigInt key', async function () {
-      const key = new Aerospike.Key(helper.namespace, helper.set, 2n ** 63n - 1n)
-      const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+    context('BigInt keys', function () {
+      helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
-      await client.put(key, record)
-      const result = await client.get(key)
-      expect(result.bins).to.eql(record)
-      await client.remove(key)
+      it('should write a record w/ BigInt key', async function () {
+        const key = new Aerospike.Key(helper.namespace, helper.set, BigInt(2) ** BigInt(63) - BigInt(1))
+        const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+
+        await client.put(key, record)
+        const result = await client.get(key)
+        expect(result.bins).to.eql(record)
+        await client.remove(key)
+      })
     })
 
     it('should write a record w/ byte array key', function (done) {
