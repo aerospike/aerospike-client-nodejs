@@ -1241,6 +1241,17 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
         as_key_init_int64(key, ns, set, value);
         as_v8_detail(log, "key.key = %d", value);
         has_value = true;
+    } else if (val_obj->IsBigInt()) {
+        Local<BigInt> big_int = val_obj.As<BigInt>();
+        bool lossless = true;
+        int64_t value = big_int->Int64Value(&lossless);
+        if (!lossless) {
+            as_v8_error(log, "Invalid key value: BigInt value could not be converted to int64_t losslessly");
+            return AS_NODE_PARAM_ERR;
+        }
+        as_key_init_int64(key, ns, set, value);
+        as_v8_detail(log, "key.key = %d", value);
+        has_value = true;
     } else if (val_obj->IsObject()) {
         Local<Object> obj = val_obj.As<Object>();
         int size ;
