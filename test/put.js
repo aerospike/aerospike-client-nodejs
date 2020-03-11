@@ -241,6 +241,16 @@ describe('client.put()', function () {
       putGetVerify(record, expected, done)
     })
 
+    context('BigInt values', function () {
+      helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
+
+      it('writes bin with BigInt value and reads it back as a Number', function (done) {
+        let record = { bigint: BigInt(42) }
+        let expected = { bigint: 42 }
+        putGetVerify(record, expected, done)
+      })
+    })
+
     context('invalid bin values', function () {
       it('should fail with a parameter error when trying to write an undefined bin value', function (done) {
         var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()

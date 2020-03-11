@@ -939,6 +939,17 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         *value = (as_val*) as_double_new(double_value(v8value));
     } else if (v8value->IsNumber()) {
         *value = (as_val*) as_integer_new(Nan::To<int64_t>(v8value).FromJust());
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+    } else if (v8value->IsBigInt()) {
+        Local<BigInt> bigint_value = v8value.As<BigInt>();
+        bool lossless = true;
+        int64_t int64_value = bigint_value->Int64Value(&lossless);
+        if (!lossless) {
+            as_v8_error(log, "Invalid key value: BigInt value could not be converted to int64_t losslessly");
+            return AS_NODE_PARAM_ERR;
+        }
+        *value = (as_val*) as_integer_new(int64_value);
+#endif
     } else if (node::Buffer::HasInstance(v8value)) {
         int size;
         uint8_t* data;
