@@ -35,11 +35,11 @@ const bigint = require('../lib/bigint')
 const BigInt = bigint.BigInt
 
 describe('client.put()', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('should write and validate records', function (done) {
-    var meta = { ttl: 1000 }
-    var putAndGet = function (key, bins, cb) {
+    const meta = { ttl: 1000 }
+    const putAndGet = function (key, bins, cb) {
       client.put(key, bins, meta, function (err) {
         if (err) throw err
         client.get(key, function (err, record) {
@@ -50,15 +50,15 @@ describe('client.put()', function () {
       })
     }
 
-    var kgen = keygen.string(helper.namespace, helper.set, {
+    const kgen = keygen.string(helper.namespace, helper.set, {
       prefix: 'test/put/putAndGet/',
       random: false
     })
-    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
-    var total = 50
-    var count = 0
+    const rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
+    const total = 50
+    let count = 0
 
-    for (var i = 0; i < total; i++) {
+    for (let i = 0; i < total; i++) {
       putAndGet(kgen(), rgen(), function () {
         count++
         if (count === total) {
@@ -70,8 +70,8 @@ describe('client.put()', function () {
 
   context('records with various key types', function () {
     it('should write a record w/ string key', function (done) {
-      var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+      const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err) {
         if (err) throw err
@@ -84,8 +84,8 @@ describe('client.put()', function () {
     })
 
     it('should write a record w/ integer key', function (done) {
-      var key = keygen.integer(helper.namespace, helper.set)()
-      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+      const key = keygen.integer(helper.namespace, helper.set)()
+      const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err) {
         if (err) throw err
@@ -112,8 +112,8 @@ describe('client.put()', function () {
     })
 
     it('should write a record w/ byte array key', function (done) {
-      var key = keygen.bytes(helper.namespace, helper.set)()
-      var record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
+      const key = keygen.bytes(helper.namespace, helper.set)()
+      const record = recgen.record({ i: valgen.integer(), s: valgen.string() })()
 
       client.put(key, record, function (err, key) {
         if (err) throw err
@@ -133,7 +133,7 @@ describe('client.put()', function () {
     })
 
     function putGetVerify (bins, expected, done) {
-      var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+      const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
       client.put(key, bins, meta, policy, function (err) {
         if (err) throw err
         client.get(key, function (err, record) {
@@ -145,47 +145,47 @@ describe('client.put()', function () {
     }
 
     it('writes bin with string values and reads it back', function (done) {
-      var record = { string: 'hello world' }
-      var expected = { string: 'hello world' }
+      const record = { string: 'hello world' }
+      const expected = { string: 'hello world' }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with integer values and reads it back', function (done) {
-      var record = { low: Number.MIN_SAFE_INTEGER, high: Number.MAX_SAFE_INTEGER }
-      var expected = { low: -9007199254740991, high: 9007199254740991 }
+      const record = { low: Number.MIN_SAFE_INTEGER, high: Number.MAX_SAFE_INTEGER }
+      const expected = { low: -9007199254740991, high: 9007199254740991 }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with Buffer value and reads it back', function (done) {
-      var record = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
-      var expected = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      const record = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
+      const expected = { buffer: Buffer.from([0x61, 0x65, 0x72, 0x6f, 0x73, 0x70, 0x69, 0x6b, 0x65]) }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with float value as double and reads it back', function (done) {
-      var record = { double: 3.141592653589793 }
-      var expected = { double: 3.141592653589793 }
+      const record = { double: 3.141592653589793 }
+      const expected = { double: 3.141592653589793 }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with Double value as double and reads it back', function (done) {
-      var record = { double: new Double(3.141592653589793) }
-      var expected = { double: 3.141592653589793 }
+      const record = { double: new Double(3.141592653589793) }
+      const expected = { double: 3.141592653589793 }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with GeoJSON value and reads it back as string', function (done) {
-      var record = { geo: new GeoJSON.Point(103.8, 1.283) }
-      var expected = { geo: '{"type":"Point","coordinates":[103.8,1.283]}' }
+      const record = { geo: new GeoJSON.Point(103.8, 1.283) }
+      const expected = { geo: '{"type":"Point","coordinates":[103.8,1.283]}' }
       putGetVerify(record, expected, done)
     })
 
     it('writes bin with array value as list and reads it back', function (done) {
-      var record = {
+      const record = {
         list: [1, 'foo', 1.23, new Double(3.14), Buffer.from('bar'),
           GeoJSON.Point(103.8, 1.283), [1, 2, 3], { a: 1, b: 2 }]
       }
-      var expected = {
+      const expected = {
         list: [1, 'foo', 1.23, 3.14, Buffer.from('bar'),
           '{"type":"Point","coordinates":[103.8,1.283]}', [1, 2, 3], { a: 1, b: 2 }]
       }
@@ -193,7 +193,7 @@ describe('client.put()', function () {
     })
 
     it('writes bin with object value as map and reads it back', function (done) {
-      var record = {
+      const record = {
         map: {
           a: 1,
           b: 'foo',
@@ -205,7 +205,7 @@ describe('client.put()', function () {
           h: { a: 1, b: 2 }
         }
       }
-      var expected = {
+      const expected = {
         map: {
           a: 1,
           b: 'foo',
@@ -221,12 +221,12 @@ describe('client.put()', function () {
     })
 
     it.skip('writes bin with Map value as map and reads it back', function (done) {
-      var record = {
+      const record = {
         map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
           ['d', new Double(3.14)], ['e', Buffer.from('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
           ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
       }
-      var expected = {
+      const expected = {
         map: {
           a: 1,
           b: 'foo',
@@ -253,8 +253,8 @@ describe('client.put()', function () {
 
     context('invalid bin values', function () {
       it('should fail with a parameter error when trying to write an undefined bin value', function (done) {
-        var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-        var record = { valid: 123, invalid: undefined }
+        const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const record = { valid: 123, invalid: undefined }
 
         client.put(key, record, function (err) {
           expect(err.code).to.equal(status.ERR_PARAM)
@@ -267,8 +267,8 @@ describe('client.put()', function () {
       })
 
       it('should fail with a parameter error when trying to write a boolean bin value', function (done) {
-        var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-        var record = { valid: 'true', invalid: true }
+        const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const record = { valid: 'true', invalid: true }
 
         client.put(key, record, function (err) {
           expect(err.code).to.equal(status.ERR_PARAM)
@@ -313,18 +313,18 @@ describe('client.put()', function () {
   })
 
   it('should delete a bin when writing null to it', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-    var record = { bin1: 123, bin2: 456 }
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+    const record = { bin1: 123, bin2: 456 }
     client.put(key, record, function (err) {
       if (err) throw err
 
-      var update = { bin1: null }
+      const update = { bin1: null }
       client.put(key, update, function (err, result) {
         if (err) throw err
 
         client.get(key, function (err, record) {
           if (err) throw err
-          var expected = { bin2: 456 }
+          const expected = { bin2: 456 }
           expect(record.bins).to.eql(expected)
 
           client.remove(key, function (err) {
@@ -337,13 +337,13 @@ describe('client.put()', function () {
   })
 
   it('should write, read, write, and check gen', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
-    var mgen = metagen.constant({ ttl: 1000 })
-    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
+    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    const mgen = metagen.constant({ ttl: 1000 })
+    const rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
 
-    var key = kgen()
-    var meta = mgen(key)
-    var bins = rgen(key, meta)
+    const key = kgen()
+    const meta = mgen(key)
+    const bins = rgen(key, meta)
 
     // write the record then check
     client.put(key, bins, meta, function (err, key1) {
@@ -378,13 +378,13 @@ describe('client.put()', function () {
   })
 
   it('should write, read, remove, read, write, and check gen', function (done) {
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
-    var mgen = metagen.constant({ ttl: 1000 })
-    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
+    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    const mgen = metagen.constant({ ttl: 1000 })
+    const rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
 
-    var key = kgen()
-    var meta = mgen(key)
-    var bins = rgen(key, meta)
+    const key = kgen()
+    const meta = mgen(key)
+    const bins = rgen(key, meta)
 
     // write the record then check
     client.put(key, bins, meta, function (err, key1) {
@@ -453,9 +453,9 @@ describe('client.put()', function () {
 
   it('should write null for bins with empty list and map', function (done) {
     // generators
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
-    var mgen = metagen.constant({ ttl: 1000 })
-    var rgen = recgen.record({
+    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })
+    const mgen = metagen.constant({ ttl: 1000 })
+    const rgen = recgen.record({
       l: valgen.constant([1, 2, 3]),
       le: valgen.constant([]),
       m: valgen.constant({ a: 1, b: 2 }),
@@ -463,9 +463,9 @@ describe('client.put()', function () {
     })
 
     // values
-    var key = kgen()
-    var meta = mgen(key)
-    var bins = rgen(key, meta)
+    const key = kgen()
+    const meta = mgen(key)
+    const bins = rgen(key, meta)
 
     // write the record then check
     client.put(key, bins, meta, function (err, key1) {
@@ -486,9 +486,9 @@ describe('client.put()', function () {
   })
 
   it('should write a key without set name', function (done) {
-    var noSet = null
-    var key = keygen.string(helper.namespace, noSet, { prefix: 'test/put/' })()
-    var record = { bin1: 123, bin2: 456 }
+    const noSet = null
+    const key = keygen.string(helper.namespace, noSet, { prefix: 'test/put/' })()
+    const record = { bin1: 123, bin2: 456 }
 
     client.put(key, record, function (err) {
       if (err) throw err
@@ -501,8 +501,8 @@ describe('client.put()', function () {
   })
 
   it('should write a map with undefined entry and verify the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-    var record = {
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+    const record = {
       list: [1, 2, 3, undefined],
       map: { a: 1, b: 2, c: undefined }
     }
