@@ -245,8 +245,8 @@ describe('client.put()', function () {
       helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
       it('writes bin with BigInt value and reads it back as a Number', function (done) {
-        let record = { bigint: BigInt(42) }
-        let expected = { bigint: 42 }
+        const record = { bigint: BigInt(42) }
+        const expected = { bigint: 42 }
         putGetVerify(record, expected, done)
       })
     })
