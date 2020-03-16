@@ -249,6 +249,13 @@ describe('client.put()', function () {
         const expected = { bigint: 42 }
         putGetVerify(record, expected, done)
       })
+
+      it('writes bin with BigInt value outside safe Number range', function (done) {
+        const tooLargeForNumber = BigInt(Number.MAX_SAFE_INTEGER) + BigInt(2)
+        const record = { bigint: tooLargeForNumber }
+        const expected = { bigint: tooLargeForNumber }
+        putGetVerify(record, expected, done)
+      })
     })
 
     context('invalid bin values', function () {

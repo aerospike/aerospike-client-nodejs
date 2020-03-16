@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <complex>
 #include <node.h>
 #include <node_buffer.h>
 
@@ -55,8 +56,11 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
-const char * DoubleType = "Double";
-const char * GeoJSONType = "GeoJSON";
+const char* DoubleType = "Double";
+const char* GeoJSONType = "GeoJSON";
+
+const int64_t MIN_SAFE_INTEGER = -1 * (std::pow(2, 53) - 1);
+const int64_t MAX_SAFE_INTEGER = std::pow(2, 53) - 1;
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -619,15 +623,23 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 
     switch (as_val_type(val)) {
         case AS_NIL: {
-            as_v8_detail(log,"value is of type as_null");
+            as_v8_detail(log, "value is of type as_null");
             return scope.Escape(Nan::Null());
         }
         case AS_INTEGER: {
             as_integer* ival = as_integer_fromval(val);
             if (ival) {
-                int64_t data = as_integer_getorelse(ival, -1);
-                as_v8_detail(log, "value = %lld", data);
-                return scope.Escape(Nan::New((double)data));
+                int64_t num = as_integer_getorelse(ival, -1);
+                as_v8_detail(log, "value = %lld", num);
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+                if (num < MIN_SAFE_INTEGER || MAX_SAFE_INTEGER < num) {
+                    as_v8_detail(log, "Integer value outside safe range - returning BigInt");
+                    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+                    Local<Value> bigInt = BigInt::New(isolate, num);
+                    return scope.Escape(bigInt);
+                }
+#endif
+                return scope.Escape(Nan::New((double) num));
             }
             break;
         }
