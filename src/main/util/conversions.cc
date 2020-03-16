@@ -612,49 +612,48 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
 Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
-    if ( val == NULL) {
+    if (val == NULL) {
         as_v8_debug(log, "value = NULL");
         return scope.Escape(Nan::Null());
     }
 
-    switch ( as_val_type(val) ) {
+    switch (as_val_type(val)) {
         case AS_NIL: {
             as_v8_detail(log,"value is of type as_null");
             return scope.Escape(Nan::Null());
         }
-        case AS_INTEGER : {
-            as_integer * ival = as_integer_fromval(val);
-            if ( ival ) {
+        case AS_INTEGER: {
+            as_integer* ival = as_integer_fromval(val);
+            if (ival) {
                 int64_t data = as_integer_getorelse(ival, -1);
-                as_v8_detail(log, "value = %lld ", data);
+                as_v8_detail(log, "value = %lld", data);
                 return scope.Escape(Nan::New((double)data));
             }
             break;
         }
-        case AS_DOUBLE : {
+        case AS_DOUBLE: {
             as_double* dval = as_double_fromval(val);
-            if( dval ) {
-                double d    = as_double_getorelse(dval, -1);
-                as_v8_detail(log, "value = %lf ",d);
-                return scope.Escape(Nan::New((double)d));
+            if (dval) {
+                double d = as_double_getorelse(dval, -1);
+                as_v8_detail(log, "value = %lf", d);
+                return scope.Escape(Nan::New((double) d));
             }
             break;
         }
-        case AS_STRING : {
+        case AS_STRING: {
             as_string * sval = as_string_fromval(val);
-            if ( sval ) {
-                char * data = as_string_getorelse(sval, NULL);
+            if (sval) {
+                char* data = as_string_getorelse(sval, NULL);
                 as_v8_detail(log, "value = \"%s\"", data);
                 return scope.Escape(Nan::New(data).ToLocalChecked());
             }
             break;
         }
-        case AS_BYTES : {
+        case AS_BYTES: {
             as_bytes * bval = as_bytes_fromval(val);
-            if ( bval ) {
-
-                uint8_t * data = as_bytes_getorelse(bval, NULL);
-                uint32_t size  = as_bytes_size(bval);
+            if (bval) {
+                uint8_t* data = as_bytes_getorelse(bval, NULL);
+                uint32_t size = as_bytes_size(bval);
 
                 as_v8_detail(log,
                         "value = <%x %x %x%s>",
@@ -670,26 +669,26 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             }
             break;
         }
-        case AS_LIST : {
+        case AS_LIST: {
             as_arraylist* listval = (as_arraylist*) as_list_fromval((as_val*)val);
             int size = as_arraylist_size(listval);
             Local<Array> jsarray = Nan::New<Array>(size);
-            for ( int i = 0; i < size; i++ ) {
-                as_val * arr_val = as_arraylist_get(listval, i);
+            for (int i = 0; i < size; i++) {
+                as_val* arr_val = as_arraylist_get(listval, i);
                 Local<Value> jsval = val_to_jsvalue(arr_val, log);
                 Nan::Set(jsarray, i, jsval);
             }
 
             return scope.Escape(jsarray);
         }
-        case AS_MAP : {
+        case AS_MAP: {
             Local<Object> jsobj = Nan::New<Object>();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
-            as_hashmap_iterator  it;
+            as_hashmap_iterator it;
             as_hashmap_iterator_init(&it, map);
 
-            while ( as_hashmap_iterator_has_next(&it) ) {
-                as_pair *p = (as_pair*) as_hashmap_iterator_next(&it);
+            while (as_hashmap_iterator_has_next(&it)) {
+                as_pair* p = (as_pair*) as_hashmap_iterator_next(&it);
                 as_val* key = as_pair_1(p);
                 as_val* val = as_pair_2(p);
                 Nan::Set(jsobj, val_to_jsvalue(key, log), val_to_jsvalue(val, log));
@@ -697,10 +696,10 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 
             return scope.Escape(jsobj);
         }
-        case AS_GEOJSON : {
-            as_geojson * gval = as_geojson_fromval(val);
-            if ( gval ) {
-                char * data = as_geojson_getorelse(gval, NULL);
+        case AS_GEOJSON: {
+            as_geojson* gval = as_geojson_fromval(val);
+            if (gval) {
+                char* data = as_geojson_getorelse(gval, NULL);
                 as_v8_detail(log, "geojson = \"%s\"", data);
                 return scope.Escape(Nan::New<String>(data).ToLocalChecked());
             }
