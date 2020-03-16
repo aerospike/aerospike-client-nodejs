@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ const Aerospike = require('../lib/aerospike')
 const Key = Aerospike.Key
 const status = Aerospike.status
 const helper = require('./test_helper')
+
+const bigint = require('../lib/bigint')
+const BigInt = bigint.BigInt
 
 describe('Key #noserver', function () {
   describe('constructor', function () {
@@ -85,6 +88,21 @@ describe('Key #noserver', function () {
         expect(new Key('ns', 'set', -1234)).to.be.ok()
       })
 
+      context('BigInt keys', function () {
+        helper.skipUnless(this, bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
+
+        it('allows BigInt user key', function () {
+          expect(new Key('ns', 'set', BigInt(42))).to.be.ok()
+          expect(new Key('ns', 'set', BigInt(2) ** BigInt(63) - BigInt(1))).to.be.ok()
+          expect(new Key('ns', 'set', BigInt(-2) ** BigInt(63))).to.be.ok()
+        })
+
+        it('rejects BigInt user keys outside valid range', function () {
+          expect(() => new Key('ns', 'set', BigInt(2) ** BigInt(63))).to.throw(TypeError, /Invalid user key/)
+          expect(() => new Key('ns', 'set', BigInt(-2) ** BigInt(63) - BigInt(1))).to.throw(TypeError, /Invalid user key/)
+        })
+      })
+
       it('allows byte array user key', function () {
         var buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
         expect(new Key('ns', 'set', buf)).to.be.ok()
@@ -99,19 +117,23 @@ describe('Key #noserver', function () {
       })
 
       it('rejects empty string user key', function () {
-        expect(function () { return new Key('ns', 'set', '') }).to.throw('Key must be a string, integer, or Buffer')
+        expect(() => new Key('ns', 'set', '')).to.throw(TypeError, /Invalid user key/)
       })
 
       it('rejects empty byte array user key', function () {
-        expect(function () { return new Key('ns', 'set', Buffer.from([])) }).to.throw('Key must be a string, integer, or Buffer')
+        expect(() => new Key('ns', 'set', Buffer.from([]))).to.throw(TypeError, /Invalid user key/)
       })
 
       it('rejects float user key', function () {
-        expect(function () { return new Key('ns', 'set', 3.1415) }).to.throw('Key must be a string, integer, or Buffer')
+        expect(() => new Key('ns', 'set', 3.1415)).to.throw(TypeError, /Invalid user key/)
+      })
+
+      it('rejects Object user key', function () {
+        expect(() => new Key('ns', 'set', { key: 'myKey' })).to.throw(TypeError, /Invalid user key/)
       })
 
       it('requires either key or digest', function () {
-        expect(function () { return new Key('ns', 'set') }).to.throw('Either key or digest must be set')
+        expect(() => new Key('ns', 'set')).to.throw('Either key or digest must be set')
       })
     })
 

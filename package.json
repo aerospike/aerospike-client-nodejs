@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "mocha",
+    "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
     "posttest": "npm run lint",
     "coverage": "nyc npm test && nyc --reporter=lcov report",
@@ -63,7 +64,8 @@
   "standard": {
     "ignore": [
       "apidocs",
-      "tmp-*.js"
+      "tmp-*.js",
+      "/*.js"
     ]
   },
   "files": [

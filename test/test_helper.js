@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -172,24 +172,36 @@ exports.runInNewProcess = function (fn, data) {
   return runInNewProcessFn(fn, env, data)
 }
 
-function skipConditional (ctx, condition, message) {
+exports.skip = function (ctx, message) {
   ctx.beforeEach(function () {
-    if (condition()) {
+    this.skip(message)
+  })
+}
+
+function skipUnless (ctx, condition, message) {
+  ctx.beforeEach(function () {
+    let dontSkip = condition
+    if (typeof condition === 'function') {
+      dontSkip = condition()
+    }
+    const shouldSkip = !dontSkip
+    if (shouldSkip) {
       this.skip(message)
     }
   })
 }
+exports.skipUnless = skipUnless
 
 exports.skipUnlessSupportsFeature = function (feature, ctx) {
-  skipConditional(ctx, () => !this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
+  skipUnless(ctx, () => this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
 }
 
 exports.skipUnlessEnterprise = function (ctx) {
-  skipConditional(ctx, () => !this.cluster.isEnterprise(), 'requires enterprise edition')
+  skipUnless(ctx, () => this.cluster.isEnterprise(), 'requires enterprise edition')
 }
 
 exports.skipUnlessVersion = function (versionRange, ctx) {
-  skipConditional(ctx, () => !this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+  skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
 }
 
 if (process.env.GLOBAL_CLIENT !== 'false') {

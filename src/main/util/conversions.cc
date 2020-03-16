@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <complex>
 #include <node.h>
 #include <node_buffer.h>
 
@@ -55,8 +56,11 @@ extern "C" {
 using namespace node;
 using namespace v8;
 
-const char * DoubleType = "Double";
-const char * GeoJSONType = "GeoJSON";
+const char* DoubleType = "Double";
+const char* GeoJSONType = "GeoJSON";
+
+const int64_t MIN_SAFE_INTEGER = -1 * (std::pow(2, 53) - 1);
+const int64_t MAX_SAFE_INTEGER = std::pow(2, 53) - 1;
 
 /*******************************************************************************
  *  FUNCTIONS
@@ -612,49 +616,56 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
 Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 {
     Nan::EscapableHandleScope scope;
-    if ( val == NULL) {
+    if (val == NULL) {
         as_v8_debug(log, "value = NULL");
         return scope.Escape(Nan::Null());
     }
 
-    switch ( as_val_type(val) ) {
+    switch (as_val_type(val)) {
         case AS_NIL: {
-            as_v8_detail(log,"value is of type as_null");
+            as_v8_detail(log, "value is of type as_null");
             return scope.Escape(Nan::Null());
         }
-        case AS_INTEGER : {
-            as_integer * ival = as_integer_fromval(val);
-            if ( ival ) {
-                int64_t data = as_integer_getorelse(ival, -1);
-                as_v8_detail(log, "value = %lld ", data);
-                return scope.Escape(Nan::New((double)data));
+        case AS_INTEGER: {
+            as_integer* ival = as_integer_fromval(val);
+            if (ival) {
+                int64_t num = as_integer_getorelse(ival, -1);
+                as_v8_detail(log, "value = %lld", num);
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+                if (num < MIN_SAFE_INTEGER || MAX_SAFE_INTEGER < num) {
+                    as_v8_detail(log, "Integer value outside safe range - returning BigInt");
+                    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+                    Local<Value> bigInt = BigInt::New(isolate, num);
+                    return scope.Escape(bigInt);
+                }
+#endif
+                return scope.Escape(Nan::New((double) num));
             }
             break;
         }
-        case AS_DOUBLE : {
+        case AS_DOUBLE: {
             as_double* dval = as_double_fromval(val);
-            if( dval ) {
-                double d    = as_double_getorelse(dval, -1);
-                as_v8_detail(log, "value = %lf ",d);
-                return scope.Escape(Nan::New((double)d));
+            if (dval) {
+                double d = as_double_getorelse(dval, -1);
+                as_v8_detail(log, "value = %lf", d);
+                return scope.Escape(Nan::New((double) d));
             }
             break;
         }
-        case AS_STRING : {
+        case AS_STRING: {
             as_string * sval = as_string_fromval(val);
-            if ( sval ) {
-                char * data = as_string_getorelse(sval, NULL);
+            if (sval) {
+                char* data = as_string_getorelse(sval, NULL);
                 as_v8_detail(log, "value = \"%s\"", data);
                 return scope.Escape(Nan::New(data).ToLocalChecked());
             }
             break;
         }
-        case AS_BYTES : {
+        case AS_BYTES: {
             as_bytes * bval = as_bytes_fromval(val);
-            if ( bval ) {
-
-                uint8_t * data = as_bytes_getorelse(bval, NULL);
-                uint32_t size  = as_bytes_size(bval);
+            if (bval) {
+                uint8_t* data = as_bytes_getorelse(bval, NULL);
+                uint32_t size = as_bytes_size(bval);
 
                 as_v8_detail(log,
                         "value = <%x %x %x%s>",
@@ -670,26 +681,26 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             }
             break;
         }
-        case AS_LIST : {
+        case AS_LIST: {
             as_arraylist* listval = (as_arraylist*) as_list_fromval((as_val*)val);
             int size = as_arraylist_size(listval);
             Local<Array> jsarray = Nan::New<Array>(size);
-            for ( int i = 0; i < size; i++ ) {
-                as_val * arr_val = as_arraylist_get(listval, i);
+            for (int i = 0; i < size; i++) {
+                as_val* arr_val = as_arraylist_get(listval, i);
                 Local<Value> jsval = val_to_jsvalue(arr_val, log);
                 Nan::Set(jsarray, i, jsval);
             }
 
             return scope.Escape(jsarray);
         }
-        case AS_MAP : {
+        case AS_MAP: {
             Local<Object> jsobj = Nan::New<Object>();
             as_hashmap* map = (as_hashmap*) as_map_fromval(val);
-            as_hashmap_iterator  it;
+            as_hashmap_iterator it;
             as_hashmap_iterator_init(&it, map);
 
-            while ( as_hashmap_iterator_has_next(&it) ) {
-                as_pair *p = (as_pair*) as_hashmap_iterator_next(&it);
+            while (as_hashmap_iterator_has_next(&it)) {
+                as_pair* p = (as_pair*) as_hashmap_iterator_next(&it);
                 as_val* key = as_pair_1(p);
                 as_val* val = as_pair_2(p);
                 Nan::Set(jsobj, val_to_jsvalue(key, log), val_to_jsvalue(val, log));
@@ -697,10 +708,10 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
 
             return scope.Escape(jsobj);
         }
-        case AS_GEOJSON : {
-            as_geojson * gval = as_geojson_fromval(val);
-            if ( gval ) {
-                char * data = as_geojson_getorelse(gval, NULL);
+        case AS_GEOJSON: {
+            as_geojson* gval = as_geojson_fromval(val);
+            if (gval) {
+                char* data = as_geojson_getorelse(gval, NULL);
                 as_v8_detail(log, "geojson = \"%s\"", data);
                 return scope.Escape(Nan::New<String>(data).ToLocalChecked());
             }
@@ -939,6 +950,17 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         *value = (as_val*) as_double_new(double_value(v8value));
     } else if (v8value->IsNumber()) {
         *value = (as_val*) as_integer_new(Nan::To<int64_t>(v8value).FromJust());
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+    } else if (v8value->IsBigInt()) {
+        Local<BigInt> bigint_value = v8value.As<BigInt>();
+        bool lossless = true;
+        int64_t int64_value = bigint_value->Int64Value(&lossless);
+        if (!lossless) {
+            as_v8_error(log, "Invalid key value: BigInt value could not be converted to int64_t losslessly");
+            return AS_NODE_PARAM_ERR;
+        }
+        *value = (as_val*) as_integer_new(int64_value);
+#endif
     } else if (node::Buffer::HasInstance(v8value)) {
         int size;
         uint8_t* data;
@@ -1241,6 +1263,19 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
         as_key_init_int64(key, ns, set, value);
         as_v8_detail(log, "key.key = %d", value);
         has_value = true;
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+    } else if (val_obj->IsBigInt()) {
+        Local<BigInt> big_int = val_obj.As<BigInt>();
+        bool lossless = true;
+        int64_t value = big_int->Int64Value(&lossless);
+        if (!lossless) {
+            as_v8_error(log, "Invalid key value: BigInt value could not be converted to int64_t losslessly");
+            return AS_NODE_PARAM_ERR;
+        }
+        as_key_init_int64(key, ns, set, value);
+        as_v8_detail(log, "key.key = %d", value);
+        has_value = true;
+#endif
     } else if (val_obj->IsObject()) {
         Local<Object> obj = val_obj.As<Object>();
         int size ;
