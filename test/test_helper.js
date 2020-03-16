@@ -178,29 +178,30 @@ exports.skip = function (ctx, message) {
   })
 }
 
-function skipIf (ctx, condition, message) {
+function skipUnless (ctx, condition, message) {
   ctx.beforeEach(function () {
-    let shouldSkip = condition
+    let dontSkip = condition
     if (typeof condition === 'function') {
-      shouldSkip = condition()
+      dontSkip = condition()
     }
+    const shouldSkip = !dontSkip
     if (shouldSkip) {
       this.skip(message)
     }
   })
 }
-exports.skipIf = skipIf
+exports.skipUnless = skipUnless
 
 exports.skipUnlessSupportsFeature = function (feature, ctx) {
-  skipIf(ctx, () => !this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
+  skipUnless(ctx, () => this.cluster.hasFeature(feature), `requires server feature "${feature}"`)
 }
 
 exports.skipUnlessEnterprise = function (ctx) {
-  skipIf(ctx, () => !this.cluster.isEnterprise(), 'requires enterprise edition')
+  skipUnless(ctx, () => this.cluster.isEnterprise(), 'requires enterprise edition')
 }
 
 exports.skipUnlessVersion = function (versionRange, ctx) {
-  skipIf(ctx, () => !this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+  skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
 }
 
 if (process.env.GLOBAL_CLIENT !== 'false') {

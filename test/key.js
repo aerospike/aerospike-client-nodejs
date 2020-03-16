@@ -89,7 +89,7 @@ describe('Key #noserver', function () {
       })
 
       context('BigInt keys', function () {
-        helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
+        helper.skipUnless(this, bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
         it('allows BigInt user key', function () {
           expect(new Key('ns', 'set', BigInt(42))).to.be.ok()

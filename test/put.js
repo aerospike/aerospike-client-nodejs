@@ -98,7 +98,7 @@ describe('client.put()', function () {
     })
 
     context('BigInt keys', function () {
-      helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
+      helper.skipUnless(this, bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
       it('should write a record w/ BigInt key', async function () {
         const key = new Aerospike.Key(helper.namespace, helper.set, BigInt(2) ** BigInt(63) - BigInt(1))
@@ -242,7 +242,7 @@ describe('client.put()', function () {
     })
 
     context('BigInt values', function () {
-      helper.skipIf(this, !bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
+      helper.skipUnless(this, bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
       it('writes bin with BigInt value and reads it back as a Number', function (done) {
         const record = { bigint: BigInt(42) }
