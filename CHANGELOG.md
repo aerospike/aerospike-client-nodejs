@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.15.0] - 2020-03-24
+
+* **New Features**
+  * Support for BigInt as record key and bin value. [#348](https://github.com/aerospike/aerospike-client-nodejs/pull/348)
+
+* **Updates**
+  * Update C client library to [v4.6.13](http://www.aerospike.com/download/client/c/notes.html#4.6.13).
+
 ## [3.14.1] - 2020-01-15
 
 * **Bug Fixes**
