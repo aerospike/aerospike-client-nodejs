@@ -16,7 +16,8 @@
   "os": [
     "linux",
     "darwin",
-    "win32"
+    "win32",
+    "freebsd"
   ],
   "cpu": [
     "x64"
