@@ -12,6 +12,6 @@
   "main": "run.js",
   "dependencies": {
     "aerospike": "file:..",
-    "yargs": "^15.0.1"
+    "yargs": "^15.3.1"
   }
 }
