@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * Update C client library to [v4.6.14](http://www.aerospike.com/download/client/c/notes.html#4.6.14).
+
 ## [3.15.0] - 2020-03-24
 
 * **New Features**
