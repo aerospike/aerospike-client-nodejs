@@ -212,11 +212,11 @@ context('Scans', function () {
       helper.skipUnlessVersion('>= 4.9.0', this)
 
       it('returns at most X number of records', function (done) {
-        const maxRecords = 33
         const scan = client.scan(helper.namespace, testSet, { nobins: true })
 
-        let recordsReceived = 0
+        const maxRecords = 33
         const stream = scan.foreach({ maxRecords })
+        let recordsReceived = 0
         stream.on('data', () => recordsReceived++)
         stream.on('end', () => {
           // The actual number returned may be less than maxRecords if node
