@@ -147,7 +147,8 @@ context('Scans', function () {
         socketTimeout: 1000,
         durableDelete: true,
         failOnClusterChange: true,
-        recordsPerSecond: 50
+        recordsPerSecond: 50,
+        maxRecords: 5000,
       })
 
       const stream = scan.foreach(policy)
@@ -202,6 +203,25 @@ context('Scans', function () {
           // The scan percentage is not very exact, esp. for small sets, so we
           // just test that the scan did not return every single record.
           expect(recordsReceived).to.be.lessThan(numberOfRecords)
+          done()
+        })
+      })
+    })
+
+    context('with max records limit', function () {
+      helper.skipUnlessVersion('>= 4.9.0', this)
+
+      it('returns at most X number of records', function (done) {
+        const maxRecords = 33
+        const scan = client.scan(helper.namespace, testSet, { nobins: true })
+
+        let recordsReceived = 0
+        const stream = scan.foreach({ maxRecords })
+        stream.on('data', () => recordsReceived++)
+        stream.on('end', () => {
+          // The actual number returned may be less than maxRecords if node
+          // record counts are small and unbalanced across nodes.
+          expect(recordsReceived).to.be.at.most(maxRecords)
           done()
         })
       })
