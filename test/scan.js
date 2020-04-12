@@ -148,7 +148,7 @@ context('Scans', function () {
         durableDelete: true,
         failOnClusterChange: true,
         recordsPerSecond: 50,
-        maxRecords: 5000,
+        maxRecords: 5000
       })
 
       const stream = scan.foreach(policy)
