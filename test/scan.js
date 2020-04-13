@@ -191,6 +191,8 @@ context('Scans', function () {
     })
 
     context('with percent sampling', function () {
+      helper.skipUnlessVersion('< 4.9', this)
+
       it('should only scan approx. half of the records', function (done) {
         const scan = client.scan(helper.namespace, testSet, {
           percent: 50,
