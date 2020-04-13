@@ -312,6 +312,9 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->records_per_second, NULL, obj, "recordsPerSecond", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t*) &policy->max_records, NULL, obj, "maxRecords", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail( log, "Parsing scan policy: success");
 	return AS_NODE_PARAM_OK;
 }
