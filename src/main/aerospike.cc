@@ -123,7 +123,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("predexp", predexp_codes());
 	export("scanPriority", scanPriority());
 	export("log", log_enum_values());
-	export("operations", opcode_values());
+	export("scalarOperations", scalar_opcode_values());
 	export("listOperations", list_opcode_values());
 	export("mapOperations", map_opcode_values());
 	export("bitOperations", bit_opcode_values());

@@ -906,7 +906,7 @@ const ops_table_entry ops_table[] = {
 };
 
 int
-add_map_op(as_operations* ops, int64_t opcode, Local<Object> op, LogInfo* log)
+add_map_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 {
 	opcode = opcode ^ MAP_OPS_OFFSET;
 	const ops_table_entry *entry = &ops_table[opcode];
