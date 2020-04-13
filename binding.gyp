@@ -52,6 +52,7 @@
         'src/main/cdt_ctx.cc',
         'src/main/operations.cc',
         'src/main/list_operations.cc',
+        'src/main/map_operations.cc',
         'src/main/bit_operations.cc',
         'src/main/policy.cc',
         'src/main/query.cc',
