@@ -410,7 +410,7 @@ const ops_table_entry ops_table[] = {
 };
 
 int
-add_bit_op(as_operations* ops, int64_t opcode, Local<Object> op, LogInfo* log)
+add_bit_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 {
 	opcode = opcode ^ BIT_OPS_OFFSET;
 	const ops_table_entry *entry = &ops_table[opcode];
