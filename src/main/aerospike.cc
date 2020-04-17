@@ -127,6 +127,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("listOperations", list_opcode_values());
 	export("mapOperations", map_opcode_values());
 	export("bitOperations", bit_opcode_values());
+	export("hllOperations", hll_opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());

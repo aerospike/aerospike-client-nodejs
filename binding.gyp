@@ -55,6 +55,7 @@
         'src/main/list_operations.cc',
         'src/main/map_operations.cc',
         'src/main/bit_operations.cc',
+        'src/main/hll_operations.cc',
         'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
