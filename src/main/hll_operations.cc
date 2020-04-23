@@ -130,6 +130,12 @@ add_hll_get_count_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<O
 	return as_operations_hll_get_count(ops, bin, context);
 }
 
+bool
+add_hll_describe_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+{
+	return as_operations_hll_describe(ops, bin, context);
+}
+
 typedef bool (*HLLOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log);
 
 typedef struct {
@@ -142,7 +148,8 @@ const ops_table_entry ops_table[] = {
 	{ "ADD", add_hll_add_op },
 	{ "REFRESH_COUNT", add_hll_refresh_count_op },
 	{ "FOLD", add_hll_fold_op },
-	{ "GET_COUNT", add_hll_get_count_op }
+	{ "GET_COUNT", add_hll_get_count_op },
+	{ "DESCRIBE", add_hll_describe_op }
 };
 
 int
