@@ -128,6 +128,19 @@ describe('client.operate() - HyperLogLog operations', function () {
     })
   })
 
+  describe('hll.getCount', function () {
+    it('returns the estimated number of elements in the bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['leopard', 'tiger', 'tiger', 'jaguar'], 8),
+          hll.getCount('hll')
+        ]))
+        .then(assertResultEql({ hll: 3 }))
+        .then(cleanup())
+    })
+  })
+
   describe('hll.describe', function () {
     it('returns the index and min hash bit counts', function () {
       return initState()
@@ -137,6 +150,17 @@ describe('client.operate() - HyperLogLog operations', function () {
           hll.describe('hll')
         ]))
         .then(assertResultEql({ hll: [16, 5] }))
+        .then(cleanup())
+    })
+
+    it('returns the index count, with min hash zero', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.init('hll', 16),
+          hll.describe('hll')
+        ]))
+        .then(assertResultEql({ hll: [16, 0] }))
         .then(cleanup())
     })
   })
