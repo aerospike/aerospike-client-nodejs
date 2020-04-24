@@ -28,6 +28,7 @@ const {
   assertError,
   assertRecordEql,
   assertResultEql,
+  assertResultSatisfy,
   cleanup,
   createRecord,
   expectError,
@@ -35,10 +36,12 @@ const {
   operate
 } = require('./util/statefulAsyncTest')
 
+const isDouble = (number) => typeof number === 'number' && parseInt(number, 10) !== number
+
 describe('client.operate() - HyperLogLog operations', function () {
   helper.skipUnlessVersion('>= 4.9.0', this)
 
-  // HLL bin value representing the set ('jaguar', 'leopard', 'lion', 'tiger')
+  // HLL object representing the set ('jaguar', 'leopard', 'lion', 'tiger')
   // with an index bit size of 8.
   const hllCats = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
@@ -102,6 +105,35 @@ describe('client.operate() - HyperLogLog operations', function () {
     })
   })
 
+  describe('hll.setUnion', function () {
+    it('sets a union of the HLL objects with the HLL bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 8),
+          hll.setUnion('hll', [hllCats]),
+          hll.getCount('hll')
+        ]))
+        .then(assertResultEql({ hll: 6 }))
+        .then(cleanup())
+    })
+  })
+
+  describe('hll.refreshCount', function () {
+    it('updates and then returns the cached count', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 8),
+          hll.update('hll', ['lion', 'tiger', 'puma', 'puma']),
+          hll.fold('hll', 6),
+          hll.refreshCount('hll')
+        ]))
+        .then(assertResultEql({ hll: 5 }))
+        .then(cleanup())
+    })
+  })
+
   describe('hll.fold', function () {
     it('folds the index bit count to the specified value', function () {
       return initState()
@@ -121,7 +153,7 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(expectError())
         .then(operate([
           hll.init('hll', 16, 8),
-          hll.fold('hll', 8),
+          hll.fold('hll', 8)
         ]))
         .then(assertError(status.ERR_OP_NOT_APPLICABLE))
         .then(cleanup())
@@ -137,6 +169,58 @@ describe('client.operate() - HyperLogLog operations', function () {
           hll.getCount('hll')
         ]))
         .then(assertResultEql({ hll: 3 }))
+        .then(cleanup())
+    })
+  })
+
+  describe('hll.getUnion', function () {
+    it('returns the union of the HLL objects with the HLL bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['leopard', 'lynx', 'tiger', 'tiger', 'cheetah', 'lynx'], 8),
+          hll.getUnion('hll', [hllCats])
+        ]))
+        .then(assertResultSatisfy(({ hll }) => Buffer.isBuffer(hll)))
+        .then(cleanup())
+    })
+  })
+
+  describe('hll.getUnionCount', function () {
+    it('returns the element count of the union of the HLL objects with the HLL bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['leopard', 'lynx', 'tiger', 'tiger', 'cheetah', 'lynx'], 8),
+          hll.getUnionCount('hll', [hllCats])
+        ]))
+        .then(assertResultEql(({ hll: 6 })))
+        .then(cleanup())
+    })
+  })
+
+  describe('hll.getIntersectCount', function () {
+    it('returns the element count of the intersection of the HLL objects with the HLL bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['leopard', 'lynx', 'tiger', 'tiger', 'cheetah', 'lynx'], 8),
+          hll.getIntersectCount('hll', [hllCats])
+        ]))
+        .then(assertResultEql(({ hll: 2 })))
+        .then(cleanup())
+    })
+  })
+
+  describe('hll.getSimilarity', function () {
+    it('returns the similarity of the HLL objects', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.add('hll', ['leopard', 'lynx', 'tiger', 'tiger', 'cheetah', 'lynx'], 8),
+          hll.getSimilarity('hll', [hllCats])
+        ]))
+        .then(assertResultSatisfy(({ hll }) => isDouble(hll)))
         .then(cleanup())
     })
   })

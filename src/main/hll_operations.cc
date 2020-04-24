@@ -103,7 +103,37 @@ add_hll_add_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object>
 				bin, list_str, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	return as_operations_hll_add_mh(ops, bin, context, &policy, list, index_bit_count, mh_bit_count);
+	bool success = as_operations_hll_add_mh(ops, bin, context, &policy, list, index_bit_count, mh_bit_count);
+
+	if (list) as_list_destroy(list);
+	return success;
+}
+
+bool
+add_hll_set_union_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+{
+	bool has_policy = false;
+	as_hll_policy policy;
+	if (!get_optional_hll_policy(&policy, &has_policy, op, log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_list* list = NULL;
+	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
+		if (list) as_list_destroy(list);
+		return false;
+	}
+
+	if (as_v8_debug_enabled(log)) {
+		char* list_str = as_val_tostring(list);
+		as_v8_debug(log, "bin=%s, list=%s, has_policy=%s",
+				bin, list_str, has_policy ?  "true" : "false");
+		cf_free(list_str);
+	}
+	bool success = as_operations_hll_set_union(ops, bin, context, &policy, list);
+
+	if (list) as_list_destroy(list);
+	return success;
 }
 
 bool
@@ -131,9 +161,41 @@ add_hll_get_count_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<O
 }
 
 bool
-add_hll_describe_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_read_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
 {
-	return as_operations_hll_describe(ops, bin, context);
+	uint32_t command;
+	if (get_uint32_property(&command, op, "command", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "bin=%s, read_command=%i", bin, command);
+	return as_operations_hll_read(ops, bin, context, (uint16_t)command);
+}
+
+bool
+add_hll_read_list_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+{
+	uint32_t command;
+	if (get_uint32_property(&command, op, "command", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_list* list = NULL;
+	if (get_list_property(&list, op, "list", log) != AS_NODE_PARAM_OK) {
+		if (list) as_list_destroy(list);
+		return false;
+	}
+
+	if (as_v8_debug_enabled(log)) {
+		char* list_str = as_val_tostring(list);
+		as_v8_debug(log, "bin=%s, read_list_command=%i, list=%s",
+				bin, command, list_str);
+		cf_free(list_str);
+	}
+	bool success =  as_operations_hll_read_list(ops, bin, context, (uint16_t)command, list);
+
+	if (list) as_list_destroy(list);
+	return success;
 }
 
 typedef bool (*HLLOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log);
@@ -146,10 +208,11 @@ typedef struct {
 const ops_table_entry ops_table[] = {
 	{ "INIT", add_hll_init_op },
 	{ "ADD", add_hll_add_op },
+	{ "SET_UNION", add_hll_set_union_op },
 	{ "REFRESH_COUNT", add_hll_refresh_count_op },
 	{ "FOLD", add_hll_fold_op },
-	{ "GET_COUNT", add_hll_get_count_op },
-	{ "DESCRIBE", add_hll_describe_op }
+	{ "READ", add_hll_read_op },
+	{ "READ_LIST", add_hll_read_list_op }
 };
 
 int
