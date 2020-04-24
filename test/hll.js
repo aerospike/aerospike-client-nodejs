@@ -102,6 +102,32 @@ describe('client.operate() - HyperLogLog operations', function () {
     })
   })
 
+  describe('hll.fold', function () {
+    it('folds the index bit count to the specified value', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.init('hll', 16),
+          hll.fold('hll', 8),
+          hll.describe('hll')
+        ]))
+        .then(assertResultEql({ hll: [8, 0] }))
+        .then(cleanup())
+    })
+
+    it('returns an error if the min hash count is not zero', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(expectError())
+        .then(operate([
+          hll.init('hll', 16, 8),
+          hll.fold('hll', 8),
+        ]))
+        .then(assertError(status.ERR_OP_NOT_APPLICABLE))
+        .then(cleanup())
+    })
+  })
+
   describe('hll.describe', function () {
     it('returns the index and min hash bit counts', function () {
       return initState()
