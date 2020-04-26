@@ -617,7 +617,7 @@ describe('Aerospike.predexp', function () {
         const keys = []
         for (let i = 0; i < 10; i++) {
           const key = batchKeyGen()
-          await client.put(key, { i: i })
+          await client.put(key, { i })
           keys.push(key)
         }
         keys.push(batchKeyGen())
@@ -646,7 +646,7 @@ describe('Aerospike.predexp', function () {
         const batch = []
         for (let i = 0; i < 10; i++) {
           const key = batchKeyGen()
-          await client.put(key, { i: i })
+          await client.put(key, { i })
           batch.push({ key })
         }
         batch.push({ key: batchKeyGen() })

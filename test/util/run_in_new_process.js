@@ -42,7 +42,7 @@ function createTempFile (fn, data) {
 
 function forkAndRun (fn, env, data) {
   const temp = createTempFile(fn, data)
-  return childProcess.fork(temp, { env: env })
+  return childProcess.fork(temp, { env })
 }
 
 module.exports = function runInNewProcess (fn, env, data) {

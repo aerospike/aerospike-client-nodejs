@@ -103,8 +103,8 @@ function handleAlert (alertInfo, sev) {
 }
 
 module.exports = {
-  handleAlert: handleAlert,
-  setupAlertSystem: setupAlertSystem,
-  severity: severity,
-  action: action
+  handleAlert,
+  setupAlertSystem,
+  severity,
+  action
 }

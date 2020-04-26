@@ -39,6 +39,6 @@ function record (bins) {
 }
 
 module.exports = {
-  constant: constant,
-  record: record
+  constant,
+  record
 }

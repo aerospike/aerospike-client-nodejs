@@ -60,8 +60,8 @@ function range (keygen, end, start) {
 }
 
 module.exports = {
-  bytes: bytes,
-  integer: integer,
-  string: string,
-  range: range
+  bytes,
+  integer,
+  string,
+  range
 }
