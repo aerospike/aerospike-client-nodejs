@@ -235,7 +235,7 @@ function run (options) {
     var k = keygen(options.keyRange.min, options.keyRange.max)
     var key = { ns: options.namespace, set: options.set, key: k }
     var record = recordgen(k, options.binSpec)
-    var ops = { key: key, record: record }
+    var ops = { key, record }
     if (writeOps > 0) {
       writeOps--
       if (usePromises) {

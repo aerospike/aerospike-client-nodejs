@@ -69,6 +69,6 @@ function generate (ns, set, numberOfRecords, recordSize, done) {
 }
 
 module.exports = {
-  interval: interval,
-  generate: generate
+  interval,
+  generate
 }

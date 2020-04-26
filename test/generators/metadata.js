@@ -26,5 +26,5 @@ function constant (metadata) {
 }
 
 module.exports = {
-  constant: constant
+  constant
 }

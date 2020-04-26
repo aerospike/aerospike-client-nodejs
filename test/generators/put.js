@@ -85,5 +85,5 @@ function put (n, keygen, recgen, metagen, policy, callback) {
 }
 
 module.exports = {
-  put: put
+  put
 }
