@@ -168,11 +168,11 @@ function map () {
 }
 
 module.exports = {
-  bytes: bytes,
-  constant: constant,
-  integer: integer,
-  string: string,
-  double: double,
-  array: array,
-  map: map
+  bytes,
+  constant,
+  integer,
+  string,
+  double,
+  array,
+  map
 }

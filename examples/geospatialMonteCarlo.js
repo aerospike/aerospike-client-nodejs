@@ -52,7 +52,7 @@ shared.runner()
 
 async function monteCarlo (client, argv) {
   const game = {
-    client: client,
+    client,
     noDarts: argv.darts, // number of darts to throw
     maxInFlight: argv.maxInFlight,
     maxLatLng: 10, // pick coordinates between (-10, -10) and (10, 10)

@@ -317,11 +317,11 @@ function reportFinal (argv, print) {
 }
 
 module.exports = {
-  start: start,
-  stop: stop,
-  iteration: iteration,
-  interval: interval,
-  printHistogram: printHistogram,
-  reportFinal: reportFinal,
-  parseTimeToSecs: parseTimeToSecs
+  start,
+  stop,
+  iteration,
+  interval,
+  printHistogram,
+  reportFinal,
+  parseTimeToSecs
 }

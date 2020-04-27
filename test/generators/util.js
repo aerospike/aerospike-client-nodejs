@@ -28,5 +28,5 @@ function range (end, start) {
 }
 
 module.exports = {
-  range: range
+  range
 }
