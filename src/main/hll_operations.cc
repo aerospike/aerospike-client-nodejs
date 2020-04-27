@@ -49,7 +49,7 @@ get_optional_hll_policy(as_hll_policy* policy, bool* has_policy, Local<Object> o
 }
 
 bool
-add_hll_init_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_init_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	int index_bit_count;
 	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
@@ -69,11 +69,11 @@ add_hll_init_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object
 
 	as_v8_debug(log, "bin=%s, index_bit_count=%i, mh_bit_count=%i, has_policy=%s",
 			bin, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
-	return as_operations_hll_init_mh(ops, bin, context, &policy, index_bit_count, mh_bit_count);
+	return as_operations_hll_init_mh(ops, bin, NULL, &policy, index_bit_count, mh_bit_count);
 }
 
 bool
-add_hll_add_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_add_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	int index_bit_count;
 	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
@@ -103,14 +103,14 @@ add_hll_add_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object>
 				bin, list_str, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	bool success = as_operations_hll_add_mh(ops, bin, context, &policy, list, index_bit_count, mh_bit_count);
+	bool success = as_operations_hll_add_mh(ops, bin, NULL, &policy, list, index_bit_count, mh_bit_count);
 
 	if (list) as_list_destroy(list);
 	return success;
 }
 
 bool
-add_hll_set_union_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_set_union_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	bool has_policy = false;
 	as_hll_policy policy;
@@ -130,20 +130,20 @@ add_hll_set_union_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<O
 				bin, list_str, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	bool success = as_operations_hll_set_union(ops, bin, context, &policy, list);
+	bool success = as_operations_hll_set_union(ops, bin, NULL, &policy, list);
 
 	if (list) as_list_destroy(list);
 	return success;
 }
 
 bool
-add_hll_refresh_count_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_refresh_count_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
-	return as_operations_hll_refresh_count(ops, bin, context);
+	return as_operations_hll_refresh_count(ops, bin, NULL);
 }
 
 bool
-add_hll_fold_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_fold_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	int index_bit_count;
 	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
@@ -151,17 +151,17 @@ add_hll_fold_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object
 	}
 
 	as_v8_debug(log, "bin=%s, index_bit_count=%i", bin, index_bit_count);
-	return as_operations_hll_fold(ops, bin, context, index_bit_count);
+	return as_operations_hll_fold(ops, bin, NULL, index_bit_count);
 }
 
 bool
-add_hll_get_count_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_get_count_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
-	return as_operations_hll_get_count(ops, bin, context);
+	return as_operations_hll_get_count(ops, bin, NULL);
 }
 
 bool
-add_hll_read_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_read_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	uint32_t command;
 	if (get_uint32_property(&command, op, "command", log) != AS_NODE_PARAM_OK) {
@@ -169,11 +169,11 @@ add_hll_read_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object
 	}
 
 	as_v8_debug(log, "bin=%s, read_command=%i", bin, command);
-	return as_operations_hll_read(ops, bin, context, (uint16_t)command);
+	return as_operations_hll_read(ops, bin, NULL, (uint16_t)command);
 }
 
 bool
-add_hll_read_list_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log)
+add_hll_read_list_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
 	uint32_t command;
 	if (get_uint32_property(&command, op, "command", log) != AS_NODE_PARAM_OK) {
@@ -192,13 +192,13 @@ add_hll_read_list_op(as_operations* ops, char* bin, as_cdt_ctx* context, Local<O
 				bin, command, list_str);
 		cf_free(list_str);
 	}
-	bool success =  as_operations_hll_read_list(ops, bin, context, (uint16_t)command, list);
+	bool success =  as_operations_hll_read_list(ops, bin, NULL, (uint16_t)command, list);
 
 	if (list) as_list_destroy(list);
 	return success;
 }
 
-typedef bool (*HLLOperation) (as_operations* ops, char* bin, as_cdt_ctx* context, Local<Object> op, LogInfo* log);
+typedef bool (*HLLOperation) (as_operations* ops, char* bin, Local<Object> op, LogInfo* log);
 
 typedef struct {
 	const char* op_name;
@@ -229,16 +229,9 @@ add_hll_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 		return AS_NODE_PARAM_ERR;
 	}
 
-	bool with_context;
-	as_cdt_ctx context;
-	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
-		free(bin);
-		return AS_NODE_PARAM_ERR;
-	}
-
-	as_v8_debug(log, "Adding HyperLogLog operation %s (opcode %i) on bin %s to operations list, %s CDT context",
-			entry->op_name, opcode, bin, with_context ? "with" : "without");
-	bool success = (entry->op_function)(ops, bin, with_context ? &context : NULL, op, log);
+	as_v8_debug(log, "Adding HyperLogLog operation %s (opcode %i) on bin %s to operations list",
+			entry->op_name, opcode, bin);
+	bool success = (entry->op_function)(ops, bin, op, log);
 
 	free(bin);
 
