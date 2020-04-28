@@ -91,6 +91,7 @@
         'src/main/commands/udf_remove.cc',
         'src/main/enums/predicates.cc',
         'src/main/enums/bitwise_enum.cc',
+        'src/main/enums/hll_enum.cc',
         'src/main/enums/maps.cc',
         'src/main/enums/lists.cc',
         'src/main/enums/index.cc',

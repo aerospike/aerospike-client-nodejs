@@ -25,6 +25,7 @@
 v8::Local<v8::Object> auth_mode_enum_values();
 v8::Local<v8::Object> bitwise_enum_values();
 v8::Local<v8::Object> generation_policy_values();
+v8::Local<v8::Object> hll_enum_values();
 v8::Local<v8::Object> indexDataType();
 v8::Local<v8::Object> indexType();
 v8::Local<v8::Object> jobStatus();

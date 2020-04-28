@@ -44,7 +44,19 @@ get_optional_hll_policy(as_hll_policy* policy, bool* has_policy, Local<Object> o
 	if (has_policy != NULL) (*has_policy) = true;
 	Local<Object> policy_obj = maybe_policy_obj.As<Object>();
 
-	as_v8_detail(log, "Setting HLL policy");
+	as_hll_write_flags write_flags;
+	Local<Value> value = Nan::Get(policy_obj, Nan::New("writeFlags").ToLocalChecked()).ToLocalChecked();
+	if (value->IsNumber()) {
+		write_flags = (as_hll_write_flags) Nan::To<int>(value).FromJust();
+	} else if (value->IsUndefined()) {
+		write_flags = AS_HLL_WRITE_DEFAULT;
+	} else {
+		as_v8_error(log, "Type error: writeFlags should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+	as_v8_detail(log, "Setting HLL policy - write_flags: %i", write_flags);
+	as_hll_policy_set_write_flags(policy, write_flags);
+
 	return true;
 }
 
@@ -69,7 +81,7 @@ add_hll_init_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 
 	as_v8_debug(log, "bin=%s, index_bit_count=%i, mh_bit_count=%i, has_policy=%s",
 			bin, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
-	return as_operations_hll_init_mh(ops, bin, NULL, &policy, index_bit_count, mh_bit_count);
+	return as_operations_hll_init_mh(ops, bin, NULL, has_policy ? &policy : NULL, index_bit_count, mh_bit_count);
 }
 
 bool
@@ -103,7 +115,7 @@ add_hll_add_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 				bin, list_str, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	bool success = as_operations_hll_add_mh(ops, bin, NULL, &policy, list, index_bit_count, mh_bit_count);
+	bool success = as_operations_hll_add_mh(ops, bin, NULL, has_policy ? &policy : NULL, list, index_bit_count, mh_bit_count);
 
 	if (list) as_list_destroy(list);
 	return success;
@@ -130,7 +142,7 @@ add_hll_set_union_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* l
 				bin, list_str, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	bool success = as_operations_hll_set_union(ops, bin, NULL, &policy, list);
+	bool success = as_operations_hll_set_union(ops, bin, NULL, has_policy ? &policy : NULL, list);
 
 	if (list) as_list_destroy(list);
 	return success;

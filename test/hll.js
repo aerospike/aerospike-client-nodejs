@@ -42,7 +42,7 @@ describe('client.operate() - HyperLogLog operations', function () {
   helper.skipUnlessVersion('>= 4.9.0', this)
 
   // HLL object representing the set ('jaguar', 'leopard', 'lion', 'tiger')
-  // with an index bit size of 8.
+  // with an index bit size of 8, and minhash bit size of 0.
   const hllCats = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
     0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -57,8 +57,106 @@ describe('client.operate() - HyperLogLog operations', function () {
     it('initializes a HLL bin value', function () {
       return initState()
         .then(createRecord({ foo: 'bar' }))
-        .then(operate(hll.init('hll', 10)))
+        .then(operate([
+          hll.init('hll', 10),
+          hll.describe('hll')
+        ]))
+        .then(assertResultEql({ hll: [10, 0] }))
         .then(cleanup())
+    })
+
+    it('initializes a HLL bin value with minhash bits', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate([
+          hll.init('hll', 10, 6),
+          hll.describe('hll')
+        ]))
+        .then(assertResultEql({ hll: [10, 6] }))
+        .then(cleanup())
+    })
+
+    it('re-initializes an existing HLL bin', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(operate(hll.add('hll', ['tiger', 'leopard'], 10)))
+        .then(operate([
+          hll.init('hll', 12, 4),
+          hll.describe('hll')
+        ]))
+        .then(assertResultEql({ hll: [12, 4] }))
+        .then(cleanup())
+    })
+
+    context('with HLL policy', function () {
+      context('with create-only write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.CREATE_ONLY
+        }
+
+        it('returns an error if the bin already exists', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(operate(hll.add('hll', ['tiger'], 8)))
+            .then(expectError())
+            .then(operate(
+              hll.init('hll', 10).withPolicy(policy)
+            ))
+            .then(assertError(status.ERR_BIN_EXISTS))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: hll.writeFlags.CREATE_ONLY | hll.writeFlags.NO_FAIL
+          }
+
+          it('does not re-initialize the bin', function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate(hll.add('hll', ['tiger', 'cheetah'], 8)))
+              .then(operate(
+                hll.init('hll', 12).withPolicy(policy)
+              ))
+              .then(operate(hll.getCount('hll')))
+              .then(assertResultEql({ hll: 2 }))
+              .then(cleanup())
+          })
+        })
+      })
+
+      context('with update-only write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.UPDATE_ONLY
+        }
+
+        it('returns an error if the bin does not yet exist', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(expectError())
+            .then(operate(
+              hll.init('hll', 10, 6).withPolicy(policy),
+            ))
+            .then(assertError(status.ERR_BIN_NOT_FOUND))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: hll.writeFlags.UPDATE_ONLY | hll.writeFlags.NO_FAIL
+          }
+
+          it('does not initialize the bin', function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate(
+                hll.init('hll', 10, 6).withPolicy(policy),
+              ))
+              .then(assertRecordEql({ foo: 'bar' }))
+              .then(cleanup())
+          })
+        })
+      })
     })
   })
 
@@ -79,6 +177,40 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(operate(hll.add('hll', ['jaguar', 'tiger', 'tiger', 'leopard', 'lion', 'jaguar'], 8)))
         .then(assertError(status.ERR_BIN_INCOMPATIBLE_TYPE))
         .then(cleanup())
+    })
+
+    context('with HLL policy', function () {
+      context('with create-only write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.CREATE_ONLY
+        }
+
+        it('returns an error if bin already exist', async function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(operate(hll.init('hll', 12)))
+            .then(expectError())
+            .then(operate(hll.add('hll', ['tiger', 'tiger', 'leopard'], 8).withPolicy(policy)))
+            .then(assertError(status.ERR_BIN_EXISTS))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: hll.writeFlags.CREATE_ONLY | hll.writeFlags.NO_FAIL
+          }
+
+          it('does not update the bin if it already exists', async function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate(hll.add('hll', ['tiger', 'lion'], 8)))
+              .then(operate(hll.add('hll', ['tiger', 'leopard', 'cheetah'], 8).withPolicy(policy)))
+              .then(operate(hll.getCount('hll')))
+              .then(assertResultEql({ hll: 2 }))
+              .then(cleanup())
+          })
+        })
+      })
     })
   })
 
@@ -117,6 +249,107 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(assertResultEql({ hll: 6 }))
         .then(cleanup())
     })
+
+    it('returns an error if the index bit count does not match', function () {
+      return initState()
+        .then(createRecord({ foo: 'bar' }))
+        .then(expectError())
+        .then(operate([
+          hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 12),
+          hll.setUnion('hll', [hllCats]), // index bit size = 8
+        ]))
+        .then(assertError(status.ERR_OP_NOT_APPLICABLE))
+        .then(cleanup())
+    })
+
+    context('with HLL policy', function () {
+      context('with create-only write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.CREATE_ONLY
+        }
+
+        it('returns an error if the bin already exists', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(expectError())
+            .then(operate([
+              hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 8),
+              hll.setUnion('hll', [hllCats]).withPolicy(policy),
+            ]))
+            .then(assertError(status.ERR_BIN_EXISTS))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: hll.writeFlags.CREATE_ONLY | hll.writeFlags.NO_FAIL
+          }
+
+          it('does not update the bin', function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate([
+                hll.add('hll', ['tiger'], 8),
+                hll.setUnion('hll', [hllCats]).withPolicy(policy),
+                hll.getCount('hll'),
+              ]))
+              .then(assertResultEql({ hll: 1 }))
+              .then(cleanup())
+          })
+        })
+      })
+
+      context('with update-only write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.UPDATE_ONLY
+        }
+
+        it('returns an error if the bin does not exist', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(expectError())
+            .then(operate(
+              hll.setUnion('hll', [hllCats]).withPolicy(policy)
+            ))
+            .then(assertError(status.ERR_BIN_NOT_FOUND))
+            .then(cleanup())
+        })
+
+        context('with no-fail write flag', function () {
+          const policy = {
+            writeFlags: hll.writeFlags.UPDATE_ONLY | hll.writeFlags.NO_FAIL
+          }
+
+          it('does not create the bin', function () {
+            return initState()
+              .then(createRecord({ foo: 'bar' }))
+              .then(operate(
+                hll.setUnion('hll', [hllCats]).withPolicy(policy)
+              ))
+              .then(assertRecordEql({ foo: 'bar' }))
+              .then(cleanup())
+          })
+        })
+      })
+
+      context('with allow-fold write flag', function () {
+        const policy = {
+          writeFlags: hll.writeFlags.ALLOW_FOLD
+        }
+
+        it('folds the result to the lowest index bit size', function () {
+          return initState()
+            .then(createRecord({ foo: 'bar' }))
+            .then(operate([
+              hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 12),
+              hll.setUnion('hll', [hllCats]).withPolicy(policy), // index bit size = 8
+              hll.describe('hll')
+            ]))
+            .then(assertResultEql({ hll: [8, 0] }))
+            .then(cleanup())
+        })
+      })
+    })
   })
 
   describe('hll.refreshCount', function () {
@@ -147,7 +380,7 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(cleanup())
     })
 
-    it('returns an error if the min hash count is not zero', function () {
+    it('returns an error if the minhash count is not zero', function () {
       return initState()
         .then(createRecord({ foo: 'bar' }))
         .then(expectError())
@@ -226,7 +459,7 @@ describe('client.operate() - HyperLogLog operations', function () {
   })
 
   describe('hll.describe', function () {
-    it('returns the index and min hash bit counts', function () {
+    it('returns the index and minhash bit counts', function () {
       return initState()
         .then(createRecord({ foo: 'bar' }))
         .then(operate([
@@ -237,7 +470,7 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(cleanup())
     })
 
-    it('returns the index count, with min hash zero', function () {
+    it('returns the index count, with minhash zero', function () {
       return initState()
         .then(createRecord({ foo: 'bar' }))
         .then(operate([
