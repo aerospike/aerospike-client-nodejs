@@ -135,7 +135,7 @@ describe('client.operate() - HyperLogLog operations', function () {
             .then(createRecord({ foo: 'bar' }))
             .then(expectError())
             .then(operate(
-              hll.init('hll', 10, 6).withPolicy(policy),
+              hll.init('hll', 10, 6).withPolicy(policy)
             ))
             .then(assertError(status.ERR_BIN_NOT_FOUND))
             .then(cleanup())
@@ -150,7 +150,7 @@ describe('client.operate() - HyperLogLog operations', function () {
             return initState()
               .then(createRecord({ foo: 'bar' }))
               .then(operate(
-                hll.init('hll', 10, 6).withPolicy(policy),
+                hll.init('hll', 10, 6).withPolicy(policy)
               ))
               .then(assertRecordEql({ foo: 'bar' }))
               .then(cleanup())
@@ -256,7 +256,7 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(expectError())
         .then(operate([
           hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 12),
-          hll.setUnion('hll', [hllCats]), // index bit size = 8
+          hll.setUnion('hll', [hllCats]) // index bit size = 8
         ]))
         .then(assertError(status.ERR_OP_NOT_APPLICABLE))
         .then(cleanup())
@@ -274,7 +274,7 @@ describe('client.operate() - HyperLogLog operations', function () {
             .then(expectError())
             .then(operate([
               hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 8),
-              hll.setUnion('hll', [hllCats]).withPolicy(policy),
+              hll.setUnion('hll', [hllCats]).withPolicy(policy)
             ]))
             .then(assertError(status.ERR_BIN_EXISTS))
             .then(cleanup())
@@ -291,7 +291,7 @@ describe('client.operate() - HyperLogLog operations', function () {
               .then(operate([
                 hll.add('hll', ['tiger'], 8),
                 hll.setUnion('hll', [hllCats]).withPolicy(policy),
-                hll.getCount('hll'),
+                hll.getCount('hll')
               ]))
               .then(assertResultEql({ hll: 1 }))
               .then(cleanup())
