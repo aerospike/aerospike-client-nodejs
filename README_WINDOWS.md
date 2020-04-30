@@ -12,7 +12,7 @@ and suitable for application prototyping and development.
 * Windows 7 or later
 * Windows 8.1 SDK
 * Visual C++ 2015 Build Tools
-* Node.js v8.x (LTS) or later
+* Node.js v10.x (LTS) or later
 
 The package includes a native add-on. To compile the add-on, Microsoft's Visual
 C++ Build Tools 2015 are required. The easiest way to install the build tools,
@@ -38,5 +38,5 @@ for further information.
 PowerShell's execution policy prevents you from running the client's installation script. You can temporarily lift the restrictions for the current PowerShell session by running the following command:
 
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
-    
+
 For further information, please refer to the PowerShell documentation [About Execution Policies](https://docs.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_execution_policies).
