@@ -214,29 +214,6 @@ describe('client.operate() - HyperLogLog operations', function () {
     })
   })
 
-  describe('hll.update', function () {
-    it('updates an existing HLL value', function () {
-      return initState()
-        .then(createRecord({ foo: 'bar' }))
-        .then(operate([
-          hll.add('hll', ['tiger', 'lion'], 8),
-          hll.update('hll', ['leopard', 'tiger', 'tiger', 'jaguar'])
-        ]))
-        .then(assertResultEql({ hll: 2 }))
-        .then(assertRecordEql({ hll: hllCats, foo: 'bar' }))
-        .then(cleanup())
-    })
-
-    it('returns an error if the HLL bin does not yet exist', function () {
-      return initState()
-        .then(createRecord({ foo: 'bar' }))
-        .then(expectError())
-        .then(operate(hll.update('hll', ['leopard', 'tiger', 'tiger', 'jaguar'])))
-        .then(assertError(status.ERR_OP_NOT_APPLICABLE))
-        .then(cleanup())
-    })
-  })
-
   describe('hll.setUnion', function () {
     it('sets a union of the HLL objects with the HLL bin', function () {
       return initState()
@@ -358,7 +335,7 @@ describe('client.operate() - HyperLogLog operations', function () {
         .then(createRecord({ foo: 'bar' }))
         .then(operate([
           hll.add('hll', ['tiger', 'lynx', 'cheetah', 'tiger'], 8),
-          hll.update('hll', ['lion', 'tiger', 'puma', 'puma']),
+          hll.add('hll', ['lion', 'tiger', 'puma', 'puma']),
           hll.fold('hll', 6),
           hll.refreshCount('hll')
         ]))

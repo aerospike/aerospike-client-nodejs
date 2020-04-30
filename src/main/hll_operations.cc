@@ -63,13 +63,13 @@ get_optional_hll_policy(as_hll_policy* policy, bool* has_policy, Local<Object> o
 bool
 add_hll_init_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
-	int index_bit_count;
-	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
+	int index_bits;
+	if (get_int_property(&index_bits, op, "indexBits", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
-	int mh_bit_count;
-	if (get_int_property(&mh_bit_count, op, "mhBitCount", log) != AS_NODE_PARAM_OK) {
+	int minhash_bits;
+	if (get_int_property(&minhash_bits, op, "minhashBits", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
@@ -79,21 +79,21 @@ add_hll_init_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 		return false;
 	}
 
-	as_v8_debug(log, "bin=%s, index_bit_count=%i, mh_bit_count=%i, has_policy=%s",
-			bin, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
-	return as_operations_hll_init_mh(ops, bin, NULL, has_policy ? &policy : NULL, index_bit_count, mh_bit_count);
+	as_v8_debug(log, "bin=%s, index_bits=%i, minhash_bits=%i, has_policy=%s",
+			bin, index_bits, minhash_bits, has_policy ?  "true" : "false");
+	return as_operations_hll_init_mh(ops, bin, NULL, has_policy ? &policy : NULL, index_bits, minhash_bits);
 }
 
 bool
 add_hll_add_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
-	int index_bit_count;
-	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
+	int index_bits;
+	if (get_int_property(&index_bits, op, "indexBits", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
-	int mh_bit_count;
-	if (get_int_property(&mh_bit_count, op, "mhBitCount", log) != AS_NODE_PARAM_OK) {
+	int minhash_bits;
+	if (get_int_property(&minhash_bits, op, "minhashBits", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
@@ -111,11 +111,11 @@ add_hll_add_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 
 	if (as_v8_debug_enabled(log)) {
 		char* list_str = as_val_tostring(list);
-		as_v8_debug(log, "bin=%s, list=%s, index_bit_count=%i, mh_bit_count=%i, has_policy=%s",
-				bin, list_str, index_bit_count, mh_bit_count, has_policy ?  "true" : "false");
+		as_v8_debug(log, "bin=%s, list=%s, index_bits=%i, minhash_bits=%i, has_policy=%s",
+				bin, list_str, index_bits, minhash_bits, has_policy ?  "true" : "false");
 		cf_free(list_str);
 	}
-	bool success = as_operations_hll_add_mh(ops, bin, NULL, has_policy ? &policy : NULL, list, index_bit_count, mh_bit_count);
+	bool success = as_operations_hll_add_mh(ops, bin, NULL, has_policy ? &policy : NULL, list, index_bits, minhash_bits);
 
 	if (list) as_list_destroy(list);
 	return success;
@@ -157,13 +157,13 @@ add_hll_refresh_count_op(as_operations* ops, char* bin, Local<Object> op, LogInf
 bool
 add_hll_fold_op(as_operations* ops, char* bin, Local<Object> op, LogInfo* log)
 {
-	int index_bit_count;
-	if (get_int_property(&index_bit_count, op, "indexBitCount", log) != AS_NODE_PARAM_OK) {
+	int index_bits;
+	if (get_int_property(&index_bits, op, "indexBits", log) != AS_NODE_PARAM_OK) {
 		return false;
 	}
 
-	as_v8_debug(log, "bin=%s, index_bit_count=%i", bin, index_bit_count);
-	return as_operations_hll_fold(ops, bin, NULL, index_bit_count);
+	as_v8_debug(log, "bin=%s, index_bits=%i", bin, index_bits);
+	return as_operations_hll_fold(ops, bin, NULL, index_bits);
 }
 
 bool
