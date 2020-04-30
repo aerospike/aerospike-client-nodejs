@@ -27,7 +27,13 @@
     "aerospike": "file:..",
     "cli-table": "^0.3.1",
     "winston": "^3.2.1",
-    "yargs": "^15.3.1"
+    "yargs": "^15.3.1",
+    "snyk": "^1.316.1"
   },
-  "main": "main.js"
+  "main": "main.js",
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
+  },
+  "snyk": true
 }
