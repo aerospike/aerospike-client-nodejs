@@ -146,7 +146,7 @@ sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
 To install library prerequisites via `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
+sudo apt-get install g++ libssl1.0.0 libssl-dev zlib1g-dev
 ```
 
 ### Mac OS X
