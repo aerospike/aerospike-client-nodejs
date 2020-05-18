@@ -35,6 +35,8 @@ add_operation(as_operations* ops, uint32_t opcode, Local<Object> params, LogInfo
 			return add_map_op(ops, opcode, params, log);
 		case BIT_OPS_OFFSET:
 			return add_bit_op(ops, opcode, params, log);
+		case HLL_OPS_OFFSET:
+			return add_hll_op(ops, opcode, params, log);
 		default:
 			return AS_NODE_PARAM_ERR;
 	}
