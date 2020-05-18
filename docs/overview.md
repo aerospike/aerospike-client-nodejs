@@ -65,18 +65,31 @@ All modules and classes can also be accessed directly through the drop-down menu
 
 ## Supported Data Types
 
-Aerospike supports integer, double, string, bytes, list and map data types.
-Within the Node.js client these values are represented as JS numbers
-(integer and double), JS strings, Buffers (bytes), Arrays (list) and Objects
-(map). Lists and Maps can contain any of the other supported data types and
-can be nested (e.g. lists-within-lists, maps-within-maps, lists-within-maps,
-etc.).
+Aerospike supports the following data types:
 
-Aerospike currently does not support a boolean data type. To store boolean
-values in the database, the application needs to convert them to a supported
-data type as the client does not do any automatica data type conversions.
-Attempting to store a boolean value in a record bin will lead to a parameter
-error being returned by the client.
+| Aerospike data type | Mapping to Node.js data type |
+|---------------------|------------------------------|
+| Integer             | Number or BigInt             |
+| Double              | Number                       |
+| String              | String                       |
+| Bytes               | Buffer                       |
+| List                | Array                        |
+| Map                 | Object                       |
+| HyperLogLog         | Buffer                       |
+
+**Note:** Aerospike currently does not support a **Boolean** data type. To
+store boolean values in the database, the application needs to convert them to
+a supported data type as the client does not do any automatica data type
+conversions.  Attempting to store a boolean value in a record bin will lead to
+a parameter error being returned by the client.
+
+### Nested Data Structure
+
+Lists and Maps can contain any of the other supported data types and
+can be nested, e.g. lists-within-lists, maps-within-maps, lists-within-maps,
+etc., to an arbitrary depth. To perform operations on nested lists and maps,
+you can provide a {@link CdtContext CDT Context} object to the list and map
+operations.
 
 ## Example
 
