@@ -39,9 +39,18 @@ describe('Config #noserver', function () {
   describe('new Config', function () {
     it('copies config values from the passed Object', function () {
       const settings = {
+        authMode: Aerospike.auth.EXTERNAL_INSECURE,
         clusterName: 'testCluster',
+        connTimeoutMs: 1000,
         hosts: [{ addr: 'localhost', port: 3000 }],
         log: { level: 1, file: 2 },
+        loginTimeoutMs: 2000,
+        maxConnsPerNode: 200,
+        maxSocketIdle: 30,
+        minConnsPerNode: 10,
+        modlua: { userPath: '/user/path' },
+        password: 'sekret',
+        port: 3333,
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
           batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
@@ -53,37 +62,34 @@ describe('Config #noserver', function () {
           scan: new Aerospike.ScanPolicy({ totalTimeout: 1000 }),
           write: new Aerospike.WritePolicy({ totalTimeout: 1000 })
         },
-        connTimeoutMs: 1000,
-        loginTimeoutMs: 2000,
-        tenderInterval: 1000,
-        user: 'admin',
-        password: 'sekret',
-        authMode: Aerospike.auth.EXTERNAL_INSECURE,
-        sharedMemory: { key: 1234 },
-        modlua: { userPath: '/user/path' },
-        tls: { enable: true, encryptOnly: true },
-        port: 3333,
         rackAware: true,
-        rackId: 42
+        rackId: 42,
+        sharedMemory: { key: 1234 },
+        tenderInterval: 1000,
+        tls: { enable: true, encryptOnly: true },
+        user: 'admin'
       }
 
       const config = new Config(settings)
+      expect(config).to.have.property('authMode')
       expect(config).to.have.property('clusterName')
+      expect(config).to.have.property('connTimeoutMs')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
-      expect(config).to.have.property('connTimeoutMs')
       expect(config).to.have.property('loginTimeoutMs')
-      expect(config).to.have.property('tenderInterval')
-      expect(config).to.have.property('user')
-      expect(config).to.have.property('password')
-      expect(config).to.have.property('authMode')
-      expect(config).to.have.property('sharedMemory')
+      expect(config).to.have.property('maxConnsPerNode')
+      expect(config).to.have.property('maxSocketIdle')
+      expect(config).to.have.property('minConnsPerNode')
       expect(config).to.have.property('modlua')
-      expect(config).to.have.property('tls')
-      expect(config).to.have.property('port')
+      expect(config).to.have.property('password')
       expect(config).to.have.property('policies')
+      expect(config).to.have.property('port')
       expect(config).to.have.property('rackAware')
       expect(config).to.have.property('rackId')
+      expect(config).to.have.property('sharedMemory')
+      expect(config).to.have.property('tenderInterval')
+      expect(config).to.have.property('tls')
+      expect(config).to.have.property('user')
 
       const policies = config.policies
       expect(policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)

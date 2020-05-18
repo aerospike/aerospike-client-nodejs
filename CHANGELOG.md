@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * **New Features**
   * Adds a max records option for sampling with basic scans. Requires server version 4.9 or later. [#359](https://github.com/aerospike/aerospike-client-nodejs/pull/359)
   * Adds support for HyperLogLog data type and operations. Requires server version 4.9 or later. [#361](https://github.com/aerospike/aerospike-client-nodejs/pull/361)
+  * Adds new minConnsPerNode and maxSocketIdle client config. [#366](https://github.com/aerospike/aerospike-client-nodejs/pull/366)
 
 * **Updates**
   * *BREAKING*: The client no longer supports the percent-based scan sampling for server versions 4.9 or later. Use the new max records scan policy option instead.
