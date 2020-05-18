@@ -113,6 +113,7 @@ NAN_MODULE_INIT(Aerospike)
 
 	// enumerations
 	export("bitwise", bitwise_enum_values());
+	export("hll", hll_enum_values());
 	export("indexDataType", indexDataType());
 	export("indexType", indexType());
 	export("jobStatus", jobStatus());
@@ -127,6 +128,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("listOperations", list_opcode_values());
 	export("mapOperations", map_opcode_values());
 	export("bitOperations", bit_opcode_values());
+	export("hllOperations", hll_opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());

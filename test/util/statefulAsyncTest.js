@@ -56,8 +56,9 @@ exports.createRecord = (bins) => (state) => {
   return state.set('key', helper.client.put(key, bins, meta, policy))
 }
 
-exports.operate = (ops) => (state) =>
-  state.set('result', helper.client.operate(state.key, Array.isArray(ops) ? ops : [ops]))
+exports.operate = (ops) => (state) => {
+  return state.set('result', helper.client.operate(state.key, Array.isArray(ops) ? ops : [ops]))
+}
 
 exports.assertResultEql = (expected) => (state) => {
   expect(state.result.bins).to.eql(expected, 'result of operation does not match expectation')
