@@ -53,13 +53,13 @@
     "dirty-chai": "^2.0.1",
     "ink-docstrap": "^1.3.0",
     "jsdoc": "^3.6.4",
-    "mocha": "^7.0.0",
+    "mocha": "^7.1.2",
     "mocha-clean": "^1.0.0",
     "nyc": "^15.0.0",
     "semver": "^7.1.1",
     "standard": "^14.3.1",
     "tmp": "^0.1",
-    "yargs": "^15.1.0"
+    "yargs": "^15.3.1"
   },
   "standard": {
     "ignore": [
