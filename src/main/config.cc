@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -286,13 +286,22 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 	if ((rc = get_optional_uint32_property(&config->login_timeout_ms, NULL, configObj, "loginTimeoutMs", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
+	if ((rc = get_optional_uint32_property(&config->max_socket_idle, NULL, configObj, "maxSocketIdle", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
 	if ((rc = get_optional_uint32_property(&config->tender_interval, NULL, configObj, "tendInterval", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->async_max_conns_per_node, NULL, configObj, "maxConnsPerNode", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
+	if ((rc = get_optional_uint32_property(&config->async_min_conns_per_node, NULL, configObj, "minConnsPerNode", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
 	if ((rc = get_optional_uint32_property(&config->max_conns_per_node, NULL, configObj, "maxConnsPerNodeSync", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = get_optional_uint32_property(&config->min_conns_per_node, NULL, configObj, "minConnsPerNodeSync", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 	if ((rc = get_optional_bool_property(&config->use_services_alternate, NULL, configObj, "useAlternateAccessAddress", log)) != AS_NODE_PARAM_OK) {
