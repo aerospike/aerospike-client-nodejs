@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * **Updates**
   * *BREAKING*: The client no longer supports the percent-based scan sampling for server versions 4.9 or later. Use the new max records scan policy option instead.
   * Update C client library to [v4.6.16](http://www.aerospike.com/download/client/c/notes.html#4.6.16).
+  * Update dependencies with potential vulnerabilities by running npm audit fix. [#367](https://github.com/aerospike/aerospike-client-nodejs/pull/367)
 
 ## [3.15.0] - 2020-03-24
 
