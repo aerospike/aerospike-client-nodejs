@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
   * Add minConnsPerNode and maxSocketIdle client config. [#366](https://github.com/aerospike/aerospike-client-nodejs/pull/366)
 
 * **Updates**
-  * *BREAKING*: The client no longer supports the percent-based scan sampling for server versions 4.9 or later. Use the new max records scan policy option instead.
+  * *BREAKING*: The client no longer supports the percent-based scan sampling for server versions 4.9 or later. Use the new max records scan policy option instead. See [API Changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-3-16-0) for details.
   * Update C client library to [v4.6.16](http://www.aerospike.com/download/client/c/notes.html#4.6.16).
   * Update dependencies with potential vulnerabilities by running npm audit fix. [#367](https://github.com/aerospike/aerospike-client-nodejs/pull/367)
 
@@ -257,7 +257,7 @@ All notable changes to this project will be documented in this file.
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * Support nobins flag on query operations
   * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
-  * Improved timeout handling and automatic transaction retries - see [detailed API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300) for more info.
+  * Improved timeout handling and automatic transaction retries - see [detailed API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-3-0-0) for more info.
   * Support gen policy for apply UDF operation.
 
 * **Bug Fixes**
@@ -271,7 +271,7 @@ All notable changes to this project will be documented in this file.
   * Policy rewrite and changes to how default client policies are configured. [PR #221](https://github.com/aerospike/aerospike-client-nodejs/pull/221)
   * Changes to shared memory layout and default shared memory key.
 
-Please refer to the full list of [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-300)
+Please refer to the full list of [backward incompatible API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-3-0-0)
 for further details.
 
 ## [2.7.2] - 2017-08-03
@@ -303,7 +303,7 @@ for further details.
 
 * **Updates**
   * Update C client library to [v4.1.6](http://www.aerospike.com/download/client/c/notes.html#4.1.6).
-  * The Client#udfRegisterWait and Info#parseInfo functions have been marked deprecated. See [API Changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md) for details.
+  * The Client#udfRegisterWait and Info#parseInfo functions have been marked deprecated. See [API Changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-2-6-0) for details.
 
 ## [2.5.2] - 2017-04-20
 
@@ -395,7 +395,7 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
 * **Updates**
   * Update C client library to [v4.1.0](http://www.aerospike.com/download/client/c/notes.html#4.1.0).
   * Shared memory layout has changed in v4.1.0 of the C client library. See
-    [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-240)
+    [backward incompatible API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-2-4-0)
     for more details.
   * The <code>retry</code> policy value for read, write, remove and operate
     policies has been deprecated as it does not actually affect single key
@@ -449,7 +449,7 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
 
 * **Changes**
   * The `aerospike.operator` module has been split up into two seperate modules `aerospike.operations` and `aerospike.lists` for operations on scalar and
-    list data types respectively. See detailed list of [API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md#version-210)
+    list data types respectively. See detailed list of [API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-2-1-0)
     for further details.
 
 * **Documentation**
@@ -549,7 +549,7 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
   * Follow Node.js error-first callback conventions: The client now returns
     null as the first parameter (`error`) in most callbacks when the command
     was executed successfully. See
-    [backward incompatible API changes](https://github.com/aerospike/aerospike-client-nodejs/blob/master/docs/api-changes.md)
+    [backward incompatible API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-2-0-0-alpha-1)
     for more details. [#105](https://github.com/aerospike/aerospike-client-nodejs/issues/105),
     [PR #106](https://github.com/aerospike/aerospike-client-nodejs/pull/106). Thanks to
     [@eljefedelrodeodeljefe](https://github.com/eljefedelrodeodeljefe)!
