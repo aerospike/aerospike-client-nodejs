@@ -127,6 +127,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 						break;
 					}
 			}
+			free((void*) bin_name);
 		}
 	}
 
@@ -194,6 +195,25 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		if (operations_from_jsarray(query->ops, ops, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing ops arguments for query object failed");
 			Nan::ThrowTypeError("Error in parsing the operations");
+		}
+	}
+}
+
+void free_query(as_query* query, as_policy_query* policy)
+{
+	if (query) {
+		for (int i = 0; i < query->where.size; i++) {
+			as_predicate entry = query->where.entries[i];
+			if (entry.dtype == AS_INDEX_STRING || entry.dtype == AS_INDEX_GEO2DSPHERE) {
+				free(entry.value.string);
+			}
+		}
+		as_query_destroy(query);
+	}
+
+	if (policy) {
+		if (policy->base.predexp) {
+			as_predexp_list_destroy(policy->base.predexp);
 		}
 	}
 }

@@ -69,6 +69,5 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 
 Cleanup:
 	delete cmd;
-	as_query_destroy(&query);
-	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
+	free_query(&query, p_policy);
 }

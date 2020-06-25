@@ -38,8 +38,8 @@ class QueryBackgroundCommand : public AerospikeCommand {
 			: AerospikeCommand("QueryBackground", client, callback_) {}
 
 		~QueryBackgroundCommand() {
+			free_query(&query, NULL);
 			if (policy != NULL) cf_free(policy);
-			as_query_destroy(&query);
 		}
 
 		as_policy_write* policy = NULL;
