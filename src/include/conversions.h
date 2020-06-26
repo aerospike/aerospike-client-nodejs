@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,13 +36,6 @@ extern "C" {
 /****************************************************************************
  * MACROS
  ****************************************************************************/
-
-#define COPY_ERR_MESSAGE(__err,__message) \
-    strcpy(__err.message, #__message); \
-__err.code = __message;\
-__err.line = __LINE__; \
-__err.file = __FILE__; \
-__err.func = __func__;
 
 #define AS_NODE_PARAM_ERR -1
 #define AS_NODE_PARAM_OK   0
