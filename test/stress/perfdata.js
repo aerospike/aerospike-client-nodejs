@@ -54,7 +54,7 @@ function generate (ns, set, numberOfRecords, recordSize, done) {
   var uniqueKeys = new Set()
   var timer = interval(10 * 1000, function (ms) {
     var throughput = Math.round(1000 * keysCreated / ms)
-    console.info('%s ms: %d records created (%d records / second)', ms, keysCreated, throughput)
+    console.info('%s ms: %d records created (%d records / second) - memory: %s', ms, keysCreated, throughput, JSON.stringify(process.memoryUsage()))
   })
   putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
     if (key) {
