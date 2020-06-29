@@ -31,12 +31,13 @@ describe('client.batchSelect()', function () {
   var client = helper.client
 
   it('should successfully read bins from 10 records', function () {
-    var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/success', random: false })
-    var mgen = metagen.constant({ ttl: 1000 })
-    var rgen = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })
-
-    return putgen.put(numberOfRecords, kgen, rgen, mgen)
+    const numberOfRecords = 10
+    const generators = {
+      keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/success', random: false }),
+      recgen: recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() }),
+      metagen: metagen.constant({ ttl: 1000 })
+    }
+    return putgen.put(numberOfRecords, generators)
       .then(records => {
         const keys = records.map(record => record.key)
         return client.batchSelect(keys, ['i', 's'])

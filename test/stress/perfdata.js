@@ -43,22 +43,28 @@ function interval (duration, callback) {
 
 // Generates records with specific record size
 function generate (ns, set, numberOfRecords, recordSize, done) {
-  var numBinsPerRecord = recordSize[0]
-  var sizePerBin = recordSize[1]
-  var kgen = keygen.string(ns, set, { length: { min: 20, max: 20 } })
-  var bins = { id: valgen.integer({ random: false, min: 0 }) }
-  for (var i = 0; i < numBinsPerRecord; i++) {
+  const numBinsPerRecord = recordSize[0]
+  const sizePerBin = recordSize[1]
+  const bins = { id: valgen.integer({ random: false, min: 0 }) }
+  for (let i = 0; i < numBinsPerRecord; i++) {
     bins['b' + i] = valgen.bytes({ length: { min: sizePerBin, max: sizePerBin } })
   }
-  var rgen = recgen.record(bins)
-  var mgen = metagen.constant({})
-  var keysCreated = 0
-  var uniqueKeys = new Set()
-  var timer = interval(10 * 1000, function (ms) {
+  const generators = {
+    keygen: keygen.string(ns, set, { length: { min: 20, max: 20 } }),
+    recgen: recgen.record(bins),
+    metagen: metagen.constant({}),
+    throttle: {
+      limit: 5000,
+      interval: 1000
+    }
+  }
+  let keysCreated = 0
+  const uniqueKeys = new Set()
+  const timer = interval(10 * 1000, function (ms) {
     const throughput = Math.round(1000 * keysCreated / ms)
     console.info('%s ms: %d records created (%d records / second) - %s', ms, keysCreated, throughput, memoryUsage())
   })
-  putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
+  putgen.put(numberOfRecords, generators, function (key) {
     if (key) {
       keysCreated++
       uniqueKeys.add(key.key)

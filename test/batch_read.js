@@ -35,15 +35,17 @@ describe('client.batchRead()', function () {
 
   before(function () {
     const nrecords = 10
-    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_read/', random: false })
-    const mgen = metagen.constant({ ttl: 1000 })
-    const rgen = recgen.record({
-      i: valgen.integer(),
-      s: valgen.string(),
-      l: () => [1, 2, 3],
-      m: () => { return { a: 1, b: 2, c: 3 } }
-    })
-    return putgen.put(nrecords, kgen, rgen, mgen)
+    const generators = {
+      keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_read/', random: false }),
+      recgen: recgen.record({
+        i: valgen.integer(),
+        s: valgen.string(),
+        l: () => [1, 2, 3],
+        m: () => { return { a: 1, b: 2, c: 3 } }
+      }),
+      metagen: metagen.constant({ ttl: 1000 })
+    }
+    return putgen.put(nrecords, generators)
   })
 
   it('returns the status whether each key was found or not', function (done) {

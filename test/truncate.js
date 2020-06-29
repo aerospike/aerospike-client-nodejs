@@ -34,16 +34,18 @@ const putgen = helper.putgen
 describe('client.truncate()', function () {
   helper.skipUnlessVersion('>= 3.12.0', this)
 
-  var client = helper.client
+  const client = helper.client
 
   // Generates a number of records; the callback function is called with a list
   // of the record keys.
   function genRecords (kgen, noRecords, done) {
-    var mgen = metagen.constant({ ttl: 300 })
-    var rgen = recgen.constant({ a: 'foo', b: 'bar' })
-    putgen.put(noRecords, kgen, rgen, mgen)
+    const generators = {
+      keygen: kgen,
+      recgen: recgen.constant({ a: 'foo', b: 'bar' }),
+      metagen: metagen.constant({ ttl: 300 })
+    }
+    putgen.put(noRecords, generators)
       .then(done)
-      .catch(err => { throw err })
   }
 
   // Checks to verify that records that are supposed to have been truncated
