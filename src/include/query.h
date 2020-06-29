@@ -25,3 +25,4 @@ extern "C" {
 #include "log.h"
 
 void setup_query(as_query* query, v8::Local<v8::Value> ns, v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options, LogInfo* log);
+void free_query(as_query* query, as_policy_query* policy);

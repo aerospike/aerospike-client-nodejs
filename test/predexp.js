@@ -110,10 +110,12 @@ describe('Aerospike.predexp', function () {
 
     before(() => {
       const entries = samples.entries()
-      const rgen = () => entries.next().value[1]
-      const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/predexp/query', random: false })
-      const mgen = metagen.constant({ ttl: 300 })
-      return putgen.put(samples.length, kgen, rgen, mgen)
+      const generators = {
+        keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/predexp/query', random: false }),
+        recgen: () => entries.next().value[1],
+        metagen: metagen.constant({ ttl: 300 })
+      }
+      return putgen.put(samples.length, generators)
     })
 
     function timeNanos (diff) {

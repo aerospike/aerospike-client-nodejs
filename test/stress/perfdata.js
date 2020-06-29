@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 // *****************************************************************************
 
 'use strict'
+
+const { format } = require('util')
 
 const helper = require('../test_helper')
 
@@ -41,22 +43,28 @@ function interval (duration, callback) {
 
 // Generates records with specific record size
 function generate (ns, set, numberOfRecords, recordSize, done) {
-  var numBinsPerRecord = recordSize[0]
-  var sizePerBin = recordSize[1]
-  var kgen = keygen.string(ns, set, { length: { min: 20, max: 20 } })
-  var bins = { id: valgen.integer({ random: false, min: 0 }) }
-  for (var i = 0; i < numBinsPerRecord; i++) {
+  const numBinsPerRecord = recordSize[0]
+  const sizePerBin = recordSize[1]
+  const bins = { id: valgen.integer({ random: false, min: 0 }) }
+  for (let i = 0; i < numBinsPerRecord; i++) {
     bins['b' + i] = valgen.bytes({ length: { min: sizePerBin, max: sizePerBin } })
   }
-  var rgen = recgen.record(bins)
-  var mgen = metagen.constant({})
-  var keysCreated = 0
-  var uniqueKeys = new Set()
-  var timer = interval(10 * 1000, function (ms) {
-    var throughput = Math.round(1000 * keysCreated / ms)
-    console.info('%s ms: %d records created (%d records / second)', ms, keysCreated, throughput)
+  const generators = {
+    keygen: keygen.string(ns, set, { length: { min: 20, max: 20 } }),
+    recgen: recgen.record(bins),
+    metagen: metagen.constant({}),
+    throttle: {
+      limit: 5000,
+      interval: 1000
+    }
+  }
+  let keysCreated = 0
+  const uniqueKeys = new Set()
+  const timer = interval(10 * 1000, function (ms) {
+    const throughput = Math.round(1000 * keysCreated / ms)
+    console.info('%s ms: %d records created (%d records / second) - %s', ms, keysCreated, throughput, memoryUsage())
   })
-  putgen.put(numberOfRecords, kgen, rgen, mgen, function (key) {
+  putgen.put(numberOfRecords, generators, function (key) {
     if (key) {
       keysCreated++
       uniqueKeys.add(key.key)
@@ -68,7 +76,17 @@ function generate (ns, set, numberOfRecords, recordSize, done) {
   })
 }
 
+const MEGA = 1024 * 1024 // bytes in a MB
+function memoryUsage () {
+  const memUsage = process.memoryUsage()
+  const rss = Math.round(memUsage.rss / MEGA)
+  const heapUsed = Math.round(memUsage.heapUsed / MEGA)
+  const heapTotal = Math.round(memUsage.heapTotal / MEGA)
+  return format('mem: %d MB, heap: %d / %d MB', rss, heapUsed, heapTotal)
+}
+
 module.exports = {
   interval,
-  generate
+  generate,
+  memoryUsage
 }

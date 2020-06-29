@@ -38,9 +38,9 @@ class QueryApplyCommand : public AerospikeCommand {
 			: AerospikeCommand("QueryApply", client, callback_) {}
 
 		~QueryApplyCommand() {
+			free_query(&query, policy);
 			if (policy != NULL) cf_free(policy);
 			if (val != NULL) cf_free(val);
-			as_query_destroy(&query);
 		}
 
 		as_policy_query* policy = NULL;

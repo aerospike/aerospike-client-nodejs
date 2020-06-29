@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ const perfdata = require('./perfdata')
 
 const fs = require('fs')
 
-const mega = 1024 * 1024 // bytes in a MB
-
 describe('client.query()', function () {
   this.enableTimeouts(false)
   var client = helper.client
@@ -42,13 +40,9 @@ describe('client.query()', function () {
 
     var received = 0
     var timer = perfdata.interval(10000, function (ms) {
-      var throughput = Math.round(1000 * received / ms)
-      var memUsage = process.memoryUsage()
-      var rss = Math.round(memUsage.rss / mega)
-      var heapUsed = Math.round(memUsage.heapUsed / mega)
-      var heapTotal = Math.round(memUsage.heapTotal / mega)
-      console.log('%d ms: %d records received (%d rps; mem: %d MB, heap: %d / %d MB)',
-        ms, received, throughput, rss, heapUsed, heapTotal)
+      const throughput = Math.round(1000 * received / ms)
+      console.log('%d ms: %d records received (%d rps; %s)',
+        ms, received, throughput, perfdata.memoryUsage())
     })
 
     stream.on('error', function (err) { throw err })
@@ -95,8 +89,8 @@ describe('client.query()', function () {
         })
       } else {
         // perf test data already exists
-        numberOfRecords = record.norec
-        testSet = record.set
+        numberOfRecords = record.bins.norec
+        testSet = record.bins.set
         console.info('using performance test data from set %s (%d records)', testSet, numberOfRecords)
         done()
       }

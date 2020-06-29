@@ -568,40 +568,6 @@ Local<Object> error_to_jsobject(as_error* error, const LogInfo* log)
         return scope.Escape(err);
     }
 
-    // LDT error codes are populated as a string message.
-    // Parse the string and populate the error object appropriately
-    // so that application can look up the error codes and doesn't have
-    // to look at strings.
-    // Check if it's an UDF ERROR and message has string LDT in it
-    // then it implies it is an LDT error, so parse the error
-    // and populate the error object.
-    if(error->code == AEROSPIKE_ERR_UDF && strstr(error->message, "LDT") != NULL) {
-        char err_message[AS_ERROR_MESSAGE_MAX_LEN] = {"\0"};
-        as_strlcpy(err_message, error->message, AS_ERROR_MESSAGE_MAX_LEN);
-        char *ptr;
-        ptr = strtok(err_message, ":");
-        if(ptr != NULL) {
-            error->file = ptr;
-            ptr = strtok(NULL, ":");
-        }
-        if(ptr != NULL) {
-            error->line =  atoi(ptr);
-            ptr = strtok(NULL, ":");
-        }
-        if(ptr != NULL) {
-            error->code =  (as_status) atoi(ptr);
-            ptr = strtok(NULL, ":");
-        }
-
-        if(ptr != NULL) {
-            as_strlcpy(error->message, ptr, AS_ERROR_MESSAGE_MAX_LEN);
-            ptr = strtok(NULL, ":");
-        }
-
-        // LDT error does not populate function name as of now.
-        error->func = NULL;
-
-    }
     Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(error->code));
     Nan::Set(err, Nan::New("message").ToLocalChecked(), error->message[0] != '\0' ? Nan::New(error->message).ToLocalChecked() : Nan::New("\0").ToLocalChecked() );
     Nan::Set(err, Nan::New("func").ToLocalChecked(), error->func ? Nan::New(error->func).ToLocalChecked() : Nan::New("\0").ToLocalChecked() );

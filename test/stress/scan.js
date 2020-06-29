@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,9 @@ describe('client.scan()', function () {
 
     var received = 0
     var timer = perfdata.interval(reportingInterval, function (ms) {
-      var throughput = Math.round(1000 * received / ms)
-      var memUsage = process.memoryUsage()
-      var rss = Math.round(memUsage.rss / mega)
-      var heapUsed = Math.round(memUsage.heapUsed / mega)
-      var heapTotal = Math.round(memUsage.heapTotal / mega)
-      console.log('%d ms: %d records received (%d rps; mem: %d MB, heap: %d / %d MB)',
-        ms, received, throughput, rss, heapUsed, heapTotal)
+      const throughput = Math.round(1000 * received / ms)
+      console.log('%d ms: %d records received (%d rps; %s)',
+        ms, received, throughput, perfdata.memUsage())
     })
 
     stream.on('error', function (err) { throw err })

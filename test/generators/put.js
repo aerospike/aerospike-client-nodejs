@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 
 'use strict'
 
+const pThrottle = require('p-throttle')
+
 const Aerospike = require('../../lib/aerospike')
 const Record = require('../../lib/record')
 const helper = require('../test_helper')
 
-function createRecords (client, generator, recordsToCreate, maxConcurrent, callback) {
+function createRecords (putCall, generator, recordsToCreate, maxConcurrent, callback) {
   var currentRecordNo = 0
   var inFlight = 0
 
@@ -39,7 +41,7 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
       const putCb = creator.bind(this, record)
       const policy = generator.policy()
       const meta = { ttl: record.ttl, gen: record.gen }
-      client.put(record.key, record.bins, meta, policy, putCb)
+      putCall(record.key, record.bins, meta, policy, putCb)
       inFlight++
     } else if (currentRecordNo > recordsToCreate && inFlight === 0) {
       callback(null)
@@ -51,29 +53,31 @@ function createRecords (client, generator, recordsToCreate, maxConcurrent, callb
   }
 }
 
-function put (n, keygen, recgen, metagen, policy, callback) {
-  if (typeof policy === 'function') {
-    callback = policy
-    policy = null
-  }
-  if (typeof policy === 'undefined') {
-    policy = new Aerospike.WritePolicy({
-      totalTimeout: 1000,
-      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
-    })
-  }
-  var generator = {
-    key: keygen,
-    bins: recgen,
-    metadata: metagen,
+function put (n, options, callback) {
+  const policy = options.policy || new Aerospike.WritePolicy({
+    totalTimeout: 1000,
+    exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+  })
+
+  const generator = {
+    key: options.keygen,
+    bins: options.recgen,
+    metadata: options.metagen,
     policy: function () { return policy }
   }
+
+  let putCall = helper.client.put.bind(helper.client)
+  if (options.throttle) {
+    const { limit, interval } = options.throttle
+    putCall = pThrottle(putCall, limit, interval)
+  }
+
   if (callback) {
-    createRecords(helper.client, generator, n, 200, callback)
+    createRecords(putCall, generator, n, 200, callback)
   } else {
     return new Promise((resolve, reject) => {
       const records = []
-      createRecords(helper.client, generator, n, 200, record => {
+      createRecords(putCall, generator, n, 200, record => {
         if (record) {
           records.push(record)
         } else {

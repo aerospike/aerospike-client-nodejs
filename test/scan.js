@@ -40,15 +40,17 @@ context('Scans', function () {
 
   before(() => helper.udf.register('udf.lua')
     .then(() => {
-      const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false })
-      const rgen = recgen.record({ i: valgen.integer(), s: valgen.string() })
-      const mgen = metagen.constant({ ttl: 300 })
-      const policy = new Aerospike.WritePolicy({
-        totalTimeout: 1000,
-        key: Aerospike.policy.key.SEND,
-        exists: Aerospike.policy.exists.CREATE_OR_REPLACE
-      })
-      return putgen.put(numberOfRecords, kgen, rgen, mgen, policy)
+      const config = {
+        keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/scan/', random: false }),
+        recgen: recgen.record({ i: valgen.integer(), s: valgen.string() }),
+        metagen: metagen.constant({ ttl: 300 }),
+        policy: new Aerospike.WritePolicy({
+          totalTimeout: 1000,
+          key: Aerospike.policy.key.SEND,
+          exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+        })
+      }
+      return putgen.put(numberOfRecords, config)
         .then((records) => { keys = records.map((rec) => rec.key) })
     }))
 

@@ -45,12 +45,12 @@ class QueryForeachCommand : public AerospikeCommand {
 			}
 
 		~QueryForeachCommand() {
+			free_query(&query, policy);
 			if (policy != NULL) cf_free(policy);
 			if (results != NULL) {
 				as_queue_mt_destroy(results);
 				results = NULL;
 			}
-			as_query_destroy(&query);
 		}
 
 		as_policy_query* policy = NULL;

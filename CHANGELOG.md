@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Bug Fixes**
+  * Fix memory leaks when running secondary index queries with string filter predicates. [#370](https://github.com/aerospike/aerospike-client-nodejs/issues/370)
+
 ## [3.16.0] - 2020-05-18
 
 * **New Features**

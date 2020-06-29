@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@
 // node -O 10000 -P 4 -R 0.5
 // *****************************************************************************
 
-var aerospike = require('aerospike')
-var cluster = require('cluster')
-var winston = require('winston')
-var stats = require('./stats')
-var alerts = require('./alerts')
-var argv = require('./config.json')
+const { format } = require('util')
+
+const aerospike = require('aerospike')
+const cluster = require('cluster')
+const winston = require('winston')
+const stats = require('./stats')
+const alerts = require('./alerts')
+const argv = require('./config.json')
 
 // *****************************************************************************
 // Globals
@@ -199,18 +201,30 @@ function workerResultsInterval (worker, intervalWorkerStats) {
 
 function printIntervalStats () {
   if (rwWorkers > 0) {
-    logger.info('%s read(tps=%d timeouts=%d errors=%d) write(tps=%d timeouts=%d errors=%d) ',
+    logger.info('%s read(tps=%d timeouts=%d errors=%d) write(tps=%d timeouts=%d errors=%d) mem(%s)',
       new Date().toString(), intervalStats[0][0], intervalStats[0][1], intervalStats[0][2],
-      intervalStats[1][0], intervalStats[1][1], intervalStats[1][2])
+      intervalStats[1][0], intervalStats[1][1], intervalStats[1][2],
+      memUsage())
   }
   if (queryWorkers) {
-    logger.info('%s query(records = %d timeouts = %d errors = %d)',
-      new Date().toString(), intervalStats[2][0], intervalStats[2][1], intervalStats[2][2])
+    logger.info('%s query(records = %d timeouts = %d errors = %d) mem(%s)',
+      new Date().toString(), intervalStats[2][0], intervalStats[2][1], intervalStats[2][2],
+      memUsage())
   }
   if (scanWorkers) {
-    logger.info('%s scan(records = %d timeouts = %d errors = %d)',
-      new Date().toString(), intervalStats[3][0], intervalStats[3][1], intervalStats[3][2])
+    logger.info('%s scan(records = %d timeouts = %d errors = %d) mem(%s)',
+      new Date().toString(), intervalStats[3][0], intervalStats[3][1], intervalStats[3][2],
+      memUsage())
   }
+}
+
+const MEGA = 1024 * 1024 // bytes in a MB
+function memUsage () {
+  const memUsage = process.memoryUsage()
+  const rss = Math.round(memUsage.rss / MEGA)
+  const heapUsed = Math.round(memUsage.heapUsed / MEGA)
+  const heapTotal = Math.round(memUsage.heapTotal / MEGA)
+  return format('%d MB, heap: %d / %d MB', rss, heapUsed, heapTotal)
 }
 
 function workerResultsIteration (worker, opStats) {

@@ -112,11 +112,13 @@ describe('Queries', function () {
   }
 
   before(() => {
-    const sampleGen = () => samples.pop()
-    const kgen = keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false })
-    const mgen = metagen.constant({ ttl: 300 })
+    const generators = {
+      keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false }),
+      recgen: () => samples.pop(),
+      metagen: metagen.constant({ ttl: 300 })
+    }
     return Promise.all([
-      putgen.put(numberOfSamples, kgen, sampleGen, mgen)
+      putgen.put(numberOfSamples, generators)
         .then((records) => { keys = records.map((rec) => rec.key) })
         .then(() => Promise.all(indexes.map(idx =>
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3])))),
