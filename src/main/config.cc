@@ -74,6 +74,7 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 			Local<Object> host = Nan::Get(host_list, i).ToLocalChecked().As<Object>();
 			Local<Value> v8_addr = Nan::Get(host, Nan::New("addr").ToLocalChecked()).ToLocalChecked();
 			Local<Value> v8_port = Nan::Get(host, Nan::New("port").ToLocalChecked()).ToLocalChecked();
+			Local<Value> v8_tlsname = Nan::Get(host, Nan::New("tlsname").ToLocalChecked()).ToLocalChecked();
 
 			uint16_t port = default_port;
 			if (v8_port->IsNumber()) {
@@ -88,8 +89,14 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 
 			if (v8_addr->IsString()) {
 				Nan::Utf8String addr(v8_addr);
-				as_config_add_host(config, *addr, port);
-				as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
+				if (v8_tlsname->IsString()) {
+					Nan::Utf8String tlsname(v8_tlsname);
+					as_config_tls_add_host(config, *addr, *tlsname, port);
+					as_v8_detail(log,"adding TLS host, addr=\"%s\", port=%d, tlsname=\"%s\"", *addr, port, *tlsname);
+				} else {
+					as_config_add_host(config, *addr, port);
+					as_v8_detail(log,"adding host, addr=\"%s\", port=%d", *addr, port);
+				}
 			} else {
 				as_v8_error(log, "host[%d].addr should be a string", i);
 				rc = AS_NODE_PARAM_ERR;
