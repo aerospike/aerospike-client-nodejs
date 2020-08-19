@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Bug Fixes**
+  * Reverses the breaking change introduced in v3.16.0 of not supporting percent-based scan sampling for server versions 4.9 or later. However, note that scan percent and max_records are mutually exclusive; the client will return an error if both values are set on a scan policy.
+
+* **Updates**
+  * Update C client library to [v4.6.18](http://www.aerospike.com/download/client/c/notes.html#4.6.18)
+  * Add support for Ubuntu 20.04
+  * Drop support for Ubuntu 14.04
+
 ## [3.16.1] - 2020-06-30
 
 * **Bug Fixes**

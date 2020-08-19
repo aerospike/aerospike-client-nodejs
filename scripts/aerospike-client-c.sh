@@ -169,8 +169,12 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           DISTRO="ubuntu16.04"
           PKG_FORMAT="deb"
           ;;
-        "ubuntu"* )
+        "ubuntu18"* )
           DISTRO="ubuntu18.04"
+          PKG_FORMAT="deb"
+          ;;
+        "ubuntu20"* )
+          DISTRO="ubuntu20.04"
           PKG_FORMAT="deb"
           ;;
         "ami"* )
