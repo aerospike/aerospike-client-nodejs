@@ -11,10 +11,12 @@
 
 An Aerospike add-on module for Node.js.
 
-This module is compatible with Node.js v8.x (LTS), v10.x (LTS), and v12.x
+The client is compatible with Node.js v8.x, v10.x (LTS), v12.x (LTS), and v14.x
 (LTS). It supports the following operating systems: CentOS/RHEL 6/7/8, Debian
-8/9/10, Ubuntu 16.04/18.04/20.04, as well as many Linux destributions compatible
-with one of these OS releases. macOS and Windows are also supported.
+8/9/10, Ubuntu 16.04/18.04/20.04, as well as many Linux distributions
+compatible with one of these OS releases. macOS is also supported. The client
+port to Windows is a community supported project and suitable for application
+prototyping and development.
 
 - [Usage](#Usage)
 - [Prerequisites](#Prerequisites)
