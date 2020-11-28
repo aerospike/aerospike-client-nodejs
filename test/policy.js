@@ -49,7 +49,6 @@ context('Client Policies #noserver', function () {
           socketTimeout: 1000,
           totalTimeout: 2000,
           maxRetries: 1,
-          gen: Aerospike.policy.gen.EQ,
           key: Aerospike.policy.key.SEND,
           commitLevel: 2,
           ttl: 3600,
@@ -59,7 +58,6 @@ context('Client Policies #noserver', function () {
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.totalTimeout).to.equal(2000)
         expect(subject.maxRetries).to.equal(1)
-        expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.commitLevel).to.equal(2)
         expect(subject.ttl).to.equal(3600)
