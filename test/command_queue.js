@@ -78,4 +78,51 @@ describe('Command Queue #slow', function () {
     const result = await helper.runInNewProcess(test, helper.config)
     expect(result).to.match(/Command queue has already been initialized!/)
   })
+
+  it('does not deadlock on extra query with failOnClusterChange info commands #389', async function () {
+    const test = async function (Aerospike, config) {
+      Object.assign(config, {
+        log: { level: Aerospike.log.OFF },
+        policies: {
+          query: new Aerospike.QueryPolicy({ totalTimeout: 10000, failOnClusterChange: true })
+        }
+      })
+      Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
+      const setName = 'testGlobalCommandQueueDeadlock389'
+
+      const client = await Aerospike.connect(config)
+      try {
+        await client.createIntegerIndex({
+          ns: 'test',
+          set: setName,
+          bin: 'i',
+          index: `idx-${setName}`
+        })
+      } catch (error) {
+        // index already exists
+        if (error.code !== Aerospike.status.ERR_INDEX_FOUND) throw error
+      }
+
+      const puts = Array.from({ length: 5 }, (_, i) =>
+        client.put(new Aerospike.Key('test', setName, i), { i })
+      )
+      await Promise.all(puts)
+
+      try {
+        let results = Array.from({ length: 5 }, (_, i) => {
+          const query = client.query('test', 'test')
+          query.where(Aerospike.filter.equal('i', i))
+          return query.results()
+        })
+        results = await Promise.all(results)
+        return results.reduce((sum, records) => sum + records.length, 0)
+      } catch (error) {
+        // throws "Delay queue timeout" error on deadlock
+        return error.message
+      }
+    }
+
+    const result = await helper.runInNewProcess(test, helper.config)
+    expect(result).to.eq(5)
+  })
 })
