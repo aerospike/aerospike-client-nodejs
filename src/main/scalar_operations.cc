@@ -159,6 +159,7 @@ add_append_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* l
 bool
 add_touch_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* log)
 {
+	setTTL(obj, &ops->ttl, log);
 	as_v8_debug(log, "<touch>");
 	return as_operations_add_touch(ops);
 }

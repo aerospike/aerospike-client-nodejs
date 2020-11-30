@@ -1062,6 +1062,7 @@ int setTTL(Local<Object> obj, uint32_t* ttl, const LogInfo* log)
     } else if (v8_ttl->IsNull() || v8_ttl->IsUndefined()) {
         // noop - ttl may not be specified
     } else {
+        as_v8_error(log, "Type error: TTL should be a positive integer");
         return AS_NODE_PARAM_ERR;
     }
 
