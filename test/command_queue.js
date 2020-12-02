@@ -45,7 +45,7 @@ describe('Command Queue #slow', function () {
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 1 })
       const client = await Aerospike.connect(config)
       const cmds = Array.from({ length: 10 }, (_, i) =>
-          client.put(new Aerospike.Key('test', 'test', i), { i })
+        client.put(new Aerospike.Key('test', 'test', i), { i })
       )
       try {
         await Promise.all(cmds)

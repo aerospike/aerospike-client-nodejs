@@ -40,10 +40,6 @@ function generateTestSource (fn, data) {
 `
 }
 
-function reportResult (result) {
-  process.send(result, () => process.exit())
-}
-
 function createTempFile (fn, data) {
   const source = generateTestSource(fn, data)
   const temp = tmp.fileSync({ postfix: '.js' })
