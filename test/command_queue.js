@@ -110,7 +110,7 @@ describe('Command Queue #slow', function () {
 
       try {
         let results = Array.from({ length: 5 }, (_, i) => {
-          const query = client.query('test', 'test')
+          const query = client.query('test', setName)
           query.where(Aerospike.filter.equal('i', i))
           return query.results()
         })
