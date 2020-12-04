@@ -92,12 +92,13 @@ describe('Command Queue #slow', function () {
 
       const client = await Aerospike.connect(config)
       try {
-        await client.createIntegerIndex({
+        const job = await client.createIntegerIndex({
           ns: 'test',
           set: setName,
           bin: 'i',
           index: `idx-${setName}`
         })
+        await job.wait(10)
       } catch (error) {
         // index already exists
         if (error.code !== Aerospike.status.ERR_INDEX_FOUND) throw error
