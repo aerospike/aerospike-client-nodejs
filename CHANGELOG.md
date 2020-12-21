@@ -4,13 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.16.2] - 2020-12-04
+
+* **New Features**
+  * Support setting tlsname using Host obj. [#382](https://github.com/aerospike/aerospike-client-nodejs/issues/382)
+
 * **Bug Fixes**
   * Reverses the breaking change introduced in v3.16.0 of not supporting percent-based scan sampling for server versions 4.9 or later. However, note that scan percent and max_records are mutually exclusive; the client will return an error if both values are set on a scan policy.
+  * Query with "failOnClusterChange" causes timeout when using command queue. [#389](https://github.com/aerospike/aerospike-client-nodejs/issues/389)
 
 * **Updates**
-  * Update C client library to [v4.6.18](http://www.aerospike.com/download/client/c/notes.html#4.6.18)
-  * Add support for Ubuntu 20.04
-  * Drop support for Ubuntu 14.04
+  * Remove support for ApplyPolicy#gen, which is not supported by the server. [#390](https://github.com/aerospike/aerospike-client-nodejs/pull/390)
+  * Update C client library to [v4.6.19](http://www.aerospike.com/download/client/c/notes.html#4.6.19)
+  * Clarify docs for HLL ALLOW_FOLD policy [#386](https://github.com/aerospike/aerospike-client-nodejs/pull/386)
+  * Fix minhash bits range in docs (4-51, not 4-58). [#385](https://github.com/aerospike/aerospike-client-nodejs/pull/385)
+  * Fix spelling of capacity in Command Queue docs. [#376](https://github.com/aerospike/aerospike-client-nodejs/pull/376) Thanks to [@icflournoy](https://github.com/icflournoy)!
+  * Refactor: Set TTL as part of the touch operation [#391](https://github.com/aerospike/aerospike-client-nodejs/pull/391)
+  * Add support for Ubuntu 20.04.
+  * Drop support for Ubuntu 14.04.
 
 ## [3.16.1] - 2020-06-30
 

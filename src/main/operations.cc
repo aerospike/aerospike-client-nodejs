@@ -56,7 +56,6 @@ operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
 	uint32_t op;
 	for (uint32_t i = 0; i < capacity; i++) {
 		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
-		setTTL(obj, &ops->ttl, log);
 		result = get_uint32_property(&op, obj, "op", log);
 		if (result == AS_NODE_PARAM_OK) {
 			result = add_operation(ops, op, obj, log);

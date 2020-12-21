@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2020 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,23 @@ const tmp = require('tmp')
 const fs = require('fs')
 
 function generateTestSource (fn, data) {
-  return `'use strict'
+  return `
+  'use strict'
   const Aerospike = require(process.cwd())
-  let fn = ${fn.toString()}
-  let data = JSON.parse(\`${JSON.stringify(data)}\`)
-  let finish = (msg) => process.send(msg, () => process.exit())
-  try {
-    fn(Aerospike, data, result => finish({ result: result }))
-  } catch (error) {
-    finish({ error: error })
-  }`
+  const fn = ${fn.toString()}
+  const data = JSON.parse(\`${JSON.stringify(data)}\`)
+  const report = (result) => new Promise((resolve) => process.send(result, resolve))
+
+  ;(async () => {
+    try {
+      const result = await fn(Aerospike, data)
+      await report({ result })
+    } catch (error) {
+      await report({ error })
+    }
+    process.exit()
+  })()
+`
 }
 
 function createTempFile (fn, data) {

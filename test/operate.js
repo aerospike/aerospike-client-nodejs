@@ -197,54 +197,42 @@ context('Operations', function () {
     })
 
     describe('operations.touch()', function () {
-      it('updates the record\'s time-to-live (ttl)', function (done) {
-        // TEST LOGIC
-        // 1.Write a record to an aerospike server.
-        // 2.Read the record, to get the ttl and calculate
-        //   the difference in the ttl written and the ttl returned by server.
-        // 3.Touch the record with a definite ttl.
-        // 4.Read the record and calculate the difference in the ttl between the
-        //  touch ttl value and read ttl value.
-        // 5.Compare the difference with the earlier difference calculated.
-        // 6.This is to account for the clock asynchronicity between
-        //   the client and the server machines.
-        // 7.Server returns a number, at which the record expires according the server clock.
-        // 8.The client calculates the time in seconds, and gives back ttl. In the case , where
-        //   clocks are not synchronous between server and client, the ttl client calculates may not
-        //   be accurate to the user. Nevertheless server expires the record in the correct time.
-
+      // TEST LOGIC
+      // 1. Write a record to an aerospike server.
+      // 2. Read the record to get the TTL and calculate the difference in
+      //    the TTL written and the TTL returned by server.
+      // 3. Touch the record with a defined TTL.
+      // 4. Read the record and calculate the difference in the TTL between the
+      //    touch TTL value and read TTL value.
+      // 5. Compare the difference with the earlier difference observed.
+      // 6. This is to account for the clock asynchronicity between the
+      //    client and the server machines.
+      // 7. Server returns the timestamp at which the record expires
+      //    according the server clock.
+      // 8. The client calculates and returns the TTL based on the returned
+      //    timestamp. In case the client and server clocks are not in sync,
+      //    the calculated TTL may seem to be inaccurate. Nevertheless, the
+      //    server will expire the record at the correct time.
+      it('updates the record\'s time-to-live (TTL)', async function () {
         const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/operate/ttl' })()
         const bins = { i: 123, s: 'abc' }
         const meta = { ttl: 1000 }
 
-        client.put(key, bins, meta, function (err) {
-          if (err) throw err
+        await client.put(key, bins, meta)
 
-          var ops = [
-            op.touch(2592000)
-          ]
-          client.get(key, function (err, record) {
-            if (err) throw err
-            var ttlDiff = record.ttl - meta.ttl
+        let record = await client.get(key)
+        const ttlDiff = record.ttl - meta.ttl
 
-            client.operate(key, ops, function (err) {
-              if (err) throw err
+        const ops = [
+          op.touch(2592000) // 30 days
+        ]
+        await client.operate(key, ops)
 
-              client.get(key, function (err, record2) {
-                if (err) throw err
+        record = await client.get(key)
+        expect(record.ttl).to.be.above(2592000 + ttlDiff - 10)
+        expect(record.ttl).to.be.below(2592000 + ttlDiff + 10)
 
-                expect(record.bins).to.eql(bins)
-                expect(2592000 + ttlDiff + 10).to.be.above(record2.ttl)
-                expect(2592000 + ttlDiff - 10).to.be.below(record2.ttl)
-
-                client.remove(key, function (err) {
-                  if (err) throw err
-                  done()
-                })
-              })
-            })
-          })
-        })
+        await client.remove(key)
       })
     })
 
