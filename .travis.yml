@@ -1,9 +1,9 @@
 language: node_js
 node_js:
+- '15'
 - '14'
 - '12'
 - '10'
-- '8'
 env:
   global:
     - AEROSPIKE_HOSTS=127.0.0.1:3000,127.0.0.1:3100

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * Drop Node.js 8 from the test matrix, which is no longer supported by the Node.js project.
+  * Add Node.js 15 to the test matrix.
+
 ## [3.16.2] - 2020-12-04
 
 * **New Features**
