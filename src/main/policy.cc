@@ -19,6 +19,7 @@
 
 #include "policy.h"
 #include "conversions.h"
+#include "expressions.h"
 #include "predexp.h"
 
 extern "C" {
@@ -103,6 +104,20 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 				as_predexp_list_add(policy->predexp, predexp);
 			}
 		}
+	}
+
+	// TODO: convert filter expression
+	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if ((rc = compile_filter_expression(exp_ary, &policy->filter_exp, log)) != AS_NODE_PARAM_OK) {
+			return rc;
+		}
+	} else if (exp_val->IsNull() || exp_val->IsUndefined()) {
+		// no-op
+	} else {
+		as_v8_error(log, "Invalid filter expression value");
+		return AS_NODE_PARAM_ERR;
 	}
 
 	return AS_NODE_PARAM_OK;

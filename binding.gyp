@@ -59,6 +59,7 @@
         'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
+        'src/main/expressions.cc',
         'src/main/predexp.cc',
         'src/main/async.cc',
         'src/main/command.cc',
@@ -102,6 +103,7 @@
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
         'src/main/enums/config_enum.cc',
+        'src/main/enums/exp_enum.cc',
         'src/main/stats.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'

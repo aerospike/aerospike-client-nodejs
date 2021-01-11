@@ -89,6 +89,7 @@ int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, 
         as_v8_detail(log, "%s => \"%s\"", prop, *strp);
     } else if (value->IsUndefined() || value->IsNull()) {
         if (defined != NULL) (*defined) = false;
+        as_v8_detail(log, "%s => undefined", prop);
     } else {
         as_v8_error(log, "Type error: %s property should be string", prop);
         return AS_NODE_PARAM_ERR;
