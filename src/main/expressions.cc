@@ -56,6 +56,19 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 	if (has_value) return rc;
 
+	if ((rc = get_optional_bool_property(&entry->v.bool_val, &has_value, entry_obj, "boolVal", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if (has_value) return rc;
+
+	// TODO: Free v.bytes_val once request is done
+	if ((rc = get_optional_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, &has_value, entry_obj, "bytesVal", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if (has_value) return rc;
+
+	// TODO: support GeoJson, Nil, float values, and possibly uint64 values as BigInt?
+
 	return rc;
 }
 

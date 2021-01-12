@@ -22,6 +22,8 @@
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
 
+const FILTERED_OUT = Aerospike.status.FILTERED_OUT
+
 const helper = require('./test_helper')
 const keygen = helper.keygen
 
@@ -30,22 +32,64 @@ describe('Aerospike.expressions', function () {
 
   const client = helper.client
 
-  it('builds up an expression', function () {
+  async function createRecord (bins, meta = null) {
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exp' })()
+    await client.put(key, bins, meta)
+    return key
+  }
+
+  async function testNoMatch (key, filterExpression) {
+    const rejectPolicy = { filterExpression }
+    try {
+      await client.remove(key, rejectPolicy)
+    } catch (error) {
+      expect(error.code).to.eq(FILTERED_OUT)
+    }
+  }
+
+  async function testMatch (key, filterExpression) {
+    const passPolicy = { filterExpression }
+    await client.remove(key, passPolicy)
+  }
+
+  it('builds up a filter expression value', function () {
     const filter = exp.cmpEq(exp.binInt('intVal'), exp.int(42))
     expect(filter).to.be.an('array')
   })
 
-  it('updates a bin conditionally', async function () {
-    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exp' })()
-    await client.put(key, { intVal: 42 })
-    const policy = { filterExpression: exp.cmpEq(exp.binInt('intVal'), exp.int(42)) }
-    await client.put(key, { intVal: 48 }, null, policy)
-    const record = await client.get(key)
-    expect(record.bins.intVal).to.eq(48)
-    try {
-      await client.put(key, { intVal: 52 }, null, policy)
-    } catch (error) {
-      expect(error.code).to.eq(Aerospike.status.FILTERED_OUT)
-    }
+  describe('cmpEq on int bin', function () {
+    it('evaluates to true if an integer bin equals the given value', async function () {
+      const key = await createRecord({ intVal: 42 })
+
+      await testNoMatch(key, exp.cmpEq(exp.binInt('intVal'), exp.int(37)))
+      await testMatch(key, exp.cmpEq(exp.binInt('intVal'), exp.int(42)))
+    })
+  })
+
+  describe('cmpEq on blob bin', function () {
+    it('evaluates to true if a blob bin matches a value', async function () {
+      const key = await createRecord({ blob: Buffer.from([1, 2, 3]) })
+
+      await testNoMatch(key, exp.cmpEq(exp.binBlob('blob'), exp.bytes(Buffer.from([4, 5, 6]))))
+      await testMatch(key, exp.cmpEq(exp.binBlob('blob'), exp.bytes(Buffer.from([1, 2, 3]))))
+    })
+  })
+
+  describe('cmpNe on int bin', function () {
+    it('evaluates to true if an integer bin does not equal the given value', async function () {
+      const key = await createRecord({ intVal: 42 })
+
+      await testNoMatch(key, exp.cmpNe(exp.binInt('intVal'), exp.int(42)))
+      await testMatch(key, exp.cmpNe(exp.binInt('intVal'), exp.int(37)))
+    })
+  })
+
+  describe('binExists', function () {
+    it('evaluates to true if the bin with the given name exists', async function () {
+      const key = await createRecord({ foo: 'bar' })
+
+      await testNoMatch(key, exp.binExists('fox'))
+      await testMatch(key, exp.binExists('foo'))
+    })
   })
 })
