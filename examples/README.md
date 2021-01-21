@@ -2,7 +2,7 @@
 
 ## Requirements
 
-These examples use async/await functionality and require Node.js v8 or later to run.
+The examples require Node.js v10 or later to run. 
 
 (These requirements apply to running the provided examples only. The Aerospike
 Node.js client itself may support a different range of Node.js versions and may
