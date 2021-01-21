@@ -11,9 +11,18 @@ have additional requirements.)
 ## Setup
 
 To use the examples, you will need to install the `aerospike` module into the
-`examples` directory. From the `examples` directory, run the following to
-install the dependencies:
+`examples` directory. To do so, you need to first ensure the `aerospike` module
+is built. In the main `aerospike-client-nodejs` directory, run the following
+command:
 
+    $ npm install
+    
+Refer to the [client's README](https://github.com/aerospike/aerospike-client-nodejs#readme)
+for more details.
+
+From change to the `examples` directory, and run the same command there as well:
+
+    $ cd examples
     $ npm install
 
 ## Usage
