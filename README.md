@@ -310,14 +310,14 @@ If you have the Aerospike C client installed in a non-standard location or
 built from source, then you can specify the search path for the build step to
 use while resolving the Aerospike C client library.
 
-Use the `PREFIX=<PATH>` environment variable to specify the search path for the
+Use the `AEROSPIKE_C_LIB_PATH=<PATH>` environment variable to specify the search path for the
 Aerospike C client. The `<PATH>` must be the path to a directory containing
 `lib` and `include` subdirectories.
 
 The following is an example of specifying the path to the Aerospike C client
 build directory:
 
-    $ export PREFIX=~/aerospike-client-c/target/Linux-x86_64
+    $ export AEROSPIKE_C_LIB_PATH=~/aerospike-client-c/target/Linux-x86_64
 
 
 <a name="Documentation"></a>
