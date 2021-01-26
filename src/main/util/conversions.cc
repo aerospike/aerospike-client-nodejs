@@ -596,7 +596,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             as_integer* ival = as_integer_fromval(val);
             if (ival) {
                 int64_t num = as_integer_getorelse(ival, -1);
-                as_v8_detail(log, "value = %lld", num);
+                as_v8_detail(log, "integer value = %lld", num);
 #if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
                 if (num < MIN_SAFE_INTEGER || MAX_SAFE_INTEGER < num) {
                     as_v8_detail(log, "Integer value outside safe range - returning BigInt");
@@ -613,7 +613,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             as_double* dval = as_double_fromval(val);
             if (dval) {
                 double d = as_double_getorelse(dval, -1);
-                as_v8_detail(log, "value = %lf", d);
+                as_v8_detail(log, "double value = %lf", d);
                 return scope.Escape(Nan::New((double) d));
             }
             break;
@@ -622,9 +622,13 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             as_string * sval = as_string_fromval(val);
             if (sval) {
                 char* data = as_string_getorelse(sval, NULL);
-                as_v8_detail(log, "value = \"%s\"", data);
+                as_v8_detail(log, "string value = \"%s\"", data);
                 return scope.Escape(Nan::New(data).ToLocalChecked());
             }
+            break;
+        }
+        case AS_BOOLEAN: {
+            printf("FIXME: Convert as_boolean to JS Boolean\n");
             break;
         }
         case AS_BYTES: {
@@ -634,7 +638,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
                 uint32_t size = as_bytes_size(bval);
 
                 as_v8_detail(log,
-                        "value = <%x %x %x%s>",
+                        "bytes value = <%x %x %x%s>",
                         size > 0 ? data[0] : 0,
                         size > 1 ? data[1] : 0,
                         size > 2 ? data[2] : 0,
@@ -678,7 +682,7 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             as_geojson* gval = as_geojson_fromval(val);
             if (gval) {
                 char* data = as_geojson_getorelse(gval, NULL);
-                as_v8_detail(log, "geojson = \"%s\"", data);
+                as_v8_detail(log, "geojson value = \"%s\"", data);
                 return scope.Escape(Nan::New<String>(data).ToLocalChecked());
             }
             break;
