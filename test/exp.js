@@ -53,34 +53,34 @@ describe('Aerospike.expressions', function () {
   }
 
   it('builds up a filter expression value', function () {
-    const filter = exp.cmpEq(exp.binInt('intVal'), exp.int(42))
+    const filter = exp.eq(exp.binInt('intVal'), exp.int(42))
     expect(filter).to.be.an('array')
   })
 
-  describe('cmpEq on int bin', function () {
+  describe('eq on int bin', function () {
     it('evaluates to true if an integer bin equals the given value', async function () {
       const key = await createRecord({ intVal: 42 })
 
-      await testNoMatch(key, exp.cmpEq(exp.binInt('intVal'), exp.int(37)))
-      await testMatch(key, exp.cmpEq(exp.binInt('intVal'), exp.int(42)))
+      await testNoMatch(key, exp.eq(exp.binInt('intVal'), exp.int(37)))
+      await testMatch(key, exp.eq(exp.binInt('intVal'), exp.int(42)))
     })
   })
 
-  describe('cmpEq on blob bin', function () {
+  describe('eq on blob bin', function () {
     it('evaluates to true if a blob bin matches a value', async function () {
       const key = await createRecord({ blob: Buffer.from([1, 2, 3]) })
 
-      await testNoMatch(key, exp.cmpEq(exp.binBlob('blob'), exp.bytes(Buffer.from([4, 5, 6]))))
-      await testMatch(key, exp.cmpEq(exp.binBlob('blob'), exp.bytes(Buffer.from([1, 2, 3]))))
+      await testNoMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([4, 5, 6]))))
+      await testMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([1, 2, 3]))))
     })
   })
 
-  describe('cmpNe on int bin', function () {
+  describe('ne on int bin', function () {
     it('evaluates to true if an integer bin does not equal the given value', async function () {
       const key = await createRecord({ intVal: 42 })
 
-      await testNoMatch(key, exp.cmpNe(exp.binInt('intVal'), exp.int(42)))
-      await testMatch(key, exp.cmpNe(exp.binInt('intVal'), exp.int(37)))
+      await testNoMatch(key, exp.ne(exp.binInt('intVal'), exp.int(42)))
+      await testMatch(key, exp.ne(exp.binInt('intVal'), exp.int(37)))
     })
   })
 
@@ -90,6 +90,33 @@ describe('Aerospike.expressions', function () {
 
       await testNoMatch(key, exp.binExists('fox'))
       await testMatch(key, exp.binExists('foo'))
+    })
+  })
+
+  describe('not', function () {
+    it('evaluates to true if the expression evaluates to false', async function () {
+      const key = await createRecord({ a: 1, b: 2, c: 3 })
+
+      await testNoMatch(key, exp.not(exp.binExists('a')))
+      await testMatch(key, exp.not(exp.binExists('d')))
+    })
+  })
+
+  describe('and', function () {
+    it('evaluates to true if all expressions evaluate to true', async function () {
+      const key = await createRecord({ a: 1, b: 2, c: 3 })
+
+      await testNoMatch(key, exp.and(exp.binExists('a'), exp.binExists('d')))
+      await testMatch(key, exp.and(exp.binExists('a'), exp.binExists('b')))
+    })
+  })
+
+  describe('or', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ a: 1, b: 2, c: 3 })
+
+      await testNoMatch(key, exp.or(exp.binExists('d'), exp.binExists('e')))
+      await testMatch(key, exp.or(exp.binExists('a'), exp.binExists('d')))
     })
   })
 })
