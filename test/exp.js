@@ -93,6 +93,29 @@ describe('Aerospike.expressions', function () {
     })
   })
 
+  describe('ttl', function () {
+    helper.skipUnlessSupportsTtl(this)
+
+    it('evaluates to true if the record ttl matches expectations', async function () {
+      const key = await createRecord({ foo: 'bar' }, { ttl: 1000 })
+
+      await testNoMatch(key, exp.eq(exp.ttl(), exp.int(0)))
+      await testMatch(key, exp.gt(exp.ttl(), exp.int(0)))
+    })
+  })
+
+  describe('voidTime', function () {
+    helper.skipUnlessSupportsTtl(this)
+
+    it('evaluates to true if the record void time matches expectations', async function () {
+      const key = await createRecord({ foo: 'bar' }, { ttl: 1000 })
+
+      const now = Date.now() * 1_000_000 // nanoseconds
+      await testNoMatch(key, exp.lt(exp.voidTime(), exp.int(now)))
+      await testMatch(key, exp.gt(exp.voidTime(), exp.int(now)))
+    })
+  })
+
   describe('not', function () {
     it('evaluates to true if the expression evaluates to false', async function () {
       const key = await createRecord({ a: 1, b: 2, c: 3 })

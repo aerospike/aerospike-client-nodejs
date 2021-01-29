@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ function ServerInfoHelper () {
   this.features = new Set()
   this.edition = 'community'
   this.build = ''
-  this.nsconfig = {}
+  this.namespaceInfo = {}
   this.cluster = []
 }
 
@@ -124,6 +124,11 @@ ServerInfoHelper.prototype.isVersionInRange = function (versionRange) {
   return semver.satisfies(version, versionRange)
 }
 
+ServerInfoHelper.prototype.supportsTtl = function () {
+  const { config } = this.namespaceInfo
+  return config['nsup-period'] > 0 || config['allow-ttl-without-nsup'] === 'true'
+}
+
 ServerInfoHelper.prototype.fetchInfo = function () {
   return client.infoAll('build\nedition\nfeatures')
     .then(results => {
@@ -139,12 +144,16 @@ ServerInfoHelper.prototype.fetchInfo = function () {
     })
 }
 
-ServerInfoHelper.prototype.fetchNamespaceConfig = function (ns) {
-  const nsKey = 'namespace/' + ns
-  return client.infoAny(nsKey)
+ServerInfoHelper.prototype.fetchNamespaceInfo = function (ns) {
+  const nsKey = `namespace/${ns}`
+  const cfgKey = `get-config:context=namespace;id=${ns}`
+  return client.infoAny([nsKey, cfgKey].join("\n"))
     .then(results => {
       const info = Info.parse(results)
-      this.nsconfig = info[nsKey]
+      this.namespaceInfo = {
+        info: info[nsKey],
+        config: info[cfgKey]
+      }
     })
 }
 
@@ -204,11 +213,15 @@ exports.skipUnlessVersion = function (versionRange, ctx) {
   skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
 }
 
+exports.skipUnlessSupportsTtl = function (ctx) {
+  skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
+}
+
 if (process.env.GLOBAL_CLIENT !== 'false') {
   /* global before */
   before(() => client.connect()
     .then(() => serverInfoHelper.fetchInfo())
-    .then(() => serverInfoHelper.fetchNamespaceConfig(options.namespace))
+    .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
     .catch(error => {
       console.error('ERROR:', error)
       console.error('CONFIG:', client.config)
