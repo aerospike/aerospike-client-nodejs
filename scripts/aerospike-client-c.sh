@@ -29,7 +29,7 @@ BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 INIFILE=${BASE_DIR}/aerospike-client-c.ini
 CHECKSUMS=${BASE_DIR}/aerospike-client-c.sha256
 AEROSPIKE=${CWD}/aerospike-client-c
-LIB_PATH=${PREFIX}
+LIB_PATH=${AEROSPIKE_C_LIB_PATH:-""}
 
 DOWNLOAD=${DOWNLOAD:=0}
 COPY_FILES=1
