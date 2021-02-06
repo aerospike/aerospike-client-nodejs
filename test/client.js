@@ -73,6 +73,25 @@ describe('Client', function () {
         done()
       })
     })
+
+    it('should allow exit when all clients are closed', async function () {
+      const test = async function (Aerospike, config) {
+        Object.assign(config, { log: { level: Aerospike.log.OFF } })
+        const client = await Aerospike.connect(config)
+        client.close()
+
+        await new Promise((resolve, reject) => {
+          // beforeExit signals that the process would exit
+          process.on('beforeExit', resolve)
+
+          setTimeout(() => {
+            reject('Process did not exit within 100ms') // eslint-disable-line
+          }, 100).unref()
+        })
+      }
+
+      await helper.runInNewProcess(test, helper.config)
+    })
   })
 
   describe('#isConnected', function () {

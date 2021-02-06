@@ -65,6 +65,20 @@ NAN_METHOD(release_as_event_loop)
 	as_event_close_loops();
 }
 
+NAN_METHOD(ref_as_event_loop)
+{
+	Nan::HandleScope();
+	as_event_loop* loop = as_event_loop_find(uv_default_loop());
+	uv_ref((uv_handle_t*) loop->wakeup);
+}
+
+NAN_METHOD(unref_as_event_loop)
+{
+	Nan::HandleScope();
+	as_event_loop* loop = as_event_loop_find(uv_default_loop());
+	uv_unref((uv_handle_t*) loop->wakeup);
+}
+
 NAN_METHOD(get_cluster_count)
 {
 	Nan::HandleScope();
@@ -109,6 +123,8 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, get_cluster_count);
 	NAN_EXPORT(target, register_as_event_loop);
 	NAN_EXPORT(target, release_as_event_loop);
+	NAN_EXPORT(target, ref_as_event_loop);
+	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
 
 	// enumerations
