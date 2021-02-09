@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Bug Fixes**
+  * CLIENT-1441: Support boolean values in Map/List bins. [#401](https://github.com/aerospike/aerospike-client-nodejs/pull/401)
+
+* **Updates**
+  * Update C client library to [v4.6.20](http://www.aerospike.com/download/client/c/notes.html#4.6.20). [#400](https://github.com/aerospike/aerospike-client-nodejs/pull/400)
+
 ## [3.16.2] - 2020-12-04
 
 * **New Features**
