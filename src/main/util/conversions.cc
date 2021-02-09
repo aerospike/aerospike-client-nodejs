@@ -628,7 +628,12 @@ Local<Value> val_to_jsvalue(as_val* val, const LogInfo* log)
             break;
         }
         case AS_BOOLEAN: {
-            printf("FIXME: Convert as_boolean to JS Boolean\n");
+            as_boolean* bval = as_boolean_fromval(val);
+            if (bval) {
+                bool b = as_boolean_get(bval);
+                as_v8_detail(log, "boolean value = %s", b ? "true" : "false");
+                return scope.Escape(Nan::New(b));
+            }
             break;
         }
         case AS_BYTES: {
