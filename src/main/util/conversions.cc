@@ -208,6 +208,20 @@ int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> ob
     return AS_NODE_PARAM_OK;
 }
 
+int get_float_property(double* floatp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+    Nan::HandleScope scope;
+    Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+    if (value->IsNumber() || instanceof(value, DoubleType)) {
+        (*floatp) = double_value(value);
+        as_v8_detail(log, "%s => (double) %g", prop, *floatp);
+    } else {
+        as_v8_error(log, "Type error: %s property should be a floating point number", prop);
+        return AS_NODE_PARAM_ERR;
+    }
+    return AS_NODE_PARAM_OK;
+}
+
 int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
 {
     Nan::HandleScope scope;

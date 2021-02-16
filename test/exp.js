@@ -84,6 +84,15 @@ describe('Aerospike.expressions', function () {
     })
   })
 
+  describe('gt on float bin', function () {
+    it('evaluates to true if a float bin value is greater than the given value', async function () {
+      const key = await createRecord({ pi: Math.PI })
+
+      await testNoMatch(key, exp.gt(exp.binFloat('pi'), exp.float(4.5678)))
+      await testMatch(key, exp.gt(exp.binFloat('pi'), exp.float(1.2345)))
+    })
+  })
+
   describe('binExists', function () {
     it('evaluates to true if the bin with the given name exists', async function () {
       const key = await createRecord({ foo: 'bar' })

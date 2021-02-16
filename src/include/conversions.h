@@ -46,6 +46,8 @@ extern "C" {
  *  FUNCTIONS
  ******************************************************************************/
 
+bool instanceof(v8::Local<v8::Value> value, const char * type);
+
 // Functions dealing with Double values
 bool is_double_value(v8::Local<v8::Value> value);
 double double_value(v8::Local<v8::Value> value);
@@ -70,6 +72,7 @@ int get_optional_int32_property(int32_t* intp, bool* defined, v8::Local<v8::Obje
 int get_optional_int64_property(int64_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_string_property(char** strp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_uint32_property(uint32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_float_property(double* floatp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 
 // Functions to convert C client structure to v8 object(map)
 v8::Local<v8::Object> error_to_jsobject(as_error* error, const LogInfo* log);

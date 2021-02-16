@@ -31,6 +31,7 @@ int
 convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
+
 	if ((rc = get_int_property((int*) &entry->op, entry_obj, "op", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -39,35 +40,33 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return rc;
 	}
 
-	bool has_value = false;
-	if ((rc = get_optional_asval_property(&entry->v.val, &has_value, entry_obj, "val", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("val").ToLocalChecked()).FromJust()) {
+		return get_asval_property(&entry->v.val, entry_obj, "val", log);
 	}
-	if (has_value) return rc;
 
-	// TODO: Free v.str_val once request is done
-	if ((rc = get_optional_string_property((char**) &entry->v.str_val, &has_value, entry_obj, "strVal", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
+		// TODO: Free v.str_val once request is done
+		return get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
 	}
-	if (has_value) return rc;
 
-	if ((rc = get_optional_int64_property(&entry->v.int_val, &has_value, entry_obj, "intVal", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
+		return get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
 	}
-	if (has_value) return rc;
 
-	if ((rc = get_optional_bool_property(&entry->v.bool_val, &has_value, entry_obj, "boolVal", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
+		return get_float_property(&entry->v.float_val, entry_obj, "floatVal", log);
 	}
-	if (has_value) return rc;
 
-	// TODO: Free v.bytes_val once request is done
-	if ((rc = get_optional_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, &has_value, entry_obj, "bytesVal", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked()).FromJust()) {
+		return get_bool_property(&entry->v.bool_val, entry_obj, "boolVal", log);
 	}
-	if (has_value) return rc;
 
-	// TODO: support GeoJson, Nil, float values, and possibly uint64 values as BigInt?
+	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
+		// TODO: Free v.bytes_val once request is done
+		return get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+	}
+
+	// TODO: support GeoJson values, and possibly uint64 values as BigInt?
 
 	return rc;
 }
