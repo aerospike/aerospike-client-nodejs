@@ -147,7 +147,7 @@ ServerInfoHelper.prototype.fetchInfo = function () {
 ServerInfoHelper.prototype.fetchNamespaceInfo = function (ns) {
   const nsKey = `namespace/${ns}`
   const cfgKey = `get-config:context=namespace;id=${ns}`
-  return client.infoAny([nsKey, cfgKey].join("\n"))
+  return client.infoAny([nsKey, cfgKey].join('\n'))
     .then(results => {
       const info = Info.parse(results)
       this.namespaceInfo = {

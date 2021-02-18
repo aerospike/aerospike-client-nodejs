@@ -120,15 +120,15 @@ describe('Aerospike.expressions', function () {
       it('matches if the point is contained within the region', async function () {
         const key = await createRecord({ location: new GeoJSON.Point(103.913, 1.308) })
 
-        await testNoMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(9.78, 53.55, 50_000))))
-        await testMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(103.875, 1.297, 10_000))))
+        await testNoMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(9.78, 53.55, 50000))))
+        await testMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(103.875, 1.297, 10000))))
       })
 
       it('matches if the region contains the point', async function () {
         const key = await createRecord({ location: new GeoJSON.Point(103.913, 1.308) })
 
-        await testNoMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(9.78, 53.55, 50_000)), exp.binGeo('location')))
-        await testMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(103.875, 1.297, 10_000)), exp.binGeo('location')))
+        await testNoMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(9.78, 53.55, 50000)), exp.binGeo('location')))
+        await testMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(103.875, 1.297, 10000)), exp.binGeo('location')))
       })
     })
   })
@@ -170,7 +170,7 @@ describe('Aerospike.expressions', function () {
     it('evaluates to true if the record void time matches expectations', async function () {
       const key = await createRecord({ foo: 'bar' }, { ttl: 1000 })
 
-      const now = Date.now() * 1_000_000 // nanoseconds
+      const now = Date.now() * 1000000 // nanoseconds
       await testNoMatch(key, exp.lt(exp.voidTime(), exp.int(now)))
       await testMatch(key, exp.gt(exp.voidTime(), exp.int(now)))
     })
