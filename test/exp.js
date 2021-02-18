@@ -21,6 +21,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
+const GeoJSON = Aerospike.GeoJSON
 
 const FILTERED_OUT = Aerospike.status.FILTERED_OUT
 
@@ -40,10 +41,15 @@ describe('Aerospike.expressions', function () {
 
   async function testNoMatch (key, filterExpression) {
     const rejectPolicy = { filterExpression }
+    let operationSuccessful = false
     try {
       await client.remove(key, rejectPolicy)
+      operationSuccessful = true
     } catch (error) {
-      expect(error.code).to.eq(FILTERED_OUT)
+      expect(error.code).to.eq(FILTERED_OUT, `Received unexpected error code with message "${error.message}"`)
+    }
+    if (operationSuccessful) {
+      expect.fail('Test no-match: Operation should have not have been executed due to failed expression match')
     }
   }
 
@@ -57,39 +63,76 @@ describe('Aerospike.expressions', function () {
     expect(filter).to.be.an('array')
   })
 
-  describe('eq on int bin', function () {
-    it('evaluates to true if an integer bin equals the given value', async function () {
-      const key = await createRecord({ intVal: 42 })
+  describe('comparison expressions', function () {
+    describe('eq on int bin', function () {
+      it('evaluates to true if an integer bin equals the given value', async function () {
+        const key = await createRecord({ intVal: 42 })
 
-      await testNoMatch(key, exp.eq(exp.binInt('intVal'), exp.int(37)))
-      await testMatch(key, exp.eq(exp.binInt('intVal'), exp.int(42)))
+        await testNoMatch(key, exp.eq(exp.binInt('intVal'), exp.int(37)))
+        await testMatch(key, exp.eq(exp.binInt('intVal'), exp.int(42)))
+      })
+    })
+
+    describe('eq on blob bin', function () {
+      it('evaluates to true if a blob bin matches a value', async function () {
+        const key = await createRecord({ blob: Buffer.from([1, 2, 3]) })
+
+        await testNoMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([4, 5, 6]))))
+        await testMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([1, 2, 3]))))
+      })
+    })
+
+    describe('ne on int bin', function () {
+      it('evaluates to true if an integer bin does not equal the given value', async function () {
+        const key = await createRecord({ intVal: 42 })
+
+        await testNoMatch(key, exp.ne(exp.binInt('intVal'), exp.int(42)))
+        await testMatch(key, exp.ne(exp.binInt('intVal'), exp.int(37)))
+      })
+    })
+
+    describe('gt on float bin', function () {
+      it('evaluates to true if a float bin value is greater than the given value', async function () {
+        const key = await createRecord({ pi: Math.PI })
+
+        await testNoMatch(key, exp.gt(exp.binFloat('pi'), exp.float(4.5678)))
+        await testMatch(key, exp.gt(exp.binFloat('pi'), exp.float(1.2345)))
+      })
+    })
+
+    describe('regex - regular expression comparisons', function () {
+      it('matches a string value with a regular expression', async function () {
+        const key = await createRecord({ title: 'Star Wars' })
+
+        await testNoMatch(key, exp.cmpRegex(0, 'Treck$', exp.binStr('title')))
+        await testMatch(key, exp.cmpRegex(0, '^Star', exp.binStr('title')))
+      })
+
+      it('matches a string value with a regular expression - case insensitive', async function () {
+        const key = await createRecord({ title: 'Star Wars' })
+
+        await testNoMatch(key, exp.cmpRegex(Aerospike.regex.ICASE, 'trEcK$', exp.binStr('title')))
+        await testMatch(key, exp.cmpRegex(Aerospike.regex.ICASE, '^sTaR', exp.binStr('title')))
+      })
+    })
+
+    describe('geo - geospatial comparisons', function () {
+      it('matches if the point is contained within the region', async function () {
+        const key = await createRecord({ location: new GeoJSON.Point(103.913, 1.308) })
+
+        await testNoMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(9.78, 53.55, 50_000))))
+        await testMatch(key, exp.cmpGeo(exp.binGeo('location'), exp.geo(new GeoJSON.Circle(103.875, 1.297, 10_000))))
+      })
+
+      it('matches if the region contains the point', async function () {
+        const key = await createRecord({ location: new GeoJSON.Point(103.913, 1.308) })
+
+        await testNoMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(9.78, 53.55, 50_000)), exp.binGeo('location')))
+        await testMatch(key, exp.cmpGeo(exp.geo(new GeoJSON.Circle(103.875, 1.297, 10_000)), exp.binGeo('location')))
+      })
     })
   })
 
-  describe('eq on blob bin', function () {
-    it('evaluates to true if a blob bin matches a value', async function () {
-      const key = await createRecord({ blob: Buffer.from([1, 2, 3]) })
-
-      await testNoMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([4, 5, 6]))))
-      await testMatch(key, exp.eq(exp.binBlob('blob'), exp.bytes(Buffer.from([1, 2, 3]))))
-    })
-  })
-
-  describe('ne on int bin', function () {
-    it('evaluates to true if an integer bin does not equal the given value', async function () {
-      const key = await createRecord({ intVal: 42 })
-
-      await testNoMatch(key, exp.ne(exp.binInt('intVal'), exp.int(42)))
-      await testMatch(key, exp.ne(exp.binInt('intVal'), exp.int(37)))
-    })
-  })
-
-  describe('gt on float bin', function () {
-    it('evaluates to true if a float bin value is greater than the given value', async function () {
-      const key = await createRecord({ pi: Math.PI })
-
-      await testNoMatch(key, exp.gt(exp.binFloat('pi'), exp.float(4.5678)))
-      await testMatch(key, exp.gt(exp.binFloat('pi'), exp.float(1.2345)))
     })
   })
 
