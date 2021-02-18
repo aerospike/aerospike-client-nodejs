@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -989,7 +989,7 @@ add_list_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 
 	bool with_context;
 	as_cdt_ctx context;
-	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+	if (get_optional_cdt_context(&context, &with_context, op, "context", log) != AS_NODE_PARAM_OK) {
 		free(bin);
 		return AS_NODE_PARAM_ERR;
 	}

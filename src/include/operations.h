@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ int add_list_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, L
 int add_map_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
 int add_bit_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
 int add_hll_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v8::Object> obj, LogInfo* log);
+int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 
 v8::Local<v8::Object> scalar_opcode_values();
 v8::Local<v8::Object> list_opcode_values();

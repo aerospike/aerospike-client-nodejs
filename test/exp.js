@@ -133,6 +133,14 @@ describe('Aerospike.expressions', function () {
     })
   })
 
+  describe('list expressions', function () {
+    describe('list size', function () {
+      it('matches the size of a list value', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        await testNoMatch(key, exp.eq(exp.lists.size(undefined, exp.binList('tags')), exp.int(5)))
+        await testMatch(key, exp.eq(exp.lists.size(undefined, exp.binList('tags')), exp.int(3)))
+      })
     })
   })
 

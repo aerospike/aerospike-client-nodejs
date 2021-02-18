@@ -83,6 +83,12 @@ Local<Object> exp_opcode_values()
 
 	set(exp_ops, "END_OF_VA_ARGS", as_exp_ops::_AS_EXP_CODE_END_OF_VA_ARGS);
 
+	Local<Object> exp_sys = Nan::New<Object>();
+	set(exp_sys, "CALL_CDT", as_exp_call_system_type::_AS_EXP_SYS_CALL_CDT);
+	set(exp_sys, "CALL_BITS", as_exp_call_system_type::_AS_EXP_SYS_CALL_BITS);
+	set(exp_sys, "CALL_HLL", as_exp_call_system_type::_AS_EXP_SYS_CALL_HLL);
+	set(exp_sys, "FLAG_MODIFY_LOCAL", as_exp_call_system_type::_AS_EXP_SYS_FLAG_MODIFY_LOCAL);
+
 	Local<Object> exp_type = Nan::New<Object>();
 	set(exp_type, "NIL", as_exp_type::AS_EXP_TYPE_NIL);
 	set(exp_type, "TRILEAN", as_exp_type::AS_EXP_TYPE_TRILEAN);
@@ -95,8 +101,12 @@ Local<Object> exp_opcode_values()
 	set(exp_type, "GEOJSON", as_exp_type::AS_EXP_TYPE_GEOJSON);
 	set(exp_type, "HLL", as_exp_type::AS_EXP_TYPE_HLL);
 
+	set(exp_type, "AUTO", as_exp_type::AS_EXP_TYPE_AUTO);
+	set(exp_type, "ERROR", as_exp_type::AS_EXP_TYPE_ERROR);
+
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("ops").ToLocalChecked(), exp_ops);
+	Nan::Set(enums, Nan::New("sys").ToLocalChecked(), exp_sys);
 	Nan::Set(enums, Nan::New("type").ToLocalChecked(), exp_type);
 	return scope.Escape(enums);
 }
