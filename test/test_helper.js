@@ -215,10 +215,10 @@ if (process.env.GLOBAL_CLIENT !== 'false') {
       throw error
     })
   )
-}
 
-/* global after */
-after(function (done) {
-  client.close()
-  done()
-})
+  /* global after */
+  after(function (done) {
+    client.close()
+    done()
+  })
+}
