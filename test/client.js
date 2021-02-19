@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,25 @@ describe('Client', function () {
         client.close(false)
         done()
       })
+    })
+
+    it('should allow exit when all clients are closed', async function () {
+      const test = async function (Aerospike, config) {
+        Object.assign(config, { log: { level: Aerospike.log.OFF } })
+        const client = await Aerospike.connect(config)
+        client.close()
+
+        await new Promise((resolve, reject) => {
+          // beforeExit signals that the process would exit
+          process.on('beforeExit', resolve)
+
+          setTimeout(() => {
+            reject('Process did not exit within 100ms') // eslint-disable-line
+          }, 100).unref()
+        })
+      }
+
+      await helper.runInNewProcess(test, helper.config)
     })
   })
 
