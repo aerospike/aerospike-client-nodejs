@@ -198,7 +198,7 @@ describe('Client', function () {
         checkpoints.push(checkpoint)
         if (checkpoints.length !== 2) return
         expect(checkpoints).to.eql(['after', 'callback'])
-        client.close(false)
+        if (client.isConnected()) client.close(false)
         done()
       }
       var key = keygen.string(helper.namespace, helper.set)()
