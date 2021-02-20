@@ -158,8 +158,12 @@ main() {
 		distro_short="${distro_id}${distro_version}"
 		;;
 	'amzn' )
-		distro_long="ami"
-		distro_short="ami"
+		case "$distro_version" in
+		201?.?? )
+			distro_version="1"
+		esac
+		distro_long="amazon_linux:${distro_version}"
+		distro_short="amzn${distro_version}"
 		;;
 	* )
 		if [ "$ID_LIKE" ]
