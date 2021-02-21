@@ -177,8 +177,8 @@ if [ $DOWNLOAD ] && [ $DOWNLOAD == 1 ]; then
           DISTRO="ubuntu20.04"
           PKG_FORMAT="deb"
           ;;
-        "ami"* )
-          DISTRO="el6"
+        "amzn"* )
+          DISTRO="el7"
           PKG_VERSION="${AEROSPIKE_C_VERSION//-/_}-1"
           PKG_FORMAT="rpm"
           ;;
