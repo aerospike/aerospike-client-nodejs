@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.16.4] - 2021-02-21
+
+* **Bug Fixes**
+  * CLIENT-1453: Client release v3.16.3 fails to install on Amazon Linux [#403](https://github.com/aerospike/aerospike-client-nodejs/issues/403)
+
 ## [3.16.3] - 2021-02-09
 
 * **Bug Fixes**
