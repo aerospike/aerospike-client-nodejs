@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **Updates**
+  * *BREAKING*: This client requires server version 4.9 or later.
+  * *BREAKING*: Remove support for CentOS 6.
+  * Update C client library to [v5.1.0](http://www.aerospike.com/download/client/c/notes.html#5.1.0)
+
 ## [3.16.3] - 2021-02-09
 
 * **Bug Fixes**

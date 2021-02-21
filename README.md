@@ -12,7 +12,7 @@
 An Aerospike add-on module for Node.js.
 
 The client is compatible with Node.js v8.x, v10.x (LTS), v12.x (LTS), and v14.x
-(LTS). It supports the following operating systems: CentOS/RHEL 6/7/8, Debian
+(LTS). It supports the following operating systems: CentOS/RHEL 7/8, Debian
 8/9/10, Ubuntu 16.04/18.04/20.04, as well as many Linux distributions
 compatible with one of these OS releases. macOS is also supported. The client
 port to Windows is a community supported project and suitable for application
@@ -128,12 +128,6 @@ To install library prerequisites via `yum`:
 ```bash
 sudo yum install gcc-c++ openssl-devel zlib-devel
 ```
-
-Note: The `gcc` tool chain included in CentOS/RHEL 6.x is gcc-4.4. Building the
-Aerospike add-on using Node.js v6 or later, requires gcc-4.8 or later. To
-update the gcc tool chain, you can install a recent version of the
-[Red Hat Developer Toolset](https://access.redhat.com/documentation/en/red-hat-developer-toolset/)
-or a compatible devtoolset version for CentOS.
 
 ### Debian
 
