@@ -106,7 +106,6 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 		}
 	}
 
-	// TODO: convert filter expression
 	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
 	if (exp_val->IsArray()) {
 		Local<Array> exp_ary = Local<Array>::Cast(exp_val);

@@ -31,7 +31,7 @@ get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> o
 {
 	Nan::HandleScope scope;
 	Local<Value> maybe_context_obj = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
-	if (maybe_context_obj->IsUndefined()) {
+	if (maybe_context_obj->IsUndefined() || maybe_context_obj->IsNull()) {
 		if (has_context != NULL) (*has_context) = false;
 		as_v8_detail(log, "No CDT context set");
 		return AS_NODE_PARAM_OK;

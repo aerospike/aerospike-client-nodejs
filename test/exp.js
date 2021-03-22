@@ -21,6 +21,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
+const lists = Aerospike.lists
 const GeoJSON = Aerospike.GeoJSON
 
 const FILTERED_OUT = Aerospike.status.FILTERED_OUT
@@ -133,13 +134,31 @@ describe('Aerospike.expressions', function () {
     })
   })
 
-  describe('list expressions', function () {
+  describe.only('list expressions', function () {
     describe('list size', function () {
       it('matches the size of a list value', async function () {
         const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
 
-        await testNoMatch(key, exp.eq(exp.lists.size(undefined, exp.binList('tags')), exp.int(5)))
-        await testMatch(key, exp.eq(exp.lists.size(undefined, exp.binList('tags')), exp.int(3)))
+        await testNoMatch(key, exp.eq(exp.lists.size(null, exp.binList('tags')), exp.int(5)))
+        await testMatch(key, exp.eq(exp.lists.size(null, exp.binList('tags')), exp.int(3)))
+      })
+    })
+
+    describe('getByValue', function () {
+      it('matches the count of the matched list values', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow', 'green'] })
+
+        await testNoMatch(key, exp.eq(exp.lists.getByValue(null, lists.returnType.COUNT, exp.str('green'), exp.binList('tags')), exp.int(1)))
+        await testMatch(key, exp.eq(exp.lists.getByValue(null, lists.returnType.COUNT, exp.str('green'), exp.binList('tags')), exp.int(2)))
+      })
+    })
+
+    describe('getByValueRange', function () {
+      it('matches the count of the matched range of list values', async function () {
+        const key = await createRecord({ values: [53, 16, 94, 38, 25, 88, 48] })
+
+        await testNoMatch(key, exp.eq(exp.lists.getByValueRange(null, lists.returnType.COUNT, exp.int(25), exp.int(50), exp.binList('values')), exp.int(1)))
+        await testMatch(key, exp.eq(exp.lists.getByValueRange(null, lists.returnType.COUNT, exp.int(25), exp.int(50), exp.binList('values')), exp.int(3)))
       })
     })
   })
