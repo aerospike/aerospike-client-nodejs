@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ const { format } = require('util')
 
 const aerospike = require('aerospike')
 const cluster = require('cluster')
-const winston = require('winston')
+const { logger } = require('./logging')
 const stats = require('./stats')
 const alerts = require('./alerts')
 const argv = require('./config.json')
@@ -81,20 +81,6 @@ if (argv.time !== undefined) {
 
 var alert = { mode: argv.alert, filename: argv.filename }
 alerts.setupAlertSystem(alert)
-
-// *****************************************************************************
-// Logging
-// *****************************************************************************
-
-var logger = new (winston.Logger)({
-  transports: [
-    new (winston.transports.Console)({
-      level: 'info',
-      silent: false,
-      colorize: true
-    })
-  ]
-})
 
 // *****************************************************************************
 // Functions
@@ -200,20 +186,21 @@ function workerResultsInterval (worker, intervalWorkerStats) {
 }
 
 function printIntervalStats () {
+  const time = new Date().toISOString()
   if (rwWorkers > 0) {
     logger.info('%s read(tps=%d timeouts=%d errors=%d) write(tps=%d timeouts=%d errors=%d) mem(%s)',
-      new Date().toString(), intervalStats[0][0], intervalStats[0][1], intervalStats[0][2],
+      time, intervalStats[0][0], intervalStats[0][1], intervalStats[0][2],
       intervalStats[1][0], intervalStats[1][1], intervalStats[1][2],
       memUsage())
   }
   if (queryWorkers) {
     logger.info('%s query(records = %d timeouts = %d errors = %d) mem(%s)',
-      new Date().toString(), intervalStats[2][0], intervalStats[2][1], intervalStats[2][2],
+      time, intervalStats[2][0], intervalStats[2][1], intervalStats[2][2],
       memUsage())
   }
   if (scanWorkers) {
     logger.info('%s scan(records = %d timeouts = %d errors = %d) mem(%s)',
-      new Date().toString(), intervalStats[3][0], intervalStats[3][1], intervalStats[3][2],
+      time, intervalStats[3][0], intervalStats[3][1], intervalStats[3][2],
       memUsage())
   }
 }
