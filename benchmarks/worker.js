@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@
 // Benchmark Worker, run operations and report results.
 // *****************************************************************************
 
-var aerospike = require('aerospike')
-var cluster = require('cluster')
-var util = require('util')
-var winston = require('winston')
-var stats = require('./stats')
-var status = aerospike.status
-var alerts = require('./alerts.js')
-var argv = require('./config.json')
+const aerospike = require('aerospike')
+const cluster = require('cluster')
+const util = require('util')
+const { logger } = require('./logging')
+const stats = require('./stats')
+const alerts = require('./alerts.js')
+const argv = require('./config.json')
+
+const status = aerospike.status
 
 // *****************************************************************************
 //  MACROS
@@ -52,20 +53,6 @@ var heapMemory = 0
 var initialFlux = true
 var memGrowth = 0
 var FLUX_PERIOD = 5
-
-// *****************************************************************************
-// Logging
-// *****************************************************************************
-
-var logger = new (winston.Logger)({
-  transports: [
-    new (winston.transports.Console)({
-      level: 'info',
-      silent: false,
-      colorize: true
-    })
-  ]
-})
 
 // *****************************************************************************
 // Aerospike Client
