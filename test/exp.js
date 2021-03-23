@@ -134,7 +134,7 @@ describe('Aerospike.expressions', function () {
     })
   })
 
-  describe.only('list expressions', function () {
+  describe('list expressions', function () {
     describe('list size', function () {
       it('matches the size of a list value', async function () {
         const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
@@ -240,6 +240,17 @@ describe('Aerospike.expressions', function () {
 
         await testNoMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([39, 41, 42])))
         await testMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([42, 41])))
+      })
+    })
+  })
+
+  describe('map expressions', function () {
+    describe('map size', function () {
+      it('returns the map size', async function () {
+        const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27 } })
+
+        await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(2)))
+        await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(3)))
       })
     })
   })

@@ -61,10 +61,49 @@ Local<Object> map_enum_values()
 	set(return_type, "VALUE",			AS_MAP_RETURN_VALUE);
 	set(return_type, "KEY_VALUE",		AS_MAP_RETURN_KEY_VALUE);
 
+	// as_cdt_op_map
+	Local<Object> opcodes = Nan::New<Object>();
+	set(opcodes, "SET_TYPE", AS_CDT_OP_MAP_SET_TYPE);
+	set(opcodes, "ADD", AS_CDT_OP_MAP_ADD);
+	set(opcodes, "ADD_ITEMS", AS_CDT_OP_MAP_ADD_ITEMS);
+	set(opcodes, "PUT", AS_CDT_OP_MAP_PUT);
+	set(opcodes, "PUT_ITEMS", AS_CDT_OP_MAP_PUT_ITEMS);
+	set(opcodes, "REPLACE", AS_CDT_OP_MAP_REPLACE);
+	set(opcodes, "REPLACE_ITEMS", AS_CDT_OP_MAP_REPLACE_ITEMS);
+	set(opcodes, "INCREMENT", AS_CDT_OP_MAP_INCREMENT);
+	set(opcodes, "DECREMENT", AS_CDT_OP_MAP_DECREMENT);
+	set(opcodes, "CLEAR", AS_CDT_OP_MAP_CLEAR);
+	set(opcodes, "REMOVE_BY_KEY", AS_CDT_OP_MAP_REMOVE_BY_KEY);
+	set(opcodes, "REMOVE_BY_INDEX", AS_CDT_OP_MAP_REMOVE_BY_INDEX);
+	set(opcodes, "REMOVE_BY_RANK", AS_CDT_OP_MAP_REMOVE_BY_RANK);
+	set(opcodes, "REMOVE_BY_KEY_LIST", AS_CDT_OP_MAP_REMOVE_BY_KEY_LIST);
+	set(opcodes, "REMOVE_ALL_BY_VALUE", AS_CDT_OP_MAP_REMOVE_ALL_BY_VALUE);
+	set(opcodes, "REMOVE_BY_VALUE_LIST", AS_CDT_OP_MAP_REMOVE_BY_VALUE_LIST);
+	set(opcodes, "REMOVE_BY_KEY_INTERVAL", AS_CDT_OP_MAP_REMOVE_BY_KEY_INTERVAL);
+	set(opcodes, "REMOVE_BY_INDEX_RANGE", AS_CDT_OP_MAP_REMOVE_BY_INDEX_RANGE);
+	set(opcodes, "REMOVE_BY_VALUE_INTERVAL", AS_CDT_OP_MAP_REMOVE_BY_VALUE_INTERVAL);
+	set(opcodes, "REMOVE_BY_RANK_RANGE", AS_CDT_OP_MAP_REMOVE_BY_RANK_RANGE);
+	set(opcodes, "REMOVE_BY_KEY_REL_INDEX_RANGE", AS_CDT_OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE);
+	set(opcodes, "REMOVE_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE);
+	set(opcodes, "SIZE", AS_CDT_OP_MAP_SIZE);
+	set(opcodes, "GET_BY_KEY", AS_CDT_OP_MAP_GET_BY_KEY);
+	set(opcodes, "GET_BY_INDEX", AS_CDT_OP_MAP_GET_BY_INDEX);
+	set(opcodes, "GET_BY_RANK", AS_CDT_OP_MAP_GET_BY_RANK);
+	set(opcodes, "GET_ALL_BY_VALUE", AS_CDT_OP_MAP_GET_ALL_BY_VALUE);
+	set(opcodes, "GET_BY_KEY_INTERVAL", AS_CDT_OP_MAP_GET_BY_KEY_INTERVAL);
+	set(opcodes, "GET_BY_INDEX_RANGE", AS_CDT_OP_MAP_GET_BY_INDEX_RANGE);
+	set(opcodes, "GET_BY_VALUE_INTERVAL", AS_CDT_OP_MAP_GET_BY_VALUE_INTERVAL);
+	set(opcodes, "GET_BY_RANK_RANGE", AS_CDT_OP_MAP_GET_BY_RANK_RANGE);
+	set(opcodes, "GET_BY_KEY_LIST", AS_CDT_OP_MAP_GET_BY_KEY_LIST);
+	set(opcodes, "GET_BY_VALUE_LIST", AS_CDT_OP_MAP_GET_BY_VALUE_LIST);
+	set(opcodes, "GET_BY_KEY_REL_INDEX_RANGE", AS_CDT_OP_MAP_GET_BY_KEY_REL_INDEX_RANGE);
+	set(opcodes, "GET_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_MAP_GET_BY_VALUE_REL_RANK_RANGE);
+
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("order").ToLocalChecked(), order);
 	Nan::Set(enums, Nan::New("writeMode").ToLocalChecked(), write_mode);
 	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
 	Nan::Set(enums, Nan::New("returnType").ToLocalChecked(), return_type);
+	Nan::Set(enums, Nan::New("opcodes").ToLocalChecked(), opcodes);
 	return scope.Escape(enums);
 }
