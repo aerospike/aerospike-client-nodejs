@@ -178,17 +178,25 @@ exports.skip = function (ctx, message) {
   })
 }
 
-function skipUnless (ctx, condition, message) {
+function skipIf (ctx, condition, message) {
   ctx.beforeEach(function () {
-    let dontSkip = condition
+    let skip = condition
     if (typeof condition === 'function') {
-      dontSkip = condition()
+      skip = condition()
     }
-    const shouldSkip = !dontSkip
-    if (shouldSkip) {
+    if (skip) {
       this.skip(message)
     }
   })
+}
+exports.skipIf = skipIf
+
+function skipUnless (ctx, condition, message) {
+  if (typeof condition === 'function') {
+    skipIf(ctx, () => !condition(), message)
+  } else {
+    skipIf(ctx, !condition, message)
+  }
 }
 exports.skipUnless = skipUnless
 
