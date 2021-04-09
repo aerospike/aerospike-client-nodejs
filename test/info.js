@@ -29,7 +29,7 @@ context('Info commands', function () {
   const client = helper.client
 
   describe('Client#info()', function () {
-    helper.skipIf(this, !!helper.config.password && helper.cluster.isVersionInRange('>= 5.5'),
+    helper.skipIf(this, () => !!helper.config.password && helper.cluster.isVersionInRange('>= 5.5'),
       'client#info does not support authenticated connections on server 5.5 or later')
 
     let node = null
