@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [3.16.5] - 2021-04-14
+
+* **Bug Fixes**
+  * CLIENT-1498: Support infoTimeout on QueryPolicy. The timeout is used when failOnClusterChange is true and and info validation command is called before/after the query. [#412](https://github.com/aerospike/aerospike-client-nodejs/pull/412)
+
+* **Updates**
+  * Update C client library to [v4.6.21](http://www.aerospike.com/download/client/c/notes.html#4.6.21).
+
 ## [3.16.4] - 2021-02-21
 
 * **Bug Fixes**
