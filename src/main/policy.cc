@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike Inc.
+ * Copyright 2013-2021 Aerospike Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -287,6 +287,9 @@ int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const 
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->info_timeout, NULL, obj, "infoTimeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail( log, "Parsing query policy : success");
