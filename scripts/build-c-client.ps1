@@ -102,8 +102,7 @@ function Build-Project {
 		if (!$verbose) { Write-Host "." -NoNewline }
 	}
 	if (!$verbose) { Write-Host "" }
-	$logfile = "$(Split-Path $projectfile -Leaf).msbuild.log"
-	return Select-String -Path $logfile -Pattern "Build succeeded." -SimpleMatch -Quiet
+	return $process.ExitCode -eq 0
 }
 
 $CClientCfg = Parse-IniFile $CClientIni
