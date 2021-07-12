@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -63,9 +63,7 @@ context('Scans', function () {
       var options = {
         concurrent: true,
         select: ['a', 'b', 'c'],
-        nobins: false,
-        percent: 50,
-        priority: Aerospike.scanPriority.HIGH
+        nobins: false
       }
       var scan = client.scan(namespace, set, options)
 
@@ -75,8 +73,6 @@ context('Scans', function () {
       expect(scan.concurrent).to.be.true()
       expect(scan.selected).to.eql(['a', 'b', 'c'])
       expect(scan.nobins).to.be.false()
-      expect(scan.percent).to.equal(50)
-      expect(scan.priority).to.equal(Aerospike.scanPriority.HIGH)
     })
 
     it('creates a scan without specifying the set', function () {
@@ -192,26 +188,6 @@ context('Scans', function () {
       })
     })
 
-    context('with percent sampling', function () {
-      helper.skipUnlessVersion('< 4.9', this)
-
-      it('should only scan approx. half of the records', function (done) {
-        const scan = client.scan(helper.namespace, testSet, {
-          percent: 50,
-          nobins: true
-        })
-        var recordsReceived = 0
-        var stream = scan.foreach()
-        stream.on('data', () => recordsReceived++)
-        stream.on('end', () => {
-          // The scan percentage is not very exact, esp. for small sets, so we
-          // just test that the scan did not return every single record.
-          expect(recordsReceived).to.be.lessThan(numberOfRecords)
-          done()
-        })
-      })
-    })
-
     context('with max records limit', function () {
       helper.skipUnlessVersion('>= 4.9.0', this)
 
@@ -310,7 +286,7 @@ context('Scans', function () {
 
   describe('job.info()', function () {
     it('returns the scan status and progress', function (done) {
-      var scan = client.scan(helper.namespace, testSet, { percent: 10 })
+      var scan = client.scan(helper.namespace, testSet)
       scan.background('udf', 'noop', function (error, job) {
         if (error) throw error
         job.info(function (error, info) {

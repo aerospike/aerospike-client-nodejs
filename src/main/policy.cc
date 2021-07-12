@@ -303,9 +303,6 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->records_per_second, NULL, obj, "recordsPerSecond", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}

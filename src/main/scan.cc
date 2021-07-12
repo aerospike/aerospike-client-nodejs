@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,20 +83,6 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	TYPE_CHECK_OPT(concurrent, IsBoolean, "concurrent must be a boolean");
 	if (concurrent->IsBoolean()) {
 		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
-	}
-
-	Local<Value> percent = Nan::Get(options, Nan::New("percent").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(percent, IsNumber, "percent must be a number");
-	if (percent->IsNumber()) {
-		uint8_t pct = (uint8_t) Nan::To<uint32_t>(percent).FromJust();
-		as_v8_detail(log, "Setting scan percent to %i", pct);
-		as_scan_set_percent(scan, pct);
-	}
-
-	Local<Value> priority = Nan::Get(options, Nan::New("priority").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(priority, IsNumber, "prioriy must be a number");
-	if (priority->IsNumber()) {
-		as_scan_set_priority(scan, (as_scan_priority) Nan::To<int>(priority).FromJust());
 	}
 
 	Local<Value> udf = Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
