@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
   * Use EL7 builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
   * Update C client library to [v5.1.0](http://www.aerospike.com/download/client/c/notes.html#5.1.0)
 
+## [3.16.6] - 2021-07-13
+
+* **Bug Fixes**
+  * Client doesn't start with "minConnsPerNode" option [#419](https://github.com/aerospike/aerospike-client-nodejs/issues/419)
+
+* **Updates**
+  * Update C client library to [v4.6.23](http://www.aerospike.com/download/client/c/notes.html#4.6.23).
+
 ## [3.16.5] - 2021-04-14
 
 * **Bug Fixes**
