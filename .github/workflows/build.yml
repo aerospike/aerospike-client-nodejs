@@ -8,7 +8,7 @@ on:
     branches:
       - master
       - maint/3.x
-      - gh-action ]
+      - gh-action
   pull_request:
     branches:
       - master
