@@ -254,7 +254,7 @@ context('Scans', function () {
   describe('scan.operate()', function () {
     helper.skipUnlessVersion('>= 4.7.0', this)
 
-    it('should perform a background scan that executes the operations', async function () {
+    it('should perform a background scan that executes the operations #slow', async function () {
       const scan = client.scan(helper.namespace, testSet)
       const ops = [op.write('backgroundOps', 1)]
       const job = await scan.operate(ops)

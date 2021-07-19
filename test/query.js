@@ -526,7 +526,7 @@ describe('Queries', function () {
   describe('query.operate()', function () {
     helper.skipUnlessVersion('>= 4.7.0', this)
 
-    it('should perform a background query that executes the operations', async function () {
+    it('should perform a background query that executes the operations #slow', async function () {
       const query = client.query(helper.namespace, testSet)
       const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
