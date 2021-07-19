@@ -42,7 +42,7 @@ async function infoAny (client, request) {
 async function infoAll (client, request) {
   const responses = await client.infoAll(request)
   if (responses.some((response) => response.info)) {
-    responses.map((response) => {
+    responses.forEach((response) => {
       console.info(`${response.host.node_id}:`)
       console.info(response.info.trim())
     })

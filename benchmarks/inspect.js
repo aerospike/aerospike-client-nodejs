@@ -18,18 +18,18 @@
 // node inspect.js -h
 // *****************************************************************************
 
-var spawn = require('child_process').spawn
+const spawn = require('child_process').spawn
 
-var cluster = require('cluster')
-var yargs = require('yargs')
-var os = require('os')
-var stats = require('./stats')
+const cluster = require('cluster')
+const yargs = require('yargs')
+const os = require('os')
+const stats = require('./stats')
 
 // *****************************************************************************
 // Options Parsing
 // *****************************************************************************
 
-var argp = yargs
+const argp = yargs
   .usage('$0 [options]')
   .options({
     help: {
@@ -83,7 +83,7 @@ var argp = yargs
     }
   })
 
-var argv = argp.argv
+const argv = argp.argv
 
 if (argv.help === true) {
   argp.showHelp()
@@ -99,31 +99,31 @@ if (!cluster.isMaster) {
 // Globals
 // *****************************************************************************
 
-var cpus = os.cpus()
+const cpus = os.cpus()
 
-var P_MIN = 1
-var P_MAX = cpus.length
-var P_STEP = 1
-var I_MIN = 1
-var I_MAX = 1
-var I_STEP = 1
-var O_MIN = 1
-var O_MAX = 100
-var O_STEP = 8
+const P_MIN = 1
+const P_MAX = cpus.length
+const P_STEP = 1
+const I_MIN = 1
+const I_MAX = 1
+const I_STEP = 1
+const O_MIN = 1
+const O_MAX = 100
+const O_STEP = 8
 
 // *****************************************************************************
 // Functions
 // *****************************************************************************
 
-var results = []
-var errors = []
+const results = []
+const errors = []
 
 function reportStep (p, i, o, code, stdout, stderr) {
   console.log('processes: %d, iterations: %d, operations: %d, status: %d', p, i, o, code)
 
   console.log()
 
-  var result
+  let result
 
   if (code === 0) {
     result = JSON.parse(stdout)
@@ -164,8 +164,8 @@ function reportFinal () {
   console.log('SUMMARY')
   console.log()
 
-  var matched = results.filter(function (res) {
-    var ops = res.operations
+  const matched = results.filter(function (res) {
+    const ops = res.operations
     return (res.durations['<= 1'] / ops * 100).toFixed(0) >= 90 &&
     (res.durations['> 1'] / ops * 100).toFixed(0) <= 10 &&
     (res.durations['> 2'] / ops * 100).toFixed(0) <= 2 &&
@@ -192,22 +192,22 @@ function reportFinal () {
     stats.print_histogram(res.durations, console.log, '      ')
   })
 
-  var groupOps = {}
+  const groupOps = {}
 
   matched.forEach(function (res) {
-    var ops = res.configuration.operations
-    var group = (groupOps[ops] || [])
+    const ops = res.configuration.operations
+    const group = (groupOps[ops] || [])
     group.push(res)
     groupOps[ops] = group
   })
 
   console.log()
   console.log()
-  for (var k in groupOps) {
-    var ops = groupOps[k]
+  for (const k in groupOps) {
+    const ops = groupOps[k]
     console.log('operations: %d', k)
-    for (var o = 0; o < ops.length; o++) {
-      var op = ops[o]
+    for (let o = 0; o < ops.length; o++) {
+      const op = ops[o]
       console.log('    p: %d, tps: {l: %d, u: %d, m: %d}, time: {l: %d, u: %d, m: %d}, dur: {0: %d, 1: %d, 2: %d}',
         op.configuration.processes,
         op.tps.min,
@@ -224,10 +224,10 @@ function reportFinal () {
   }
   console.log()
 
-  var opsHist = {}
+  const opsHist = {}
 
   matched.forEach(function (res) {
-    var ops = res.configuration.operations
+    const ops = res.configuration.operations
     opsHist[ops] = (opsHist[ops] || 0) + 1
   })
 
@@ -239,12 +239,12 @@ function reportFinal () {
 }
 
 function exec (p, i, o) {
-  var stdout = Buffer.alloc(0)
-  var stderr = Buffer.alloc(0)
+  let stdout = Buffer.alloc(0)
+  let stderr = Buffer.alloc(0)
 
-  var prog = 'node'
+  const prog = 'node'
 
-  var args = ['main.js',
+  const args = ['main.js',
     '-h', argv.host, '-p', argv.port, '-t', argv.timeout,
     '-n', argv.namespace, '-s', argv.set,
     '-R', argv.reads, '-W', argv.writes, '-K', argv.keyrange,
@@ -252,7 +252,7 @@ function exec (p, i, o) {
     '--silent', '--json'
   ]
 
-  var proc = spawn(prog, args)
+  const proc = spawn(prog, args)
 
   proc.stdout.on('data', function (data) {
     stdout = Buffer.concat([stdout, data])

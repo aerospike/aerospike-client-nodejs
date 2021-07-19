@@ -28,7 +28,7 @@ const putgen = helper.putgen
 const valgen = helper.valgen
 
 describe('client.batchExists()', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('should successfully find 10 records', function () {
     const numberOfRecords = 10
@@ -52,9 +52,9 @@ describe('client.batchExists()', function () {
   })
 
   it('should fail finding 10 records', function (done) {
-    var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_exists/fail/', random: false })
-    var keys = keygen.range(kgen, numberOfRecords)
+    const numberOfRecords = 10
+    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_exists/fail/', random: false })
+    const keys = keygen.range(kgen, numberOfRecords)
 
     client.batchExists(keys, function (err, results) {
       expect(err).not.to.be.ok()

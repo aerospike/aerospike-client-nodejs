@@ -151,51 +151,51 @@ context('Info commands', function () {
 
   describe('info.parse()', function () {
     it('should parse key-value pairs from an info string', function () {
-      var infoStr = 'version\t1\nedition\tCommunity Edition\n'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'version\t1\nedition\tCommunity Edition\n'
+      const infoHash = info.parse(infoStr)
       expect(infoHash).to.eql({ version: 1, edition: 'Community Edition' })
     })
 
     it('should parse nested key-value pairs', function () {
-      var infoStr = 'statistics\tmem=10;req=20\n'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'statistics\tmem=10;req=20\n'
+      const infoHash = info.parse(infoStr)
       expect(infoHash.statistics).to.eql({ mem: 10, req: 20 })
     })
 
     it('should parse list values', function () {
-      var infoStr = 'features\tgeo;double\n'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'features\tgeo;double\n'
+      const infoHash = info.parse(infoStr)
       expect(infoHash.features).to.eql(['geo', 'double'])
     })
 
     it('should parse numeric strings as numbers', function () {
-      var infoStr = 'version\t1'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'version\t1'
+      const infoHash = info.parse(infoStr)
       expect(infoHash.version).to.be.a('number')
     })
 
     it('should be able to handle an empty info response', function () {
-      var infoStr = 'foo\n'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'foo\n'
+      const infoHash = info.parse(infoStr)
       expect(infoHash).to.eql({ foo: undefined })
     })
 
     it('should be able to handle an empty string', function () {
-      var infoStr = ''
-      var infoHash = info.parse(infoStr)
+      const infoStr = ''
+      const infoHash = info.parse(infoStr)
       expect(infoHash).to.eql({})
     })
 
     it('does not split the response if no separators are specified', function () {
       info.separators['test-foo'] = []
-      var infoStr = 'test-foo\ta=1;b=2\n'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'test-foo\ta=1;b=2\n'
+      const infoHash = info.parse(infoStr)
       expect(infoHash['test-foo']).to.eql('a=1;b=2')
     })
 
     it('should parse the udf-list info key', function () {
-      var infoStr = 'udf-list\tfilename=mod1.lua,hash=00557374fc319b8d0f38c6668015db35358d7b62,type=LUA;filename=mod2.lua,hash=c96771bd8ce6911a22a592e4857fd47082f14990,type=LUA;'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'udf-list\tfilename=mod1.lua,hash=00557374fc319b8d0f38c6668015db35358d7b62,type=LUA;filename=mod2.lua,hash=c96771bd8ce6911a22a592e4857fd47082f14990,type=LUA;'
+      const infoHash = info.parse(infoStr)
       expect(infoHash['udf-list']).to.eql([
         { filename: 'mod1.lua', hash: '00557374fc319b8d0f38c6668015db35358d7b62', type: 'LUA' },
         { filename: 'mod2.lua', hash: 'c96771bd8ce6911a22a592e4857fd47082f14990', type: 'LUA' }
@@ -203,8 +203,8 @@ context('Info commands', function () {
     })
 
     it('should parse empty udf-list info key and return empty array', function () {
-      var infoStr = 'udf-list\t'
-      var infoHash = info.parse(infoStr)
+      const infoStr = 'udf-list\t'
+      const infoHash = info.parse(infoStr)
       expect(infoHash['udf-list']).to.eql([])
     })
 

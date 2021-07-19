@@ -29,12 +29,12 @@ const recgen = helper.recgen
 const status = Aerospike.status
 
 describe('client.get()', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('should read the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
-    var meta = metagen.constant({ ttl: 1000 })()
-    var record = recgen.constant({ i: 123, s: 'abc' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
+    const meta = metagen.constant({ ttl: 1000 })()
+    const record = recgen.constant({ i: 123, s: 'abc' })()
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
@@ -49,7 +49,7 @@ describe('client.get()', function () {
   })
 
   it('should not find the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/not_found/' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/not_found/' })()
 
     client.get(key, function (err, record) {
       expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
@@ -85,9 +85,9 @@ describe('client.get()', function () {
   })
 
   it('should return the TTL for a never expiring record as Aerospike.ttl.NEVER_EXPIRE', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
-    var meta = metagen.constant({ ttl: Aerospike.ttl.NEVER_EXPIRE })()
-    var record = recgen.constant({ i: 123, s: 'abc' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
+    const meta = metagen.constant({ ttl: Aerospike.ttl.NEVER_EXPIRE })()
+    const record = recgen.constant({ i: 123, s: 'abc' })()
 
     client.put(key, record, meta, function (err) {
       if (err) throw err
@@ -103,7 +103,7 @@ describe('client.get()', function () {
   })
 
   it('should return a Promise that resolves to a Record', function () {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
 
     return client.put(key, { i: 42 })
       .then(() => client.get(key))

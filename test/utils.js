@@ -23,62 +23,62 @@ const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {
-    var host = utils.parseHostString('aero.local')
+    const host = utils.parseHostString('aero.local')
     expect(host).to.eql({ addr: 'aero.local', port: 3000 })
   })
 
   it('parses a domain name with port', function () {
-    var host = utils.parseHostString('aero.local:3333')
+    const host = utils.parseHostString('aero.local:3333')
     expect(host).to.eql({ addr: 'aero.local', port: 3333 })
   })
 
   it('parses a domain name with TLS name and port', function () {
-    var host = utils.parseHostString('aero.local:aero.tls:3333')
+    const host = utils.parseHostString('aero.local:aero.tls:3333')
     expect(host).to.eql({ addr: 'aero.local', tlsname: 'aero.tls', port: 3333 })
   })
 
   it('parses a domain name with TLS name', function () {
-    var host = utils.parseHostString('aero.local:aero.tls')
+    const host = utils.parseHostString('aero.local:aero.tls')
     expect(host).to.eql({ addr: 'aero.local', tlsname: 'aero.tls', port: 3000 })
   })
 
   it('parses an IPv4 address', function () {
-    var host = utils.parseHostString('192.168.33.10')
+    const host = utils.parseHostString('192.168.33.10')
     expect(host).to.eql({ addr: '192.168.33.10', port: 3000 })
   })
 
   it('parses an IPv4 address with port', function () {
-    var host = utils.parseHostString('192.168.33.10:3333')
+    const host = utils.parseHostString('192.168.33.10:3333')
     expect(host).to.eql({ addr: '192.168.33.10', port: 3333 })
   })
 
   it('parses an IPv4 address with TLS name and port', function () {
-    var host = utils.parseHostString('192.168.33.10:aero.tls:3333')
+    const host = utils.parseHostString('192.168.33.10:aero.tls:3333')
     expect(host).to.eql({ addr: '192.168.33.10', tlsname: 'aero.tls', port: 3333 })
   })
 
   it('parses an IPv4 address with TLS name', function () {
-    var host = utils.parseHostString('192.168.33.10:aero.tls')
+    const host = utils.parseHostString('192.168.33.10:aero.tls')
     expect(host).to.eql({ addr: '192.168.33.10', tlsname: 'aero.tls', port: 3000 })
   })
 
   it('parses an IPv6 address', function () {
-    var host = utils.parseHostString('[fde4:8dba:82e1::c4]')
+    const host = utils.parseHostString('[fde4:8dba:82e1::c4]')
     expect(host).to.eql({ addr: 'fde4:8dba:82e1::c4', port: 3000 })
   })
 
   it('parses an IPv6 address with port', function () {
-    var host = utils.parseHostString('[fde4:8dba:82e1::c4]:3333')
+    const host = utils.parseHostString('[fde4:8dba:82e1::c4]:3333')
     expect(host).to.eql({ addr: 'fde4:8dba:82e1::c4', port: 3333 })
   })
 
   it('parses an IPv6 address with TLS name and port', function () {
-    var host = utils.parseHostString('[fde4:8dba:82e1::c4]:aero.tls:3333')
+    const host = utils.parseHostString('[fde4:8dba:82e1::c4]:aero.tls:3333')
     expect(host).to.eql({ addr: 'fde4:8dba:82e1::c4', tlsname: 'aero.tls', port: 3333 })
   })
 
   it('parses an IPv6 address with TLS name', function () {
-    var host = utils.parseHostString('[fde4:8dba:82e1::c4]:aero.tls')
+    const host = utils.parseHostString('[fde4:8dba:82e1::c4]:aero.tls')
     expect(host).to.eql({ addr: 'fde4:8dba:82e1::c4', tlsname: 'aero.tls', port: 3000 })
   })
 

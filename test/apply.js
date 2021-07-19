@@ -36,7 +36,7 @@ describe('client.apply()', function () {
     .then(() => client.remove(key)))
 
   it('should invoke an UDF to without any args', function (done) {
-    var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
+    const udfArgs = { module: 'udf', funcname: 'withoutArguments' }
     client.apply(key, udfArgs, function (error, result) {
       if (error) throw error
       expect(result).to.equal(1)
@@ -45,7 +45,7 @@ describe('client.apply()', function () {
   })
 
   it('should invoke an UDF with arguments', function (done) {
-    var udfArgs = { module: 'udf', funcname: 'withArguments', args: [42] }
+    const udfArgs = { module: 'udf', funcname: 'withArguments', args: [42] }
     client.apply(key, udfArgs, function (error, result) {
       if (error) throw error
       expect(result).to.equal(42)
@@ -71,7 +71,7 @@ describe('client.apply()', function () {
   })
 
   it('should return an error if the user-defined function does not exist', function (done) {
-    var udfArgs = { module: 'udf', funcname: 'not-such-function' }
+    const udfArgs = { module: 'udf', funcname: 'not-such-function' }
     client.apply(key, udfArgs, function (error, result) {
       expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_UDF)
       done()
@@ -79,7 +79,7 @@ describe('client.apply()', function () {
   })
 
   it('should return an error if the UDF arguments are invalid', function (done) {
-    var udfArgs = { module: 'udf', funcname: 'noop', args: 42 } // args should always be an array
+    const udfArgs = { module: 'udf', funcname: 'noop', args: 42 } // args should always be an array
     client.apply(key, udfArgs, function (error, result) {
       expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_PARAM)
       done()
@@ -87,7 +87,7 @@ describe('client.apply()', function () {
   })
 
   it('should return a Promise that resolves to the return value of the UDF function', function () {
-    var udfArgs = { module: 'udf', funcname: 'withoutArguments' }
+    const udfArgs = { module: 'udf', funcname: 'withoutArguments' }
 
     return client.apply(key, udfArgs)
       .then(result => expect(result).to.equal(1))

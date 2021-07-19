@@ -97,9 +97,9 @@ describe('Queries', function () {
   let keys = []
 
   function verifyQueryResults (queryOptions, matchName, done) {
-    var query = client.query(helper.namespace, testSet, queryOptions)
-    var matches = 0
-    var stream = query.foreach()
+    const query = client.query(helper.namespace, testSet, queryOptions)
+    let matches = 0
+    const stream = query.foreach()
     stream.on('error', error => { throw error })
     stream.on('data', record => {
       expect(record.bins).to.have.property('name', matchName)
@@ -132,14 +132,14 @@ describe('Queries', function () {
 
   describe('client.query()', function () {
     it('creates a new Query instance and sets up it\'s properties', function () {
-      var namespace = 'test'
-      var set = 'demo'
-      var options = {
+      const namespace = 'test'
+      const set = 'demo'
+      const options = {
         select: ['a', 'b', 'c'],
         nobins: false,
         filters: [Aerospike.filter.equal('a', 9)]
       }
-      var query = client.query(namespace, set, options)
+      const query = client.query(namespace, set, options)
 
       expect(query).to.be.instanceof(Query)
       expect(query.ns).to.equal('test')
@@ -151,8 +151,8 @@ describe('Queries', function () {
     })
 
     it('creates a query without specifying the set', function () {
-      var namespace = 'test'
-      var query = client.query(namespace, { select: ['i'] })
+      const namespace = 'test'
+      const query = client.query(namespace, { select: ['i'] })
       expect(query).to.be.instanceof(Query)
       expect(query.ns).to.equal('test')
       expect(query.set).to.be.null()
@@ -162,13 +162,13 @@ describe('Queries', function () {
 
   describe('query.select()', function () {
     it('sets the selected bins from an argument list', function () {
-      var query = client.query('test', 'test')
+      const query = client.query('test', 'test')
       query.select('a', 'b', 'c')
       expect(query.selected).to.eql(['a', 'b', 'c'])
     })
 
     it('sets the selected bins from an array', function () {
-      var query = client.query('test', 'test')
+      const query = client.query('test', 'test')
       query.select(['a', 'b', 'c'])
       expect(query.selected).to.eql(['a', 'b', 'c'])
     })
@@ -176,7 +176,7 @@ describe('Queries', function () {
 
   describe('query.where()', function () {
     it('adds a filter predicate to the query', function () {
-      var query = client.query('test', 'test')
+      const query = client.query('test', 'test')
       query.where(Aerospike.filter.equal('a', 9))
       expect(query.filters.length).to.equal(1)
     })
@@ -184,13 +184,13 @@ describe('Queries', function () {
 
   describe('query.foreach() #slow', function () {
     it('should apply a stream UDF to filter the results', function (done) {
-      var args = {
+      const args = {
         filters: [filter.equal('name', 'filter')]
       }
-      var query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       query.setUdf('udf', 'even')
-      var stream = query.foreach()
-      var results = []
+      const stream = query.foreach()
+      const results = []
       stream.on('error', error => { throw error })
       stream.on('data', record => results.push(record.bins))
       stream.on('end', () => {
@@ -210,10 +210,10 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
-        var query = client.query(helper.namespace, testSet)
+        const query = client.query(helper.namespace, testSet)
         query.where(Aerospike.filter.equal('name', uniqueKey))
-        var stream = query.foreach()
-        var count = 0
+        const stream = query.foreach()
+        let count = 0
         stream.on('data', record => {
           expect(++count).to.equal(1)
           expect(record.key).to.be.instanceof(Key)
@@ -227,11 +227,11 @@ describe('Queries', function () {
       helper.skipUnlessVersion('>= 3.15.0', this)
 
       it('should return only meta data', function (done) {
-        var query = client.query(helper.namespace, testSet)
+        const query = client.query(helper.namespace, testSet)
         query.where(Aerospike.filter.equal('i', 5))
         query.nobins = true
-        var received = null
-        var stream = query.foreach()
+        let received = null
+        const stream = query.foreach()
         stream.on('error', error => { throw error })
         stream.on('data', record => {
           received = record
@@ -278,12 +278,12 @@ describe('Queries', function () {
     context('filter predicates', function () {
       describe('filter.equal()', function () {
         it('should match equal integer values', function (done) {
-          var args = { filters: [filter.equal('i', 5)] }
+          const args = { filters: [filter.equal('i', 5)] }
           verifyQueryResults(args, 'int match', done)
         })
 
         it('should match equal string values', function (done) {
-          var args = { filters: [filter.equal('s', 'banana')] }
+          const args = { filters: [filter.equal('s', 'banana')] }
           verifyQueryResults(args, 'string match', done)
         })
 
@@ -295,44 +295,44 @@ describe('Queries', function () {
 
       describe('filter.range()', function () {
         it('should match integers within a range', function (done) {
-          var args = { filters: [filter.range('i', 3, 7)] }
+          const args = { filters: [filter.range('i', 3, 7)] }
           verifyQueryResults(args, 'int match', done)
         })
 
         it('should match integers in a list within a range', function (done) {
-          var args = { filters: [filter.range('li', 3, 7, LIST)] }
+          const args = { filters: [filter.range('li', 3, 7, LIST)] }
           verifyQueryResults(args, 'int list match', done)
         })
 
         it('should match integers in a map within a range', function (done) {
-          var args = { filters: [filter.range('mi', 3, 7, MAPVALUES)] }
+          const args = { filters: [filter.range('mi', 3, 7, MAPVALUES)] }
           verifyQueryResults(args, 'int map match', done)
         })
       })
 
       describe('filter.contains()', function () {
         it('should match lists containing an integer', function (done) {
-          var args = { filters: [filter.contains('li', 5, LIST)] }
+          const args = { filters: [filter.contains('li', 5, LIST)] }
           verifyQueryResults(args, 'int list match', done)
         })
 
         it('should match maps containing an integer value', function (done) {
-          var args = { filters: [filter.contains('mi', 5, MAPVALUES)] }
+          const args = { filters: [filter.contains('mi', 5, MAPVALUES)] }
           verifyQueryResults(args, 'int map match', done)
         })
 
         it('should match lists containing a string', function (done) {
-          var args = { filters: [filter.contains('ls', 'banana', LIST)] }
+          const args = { filters: [filter.contains('ls', 'banana', LIST)] }
           verifyQueryResults(args, 'string list match', done)
         })
 
         it('should match maps containing a string value', function (done) {
-          var args = { filters: [filter.contains('ms', 'banana', MAPVALUES)] }
+          const args = { filters: [filter.contains('ms', 'banana', MAPVALUES)] }
           verifyQueryResults(args, 'string map match', done)
         })
 
         it('should match maps containing a string key', function (done) {
-          var args = { filters: [filter.contains('mks', 'banana', MAPKEYS)] }
+          const args = { filters: [filter.contains('mks', 'banana', MAPKEYS)] }
           verifyQueryResults(args, 'string mapkeys match', done)
         })
 
@@ -344,86 +344,86 @@ describe('Queries', function () {
 
       describe('filter.geoWithinGeoJSONRegion()', function () {
         it('should match locations within a GeoJSON region', function (done) {
-          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+          const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
+          const args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
           verifyQueryResults(args, 'point match', done)
         })
 
         it('should match locations in a list within a GeoJSON region', function (done) {
-          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          var args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
+          const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
+          const args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
           verifyQueryResults(args, 'point list match', done)
         })
 
         it('should match locations in a map within a GeoJSON region', function (done) {
-          var region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          var args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
+          const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
+          const args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
           verifyQueryResults(args, 'point map match', done)
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
-          var region = { type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] }
-          var args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+          const region = { type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] }
+          const args = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
           verifyQueryResults(args, 'point match', done)
         })
       })
 
       describe('filter.geoWithinRadius()', function () {
         it('should match locations within a radius from another location', function (done) {
-          var args = { filters: [filter.geoWithinRadius('g', 103.9135, 1.3085, 15000)] }
+          const args = { filters: [filter.geoWithinRadius('g', 103.9135, 1.3085, 15000)] }
           verifyQueryResults(args, 'point match', done)
         })
 
         it('should match locations in a list within a radius from another location', function (done) {
-          var args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST)] }
+          const args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST)] }
           verifyQueryResults(args, 'point list match', done)
         })
 
         it('should match locations in a map within a radius from another location', function (done) {
-          var args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES)] }
+          const args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES)] }
           verifyQueryResults(args, 'point map match', done)
         })
       })
 
       describe('filter.geoContainsGeoJSONPoint()', function () {
         it('should match regions that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+          const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+          const args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
           verifyQueryResults(args, 'region match', done)
         })
 
         it('should match regions in a list that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          var args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
+          const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+          const args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
           verifyQueryResults(args, 'region list match', done)
         })
 
         it('should match regions in a map that contain a GeoJSON point', function (done) {
-          var point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          var args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
+          const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+          const args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
           verifyQueryResults(args, 'region map match', done)
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
-          var point = { type: 'Point', coordinates: [103.913, 1.308] }
-          var args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+          const point = { type: 'Point', coordinates: [103.913, 1.308] }
+          const args = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
           verifyQueryResults(args, 'region match', done)
         })
       })
 
       describe('filter.geoContainsPoint()', function () {
         it('should match regions that contain a lng/lat coordinate pair', function (done) {
-          var args = { filters: [filter.geoContainsPoint('g', 103.913, 1.308)] }
+          const args = { filters: [filter.geoContainsPoint('g', 103.913, 1.308)] }
           verifyQueryResults(args, 'region match', done)
         })
 
         it('should match regions in a list that contain a lng/lat coordinate pair', function (done) {
-          var args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST)] }
+          const args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST)] }
           verifyQueryResults(args, 'region list match', done)
         })
 
         it('should match regions in a map that contain a lng/lat coordinate pair', function (done) {
-          var args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES)] }
+          const args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES)] }
           verifyQueryResults(args, 'region map match', done)
         })
       })
@@ -463,10 +463,10 @@ describe('Queries', function () {
 
   describe('query.apply()', function () {
     it('should apply a user defined function and aggregate the results', function (done) {
-      var args = {
+      const args = {
         filters: [filter.equal('name', 'aggregate')]
       }
-      var query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       query.apply('udf', 'count', function (error, result) {
         if (error) throw error
         expect(result).to.equal(3)
@@ -475,10 +475,10 @@ describe('Queries', function () {
     })
 
     it('should apply a user defined function with arguments and aggregate the results', function (done) {
-      var args = {
+      const args = {
         filters: [filter.equal('name', 'aggregate')]
       }
-      var query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       query.apply('udf', 'countGreaterThan', ['value', 15], function (error, result) {
         if (error) throw error
         expect(result).to.equal(2)
@@ -500,10 +500,10 @@ describe('Queries', function () {
 
   describe('query.background()', function () {
     it('should run a background query and return a job', function (done) {
-      var args = {
+      const args = {
         filters: [filter.equal('name', 'aggregate')]
       }
-      var query = client.query(helper.namespace, testSet, args)
+      const query = client.query(helper.namespace, testSet, args)
       query.background('udf', 'noop', function (error, job) {
         if (error) throw error
         expect(job).to.be.instanceof(Job)
@@ -526,7 +526,7 @@ describe('Queries', function () {
   describe('query.operate()', function () {
     helper.skipUnlessVersion('>= 4.7.0', this)
 
-    it('should perform a background query that executes the operations', async function () {
+    it('should perform a background query that executes the operations #slow', async function () {
       const query = client.query(helper.namespace, testSet)
       const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
@@ -559,7 +559,7 @@ describe('Queries', function () {
   context('legacy scan interface', function () {
     ;['UDF', 'concurrent', 'percentage', 'priority'].forEach(function (key) {
       it('should throw an exception if the query options contain key "' + key + '"', function () {
-        var args = {}
+        const args = {}
         args[key] = 'foo'
         expect(() => client.query(helper.namespace, testSet, args)).to.throw('Invalid query arguments')
       })

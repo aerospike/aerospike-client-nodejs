@@ -32,14 +32,14 @@ const status = aerospike.status
 //  MACROS
 // *****************************************************************************
 
-var OP_TYPES = 4 // READ, WRITE, QUERY and SCAN
-var READ = 0
-var WRITE = 1
-var QUERY = 2
-var SCAN = 3
-var TPS = 0
-var TIMEOUT = 1
-var ERROR = 2
+const OP_TYPES = 4 // READ, WRITE, QUERY and SCAN
+const READ = 0
+const WRITE = 1
+const QUERY = 2
+const SCAN = 3
+const TPS = 0
+const TIMEOUT = 1
+const ERROR = 2
 
 if (!cluster.isWorker) {
   console.error('worker.js must only be run as a child process of main.js.')
@@ -49,10 +49,10 @@ if (!cluster.isWorker) {
 argv.ttl = stats.parseTimeToSecs(argv.ttl)
 
 // variables to track memory growth(RSS) of worker process.
-var heapMemory = 0
-var initialFlux = true
-var memGrowth = 0
-var FLUX_PERIOD = 5
+let heapMemory = 0
+let initialFlux = true
+let memGrowth = 0
+const FLUX_PERIOD = 5
 
 // *****************************************************************************
 // Aerospike Client
@@ -86,7 +86,7 @@ if (argv.password !== null) {
   config.password = argv.password
 }
 
-var client = aerospike.client(config)
+const client = aerospike.client(config)
 
 client.connect(function (err) {
   if (err) {
@@ -104,11 +104,11 @@ client.connect(function (err) {
 * key are in range [min ... max]
 */
 function keygen (min, max) {
-  var rand = Math.floor(Math.random() * 0x100000000) % (max - min + 1) + min
+  const rand = Math.floor(Math.random() * 0x100000000) % (max - min + 1) + min
   return rand < 1 ? 1 : rand
 }
 
-var STRING_DATA = 'This the test data to be written to the server'
+const STRING_DATA = 'This the test data to be written to the server'
 /**
 * Generate a record with string and blob in it if run for longevity.
 * Size of strings and blob is argv.datasize ( default 1K).
@@ -116,31 +116,35 @@ var STRING_DATA = 'This the test data to be written to the server'
 *
 */
 function recordgen (key, binSpec) {
-  var data = {}
-  var i = 0
+  const data = {}
+  let i = 0
   do {
-    var bin = binSpec[i]
+    const bin = binSpec[i]
     switch (bin.type) {
-      case 'INTEGER':
+      case 'INTEGER': {
         data[bin.name] = key
         break
-      case 'STRING':
+      }
+      case 'STRING': {
         data[bin.name] = STRING_DATA
         while (data[bin.name].length < bin.size) {
           data[bin.name] += STRING_DATA
         }
         data[bin.name] += key
         break
-      case 'BYTES':
-        var bufData = STRING_DATA
+      }
+      case 'BYTES': {
+        let bufData = STRING_DATA
         while (bufData.length < bin.size) {
           bufData += STRING_DATA
         }
         data[bin.name] = Buffer.from(bufData)
         break
-      default:
+      }
+      default: {
         data.num = key
         break
+      }
     }
     i++
   } while (i < binSpec.length)
@@ -163,7 +167,7 @@ function getPromise (key, done) {
 }
 
 // set the ttl for the write
-var metadata = {
+const metadata = {
   ttl: argv.ttl
 }
 
@@ -183,12 +187,12 @@ function putPromise (options, done) {
 }
 
 // Structure to store per second statistics.
-var intervalData = new Array(OP_TYPES)
+const intervalData = new Array(OP_TYPES)
 resetIntervalData()
 
 function run (options) {
-  var expected = options.rops + options.wops
-  var completed = 0
+  const expected = options.rops + options.wops
+  let completed = 0
 
   // @ TO-DO optimization.
   // Currently stats of all the operations is collected and sent to
@@ -196,9 +200,9 @@ function run (options) {
   // Master puts the stats in appropriate histogram.
   // Consider having histogram for each worker Vs sending the
   // results in an array - Which one is more memory efficient.
-  var operations = Array(expected)
-  var readOps = options.rops
-  var writeOps = options.wops
+  const operations = Array(expected)
+  let readOps = options.rops
+  let writeOps = options.wops
 
   function done (opStatus, elapsed, opType) {
     operations[completed] = [opStatus, elapsed]
@@ -216,13 +220,13 @@ function run (options) {
     }
   }
 
-  var usePromises = options.promises
+  const usePromises = options.promises
 
   while (writeOps > 0 || readOps > 0) {
-    var k = keygen(options.keyRange.min, options.keyRange.max)
-    var key = { ns: options.namespace, set: options.set, key: k }
-    var record = recordgen(k, options.binSpec)
-    var ops = { key, record }
+    const k = keygen(options.keyRange.min, options.keyRange.max)
+    const key = { ns: options.namespace, set: options.set, key: k }
+    const record = recordgen(k, options.binSpec)
+    const ops = { key, record }
     if (writeOps > 0) {
       writeOps--
       if (usePromises) {
@@ -265,8 +269,8 @@ function resetIntervalData () {
  */
 
 function executeJob (options, opType, callback) {
-  var job = client.query(options.namespace, options.set, options.statement)
-  var stream = job.execute()
+  const job = client.query(options.namespace, options.set, options.statement)
+  const stream = job.execute()
   stream.on('data', function (record) {
     // count the records returned
     intervalData[opType][TPS]++
@@ -283,7 +287,7 @@ function executeJob (options, opType, callback) {
   })
 }
 
-var runLongRunningJob = function (options) {
+const runLongRunningJob = function (options) {
   if (options.statement.filters === undefined) {
     executeJob(options, SCAN, runLongRunningJob)
   } else {
@@ -291,13 +295,13 @@ var runLongRunningJob = function (options) {
   }
 }
 
-var monitorMemory = function () {
-  var currentMemory = process.memoryUsage()
+const monitorMemory = function () {
+  const currentMemory = process.memoryUsage()
   currentMemory.pid = process.pid
   if (heapMemory < currentMemory.heapUsed) {
     memGrowth++
     if (!initialFlux && memGrowth >= FLUX_PERIOD) {
-      var alertData = {
+      const alertData = {
         alert: currentMemory,
         severity: alerts.severity.HIGH
       }

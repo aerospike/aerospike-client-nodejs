@@ -26,20 +26,20 @@ const fs = require('fs')
 
 describe('client.query()', function () {
   this.enableTimeouts(false)
-  var client = helper.client
-  var testSet = 'test/queryperf'
-  var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'queryPerfData')
-  var recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
-  var numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
+  const client = helper.client
+  let testSet = 'test/queryperf'
+  const idxKey = new Aerospike.Key(helper.namespace, helper.set, 'queryPerfData')
+  const recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
+  let numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
 
   // Execute query using given onData handler to process each scanned record
   function executeQuery (onData, done) {
-    var query = client.query(helper.namespace, testSet)
+    const query = client.query(helper.namespace, testSet)
     query.where(Aerospike.filter.range('id', 0, numberOfRecords))
-    var stream = query.foreach()
+    const stream = query.foreach()
 
-    var received = 0
-    var timer = perfdata.interval(10000, function (ms) {
+    let received = 0
+    const timer = perfdata.interval(10000, function (ms) {
       const throughput = Math.round(1000 * received / ms)
       console.log('%d ms: %d records received (%d rps; %s)',
         ms, received, throughput, perfdata.memoryUsage())
@@ -68,7 +68,7 @@ describe('client.query()', function () {
         perfdata.generate(helper.namespace, testSet, numberOfRecords, recordSize, function (recordsGenerated) {
           console.timeEnd('generating performance test data')
           numberOfRecords = recordsGenerated // might be slightly less due to duplciate keys
-          var index = {
+          const index = {
             ns: helper.namespace,
             set: testSet,
             bin: 'id',
@@ -99,22 +99,23 @@ describe('client.query()', function () {
 
   // Test definitions
   it('queries ' + numberOfRecords + ' records with noop', function (done) {
-    var noop = function () {}
+    const noop = function () {}
     executeQuery(noop, done)
   })
 
   it('queries ' + numberOfRecords + ' records with busy loop', function (done) {
-    var busy = function () {
-      for (var x = 0; x < 1e5; x++) {} // busy loop
+    const busy = function () {
+      // busy loop
+      for (let x = 0; x < 1e5; x++) {} // eslint-disable-line
     }
     executeQuery(busy, done)
   })
 
   it('queries ' + numberOfRecords + ' records with file IO', function (done) {
-    var file = 'query-stress-test.log'
-    var stream = fs.createWriteStream(file)
+    const file = 'query-stress-test.log'
+    const stream = fs.createWriteStream(file)
     stream.on('error', function (err) { throw err })
-    var fileAppend = function (record) {
+    const fileAppend = function (record) {
       stream.write(JSON.stringify(record) + '\n')
     }
     executeQuery(fileAppend, function () {

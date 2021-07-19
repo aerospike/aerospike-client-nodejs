@@ -97,12 +97,12 @@ describe('Client', function () {
   describe('#isConnected', function () {
     context('without tender health check', function () {
       it('returns false if the client is not connected', function () {
-        var client = new Client(helper.config)
+        const client = new Client(helper.config)
         expect(client.isConnected(false)).to.be.false()
       })
 
       it('returns true if the client is connected', function (done) {
-        var client = new Client(helper.config)
+        const client = new Client(helper.config)
         client.connect(function () {
           expect(client.isConnected(false)).to.be.true()
           client.close(false)
@@ -111,7 +111,7 @@ describe('Client', function () {
       })
 
       it('returns false after the connection is closed', function (done) {
-        var client = new Client(helper.config)
+        const client = new Client(helper.config)
         client.connect(function () {
           client.close(false)
           expect(client.isConnected(false)).to.be.false()
@@ -122,10 +122,10 @@ describe('Client', function () {
 
     context('with tender health check', function () {
       it("calls the Aerospike C client library's isConnected() method", function (done) {
-        var client = new Client(helper.config)
-        var orig = client.as_client.isConnected
+        const client = new Client(helper.config)
+        const orig = client.as_client.isConnected
         client.connect(function () {
-          var tenderHealthCheck = false
+          let tenderHealthCheck = false
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
           expect(client.isConnected(true)).to.be.false()
           expect(tenderHealthCheck).to.be.true()
@@ -138,10 +138,10 @@ describe('Client', function () {
   })
 
   describe('Client#getNodes', function () {
-    var client = helper.client
+    const client = helper.client
 
     it('returns a list of cluster nodes', function () {
-      var nodes = client.getNodes()
+      const nodes = client.getNodes()
 
       expect(nodes).to.be.an('array')
       expect(nodes.length).to.be.greaterThan(0)
@@ -193,15 +193,15 @@ describe('Client', function () {
     // The get command is used for the test but the same behavior should apply
     // to all client commands.
     function assertErrorCbAsync (client, errorCb, done) {
-      var checkpoints = []
-      var checkAssertions = function (checkpoint) {
+      const checkpoints = []
+      const checkAssertions = function (checkpoint) {
         checkpoints.push(checkpoint)
         if (checkpoints.length !== 2) return
         expect(checkpoints).to.eql(['after', 'callback'])
         if (client.isConnected()) client.close(false)
         done()
       }
-      var key = keygen.string(helper.namespace, helper.set)()
+      const key = keygen.string(helper.namespace, helper.set)()
       client.get(key, function (err, _record) {
         errorCb(err)
         checkAssertions('callback')
@@ -211,8 +211,8 @@ describe('Client', function () {
 
     it('callback is asynchronous in case of an client error #noserver', function (done) {
       // trying to send a command to a client that is not connected will trigger a client error
-      var client = Aerospike.client()
-      var errorCheck = function (err) {
+      const client = Aerospike.client()
+      const errorCheck = function (err) {
         expect(err).to.be.instanceof(Error)
         expect(err.message).to.equal('Not connected.')
       }
@@ -221,10 +221,10 @@ describe('Client', function () {
 
     it('callback is asynchronous in case of an I/O error', function (done) {
       // maxConnsPerNode = 0 will trigger an error in the C client when trying to send a command
-      var config = Object.assign({ maxConnsPerNode: 0 }, helper.config)
+      const config = Object.assign({ maxConnsPerNode: 0 }, helper.config)
       Aerospike.connect(config, function (err, client) {
         if (err) throw err
-        var errorCheck = function (err) {
+        const errorCheck = function (err) {
           expect(err).to.be.instanceof(Error)
           expect(err.code).to.equal(Aerospike.status.ERR_NO_MORE_CONNECTIONS)
         }
@@ -235,9 +235,9 @@ describe('Client', function () {
 
   describe('#captureStackTraces', function () {
     it('should capture stack traces that show the command being called', function (done) {
-      var client = helper.client
-      var key = keygen.string(helper.namespace, helper.set)()
-      var orig = client.captureStackTraces
+      const client = helper.client
+      const key = keygen.string(helper.namespace, helper.set)()
+      const orig = client.captureStackTraces
       client.captureStackTraces = true
       client.get(key, function (err) {
         expect(err.stack).to.match(/Client.get/)

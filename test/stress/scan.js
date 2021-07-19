@@ -28,22 +28,22 @@ const mega = 1024 * 1024 // bytes in a MB
 
 describe('client.scan()', function () {
   this.enableTimeouts(false)
-  var client = helper.client
-  var testSet = 'test/scanperf'
-  var idxKey = new Aerospike.Key(helper.namespace, helper.set, 'scanPerfData')
-  var recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
-  var numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
-  var webWorkerThreads = 10 // number of WebWorker threads to use
-  var reportingInterval = 10000 // report progress every 10 seconds
+  const client = helper.client
+  let testSet = 'test/scanperf'
+  const idxKey = new Aerospike.Key(helper.namespace, helper.set, 'scanPerfData')
+  const recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
+  let numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
+  const webWorkerThreads = 10 // number of WebWorker threads to use
+  const reportingInterval = 10000 // report progress every 10 seconds
 
   // Execute scan using given onData handler to process each scanned record
   function executeScan (onData, done) {
-    var scan = client.scan(helper.namespace, testSet)
+    const scan = client.scan(helper.namespace, testSet)
     scan.concurrent = true
-    var stream = scan.foreach()
+    const stream = scan.foreach()
 
-    var received = 0
-    var timer = perfdata.interval(reportingInterval, function (ms) {
+    let received = 0
+    const timer = perfdata.interval(reportingInterval, function (ms) {
       const throughput = Math.round(1000 * received / ms)
       console.log('%d ms: %d records received (%d rps; %s)',
         ms, received, throughput, perfdata.memUsage())
@@ -86,41 +86,44 @@ describe('client.scan()', function () {
 
   // Test definitions
   it('scans ' + numberOfRecords + ' records with noop', function (done) {
-    var noop = function () {}
+    const noop = function () {}
     executeScan(noop, done)
   })
 
   it('scans ' + numberOfRecords + ' records with busy loop', function (done) {
-    var busy = function () {
-      for (var x = 0; x < 1e5; x++) {} // busy loop
+    const busy = function () {
+      // busy loop
+      for (let x = 0; x < 1e5; x++) {} // eslint-disable-line
     }
     executeScan(busy, done)
   })
 
   it('scans ' + numberOfRecords + ' records with busy loop in WebWorker', function (done) {
+    let Worker
     try {
-      var Worker = require('webworker-threads')
+      Worker = require('webworker-threads')
     } catch (err) {
       console.error('gem install webworker-threads to run this test!')
       this.skip('gem install webworker-threads to run this test!')
       return
     }
     function doWork () {
-      for (var x = 0; x < 1e5; x++) {} // busy loop
+      // busy loop
+      for (let x = 0; x < 1e5; x++) {} // eslint-disable-line
     }
-    var threadPool = Worker.createPool(webWorkerThreads).all.eval(doWork)
+    const threadPool = Worker.createPool(webWorkerThreads).all.eval(doWork)
     console.log('created WebWorker pool with %s threads', webWorkerThreads)
-    var processed = 0
-    var timer = perfdata.interval(reportingInterval, function (ms) {
-      var throughput = Math.round(1000 * processed / ms)
-      var memUsage = process.memoryUsage()
-      var rss = Math.round(memUsage.rss / mega)
-      var heapUsed = Math.round(memUsage.heapUsed / mega)
-      var heapTotal = Math.round(memUsage.heapTotal / mega)
+    let processed = 0
+    const timer = perfdata.interval(reportingInterval, function (ms) {
+      const throughput = Math.round(1000 * processed / ms)
+      const memUsage = process.memoryUsage()
+      const rss = Math.round(memUsage.rss / mega)
+      const heapUsed = Math.round(memUsage.heapUsed / mega)
+      const heapTotal = Math.round(memUsage.heapTotal / mega)
       console.log('%d ms: %d records processed (%d rps; mem: %d MB, heap: %d / %d MB)',
         ms, processed, throughput, rss, heapUsed, heapTotal)
     })
-    var worker = function (record, meta, key) {
+    const worker = function (record, meta, key) {
       threadPool.any.eval('doWork()', function (err) {
         if (err) throw err
         if (++processed === numberOfRecords) {
@@ -135,10 +138,10 @@ describe('client.scan()', function () {
   })
 
   it('scans ' + numberOfRecords + ' records with file IO', function (done) {
-    var file = 'scan-stress-test.log'
-    var stream = fs.createWriteStream(file)
+    const file = 'scan-stress-test.log'
+    const stream = fs.createWriteStream(file)
     stream.on('error', function (err) { throw err })
-    var fileAppend = function (record) {
+    const fileAppend = function (record) {
       stream.write(JSON.stringify(record) + '\n')
     }
     executeScan(fileAppend, function () {

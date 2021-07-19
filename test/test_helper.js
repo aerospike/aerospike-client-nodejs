@@ -38,6 +38,7 @@ exports.metagen = require('./generators/metadata')
 exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
+exports.util = require('./util')
 
 const config = options.getConfig()
 exports.config = config
@@ -154,9 +155,9 @@ ServerInfoHelper.prototype.randomNode = function () {
   return nodes[i]
 }
 
-var udfHelper = new UDFHelper(client)
-var indexHelper = new IndexHelper(client)
-var serverInfoHelper = new ServerInfoHelper(client)
+const udfHelper = new UDFHelper(client)
+const indexHelper = new IndexHelper(client)
+const serverInfoHelper = new ServerInfoHelper(client)
 
 exports.udf = udfHelper
 exports.index = indexHelper
