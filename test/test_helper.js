@@ -38,6 +38,7 @@ exports.metagen = require('./generators/metadata')
 exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
+exports.util = require('./util')
 
 const config = options.getConfig()
 exports.config = config
