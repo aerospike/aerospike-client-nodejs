@@ -1,4 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm test -- --reporter progress
+npm test -- --invert --fgrep "#slow" --reporter progress
