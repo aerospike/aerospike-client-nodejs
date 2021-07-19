@@ -23,7 +23,7 @@ const Config = require('../lib/config')
 require('./test_helper')
 
 describe('Config #noserver', function () {
-  var asHostsEnv
+  let asHostsEnv
   beforeEach(function () {
     asHostsEnv = process.env.AEROSPIKE_HOSTS
     delete process.env.AEROSPIKE_HOSTS
@@ -131,7 +131,7 @@ describe('Config #noserver', function () {
     })
 
     it('ignores invalid config properties', function () {
-      var obj = {
+      const obj = {
         log: './debug.log',
         policies: 1000,
         connTimeoutMs: 1.5,
@@ -141,7 +141,7 @@ describe('Config #noserver', function () {
         sharedMemory: true,
         rackId: 'myRack'
       }
-      var config = new Config(obj)
+      const config = new Config(obj)
       expect(config).to.not.have.property('log')
       expect(config).to.not.have.property('connTimeoutMs')
       expect(config).to.not.have.property('tenderInterval')
@@ -163,17 +163,17 @@ describe('Config #noserver', function () {
 
     it('reads hosts from AEROSPIKE_HOSTS if not specified', function () {
       process.env.AEROSPIKE_HOSTS = 'db1:3001'
-      var config = new Config()
+      const config = new Config()
       expect(config.hosts).to.eql('db1:3001')
     })
 
     it('defaults to "localhost:3000"', function () {
-      var config = new Config()
+      const config = new Config()
       expect(config.hosts).to.eql('localhost:3000')
     })
 
     it('defaults to the specified default port number', function () {
-      var config = new Config({
+      const config = new Config({
         port: 3333
       })
       expect(config.hosts).to.eql('localhost:3333')

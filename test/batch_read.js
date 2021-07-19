@@ -31,7 +31,7 @@ const valgen = helper.valgen
 const Key = Aerospike.Key
 
 describe('client.batchRead()', function () {
-  var client = helper.client
+  const client = helper.client
 
   before(function () {
     const nrecords = 10
@@ -71,7 +71,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns only meta data if no bins are selected', function (done) {
-    var batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1') },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/3') },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5') }
@@ -89,7 +89,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns just the selected bins', function (done) {
-    var batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), bins: ['i'] },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), bins: ['i'] },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), bins: ['i'] }
@@ -109,7 +109,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns the entire record', function (done) {
-    var batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: true },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: true }
@@ -129,7 +129,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns selected bins for each key', function (done) {
-    var batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: false, bins: ['i'] },
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: false }
@@ -183,7 +183,7 @@ describe('client.batchRead()', function () {
   })
 
   it('returns a Promise that resolves to the batch results', function () {
-    var batchRecords = [
+    const batchRecords = [
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true }
     ]
 

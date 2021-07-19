@@ -24,7 +24,7 @@ const helper = require('./test_helper')
 describe('Aerospike', function () {
   describe('Aerospike.client() #noserver', function () {
     it('instantiates a new client instance', function (done) {
-      var client = Aerospike.client(helper.config)
+      const client = Aerospike.client(helper.config)
       expect(client).to.be.instanceof(Aerospike.Client)
       done()
     })

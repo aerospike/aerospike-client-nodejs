@@ -24,9 +24,9 @@ const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
 context('registering/unregistering UDF modules', function () {
-  var client = helper.client
-  var module = 'udf.lua'
-  var filename = path.join(__dirname, module)
+  const client = helper.client
+  const module = 'udf.lua'
+  const filename = path.join(__dirname, module)
 
   it('should register and then remove a module', function (done) {
     client.udfRegister(filename, function (err, registerJob) {

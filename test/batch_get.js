@@ -28,7 +28,7 @@ const putgen = helper.putgen
 const valgen = helper.valgen
 
 describe('client.batchGet()', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('should successfully read 10 records', function () {
     const numberOfRecords = 10
@@ -53,9 +53,9 @@ describe('client.batchGet()', function () {
   })
 
   it('should fail reading 10 records', function (done) {
-    var numberOfRecords = 10
-    var kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/fail/', random: false })
-    var keys = keygen.range(kgen, numberOfRecords)
+    const numberOfRecords = 10
+    const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/fail/', random: false })
+    const keys = keygen.range(kgen, numberOfRecords)
     client.batchGet(keys, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.equal(numberOfRecords)

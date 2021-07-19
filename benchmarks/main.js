@@ -31,21 +31,21 @@ const argv = require('./config.json')
 // Globals
 // *****************************************************************************
 
-var OP_TYPES = 4 // READ, WRITE, SCAN and QUERY
-var STATS = 3 // OPERATIONS, TIMEOUTS and ERRORS
+const OP_TYPES = 4 // READ, WRITE, SCAN and QUERY
+const STATS = 3 // OPERATIONS, TIMEOUTS and ERRORS
 
-var queryWorkers = 0
-var scanWorkers = 0
-var online = 0
-var exited = 0
-var rwOnline = 0
-var queryOnline = 0
-var scanOnline = 0
+let queryWorkers = 0
+let scanWorkers = 0
+let online = 0
+let exited = 0
+let rwOnline = 0
+let queryOnline = 0
+let scanOnline = 0
 
 //
 // Number of completed operations(READ & WRITE), timed out operations and operations that ran into error per second
 //
-var intervalStats = new Array(OP_TYPES)
+let intervalStats = new Array(OP_TYPES)
 resetIntervalStats()
 
 if (argv.querySpec !== undefined) {
@@ -56,21 +56,21 @@ if (argv.scanSpec !== undefined) {
   scanWorkers = argv.scanSpec.length
 }
 
-var rwWorkers = argv.processes - queryWorkers - scanWorkers
+const rwWorkers = argv.processes - queryWorkers - scanWorkers
 
 if (!cluster.isMaster) {
   console.error('main.js must not run as a child process.')
   process.exit()
 }
 
-var FOPS = (argv.operations / (argv.reads + argv.writes))
-var ROPS = FOPS * argv.reads
-var WOPS = FOPS * argv.writes
-var ROPSPCT = ROPS / argv.operations * 100
-var WOPSPCT = WOPS / argv.operations * 100
+const FOPS = (argv.operations / (argv.reads + argv.writes))
+let ROPS = FOPS * argv.reads
+const WOPS = FOPS * argv.writes
+const ROPSPCT = ROPS / argv.operations * 100
+const WOPSPCT = WOPS / argv.operations * 100
 
 if ((ROPS + WOPS) < argv.operations) {
-  var DOPS = argv.operations - (ROPS + WOPS)
+  const DOPS = argv.operations - (ROPS + WOPS)
   ROPS += DOPS
 }
 
@@ -79,7 +79,7 @@ if (argv.time !== undefined) {
   argv.iterations = undefined
 }
 
-var alert = { mode: argv.alert, filename: argv.filename }
+const alert = { mode: argv.alert, filename: argv.filename }
 alerts.setupAlertSystem(alert)
 
 // *****************************************************************************
@@ -94,7 +94,7 @@ function finalize () {
 }
 
 function workerSpawn () {
-  var worker = cluster.fork()
+  const worker = cluster.fork()
   worker.iteration = 0
   worker.on('message', workerResults(worker))
 }
@@ -119,7 +119,7 @@ function workerProbe () {
 }
 
 function rwWorkerJob (worker) {
-  var option = {
+  const option = {
     namespace: argv.namespace,
     set: argv.set,
     keyRange: argv.keyRange,
@@ -136,15 +136,15 @@ function rwWorkerJob (worker) {
 // once the index is created. After implementing the task completed API
 // this can be enhanced for that.
 function queryWorkerJob (worker, id) {
-  var stmt = {}
-  var queryConfig = argv.querySpec[id]
+  const stmt = {}
+  const queryConfig = argv.querySpec[id]
   if (queryConfig.qtype === 'Range') {
     stmt.filters = [aerospike.filter.range(queryConfig.bin, queryConfig.min, queryConfig.max)]
   } else if (queryConfig.qtype === 'Equal') {
     stmt.filters = [aerospike.filter.equal(queryConfig.bin, queryConfig.value)]
   }
 
-  var options = {
+  const options = {
     namespace: argv.namespace,
     set: argv.set,
     statement: stmt
@@ -153,7 +153,7 @@ function queryWorkerJob (worker, id) {
 }
 
 function scanWorkerJob (worker) {
-  var options = {
+  const options = {
     namespace: argv.namespace,
     set: argv.set,
     statement: argv.scanSpec
@@ -165,10 +165,10 @@ function scanWorkerJob (worker) {
  * Collects the data related to transactions and prints it once the data is recieved from all workers.
  * (called per second)
  */
-var counter = 0 // Number of times workerResultsInterval is called
+let counter = 0 // Number of times workerResultsInterval is called
 function workerResultsInterval (worker, intervalWorkerStats) {
-  for (var i = 0; i < OP_TYPES; i++) {
-    for (var j = 0; j < STATS; j++) {
+  for (let i = 0; i < OP_TYPES; i++) {
+    for (let j = 0; j < STATS; j++) {
       intervalStats[i][j] = intervalStats[i][j] + intervalWorkerStats[i][j]
     }
   }
@@ -238,7 +238,7 @@ function workerResults (worker) {
 /**
 *  * Print config information
 *   */
-var keyrange = argv.keyRange.max - argv.keyRange.min
+const keyrange = argv.keyRange.max - argv.keyRange.min
 
 if (!argv.silent) {
   logger.info('namespace: %s, set: %s, worker processes: %s, keys: %s, read: %s%%, write: %s%%, promises: %s',
@@ -329,6 +329,6 @@ cluster.setupMaster({
 })
 
 stats.start()
-for (var p = 0; p < argv.processes; p++) {
+for (let p = 0; p < argv.processes; p++) {
   workerSpawn()
 }

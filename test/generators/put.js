@@ -23,10 +23,10 @@ const Record = require('../../lib/record')
 const helper = require('../test_helper')
 
 function createRecords (putCall, generator, recordsToCreate, maxConcurrent, callback) {
-  var currentRecordNo = 0
-  var inFlight = 0
+  let currentRecordNo = 0
+  let inFlight = 0
 
-  var creator = function (record, err) {
+  const creator = function (record, err) {
     if (err) {
       console.error('ERROR: %s [%d] in %s at %s:%d\n%s', err.message, err.code, err.func, err.file, err.line, err.stack)
       throw err
@@ -48,7 +48,7 @@ function createRecords (putCall, generator, recordsToCreate, maxConcurrent, call
     }
   }
 
-  for (var i = 0; i < Math.min(maxConcurrent, recordsToCreate); i++) {
+  for (let i = 0; i < Math.min(maxConcurrent, recordsToCreate); i++) {
     creator(null, null)
   }
 }

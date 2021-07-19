@@ -14,7 +14,7 @@
 // limitations under the License.
 // *****************************************************************************
 
-var Table = require('cli-table')
+const Table = require('cli-table')
 
 const OPERATION_STATUS = 0
 const OPERATION_TIME_DIFF = 1
@@ -22,8 +22,8 @@ const OPERATION_TIME_DIFF = 1
 // histograms
 // 1. For status code of each operation.
 // 2. Latency histogram.
-var hist = {}
-var timeHist = {
+const hist = {}
+const timeHist = {
   '<= 1': 0,
   '> 1': 0,
   '> 2': 0,
@@ -33,10 +33,10 @@ var timeHist = {
   '> 32': 0
 }
 
-var trans = { total: { count: 0, min_tps: Infinity, max_tps: 0 } }
+const trans = { total: { count: 0, min_tps: Infinity, max_tps: 0 } }
 
-var startTime
-var totalDuration
+let startTime
+let totalDuration
 
 const TABLE_CHARS = {
   top: '',
@@ -74,11 +74,11 @@ function duration (time) {
 
 function parseTimeToSecs (time) {
   if (time !== undefined) {
-    var timeMatch = time.toString().match(/(\d+)([smh])?/)
+    const timeMatch = time.toString().match(/(\d+)([smh])?/)
     if (timeMatch !== null) {
       if (timeMatch[2] !== null) {
         time = parseInt(timeMatch[1], 10)
-        var timeUnit = timeMatch[2]
+        const timeUnit = timeMatch[2]
         switch (timeUnit) {
           case 'm':
             time = time * 60
@@ -123,7 +123,7 @@ function numberFormat (v, precision) {
 }
 
 function timeUnits (v) {
-  var u = v === 1 ? 'second' : 'seconds'
+  let u = v === 1 ? 'second' : 'seconds'
 
   if (Math.abs(v) >= 60) {
     v = v / 60
@@ -163,7 +163,7 @@ function printTable (table, print, prefix) {
 }
 
 function printEnvTable (print, prefix) {
-  var envTable = new Table({
+  const envTable = new Table({
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
@@ -175,7 +175,7 @@ function printEnvTable (print, prefix) {
 }
 
 function printConfigTable (config, print, prefix) {
-  var configTable = new Table({
+  const configTable = new Table({
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
@@ -190,13 +190,13 @@ function printConfigTable (config, print, prefix) {
 }
 
 function printTransactions (transactions, print, prefix) {
-  var thead = []
+  const thead = []
   thead.push('')
-  for (var t in transactions) {
+  for (const t in transactions) {
     thead.push(t)
   }
 
-  var table = new Table({
+  const table = new Table({
     head: thead,
     chars: TABLE_CHARS,
     style: TABLE_STYLE
@@ -219,19 +219,19 @@ function printTransactions (transactions, print, prefix) {
 }
 
 function printHistogram (histogram, print, prefix) {
-  var total = Object.keys(histogram).map(function (k) {
+  const total = Object.keys(histogram).map(function (k) {
     return histogram[k]
   }).reduce(sum)
 
-  var thead = []
-  var tbody = []
+  const thead = []
+  const tbody = []
 
-  for (var k in histogram) {
+  for (const k in histogram) {
     thead.push(k)
     tbody.push(numberFormat(histogram[k] / total * 100, 1) + '%')
   }
 
-  var table = new Table({
+  const table = new Table({
     head: thead,
     chars: TABLE_CHARS,
     style: TABLE_STYLE
@@ -257,16 +257,16 @@ function iteration (operations) {
 }
 
 function aggregateIntervalStats (statName, tx) {
-  var stats = trans[statName] = trans[statName] || { count: 0, max_tps: 0, min_tps: Infinity }
+  const stats = trans[statName] = trans[statName] || { count: 0, max_tps: 0, min_tps: Infinity }
   stats.count += tx
   if (tx > stats.max_tps) stats.max_tps = tx
   if (tx < stats.min_tps) stats.min_tps = tx
 }
 
 function interval (intervalStats) {
-  var totalTX = 0
-  for (var stat in intervalStats) {
-    var tx = intervalStats[stat][0]
+  let totalTX = 0
+  for (const stat in intervalStats) {
+    const tx = intervalStats[stat][0]
     totalTX += tx
     aggregateIntervalStats(stat, tx)
   }
@@ -295,7 +295,7 @@ function reportFinal (argv, print) {
     printHistogram(hist, print)
     print()
   } else {
-    var output = {
+    const output = {
       env: {
         nodejs: process.versions.node,
         UV_THREADPOOL_SIZE: process.env.UV_THREADPOOL_SIZE || null

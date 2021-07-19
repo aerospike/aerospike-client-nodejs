@@ -14,29 +14,29 @@
 // limitations under the License.
 // *****************************************************************************
 
-var winston
-var nodemailer
-var transporter
+let winston
+let nodemailer
+let transporter
 
-var severity = {
+const severity = {
   HIGH: 0,
   MEDIUM: 1,
   LOW: 2
 }
 
-var action = {
+const action = {
   SENDEMAIL: 0,
   PRINTCONSOLE: 1,
   PRINTFILE: 2
 }
 
-var mediumSevCount = 0
-var lowSevCount = 0
+let mediumSevCount = 0
+let lowSevCount = 0
 
 // setup winston logger to log it to file or console
 // Setup node mailers to generate email alerts to
 // send emails in case of errors.
-var alertMode
+let alertMode
 function setupAlertSystem (alert) {
   if (alert.mode === 'EMAIL') {
     nodemailer = require('nodemailer')
@@ -59,7 +59,7 @@ function setupAlertSystem (alert) {
 }
 
 function handleAlert (alertInfo, sev) {
-  var generateAlert = false
+  let generateAlert = false
   switch (sev) {
     case severity.HIGH:
       generateAlert = true
@@ -83,7 +83,7 @@ function handleAlert (alertInfo, sev) {
   if (generateAlert) {
     if (alertMode === 'EMAIL') {
       // send an email.
-      var email = {
+      const email = {
         from: 'Aerospike alert account',
         to: 'gayathri@aerospike.com',
         subject: 'Nodejs Longevity Alert',

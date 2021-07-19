@@ -73,7 +73,7 @@ describe('Key #noserver', function () {
     })
 
     context('user key', function () {
-      var dummyDigest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+      const dummyDigest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
 
       it('allows string user key', function () {
         expect(new Key('ns', 'set', 'abc')).to.be.ok()
@@ -104,7 +104,7 @@ describe('Key #noserver', function () {
       })
 
       it('allows byte array user key', function () {
-        var buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
+        const buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
         expect(new Key('ns', 'set', buf)).to.be.ok()
       })
 
@@ -139,7 +139,7 @@ describe('Key #noserver', function () {
 
     context('digest', function () {
       it('allows creating a new key with just the namespace and digest', function () {
-        var digest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
+        const digest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
         expect(new Key('ns', null, null, digest)).to.be.ok()
       })
 
@@ -234,10 +234,10 @@ describe('Key #noserver', function () {
 })
 
 context('Plain Object Keys (for backward compatibility)', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('accepts plain objects as user keys', function (done) {
-    var key = { ns: helper.namespace, set: helper.set, key: 1234 }
+    const key = { ns: helper.namespace, set: helper.set, key: 1234 }
     client.put(key, { foo: 'bar' }, function (err) {
       expect(err).to.not.be.ok()
       done()
@@ -245,7 +245,7 @@ context('Plain Object Keys (for backward compatibility)', function () {
   })
 
   it('returns an error for an unsupported float user key', function (done) {
-    var key = { ns: helper.namespace, set: helper.set, key: 3.1415 }
+    const key = { ns: helper.namespace, set: helper.set, key: 3.1415 }
     client.put(key, { foo: 'bar' }, function (err) {
       expect(err.code).to.equal(status.ERR_PARAM)
       done()
@@ -253,7 +253,7 @@ context('Plain Object Keys (for backward compatibility)', function () {
   })
 
   it('returns an error for an invalid user key', function (done) {
-    var key = { ns: helper.namespace, set: helper.set, key: { a: 1, b: 2, c: 3 } }
+    const key = { ns: helper.namespace, set: helper.set, key: { a: 1, b: 2, c: 3 } }
     client.put(key, { foo: 'bar' }, function (err) {
       expect(err.code).to.equal(status.ERR_PARAM)
       done()

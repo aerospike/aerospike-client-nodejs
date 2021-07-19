@@ -16,14 +16,14 @@
 
 'use strict'
 
-var Key = require('../../lib/key')
-var valgen = require('./value')
+const Key = require('../../lib/key')
+const valgen = require('./value')
 
 //
 // Returns a generator for bytes keys.
 //
 function bytes (namespace, set, options) {
-  var bgen = valgen.bytes(options)
+  const bgen = valgen.bytes(options)
   return function () {
     return new Key(namespace, set, bgen())
   }
@@ -33,7 +33,7 @@ function bytes (namespace, set, options) {
 // Returns a generator for string keys.
 //
 function string (namespace, set, options) {
-  var sgen = valgen.string(options)
+  const sgen = valgen.string(options)
   return function () {
     return new Key(namespace, set, sgen())
   }
@@ -43,7 +43,7 @@ function string (namespace, set, options) {
 // Returns a generator for integer keys.
 //
 function integer (namespace, set, options) {
-  var igen = valgen.integer(options)
+  const igen = valgen.integer(options)
   return function () {
     return new Key(namespace, set, igen())
   }
@@ -52,8 +52,8 @@ function integer (namespace, set, options) {
 function range (keygen, end, start) {
   start = start || 0
   end = end || start + 1
-  var a = []
-  for (var i = 0; i < end; i++) {
+  const a = []
+  for (let i = 0; i < end; i++) {
     a.push(keygen())
   }
   return a

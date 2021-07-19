@@ -30,8 +30,8 @@ function constant (bins) {
 //
 function record (bins) {
   return function () {
-    var out = {}
-    for (var bin in bins) {
+    const out = {}
+    for (const bin in bins) {
       out[bin] = bins[bin]()
     }
     return out
