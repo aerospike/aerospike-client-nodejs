@@ -152,13 +152,13 @@ describe('Client', function () {
     })
   })
 
-  context('cluster name', function () {
+  context.skip('cluster name', function () {
     it('should fail to connect to the cluster if the cluster name does not match', function (done) {
-      var config = Object.assign({}, helper.config)
+      const config = Object.assign({}, helper.config)
       config.clusterName = 'notAValidClusterName'
-      var client = new Client(config)
+      const client = new Client(config)
       client.connect(function (err) {
-        expect(err.code).to.equal(Aerospike.status.ERR_CLIENT)
+        expect(err.code).to.eq(Aerospike.status.ERR_CLIENT)
         client.close(false)
         done()
       })
