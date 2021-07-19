@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * **Updates**
   * *BREAKING*: This client requires server version 4.9 or later.
+  * *BREAKING*: Drop support for Node.js 8.
   * *BREAKING*: Remove support for CentOS 6 as well as Ubuntu 16.0.4.
   * *BREAKING*: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
   * Use EL7 C client builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
