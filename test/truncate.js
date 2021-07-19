@@ -32,7 +32,7 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const putgen = helper.putgen
 
-describe('client.truncate()', function () {
+describe('client.truncate() #slow', function () {
   helper.skipUnlessVersion('>= 3.12.0', this)
 
   const client = helper.client
@@ -84,7 +84,7 @@ describe('client.truncate()', function () {
     await checkRecords(records, [], pollIntMs)
   })
 
-  it('deletes all records with an older update timestamp #slow', async function () {
+  it('deletes all records with an older update timestamp', async function () {
     this.timeout(15000)
     const ns = helper.namespace
     const set = setgen()
