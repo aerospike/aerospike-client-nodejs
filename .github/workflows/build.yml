@@ -36,8 +36,6 @@ jobs:
         cache: 'npm'
     - name: Set up Aerospike Database
       uses: reugn/github-action-aerospike@v1
-      with:
-        config-file: .github/workflows/aerospike.conf
     - run: npm ci
     - run: npm run coverage
       env:
