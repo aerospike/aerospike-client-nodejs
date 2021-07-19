@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,5 @@ v8::Local<v8::Object> map_enum_values();
 v8::Local<v8::Object> policy();
 v8::Local<v8::Object> predicates();
 v8::Local<v8::Object> retry_policy_values();
-v8::Local<v8::Object> scanPriority();
 v8::Local<v8::Object> status();
 v8::Local<v8::Object> ttl_enum_values();

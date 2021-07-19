@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ describe('client.scan()', function () {
   // Execute scan using given onData handler to process each scanned record
   function executeScan (onData, done) {
     var scan = client.scan(helper.namespace, testSet)
-    scan.priority = Aerospike.scanPriority.HIGH
     scan.concurrent = true
     var stream = scan.foreach()
 
