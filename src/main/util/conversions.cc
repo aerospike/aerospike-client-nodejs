@@ -972,61 +972,85 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
     const Local<Array> props = Nan::GetOwnPropertyNames(obj).ToLocalChecked();
     const uint32_t count = props->Length();
     as_record_init(rec, count);
-    for ( uint32_t i = 0; i < count; i++ ) {
-
+    for (uint32_t i = 0; i < count; i++) {
         const Local<Value> name = Nan::Get(props, i).ToLocalChecked();
         const Local<Value> value = Nan::Get(obj, name).ToLocalChecked();
 
-        // A bin can be undefined, or an entry inside a CDT(list, map)
-        // can be an undefined value.
-        // If a bin is undefined, it must error out at the earliest.
-        if( value->IsUndefined()) {
-            as_v8_error(log, "Bin value 'undefined' not supported: %s", *Nan::Utf8String(name));
+        Nan::Utf8String n(name);
+        if (strlen(*n) > AS_BIN_NAME_MAX_SIZE) {
+            as_v8_error(log, "Bin name length exceeded (max. %i): %s", AS_BIN_NAME_MAX_SIZE, *n);
             return AS_NODE_PARAM_ERR;
         }
 
-        Nan::Utf8String n(name);
-        if( strlen(*n) > AS_BIN_NAME_MAX_SIZE ) {
-            as_v8_error(log, "Bin name length exceeded (max. 14): %s", *n);
+        if (value->IsUndefined()) {
+            as_v8_error(log, "Bin value 'undefined' not supported: %s", *n);
             return AS_NODE_PARAM_ERR;
         }
-        as_val* val = NULL;
-        if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
-            return AS_NODE_PARAM_ERR;
+        if (value->IsNull()) {
+            as_record_set_nil(rec, *n);
+            continue;
         }
-        switch(as_val_type(val)) {
-            case AS_BOOLEAN:
-                as_val_destroy(val);
-                as_v8_error(log, "Boolean type not supported: %s", *n);
+        if (value->IsBoolean()) {
+            as_record_set_bool(rec, *n, Nan::To<bool>(value).FromJust());
+            continue;
+        }
+        if (value->IsString()) {
+            as_record_set_strp(rec, *n, strdup(*Nan::Utf8String(value)), true);
+            continue;
+        }
+        if (is_double_value(value)) {
+            as_record_set_double(rec, *n, double_value(value));
+            continue;
+        }
+        if (value->IsInt32() || value->IsUint32() || value->IsNumber()) {
+            as_record_set_int64(rec, *n, Nan::To<int64_t>(value).FromJust());
+            continue;
+        }
+#if (NODE_MAJOR_VERSION > 10) || (NODE_MAJOR_VERSION == 10  && NODE_MINOR_VERSION >= 4)
+        if (value->IsBigInt()) {
+            Local<BigInt> bigint_value = value.As<BigInt>();
+            bool lossless = true;
+            int64_t int64_value = bigint_value->Int64Value(&lossless);
+            if (!lossless) {
+                as_v8_error(log, "Invalid key value: BigInt value could not be converted to int64_t losslessly");
                 return AS_NODE_PARAM_ERR;
-            case AS_INTEGER:
-                as_record_set_integer(rec, *n, (as_integer*)val);
-                break;
-            case AS_DOUBLE:
-                as_record_set_as_double(rec, *n, (as_double*)val);
-                break;
-            case AS_STRING:
-                as_record_set_string(rec, *n, (as_string*)val);
-                break;
-            case AS_BYTES:
-                as_record_set_bytes(rec, *n, (as_bytes*) val);
-                break;
-            case AS_LIST:
-                as_record_set_list(rec, *n, (as_list*) val);
-                break;
-            case AS_MAP:
-                as_record_set_map(rec, *n, (as_map*) val);
-                break;
-            case AS_GEOJSON:
-                as_record_set_geojson(rec, *n, (as_geojson*) val);
-                break;
-            case AS_NIL:
-                as_record_set_nil(rec, *n);
-                break;
-            default:
-                as_v8_error(log,"Skipping unsupported as_val type %i: %s", as_val_type(val), *n);
-                break;
+            }
+            as_record_set_int64(rec, *n, int64_value);
+            continue;
         }
+#endif
+        if (node::Buffer::HasInstance(value)) {
+            int size;
+            uint8_t* data;
+            if (extract_blob_from_jsobject(&data, &size, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
+                as_v8_error(log, "Extractingb blob from a js object failed");
+                return AS_NODE_PARAM_ERR;
+            }
+            as_record_set_rawp(rec, *n, data, size, true);
+            continue;
+        }
+        if (is_geojson_value(value)) {
+            as_record_set_geojson_strp(rec, *n, geojson_as_string(value), true);
+            continue;
+        }
+        if (value->IsArray()) {
+            as_list* list;
+            if (list_from_jsarray(&list, Local<Array>::Cast(value), log) != AS_NODE_PARAM_OK) {
+                return AS_NODE_PARAM_ERR;
+            }
+            as_record_set_list(rec, *n, list);
+            continue;
+        }
+        if (value->IsObject()) {
+            as_map* map;
+            if (map_from_jsobject(&map, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
+                return AS_NODE_PARAM_ERR;
+            }
+            as_record_set_map(rec, *n, map);
+            continue;
+        }
+
+        as_v8_error(log, "Skipping unsupported value for bin \"%s\"", *n);
     }
 
     return AS_NODE_PARAM_OK;
