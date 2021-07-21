@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+
 * **Updates**
   * *BREAKING*: This client requires server version 4.9 or later.
   * *BREAKING*: Drop support for Node.js 8.
