@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 * **Updates**
   * Update C client library to [v4.6.23](http://www.aerospike.com/download/client/c/notes.html#4.6.23).
+  * Drop support for Ubuntu 16.04.
 
 ## [3.16.5] - 2021-04-14
 
