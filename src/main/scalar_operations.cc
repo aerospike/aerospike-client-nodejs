@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,10 @@ add_write_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* lo
 		int64_t val = Nan::To<int64_t>(v8val).FromJust();
 		as_v8_debug(log, "value=%i", val);
 		return as_operations_add_write_int64(ops, bin, val);
+	} else if (v8val->IsBoolean()) {
+		bool val = Nan::To<bool>(v8val).FromJust();
+		as_v8_debug(log, "value=%i", val);
+		return as_operations_add_write(ops, bin, (as_bin_value*) (val ? &as_true : &as_false));
 	} else if (v8val->IsString()) {
 		char* val = strdup(*Nan::Utf8String(v8val));
 		as_v8_debug(log, "value=%s", val);
