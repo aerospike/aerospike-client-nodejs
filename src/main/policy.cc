@@ -60,9 +60,9 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
+	// if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
+	// 	return rc;
+	// }
 	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj, "sendAsIs", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -82,9 +82,9 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
+	// if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
+	// 	return rc;
+	// }
 	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "retry", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -300,9 +300,6 @@ int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const 
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	as_v8_detail( log, "Parsing query policy : success");
 	return AS_NODE_PARAM_OK;
 }
@@ -315,9 +312,6 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj, "durableDelete", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t*) &policy->records_per_second, NULL, obj, "recordsPerSecond", log)) != AS_NODE_PARAM_OK) {

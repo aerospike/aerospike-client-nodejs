@@ -39,7 +39,6 @@ describe('client.scan()', function () {
   // Execute scan using given onData handler to process each scanned record
   function executeScan (onData, done) {
     var scan = client.scan(helper.namespace, testSet)
-    scan.priority = Aerospike.scanPriority.HIGH
     scan.concurrent = true
     var stream = scan.foreach()
 

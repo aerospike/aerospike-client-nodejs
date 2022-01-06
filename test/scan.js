@@ -64,8 +64,7 @@ context('Scans', function () {
         concurrent: true,
         select: ['a', 'b', 'c'],
         nobins: false,
-        percent: 50,
-        priority: Aerospike.scanPriority.HIGH
+        percent: 50
       }
       var scan = client.scan(namespace, set, options)
 
@@ -76,7 +75,6 @@ context('Scans', function () {
       expect(scan.selected).to.eql(['a', 'b', 'c'])
       expect(scan.nobins).to.be.false()
       expect(scan.percent).to.equal(50)
-      expect(scan.priority).to.equal(Aerospike.scanPriority.HIGH)
     })
 
     it('creates a scan without specifying the set', function () {

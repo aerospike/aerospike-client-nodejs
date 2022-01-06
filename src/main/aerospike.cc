@@ -83,7 +83,7 @@ NAN_METHOD(setDefaultLogging)
 				as_log_set_level(AS_LOG_LEVEL_ERROR);
 				as_log_set_callback(NULL);
 			} else {
-				as_log_set_level(g_log_info.level);
+				as_log_set_level(AS_LOG_LEVEL_TRACE);//(g_log_info.level);
 				as_log_set_callback(as_log_callback_fnct);
 			}
 		}
@@ -124,7 +124,6 @@ NAN_MODULE_INIT(Aerospike)
 	export("predicates", predicates());
 	export("predexp", predexp_codes());
 	export("exp", exp_opcode_values());
-	export("scanPriority", scanPriority());
 	export("log", log_enum_values());
 	export("scalarOperations", scalar_opcode_values());
 	export("listOperations", list_opcode_values());

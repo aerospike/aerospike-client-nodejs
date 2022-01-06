@@ -91,7 +91,6 @@ Local<Object> exp_opcode_values()
 
 	Local<Object> exp_type = Nan::New<Object>();
 	set(exp_type, "NIL", as_exp_type::AS_EXP_TYPE_NIL);
-	set(exp_type, "TRILEAN", as_exp_type::AS_EXP_TYPE_TRILEAN);
 	set(exp_type, "INT", as_exp_type::AS_EXP_TYPE_INT);
 	set(exp_type, "STR", as_exp_type::AS_EXP_TYPE_STR);
 	set(exp_type, "LIST", as_exp_type::AS_EXP_TYPE_LIST);

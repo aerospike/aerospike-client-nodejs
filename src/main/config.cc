@@ -141,9 +141,9 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 			goto Cleanup;
 		}
 
-		if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
-			goto Cleanup;
-		}
+		// if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
+		// 	goto Cleanup;
+		// }
 
 		if ((rc = get_optional_string_property(&config->tls.certfile, &defined, tls_config, "certfile", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;
@@ -251,6 +251,10 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		} else {
 			as_v8_debug(log, "Using default Lua user path: %s", AS_CONFIG_LUA_USER_PATH);
 		}
+	}
+
+	if ((rc = get_optional_int32_property((int32_t *)&config->auth_mode, NULL, configObj, "authMode", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
 	}
 
 	if ((rc = get_optional_string_property(&user, &defined, configObj, "user", log)) != AS_NODE_PARAM_OK) {

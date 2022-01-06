@@ -47,5 +47,6 @@ Local<Object> auth_mode_enum_values()
 	set(obj, "INTERNAL", AS_AUTH_INTERNAL);
 	set(obj, "EXTERNAL", AS_AUTH_EXTERNAL);
 	set(obj, "EXTERNAL_INSECURE", AS_AUTH_EXTERNAL_INSECURE);
+	set(obj, "AUTH_PKI", AS_AUTH_PKI);
 	return scope.Escape(obj);
 }
