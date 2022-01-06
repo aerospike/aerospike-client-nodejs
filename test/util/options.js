@@ -86,11 +86,14 @@ const parser = yargs
     keyfile: {
       describe: 'Path to the client\'s key for mutual auth'
     },
-    keyfilePassword: {
-      describe: 'Decryption password for the client\'s key file'
-    },
+    // keyfilePassword: {
+    //   describe: 'Decryption password for the client\'s key file'
+    // },
     certfile: {
       describe: 'Path to the client\'s certificate chain file for mutual auth'
+    },
+    auth: {
+      describe: 'Specify client authentication mode'
     }
   })
 
@@ -166,10 +169,13 @@ options.getConfig = function () {
       cafile: options.cafile,
       certfile: options.certfile,
       keyfile: options.keyfile,
-      keyfilePassword: options.keyfilePassword
+      // keyfilePassword: options.keyfilePassword
     }
   }
 
+  if (options.auth) {
+    config.auth = options.auth
+  }
   return config
 }
 
