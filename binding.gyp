@@ -11,11 +11,11 @@
               'action_name': 'Installing Aerospike C Client dependency',
               'inputs': [],
               'outputs': [
-                'aerospike-client-c/include/aerospike/aerospike.h',
-                'aerospike-client-c/lib/libaerospike.a'
+                'aerospike-client-c/target/Linux-x86_64/include/aerospike/aerospike.h',
+                'aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a'
               ],
               'action': [
-                'scripts/aerospike-client-c.sh'
+                # 'scripts/aerospike-client-c.sh'
               ]
             }
           ]
@@ -98,7 +98,6 @@
         'src/main/enums/index.cc',
         'src/main/enums/policy_enum.cc',
         'src/main/enums/status.cc',
-        'src/main/enums/scanPriority.cc',
         'src/main/enums/job_status.cc',
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
@@ -109,7 +108,7 @@
         'src/main/util/log.cc'
       ],
       'include_dirs': [
-        'aerospike-client-c/include',
+        'aerospike-client-c/target/Linux-x86_64/include',
         'src/include',
         "<!(node -e \"require('nan')\")",
       ],
@@ -129,9 +128,12 @@
       'conditions': [
         ['OS=="linux"',{
           'libraries': [
-            '../aerospike-client-c/lib/libaerospike.a',
+            '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
             '-lz',
             '-lssl',
+            # '-levent_core', 
+            # '-levent_pthreads',
+            '-luv'
           ],
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
         }],
