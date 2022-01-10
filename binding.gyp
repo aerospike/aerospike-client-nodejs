@@ -1,21 +1,31 @@
 {
   'targets': [
     {
-      'target_name': 'aerospike-client-c',
+      'target_name': 'aerospike-core-client',
       'type': 'none',
       'hard_dependency': 1,
       'conditions': [
         ['OS!="win"', {
           'actions': [
             {
-              'action_name': 'Installing Aerospike C Client dependency',
+              'action_name': 'Validating Aerospike C Client dependency',
               'inputs': [],
-              'outputs': [
-                'aerospike-client-c/target/Linux-x86_64/include/aerospike/aerospike.h',
-                'aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a'
+              'conditions': [
+                ['OS=="linux"',{
+                  'outputs': [
+                    'aerospike-client-c/target/Linux-x86_64/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Linux-x86_64/lib/aerospike.lib'
+                  ],
+                }],
+                ['OS=="mac"',{
+                  'outputs': [
+                    'aerospike-client-c/target/Darwin-x86_64/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Darwin-x86_64/lib/aerospike.lib'
+                  ],
+                }],
               ],
               'action': [
-                # 'scripts/aerospike-client-c.sh'
+                'scripts/validate-c-client.sh'
               ]
             }
           ]
@@ -42,7 +52,7 @@
     {
       'target_name': 'aerospike',
       'dependencies': [
-        'aerospike-client-c'
+        'aerospike-core-client'
       ],
       'sources': [
         'src/main/aerospike.cc',
@@ -107,11 +117,6 @@
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
       ],
-      'include_dirs': [
-        'aerospike-client-c/target/Linux-x86_64/include',
-        'src/include',
-        "<!(node -e \"require('nan')\")",
-      ],
       'configurations': {
         'Release': {
             "cflags": [
@@ -131,17 +136,25 @@
             '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
             '-lz',
             '-lssl',
-            # '-levent_core', 
-            # '-levent_pthreads',
             '-luv'
           ],
+          'include_dirs': [
+            'aerospike-client-c/target/Linux-x86_64/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
+          ],          
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
         }],
         ['OS=="mac"',{
           'libraries': [
-            '../aerospike-client-c/lib/libaerospike.a',
+            '../aerospike-client-c//target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
           ],
+          'include_dirs': [
+            'aerospike-client-c/target/Darwin-x86_64/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
+          ],          
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
           },
