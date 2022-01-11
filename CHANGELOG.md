@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ## [3.16.7] - 2022-01-10
 
+* **Bug Fixes**
+  * CLIENT-1641: Unprocessed results sent to a different transaction on "Partition unavailable"
+
 * **Updates**
   * Update C client library to [v4.6.24](http://www.aerospike.com/download/client/c/notes.html#4.6.24).
 
