@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [3.16.6] - 2021-07-13
+## [3.16.7] - 2022-01-10
 
 * **Bug Fixes**
-  * Client doesn't start with "minConnsPerNode" option [#419](https://github.com/aerospike/aerospike-client-nodejs/issues/419)
+  * CLIENT-1641: Unprocessed results sent to a different transaction on "Partition unavailable"
+
+* **Updates**
+  * Update C client library to [v4.6.24](http://www.aerospike.com/download/client/c/notes.html#4.6.24).
+
+## [3.16.6] - 2021-07-13
 
 * **Updates**
   * Update C client library to [v4.6.23](http://www.aerospike.com/download/client/c/notes.html#4.6.23).
