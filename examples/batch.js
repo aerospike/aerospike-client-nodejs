@@ -37,8 +37,9 @@ async function batchRead (client, argv) {
 
   for (const result of batchResults) {
     const record = result.record
-    console.info(record.key.key, ':', result.status === Aerospike.status.OK
-      ? record.bins : 'NOT FOUND')
+    console.info(record.key.key, ':',
+      result.status === Aerospike.status.OK ? record.bins : 'NOT FOUND'
+    )
   }
 }
 

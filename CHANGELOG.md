@@ -4,10 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* **New Features**
+  * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+
 * **Updates**
   * *BREAKING*: This client requires server version 4.9 or later.
-  * *BREAKING*: Remove support for CentOS 6.
-  * Update C client library to [v5.1.0](http://www.aerospike.com/download/client/c/notes.html#5.1.0)
+  * *BREAKING*: Drop support for Node.js 8.
+  * *BREAKING*: Remove support for CentOS 6 as well as Ubuntu 16.0.4.
+  * *BREAKING*: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
+  * Use EL7 C client builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
+  * Update C client library to [v5.2.1](http://www.aerospike.com/download/client/c/notes.html#5.2.1)
+
+## [3.16.6] - 2021-07-13
+
+* **Bug Fixes**
+  * Client doesn't start with "minConnsPerNode" option [#419](https://github.com/aerospike/aerospike-client-nodejs/issues/419)
+
+* **Updates**
+  * Update C client library to [v4.6.23](http://www.aerospike.com/download/client/c/notes.html#4.6.23).
+  * Drop support for Ubuntu 16.04.
+
+## [3.16.5] - 2021-04-14
+
+* **Bug Fixes**
+  * CLIENT-1498: Support infoTimeout on QueryPolicy. The timeout is used when failOnClusterChange is true and an info validation command is sent before/after the query. [#412](https://github.com/aerospike/aerospike-client-nodejs/pull/412)
+
+* **Updates**
+  * Update C client library to [v4.6.21](http://www.aerospike.com/download/client/c/notes.html#4.6.21).
+
+## [3.16.4] - 2021-02-21
+
+* **Bug Fixes**
+  * CLIENT-1453: Client release v3.16.3 fails to install on Amazon Linux [#403](https://github.com/aerospike/aerospike-client-nodejs/issues/403)
 
 ## [3.16.3] - 2021-02-09
 

@@ -28,13 +28,13 @@ const valgen = helper.valgen
 const status = Aerospike.status
 
 describe('client.select()', function () {
-  var client = helper.client
+  const client = helper.client
 
   it('should read the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
-    var meta = { ttl: 1000 }
-    var bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
-    var selected = ['i', 's']
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
+    const meta = { ttl: 1000 }
+    const bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
+    const selected = ['i', 's']
 
     client.put(key, bins, meta, function (err) {
       if (err) throw err
@@ -43,7 +43,7 @@ describe('client.select()', function () {
         if (err) throw err
         expect(record.bins).to.have.all.keys(selected)
 
-        for (var bin in selected) {
+        for (const bin in selected) {
           expect(record.bins[bin]).to.equal(bins[bin])
         }
 
@@ -56,10 +56,10 @@ describe('client.select()', function () {
   })
 
   it('should fail - when a select is called without key', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
-    var meta = { ttl: 1000 }
-    var bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
-    var selected = ['i', 's']
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
+    const meta = { ttl: 1000 }
+    const bins = recgen.record({ i: valgen.integer(), s: valgen.string(), b: valgen.bytes() })()
+    const selected = ['i', 's']
 
     client.put(key, bins, meta, function (err) {
       if (err) throw err
@@ -76,7 +76,7 @@ describe('client.select()', function () {
   })
 
   it('should not find the record', function (done) {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/not_found/' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/not_found/' })()
 
     client.select(key, ['i'], function (err, record) {
       expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
@@ -100,7 +100,7 @@ describe('client.select()', function () {
         if (err) throw err
         expect(record.bins).to.have.all.keys(selected)
 
-        for (var bin in selected) {
+        for (const bin in selected) {
           expect(record.bins[bin]).to.equal(bins[bin])
         }
 
@@ -113,7 +113,7 @@ describe('client.select()', function () {
   })
 
   it('should return a Promise that resolves to a Record', function () {
-    var key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
+    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/select/' })()
 
     return client.put(key, { i: 42, s: 'abc', f: 3.1416 })
       .then(() => client.select(key, ['i', 'f']))

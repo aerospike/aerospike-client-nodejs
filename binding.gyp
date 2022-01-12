@@ -147,7 +147,7 @@
         }],
         ['OS=="mac"',{
           'libraries': [
-            '../aerospike-client-c//target/Darwin-x86_64/lib/libaerospike.a',
+            '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
           ],
           'include_dirs': [
@@ -165,7 +165,6 @@
             '../aerospike-client-c/lib/pthreadVC2.lib',
           ],
           'defines': [
-            'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
           ],

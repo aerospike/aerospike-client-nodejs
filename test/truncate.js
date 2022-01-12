@@ -20,6 +20,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
+const { sleep } = helper.util
 
 const setgen = helper.valgen.string({
   prefix: 'test/trunc/',
@@ -31,7 +32,7 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const putgen = helper.putgen
 
-describe('client.truncate()', function () {
+describe('client.truncate() #slow', function () {
   helper.skipUnlessVersion('>= 3.12.0', this)
 
   const client = helper.client
@@ -44,77 +45,63 @@ describe('client.truncate()', function () {
       recgen: recgen.constant({ a: 'foo', b: 'bar' }),
       metagen: metagen.constant({ ttl: 300 })
     }
-    putgen.put(noRecords, generators)
-      .then(done)
+    return putgen.put(noRecords, generators)
   }
 
   // Checks to verify that records that are supposed to have been truncated
   // are gone and that records that are supposed to remain still exist. If some
   // truncated records still exist it will try again every pollInt ms.
-  function checkRecords (truncated, remaining, pollInt, done) {
-    client.batchRead(truncated.concat(remaining), function (err, results) {
-      if (err) throw err
-      for (var result of results) {
-        var expectExist = !!remaining.find(record => record.key.equals(result.record.key))
-        switch (result.status) {
-          case Aerospike.status.OK:
-            if (!expectExist) {
-              return setTimeout(checkRecords, pollInt, truncated, remaining, pollInt, done)
-            }
-            break
-          case Aerospike.status.ERR_RECORD_NOT_FOUND:
-            if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.record.key)
-            break
-          default:
-            throw new Error('Unexpected batchRead status code: ' + result.status)
-        }
+  async function checkRecords (truncated, remaining, pollInt) {
+    const results = await client.batchRead(truncated.concat(remaining))
+    for (const result of results) {
+      const expectExist = !!remaining.find(record => record.key.equals(result.record.key))
+      switch (result.status) {
+        case Aerospike.status.OK:
+          if (!expectExist) {
+            await sleep(pollInt)
+            return checkRecords(truncated, remaining, pollInt)
+          }
+          break
+        case Aerospike.status.ERR_RECORD_NOT_FOUND:
+          if (expectExist) throw new Error("Truncate removed record it wasn't supposed to: " + result.record.key)
+          break
+        default:
+          throw new Error('Unexpected batchRead status code: ' + result.status)
       }
-      done()
-    })
+    }
   }
 
-  it('deletes all records in the set', function (done) {
+  it('deletes all records in the set', async function () {
     const ns = helper.namespace
     const set = setgen()
     const noRecords = 5
     const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
 
-    var kgen = keygen.string(ns, set, { prefix: 'test/trunc/', random: false })
-    genRecords(kgen, noRecords, function (records) {
-      setTimeout(function () {
-        client.truncate(ns, set, 0, function (err) {
-          if (err) throw err
-          checkRecords(records, [], pollIntMs, done)
-        })
-      }, 5)
-    })
+    const kgen = keygen.string(ns, set, { prefix: 'test/trunc/', random: false })
+    const records = await genRecords(kgen, noRecords)
+    await sleep(5)
+    await client.truncate(ns, set, 0)
+    await checkRecords(records, [], pollIntMs)
   })
 
-  it('deletes all records with an older update timestamp', function (done) {
-    this.timeout(10000)
+  it('deletes all records with an older update timestamp', async function () {
+    this.timeout(15000)
     const ns = helper.namespace
     const set = setgen()
     const noRecordsToDelete = 5
     const noRecordsToRemain = 2
-    const pollIntMs = 10 // Poll interval in ms to check whether records have been removed
-    const allowanceMs = 2000 // Test will fail if client and server clocks differ by more than this many ms!
+    const pollIntMs = 100 // Poll interval in ms to check whether records have been removed
+    const allowanceMs = 5000 // Test will fail if client and server clocks differ by more than this many ms!
 
-    var kgen = keygen.string(ns, set, { prefix: 'test/trunc/del/', random: false })
-    genRecords(kgen, noRecordsToDelete, function (batchToDelete) {
-      setTimeout(function () {
-        var timeNanos = new Date().getTime() * 1000000
-        setTimeout(function () {
-          var kgen = keygen.string(ns, set, { prefix: 'test/trunc/rem/', random: false })
-          genRecords(kgen, noRecordsToRemain, function (batchToRemain) {
-            setTimeout(function () {
-              client.truncate(ns, set, timeNanos, function (err) {
-                if (err) throw err
-                checkRecords(batchToDelete, batchToRemain, pollIntMs, done)
-              })
-            }, 5)
-          })
-        }, allowanceMs)
-      }, allowanceMs)
-    })
+    let kgen = keygen.string(ns, set, { prefix: 'test/trunc/del/', random: false })
+    const batchToDelete = await genRecords(kgen, noRecordsToDelete)
+    await sleep(allowanceMs)
+    const timeNanos = Date.now() * 1000000
+    await sleep(allowanceMs)
+    kgen = keygen.string(ns, set, { prefix: 'test/trunc/rem/', random: false })
+    const batchToRemain = await genRecords(kgen, noRecordsToRemain)
+    await sleep(5)
+    await client.truncate(ns, set, timeNanos)
+    await checkRecords(batchToDelete, batchToRemain, pollIntMs)
   })
 })

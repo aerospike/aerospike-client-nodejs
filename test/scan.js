@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -58,15 +58,14 @@ context('Scans', function () {
 
   describe('client.scan()', function () {
     it('creates a new Scan instance and sets up it\'s properties', function () {
-      var namespace = 'test'
-      var set = 'demo'
-      var options = {
+      const namespace = 'test'
+      const set = 'demo'
+      const options = {
         concurrent: true,
         select: ['a', 'b', 'c'],
-        nobins: false,
-        percent: 50
+        nobins: false
       }
-      var scan = client.scan(namespace, set, options)
+      const scan = client.scan(namespace, set, options)
 
       expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal('test')
@@ -74,12 +73,11 @@ context('Scans', function () {
       expect(scan.concurrent).to.be.true()
       expect(scan.selected).to.eql(['a', 'b', 'c'])
       expect(scan.nobins).to.be.false()
-      expect(scan.percent).to.equal(50)
     })
 
     it('creates a scan without specifying the set', function () {
-      var namespace = 'test'
-      var scan = client.scan(namespace, { select: ['i'] })
+      const namespace = 'test'
+      const scan = client.scan(namespace, { select: ['i'] })
       expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal('test')
       expect(scan.set).to.be.null()
@@ -89,13 +87,13 @@ context('Scans', function () {
 
   describe('scan.select()', function () {
     it('sets the selected bins from an argument list', function () {
-      var scan = client.scan('test', 'test')
+      const scan = client.scan('test', 'test')
       scan.select('a', 'b', 'c')
       expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
 
     it('sets the selected bins from an array', function () {
-      var scan = client.scan('test', 'test')
+      const scan = client.scan('test', 'test')
       scan.select(['a', 'b', 'c'])
       expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
@@ -103,9 +101,9 @@ context('Scans', function () {
 
   describe('scan.foreach() #slow', function () {
     it('retrieves all records in the set', function (done) {
-      var scan = client.scan(helper.namespace, testSet)
-      var recordsReceived = 0
-      var stream = scan.foreach()
+      const scan = client.scan(helper.namespace, testSet)
+      let recordsReceived = 0
+      const stream = scan.foreach()
       stream.on('data', () => recordsReceived++)
       stream.on('end', () => {
         expect(recordsReceived).to.equal(numberOfRecords)
@@ -115,8 +113,8 @@ context('Scans', function () {
 
     it('returns the key if it is stored on the server', function (done) {
       // requires { key: Aerospike.policy.key.SEND } when creating the record
-      var scan = client.scan(helper.namespace, testSet)
-      var stream = scan.foreach()
+      const scan = client.scan(helper.namespace, testSet)
+      const stream = scan.foreach()
       stream.on('data', record => {
         expect(record.key).to.be.instanceof(Key)
         expect(record.key.key).to.not.be.empty()
@@ -179,34 +177,14 @@ context('Scans', function () {
 
     context('with bin selection', function () {
       it('should return only selected bins', function (done) {
-        var scan = client.scan(helper.namespace, testSet)
+        const scan = client.scan(helper.namespace, testSet)
         scan.select('i')
-        var stream = scan.foreach()
+        const stream = scan.foreach()
         stream.on('data', record => {
           expect(record.bins).to.have.all.keys('i')
           stream.abort()
         })
         stream.on('end', done)
-      })
-    })
-
-    context('with percent sampling', function () {
-      helper.skipUnlessVersion('< 4.9', this)
-
-      it('should only scan approx. half of the records', function (done) {
-        const scan = client.scan(helper.namespace, testSet, {
-          percent: 50,
-          nobins: true
-        })
-        var recordsReceived = 0
-        var stream = scan.foreach()
-        stream.on('data', () => recordsReceived++)
-        stream.on('end', () => {
-          // The scan percentage is not very exact, esp. for small sets, so we
-          // just test that the scan did not return every single record.
-          expect(recordsReceived).to.be.lessThan(numberOfRecords)
-          done()
-        })
       })
     })
 
@@ -231,9 +209,9 @@ context('Scans', function () {
 
     context('without set', function () {
       it('executes a scan without set', function (done) {
-        var scan = client.scan(helper.namespace)
-        var recordsReceived = 0
-        var stream = scan.foreach()
+        const scan = client.scan(helper.namespace)
+        let recordsReceived = 0
+        const stream = scan.foreach()
         stream.on('error', error => { throw error })
         stream.on('data', () => {
           recordsReceived++
@@ -249,14 +227,14 @@ context('Scans', function () {
 
   describe('scan.background()', function () {
     it('applies a UDF to every record', function (done) {
-      var token = valgen.string({ length: { min: 10, max: 10 } })()
-      var backgroundScan = client.scan(helper.namespace, testSet)
+      const token = valgen.string({ length: { min: 10, max: 10 } })()
+      const backgroundScan = client.scan(helper.namespace, testSet)
       backgroundScan.background('udf', 'updateRecord', ['x', token], function (err, job) {
         if (err) throw err
         job.waitUntilDone(10, function (err) {
           if (err) throw err
-          var validationScan = client.scan(helper.namespace, testSet)
-          var stream = validationScan.foreach()
+          const validationScan = client.scan(helper.namespace, testSet)
+          const stream = validationScan.foreach()
           stream.on('error', error => { throw error })
           stream.on('data', record => expect(record.bins.x).to.equal(token))
           stream.on('end', done)
@@ -276,7 +254,7 @@ context('Scans', function () {
   describe('scan.operate()', function () {
     helper.skipUnlessVersion('>= 4.7.0', this)
 
-    it('should perform a background scan that executes the operations', async function () {
+    it('should perform a background scan that executes the operations #slow', async function () {
       const scan = client.scan(helper.namespace, testSet)
       const ops = [op.write('backgroundOps', 1)]
       const job = await scan.operate(ops)
@@ -308,7 +286,7 @@ context('Scans', function () {
 
   describe('job.info()', function () {
     it('returns the scan status and progress', function (done) {
-      var scan = client.scan(helper.namespace, testSet, { percent: 10 })
+      const scan = client.scan(helper.namespace, testSet)
       scan.background('udf', 'noop', function (error, job) {
         if (error) throw error
         job.info(function (error, info) {

@@ -34,8 +34,8 @@ function randomDouble (min, max) {
 }
 
 function merge (o1, o2) {
-  var o3 = {}
-  var k
+  const o3 = {}
+  let k
   if (o1) {
     for (k in o1) {
       o3[k] = o1[k]
@@ -60,15 +60,15 @@ function constant (value) {
 }
 
 function string (options) {
-  var opt = merge(string.defaults, options)
-  var seq = 0
+  const opt = merge(string.defaults, options)
+  let seq = 0
   return function () {
     if (opt.random === true) {
       const lengthMin = opt.length.min || 1
       const lengthMax = opt.length.max || lengthMin
-      var len = randomInt(lengthMin, lengthMax)
-      var arr = new Array(len)
-      for (var i = 0; i < len; i++) {
+      const len = randomInt(lengthMin, lengthMax)
+      const arr = new Array(len)
+      for (let i = 0; i < len; i++) {
         arr[i] = opt.charset[randomInt(0, opt.charset.length)]
       }
       return opt.prefix + arr.join('') + opt.suffix
@@ -89,11 +89,11 @@ string.defaults = {
 }
 
 function bytes (options) {
-  var opt = merge(bytes.defaults, options)
+  const opt = merge(bytes.defaults, options)
   return function () {
-    var len = randomInt(opt.length.min, opt.length.max)
-    var buf = Buffer.alloc(len)
-    for (var i = 0; i < len; i++) {
+    const len = randomInt(opt.length.min, opt.length.max)
+    const buf = Buffer.alloc(len)
+    for (let i = 0; i < len; i++) {
       buf[i] = randomInt(opt.byte.min, opt.byte.max)
     }
     return buf
@@ -112,8 +112,8 @@ bytes.defaults = {
 }
 
 function integer (options) {
-  var opt = merge(integer.defaults, options)
-  var seq = opt.min
+  const opt = merge(integer.defaults, options)
+  let seq = opt.min
   return function () {
     return opt.random === true ? randomInt(opt.min, opt.max) : seq++
   }
@@ -126,10 +126,10 @@ integer.defaults = {
 }
 
 function double (options) {
-  var opt = merge(double.defaults, options)
-  var seq = opt.min
-  var step = opt.step
-  var r = Math.pow(10, step.toString().length - step.toString().indexOf('.') - 1)
+  const opt = merge(double.defaults, options)
+  let seq = opt.min
+  const step = opt.step
+  const r = Math.pow(10, step.toString().length - step.toString().indexOf('.') - 1)
   return function () {
     if (opt.random) {
       return new Double(randomDouble(opt.min, opt.max))
@@ -148,7 +148,7 @@ double.defaults = {
 }
 
 function array (options) {
-  var opt = merge(array.defaults, options)
+  const opt = merge(array.defaults, options)
   return function () {
     return opt.values.map(function (gen) { return gen() })
   }
@@ -159,10 +159,10 @@ array.defaults = {
 
 function map () {
   return function () {
-    var num = integer()
-    var str = string()
-    var uint = bytes()
-    var map = { itype: num(), stype: str(), btyte: uint() }
+    const num = integer()
+    const str = string()
+    const uint = bytes()
+    const map = { itype: num(), stype: str(), btyte: uint() }
     return map
   }
 }

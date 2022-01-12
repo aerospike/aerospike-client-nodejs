@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
 const shared = require('./shared')
 
 shared.runner()
@@ -34,27 +33,7 @@ function udfParams (argv) {
 
 function buildScanOptions (argv) {
   const options = {
-    percent: argv.percent,
     concurrent: argv.concurrent
-  }
-
-  let priority
-  switch ((argv.priority || '').toUpperCase()) {
-    case 'LOW':
-      priority = Aerospike.scanPriority.LOW
-      break
-    case 'MEDIUM':
-      priority = Aerospike.scanPriority.MEDIUM
-      break
-    case 'HIGH':
-      priority = Aerospike.scanPriority.HIGH
-      break
-    case 'auto':
-      priority = Aerospike.scanPriority.AUTO
-      break
-  }
-  if (priority) {
-    options.priority = priority
   }
 
   console.info(options)
@@ -95,17 +74,6 @@ exports.builder = {
     describe: 'List of bins to fetch for each record',
     type: 'array',
     group: 'Command:'
-  },
-  priority: {
-    describe: 'Scan priority',
-    choices: ['auto', 'low', 'medium', 'high'],
-    group: 'Command:'
-  },
-  percent: {
-    describe: 'Run scan on given percentage of records',
-    type: 'number',
-    group: 'Command:',
-    default: 100
   },
   concurrent: {
     describe: 'Scan all cluster nodes in parallel',

@@ -29,10 +29,10 @@ const valgen = helper.valgen
 // Creates a new timer interval and passes the elapsed time in milliseconds
 // into each invocation of the interval callback.
 function interval (duration, callback) {
-  var obj = {}
+  const obj = {}
   obj.startTime = process.hrtime()
   obj.elapsed = function () {
-    var diff = process.hrtime(obj.startTime)
+    const diff = process.hrtime(obj.startTime)
     return Math.round(diff[0] * 1000 + (diff[1] / 1e6))
   }
   obj.call = function () { callback(obj.elapsed()) }

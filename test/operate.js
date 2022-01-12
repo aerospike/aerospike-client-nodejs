@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -69,7 +69,8 @@ context('Operations', function () {
           op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
           op.write('blob', Buffer.from('bar')),
           op.write('list', [2, 3, 4]),
-          op.write('map', { d: 4, e: 5, f: 6 })
+          op.write('map', { d: 4, e: 5, f: 6 }),
+          op.write('boolean', true)
         ]
 
         return client.operate(key, ops)
@@ -85,6 +86,7 @@ context('Operations', function () {
             expect(record.bins.blob.equals(Buffer.from('bar'))).to.be.ok()
             expect(record.bins.list).to.eql([2, 3, 4])
             expect(record.bins.map).to.eql({ d: 4, e: 5, f: 6 })
+            expect(record.bins.boolean).to.eql(true)
           })
       })
 

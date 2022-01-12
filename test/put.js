@@ -278,24 +278,20 @@ describe('client.put()', function () {
       })
     })
 
+    context('Boolean values', function () {
+      helper.skipUnlessVersion('>= 5.6.0', this)
+
+      it('writes bin with boolean value and reads it back', function (done) {
+        const record = { bool: true, bool2: false }
+        const expected = { bool: true, bool2: false }
+        putGetVerify(record, expected, done)
+      })
+    })
+
     context('invalid bin values', function () {
       it('should fail with a parameter error when trying to write an undefined bin value', function (done) {
         const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
         const record = { valid: 123, invalid: undefined }
-
-        client.put(key, record, function (err) {
-          expect(err.code).to.equal(status.ERR_PARAM)
-
-          client.remove(key, function (err, key) {
-            expect(err.code).to.equal(status.ERR_RECORD_NOT_FOUND)
-            done()
-          })
-        })
-      })
-
-      it('should fail with a parameter error when trying to write a boolean bin value', function (done) {
-        const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-        const record = { valid: 'true', invalid: true }
 
         client.put(key, record, function (err) {
           expect(err.code).to.equal(status.ERR_PARAM)
@@ -339,28 +335,18 @@ describe('client.put()', function () {
     })
   })
 
-  it('should delete a bin when writing null to it', function (done) {
+  it('should delete a bin when writing null to it', async function () {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
     const record = { bin1: 123, bin2: 456 }
-    client.put(key, record, function (err) {
-      if (err) throw err
+    await client.put(key, record)
 
-      const update = { bin1: null }
-      client.put(key, update, function (err, result) {
-        if (err) throw err
+    const update = { bin1: null }
+    await client.put(key, update)
 
-        client.get(key, function (err, record) {
-          if (err) throw err
-          const expected = { bin2: 456 }
-          expect(record.bins).to.eql(expected)
-
-          client.remove(key, function (err) {
-            if (err) throw err
-            done()
-          })
-        })
-      })
-    })
+    const result = await client.get(key)
+    const expected = { bin2: 456 }
+    expect(result.bins).to.eql(expected)
+    await client.remove(key)
   })
 
   it('should write, read, write, and check gen', function (done) {

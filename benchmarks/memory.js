@@ -14,12 +14,12 @@
 // limitations under the License.
 // *****************************************************************************
 
-var Table = require('cli-table')
-var yargs = require('yargs')
+const Table = require('cli-table')
+const yargs = require('yargs')
 
-var MEM_MATCH = /(\d+(\.\d+)?) MB/
+const MEM_MATCH = /(\d+(\.\d+)?) MB/
 
-var TABLE_CHARS = {
+const TABLE_CHARS = {
   top: '',
   'top-mid': '',
   'top-left': '',
@@ -37,7 +37,7 @@ var TABLE_CHARS = {
   middle: ''
 }
 
-var TABLE_STYLE = {
+const TABLE_STYLE = {
   'padding-left': 4,
   'padding-right': 0,
   head: ['blue'],
@@ -45,18 +45,18 @@ var TABLE_STYLE = {
   compact: true
 }
 
-var ITERATION_COUNT = 0
+let ITERATION_COUNT = 0
 
-var memCnt = 0
-var memMin
-var memMax
-var memRanges = []
+let memCnt = 0
+let memMin
+let memMax
+const memRanges = []
 
 // *****************************************************************************
 // Options Parsing
 // *****************************************************************************
 
-var argp = yargs
+const argp = yargs
   .usage('$0 [options]')
   .options({
     help: {
@@ -80,7 +80,7 @@ var argp = yargs
     }
   })
 
-var argv = argp.argv
+const argv = argp.argv
 
 if (argv.help === true) {
   argp.showHelp()
@@ -91,18 +91,18 @@ if (argv.help === true) {
 // Functions
 // *****************************************************************************
 
-var MEM_MAX_MB = 100
-var MEM_BUCKETS = 100
+const MEM_MAX_MB = 100
+const MEM_BUCKETS = 100
 
 function memoryBar (minUsedMb, maxUsedMb) {
-  var minUsedLen = Math.floor(minUsedMb / MEM_MAX_MB * MEM_BUCKETS)
-  var minUsedBar = Buffer.alloc(minUsedLen)
+  const minUsedLen = Math.floor(minUsedMb / MEM_MAX_MB * MEM_BUCKETS)
+  const minUsedBar = Buffer.alloc(minUsedLen)
   if (minUsedLen > 0) {
     minUsedBar.fill(']')
   }
 
-  var maxUsedLen = Math.floor(maxUsedMb / MEM_MAX_MB * MEM_BUCKETS)
-  var maxUsedBar = Buffer.alloc(maxUsedLen - minUsedLen)
+  const maxUsedLen = Math.floor(maxUsedMb / MEM_MAX_MB * MEM_BUCKETS)
+  const maxUsedBar = Buffer.alloc(maxUsedLen - minUsedLen)
   if (maxUsedLen > 0) {
     maxUsedBar.fill(']')
   }
@@ -111,21 +111,21 @@ function memoryBar (minUsedMb, maxUsedMb) {
 }
 
 function report () {
-  var minhist = {}
-  var maxhist = {}
-  var stephist = {}
+  const minhist = {}
+  const maxhist = {}
+  const stephist = {}
 
-  var rtable = new Table({
+  const rtable = new Table({
     head: ['min', 'min diff', 'max', 'max diff', 'steps', 'size'],
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
 
-  var l
+  let l
 
-  var unfiltered = memRanges
+  const unfiltered = memRanges
 
-  var filtered = unfiltered.filter(function (r, i) {
+  const filtered = unfiltered.filter(function (r, i) {
     if (argv.factor && i % argv.factor !== 0) {
       return false
     }
@@ -139,13 +139,13 @@ function report () {
   })
 
   filtered.forEach(function (r, i) {
-    var minceil = Math.ceil(r[0])
+    const minceil = Math.ceil(r[0])
     minhist[minceil] = (minhist[minceil] || 0) + 1
 
-    var maxceil = Math.ceil(r[1])
+    const maxceil = Math.ceil(r[1])
     maxhist[maxceil] = (maxhist[maxceil] || 0) + 1
 
-    var step = Math.ceil(r[2])
+    const step = Math.ceil(r[2])
     stephist[step] = (stephist[step] || 0) + 1
 
     if (l) {
@@ -172,41 +172,41 @@ function report () {
     l = r
   })
 
-  var k
+  let k
 
-  var minhead = []
-  var minbody = []
+  const minhead = []
+  const minbody = []
   for (k in minhist) {
     minhead.push('<' + k)
     minbody.push(minhist[k])
   }
-  var mintable = new Table({
+  const mintable = new Table({
     head: minhead,
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
   mintable.push(minbody)
 
-  var maxhead = []
-  var maxbody = []
+  const maxhead = []
+  const maxbody = []
   for (k in maxhist) {
     maxhead.push('<' + k)
     maxbody.push(maxhist[k])
   }
-  var maxtable = new Table({
+  const maxtable = new Table({
     head: maxhead,
     chars: TABLE_CHARS,
     style: TABLE_STYLE
   })
   maxtable.push(maxbody)
 
-  var stephead = []
-  var stepbody = []
+  const stephead = []
+  const stepbody = []
   for (k in stephist) {
     stephead.push(k)
     stepbody.push(stephist[k])
   }
-  var steptable = new Table({
+  const steptable = new Table({
     head: stephead,
     chars: TABLE_CHARS,
     style: TABLE_STYLE
@@ -260,13 +260,13 @@ function readline (line) {
     return line
   }
 
-  var matches = line.match(MEM_MATCH)
+  const matches = line.match(MEM_MATCH)
   if (!matches || !matches[1]) {
     console.error('RegEx match failed on: |%s|', line, matches)
     process.exit(1)
   }
 
-  var mem = parseFloat(matches[1])
+  const mem = parseFloat(matches[1])
 
   if (memMin === undefined) {
     memMin = mem
@@ -295,11 +295,11 @@ function readline (line) {
 // Event Listeners
 // *****************************************************************************
 
-var lastLine
+let lastLine
 
 process.stdin.on('data', function (chunk) {
-  var i = 0
-  var j = 0
+  let i = 0
+  let j = 0
 
   for (i = 0, j = chunk.indexOf('\n', i); j !== -1; i = j + 1, j = chunk.indexOf('\n', i)) {
     if (lastLine) {

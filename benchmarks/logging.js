@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2017 Aerospike, Inc.
+// Copyright 2013-2021 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -14,31 +14,18 @@
 // limitations under the License.
 // *****************************************************************************
 
-'use strict'
+const { createLogger, format, transports } = require('winston')
 
-//
-// Returns a static record.
-//
-function constant (bins) {
-  return function () {
-    return bins
-  }
-}
-
-//
-// Returns a record from bins spec'd using generators record.
-//
-function record (bins) {
-  return function () {
-    const out = {}
-    for (const bin in bins) {
-      out[bin] = bins[bin]()
-    }
-    return out
-  }
-}
-
-module.exports = {
-  constant,
-  record
-}
+exports.logger = createLogger({
+  format: format.combine(
+    format.splat(),
+    format.simple()
+  ),
+  transports: [
+    new transports.Console({
+      level: 'info',
+      silent: false,
+      colorize: true
+    })
+  ]
+})

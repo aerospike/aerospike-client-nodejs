@@ -26,7 +26,7 @@ require('./test_helper.js')
 describe('Aerospike.Double #noserver', function () {
   describe('constructor', function () {
     it('returns a new Double value', function () {
-      var subject = new Double(3.1415)
+      const subject = new Double(3.1415)
 
       expect(subject).to.be.instanceof(Double)
       expect(subject.Double).to.equal(3.1415)
@@ -44,7 +44,7 @@ describe('Aerospike.Double #noserver', function () {
   })
 
   describe('#value()', function () {
-    var subject = new Double(3.1415)
+    const subject = new Double(3.1415)
 
     it('returns the double value', function () {
       expect(subject.value()).to.equal(3.1415)

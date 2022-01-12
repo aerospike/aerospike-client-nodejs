@@ -38,6 +38,7 @@ exports.metagen = require('./generators/metadata')
 exports.recgen = require('./generators/record')
 exports.valgen = require('./generators/value')
 exports.putgen = require('./generators/put')
+exports.util = require('./util')
 
 const config = options.getConfig()
 exports.config = config
@@ -163,9 +164,9 @@ ServerInfoHelper.prototype.randomNode = function () {
   return nodes[i]
 }
 
-var udfHelper = new UDFHelper(client)
-var indexHelper = new IndexHelper(client)
-var serverInfoHelper = new ServerInfoHelper(client)
+const udfHelper = new UDFHelper(client)
+const indexHelper = new IndexHelper(client)
+const serverInfoHelper = new ServerInfoHelper(client)
 
 exports.udf = udfHelper
 exports.index = indexHelper
@@ -187,17 +188,25 @@ exports.skip = function (ctx, message) {
   })
 }
 
-function skipUnless (ctx, condition, message) {
+function skipIf (ctx, condition, message) {
   ctx.beforeEach(function () {
-    let dontSkip = condition
+    let skip = condition
     if (typeof condition === 'function') {
-      dontSkip = condition()
+      skip = condition()
     }
-    const shouldSkip = !dontSkip
-    if (shouldSkip) {
+    if (skip) {
       this.skip(message)
     }
   })
+}
+exports.skipIf = skipIf
+
+function skipUnless (ctx, condition, message) {
+  if (typeof condition === 'function') {
+    skipIf(ctx, () => !condition(), message)
+  } else {
+    skipIf(ctx, !condition, message)
+  }
 }
 exports.skipUnless = skipUnless
 
@@ -228,10 +237,10 @@ if (process.env.GLOBAL_CLIENT !== 'false') {
       throw error
     })
   )
-}
 
-/* global after */
-after(function (done) {
-  client.close()
-  done()
-})
+  /* global after */
+  after(function (done) {
+    client.close()
+    done()
+  })
+}
