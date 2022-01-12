@@ -42,7 +42,7 @@ rebuild_c_client() {
   make clean
   # make SHELL='sh -x' V=3 EVENT_LIB=libuv 2>&1 | tee output.txt 
   # make --debug=b -j1 -d -r
-  make EVENT_LIB=libuv 2>&1 | tee output.txt  
+  make V=1 EVENT_LIB=libuv 2>&1 | tee ${CWD}/${0}-output.txt  
 }
 
 rebuild_c_client

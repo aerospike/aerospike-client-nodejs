@@ -138,6 +138,9 @@
             '-lssl',
             '-luv'
           ],
+          'defines': [
+            'AS_USE_LIBUV'
+          ],
           'include_dirs': [
             'aerospike-client-c/target/Linux-x86_64/include',
             'src/include',
@@ -149,6 +152,9 @@
           'libraries': [
             '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
+          ],
+          'defines': [
+            'AS_USE_LIBUV'
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-x86_64/include',
