@@ -21,6 +21,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
+const op = Aerospike.operations
 const lists = Aerospike.lists
 const GeoJSON = Aerospike.GeoJSON
 
@@ -57,6 +58,13 @@ describe('Aerospike.expressions', function () {
   async function testMatch (key, filterExpression) {
     const passPolicy = { filterExpression }
     await client.remove(key, passPolicy)
+  }
+
+  async function applyExp (key, bin, expression) {
+    const policy = { filterExpression: expression }
+    const ops = [op.read(bin)]
+    const result = await client.operate(key, ops, {}, policy)
+    return result.bins[bin]
   }
 
   it('builds up a filter expression value', function () {
@@ -240,6 +248,15 @@ describe('Aerospike.expressions', function () {
 
         await testNoMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([39, 41, 42])))
         await testMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([42, 41])))
+      })
+    })
+
+    describe('append', function () {
+      it('appends an element at the end of the list', async function () {
+        const key = await createRecord({ values: [83, 39, 49] })
+
+        const result = await applyExp(key, exp.lists.append(exp.binList('values'), exp.int(2)))
+        expect(result).to.eql([83, 39, 49, 2])
       })
     })
   })
