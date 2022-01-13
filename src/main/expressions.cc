@@ -67,6 +67,18 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
 	}
 
+	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
+		if (rc = get_optional_list_policy(&entry.v.list_pol, NULL, policy_obj, log)) {
+			return rc;
+		}
+	}
+
+	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+		// TODO: implement policy convertion
+		return AS_NODE_PARAM_OK;
+	}
+
 	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
 		entry->v.ctx = NULL;
 		return get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
