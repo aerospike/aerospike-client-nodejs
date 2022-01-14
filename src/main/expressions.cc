@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2020 Aerospike, Inc.
+ * Copyright 2020-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include "conversions.h"
 #include "expressions.h"
 #include "operations.h"
+#include "list_operations.h"
 
 extern "C" {
 #include <aerospike/as_exp.h>
@@ -68,8 +69,8 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
-		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
-		if (rc = get_optional_list_policy(&entry.v.list_pol, NULL, policy_obj, log)) {
+		Local<Object> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked().As<Object>();
+		if ((rc = get_optional_list_policy(entry->v.list_pol, NULL, policy_obj, log)) != AS_NODE_PARAM_OK) {
 			return rc;
 		}
 	}
