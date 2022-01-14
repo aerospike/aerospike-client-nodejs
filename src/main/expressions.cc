@@ -34,43 +34,65 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	int rc = AS_NODE_PARAM_OK;
 
 	if ((rc = get_int_property((int*) &entry->op, entry_obj, "op", log)) != AS_NODE_PARAM_OK) {
+		printf("get_int_property failed\n");
 		return rc;
 	}
 
 	if ((rc = get_optional_uint32_property(&entry->count, NULL, entry_obj, "count", log)) != AS_NODE_PARAM_OK) {
+		printf("get_optional_uint32_property failed\n");
 		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("val").ToLocalChecked()).FromJust()) {
-		return get_asval_property(&entry->v.val, entry_obj, "val", log);
+		rc = get_asval_property(&entry->v.val, entry_obj, "val", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_asval_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
 		// TODO: Free v.str_val once request is done
-		return get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
+		rc =  get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_string_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
-		return get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
+		rc = get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_int64_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
-		return get_float_property(&entry->v.float_val, entry_obj, "floatVal", log);
+		rc = get_float_property(&entry->v.float_val, entry_obj, "floatVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_float_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked()).FromJust()) {
-		return get_bool_property(&entry->v.bool_val, entry_obj, "boolVal", log);
+		rc = get_bool_property(&entry->v.bool_val, entry_obj, "boolVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_bool_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
 		// TODO: Free v.bytes_val once request is done
-		return get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		rc = get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_bytes_property failed\n");
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
 		printf("check listPolicy start");
 		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
-		if (get_optional_list_policy(entry->v.list_pol, NULL, policy_obj, log)) {
+		
+		if (policy_obj->IsObject() && 
+				get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log)) {
 			printf("check listPolicy found");
 			return AS_NODE_PARAM_OK;
 		}

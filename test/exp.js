@@ -254,6 +254,7 @@ describe('Aerospike.expressions', function () {
     describe('append', function () {
       it('appends an element at the end of the list', async function () {
         const key = await createRecord({ values: [83, 39, 49] })
+        //const list_policy = { list_pol: []}
 
         const result = await applyExp(key, 'values', exp.lists.append(exp.binList('values'), exp.int(2)))
         expect(result).to.eql([83, 39, 49, 2])

@@ -94,8 +94,10 @@ NAN_METHOD(setDefaultLogging)
 		if (log_from_jsobject(&g_log_info, info[0].As<Object>()) == AS_NODE_PARAM_OK) {
 			if (g_log_info.level < 0) {
 				// common logging does not support log level "OFF"
-				as_log_set_level(AS_LOG_LEVEL_ERROR);
-				as_log_set_callback(NULL);
+				//as_log_set_level(AS_LOG_LEVEL_ERROR);
+				//as_log_set_callback(NULL);
+				as_log_set_level(AS_LOG_LEVEL_TRACE);
+				as_log_set_callback(as_log_callback_fnct);
 			} else {
 				as_log_set_level(AS_LOG_LEVEL_TRACE);//(g_log_info.level);
 				as_log_set_callback(as_log_callback_fnct);

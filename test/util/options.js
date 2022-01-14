@@ -168,7 +168,7 @@ options.getConfig = function () {
       enable: true,
       cafile: options.cafile,
       certfile: options.certfile,
-      keyfile: options.keyfile,
+      keyfile: options.keyfile
       // keyfilePassword: options.keyfilePassword
     }
   }

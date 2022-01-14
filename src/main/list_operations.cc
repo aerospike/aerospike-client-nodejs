@@ -27,12 +27,19 @@ extern "C" {
 
 using namespace v8;
 
-bool
-get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Object> obj, LogInfo* log)
+// bool
+// get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Object> obj, LogInfo* log)
+bool get_optional_list_policy(as_list_policy* policy, bool* has_policy, v8::Local<v8::Object> obj, const LogInfo* log)
 {
 	Nan::HandleScope scope;
 	as_list_policy_init(policy);
 	Local<Value> maybe_policy_obj = Nan::Get(obj, Nan::New("policy").ToLocalChecked()).ToLocalChecked();
+
+	if (!maybe_policy_obj->IsObject()) {
+		as_v8_detail(log, "No valid list policy set - using default policy");
+		return true;
+	}
+
 	if (maybe_policy_obj->IsUndefined()) {
 		if (has_policy != NULL) (*has_policy) = false;
 		as_v8_detail(log, "No list policy set - using default policy");
