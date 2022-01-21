@@ -256,8 +256,11 @@ describe('Aerospike.expressions', function () {
         const key = await createRecord({ values: [83, 39, 49] })
         //const list_policy = { list_pol: []}
 
-        const result = await applyExp(key, 'values', exp.lists.append(exp.binList('values'), exp.int(2)))
-        expect(result).to.eql([83, 39, 49, 2])
+        const result = await applyExp(key, 'values', exp.eq(
+                                                        exp.lists.size(
+                                                            exp.binList('values'),
+                                                            exp.int(4)))
+        expect(result).to.eql([83, 39, 49])
       })
     })
   })
