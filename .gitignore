@@ -3,7 +3,6 @@
 .vscode/
 build/
 node_modules/
-aerospike-client-c/
 coverage/
 npm-debug.log
 test.log
