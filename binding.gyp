@@ -61,6 +61,7 @@
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',
         'src/main/operations.cc',
+        'src/main/exp_operations.cc',
         'src/main/scalar_operations.cc',
         'src/main/list_operations.cc',
         'src/main/map_operations.cc',

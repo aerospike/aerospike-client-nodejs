@@ -23,4 +23,4 @@ extern "C" {
 }
 
 v8::Local<v8::Object> exp_opcode_values();
-int compile_filter_expression(v8::Local<v8::Array> exp_ary, as_exp** filter_exp, const LogInfo* log);
+int compile_expression(v8::Local<v8::Array> exp_ary, as_exp** filter_exp, const LogInfo* log);

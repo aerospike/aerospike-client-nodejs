@@ -83,6 +83,10 @@ Local<Object> exp_opcode_values()
 
 	set(exp_ops, "END_OF_VA_ARGS", as_exp_ops::_AS_EXP_CODE_END_OF_VA_ARGS);
 
+	Local<Object> expop_ops = Nan::New<Object>();
+	set(expop_ops, "READ", as_operator::AS_OPERATOR_EXP_READ);
+	set(expop_ops, "WRITE", as_operator::AS_OPERATOR_EXP_MODIFY);
+
 	Local<Object> exp_sys = Nan::New<Object>();
 	set(exp_sys, "CALL_CDT", as_exp_call_system_type::_AS_EXP_SYS_CALL_CDT);
 	set(exp_sys, "CALL_BITS", as_exp_call_system_type::_AS_EXP_SYS_CALL_BITS);

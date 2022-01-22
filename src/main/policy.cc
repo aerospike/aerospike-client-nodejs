@@ -109,7 +109,7 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
 	if (exp_val->IsArray()) {
 		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
-		if ((rc = compile_filter_expression(exp_ary, &policy->filter_exp, log)) != AS_NODE_PARAM_OK) {
+		if ((rc = compile_expression(exp_ary, &policy->filter_exp, log)) != AS_NODE_PARAM_OK) {
 			return rc;
 		}
 	} else if (exp_val->IsNull() || exp_val->IsUndefined()) {

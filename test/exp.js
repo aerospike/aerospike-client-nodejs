@@ -62,7 +62,7 @@ describe('Aerospike.expressions', function () {
 
   async function applyExp (key, bin, expression) {
     const policy = { filterExpression: expression }
-    const ops = [op.read(bin)]
+    const ops = [op.read(bin)]//,exp.and(exp.binExists(bin), exp.lists(bin))]
     const result = await client.operate(key, ops, {}, policy)
     return result.bins[bin]
   }

@@ -113,18 +113,18 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 }
 
 int
-compile_filter_expression(Local<Array> entries_ary, as_exp** filter_exp, const LogInfo* log)
+compile_expression(Local<Array> entries_ary, as_exp** filter_exp, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
 	int length = entries_ary->Length();
-	as_v8_debug(log, "Compiling filter expression (length=%i)", length);
+	as_v8_debug(log, "Compiling expression (length=%i)", length);
 	as_exp_entry* entries = (as_exp_entry*) cf_malloc(length * sizeof(as_exp_entry));
 	as_exp_entry* entry = entries;
 	for (int i = 0; i < length; i++) {
 		*entry = { };
 		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 		if ((rc = convert_entry(entry_obj, entry, log)) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Error converting filter expression entry: %i", i);
+			as_v8_error(log, "Error converting expression entry: %i", i);
 			goto done;
 		}
 		entry++;

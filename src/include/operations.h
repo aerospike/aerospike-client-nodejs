@@ -30,6 +30,7 @@ int add_list_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, L
 int add_map_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
 int add_bit_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
 int add_hll_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
+int add_exp_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
 int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 
 v8::Local<v8::Object> scalar_opcode_values();
@@ -37,6 +38,7 @@ v8::Local<v8::Object> list_opcode_values();
 v8::Local<v8::Object> map_opcode_values();
 v8::Local<v8::Object> bit_opcode_values();
 v8::Local<v8::Object> hll_opcode_values();
+v8::Local<v8::Object> expop_opcode_values();
 
 const uint32_t OPS_MASK = 0xFF00;
 const uint32_t SCALAR_OPS_OFFSET = 0x0000;
@@ -44,3 +46,4 @@ const uint32_t LIST_OPS_OFFSET = 0x0100;
 const uint32_t MAP_OPS_OFFSET = 0x0200;
 const uint32_t BIT_OPS_OFFSET = 0x0300;
 const uint32_t HLL_OPS_OFFSET = 0x0400;
+const uint32_t EXPOP_OPS_OFFSET = 0x0500;
