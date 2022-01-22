@@ -258,8 +258,8 @@ describe('Aerospike.expressions', function () {
 
         const result = await applyExp(key, 'values', exp.eq(
                                                         exp.lists.size(
-                                                            exp.binList('values'),
-                                                            exp.int(4)))
+                                                            exp.binList('values')),
+                                                            exp.int(3)))
         expect(result).to.eql([83, 39, 49])
       })
     })
