@@ -83,6 +83,8 @@ Local<Object> exp_opcode_values()
 
 	set(exp_ops, "END_OF_VA_ARGS", as_exp_ops::_AS_EXP_CODE_END_OF_VA_ARGS);
 
+	set(exp_ops, "ADD", as_exp_ops::_AS_EXP_CODE_ADD);
+
 	Local<Object> expop_ops = Nan::New<Object>();
 	set(expop_ops, "READ", as_operator::AS_OPERATOR_EXP_READ);
 	set(expop_ops, "WRITE", as_operator::AS_OPERATOR_EXP_MODIFY);

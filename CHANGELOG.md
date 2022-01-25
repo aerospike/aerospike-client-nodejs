@@ -15,6 +15,14 @@ All notable changes to this project will be documented in this file.
   * Use EL7 C client builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
   * Update C client library to [v5.2.1](http://www.aerospike.com/download/client/c/notes.html#5.2.1)
 
+## [3.16.7] - 2022-01-10
+
+* **Bug Fixes**
+  * CLIENT-1641: Unprocessed results sent to a different transaction on "Partition unavailable"
+
+* **Updates**
+  * Update C client library to [v4.6.24](http://www.aerospike.com/download/client/c/notes.html#4.6.24).
+
 ## [3.16.6] - 2021-07-13
 
 * **Bug Fixes**

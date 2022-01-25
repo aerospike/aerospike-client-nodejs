@@ -28,52 +28,40 @@ extern "C" {
 using namespace v8;
 
 bool
-add_exp_write_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* log)
+add_exp_write_op(as_operations* ops, const char* bin, as_exp* exp, int flags, LogInfo* log)
 {
-	int rc = 0;
-	as_exp* exp = NULL;
-	as_exp_write_flags flags = 0;
-
-	Local<Array> exp_ary = Local<Array>::Cast(obj);
-		if ((rc = compile_expression(exp_ary, &exp, log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-
 	return as_operations_exp_write(ops, bin, exp, flags);
 }
 
 bool
-add_exp_read_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* log)
+add_exp_read_op(as_operations* ops, const char* bin, as_exp* exp, int flags, LogInfo* log)
 {
-	int rc = 0;
-	as_exp* exp = NULL;
-	as_exp_read_flags flags = 0;
-
-	Local<Array> exp_ary = Local<Array>::Cast(obj);
-		if ((rc = compile_expression(exp_ary, &exp, log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-
 	return as_operations_exp_read(ops, bin, exp, flags);
 }
 
 
-typedef bool (*Operation) (as_operations* ops, const char* bin, Local<Object> op, LogInfo* log);
+typedef bool (*Operation) (as_operations* ops, 
+							const char* bin, 
+							as_exp* exp, 
+							int flags, 
+							LogInfo* log);
 
 typedef struct {
 	const char* op_name;
 	Operation op_function;
-	bool needs_bin;
 } ops_table_entry;
 
 const ops_table_entry ops_table[] = {
-	{ "WRITE", add_exp_write_op, true },
-	{ "READ", add_exp_read_op, true }
+	{ "WRITE", add_exp_write_op},
+	{ "READ", add_exp_read_op}
 };
 
 int
 add_exp_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 {
+	as_exp* exp;
+	int flags = 0;
+
 	opcode = opcode ^ EXPOP_OPS_OFFSET;
 	const ops_table_entry *entry = &ops_table[opcode];
 	if (!entry) {
@@ -81,19 +69,26 @@ add_exp_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 	}
 
 	char* bin = NULL;
-	if (entry->needs_bin) {
-		if (get_string_property(&bin, op, "bin", log) != AS_NODE_PARAM_OK) {
+	if (get_string_property(&bin, op, "bin", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (get_int_property((int*) &flags, op, "flags", log) != AS_NODE_PARAM_OK) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Value> exp_val = Nan::Get(op, Nan::New("exp").ToLocalChecked()).ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
-	} else {
-		bin = (char*) "n/a";
 	}
 
 	as_v8_debug(log, "Adding exp operation %s (opcode %i) on bin %s to operations list",
 			entry->op_name, opcode, bin);
-	bool success = (entry->op_function)(ops, bin, op, log);
 
-	if (entry->needs_bin) free(bin);
+	bool success = (entry->op_function)(ops, bin, exp, flags, log);
 
 	return success ? AS_NODE_PARAM_OK : AS_NODE_PARAM_ERR;
 }
