@@ -22,6 +22,7 @@
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
 const op = Aerospike.operations
+const expop = Aerospike.exp_operations
 const lists = Aerospike.lists
 const GeoJSON = Aerospike.GeoJSON
 
@@ -62,10 +63,10 @@ describe('Aerospike.expressions', function () {
 
   async function applyExp (key, bin, expression, flags) {
     const policy = { filterExpression: expression }
-    // const ops = [op.read(bin), 
-    //         exop.read(bin, exp.add(exp.binInt('values'), exp.int(2)), flags)]//,exp.and(exp.binExists(bin), exp.lists(bin))]
-    const ops = [op.read(bin)]
-      const result = await client.operate(key, ops, {}, policy)
+    const ops = [op.read(bin), 
+                  expop.read(bin, exp.add(exp.binInt(bin), exp.int(2)), flags)]//,exp.and(exp.binExists(bin), exp.lists(bin))]
+    // const ops = [op.read(bin)]
+    const result = await client.operate(key, ops, {}, policy)
     return result.bins[bin]
   }
 
@@ -261,7 +262,8 @@ describe('Aerospike.expressions', function () {
         const result = await applyExp(key, 'values', exp.eq(
                                                         exp.lists.size(
                                                             exp.binList('values')),
-                                                            exp.int(3)))
+                                                            exp.int(3)),
+                                                        0)
         expect(result).to.eql([83, 39, 49])
       })
     })
