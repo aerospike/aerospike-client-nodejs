@@ -52,8 +52,8 @@ AerospikeClient::~AerospikeClient() {}
  */
 NAN_METHOD(AerospikeClient::New)
 {
-	sleep(10);
-	
+	//sleep(10);
+
 	AerospikeClient* client = new AerospikeClient();
 	client->as = (aerospike*) cf_malloc(sizeof(aerospike));
 	client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));

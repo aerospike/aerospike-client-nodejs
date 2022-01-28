@@ -59,7 +59,7 @@ describe('Aerospike.exp_operations', function () {
 
   describe('exp_operations on arithmetic expressions', function () {
     describe('int bin add expression', function () {
-      it('evaluates exp_read op to true if an temp bin equals the sum of bin and given value', async function () {
+      it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
         const ops = [ 
                     expop.read(temp_bin, 
@@ -72,7 +72,7 @@ describe('Aerospike.exp_operations', function () {
         expect(result.bins.intVal).to.eql(2)
         expect(result.bins.ExpVar).to.eql(4)
       })
-      it('evaluates exp_read op to true if an temp bin equals the sum of bin and given value', async function () {
+      it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
         const ops = [ 
                     expop.write('intVal', 

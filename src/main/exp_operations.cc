@@ -30,13 +30,13 @@ using namespace v8;
 bool
 add_exp_write_op(as_operations* ops, const char* bin, as_exp* exp, int flags, LogInfo* log)
 {
-	return as_operations_exp_write(ops, bin, exp, flags);
+	return as_operations_exp_write(ops, bin, exp, (as_exp_write_flags)flags);
 }
 
 bool
 add_exp_read_op(as_operations* ops, const char* bin, as_exp* exp, int flags, LogInfo* log)
 {
-	return as_operations_exp_read(ops, bin, exp, flags);
+	return as_operations_exp_read(ops, bin, exp, (as_exp_read_flags)flags);
 }
 
 
