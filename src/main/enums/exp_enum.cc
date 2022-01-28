@@ -84,6 +84,32 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "END_OF_VA_ARGS", as_exp_ops::_AS_EXP_CODE_END_OF_VA_ARGS);
 
 	set(exp_ops, "ADD", as_exp_ops::_AS_EXP_CODE_ADD);
+	set(exp_ops, "SUB", as_exp_ops::_AS_EXP_CODE_SUB);
+	set(exp_ops, "MUL", as_exp_ops::_AS_EXP_CODE_MUL);
+	set(exp_ops, "DIV", as_exp_ops::_AS_EXP_CODE_DIV);
+	set(exp_ops, "POW", as_exp_ops::_AS_EXP_CODE_POW);
+	set(exp_ops, "LOG", as_exp_ops::_AS_EXP_CODE_LOG);
+	set(exp_ops, "MOD", as_exp_ops::_AS_EXP_CODE_MOD);
+	set(exp_ops, "ABS", as_exp_ops::_AS_EXP_CODE_ABS);
+	set(exp_ops, "FLOOR", as_exp_ops::_AS_EXP_CODE_FLOOR);
+	set(exp_ops, "CEIL", as_exp_ops::_AS_EXP_CODE_CEIL);
+	set(exp_ops, "TO_INT", as_exp_ops::_AS_EXP_CODE_TO_INT);
+	set(exp_ops, "TO_FLOAT", as_exp_ops::_AS_EXP_CODE_TO_FLOAT);
+	set(exp_ops, "INT_AND", as_exp_ops::_AS_EXP_CODE_INT_AND);
+	set(exp_ops, "INT_OR", as_exp_ops::_AS_EXP_CODE_INT_OR);
+	set(exp_ops, "INT_XOR", as_exp_ops::_AS_EXP_CODE_INT_XOR);
+	set(exp_ops, "INT_NOT", as_exp_ops::_AS_EXP_CODE_INT_NOT);
+	set(exp_ops, "INT_LSHIFT", as_exp_ops::_AS_EXP_CODE_INT_LSHIFT);
+	set(exp_ops, "INT_RSHIFT", as_exp_ops::_AS_EXP_CODE_INT_RSHIFT);
+	set(exp_ops, "INT_ARSHIFT", as_exp_ops::_AS_EXP_CODE_INT_ARSHIFT);
+	set(exp_ops, "INT_COUNT", as_exp_ops::_AS_EXP_CODE_INT_COUNT);
+	set(exp_ops, "INT_LSCAN", as_exp_ops::_AS_EXP_CODE_INT_LSCAN);
+	set(exp_ops, "INT_RSCAN", as_exp_ops::_AS_EXP_CODE_INT_RSCAN);
+	set(exp_ops, "MIN", as_exp_ops::_AS_EXP_CODE_MIN);
+	set(exp_ops, "MAX", as_exp_ops::_AS_EXP_CODE_MAX);
+
+	set(exp_ops, "COND", as_exp_ops::_AS_EXP_CODE_COND);
+	set(exp_ops, "LET", as_exp_ops::_AS_EXP_CODE_LET);
 
 	Local<Object> expop_ops = Nan::New<Object>();
 	set(expop_ops, "READ", as_operator::AS_OPERATOR_EXP_READ);
