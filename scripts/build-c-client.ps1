@@ -3,8 +3,6 @@ param (
   [Parameter(Mandatory=$true)][string]$NodeLibFile,
   [string]$Configuration = "Release",
   [string]$Platform = "x64",
-  [string]$CClientIni = "..\aerospike-client-c.ini",
-  [string]$FileHashesIni = "..\aerospike-client-c.sha256"
 )
 
 # Required to unzip files
@@ -12,78 +10,6 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 # Utility module to invoke MSBuild tool
 Import-Module "..\scripts\Invoke-MsBuild.psm1"
-
-# Parse name-value pairs, separated by "=" or another separator, from the given
-# file.
-function Parse-IniFile {
-	param(
-		[Parameter(Mandatory=$true)][string]$file,
-		[string]$sep,
-		[switch]$swap=$false
-	)
-
-	$ini = Get-Content $file
-	if ($sep) {
-	  $ini = $ini -replace $sep, "="
-	}
-	if ($swap) {
-		$ini = $ini -replace "^(\w+)=(.+)$", "`$2=`$1"
-	}
-	return ConvertFrom-StringData($ini -join "`n")
-}
-
-# Download a file and check it's SHA256 checksum.
-function Download {
-	param(
-		[string]$uri,
-		[string]$outfile,
-		[string]$hash
-	)
-
-	Write-Host "Downloading ${uri} to ${outfile}"
-	Invoke-WebRequest -Uri $uri -OutFile $outfile
-	$sha256 = (Get-FileHash $outfile -Algorithm Sha256).Hash
-	Write-Verbose "Validating ${outfile} checksum (expected: ${hash})"
-	if (! $sha256 -eq $hash) {
-		Write-Error "Checksum mis-match: ${outfile} - expected: ${hash}, actual: ${sha256}"
-		throw "Checksum mis-match: ${outfile} - expected: ${hash}, actual: ${sha256}"
-	}
-}
-
-# Uncompress a zip archive.
-function Unzip {
-	param(
-		[string]$zipfile,
-		[string]$outpath = (Resolve-Path ".\")
-	)
-
-	Write-Verbose "Expanding ${zipfile} archive to ${outpath}"
-	$zipfile = Resolve-Path $zipfile
-	New-Item -Path $outpath -ItemType "directory" -Force | out-null
-	[System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
-}
-
-# Downloads and unpacks a zip-compressed archive from the given URL.
-function Install-Package {
-	param(
-		[string]$uri,
-		[string]$archive,
-		[string]$hash,
-		[string]$outpath,
-		[switch]$createDir = $false
-	)
-
-	if (! (Test-Path $outpath)) {
-		if (! (Test-Path $archive)) {
-			Download $uri $archive $hash
-		}
-		if ($createDir) {
-			Unzip $archive $outpath
-		} else {
-			Unzip $archive ".\"
-		}
-	}
-}
 
 # Builds a VS project
 function Build-Project {
@@ -104,29 +30,6 @@ function Build-Project {
 	if (!$verbose) { Write-Host "" }
 	return $process.ExitCode -eq 0
 }
-
-$CClientCfg = Parse-IniFile $CClientIni
-Write-Debug ($CClientCfg | Out-String)
-$FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
-Write-Debug ($FileHashes | Out-String)
-
-# Install C client source package
-Write-Host "Installing Aerospike C client source package"
-$CClientVersion = $CClientCfg["AEROSPIKE_C_VERSION"]
-$CClientSrcPath = "aerospike-client-c-src-${CClientVersion}"
-$CClientArchive = "${CClientSrcPath}.zip"
-$CClientUrl = "https://artifacts.aerospike.com/aerospike-client-c/${CClientVersion}/${CClientArchive}"
-$CClientArchiveHash = $FileHashes[$CClientArchive]
-Install-Package -uri $CClientUrl -archive $CClientArchive -outpath $CClientSrcPath -hash $CClientArchiveHash
-
-# Install C client dependencies package
-Write-Host "Installing Aerospike C client dependencies"
-$CClientDepsVersion = $CClientCfg["AEROSPIKE_C_DEPS_VERSION"]
-$CClientDepsSrcPath = "aerospike-client-c-dependencies.${CClientDepsVersion}"
-$CClientDepsArchive = "${CClientDepsSrcPath}.zip"
-$CClientDepsUrl = "https://www.nuget.org/api/v2/package/aerospike-client-c-dependencies/${CClientDepsVersion}"
-$CClientDepsArchiveHash = $FileHashes[$CClientDepsArchive]
-Install-Package -uri $CClientDepsUrl -archive $CClientDepsArchive -outpath $CClientDepsSrcPath -hash $CClientDepsArchiveHash -createdir
 
 $ProjectFile = Resolve-Path (Join-Path $CClientSrcPath "vs\aerospike\aerospike.vcxproj")
 $NodePath = Split-Path $NodeLibFile -Parent
