@@ -175,6 +175,11 @@
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
           ],
+          'include_dirs': [
+            'aerospike-client-c/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
+          ],
           'msvs_settings': {
             'VCCLCompilerTool': {
               'DisableSpecificWarnings': ['4200']
