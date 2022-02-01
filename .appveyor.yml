@@ -12,7 +12,8 @@ environment:
 install:
   - ps: Install-Product node $env:nodejs_version $env:platform
   - npm install
-
+  - git submodule update --init --recursive
+  
 build: off
 test_script:
   - set GLOBAL_CLIENT=false
