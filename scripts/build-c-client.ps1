@@ -2,7 +2,7 @@
 param (
   [Parameter(Mandatory=$true)][string]$NodeLibFile,
   [string]$Configuration = "Release",
-  [string]$Platform = "x64",
+  [string]$Platform = "x64"
 )
 
 # Required to unzip files
