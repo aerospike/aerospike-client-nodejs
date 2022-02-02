@@ -44,7 +44,7 @@ describe('Aerospike.exp_operations', function () {
     expect(filter).to.be.an('array')
   })
 
-  describe('exp_operations on arithmetic expressions', function () {
+  describe('read and write exp_operations on arithmetic expressions', function () {
     describe('int bin add expression', function () {
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
@@ -72,5 +72,42 @@ describe('Aerospike.exp_operations', function () {
         expect(result.bins.intVal).to.eql(4)
       })
     })
+  }),
+
+  describe('read exp_operation on list expressions', function () {
+    describe('list bin append expression', function () {
+      it('evaluates exp_read op to true if temp bin equals to appended list', async function () {
+        const key = await createRecord({ list: [2, 3, 4, 5] })
+        const ops = [
+          expop.read(tempBin,
+            exp.lists.appendItems(exp.binList('list'), exp.binList('list')),
+            0),
+          op.read('list')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.list).to.eql([2, 3, 4, 5])
+        expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 2, 3, 4, 5])
+      })
+    })
+  }),
+
+  describe('write exp_operation on map expressions', function () {
+    describe('map bin putItems expression', function () {
+      it('evaluates exp_write op to true if temp bin equals to combined maps', async function () {
+        const key = await createRecord({ map: { c: 1, b: 2, a: 3 },  map2: { f: 1, e: 2, d: 3 }})
+        const ops = [
+          expop.write('map',
+            exp.maps.putItems(exp.binMap('map'), exp.binMap('map2')),
+            0),
+          op.read('map')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
+      })
+    })
   })
+
+
 })
