@@ -65,6 +65,13 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return rc;
 	}
 
+	if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
+		rc = get_int64_property(&entry->v.uint_val, entry_obj, "uintVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_int64_property failed\n");
+		return rc;
+	}
+
 	if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
 		rc = get_float_property(&entry->v.float_val, entry_obj, "floatVal", log);
 		if(rc != AS_NODE_PARAM_OK)
