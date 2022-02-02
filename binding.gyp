@@ -172,6 +172,7 @@
             '../aerospike-client-c-output/lib/pthreadVC2.lib',
           ],
           'defines': [
+            'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
           ],
