@@ -23,14 +23,10 @@ const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
 const op = Aerospike.operations
 const expop = Aerospike.exp_operations
-const lists = Aerospike.lists
-const GeoJSON = Aerospike.GeoJSON
-
-const FILTERED_OUT = Aerospike.status.FILTERED_OUT
 
 const helper = require('./test_helper')
 const keygen = helper.keygen
-const temp_bin = "ExpVar"
+const tempBin = 'ExpVar'
 
 describe('Aerospike.exp_operations', function () {
   helper.skipUnlessVersion('>= 5.0.0', this)
@@ -43,15 +39,6 @@ describe('Aerospike.exp_operations', function () {
     return key
   }
 
-  async function applyExp (key, bin, expression, flags) {
-    //const policy = { filterExpression: expression }
-    const ops = [op.read(bin), 
-                  expop.read(temp_bin, exp.add(exp.binInt(bin), exp.int(2)), flags)]//,exp.and(exp.binExists(bin), exp.lists(bin))]
-    // const ops = [op.read(bin)]
-    const result = await client.operate(key, ops, {})
-    return result.bins[bin]
-  }
-
   it('builds up a filter expression value', function () {
     const filter = exp.eq(exp.binInt('intVal'), exp.int(42))
     expect(filter).to.be.an('array')
@@ -61,27 +48,27 @@ describe('Aerospike.exp_operations', function () {
     describe('int bin add expression', function () {
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
-        const ops = [ 
-                    expop.read(temp_bin, 
-                        exp.add(exp.binInt('intVal'), exp.binInt('intVal')), 
-                        0),
-                    op.read('intVal')
-                  ]
+        const ops = [
+          expop.read(tempBin,
+            exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
+            0),
+          op.read('intVal')
+        ]
         const result = await client.operate(key, ops, {})
-        //console.log(result)
+        // console.log(result)
         expect(result.bins.intVal).to.eql(2)
         expect(result.bins.ExpVar).to.eql(4)
       })
       it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
-        const ops = [ 
-                    expop.write('intVal', 
-                        exp.add(exp.binInt('intVal'), exp.binInt('intVal')), 
-                        0),
-                    op.read('intVal')
-                  ]
+        const ops = [
+          expop.write('intVal',
+            exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
+            0),
+          op.read('intVal')
+        ]
         const result = await client.operate(key, ops, {})
-        //console.log(result)
+        // console.log(result)
         expect(result.bins.intVal).to.eql(4)
       })
     })

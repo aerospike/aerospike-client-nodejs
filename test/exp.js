@@ -21,7 +21,6 @@
 
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.expressions
-const op = Aerospike.operations
 const lists = Aerospike.lists
 const GeoJSON = Aerospike.GeoJSON
 

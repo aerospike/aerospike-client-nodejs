@@ -52,7 +52,7 @@ get_optional_hll_policy(as_hll_policy* policy, bool* has_policy, Local<Object> o
 		write_flags = AS_HLL_WRITE_DEFAULT;
 	} else {
 		as_v8_error(log, "Type error: writeFlags should be integer");
-		return AS_NODE_PARAM_ERR;
+		return false;
 	}
 	as_v8_detail(log, "Setting HLL policy - write_flags: %i", write_flags);
 	as_hll_policy_set_write_flags(policy, write_flags);
