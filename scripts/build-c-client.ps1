@@ -112,7 +112,7 @@ Write-Debug ($FileHashes | Out-String)
 
 # C client path
 Write-Host "Setting Aerospike C client source path"
-$CClientSrcPath = "aerospike-client-c"
+$CClientSrcPath = "..\aerospike-client-c"
 
 # Install C client dependencies package
 Write-Host "Installing Aerospike C client dependencies"
@@ -128,6 +128,7 @@ $NodePath = Split-Path $NodeLibFile -Parent
 $CClientConfiguration = "${Configuration} nodejs"
 $PackagesPath = Resolve-Path ".\"
 $BuildParams = "/p:Configuration=`"$CClientConfiguration`" /p:Platform=$Platform /p:NodejsPath=$NodePath /p:PackagesPath=$PackagesPath"
+Write-Host "ProjectFile: $ProjectFile"
 $BuildSuccess = Build-Project $ProjectFile $BuildParams
 if (-not $BuildSuccess) {
 	Write-Error -Message "Failed to build aerospike-client-c dependency"
