@@ -136,7 +136,7 @@ if (-not $BuildSuccess) {
 }
 
 # Copy header files
-$TargetPath = "..\aerospike-client-c"
+$TargetPath = "..\aerospike-client-c-output"
 New-Item -Path $TargetPath/include, $TargetPath/include/aerospike, $TargetPath/include/citrusleaf -ItemType "directory" -Force | out-null
 Copy-Item $CClientDepsSrcPath\build\native\include\*.h $TargetPath\include -Include pthread.h,_ptw32.h,sched.h
 Copy-Item $CClientSrcPath\src\include\aerospike\*.h $TargetPath\include\aerospike -Exclude as_tls.h

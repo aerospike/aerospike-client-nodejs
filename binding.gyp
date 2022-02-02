@@ -36,8 +36,8 @@
               'action_name': 'Installing Aerospike C Client dependency',
               'inputs': [],
               'outputs': [
-                'aerospike-client-c/include/aerospike/aerospike.h',
-                'aerospike-client-c/lib/aerospike.lib'
+                'aerospike-client-c-output/include/aerospike/aerospike.h',
+                'aerospike-client-c-output/lib/aerospike.lib'
               ],
               'action': [
                 'powershell', 'scripts/build-c-client.ps1',
@@ -168,15 +168,15 @@
         }],
         ['OS=="win"', {
           'libraries': [
-            '../aerospike-client-c/lib/aerospike.lib',
-            '../aerospike-client-c/lib/pthreadVC2.lib',
+            '../aerospike-client-c-output/lib/aerospike.lib',
+            '../aerospike-client-c-output/lib/pthreadVC2.lib',
           ],
           'defines': [
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
           ],
           'include_dirs': [
-            'aerospike-client-c/include',
+            'aerospike-client-c-output/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],
