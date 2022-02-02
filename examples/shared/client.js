@@ -29,7 +29,7 @@ module.exports = function (argv) {
 
 function defaultConfig (argv) {
   const defaultPolicy = {
-    totalTimeout: argv.timeout
+    timeout: argv.timeout
   }
   return {
     hosts: argv.hosts,

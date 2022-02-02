@@ -27,8 +27,6 @@ extern "C" {
 
 using namespace v8;
 
-// bool
-// get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Object> obj, LogInfo* log)
 bool get_optional_list_policy(as_list_policy* policy, bool* has_policy, v8::Local<v8::Object> obj, const LogInfo* log)
 {
 	Nan::HandleScope scope;

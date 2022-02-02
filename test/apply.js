@@ -55,7 +55,7 @@ describe('client.apply()', function () {
 
   it('should invoke an UDF with apply policy', function (done) {
     const policy = new Aerospike.ApplyPolicy({
-      totalTimeout: 1500
+      timeout: 1500
     })
     const udf = {
       module: 'udf',

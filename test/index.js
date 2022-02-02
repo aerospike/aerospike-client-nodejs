@@ -89,7 +89,7 @@ context('secondary indexes', function () {
         datatype: Aerospike.indexDataType.NUMERIC
       }
       const policy = new Aerospike.InfoPolicy({
-        totalTimeout: 100
+        timeout: 100
       })
 
       return client.createIndex(options, policy)

@@ -141,9 +141,9 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 			goto Cleanup;
 		}
 
-		// if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
-		// 	goto Cleanup;
-		// }
+		if ((rc = get_optional_string_property(&config->tls.keyfile_pw, &defined, tls_config, "keyfilePassword", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
 
 		if ((rc = get_optional_string_property(&config->tls.certfile, &defined, tls_config, "certfile", log)) != AS_NODE_PARAM_OK) {
 			goto Cleanup;

@@ -84,7 +84,7 @@ describe('Command Queue #slow', function () {
       Object.assign(config, {
         log: { level: Aerospike.log.OFF },
         policies: {
-          query: new Aerospike.QueryPolicy({ totalTimeout: 10000, failOnClusterChange: true })
+          query: new Aerospike.QueryPolicy({ timeout: 10000, failOnClusterChange: true })
         }
       })
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 50 })

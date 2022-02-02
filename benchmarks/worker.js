@@ -59,7 +59,7 @@ const FLUX_PERIOD = 5
 // *****************************************************************************
 
 const defaultPolicy = {
-  totalTimeout: argv.timeout
+  timeout: argv.timeout
 }
 const config = {
   policies: {

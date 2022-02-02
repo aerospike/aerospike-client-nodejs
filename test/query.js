@@ -248,7 +248,7 @@ describe('Queries', function () {
 
     it('should raise client errors asynchronously', function (done) {
       const invalidPolicy = new Aerospike.QueryPolicy({
-        totalTimeout: 'not a valid timeout'
+        timeout: 'not a valid timeout'
       })
 
       const query = client.query('test')

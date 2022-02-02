@@ -52,15 +52,15 @@ describe('Config #noserver', function () {
         password: 'sekret',
         port: 3333,
         policies: {
-          apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
-          batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
-          info: new Aerospike.InfoPolicy({ totalTimeout: 1000 }),
-          operate: new Aerospike.OperatePolicy({ totalTimeout: 1000 }),
-          query: new Aerospike.QueryPolicy({ totalTimeout: 1000 }),
-          read: new Aerospike.ReadPolicy({ totalTimeout: 1000 }),
-          remove: new Aerospike.RemovePolicy({ totalTimeout: 1000 }),
-          scan: new Aerospike.ScanPolicy({ totalTimeout: 1000 }),
-          write: new Aerospike.WritePolicy({ totalTimeout: 1000 })
+          apply: new Aerospike.ApplyPolicy({ timeout: 1000 }),
+          batch: new Aerospike.BatchPolicy({ timeout: 1000 }),
+          info: new Aerospike.InfoPolicy({ timeout: 1000 }),
+          operate: new Aerospike.OperatePolicy({ timeout: 1000 }),
+          query: new Aerospike.QueryPolicy({ timeout: 1000 }),
+          read: new Aerospike.ReadPolicy({ timeout: 1000 }),
+          remove: new Aerospike.RemovePolicy({ timeout: 1000 }),
+          scan: new Aerospike.ScanPolicy({ timeout: 1000 }),
+          write: new Aerospike.WritePolicy({ timeout: 1000 })
         },
         rackAware: true,
         rackId: 42,
@@ -106,15 +106,15 @@ describe('Config #noserver', function () {
     it('initializes default policies', function () {
       const settings = {
         policies: {
-          apply: { totalTimeout: 1000 },
-          batch: { totalTimeout: 1000 },
-          info: { totalTimeout: 1000 },
-          operate: { totalTimeout: 1000 },
-          query: { totalTimeout: 1000 },
-          read: { totalTimeout: 1000 },
-          remove: { totalTimeout: 1000 },
-          scan: { totalTimeout: 1000 },
-          write: { totalTimeout: 1000 }
+          apply: { timeout: 1000 },
+          batch: { timeout: 1000 },
+          info: { timeout: 1000 },
+          operate: { timeout: 1000 },
+          query: { timeout: 1000 },
+          read: { timeout: 1000 },
+          remove: { timeout: 1000 },
+          scan: { timeout: 1000 },
+          write: { timeout: 1000 }
         }
       }
       const config = new Config(settings)
@@ -155,7 +155,7 @@ describe('Config #noserver', function () {
     it('throws a TypeError if invalid policy values are passed', function () {
       const settings = {
         policies: {
-          totalTimeout: 1000
+          timeout: 1000
         }
       }
       expect(() => new Config(settings)).to.throw(TypeError)
