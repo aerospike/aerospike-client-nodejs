@@ -72,7 +72,7 @@ describe('Aerospike.exp_operations', function () {
         expect(result.bins.intVal).to.eql(4)
       })
     })
-  }),
+  })
 
   describe('read exp_operation on list expressions', function () {
     describe('list bin append expression', function () {
@@ -90,12 +90,12 @@ describe('Aerospike.exp_operations', function () {
         expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 2, 3, 4, 5])
       })
     })
-  }),
+  })
 
   describe('write exp_operation on map expressions', function () {
     describe('map bin putItems expression', function () {
       it('evaluates exp_write op to true if temp bin equals to combined maps', async function () {
-        const key = await createRecord({ map: { c: 1, b: 2, a: 3 },  map2: { f: 1, e: 2, d: 3 }})
+        const key = await createRecord({ map: { c: 1, b: 2, a: 3 }, map2: { f: 1, e: 2, d: 3 } })
         const ops = [
           expop.write('map',
             exp.maps.putItems(exp.binMap('map'), exp.binMap('map2')),
@@ -108,6 +108,4 @@ describe('Aerospike.exp_operations', function () {
       })
     })
   })
-
-
 })
