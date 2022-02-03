@@ -32,6 +32,11 @@ perform_check() {
   scripts/validate-c-client.sh
 }
 
+install_libuv() {
+  cd ${AEROSPIKE_C_HOME}
+  ./install_libuv
+}
+
 build_c_client() {
   cd ${AEROSPIKE_C_HOME}
   make EVENT_LIB=libuv
@@ -45,5 +50,8 @@ rebuild_c_client() {
   make V=1 EVENT_LIB=libuv 2>&1 | tee ${CWD}/${0}-output.txt  
 }
 
+install_libuv
 rebuild_c_client
 perform_check
+
+cd ${CWD}
