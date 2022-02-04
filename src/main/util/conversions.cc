@@ -133,6 +133,8 @@ int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const
     Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
     if (!value->IsNumber()) {
         as_v8_error(log, "Type error: %s property should be integer", prop);
+        (*intp) = Nan::To<int64_t>(value).FromJust();
+        as_v8_detail(log, "%s => (int64) %d", prop, *intp);
         return AS_NODE_PARAM_ERR;
     }
     (*intp) = Nan::To<int64_t>(value).FromJust();

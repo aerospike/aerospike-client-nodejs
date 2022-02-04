@@ -39,7 +39,12 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if ((rc = get_optional_uint32_property(&entry->count, NULL, entry_obj, "count", log)) != AS_NODE_PARAM_OK) {
-		printf("get_optional_uint32_property failed\n");
+		printf("get_int_property failed\n");
+		return rc;
+	}
+
+	if ((rc = get_optional_uint32_property(&entry->sz, NULL, entry_obj, "sz", log)) != AS_NODE_PARAM_OK) {
+		printf("get_int_property failed\n");
 		return rc;
 	}
 
@@ -58,6 +63,14 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return rc;
 	}
 
+	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
+		// TODO: Free v.bytes_val once request is done
+		rc = get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		if(rc != AS_NODE_PARAM_OK)
+			printf("get_bytes_property failed\n");
+		return rc;
+	}
+
 	if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
 		rc = get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
 		if(rc != AS_NODE_PARAM_OK)
@@ -68,7 +81,7 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
 		rc = get_uint64_property(&entry->v.uint_val, entry_obj, "uintVal", log);
 		if(rc != AS_NODE_PARAM_OK)
-			printf("get_int64_property failed\n");
+			printf("get_uint64_property failed\n");
 		return rc;
 	}
 
@@ -86,12 +99,9 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return rc;
 	}
 
-	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
-		// TODO: Free v.bytes_val once request is done
-		rc = get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
-		if(rc != AS_NODE_PARAM_OK)
-			printf("get_bytes_property failed\n");
-		return rc;
+	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
+		entry->v.ctx = NULL;
+		return get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
@@ -109,11 +119,6 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
 		// TODO: implement policy convertion
 		return AS_NODE_PARAM_OK;
-	}
-
-	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
-		entry->v.ctx = NULL;
-		return get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
 	}
 
 	return rc;

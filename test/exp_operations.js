@@ -108,4 +108,22 @@ describe('Aerospike.exp_operations', function () {
       })
     })
   })
+
+  describe('read exp_operation on bit expressions', function () {
+    describe('bit bin insert expression', function () {
+      it('evaluates exp_read op to true if temp bin equals to inserted bits', async function () {
+        const key = await createRecord({ blob: Buffer.from([1, 2, 3]) })
+        const ops = [
+          expop.read(tempBin,
+            exp.bit.get(exp.binBlob('blob'), 7, 8),
+            //exp.bit.insert(exp.binBlob('blob'), exp.bytes(Buffer.from([1]), 1), exp.int(1)),
+            0),
+          op.read('blob')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
+        expect(result.bins.blob).to.eql(exp.bytes(Buffer.from([0x01, 0x03, 0x04, 0x02])))
+      })
+    })
+  })
 })
