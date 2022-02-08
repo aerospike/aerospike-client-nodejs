@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ const parser = yargs
     },
     log: {
       alias: 'l',
-      default: Aerospike.log.WARN,
+      default: Aerospike.log.TRACE,
       describe: 'Log level [0-5]'
     },
     log_file: {

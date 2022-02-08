@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ NAN_METHOD(setDefaultLogging)
 				as_log_set_level(AS_LOG_LEVEL_TRACE);
 				as_log_set_callback(as_log_callback_fnct);
 			} else {
-				as_log_set_level(AS_LOG_LEVEL_TRACE);
+				as_log_set_level(g_log_info.level);
 				as_log_set_callback(as_log_callback_fnct);
 			}
 		}

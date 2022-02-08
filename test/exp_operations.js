@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2021 Aerospike, Inc.
+// Copyright 2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@
 /* global expect */
 
 const Aerospike = require('../lib/aerospike')
-const exp = Aerospike.expressions
+const exp = Aerospike.exp
 const op = Aerospike.operations
-const expop = Aerospike.exp_operations
 
 const helper = require('./test_helper')
 const keygen = helper.keygen
@@ -49,7 +48,7 @@ describe('Aerospike.exp_operations', function () {
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
         const ops = [
-          expop.read(tempBin,
+          exp.operations.read(tempBin,
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
             0),
           op.read('intVal')
@@ -62,7 +61,7 @@ describe('Aerospike.exp_operations', function () {
       it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
         const ops = [
-          expop.write('intVal',
+          exp.operations.write('intVal',
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
             0),
           op.read('intVal')
@@ -79,7 +78,7 @@ describe('Aerospike.exp_operations', function () {
       it('evaluates exp_read op to true if temp bin equals to appended list', async function () {
         const key = await createRecord({ list: [2, 3, 4, 5] })
         const ops = [
-          expop.read(tempBin,
+          exp.operations.read(tempBin,
             exp.lists.appendItems(exp.binList('list'), exp.binList('list')),
             0),
           op.read('list')
@@ -97,7 +96,7 @@ describe('Aerospike.exp_operations', function () {
       it('evaluates exp_write op to true if temp bin equals to combined maps', async function () {
         const key = await createRecord({ map: { c: 1, b: 2, a: 3 }, map2: { f: 1, e: 2, d: 3 } })
         const ops = [
-          expop.write('map',
+          exp.operations.write('map',
             exp.maps.putItems(exp.binMap('map'), exp.binMap('map2')),
             0),
           op.read('map')
@@ -115,7 +114,7 @@ describe('Aerospike.exp_operations', function () {
         // const key = await createRecord({ blob: Buffer.from([0b00000001, 0b01000010, 0b01010111, 0b00000100, 0b00000101]) })
         const key = await createRecord({ blob: Buffer.from([0, 1, 2, 3]) })
         const ops = [
-          expop.read(tempBin,
+          exp.operations.read(tempBin,
             exp.bit.count(exp.binBlob('blob'), exp.uint(32), exp.int(0)), // b0,b1,b10,b11 (4bits set)
             // exp.bit.insert(exp.binBlob('blob'), exp.bytes(Buffer.from([1]), 1), exp.int(1)),
             0),

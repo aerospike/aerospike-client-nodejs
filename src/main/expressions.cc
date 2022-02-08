@@ -48,8 +48,8 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 		return rc;
 	}
 
-	if (Nan::Has(entry_obj, Nan::New("val").ToLocalChecked()).FromJust()) {
-		rc = get_asval_property(&entry->v.val, entry_obj, "val", log);
+	if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
+		rc = get_asval_property(&entry->v.val, entry_obj, "value", log);
 		if(rc != AS_NODE_PARAM_OK)
 			printf("get_asval_property failed\n");
 		return rc;

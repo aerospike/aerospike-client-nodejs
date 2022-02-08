@@ -122,6 +122,9 @@ _as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
 	char msg[1024];
 	vsnprintf(msg, 1024, fmt, args);
 
+	printf(msg);
+	printf("\n");
+
 	fprintf(log->fd, "%s: %-5s(%d) [%s:%u] [%s] - %s\n", ts,
 			log_level_name(level), as_getpid(), filename, line, func, msg);
 	fflush(log->fd);

@@ -20,7 +20,7 @@
 /* global expect */
 
 const Aerospike = require('../lib/aerospike')
-const exp = Aerospike.expressions
+const exp = Aerospike.exp
 const lists = Aerospike.lists
 const GeoJSON = Aerospike.GeoJSON
 
@@ -29,7 +29,7 @@ const FILTERED_OUT = Aerospike.status.FILTERED_OUT
 const helper = require('./test_helper')
 const keygen = helper.keygen
 
-describe('Aerospike.expressions', function () {
+describe('Aerospike.exp', function () {
   helper.skipUnlessVersion('>= 5.0.0', this)
 
   const client = helper.client

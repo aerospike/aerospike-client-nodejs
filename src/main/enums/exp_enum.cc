@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Aerospike, Inc.
+ * Copyright 2021-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "AND", as_exp_ops::_AS_EXP_CODE_AND);
 	set(exp_ops, "OR", as_exp_ops::_AS_EXP_CODE_OR);
 	set(exp_ops, "NOT", as_exp_ops::_AS_EXP_CODE_NOT);
+	set(exp_ops, "EXCLUSIVE", as_exp_ops::_AS_EXP_CODE_EXCLUSIVE);
 
 	set(exp_ops, "DIGEST_MODULO", as_exp_ops::_AS_EXP_CODE_DIGEST_MODULO);
 	set(exp_ops, "DEVICE_SIZE", as_exp_ops::_AS_EXP_CODE_DEVICE_SIZE);
@@ -110,6 +111,7 @@ Local<Object> exp_opcode_values()
 
 	set(exp_ops, "COND", as_exp_ops::_AS_EXP_CODE_COND);
 	set(exp_ops, "LET", as_exp_ops::_AS_EXP_CODE_LET);
+	set(exp_ops, "VAR", as_exp_ops::_AS_EXP_CODE_VAR);
 
 	Local<Object> expop_ops = Nan::New<Object>();
 	set(expop_ops, "READ", as_operator::AS_OPERATOR_EXP_READ);

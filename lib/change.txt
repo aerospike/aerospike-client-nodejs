@@ -1,0 +1,5 @@
+use exp_operation as part exp.operation exp.operation
+generic param local function can take any number of params
+addressed map read api issues
+api doc for expressions (logic/arith/list/map/hll/bit/etc)
+copyright update

@@ -91,7 +91,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								Nan::ThrowError("The min/max of the range value passed must both be integers.");
 							}
 						} else if (datatype == AS_INDEX_GEO2DSPHERE) {
-							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
+							Local<Value> value = Nan::Get(filter, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 							if (!value->IsString()) {
 								as_v8_error(log, "The region value passed must be a GeoJSON string");
 								Nan::ThrowError("The region value passed is not a GeoJSON string");
@@ -105,7 +105,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 				case AS_PREDICATE_EQUAL:
 					{
 						if (datatype == AS_INDEX_NUMERIC) {
-							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
+							Local<Value> value = Nan::Get(filter, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 							if (value->IsNumber()) {
 								const int64_t val = Nan::To<int64_t>(value).FromJust();
 								as_query_where(query, bin_name, predicate, type, datatype, val);
@@ -115,7 +115,7 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 								Nan::ThrowError("Querying an numeric index with equal predicate - value is not a number");
 							}
 						} else if (datatype == AS_INDEX_STRING) {
-							Local<Value> value = Nan::Get(filter, Nan::New("val").ToLocalChecked()).ToLocalChecked();
+							Local<Value> value = Nan::Get(filter, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 							if (!value->IsString()) {
 								as_v8_error(log, "querying a string index with equal predicate - value must be a string");
 								Nan::ThrowError("Querying a string index with equal predicate - value is not a string");
