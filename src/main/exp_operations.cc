@@ -59,7 +59,7 @@ const ops_table_entry ops_table[] = {
 int
 add_exp_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 {
-	as_exp* exp;
+	as_exp* exp = NULL;
 	int flags = 0;
 
 	opcode = opcode ^ EXPOP_OPS_OFFSET;

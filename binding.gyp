@@ -159,6 +159,7 @@
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-x86_64/include',
+            'aerospike-client-c/src/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
