@@ -73,7 +73,7 @@ describe('Aerospike.exp_operations', function () {
     })
   })
 
-  describe('read exp_operation on list expressions', function () {
+  describe('read exp_operations on list expressions', function () {
     describe('list bin append expression', function () {
       it('evaluates exp_read op to true if temp bin equals to appended list', async function () {
         const key = await createRecord({ list: [2, 3, 4, 5] })
@@ -91,7 +91,7 @@ describe('Aerospike.exp_operations', function () {
     })
   })
 
-  describe('write exp_operation on map expressions', function () {
+  describe('write exp_operations on map expressions', function () {
     describe('map bin putItems expression', function () {
       it('evaluates exp_write op to true if temp bin equals to combined maps', async function () {
         const key = await createRecord({ map: { c: 1, b: 2, a: 3 }, map2: { f: 1, e: 2, d: 3 } })
@@ -108,7 +108,7 @@ describe('Aerospike.exp_operations', function () {
     })
   })
 
-  describe('read exp_operation on bit expressions', function () {
+  describe('read exp_operations on bit expressions', function () {
     describe('bit bin get expression', function () {
       it('evaluates exp_read op to true if temp bin equals to bin bits', async function () {
         // const key = await createRecord({ blob: Buffer.from([0b00000001, 0b01000010, 0b01010111, 0b00000100, 0b00000101]) })
