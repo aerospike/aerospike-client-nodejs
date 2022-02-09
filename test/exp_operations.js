@@ -22,6 +22,7 @@
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.exp
 const op = Aerospike.operations
+const hll = Aerospike.hll
 
 const helper = require('./test_helper')
 const keygen = helper.keygen
@@ -123,6 +124,38 @@ describe('Aerospike.exp_operations', function () {
         const result = await client.operate(key, ops, {})
         // console.log(result)
         expect(result.bins.ExpVar).to.eql(4)
+      })
+    })
+  })
+
+  describe('read exp_operations on hll expressions', function () {
+    describe('hll bin get expression', function () {
+      it('evaluates exp_read op to true if temp bin equals to bin hll', async function () {
+        const key = await createRecord({
+          hllCats: Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
+            0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+          list: ['tiger']
+        })
+        const ops = [
+          hll.add('hllCats2', ['tiger'], 8),
+          exp.operations.write('hllCats2',
+            exp.hll.init(exp.binHll('hllCats2'), 8),
+            0),
+          exp.operations.read(tempBin,
+            exp.binHll('hllCats2'),
+            0),
+          op.read('hllCats2')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.ExpVar).to.eql(result.bins.hllCats2)
       })
     })
   })
