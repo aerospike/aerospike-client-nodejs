@@ -129,8 +129,8 @@ describe('Aerospike.exp_operations', function () {
   })
 
   describe('read exp_operations on hll expressions', function () {
-    describe('hll bin get expression', function () {
-      it('evaluates exp_read op to true if temp bin equals to bin hll', async function () {
+    describe('hll bin getCount expression', function () {
+      it('evaluates exp_read op to true if temp bin equals to unique items in hll', async function () {
         const key = await createRecord({
           hllCats: Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
@@ -144,18 +144,15 @@ describe('Aerospike.exp_operations', function () {
           list: ['tiger']
         })
         const ops = [
-          hll.add('hllCats2', ['tiger'], 8),
-          exp.operations.write('hllCats2',
-            exp.hll.init(exp.binHll('hllCats2'), 8),
-            0),
+          hll.add('hllCats2', ['jaguar', 'tiger', 'tiger', 'leopard', 'lion', 'jaguar'], 8),
           exp.operations.read(tempBin,
-            exp.binHll('hllCats2'),
+            exp.hll.getCount(exp.binHll('hllCats2')),
             0),
           op.read('hllCats2')
         ]
         const result = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.ExpVar).to.eql(result.bins.hllCats2)
+        expect(result.bins.ExpVar).to.eql(4)
       })
     })
   })
