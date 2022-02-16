@@ -126,10 +126,10 @@
             "xcode_settings": {
               "OTHER_CFLAGS": [
                 "-Wno-deprecated-declarations",
-              ],
+              ]
             },
             'msvs_disabled_warnings': [4996],
-          },
+          }
       },
       'conditions': [
         ['OS=="linux"',{
@@ -144,6 +144,7 @@
           ],
           'include_dirs': [
             'aerospike-client-c/target/Linux-x86_64/include',
+            'aerospike-client-c/src/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
@@ -188,6 +189,17 @@
             }
           },
         }],
+      ]
+    },
+    {
+      "target_name": "action_after_build",
+      "type": "none",
+      "dependencies": [ "<(module_name)" ],
+      "copies": [
+        {
+          "files": [ "<(PRODUCT_DIR)/<(module_name).node" ],
+          "destination": "<(module_path)"
+        }
       ]
     }
   ]
