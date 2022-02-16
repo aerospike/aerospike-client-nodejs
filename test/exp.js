@@ -21,13 +21,15 @@
 
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.exp
-const lists = Aerospike.lists
+const op = Aerospike.operations
+
 const GeoJSON = Aerospike.GeoJSON
 
 const FILTERED_OUT = Aerospike.status.FILTERED_OUT
 
 const helper = require('./test_helper')
 const keygen = helper.keygen
+const tempBin = 'ExpVar'
 
 describe('Aerospike.exp', function () {
   helper.skipUnlessVersion('>= 5.0.0', this)
@@ -134,127 +136,6 @@ describe('Aerospike.exp', function () {
     })
   })
 
-  describe('list expressions', function () {
-    describe('list size', function () {
-      it('matches the size of a list value', async function () {
-        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
-
-        await testNoMatch(key, exp.eq(exp.lists.size(exp.binList('tags')), exp.int(5)))
-        await testMatch(key, exp.eq(exp.lists.size(exp.binList('tags')), exp.int(3)))
-      })
-    })
-
-    describe('getByValue', function () {
-      it('matches the count of the matched list values', async function () {
-        const key = await createRecord({ tags: ['blue', 'green', 'yellow', 'green'] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByValue(exp.binList('tags'), exp.str('green'), lists.returnType.COUNT), exp.int(1)))
-        await testMatch(key, exp.eq(exp.lists.getByValue(exp.binList('tags'), exp.str('green'), lists.returnType.COUNT), exp.int(2)))
-      })
-    })
-
-    describe('getByValueRange', function () {
-      it('matches the count of the matched range of list values', async function () {
-        const key = await createRecord({ values: [53, 16, 94, 38, 25, 88, 48] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByValueRange(exp.binList('values'), exp.int(25), exp.int(50), lists.returnType.COUNT), exp.int(1)))
-        await testMatch(key, exp.eq(exp.lists.getByValueRange(exp.binList('values'), exp.int(25), exp.int(50), lists.returnType.COUNT), exp.int(3)))
-      })
-    })
-
-    describe('getByValueList', function () {
-      it('matches the count of the matched values', async function () {
-        const key = await createRecord({ values: [53, 16, 94, 38, 25, 88, 88, 48, 16] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByValueList(exp.binList('values'), exp.list([88, 94]), lists.returnType.COUNT), exp.int(2)))
-        await testMatch(key, exp.eq(exp.lists.getByValueList(exp.binList('values'), exp.list([88, 94]), lists.returnType.COUNT), exp.int(3)))
-      })
-    })
-
-    describe('getByRelRankRangeToEnd', function () {
-      it('selects list items nearest to value and greater by relative rank', async function () {
-        const key = await createRecord({ values: [53, 16, 94, 38, 25, 88, 88, 48, 16] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByRelRankRangeToEnd(exp.binList('values'), exp.int(38), exp.int(1), lists.returnType.VALUE), exp.list([38, 48, 53, 88, 88, 94])))
-        await testMatch(key, exp.eq(exp.lists.getByRelRankRangeToEnd(exp.binList('values'), exp.int(38), exp.int(1), lists.returnType.VALUE), exp.list([48, 53, 88, 88, 94])))
-      })
-    })
-
-    describe('getByRelRankRange', function () {
-      it('selects list items nearest to value and greater by relative rank with a count limit', async function () {
-        const key = await createRecord({ values: [53, 16, 94, 38, 25, 88, 88, 48, 16] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByRelRankRange(exp.binList('values'), exp.int(38), exp.int(1), exp.int(3), lists.returnType.VALUE), exp.list([38, 48, 53])))
-        await testMatch(key, exp.eq(exp.lists.getByRelRankRange(exp.binList('values'), exp.int(38), exp.int(1), exp.int(3), lists.returnType.VALUE), exp.list([48, 53, 88])))
-      })
-    })
-
-    describe('getByIndex', function () {
-      it('selects item identified by index', async function () {
-        const key = await createRecord({ values: ['Singapore', 'Hamburg', 'San Francisco', 'Tokyo'] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByIndex(exp.binList('values'), exp.int(2), exp.type.STR, lists.returnType.VALUE), exp.str('Hamburg')))
-        await testMatch(key, exp.eq(exp.lists.getByIndex(exp.binList('values'), exp.int(2), exp.type.STR, lists.returnType.VALUE), exp.str('San Francisco')))
-      })
-    })
-
-    describe('getByIndexRangeToEnd', function () {
-      it('selects list items starting at specified index to the end of the list', async function () {
-        const key = await createRecord({ values: ['Singapore', 'Hamburg', 'San Francisco', 'Tokyo'] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByIndexRangeToEnd(exp.binList('values'), exp.int(2), lists.returnType.VALUE), exp.list(['Hamburg', 'San Francisco'])))
-        await testMatch(key, exp.eq(exp.lists.getByIndexRangeToEnd(exp.binList('values'), exp.int(2), lists.returnType.VALUE), exp.list(['San Francisco', 'Tokyo'])))
-      })
-    })
-
-    describe('getByIndexRange', function () {
-      it('selects "count" list items starting at specified index', async function () {
-        const key = await createRecord({ values: ['Singapore', 'Hamburg', 'San Francisco', 'Tokyo'] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByIndexRange(exp.binList('values'), exp.int(2), exp.int(1), lists.returnType.VALUE), exp.list(['Hamburg'])))
-        await testMatch(key, exp.eq(exp.lists.getByIndexRange(exp.binList('values'), exp.int(2), exp.int(1), lists.returnType.VALUE), exp.list(['San Francisco'])))
-      })
-    })
-
-    describe('getByRank', function () {
-      it('selects list item identified by rank', async function () {
-        const key = await createRecord({ values: [83, 39, 49, 20, 42, 41, 98] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByRank(exp.binList('values'), exp.int(2), exp.type.INT, lists.returnType.VALUE), exp.int(42)))
-        await testMatch(key, exp.eq(exp.lists.getByRank(exp.binList('values'), exp.int(2), exp.type.INT, lists.returnType.VALUE), exp.int(41)))
-      })
-    })
-
-    describe('getByRankRangeToEnd', function () {
-      it('selects list items starting at specified rank to the last ranked item', async function () {
-        const key = await createRecord({ values: [83, 39, 49, 20, 42, 41, 98] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByRankRangeToEnd(exp.binList('values'), exp.int(2), lists.returnType.VALUE), exp.list([39, 41, 42, 49, 83, 98])))
-        await testMatch(key, exp.eq(exp.lists.getByRankRangeToEnd(exp.binList('values'), exp.int(2), lists.returnType.VALUE), exp.list([41, 42, 49, 83, 98])))
-      })
-    })
-
-    describe('getByRankRange', function () {
-      it('selects "count" list items starting at specified rank', async function () {
-        const key = await createRecord({ values: [83, 39, 49, 20, 42, 41, 98] })
-
-        await testNoMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([39, 41, 42])))
-        await testMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([42, 41])))
-      })
-    })
-  })
-
-  describe('map expressions', function () {
-    describe('map size', function () {
-      it('returns the map size', async function () {
-        const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27 } })
-
-        await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(2)))
-        await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(3)))
-      })
-    })
-  })
-
   describe('binExists', function () {
     it('evaluates to true if the bin with the given name exists', async function () {
       const key = await createRecord({ foo: 'bar' })
@@ -311,6 +192,49 @@ describe('Aerospike.exp', function () {
 
       await testNoMatch(key, exp.or(exp.binExists('d'), exp.binExists('e')))
       await testMatch(key, exp.or(exp.binExists('a'), exp.binExists('d')))
+    })
+  })
+
+  describe('read and write exp_operations on arithmetic expressions', function () {
+    describe('int bin add expression', function () {
+      it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
+        const key = await createRecord({ intVal: 2 })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
+            0),
+          op.read('intVal')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.intVal).to.eql(2)
+        expect(result.bins.ExpVar).to.eql(4)
+      })
+      it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
+        const key = await createRecord({ intVal: 2 })
+        const ops = [
+          exp.operations.write('intVal',
+            exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
+            0),
+          op.read('intVal')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.intVal).to.eql(4)
+      })
+      it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
+        const key = await createRecord({ intVal: 2 })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
+            0),
+          op.read('intVal')
+        ]
+        const result = await client.operate(key, ops, {})
+        // console.log(result)
+        expect(result.bins.intVal).to.eql(2)
+        expect(result.bins.ExpVar).to.eql(4)
+      })
     })
   })
 })
