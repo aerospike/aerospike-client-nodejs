@@ -210,31 +210,31 @@ describe('Aerospike.exp_operations', function () {
       it('selects item identified by index', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
-        // const ops = [
-        //   exp.operations.read(tempBin,
-        //     exp.maps.getByIndex(
-        //       exp.binMap('tags'),
-        //       exp.int(2),
-        //       exp.type.STR,
-        //       maps.returnType.COUNT),
-        //       0),
-        //   op.read('tags')
-        // ]
-        // const result = await client.operate(key, ops, {})
-        // console.log(result)
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByIndex(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.type.INT,
+              maps.returnType.COUNT),
+              0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
 
         await testNoMatch(key, exp.eq(
           exp.maps.getByIndex(
             exp.binMap('tags'),
             exp.int(2),
-            exp.type.STR,
+            exp.type.INT,
             maps.returnType.COUNT),
           exp.int(0)))
         await testMatch(key, exp.eq(
           exp.maps.getByIndex(
             exp.binMap('tags'),
             exp.int(2),
-            exp.type.STR,
+            exp.type.INT,
             maps.returnType.COUNT),
           exp.int(1)))
       })
@@ -301,14 +301,14 @@ describe('Aerospike.exp_operations', function () {
           exp.maps.getByRank(
             exp.binMap('tags'),
             exp.int(0),
-            exp.type.STR,
+            exp.type.INT,
             maps.returnType.COUNT),
           exp.int(0)))
         await testMatch(key, exp.eq(
           exp.maps.getByRank(
             exp.binMap('tags'),
             exp.int(0),
-            exp.type.STR,
+            exp.type.INT,
             maps.returnType.COUNT),
           exp.int(1)))
       })

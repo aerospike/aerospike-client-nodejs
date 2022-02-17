@@ -44,7 +44,7 @@ describe('Aerospike.exp_operations', function () {
     expect(filter).to.be.an('array')
   })
 
-  describe('read exp_operations on hll expressions', function () {
+  describe('hll expressions', function () {
     describe('hll bin getCount expression', function () {
       it('evaluates exp_read op to true if temp bin equals to unique items in hll', async function () {
         const key = await createRecord({

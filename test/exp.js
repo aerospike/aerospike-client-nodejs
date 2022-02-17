@@ -195,7 +195,7 @@ describe('Aerospike.exp', function () {
     })
   })
 
-  describe('read and write exp_operations on arithmetic expressions', function () {
+  describe('arithmetic expressions', function () {
     describe('int bin add expression', function () {
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })

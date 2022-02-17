@@ -43,7 +43,7 @@ describe('Aerospike.exp_operations', function () {
     expect(filter).to.be.an('array')
   })
 
-  describe('read exp_operations on bit expressions', function () {
+  describe('bit expressions', function () {
     describe('bit bin get expression', function () {
       it('evaluates exp_read op to true if temp bin equals to bin bits', async function () {
         // const key = await createRecord({ blob: Buffer.from([0b00000001, 0b01000010, 0b01010111, 0b00000100, 0b00000101]) })
