@@ -37,11 +37,17 @@ install_libuv() {
   ./install_libuv
 }
 
+build_c_client() {
+  cd ${AEROSPIKE_C_HOME}
+  make EVENT_LIB=libuv
+}
+
 rebuild_c_client() {
   cd ${AEROSPIKE_C_HOME}
   make clean
-  make EVENT_LIB=libuv 2>&1 | tee ${CWD}/${0}-output.txt
-  # make O=0 V=1 EVENT_LIB=libuv EXT_CFLAGS=-DDEBUG 2>&1 | tee ${CWD}/${0}-output.txt  
+  # make SHELL='sh -x' V=3 EVENT_LIB=libuv 2>&1 | tee output.txt 
+  # make --debug=b -j1 -d -r
+  make V=1 EVENT_LIB=libuv 2>&1 | tee ${CWD}/${0}-output.txt  
 }
 
 install_libuv
