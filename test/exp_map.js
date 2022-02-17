@@ -217,7 +217,7 @@ describe('Aerospike.exp_operations', function () {
               exp.int(2),
               exp.type.INT,
               maps.returnType.COUNT),
-              0),
+            0),
           op.read('tags')
         ]
         const result = await client.operate(key, ops, {})

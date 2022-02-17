@@ -329,15 +329,21 @@ if (argv.longevity) {
 //
 process.on('exit', function () {
   logger.debug('Exiting.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
 })
 
 process.on('SIGINT', function () {
   logger.debug('Received SIGINT.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
   process.exit(0)
 })
 
 process.on('SIGTERM', function () {
   logger.debug('Received SIGTERM.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
   process.exit(0)
 })
 
