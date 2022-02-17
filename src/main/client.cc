@@ -96,7 +96,7 @@ NAN_METHOD(AerospikeClient::Connect)
 	if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
 		cmd->ErrorCallback(&err);
 	} else {
-		as_v8_debug(client->log, "Successfully connected to cluster:%s", client->as->cluster->cluster_name);
+		as_v8_debug(client->log, "Successfully connected to cluster: Enjoy your cake!");
 		cmd->Callback(0, {});
 	}
 
