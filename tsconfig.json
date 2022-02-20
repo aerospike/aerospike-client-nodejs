@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2019",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "removeComments": false,
+    "alwaysStrict": true,
+    "pretty": true,
+    "incremental": true,
+    "noEmitHelpers": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+  },
+  "exclude": [
+    "node_modules",
+  ],
+  "include": [
+    "typings"
+  ]
+}

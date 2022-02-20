@@ -1,27 +1,5 @@
 declare module 'aerospike' {
 
-    export type FilterModule = {
-        SindexFilterPredicate,
-        range, equal, contains,
-        geoWithinGeoJSONRegion, geoContainsGeoJSONPoint, geoWithinRadius, geoContainsPoint
-    };
-    export type PredexpModule = {
-        PredicateExpression,
-        and, or, not,
-        integerValue, stringValue, geojsonValue,
-        integerBin, stringBin, geojsonBin, listBin, mapBin,
-        integerVar, stringVar, geojsonVar,
-        recDeviceSize, recLastUpdate, recVoidTime, recDigestModulo,
-        integerEqual, integerUnequal, integerGreater, integerGreaterEq, integerLess, integerLessEq,
-        stringEqual, stringUnequal, stringRegex,
-        geojsonWithin, geojsonContains,
-        listIterateOr, listIterateAnd,
-        mapKeyIterateOr, mapKeyIterateAnd, mapValIterateOr, mapValIterateAnd
-    };
-
-    export declare const filter: FilterModule;
-    export declare const predexp: PredexpModule;
-
     type AerospikeRecordValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON;
     type AerospikeRecord = {
         [key: string]: AerospikeRecordValue | Array<AerospikeRecordValue> | Record<string, AerospikeRecordValue>
@@ -77,56 +55,12 @@ declare module 'aerospike' {
         public val: GeoJSON;
     }
 
-    function range(bin: string, min: number, max: number, indexType?: IndexType): RangePredicate;
-    function equal(bin: string, value: string): EqualPredicate;
-    function contains(bin: string, value: string | number, indexType: IndexType): EqualPredicate;
-    function geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
-    function geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
-    function geoWithinRadius(bin: string, lng: number, lat: number, radius: number, indexType?: IndexType): GeoPredicate;
-    function geoContainsPoint(bin: string, lng: number, lat: number, indexType?: IndexType): GeoPredicate;
-
     // predexp.js
     class PredicateExpression {
         constructor(code: number, arg?: string | number);
         public code: number;
         public arg: undefined | string | number;
     }
-
-    function and(nexpr: number): PredicateExpression;
-    function or(count: number): PredicateExpression;
-    function not(): PredicateExpression;
-    function integerValue(value: number): PredicateExpression;
-    function stringValue(value: string): PredicateExpression;
-    function geojsonValue(value: GeoJSON): PredicateExpression;
-    function integerBin(bin: string): PredicateExpression;
-    function stringBin(bin: string): PredicateExpression;
-    function geojsonBin(bin: string): PredicateExpression;
-    function listBin(bin: string): PredicateExpression;
-    function mapBin(bin: string): PredicateExpression;
-    function integerVar(name: string): PredicateExpression;
-    function stringVar(name: string): PredicateExpression;
-    function geojsonVar(name: string): PredicateExpression;
-    function recDeviceSize(): PredicateExpression;
-    function recLastUpdate(): PredicateExpression;
-    function recVoidTime(): PredicateExpression;
-    function recDigestModulo(mod: number): PredicateExpression;
-    function integerEqual(): PredicateExpression;
-    function integerUnequal(): PredicateExpression;
-    function integerGreater(): PredicateExpression;
-    function integerGreaterEq(): PredicateExpression;
-    function integerLess(): PredicateExpression;
-    function integerLessEq(): PredicateExpression;
-    function stringEqual(): PredicateExpression;
-    function stringUnequal(): PredicateExpression;
-    function stringRegex(flags?: number): PredicateExpression;
-    function geojsonWithin(): PredicateExpression;
-    function geojsonContains(): PredicateExpression;
-    function listIterateOr(name: string): PredicateExpression;
-    function listIterateAnd(name: string): PredicateExpression;
-    function mapKeyIterateOr(name: string): PredicateExpression;
-    function mapKeyIterateAnd(name: string): PredicateExpression;
-    function mapValIterateOr(name: string): PredicateExpression;
-    function mapValIterateAnd(name: string): PredicateExpression;
 
     // info.js
 
@@ -180,5 +114,57 @@ declare module 'aerospike' {
 
     // record.js
 
+    export interface FilterModule {
+        SindexFilterPredicate: SindexFilterPredicate,
+        range(bin: string, min: number, max: number, indexType?: IndexType): RangePredicate;
+        equal(bin: string, value: string): EqualPredicate;
+        contains(bin: string, value: string | number, indexType: IndexType): EqualPredicate;
+        geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
+        geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
+        geoWithinRadius(bin: string, lng: number, lat: number, radius: number, indexType?: IndexType): GeoPredicate;
+        geoContainsPoint(bin: string, lng: number, lat: number, indexType?: IndexType): GeoPredicate;
+    }
+
+    export interface PredexpModule {
+        PredicateExpression: PredicateExpression,
+        and(nexpr: number): PredicateExpression;
+        or(count: number): PredicateExpression;
+        not(): PredicateExpression;
+        integerValue(value: number): PredicateExpression;
+        stringValue(value: string): PredicateExpression;
+        geojsonValue(value: GeoJSON): PredicateExpression;
+        integerBin(bin: string): PredicateExpression;
+        stringBin(bin: string): PredicateExpression;
+        geojsonBin(bin: string): PredicateExpression;
+        listBin(bin: string): PredicateExpression;
+        mapBin(bin: string): PredicateExpression;
+        integerVar(name: string): PredicateExpression;
+        stringVar(name: string): PredicateExpression;
+        geojsonVar(name: string): PredicateExpression;
+        recDeviceSize(): PredicateExpression;
+        recLastUpdate(): PredicateExpression;
+        recVoidTime(): PredicateExpression;
+        recDigestModulo(mod: number): PredicateExpression;
+        integerEqual(): PredicateExpression;
+        integerUnequal(): PredicateExpression;
+        integerGreater(): PredicateExpression;
+        integerGreaterEq(): PredicateExpression;
+        integerLess(): PredicateExpression;
+        integerLessEq(): PredicateExpression;
+        stringEqual(): PredicateExpression;
+        stringUnequal(): PredicateExpression;
+        stringRegex(flags?: number): PredicateExpression;
+        geojsonWithin(): PredicateExpression;
+        geojsonContains(): PredicateExpression;
+        listIterateOr(name: string): PredicateExpression;
+        listIterateAnd(name: string): PredicateExpression;
+        mapKeyIterateOr(name: string): PredicateExpression;
+        mapKeyIterateAnd(name: string): PredicateExpression;
+        mapValIterateOr(name: string): PredicateExpression;
+        mapValIterateAnd(name: string): PredicateExpression;
+    }
+
+    export declare const filter: FilterModule;
+    export declare const predexp: PredexpModule;
 
 }
