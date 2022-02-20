@@ -10,6 +10,7 @@
   "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
   "license": "Apache-2.0",
   "main": "lib/aerospike",
+  "types": "typings/index.d.ts",
   "engines": {
     "node": ">=4"
   },
