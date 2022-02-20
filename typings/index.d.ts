@@ -1,9 +1,11 @@
 declare module 'aerospike' {
 
-    type AerospikeRecordValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON;
+    type PartialAerospikeRecordValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON;
+    type AerospikeRecordValue = PartialAerospikeRecordValue | PartialAerospikeRecordValue[] | Record<string, PartialAerospikeRecordValue>;
+
     type AerospikeRecord = {
-        [key: string]: AerospikeRecordValue | Array<AerospikeRecordValue> | Record<string, AerospikeRecordValue>
-    }
+        [key: string]: AerospikeRecordValue
+    };
 
     // C++ bindings
     enum Predicates {
@@ -24,6 +26,45 @@ declare module 'aerospike' {
         MAPVALUES
     }
 
+    enum ListOrder {
+        UNORDERED,
+        ORDERED
+    }
+
+    enum ListSortFlags {
+        DEFAULT,
+        DROP_DUPLICATES
+    }
+
+    enum ListWriteFlags {
+        DEFAULT,
+        ADD_UNIQUE,
+        INSERT_BOUNDED,
+        NO_FAIL,
+        PARTIAL
+    }
+
+    enum ListReturnType {
+        NONE,
+        INDEX,
+        REVERSE_INDEX,
+        RANK,
+        REVERSE_RANK,
+        COUNT,
+        VALUE,
+        INVERTED
+    }
+
+    enum ScalarOperations {
+        WRITE,
+        READ,
+        INCR,
+        PREPEND,
+        APPEND,
+        TOUCH,
+        DELETE
+    }
+
     // filter.js
     class SindexFilterPredicate {
         public constructor (
@@ -31,7 +72,7 @@ declare module 'aerospike' {
             bin: string,
             dataType: IndexDataType,
             indexType: IndexType,
-            props: Record<string, any>
+            props?: Record<string, any>
         );
         public predicate: Predicates;
         public bin: string;
@@ -62,8 +103,6 @@ declare module 'aerospike' {
         public arg: undefined | string | number;
     }
 
-    // info.js
-
     // lists.js
 
     // hll.js
@@ -71,10 +110,75 @@ declare module 'aerospike' {
     // maps.js
 
     // cdt_context.js
+    enum CdtItemType {
+        LIST_INDEX = 0x10,
+        LIST_RANK,
+        LIST_VALUE = 0x13,
+        MAP_INDEX = 0x20,
+        MAP_RANK,
+        MAP_KEY,
+        MAP_VALUE
+    }
+    class CdtItems extends Array {
+        public push(v: [number, CdtContext]);
+    }
+    class CdtContext {
+        public items: CdtItems;
+        private add(type: CdtItemType, value: CdtContext): CdtContext;
+        public addListIndex(index: number): CdtContext;
+        public addListRank(rank: number): CdtContext;
+        public addListValue(value: AerospikeRecordValue): CdtContext;
+        public addMapIndex(index: number): CdtContext;
+        public addMapRank(rank: number): CdtContext;
+        public addMapKey(key: string): CdtContext;
+        public addMapValue(value: AerospikeRecordValue): CdtContext;
+    }
 
     // bitwise.js
 
     // operations.js
+    class Operation {
+        constructor(op: ScalarOperations, bin: string, props?: Record<string, any>);
+    }
+
+    class WriteOperation extends Operation {
+        public value: any;
+    }
+
+    class AddOperation extends Operation {
+        public value: number | Double;
+    }
+
+    class AppendOperation extends Operation {
+        public value: string | Buffer;
+    }
+
+    class PrependOperation extends Operation {
+        public value: string | Buffer;
+    }
+
+    class TouchOperation extends Operation {
+        public ttl: number;
+    }
+
+    class ListOperation extends Operation {
+        public andReturn(returnType: ListReturnType): ListOperation;
+        public withContext(contextOrFunction: CdtContext | Function): ListOperation;
+        public invertSelection(): void;
+    }
+
+    class InvertibleListOp extends ListOperation {
+        public inverted: boolean;
+        public invertSelection(): InvertibleListOp;
+    }
+
+    class OrderListOperation extends ListOperation {
+        public order: number;
+    }
+
+    class SortListOperation extends ListOperation {
+        public flags: ListSortFlags;
+    }
 
     // policy.js
 
@@ -96,14 +200,14 @@ declare module 'aerospike' {
     // geojson.js
     type GeoJSONType = {
         type: string,
-        coordinates: Array<Array<number> | number>
+        coordinates: Array<number[] | number>
     }
 
     class GeoJSON {
         constructor(json: string | object);
         public str: string;
         public static Point(lng: number, lat: number): GeoJSON;
-        public static Polygon(...coordinates: Array<number>): GeoJSON;
+        public static Polygon(...coordinates: number[][]): GeoJSON;
         public static Circle(lng: number, lat: number, radius: number);
         public toJSON(): GeoJSONType;
         public value(): GeoJSONType;
@@ -163,8 +267,31 @@ declare module 'aerospike' {
         mapValIterateOr(name: string): PredicateExpression;
         mapValIterateAnd(name: string): PredicateExpression;
     }
+    export interface ListsModule {
+        order: ListOrder;
+        sortFlags: ListSortFlags;
+        writeFlags: ListWriteFlags;
+        returnType: ListReturnType;
+        setOrder(bin: name, order: ListOrder): OrderListOperation;
+        sort(bin: string, flags: ListSortFlags): SortListOperation;
+    }
+
+    export interface InfoModule {
+        parse(info: string): Record<string, any>;
+        separators: Object<string, string[]>;
+    }
+    export interface CdtModule {
+        Context: CdtContext;
+    }
 
     export declare const filter: FilterModule;
     export declare const predexp: PredexpModule;
-
+    export declare enum regex {
+        BASIC,
+        EXTENDED,
+        ICASE,
+        NEWLINE
+    };
+    export declare const info: InfoModule;
+    export declare const cdt: CdtModule;
 }
