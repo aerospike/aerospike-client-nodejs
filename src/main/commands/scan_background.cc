@@ -65,7 +65,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[4]->IsNumber()) {
 		cmd->scan_id = Nan::To<int64_t>(info[4]).FromJust();
-		as_v8_info(log, "Using scan ID %lli for background scan.", cmd->scan_id);
+		as_v8_debug(log, "Using scan ID %lli for background scan.", cmd->scan_id);
 	}
 
 	return cmd;
