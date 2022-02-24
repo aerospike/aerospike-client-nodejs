@@ -103,41 +103,43 @@ describe('Aerospike.exp_operations', function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
         await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('yellow'), exp.str('blue'), maps.returnType.COUNT), exp.int(3)))
-        // const ops = [
-        //   exp.operations.read(tempBin,
-        //     exp.maps.getByValueRange(
-        //       exp.binMap('tags'),
-        //       exp.str('yellow'),
-        //       exp.str('blue'),
-        //       maps.returnType.COUNT),
-        //     0),
-        //   op.read('tags')
-        // ]
-        // const result = await client.operate(key, ops, {})
-        // console.log(result)
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByValueRange(
+              exp.binMap('tags'),
+              exp.str('yellow'),
+              exp.str('blue'),
+              maps.returnType.COUNT),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
+
         await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('yellow'), exp.str('blue'), maps.returnType.COUNT), exp.int(2)))
       })
     })
 
-    // describe('getByValueList', function () {
-    //   it('matches the count of the matched values', async function () {
-    //     const key = await createRecord({ tags: {a: 'blue', b: 'green', c: 'yellow'} })
+    describe('getByValueList', function () {
+      it('matches the count of the matched values', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
-    //     const ops = [
-    //       exp.operations.read(tempBin,
-    //         exp.maps.getByValueList(
-    //           exp.binMap('tags'),
-    //           exp.list(['yellow','blue']),
-    //           maps.returnType.KEY),
-    //         0),
-    //       op.read('tags')
-    //     ]
-    //     const result = await client.operate(key, ops, {})
-    //     console.log(result)
-    //     // // await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(3)))
-    //     // await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(0)))
-    //   })
-    // })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByValueList(
+              exp.binMap('tags'),
+              exp.list(['yellow', 'blue']),
+              maps.returnType.KEY),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
+
+        await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(3)))
+        await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(0)))
+      })
+    })
 
     describe('getByValueRelRankRangeToEnd', function () {
       it('selects map items nearest to value and greater by relative rank', async function () {
@@ -155,6 +157,7 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result = await client.operate(key, ops, {})
         console.log(result)
+
         await testNoMatch(key, exp.eq(exp.maps.getByValueRelRankRangeToEnd(
           exp.binMap('tags'),
           exp.int(0),
@@ -174,19 +177,20 @@ describe('Aerospike.exp_operations', function () {
       it('selects map items nearest to value and greater by relative rank with a count limit', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
-        // const ops = [
-        //   exp.operations.read(tempBin,
-        //     exp.maps.getByValueRelRankRange(
-        //       exp.binMap('tags'),
-        //       exp.int(2),
-        //       exp.int(0),
-        //       exp.str('yellow'),
-        //       maps.returnType.KEY),
-        //     0),
-        //   op.read('tags')
-        // ]
-        // const result = await client.operate(key, ops, {})
-        // console.log(result)
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByValueRelRankRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              exp.str('yellow'),
+              maps.returnType.KEY),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
+
         await testNoMatch(key, exp.eq(
           exp.maps.getByValueRelRankRange(
             exp.binMap('tags'),
@@ -284,18 +288,18 @@ describe('Aerospike.exp_operations', function () {
       it('selects map item identified by rank', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 5, c: 'yellow' } })
 
-        // const ops = [
-        //   exp.operations.read(tempBin,
-        //     exp.maps.getByRank(
-        //       exp.binMap('tags'),
-        //       exp.int(0),
-        //       exp.type.INT,
-        //       maps.returnType.COUNT),
-        //       0),
-        //   op.read('tags')
-        // ]
-        // const result = await client.operate(key, ops, {})
-        // console.log(result)
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByRank(
+              exp.binMap('tags'),
+              exp.int(0),
+              exp.type.INT,
+              maps.returnType.COUNT),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        console.log(result)
 
         await testNoMatch(key, exp.eq(
           exp.maps.getByRank(

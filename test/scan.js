@@ -22,6 +22,7 @@ const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
 const Job = require('../lib/job')
 const helper = require('./test_helper')
+const { sleep } = require('./util')
 
 const Key = Aerospike.Key
 const op = Aerospike.operations
@@ -223,6 +224,32 @@ context('Scans', function () {
         })
       })
     })
+
+    it('retrieves all records in the set', function (done) {
+      const scan = client.scan(helper.namespace, testSet)
+      const policy = new Aerospike.ScanPolicy({
+        timeout: 10000,
+        socketTimeout: 1000,
+        durableDelete: true,
+        failOnClusterChange: true,
+        recordsPerSecond: 5,
+        maxRecords: 50,
+        maxRetries: 10
+      })
+      let number = 0
+      while (true) {
+        let recordsReceived = 0
+        const stream = scan.foreach(policy)
+        stream.on('data', () => recordsReceived++)
+        stream.on('end', () => {
+          // console.log(`received ${recordsReceived} expected ${numberOfRecords}\n`)
+          done()
+        })
+        if (number++ < 10) {
+          sleep(1000)
+        } else { break }
+      }
+    })
   })
 
   describe('scan.background()', function () {
@@ -263,6 +290,18 @@ context('Scans', function () {
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.bins.backgroundOps).to.equal(1)
+    })
+
+    it('should perform a background scan that executes the ttl operations #slow', async function () {
+      const ttl = 5000
+      const scan = client.scan(helper.namespace, testSet)
+      const job = await scan.operate([Aerospike.operations.touch(ttl)])
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      console.log('After scan-op TTL : %d Key TTL: %d', ttl, record.ttl)
+      // expect(record.ttl).to.equal(500)
     })
   })
 
