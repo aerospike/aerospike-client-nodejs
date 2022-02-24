@@ -6,14 +6,14 @@ All notable changes to this project will be documented in this file.
 
 * **New Features**
   * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+  * Add support for Aerospike Expressions
 
 * **Updates**
   * *BREAKING*: This client requires server version 4.9 or later.
   * *BREAKING*: Drop support for Node.js 8.
   * *BREAKING*: Remove support for CentOS 6 as well as Ubuntu 16.0.4.
   * *BREAKING*: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
-  * Use EL7 C client builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
-  * Update C client library to [v5.2.1](http://www.aerospike.com/download/client/c/notes.html#5.2.1)
+  * Add support for building c-client as sub-module
 
 ## [3.16.7] - 2022-01-10
 
