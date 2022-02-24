@@ -49,7 +49,7 @@ const parser = yargs
     },
     log: {
       alias: 'l',
-      default: Aerospike.log.TRACE,
+      default: Aerospike.log.WARN,
       describe: 'Log level [0-5]'
     },
     log_file: {
@@ -119,7 +119,8 @@ function testDir () {
 
 options.getConfig = function () {
   const defaultPolicy = {
-    timeout: options.timeout
+    timeout: options.timeout,
+    maxRetries: 6
   }
   const config = {
     log: {
