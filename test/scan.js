@@ -22,7 +22,6 @@ const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
 const Job = require('../lib/job')
 const helper = require('./test_helper')
-const { sleep } = require('./util')
 
 const Key = Aerospike.Key
 const op = Aerospike.operations
