@@ -42,7 +42,7 @@ const parser = yargs
       default: null,
       describe: 'Aerospike database port.'
     },
-    timeout: {
+    totalTimeout: {
       alias: 't',
       default: 1000,
       describe: 'Timeout in milliseconds.'
@@ -119,7 +119,8 @@ function testDir () {
 
 options.getConfig = function () {
   const defaultPolicy = {
-    timeout: options.timeout,
+    timeout: options.totalTimeout,
+    totalTimeout: options.totalTimeout,
     maxRetries: 6
   }
   const config = {

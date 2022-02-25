@@ -55,7 +55,7 @@ function createRecords (putCall, generator, recordsToCreate, maxConcurrent, call
 
 function put (n, options, callback) {
   const policy = options.policy || new Aerospike.WritePolicy({
-    timeout: 1000,
+    totalTimeout: 1000,
     exists: Aerospike.policy.exists.CREATE_OR_REPLACE
   })
 

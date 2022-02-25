@@ -45,7 +45,7 @@ context('Scans', function () {
         recgen: recgen.record({ i: valgen.integer(), s: valgen.string() }),
         metagen: metagen.constant({ ttl: 300 }),
         policy: new Aerospike.WritePolicy({
-          timeout: 1000,
+          totalTimeout: 1000,
           key: Aerospike.policy.key.SEND,
           exists: Aerospike.policy.exists.CREATE_OR_REPLACE
         })
@@ -141,10 +141,9 @@ context('Scans', function () {
     it('sets a scan policy', function (done) {
       const scan = client.scan(helper.namespace, testSet)
       const policy = new Aerospike.ScanPolicy({
-        timeout: 1000,
+        totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
-        failOnClusterChange: true,
         recordsPerSecond: 50,
         maxRecords: 5000
       })

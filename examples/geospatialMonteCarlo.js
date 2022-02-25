@@ -154,7 +154,7 @@ async function countHits (game) {
   query.where(Aerospike.filter.geoWithinRadius(game.bin, 0, 0, radius))
 
   const policy = new Aerospike.QueryPolicy({
-    timeout: 10000
+    totalTimeout: 10000
   })
   const count = query.apply('monte_carlo', 'count', [], policy)
   return count
