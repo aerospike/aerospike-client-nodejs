@@ -918,15 +918,29 @@ declare namespace Aerospike {
         public getNodes(): IAddonNode[];
         public addSeedHost(hostname: string, number?: number): void;
         public removeSeedHost(hostname: string, number?: number): void;
-        public batchExists(keys: IKey[], policy?: BatchCommand, callback?: (err?: Error, result: IBatchResult[]) => void): Promise<IBatchResult[]> | void;
-        public batchGet(keys: IBatchReadRecord[], policy?: BatchPolicy, callback?: (err?: Error, result: AerospikeRecord[]) => void): Promise<AerospikeRecord[]> | void;
-        public batchSelect(keys: IKey[], bins: string[], policy?: BatchPolicy, callback?: (error?: Error, result?: IBatchSelectEntity[]) => void): Promise<IBatchSelectEntity[]> | void;
+        public batchExists(keys: IKey[], policy?: BatchPolicy): Promise<IBatchResult[]>;
+        public batchExists(keys: IKey[], callback: TypedCallback<IBatchResult[]>): void;
+        public batchExists(keys: IKey[], policy?: BatchPolicy, callback: TypedCallback<IBatchResult[]>): void;
+        public batchGet(keys: IBatchReadRecord[], policy?: BatchPolicy): Promise<AerospikeRecord[]>;
+        public batchGet(keys: IBatchReadRecord[], callback: TypedCallback<AerospikeRecord[]>): void;
+        public batchGet(keys: IBatchReadRecord[], policy?: BatchPolicy, callback: TypedCallback<AerospikeRecord[]>): void;
+        public batchSelect(keys: IKey[], bins: string[], policy?: BatchPolicy): Promise<IBatchSelectEntity[]>;
+        public batchSelect(keys: IKey[], bins: string[], callback: TypedCallback<IBatchSelectEntity[]>): void;
+        public batchSelect(keys: IKey[], bins: string[], policy?: BatchPolicy, callback: TypedCallback<IBatchSelectEntity[]>): void;
         public close(releaseEventLoop?: boolean): void;
-        public connect(callback?: (error?: Error, client?: Client) => void): Promise<Client>;
-        public createIndex(options: IIndexOptions, policy: InfoPolicy, callback?: TypedCallback<IndexJob>): Promise<IndexJob> | void;
-        public createIntegerIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback?: TypedCallback<IndexJob>): Promise<IndexJob> | void;
-        public createStringIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback?: TypedCallback<IndexJob>): Promise<IndexJob> | void;
-        public createGeo2DSphereIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback?: TypedCallback<IndexJob>): Promise<IndexJob> | void;
+        public connect(callback?: TypedCallback<Client>): Promise<Client>;
+        public createIndex(options: IIndexOptions, policy?: InfoPolicy): Promise<IndexJob>;
+        public createIndex(options: IIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createIndex(options: IIndexOptions, policy?: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createIntegerIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createIntegerIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createIntegerIndex(options: ITypedIndexOptions, policy?: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createStringIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createStringIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createStringIndex(options: ITypedIndexOptions, policy?: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, policy?: InfoPolicy, callback: TypedCallback<IndexJob>): void;
         public apply(key: IKey, udfArgs: IAddonUDF, policy?: ApplyPolicy): Promise<any>;
         public apply(key: IKey, udfArgs: IAddonUDF, callback: AddonCallback): void;
         public apply(key: IKey, udfArgs: IAddonUDF, policy?: ApplyPolicy, callback: AddonCallback): void;
@@ -1146,8 +1160,6 @@ declare namespace Aerospike {
         status: JobStatus;
     }
 
-    type JobInfoCallback = (err?: Error, info?: IJobInfoResponse) => void;
-
     class Job {
         public client: Client;
         public jobID: number;
@@ -1157,9 +1169,15 @@ declare namespace Aerospike {
         static pollUntilDone(statusFunction: () => Promise<boolean>, pollInterval?: number): Promise<void>;
         public hasCompleted(info: IJobInfoResponse): Promise<boolean>;
         public checkStatus(): Promise<boolean>;
-        public info(policy?: InfoPolicy | JobInfoCallback, callback?: JobInfoCallback): Promise<IJobInfoResponse> | void;
-        public wait(pollInterval?: number, callback?: (err?: Error, result?: void) => void): Promise<void> | void;
-        public waitUntilDone(pollInterval?: number, callback?: (err?: Error, result?: void) => void): Promise<void> | void;
+        public info(policy?: InfoPolicy): Promise<IJobInfoResponse>;
+        public info(callback: TypedCallback<IJobInfoResponse>): void;
+        public info(policy?: InfoPolicy, callback: TypedCallback<IJobInfoResponse>): void;
+        public wait(poolInterval?: number): Promise<void>;
+        public wait(callback: TypedCallback<void>): void;
+        public wait(pollInterval?: number, callback: TypedCallback<void>): void;
+        public waitUntilDone(pollInterval?: number): Promise<void>;
+        public waitUntilDone(callback: TypedCallback<void>): void;
+        public waitUntilDone(pollInterval?: number, callback: TypedCallback<void>): void;
     }
 
     // key.js
