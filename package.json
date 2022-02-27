@@ -48,7 +48,7 @@
     "nan": "^2.14.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.18",
+    "@types/node": "^17.0.21",
     "chai": "^4.2.0",
     "choma": "^1.2.1",
     "codecov": "^3.8.1",
