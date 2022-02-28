@@ -13,25 +13,25 @@ declare namespace Aerospike {
     // Commands
 
     class Command {
-        public client;
-        public args: any[];
-        public callback?: AddonCallback;
-        public captureStackTraces: boolean;
-        public key?: IKey;
+        readonly client: Client;
+        private args: any[];
+        private callback?: AddonCallback;
+        readonly captureStackTraces: boolean;
+        readonly key: ?IKey;
         public ensureConnected: boolean;
         constructor(client: Client, args: any[], callback: AddonCallback);
-        public captureStackTrace(): void;
-        public connected(): boolean;
-        public convertError(): AerospikeError;
-        public convertResult(arg1, arg2, arg3): any;
-        public convertResponse(err, arg1, arg2, arg3): [AerospikeError, any];
-        public execute(): Promise<any> | void;
-        public executeWithCallback(callback: AddonCallback): void;
-        public executeAndReturnPromise(): Promise<any>;
-        public expectsPromise(): boolean;
-        public asCommand(): string;
-        public process(cb: AddonCallback): void;
-        public sendError(message: string): void;
+        private captureStackTrace(): void;
+        private connected(): boolean;
+        private convertError(): AerospikeError;
+        private convertResult(arg1, arg2, arg3): any;
+        private convertResponse(err, arg1, arg2, arg3): [AerospikeError, any];
+        private execute(): Promise<any> | void;
+        private executeWithCallback(callback: AddonCallback): void;
+        private executeAndReturnPromise(): Promise<any>;
+        private expectsPromise(): boolean;
+        private asCommand(): string;
+        private process(cb: AddonCallback): void;
+        private sendError(message: string): void;
     }
 
     interface IBatchResult {
@@ -40,7 +40,7 @@ declare namespace Aerospike {
     }
 
     class BatchCommand extends Command {
-        public convertResult(results: IBatchResult[]);
+        private convertResult(results: AerospikeRecord[]): IBatchResult[];
     }
 
     class ConnectCommand extends Command {
@@ -62,13 +62,13 @@ declare namespace Aerospike {
     class StreamCommand extends Command {
         public stream: RecordStream;
         constructor(stream: RecordStream, args: any[]);
-        public callback(error?: Error, record: AerospikeRecord): boolean;
-        public convertResult(bins: AerospikeBins, meta: IRecordMetadata, asKey: IKey): AerospikeRecord;
+        private callback(error?: Error, record: AerospikeRecord): boolean;
+        private convertResult(bins: AerospikeBins, meta: IRecordMetadata, asKey: IKey): AerospikeRecord;
     }
 
     class WriteRecordCommand extends Command {
         constructor(client: Client, key: IKey, args: any[], callback: AddOperation);
-        public convertResult(): IKey;
+        private convertResult(): IKey;
     }
 
     // C++ bindings
@@ -910,11 +910,11 @@ declare namespace Aerospike {
 
     class Client extends EventEmitter {
         public config: Config;
-        public as_client: AddonAerospikeClient;
-        public connected: boolean;
+        private as_client: AddonAerospikeClient;
+        private connected: boolean;
         public captureStackTraces: boolean;
         constructor(config: Config);
-        public asExec(cmd: string, args?: any): any;
+        private asExec(cmd: string, args?: any): any;
         public getNodes(): IAddonNode[];
         public addSeedHost(hostname: string, number?: number): void;
         public removeSeedHost(hostname: string, number?: number): void;
@@ -1104,19 +1104,19 @@ declare namespace Aerospike {
 
     // error.js
     class AerospikeError extends Error {
-        public code: Status;
-        public command?: Command;
-        public func?: string;
-        public file?: string;
-        public line?: number;
-        public inDoubt: boolean;
+        readonly code: Status;
+        readonly command: ?Command;
+        readonly func: ?string;
+        readonly file: ?string;
+        readonly line: ?number;
+        readonly inDoubt: boolean;
         constructor(message?: string, command: Command);
-        public static fromASError(asError?: AerospikeError | Error, command: Command): AerospikeError;
-        public static copyASErrorProperties(target: AerospikeError, source: Error): void;
-        public static formatMessage(message: string, code: Status): string;
-        public setStackTrace(stack: string): void;
+        static fromASError(asError?: AerospikeError | Error, command: Command): AerospikeError;
+        static copyASErrorProperties(target: AerospikeError, source: Error): void;
+        static formatMessage(message: string, code: Status): string;
+        private setStackTrace(stack: string): void;
         public isServerError(): boolean;
-        public get client(): Client;
+        readonly get client(): ?Client;
     }
 
     // geojson.js
@@ -1128,9 +1128,9 @@ declare namespace Aerospike {
     class GeoJSON {
         public str: string;
         constructor(json: string | object);
-        public static Point(lng: number, lat: number): GeoJSON;
-        public static Polygon(...coordinates: number[][]): GeoJSON;
-        public static Circle(lng: number, lat: number, radius: number);
+        static Point(lng: number, lat: number): GeoJSON;
+        static Polygon(...coordinates: number[][]): GeoJSON;
+        static Circle(lng: number, lat: number, radius: number);
         public toJSON(): GeoJSONType;
         public value(): GeoJSONType;
         public toString(): string;
@@ -1149,8 +1149,8 @@ declare namespace Aerospike {
         public namespace: string;
         public indexName: string;
         constructor(client: Client, namespace: string, indexName: string);
-        public hasCompleted(sindexInfo: ISindexInfoEntity[]): boolean;
-        public info(): Promise<ISindexInfoEntity[]>
+        private hasCompleted(sindexInfo: ISindexInfoEntity[]): boolean;
+        private info(): Promise<ISindexInfoEntity[]>
     }
 
     // job.js
@@ -1167,8 +1167,8 @@ declare namespace Aerospike {
         constructor(client: Client, jobID: number, module: string);
         static safeRandomJobID(): number;
         static pollUntilDone(statusFunction: () => Promise<boolean>, pollInterval?: number): Promise<void>;
-        public hasCompleted(info: IJobInfoResponse): Promise<boolean>;
-        public checkStatus(): Promise<boolean>;
+        private hasCompleted(info: IJobInfoResponse): Promise<boolean>;
+        private checkStatus(): Promise<boolean>;
         public info(policy?: InfoPolicy): Promise<IJobInfoResponse>;
         public info(callback: TypedCallback<IJobInfoResponse>): void;
         public info(policy?: InfoPolicy, callback: TypedCallback<IJobInfoResponse>): void;
