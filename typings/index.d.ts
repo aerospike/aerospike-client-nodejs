@@ -17,7 +17,7 @@ declare namespace Aerospike {
         private args: any[];
         private callback?: AddonCallback;
         readonly captureStackTraces: boolean;
-        public key: ?IKey;
+        public key?: IKey;
         public ensureConnected: boolean;
         constructor(client: Client, args: any[], callback?: AddonCallback);
         private captureStackTrace(): void;
@@ -1105,10 +1105,10 @@ declare namespace Aerospike {
     // error.js
     class AerospikeError extends Error {
         readonly code: Status;
-        readonly command: ?Command;
-        readonly func: ?string;
-        readonly file: ?string;
-        readonly line: ?number;
+        readonly command: Command | null;
+        readonly func: string | null;
+        readonly file: string | null;
+        readonly line: number | null;
         readonly inDoubt: boolean;
         constructor(message?: string, command: Command);
         static fromASError(asError?: AerospikeError | Error, command: Command): AerospikeError;
@@ -1116,7 +1116,7 @@ declare namespace Aerospike {
         static formatMessage(message: string, code: Status): string;
         private setStackTrace(stack: string): void;
         public isServerError(): boolean;
-        readonly get client(): ?Client;
+        readonly get client(): Client | void;
     }
 
     // geojson.js
