@@ -17,9 +17,9 @@ declare namespace Aerospike {
         private args: any[];
         private callback?: AddonCallback;
         readonly captureStackTraces: boolean;
-        readonly key: ?IKey;
+        public key: ?IKey;
         public ensureConnected: boolean;
-        constructor(client: Client, args: any[], callback: AddonCallback);
+        constructor(client: Client, args: any[], callback?: AddonCallback);
         private captureStackTrace(): void;
         private connected(): boolean;
         private convertError(): AerospikeError;
@@ -913,7 +913,7 @@ declare namespace Aerospike {
         private as_client: AddonAerospikeClient;
         private connected: boolean;
         public captureStackTraces: boolean;
-        constructor(config: Config);
+        constructor(config: IConfigOptions);
         private asExec(cmd: string, args?: any): any;
         public getNodes(): IAddonNode[];
         public addSeedHost(hostname: string, number?: number): void;
@@ -1593,8 +1593,8 @@ declare namespace Aerospike {
     export declare const indexType: IndexType;
     export declare function print(err: Error, result: any): void;
     export declare function releaseEventLoop(): void;
-    export declare function client(config: Config): Client;
-    export declare function connect(config: Config, callback?: (error?: Error, client?: Client) => void): Promise<Client>;
+    export declare function client(config: IConfigOptions): Client;
+    export declare function connect(config: IConfigOptions, callback?: (error?: Error, client?: Client) => void): Promise<Client>;
     export declare function setDefaultLogging(ILogInfo: ILogInfo): void;
     export declare function setupGlobalCommandQueue(policy: CommandQueuePolicy): void;
 }
