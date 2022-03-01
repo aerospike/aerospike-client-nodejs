@@ -119,7 +119,6 @@ function testDir () {
 
 options.getConfig = function () {
   const defaultPolicy = {
-    timeout: options.totalTimeout,
     totalTimeout: options.totalTimeout,
     maxRetries: 6
   }

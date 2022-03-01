@@ -264,7 +264,7 @@ context('Scans', function () {
       expect(record.bins.backgroundOps).to.equal(1)
     })
 
-    it('should perform a background scan that executes the ttl operations #slow', async function () {
+    it('should perform a background scan that executes the touch operation #slow', async function () {
       const ttl = 5000
       const scan = client.scan(helper.namespace, testSet)
       const job = await scan.operate([Aerospike.operations.touch(ttl)])
