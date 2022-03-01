@@ -247,7 +247,7 @@ describe('Client', function () {
     })
   })
 
-  context('minConnsPerNode', function () {
+  context.only('minConnsPerNode', function () {
     it('connects to the server and establishes the minimum number of connections', async function () {
       const test = async function (Aerospike, config) {
         Object.assign(config, { minConnsPerNode: 5, log: { level: 0 } })
