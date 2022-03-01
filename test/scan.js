@@ -222,32 +222,6 @@ context('Scans', function () {
         })
       })
     })
-
-    it('retrieves all records in the set', function (done) {
-      const scan = client.scan(helper.namespace, testSet)
-      const policy = new Aerospike.ScanPolicy({
-        timeout: 10000,
-        socketTimeout: 1000,
-        durableDelete: true,
-        failOnClusterChange: true,
-        recordsPerSecond: 5,
-        maxRecords: 50,
-        maxRetries: 10
-      })
-      let number = 0
-      while (true) {
-        let recordsReceived = 0
-        const stream = scan.foreach(policy)
-        stream.on('data', () => recordsReceived++)
-        stream.on('end', () => {
-          // console.log(`received ${recordsReceived} expected ${numberOfRecords}\n`)
-          done()
-        })
-        if (number++ < 10) {
-          sleep(1000)
-        } else { break }
-      }
-    })
   })
 
   describe('scan.background()', function () {
