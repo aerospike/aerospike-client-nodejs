@@ -28,9 +28,10 @@ BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
 
 LIBUV_VERSION=1.8.0
-LIBUV_DIR=${CWD}/libuv-v${LIBUV_VERSION}
+LIBUV_DIR=libuv-v${LIBUV_VERSION}
 LIBUV_TAR=${LIBUV_DIR}.tar.gz
 LIBUV_URL=http://dist.libuv.org/dist/v1.8.0/${LIBUV_TAR}
+LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
@@ -101,8 +102,8 @@ rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
     make clean
-    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_DIR}/include" 2>&1 | tee ${CWD}/${0}-output.txt
-    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.txt
+    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-output.txt
+    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.txt
   # fi
 }
 
