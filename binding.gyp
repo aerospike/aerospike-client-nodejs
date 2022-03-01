@@ -134,10 +134,10 @@
       'conditions': [
         ['OS=="linux"',{
           'libraries': [
+            '../libuv-v1.8.0/.libs/libuv.a',
             '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
             '-lz',
-            '-lssl',
-            '-luv'
+            '-lssl'
           ],
           'defines': [
             'AS_USE_LIBUV'
@@ -148,10 +148,11 @@
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
         }],
         ['OS=="mac"',{
           'libraries': [
+            '../libuv-v1.8.0/.libs/libuv.a',
             '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
           ],
@@ -164,6 +165,7 @@
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
           },

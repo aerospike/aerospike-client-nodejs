@@ -68,6 +68,6 @@ build_nodejs_client v12.22.10
 build_nodejs_client v14.19.0
 build_nodejs_client v16.14.0
 
-nvm use v14.19.0
+nvm use v16.14.0
 
 cd ${CWD}

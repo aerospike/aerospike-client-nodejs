@@ -18,8 +18,7 @@
 
 ################################################################################
 #
-# This script is used by bindings.gyp, to detect if libaerospike.a is
-# installed and exporting the proper environment variables.
+# This script is used to build dependancy c-client sub-module.
 #
 ################################################################################
 
@@ -27,25 +26,121 @@ CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
-perform_check() {
-  cd ${CWD}
-  scripts/validate-c-client.sh
+
+LIBUV_VERSION=1.8.0
+LIBUV_DIR=${CWD}/libuv-v${LIBUV_VERSION}
+LIBUV_TAR=${LIBUV_DIR}.tar.gz
+LIBUV_URL=http://dist.libuv.org/dist/v1.8.0/${LIBUV_TAR}
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
+  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
+  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
+  LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
+  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
+  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
+  LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
+else
+    # Unknown.
+    printf "Unsupported OS version:" "$OSTYPE"
+    exit 1
+fi
+
+download_libuv() {
+    if [ ! -f ${LIBUV_TAR} ]; then
+        echo Download ${LIBUV_URL}
+        wget ${LIBUV_URL}
+    fi
+
+    if [ ! -d ${LIBUV_DIR} ]; then
+        echo Extract ${LIBUV_TAR} 
+        tar xf ${LIBUV_TAR}
+    fi
 }
 
-install_libuv() {
-  cd ${AEROSPIKE_C_HOME}
-  ./install_libuv
+rebuild_libuv() {
+    # if [ ! -f ${LIBUV_LIBRARY} ]; then
+        echo Make ${LIBUV_DIR}
+        cd ${LIBUV_DIR}
+        sh autogen.sh
+        ./configure -q
+        make clean
+        make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-output.txt
+        # make V=1 LIBUV_VERSIONBOSE=1 install
+        cd ..
+    # fi
+}
+
+check_libuv() {
+
+  cd ${CWD}
+
+  printf "\n" >&1
+  printf "CHECK\n" >&1
+
+  if [ -f ${LIBUV_LIBRARY} ]; then
+    printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
+  else
+    printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
+    FAILED=1
+  fi
+
+  printf "\n" >&1
+
+  if [ $FAILED ]; then
+    exit 1
+  fi
 }
 
 rebuild_c_client() {
-  cd ${AEROSPIKE_C_HOME}
-  make clean
-  make V=1 VERBOSE=1 EVENT_LIB=libuv 2>&1 | tee ${CWD}/${0}-output.txt
-  # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS=-DDEBUG 2>&1 | tee ${CWD}/${0}-output.txt
+  # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
+    cd ${AEROSPIKE_C_HOME}
+    make clean
+    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_DIR}/include" 2>&1 | tee ${CWD}/${0}-output.txt
+    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.txt
+  # fi
 }
 
-install_libuv
+check_c_client() {
+
+  cd ${CWD}
+
+  printf "\n" >&1
+  printf "CHECK\n" >&1
+
+  if [ -f ${AEROSPIKE_LIBRARY} ]; then
+    printf "   [✓] %s\n" "${AEROSPIKE_LIBRARY}" >&1
+  else
+    printf "   [✗] %s\n" "${AEROSPIKE_LIBRARY}" >&1
+    FAILED=1
+  fi
+
+  if [ -f ${AEROSPIKE_INCLUDE}/aerospike/aerospike.h ]; then
+    printf "   [✓] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
+  else
+    printf "   [✗] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
+    FAILED=1
+  fi
+
+  printf "\n" >&1
+
+  if [ $FAILED ]; then
+    exit 1
+  fi
+}
+
+download_libuv
+rebuild_libuv
+check_libuv
+
 rebuild_c_client
-perform_check
+
+check_libuv
+check_c_client
 
 cd ${CWD}
