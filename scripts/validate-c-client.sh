@@ -26,52 +26,7 @@
 CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
-AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
-  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
-  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-else
-    # Unknown.
-    printf "Unsupported OS version:" "$OSTYPE"
-    exit 1
-fi
-
-################################################################################
-# PERFORM CHECKS
-################################################################################
-perform_check() {
-
-  cd ${CWD}
-
-  printf "\n" >&1
-  printf "CHECK\n" >&1
-
-  if [ -f ${AEROSPIKE_LIBRARY} ]; then
-    printf "   [✓] %s\n" "${AEROSPIKE_LIBRARY}" >&1
-  else
-    printf "   [✗] %s\n" "${AEROSPIKE_LIBRARY}" >&1
-    FAILED=1
-  fi
-
-  if [ -f ${AEROSPIKE_INCLUDE}/aerospike/aerospike.h ]; then
-    printf "   [✓] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
-  else
-    printf "   [✗] %s\n" "${AEROSPIKE_INCLUDE}/aerospike/aerospike.h" >&1
-    FAILED=1
-  fi
-
-  printf "\n" >&1
-
-  if [ $FAILED ]; then
-    exit 1
-  fi
-}
+. ${SCRIPT_DIR}/build-commands.sh
 
 perform_check
