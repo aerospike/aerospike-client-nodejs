@@ -38,7 +38,7 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "node-pre-gyp install --fallback-to-build",
-    "test": "mocha --timeout 20000",
+    "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
     "posttest": "npm run lint",
