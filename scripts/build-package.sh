@@ -26,30 +26,7 @@ CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 
-if [ -f ~/.nvm/nvm.sh ]; then
-  echo 'sourcing nvm from ~/.nvm'
-  . ~/.nvm/nvm.sh
-elif command -v brew; then
-  # https://docs.brew.sh/Manpage#--prefix-formula
-  BREW_PREFIX=$(brew --prefix nvm)
-  if [ -f "$BREW_PREFIX/nvm.sh" ]; then
-    echo "sourcing nvm from brew ($BREW_PREFIX)"
-    . $BREW_PREFIX/nvm.sh
-  fi
-fi
-
-if command -v nvm ; then
-  echo "SUCCESS: nvm is configured"
-else
-  echo "WARN: not able to configure nvm"
-  exit 1
-fi
-
-build_c_client() {
-  cd ${CWD}
-  scripts/build-c-client.sh
-  cd ${CWD}
-}
+. ${SCRIPT_DIR}/build-commands.sh
 
 build_nodejs_client() {
   rm -rf ./node_modules
@@ -59,9 +36,17 @@ build_nodejs_client() {
   npm install --unsafe-perm --build-from-source
 }
 
-install_nodejs
+configure_nvm
 
-build_c_client
+download_libuv
+rebuild_libuv
+check_libuv
+
+rebuild_c_client
+
+perform_check
+
+rm -rf ${AEROSPIKE_NODEJS_RELEASE_HOME}/node-*-${OS_FLAVOR}-*
 
 build_nodejs_client v10.20.0
 build_nodejs_client v12.22.10

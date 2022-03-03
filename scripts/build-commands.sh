@@ -26,7 +26,8 @@ CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
-
+OS_FLAVOR=linux
+AEROSPIKE_NODEJS_RELEASE_HOME=${CWD}/lib/binding/Release
 LIBUV_VERSION=1.8.0
 LIBUV_DIR=libuv-v${LIBUV_VERSION}
 LIBUV_TAR=${LIBUV_DIR}.tar.gz
@@ -39,6 +40,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
   LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+  OS_FLAVOR=linux
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
@@ -46,11 +48,33 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
   LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+  OS_FLAVOR=darwin
 else
     # Unknown.
     printf "Unsupported OS version:" "$OSTYPE"
     exit 1
 fi
+
+configure_nvm() {
+  if [ -f ~/.nvm/nvm.sh ]; then
+    echo 'sourcing nvm from ~/.nvm'
+    . ~/.nvm/nvm.sh
+  elif command -v brew; then
+    # https://docs.brew.sh/Manpage#--prefix-formula
+    BREW_PREFIX=$(brew --prefix nvm)
+    if [ -f "$BREW_PREFIX/nvm.sh" ]; then
+      echo "sourcing nvm from brew ($BREW_PREFIX)"
+      . $BREW_PREFIX/nvm.sh
+    fi
+  fi
+
+  if command -v nvm ; then
+    echo "SUCCESS: nvm is configured"
+  else
+    echo "WARN: not able to configure nvm"
+    exit 1
+  fi
+}
 
 download_libuv() {
   if [ ! -f ${LIBUV_TAR} ]; then
@@ -71,7 +95,8 @@ rebuild_libuv() {
       sh autogen.sh
       ./configure -q
       make clean
-      make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.txt
+      make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+      # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
       # make V=1 LIBUV_VERSIONBOSE=1 install
       cd ..
   # fi
@@ -102,8 +127,8 @@ rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
     make clean
-    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.txt
-    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.txt
+    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
+    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
 }
 
