@@ -132,7 +132,7 @@ describe('Queries', function () {
 
   describe('client.query()', function () {
     it('creates a new Query instance and sets up it\'s properties', function () {
-      const namespace = 'test'
+      const namespace = helper.namespace
       const set = 'demo'
       const options = {
         select: ['a', 'b', 'c'],
@@ -142,7 +142,7 @@ describe('Queries', function () {
       const query = client.query(namespace, set, options)
 
       expect(query).to.be.instanceof(Query)
-      expect(query.ns).to.equal('test')
+      expect(query.ns).to.equal(helper.namespace)
       expect(query.set).to.equal('demo')
       expect(query.selected).to.eql(['a', 'b', 'c'])
       expect(query.nobins).to.be.false()
@@ -151,10 +151,10 @@ describe('Queries', function () {
     })
 
     it('creates a query without specifying the set', function () {
-      const namespace = 'test'
+      const namespace = helper.namespace
       const query = client.query(namespace, { select: ['i'] })
       expect(query).to.be.instanceof(Query)
-      expect(query.ns).to.equal('test')
+      expect(query.ns).to.equal(helper.namespace)
       expect(query.set).to.be.null()
       expect(query.selected).to.eql(['i'])
     })
@@ -162,13 +162,13 @@ describe('Queries', function () {
 
   describe('query.select()', function () {
     it('sets the selected bins from an argument list', function () {
-      const query = client.query('test', 'test')
+      const query = client.query(helper.namespace, helper.set)
       query.select('a', 'b', 'c')
       expect(query.selected).to.eql(['a', 'b', 'c'])
     })
 
     it('sets the selected bins from an array', function () {
-      const query = client.query('test', 'test')
+      const query = client.query(helper.namespace, helper.set)
       query.select(['a', 'b', 'c'])
       expect(query.selected).to.eql(['a', 'b', 'c'])
     })
@@ -176,7 +176,7 @@ describe('Queries', function () {
 
   describe('query.where()', function () {
     it('adds a filter predicate to the query', function () {
-      const query = client.query('test', 'test')
+      const query = client.query(helper.namespace, helper.set)
       query.where(Aerospike.filter.equal('a', 9))
       expect(query.filters.length).to.equal(1)
     })
