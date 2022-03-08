@@ -25,6 +25,11 @@
 CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
+AS_HOST="bob-cluster-a"
+AS_USER="generic_client"
+AS_PWD="generic_client"
+AS_PORT="3000"
+AS_NAMESPACE="ssd-store"
 
 . ${SCRIPT_DIR}/build-commands.sh
 
@@ -34,6 +39,7 @@ build_nodejs_client() {
   nvm install $1
   nvm use $1
   npm install --unsafe-perm --build-from-source
+  # node ${CWD}/node_modules/.bin/mocha --exit --U ${AS_USER} --P ${AS_PWD} --h ${AS_HOST} --port ${AS_PORT} --namespace ${AS_NAMESPACE}
 }
 
 configure_nvm
