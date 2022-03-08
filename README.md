@@ -145,12 +145,25 @@ To install library prerequisites via `apt-get`:
 sudo apt-get install g++ libssl1.0.0 libssl-dev zlib1g-dev
 ```
 
-### Mac OS X
+### Mac OS X (Intel)
 
 Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
 
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
+
+### Mac OS X (M1 Chip)
+
+Currently C library does not support M1, so you can't install Aerospike Nodejs Client directly on your mac, see [Issue](https://github.com/aerospike/aerospike-client-nodejs/issues/430).
+As a workaround, you can build your app inside of Docker with using `--platform` [option](https://docs.docker.com/engine/reference/commandline/build/).
+Example of working docker-compose.yaml file will look like this:
+```
+version: '2.4'
+services:
+  my-node-js-app:
+    build: .
+    platform: linux/amd64
+```
 
 #### Openssl library installation in Mac OS X.
 
