@@ -2,6 +2,7 @@
 .nyc_output/
 .vscode/
 lib/binding
+.idea/
 build/
 node_modules/
 coverage/

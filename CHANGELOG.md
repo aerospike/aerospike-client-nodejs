@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * **New Features**
   * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
   * Add support for Aerospike Expressions
+  * Added TypeScript typings. [#446](https://github.com/aerospike/aerospike-client-nodejs/pull/446) Thanks to [@bit0r1n](https://github.com/bit0r1n)!
 
 * **Updates**
   * *BREAKING*: This client requires server version 4.9 or later.
