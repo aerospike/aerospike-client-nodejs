@@ -10,20 +10,25 @@ and suitable for application prototyping and development.
 ## Prerequisites
 
 * Windows 7 or later
-* Windows 8.1 SDK
-* Visual C++ 2015 Build Tools
 * Node.js v10.x (LTS) or later
 
 The package includes a native add-on. To compile the add-on, Microsoft's Visual
-C++ Build Tools 2015 are required. The easiest way to install the build tools,
-is using the [`windows-build-tools`
-](https://www.npmjs.com/package/windows-build-tools) npm package:
+C++ Build Tools 2015 are required, which you can download from the
+[Visual Studio website](https://visualstudio.microsoft.com/vs/older-downloads/).
+The required components are:
 
-    npm install windows-build-tools --global --vs2015
+* Windows 8.1 SDK
+* Visual C++ 2015 (v140) Toolset for Desktop
+
+![Windows 8.1 SDK](./docs/assets/windows-8-1-sdk.png)
+![VC++ 2015.3 v14.00 (v140) toolset for desktop](./docs/assets/vc-2015-3-v140.png)
+
+<a name="aerospike-c-client-sdk"></a>
+## Aerospike C Client SDK
 
 The Aerospike Node.js client depends on the Aerospike C client. During
 installation, a copy of the C client SDK is downloaded and compiled.
-Additionally set of pre-built, third-party libraries are downloaded and
+Additionally, a set of pre-built, third-party libraries are downloaded and
 installed via the
 [`aerospike-client-c-dependencies`](https://www.nuget.org/packages/aerospike-client-c-dependencies)
 nuget package. Please refer to the [Aerospike C client
