@@ -29,6 +29,8 @@ extern "C" {
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_list.h>
+#include <aerospike/as_map.h>
+#include <aerospike/as_map_operations.h>
 }
 
 #include "client.h"
@@ -75,6 +77,7 @@ int get_optional_string_property(char** strp, bool* defined, v8::Local<v8::Objec
 int get_optional_uint32_property(uint32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_float_property(double* floatp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 bool get_optional_list_policy(as_list_policy* policy, bool* has_policy, v8::Local<v8::Object> obj, const LogInfo* log);
+bool get_map_policy(as_map_policy* policy, v8::Local<v8::Object> obj, const LogInfo* log);
 
 // Functions to convert C client structure to v8 object(map)
 v8::Local<v8::Object> error_to_jsobject(as_error* error, const LogInfo* log);

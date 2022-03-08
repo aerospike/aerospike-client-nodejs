@@ -28,7 +28,7 @@ extern "C" {
 using namespace v8;
 
 bool
-get_map_policy(as_map_policy* policy, Local<Object> obj, LogInfo* log)
+get_map_policy(as_map_policy* policy, v8::Local<v8::Object> obj, const LogInfo* log)
 {
 	Nan::HandleScope scope;
 	as_map_policy_init(policy);
