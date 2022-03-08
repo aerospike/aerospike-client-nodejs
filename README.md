@@ -205,6 +205,10 @@ Once installed, the module can be required in the application:
 The following is relevant for users who have cloned the repository, and want
 to install it as a dependency of their application.
 
+To clone the repository use the following command:
+
+	$ git clone --recursive git@github.com:aerospike/aerospike-client-nodejs.git
+
 Installing via Git Repository is slightly different from installing via npm
 registry, in that you will be referencing the module by path, rather than name.
 
