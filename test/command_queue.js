@@ -36,7 +36,8 @@ describe('Command Queue #slow', function () {
     }
 
     const result = await helper.runInNewProcess(test, helper.config)
-    expect(result).to.equal(10)
+      .then(() => expect(result).to.equal(10))
+      .catch(error => console.error('Error:', error))
   })
 
   it('rejects commands it cannot queue', async function () {
@@ -58,7 +59,8 @@ describe('Command Queue #slow', function () {
     }
 
     const result = await helper.runInNewProcess(test, helper.config)
-    expect(result).to.match(/Async delay queue full/)
+      .then(() => expect(result).to.match(/Async delay queue full/))
+      .catch(error => console.error('Error:', error))
   })
 
   it('throws an error when trying to configure command queue after client connect', async function () {
