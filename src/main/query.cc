@@ -215,5 +215,6 @@ void free_query(as_query* query, as_policy_query* policy)
 		if (policy->base.predexp) {
 			as_predexp_list_destroy(policy->base.predexp);
 		}
+		if (policy->base.filter_exp) { as_exp_destroy(policy->base.filter_exp); }
 	}
 }

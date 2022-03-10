@@ -83,4 +83,5 @@ Cleanup:
 	if (key_initalized) as_key_destroy(&key);
 	if (record_initalized) as_record_destroy(&record);
 	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
+	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
 }

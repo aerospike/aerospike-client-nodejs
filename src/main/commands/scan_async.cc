@@ -77,5 +77,6 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 Cleanup:
 	delete cmd;
 	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
+	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
 	as_scan_destroy(&scan);
 }

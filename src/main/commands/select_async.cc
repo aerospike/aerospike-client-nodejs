@@ -73,6 +73,7 @@ Cleanup:
 	delete cmd;
 	if (key_initalized) as_key_destroy(&key);
 	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
+	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
 	if (bins) {
 		for (uint32_t i = 0; i < num_bins; i++) {
 			cf_free(bins[i]);

@@ -29,6 +29,64 @@ extern "C" {
 using namespace v8;
 
 int
+free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log)
+{
+	int rc = AS_NODE_PARAM_OK;
+	int length = entries_ary->Length();
+	as_exp_entry* entry = entries;
+
+	for (int i = 0; i < length; i++,entry++) {
+		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
+
+		if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
+			if (entry->v.str_val) free((void*)entry->v.str_val);
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
+			if (entry->v.str_val) cf_free((void*)entry->v.bytes_val);
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
+			if (entry->v.ctx) as_cdt_ctx_destroy(entry->v.ctx);
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+			continue;
+		}
+	}
+
+	cf_free(entries);
+	return rc;
+}
+
+int
 convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
@@ -50,12 +108,10 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
-		// TODO: Free v.str_val once request is done
 		return get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
-		// TODO: Free v.bytes_val once request is done
 		return get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
 	}
 
@@ -118,10 +174,9 @@ compile_expression(Local<Array> entries_ary, as_exp** filter_exp, const LogInfo*
 		}
 		entry++;
 	}
-	// TODO: destroy *filter_exp after use
 	*filter_exp = as_exp_compile(entries, length);
 
 done:
-	cf_free(entries);
+	free_entries(entries_ary, entries, log);
 	return rc;
 }

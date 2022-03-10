@@ -31,6 +31,7 @@ extern "C" {
 #include <aerospike/as_list.h>
 #include <aerospike/as_map.h>
 #include <aerospike/as_map_operations.h>
+#include <aerospike/as_exp.h>
 }
 
 #include "client.h"
