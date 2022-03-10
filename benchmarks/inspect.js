@@ -46,7 +46,7 @@ const argp = yargs
       default: 3000,
       describe: 'Aerospike database port.'
     },
-    timeout: {
+    totalTimeout: {
       alias: 't',
       default: 10,
       describe: 'Timeout in milliseconds.'
@@ -245,7 +245,7 @@ function exec (p, i, o) {
   const prog = 'node'
 
   const args = ['main.js',
-    '-h', argv.host, '-p', argv.port, '-t', argv.timeout,
+    '-h', argv.host, '-p', argv.port, '-t', argv.totalTimeout,
     '-n', argv.namespace, '-s', argv.set,
     '-R', argv.reads, '-W', argv.writes, '-K', argv.keyrange,
     '-P', p, '-I', i, '-O', o,

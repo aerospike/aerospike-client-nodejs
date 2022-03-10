@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike Inc.
+ * Copyright 2013-2022 Aerospike Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include "policy.h"
 #include "conversions.h"
+#include "expressions.h"
 #include "predexp.h"
 
 extern "C" {
@@ -59,9 +60,6 @@ int infopolicy_from_jsobject(as_policy_info* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj, "sendAsIs", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -78,13 +76,10 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj, "socketTimeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "timeout", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj, "totalTimeout", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "retry", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property(&policy->max_retries, NULL, obj, "maxRetries", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj, "compress", log)) != AS_NODE_PARAM_OK) {
@@ -103,6 +98,19 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 				as_predexp_list_add(policy->predexp, predexp);
 			}
 		}
+	}
+
+	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if ((rc = compile_expression(exp_ary, &policy->filter_exp, log)) != AS_NODE_PARAM_OK) {
+			return rc;
+		}
+	} else if (exp_val->IsNull() || exp_val->IsUndefined()) {
+		// no-op
+	} else {
+		as_v8_error(log, "Invalid filter expression value");
+		return AS_NODE_PARAM_ERR;
 	}
 
 	return AS_NODE_PARAM_OK;
@@ -284,9 +292,6 @@ int querypolicy_from_jsobject(as_policy_query* policy, Local<Object> obj, const 
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj, "deserialize", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail( log, "Parsing query policy : success");

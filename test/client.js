@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2021 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -244,6 +244,23 @@ describe('Client', function () {
         client.captureStackTraces = orig
         done()
       })
+    })
+  })
+
+  context('minConnsPerNode', function () {
+    it('connects to the server and establishes the minimum number of connections', async function () {
+      const test = async function (Aerospike, config) {
+        Object.assign(config, { minConnsPerNode: 5, log: { level: 0 } })
+        const client = await Aerospike.connect(config)
+        // give client enough time to establish the requested min. connections
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        const stats = client.stats()
+        client.close()
+        return stats
+      }
+
+      const stats = await helper.runInNewProcess(test, helper.config)
+      expect(stats.nodes[0].asyncConnections.inPool).to.equal(5)
     })
   })
 })

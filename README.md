@@ -24,9 +24,6 @@ development.
   - [Primer on Node.js Modules](#Primer-on-Node.js-Modules)
   - [Installing via npm Registry](#Installing-via-npm-Registry)
   - [Installing via Git Repository](#Installing-via-Git-Repository)
-  - [C Client Resolution](#C-Client-Resolution)
-    - [Force Download](#Force-Download)
-    - [Custom Search Path](#Custom-Search-Path)
 - [Documentation](#Documentation)
 - [Tests](#Tests)
 - [Benchmarks](#Benchmarks)
@@ -108,11 +105,6 @@ your operating system.
 The package includes a native add-on. `gcc`/`g++` v4.8 or newer or
 `clang`/`clang++` v3.4 or newer are required to build the add-on.
 
-The Aerospike add-on depends on the Aerospike C client library, which is
-downloaded during package installation. Either the cURL or Wget command line tool
-is required for this. See ["C Client Resolution"](#C-Client-Resolution) below for
-further information.
-
 The package has the following compile time/run time dependencies:
 
 | Library Name | Description |
@@ -167,9 +159,7 @@ See [Prerequisites for Aerospike Node.js Client on Windows](https://github.com/a
 ## Installation
 
 The Aerospike Node.js client is a Node.js add-on module utilizing the Aerospike
-C client. The installation will attempt to build the add-on module prior to
-installation. The build step will resolve the Aerospike C client dependency as
-described in [C Client Resolution](#C-Client-Resolution).
+C client. The installation will attempt to install the pre-built binaries.
 
 The Aerospike Node.js client can be installed like any other Node.js module, however
 we provided the following information for those not so familiar with Node.js modules.
@@ -215,11 +205,22 @@ Once installed, the module can be required in the application:
 The following is relevant for users who have cloned the repository, and want
 to install it as a dependency of their application.
 
+To clone the repository use the following command:
+
+	$ git clone --recursive git@github.com:aerospike/aerospike-client-nodejs.git
+
 Installing via Git Repository is slightly different from installing via npm
 registry, in that you will be referencing the module by path, rather than name.
 
 Although the module may be installed globally or locally, we recommend performing
 local installs.
+
+#### Building dependancy c client
+
+Make sure to build c client before doing npm install variants
+Run the following commands to build c-client:
+
+	$ ./scripts/build-c-client.sh
 
 #### Installing Globally
 
@@ -229,7 +230,7 @@ However, you will need to first install the package globally using root permissi
 
 Run the following as a user with root permission or using the sudo command:
 
-	$ npm install -g <PATH>
+	$ npm install -g <PATH> --unsafe-perm --build-from-source
 
 Where `<PATH>` is the path to the Aerospike Node.js client's Git respository is
 located. This will install the module in a globally accessible location.
@@ -255,7 +256,7 @@ to the application.
 To install the module as a dependency of your application, run the following
 from your application's directory:
 
-	$ npm install <PATH>
+	$ npm install <PATH> --unsafe-perm --build-from-source
 
 Where `<PATH>` is the path to the Aerospike Node.js client's Git respository is
 located.
@@ -263,56 +264,6 @@ located.
 Once installed, the module can be required in the application:
 
 	const Aerospike = require('aerospike')
-
-<a name="C-Client-Resolution"></a>
-### C Client Resolution
-
-When running `npm install`, `npm link` or `node-gyp rebuild`, the `.gyp`
-script will run `scripts/aerospike-client-c.sh` to resolve the C client
-dependency.
-
-The script will check for the following files in the search paths:
-
-- `lib/libaerospike.a`
-- `include/aerospike/aerospike.h`
-
-By default, the search paths are:
-
-- `./aerospike-client-c`
-- `/usr`
-
-If neither are found, then it will download the C client and create the
-`./aerospike-client-c` directory.
-
-You can modify the C client resolution via:
-
-- [force download](#Force-Download) the C client
-- Specifying a [custom search path](#Custom-Search-Path) for the C client.
-
-<a name="Force-Download"></a>
-#### Force Download
-
-To force downloading of the C client, you can specify the `DOWNLOAD=1`
-environment variable. Example:
-
-    $ DOWNLOAD=1 npm install
-
-<a name="Custom-Search-Path"></a>
-#### Custom Search Path
-
-If you have the Aerospike C client installed in a non-standard location or
-built from source, then you can specify the search path for the build step to
-use while resolving the Aerospike C client library.
-
-Use the `AEROSPIKE_C_LIB_PATH=<PATH>` environment variable to specify the search path for the
-Aerospike C client. The `<PATH>` must be the path to a directory containing
-`lib` and `include` subdirectories.
-
-The following is an example of specifying the path to the Aerospike C client
-build directory:
-
-    $ export AEROSPIKE_C_LIB_PATH=~/aerospike-client-c/target/Linux-x86_64
-
 
 <a name="Documentation"></a>
 ## Documentation

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Aerospike, Inc.
+ * Copyright 2018-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,10 +58,47 @@ Local<Object> list_enum_values()
 	set(return_type, "VALUE", AS_LIST_RETURN_VALUE);
 	set(return_type, "INVERTED", AS_LIST_RETURN_INVERTED);
 
+	// as_cdt_op_list
+	Local<Object> opcodes = Nan::New<Object>();
+	set(opcodes, "SET_TYPE", AS_CDT_OP_LIST_SET_TYPE);
+	set(opcodes, "APPEND", AS_CDT_OP_LIST_APPEND);
+	set(opcodes, "APPEND_ITEMS", AS_CDT_OP_LIST_APPEND_ITEMS);
+	set(opcodes, "INSERT", AS_CDT_OP_LIST_INSERT);
+	set(opcodes, "INSERT_ITEMS", AS_CDT_OP_LIST_INSERT_ITEMS);
+	set(opcodes, "POP", AS_CDT_OP_LIST_POP);
+	set(opcodes, "POP_RANGE", AS_CDT_OP_LIST_POP_RANGE);
+	set(opcodes, "REMOVE", AS_CDT_OP_LIST_REMOVE);
+	set(opcodes, "REMOVE_RANGE", AS_CDT_OP_LIST_REMOVE_RANGE);
+	set(opcodes, "SET", AS_CDT_OP_LIST_SET);
+	set(opcodes, "TRIM", AS_CDT_OP_LIST_TRIM);
+	set(opcodes, "CLEAR", AS_CDT_OP_LIST_CLEAR);
+	set(opcodes, "INCREMENT", AS_CDT_OP_LIST_INCREMENT);
+	set(opcodes, "SORT", AS_CDT_OP_LIST_SORT);
+	set(opcodes, "SIZE", AS_CDT_OP_LIST_SIZE);
+	set(opcodes, "GET", AS_CDT_OP_LIST_GET);
+	set(opcodes, "GET_RANGE", AS_CDT_OP_LIST_GET_RANGE);
+	set(opcodes, "GET_BY_INDEX", AS_CDT_OP_LIST_GET_BY_INDEX);
+	set(opcodes, "GET_BY_RANK", AS_CDT_OP_LIST_GET_BY_RANK);
+	set(opcodes, "GET_ALL_BY_VALUE", AS_CDT_OP_LIST_GET_ALL_BY_VALUE);
+	set(opcodes, "GET_BY_VALUE_LIST", AS_CDT_OP_LIST_GET_BY_VALUE_LIST);
+	set(opcodes, "GET_BY_INDEX_RANGE", AS_CDT_OP_LIST_GET_BY_INDEX_RANGE);
+	set(opcodes, "GET_BY_VALUE_INTERVAL", AS_CDT_OP_LIST_GET_BY_VALUE_INTERVAL);
+	set(opcodes, "GET_BY_RANK_RANGE", AS_CDT_OP_LIST_GET_BY_RANK_RANGE);
+	set(opcodes, "GET_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE);
+	set(opcodes, "REMOVE_BY_INDEX", AS_CDT_OP_LIST_REMOVE_BY_INDEX);
+	set(opcodes, "REMOVE_BY_RANK", AS_CDT_OP_LIST_REMOVE_BY_RANK);
+	set(opcodes, "REMOVE_ALL_BY_VALUE", AS_CDT_OP_LIST_REMOVE_ALL_BY_VALUE);
+	set(opcodes, "REMOVE_BY_VALUE_LIST", AS_CDT_OP_LIST_REMOVE_BY_VALUE_LIST);
+	set(opcodes, "REMOVE_BY_INDEX_RANGE", AS_CDT_OP_LIST_REMOVE_BY_INDEX_RANGE);
+	set(opcodes, "REMOVE_BY_VALUE_INTERVAL", AS_CDT_OP_LIST_REMOVE_BY_VALUE_INTERVAL);
+	set(opcodes, "REMOVE_BY_RANK_RANGE", AS_CDT_OP_LIST_REMOVE_BY_RANK_RANGE);
+	set(opcodes, "REMOVE_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_LIST_REMOVE_BY_VALUE_REL_RANK_RANGE);
+
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("order").ToLocalChecked(), order);
 	Nan::Set(enums, Nan::New("sortFlags").ToLocalChecked(), sort_flags);
 	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
 	Nan::Set(enums, Nan::New("returnType").ToLocalChecked(), return_type);
+	Nan::Set(enums, Nan::New("opcodes").ToLocalChecked(), opcodes);
 	return scope.Escape(enums);
 }

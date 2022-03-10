@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include "policy.h"
 #include "operations.h"
 #include "predexp.h"
+#include "expressions.h"
 #include "log.h"
 #include "conversions.h"
 
@@ -138,12 +139,14 @@ NAN_MODULE_INIT(Aerospike)
 	export("maps", map_enum_values());
 	export("predicates", predicates());
 	export("predexp", predexp_codes());
+	export("exp", exp_opcode_values());
 	export("log", log_enum_values());
 	export("scalarOperations", scalar_opcode_values());
 	export("listOperations", list_opcode_values());
 	export("mapOperations", map_opcode_values());
 	export("bitOperations", bit_opcode_values());
 	export("hllOperations", hll_opcode_values());
+	export("expOperations", expop_opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());

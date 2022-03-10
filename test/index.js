@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ context('secondary indexes', function () {
         datatype: Aerospike.indexDataType.NUMERIC
       }
       const policy = new Aerospike.InfoPolicy({
-        totalTimeout: 100
+        timeout: 100
       })
 
       return client.createIndex(options, policy)

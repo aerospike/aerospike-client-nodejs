@@ -1,11 +1,12 @@
 .DS_Store
 .nyc_output/
 .vscode/
+lib/binding
 .idea/
 build/
 node_modules/
-aerospike-client-c/
 coverage/
 npm-debug.log
 test.log
 aerospike-*.tgz
+scripts/build-c-client.sh-output.txt

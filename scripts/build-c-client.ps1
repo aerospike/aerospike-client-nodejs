@@ -110,14 +110,9 @@ Write-Debug ($CClientCfg | Out-String)
 $FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
 Write-Debug ($FileHashes | Out-String)
 
-# Install C client source package
-Write-Host "Installing Aerospike C client source package"
-$CClientVersion = $CClientCfg["AEROSPIKE_C_VERSION"]
-$CClientSrcPath = "aerospike-client-c-src-${CClientVersion}"
-$CClientArchive = "${CClientSrcPath}.zip"
-$CClientUrl = "https://artifacts.aerospike.com/aerospike-client-c/${CClientVersion}/${CClientArchive}"
-$CClientArchiveHash = $FileHashes[$CClientArchive]
-Install-Package -uri $CClientUrl -archive $CClientArchive -outpath $CClientSrcPath -hash $CClientArchiveHash
+# C client path
+Write-Host "Setting Aerospike C client source path"
+$CClientSrcPath = "..\aerospike-client-c"
 
 # Install C client dependencies package
 Write-Host "Installing Aerospike C client dependencies"
@@ -133,6 +128,7 @@ $NodePath = Split-Path $NodeLibFile -Parent
 $CClientConfiguration = "${Configuration} nodejs"
 $PackagesPath = Resolve-Path ".\"
 $BuildParams = "/p:Configuration=`"$CClientConfiguration`" /p:Platform=$Platform /p:NodejsPath=$NodePath /p:PackagesPath=$PackagesPath"
+Write-Host "ProjectFile: $ProjectFile"
 $BuildSuccess = Build-Project $ProjectFile $BuildParams
 if (-not $BuildSuccess) {
 	Write-Error -Message "Failed to build aerospike-client-c dependency"
@@ -140,7 +136,7 @@ if (-not $BuildSuccess) {
 }
 
 # Copy header files
-$TargetPath = "..\aerospike-client-c"
+$TargetPath = "..\aerospike-client-c-output"
 New-Item -Path $TargetPath/include, $TargetPath/include/aerospike, $TargetPath/include/citrusleaf -ItemType "directory" -Force | out-null
 Copy-Item $CClientDepsSrcPath\build\native\include\*.h $TargetPath\include -Include pthread.h,_ptw32.h,sched.h
 Copy-Item $CClientSrcPath\src\include\aerospike\*.h $TargetPath\include\aerospike -Exclude as_tls.h

@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2020 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ describe('Command Queue #slow', function () {
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
       const client = await Aerospike.connect(config)
       const cmds = Array.from({ length: 10 }, (_, i) =>
-        client.put(new Aerospike.Key('test', 'test', i), { i })
+        client.put(new Aerospike.Key(helper.namespace, helper.set, i), { i })
       )
       const results = await Promise.all(cmds)
       client.close()
@@ -36,7 +36,8 @@ describe('Command Queue #slow', function () {
     }
 
     const result = await helper.runInNewProcess(test, helper.config)
-    expect(result).to.equal(10)
+      .then(() => expect(result).to.equal(10))
+      .catch(error => console.error('Error:', error))
   })
 
   it('rejects commands it cannot queue', async function () {
@@ -45,7 +46,7 @@ describe('Command Queue #slow', function () {
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 1 })
       const client = await Aerospike.connect(config)
       const cmds = Array.from({ length: 10 }, (_, i) =>
-        client.put(new Aerospike.Key('test', 'test', i), { i })
+        client.put(new Aerospike.Key(helper.namespace, helper.set, i), { i })
       )
       try {
         await Promise.all(cmds)
@@ -58,7 +59,8 @@ describe('Command Queue #slow', function () {
     }
 
     const result = await helper.runInNewProcess(test, helper.config)
-    expect(result).to.match(/Async delay queue full/)
+      .then(() => expect(result).to.match(/Async delay queue full/))
+      .catch(error => console.error('Error:', error))
   })
 
   it('throws an error when trying to configure command queue after client connect', async function () {
@@ -77,53 +79,5 @@ describe('Command Queue #slow', function () {
 
     const result = await helper.runInNewProcess(test, helper.config)
     expect(result).to.match(/Command queue has already been initialized!/)
-  })
-
-  it('does not deadlock on extra query with failOnClusterChange info commands #389', async function () {
-    const test = async function (Aerospike, config) {
-      Object.assign(config, {
-        log: { level: Aerospike.log.OFF },
-        policies: {
-          query: new Aerospike.QueryPolicy({ totalTimeout: 10000, failOnClusterChange: true })
-        }
-      })
-      Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 50 })
-      const setName = 'testGlobalCommandQueueDeadlock389'
-
-      const client = await Aerospike.connect(config)
-      try {
-        const job = await client.createIntegerIndex({
-          ns: 'test',
-          set: setName,
-          bin: 'i',
-          index: `idx-${setName}`
-        })
-        await job.wait(10)
-      } catch (error) {
-        // index already exists
-        if (error.code !== Aerospike.status.ERR_INDEX_FOUND) throw error
-      }
-
-      const puts = Array.from({ length: 5 }, (_, i) =>
-        client.put(new Aerospike.Key('test', setName, i), { i })
-      )
-      await Promise.all(puts)
-
-      try {
-        let results = Array.from({ length: 5 }, (_, i) => {
-          const query = client.query('test', setName)
-          query.where(Aerospike.filter.equal('i', i))
-          return query.results()
-        })
-        results = await Promise.all(results)
-        return results.reduce((sum, records) => sum + records.length, 0)
-      } catch (error) {
-        // throws "Delay queue timeout" error on deadlock
-        return error.message
-      }
-    }
-
-    const result = await helper.runInNewProcess(test, helper.config)
-    expect(result).to.eq(5)
   })
 })

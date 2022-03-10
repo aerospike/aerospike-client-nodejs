@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,9 @@ extern "C" {
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_list.h>
+#include <aerospike/as_map.h>
+#include <aerospike/as_map_operations.h>
+#include <aerospike/as_exp.h>
 }
 
 #include "client.h"
@@ -46,6 +49,8 @@ extern "C" {
  *  FUNCTIONS
  ******************************************************************************/
 
+bool instanceof(v8::Local<v8::Value> value, const char * type);
+
 // Functions dealing with Double values
 bool is_double_value(v8::Local<v8::Value> value);
 double double_value(v8::Local<v8::Value> value);
@@ -59,16 +64,21 @@ int get_bytes_property(uint8_t** bytes, int* size, v8::Local<v8::Object> obj, ch
 int get_list_property(as_list** list, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_int_property(int* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_int64_property(int64_t* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_uint64_property(uint64_t* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_uint32_property(uint32_t* intp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_asval_property(as_val** value, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 int get_string_property(char** strp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_asval_property(as_val** value, bool* defined, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
 int get_optional_bool_property(bool* boolp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_optional_bytes_property(uint8_t** bytes, int* size, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_int_property(int* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_int32_property(int32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_int64_property(int64_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_string_property(char** strp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
 int get_optional_uint32_property(uint32_t* intp, bool* defined, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+int get_float_property(double* floatp, v8::Local<v8::Object> obj, char const* prop, const LogInfo* log);
+bool get_optional_list_policy(as_list_policy* policy, bool* has_policy, v8::Local<v8::Object> obj, const LogInfo* log);
+bool get_map_policy(as_map_policy* policy, v8::Local<v8::Object> obj, const LogInfo* log);
 
 // Functions to convert C client structure to v8 object(map)
 v8::Local<v8::Object> error_to_jsobject(as_error* error, const LogInfo* log);

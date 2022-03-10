@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ describe('Config #noserver', function () {
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
           batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
-          info: new Aerospike.InfoPolicy({ totalTimeout: 1000 }),
+          info: new Aerospike.InfoPolicy({ timeout: 1000 }),
           operate: new Aerospike.OperatePolicy({ totalTimeout: 1000 }),
           query: new Aerospike.QueryPolicy({ totalTimeout: 1000 }),
           read: new Aerospike.ReadPolicy({ totalTimeout: 1000 }),
@@ -108,7 +108,7 @@ describe('Config #noserver', function () {
         policies: {
           apply: { totalTimeout: 1000 },
           batch: { totalTimeout: 1000 },
-          info: { totalTimeout: 1000 },
+          info: { timeout: 1000 },
           operate: { totalTimeout: 1000 },
           query: { totalTimeout: 1000 },
           read: { totalTimeout: 1000 },
@@ -155,6 +155,7 @@ describe('Config #noserver', function () {
     it('throws a TypeError if invalid policy values are passed', function () {
       const settings = {
         policies: {
+          timeout: 1000,
           totalTimeout: 1000
         }
       }

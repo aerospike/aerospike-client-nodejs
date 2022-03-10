@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2018 Aerospike, Inc.
+// Copyright 2018-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ module.exports = function (argv) {
 
 function defaultConfig (argv) {
   const defaultPolicy = {
-    totalTimeout: argv.timeout
+    timeout: argv.totalTimeout,
+    totalTimeout: argv.totalTimeout
   }
   return {
     hosts: argv.hosts,

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ add_operation(as_operations* ops, uint32_t opcode, Local<Object> params, LogInfo
 			return add_bit_op(ops, opcode, params, log);
 		case HLL_OPS_OFFSET:
 			return add_hll_op(ops, opcode, params, log);
+		case EXPOP_OPS_OFFSET:
+			return add_exp_op(ops, opcode, params, log);
 		default:
 			return AS_NODE_PARAM_ERR;
 	}

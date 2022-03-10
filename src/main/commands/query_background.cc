@@ -85,6 +85,7 @@ execute(uv_work_t* req)
 	aerospike_query_background(cmd->as, &cmd->err, cmd->policy, &cmd->query, &cmd->query_id);
 
 	if (cmd->policy && cmd->policy->base.predexp) as_predexp_list_destroy(cmd->policy->base.predexp);
+	if (cmd->policy && cmd->policy->base.filter_exp) { as_exp_destroy(cmd->policy->base.filter_exp); }
 }
 
 static void

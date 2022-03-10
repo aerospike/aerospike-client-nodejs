@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,17 @@ extern "C" {
 
 using namespace v8;
 
-bool
-get_optional_list_policy(as_list_policy* policy, bool* has_policy, Local<Object> obj, LogInfo* log)
+bool get_optional_list_policy(as_list_policy* policy, bool* has_policy, v8::Local<v8::Object> obj, const LogInfo* log)
 {
 	Nan::HandleScope scope;
 	as_list_policy_init(policy);
 	Local<Value> maybe_policy_obj = Nan::Get(obj, Nan::New("policy").ToLocalChecked()).ToLocalChecked();
+
+	if (!maybe_policy_obj->IsObject()) {
+		as_v8_detail(log, "No valid list policy set - using default policy");
+		return true;
+	}
+
 	if (maybe_policy_obj->IsUndefined()) {
 		if (has_policy != NULL) (*has_policy) = false;
 		as_v8_detail(log, "No list policy set - using default policy");
@@ -989,7 +994,7 @@ add_list_op(as_operations* ops, uint32_t opcode, Local<Object> op, LogInfo* log)
 
 	bool with_context;
 	as_cdt_ctx context;
-	if (get_optional_cdt_context(&context, &with_context, op, log) != AS_NODE_PARAM_OK) {
+	if (get_optional_cdt_context(&context, &with_context, op, "context", log) != AS_NODE_PARAM_OK) {
 		free(bin);
 		return AS_NODE_PARAM_ERR;
 	}

@@ -77,7 +77,7 @@ yargs
     describe: 'Password to connect to secured clsuter',
     group: 'Connect:'
   })
-  .option('timeout', {
+  .option('totalTimeout', {
     alias: 't',
     describe: 'Timeout in milliseconds',
     group: 'Connect:',

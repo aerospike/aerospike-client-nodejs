@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2021 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ const FLUX_PERIOD = 5
 // *****************************************************************************
 
 const defaultPolicy = {
-  totalTimeout: argv.timeout
+  totalTimeout: argv.totalTimeout
 }
 const config = {
   policies: {
@@ -329,15 +329,21 @@ if (argv.longevity) {
 //
 process.on('exit', function () {
   logger.debug('Exiting.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
 })
 
 process.on('SIGINT', function () {
   logger.debug('Received SIGINT.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
   process.exit(0)
 })
 
 process.on('SIGTERM', function () {
   logger.debug('Received SIGTERM.')
+  const stats = client.stats()
+  console.log(util.inspect(stats, true, 10, true))
   process.exit(0)
 })
 

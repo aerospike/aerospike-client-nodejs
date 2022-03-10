@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ int get_optional_string_property(char** strp, bool* defined, Local<Object> obj, 
         as_v8_detail(log, "%s => \"%s\"", prop, *strp);
     } else if (value->IsUndefined() || value->IsNull()) {
         if (defined != NULL) (*defined) = false;
+        as_v8_detail(log, "%s => undefined", prop);
     } else {
         as_v8_error(log, "Type error: %s property should be string", prop);
         return AS_NODE_PARAM_ERR;
@@ -132,10 +133,24 @@ int get_int64_property(int64_t* intp, Local<Object> obj, char const* prop, const
     Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
     if (!value->IsNumber()) {
         as_v8_error(log, "Type error: %s property should be integer", prop);
+        as_v8_detail(log, "%s => (int64) %d", prop, *intp);
         return AS_NODE_PARAM_ERR;
     }
     (*intp) = Nan::To<int64_t>(value).FromJust();
     as_v8_detail(log, "%s => (int64) %d", prop, *intp);
+    return AS_NODE_PARAM_OK;
+}
+
+int get_uint64_property(uint64_t* intp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+    Nan::HandleScope scope;
+    Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+    if (!value->IsNumber()) {
+        as_v8_error(log, "Type error: %s property should be integer", prop);
+        return AS_NODE_PARAM_ERR;
+    }
+    (*intp) = Nan::To<int64_t>(value).FromJust();
+    as_v8_detail(log, "%s => (uint64) %d", prop, *intp);
     return AS_NODE_PARAM_OK;
 }
 
@@ -207,6 +222,20 @@ int get_optional_uint32_property(uint32_t* intp, bool* defined, Local<Object> ob
     return AS_NODE_PARAM_OK;
 }
 
+int get_float_property(double* floatp, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+    Nan::HandleScope scope;
+    Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+    if (value->IsNumber() || instanceof(value, DoubleType)) {
+        (*floatp) = double_value(value);
+        as_v8_detail(log, "%s => (double) %g", prop, *floatp);
+    } else {
+        as_v8_error(log, "Type error: %s property should be a floating point number", prop);
+        return AS_NODE_PARAM_ERR;
+    }
+    return AS_NODE_PARAM_OK;
+}
+
 int get_optional_bool_property(bool* boolp, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
 {
     Nan::HandleScope scope;
@@ -263,6 +292,28 @@ int get_bytes_property(uint8_t** bytes, int* size, Local<Object> obj, char const
     as_v8_debug(log, "Extracting bytes from JS Buffer");
     if (extract_blob_from_jsobject(bytes, size, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
         as_v8_error(log, "Extracting bytes from a JS Buffer failed");
+        return AS_NODE_PARAM_ERR;
+    }
+    return AS_NODE_PARAM_OK;
+}
+
+int get_optional_bytes_property(uint8_t** bytes, int* size, bool* defined, Local<Object> obj, char const* prop, const LogInfo* log)
+{
+    Nan::HandleScope scope;
+    Local<Value> value = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+    if (node::Buffer::HasInstance(value)) {
+        as_v8_debug(log, "Extracting bytes from JS Buffer");
+        if (extract_blob_from_jsobject(bytes, size, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
+            as_v8_error(log, "Extracting bytes from a JS Buffer failed");
+            return AS_NODE_PARAM_ERR;
+        }
+        if (defined != NULL) (*defined) = true;
+    } else if (value->IsUndefined() || value->IsNull()) {
+        if (defined != NULL) (*defined) = false;
+        as_v8_detail(log, "%s => undefined", prop);
+    } else {
+        as_v8_error(log, "Type error: %s property should be Buffer", prop);
+        if (defined != NULL) (*defined) = false;
         return AS_NODE_PARAM_ERR;
     }
     return AS_NODE_PARAM_OK;

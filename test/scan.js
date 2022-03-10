@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2021 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ context('Scans', function () {
 
   describe('client.scan()', function () {
     it('creates a new Scan instance and sets up it\'s properties', function () {
-      const namespace = 'test'
+      const namespace = helper.namespace
       const set = 'demo'
       const options = {
         concurrent: true,
@@ -68,7 +68,7 @@ context('Scans', function () {
       const scan = client.scan(namespace, set, options)
 
       expect(scan).to.be.instanceof(Scan)
-      expect(scan.ns).to.equal('test')
+      expect(scan.ns).to.equal(helper.namespace)
       expect(scan.set).to.equal('demo')
       expect(scan.concurrent).to.be.true()
       expect(scan.selected).to.eql(['a', 'b', 'c'])
@@ -76,10 +76,10 @@ context('Scans', function () {
     })
 
     it('creates a scan without specifying the set', function () {
-      const namespace = 'test'
+      const namespace = helper.namespace
       const scan = client.scan(namespace, { select: ['i'] })
       expect(scan).to.be.instanceof(Scan)
-      expect(scan.ns).to.equal('test')
+      expect(scan.ns).to.equal(helper.namespace)
       expect(scan.set).to.be.null()
       expect(scan.selected).to.eql(['i'])
     })
@@ -87,13 +87,13 @@ context('Scans', function () {
 
   describe('scan.select()', function () {
     it('sets the selected bins from an argument list', function () {
-      const scan = client.scan('test', 'test')
+      const scan = client.scan(helper.namespace, helper.namespace)
       scan.select('a', 'b', 'c')
       expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
 
     it('sets the selected bins from an array', function () {
-      const scan = client.scan('test', 'test')
+      const scan = client.scan(helper.namespace, helper.namespace)
       scan.select(['a', 'b', 'c'])
       expect(scan.selected).to.eql(['a', 'b', 'c'])
     })
@@ -144,7 +144,6 @@ context('Scans', function () {
         totalTimeout: 1000,
         socketTimeout: 1000,
         durableDelete: true,
-        failOnClusterChange: true,
         recordsPerSecond: 50,
         maxRecords: 5000
       })
@@ -263,6 +262,18 @@ context('Scans', function () {
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.bins.backgroundOps).to.equal(1)
+    })
+
+    it('should perform a background scan that executes the touch operation #slow', async function () {
+      const ttl = 123
+      const scan = client.scan(helper.namespace, testSet)
+      const job = await scan.operate([Aerospike.operations.touch(ttl)])
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      console.log('After scan-op TTL : %d Key TTL: %d', ttl, record.ttl)
+      expect(record.ttl).to.equal(ttl - 1)
     })
   })
 

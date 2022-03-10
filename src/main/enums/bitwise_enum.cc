@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Aerospike, Inc.
+ * Copyright 2019-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,9 +50,31 @@ Local<Object> bitwise_enum_values()
 	set(overflow, "SATURATE", AS_BIT_OVERFLOW_SATURATE);
 	set(overflow, "WRAP", AS_BIT_OVERFLOW_WRAP);
 
+	// as_bit_op
+	Local<Object> opcodes = Nan::New<Object>();
+	set(opcodes, "RESIZE", AS_BIT_OP_RESIZE);
+	set(opcodes, "INSERT", AS_BIT_OP_INSERT);
+	set(opcodes, "REMOVE", AS_BIT_OP_REMOVE);
+	set(opcodes, "SET", AS_BIT_OP_SET);
+	set(opcodes, "OR", AS_BIT_OP_OR);
+	set(opcodes, "XOR", AS_BIT_OP_XOR);
+	set(opcodes, "AND", AS_BIT_OP_AND);
+	set(opcodes, "NOT", AS_BIT_OP_NOT);
+	set(opcodes, "LSHIFT", AS_BIT_OP_LSHIFT);
+	set(opcodes, "RSHIFT", AS_BIT_OP_RSHIFT);
+	set(opcodes, "ADD", AS_BIT_OP_ADD);
+	set(opcodes, "SUBTRACT", AS_BIT_OP_SUBTRACT);
+	set(opcodes, "SET_INT", AS_BIT_OP_SET_INT);
+	set(opcodes, "GET", AS_BIT_OP_GET);
+	set(opcodes, "COUNT", AS_BIT_OP_COUNT);
+	set(opcodes, "LSCAN", AS_BIT_OP_LSCAN);
+	set(opcodes, "RSCAN", AS_BIT_OP_RSCAN);
+	set(opcodes, "GET_INT", AS_BIT_OP_GET_INT);
+
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);
 	Nan::Set(enums, Nan::New("resizeFlags").ToLocalChecked(), resize_flags);
 	Nan::Set(enums, Nan::New("overflow").ToLocalChecked(), overflow);
+	Nan::Set(enums, Nan::New("opcodes").ToLocalChecked(), opcodes);
 	return scope.Escape(enums);
 }

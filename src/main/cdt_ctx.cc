@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ extern "C" {
 using namespace v8;
 
 int
-get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> obj, LogInfo* log)
+get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, Local<Object> obj, const char* prop, const LogInfo* log)
 {
 	Nan::HandleScope scope;
-	Local<Value> maybe_context_obj = Nan::Get(obj, Nan::New("context").ToLocalChecked()).ToLocalChecked();
-	if (maybe_context_obj->IsUndefined()) {
+	Local<Value> maybe_context_obj = Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (maybe_context_obj->IsUndefined() || maybe_context_obj->IsNull()) {
 		if (has_context != NULL) (*has_context) = false;
 		as_v8_detail(log, "No CDT context set");
 		return AS_NODE_PARAM_OK;

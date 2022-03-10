@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2013-2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -251,6 +251,10 @@ int config_from_jsobject(as_config* config, Local<Object> configObj, const LogIn
 		} else {
 			as_v8_debug(log, "Using default Lua user path: %s", AS_CONFIG_LUA_USER_PATH);
 		}
+	}
+
+	if ((rc = get_optional_int32_property((int32_t *)&config->auth_mode, NULL, configObj, "authMode", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
 	}
 
 	if ((rc = get_optional_string_property(&user, &defined, configObj, "user", log)) != AS_NODE_PARAM_OK) {

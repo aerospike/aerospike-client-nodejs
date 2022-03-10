@@ -65,7 +65,7 @@ prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (info[4]->IsNumber()) {
 		cmd->scan_id = Nan::To<int64_t>(info[4]).FromJust();
-		as_v8_info(log, "Using scan ID %lli for background scan.", cmd->scan_id);
+		as_v8_debug(log, "Using scan ID %lli for background scan.", cmd->scan_id);
 	}
 
 	return cmd;
@@ -85,6 +85,7 @@ execute(uv_work_t* req)
 	aerospike_scan_background(cmd->as, &cmd->err, cmd->policy, &cmd->scan, &cmd->scan_id);
 
 	if (cmd->policy && cmd->policy->base.predexp) as_predexp_list_destroy(cmd->policy->base.predexp);
+	if (cmd->policy && cmd->policy->base.filter_exp) { as_exp_destroy(cmd->policy->base.filter_exp); }
 }
 
 static void

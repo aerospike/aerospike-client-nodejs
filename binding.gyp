@@ -1,21 +1,31 @@
 {
   'targets': [
     {
-      'target_name': 'aerospike-client-c',
+      'target_name': 'aerospike-core-client',
       'type': 'none',
       'hard_dependency': 1,
       'conditions': [
         ['OS!="win"', {
           'actions': [
             {
-              'action_name': 'Installing Aerospike C Client dependency',
+              'action_name': 'Validating Aerospike C Client dependency',
               'inputs': [],
-              'outputs': [
-                'aerospike-client-c/include/aerospike/aerospike.h',
-                'aerospike-client-c/lib/libaerospike.a'
+              'conditions': [
+                ['OS=="linux"',{
+                  'outputs': [
+                    'aerospike-client-c/target/Linux-x86_64/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Linux-x86_64/lib/aerospike.lib'
+                  ],
+                }],
+                ['OS=="mac"',{
+                  'outputs': [
+                    'aerospike-client-c/target/Darwin-x86_64/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Darwin-x86_64/lib/aerospike.lib'
+                  ],
+                }],
               ],
               'action': [
-                'scripts/aerospike-client-c.sh'
+                'scripts/validate-c-client.sh'
               ]
             }
           ]
@@ -26,8 +36,8 @@
               'action_name': 'Installing Aerospike C Client dependency',
               'inputs': [],
               'outputs': [
-                'aerospike-client-c/include/aerospike/aerospike.h',
-                'aerospike-client-c/lib/aerospike.lib'
+                'aerospike-client-c-output/include/aerospike/aerospike.h',
+                'aerospike-client-c-output/lib/aerospike.lib'
               ],
               'action': [
                 'powershell', 'scripts/build-c-client.ps1',
@@ -42,7 +52,7 @@
     {
       'target_name': 'aerospike',
       'dependencies': [
-        'aerospike-client-c'
+        'aerospike-core-client'
       ],
       'sources': [
         'src/main/aerospike.cc',
@@ -51,6 +61,7 @@
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',
         'src/main/operations.cc',
+        'src/main/exp_operations.cc',
         'src/main/scalar_operations.cc',
         'src/main/list_operations.cc',
         'src/main/map_operations.cc',
@@ -59,6 +70,7 @@
         'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
+        'src/main/expressions.cc',
         'src/main/predexp.cc',
         'src/main/async.cc',
         'src/main/command.cc',
@@ -101,17 +113,10 @@
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
         'src/main/enums/config_enum.cc',
+        'src/main/enums/exp_enum.cc',
         'src/main/stats.cc',
         'src/main/util/conversions.cc',
         'src/main/util/log.cc'
-      ],
-      'include_dirs': [
-        'aerospike-client-c/include',
-        'src/include',
-        "<!(node -e \"require('nan')\")",
-      ],
-      'defines': [
-        'AS_USE_LIBUV',
       ],
       'configurations': {
         'Release': {
@@ -121,37 +126,64 @@
             "xcode_settings": {
               "OTHER_CFLAGS": [
                 "-Wno-deprecated-declarations",
-              ],
+              ]
             },
             'msvs_disabled_warnings': [4996],
-          },
+          }
       },
       'conditions': [
         ['OS=="linux"',{
           'libraries': [
-            '../aerospike-client-c/lib/libaerospike.a',
+            '../libuv-v1.8.0/.libs/libuv.a',
+            '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
             '-lz',
-            '-lssl',
+            '-lssl'
           ],
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing'],
+          'defines': [
+            'AS_USE_LIBUV'
+          ],
+          'include_dirs': [
+            'aerospike-client-c/target/Linux-x86_64/include',
+            'aerospike-client-c/src/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
+          ],          
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
         }],
         ['OS=="mac"',{
           'libraries': [
-            '../aerospike-client-c/lib/libaerospike.a',
+            '../libuv-v1.8.0/.libs/libuv.a',
+            '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
           ],
+          'defines': [
+            'AS_USE_LIBUV'
+          ],
+          'include_dirs': [
+            'aerospike-client-c/target/Darwin-x86_64/include',
+            'aerospike-client-c/src/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
+          ],          
+          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
           },
         }],
         ['OS=="win"', {
           'libraries': [
-            '../aerospike-client-c/lib/aerospike.lib',
-            '../aerospike-client-c/lib/pthreadVC2.lib',
+            '../aerospike-client-c-output/lib/aerospike.lib',
+            '../aerospike-client-c-output/lib/pthreadVC2.lib',
           ],
           'defines': [
+            'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
+          ],
+          'include_dirs': [
+            'aerospike-client-c-output/include',
+            'src/include',
+            "<!(node -e \"require('nan')\")",
           ],
           'msvs_settings': {
             'VCCLCompilerTool': {
@@ -159,6 +191,17 @@
             }
           },
         }],
+      ]
+    },
+    {
+      "target_name": "action_after_build",
+      "type": "none",
+      "dependencies": [ "<(module_name)" ],
+      "copies": [
+        {
+          "files": [ "<(PRODUCT_DIR)/<(module_name).node" ],
+          "destination": "<(module_path)"
+        }
       ]
     }
   ]

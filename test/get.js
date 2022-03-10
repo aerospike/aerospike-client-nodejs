@@ -112,11 +112,11 @@ describe('client.get()', function () {
   })
 
   it('fetches a record given the digest', function () {
-    const key = new Aerospike.Key('test', 'test', 'digestOnly')
+    const key = new Aerospike.Key(helper.namespace, helper.set, 'digestOnly')
     client.put(key, { foo: 'bar' })
       .then(() => {
         const digest = key.digest
-        const key2 = new Aerospike.Key('test', null, null, digest)
+        const key2 = new Aerospike.Key(helper.namespace, null, null, digest)
         return client.get(key2)
           .then(record => expect(record.bins.foo).to.equal('bar'))
       })

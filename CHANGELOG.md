@@ -2,10 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [4.0.0]
 
 * **New Features**
   * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+  * Add support for Aerospike Expressions
   * Added TypeScript typings. [#446](https://github.com/aerospike/aerospike-client-nodejs/pull/446) Thanks to [@bit0r1n](https://github.com/bit0r1n)!
 
 * **Updates**
@@ -13,8 +14,15 @@ All notable changes to this project will be documented in this file.
   * *BREAKING*: Drop support for Node.js 8.
   * *BREAKING*: Remove support for CentOS 6 as well as Ubuntu 16.0.4.
   * *BREAKING*: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
-  * Use EL7 C client builds on Amazon Linux [#405](https://github.com/aerospike/aerospike-client-nodejs/pull/405)
-  * Update C client library to [v5.2.1](http://www.aerospike.com/download/client/c/notes.html#5.2.1)
+  * Add support for building c-client as sub-module
+
+## [3.16.7] - 2022-01-10
+
+* **Bug Fixes**
+  * CLIENT-1641: Unprocessed results sent to a different transaction on "Partition unavailable"
+
+* **Updates**
+  * Update C client library to [v4.6.24](http://www.aerospike.com/download/client/c/notes.html#4.6.24).
 
 ## [3.16.6] - 2021-07-13
 

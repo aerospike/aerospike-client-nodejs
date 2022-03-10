@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ const parser = yargs
       default: null,
       describe: 'Aerospike database port.'
     },
-    timeout: {
+    totalTimeout: {
       alias: 't',
       default: 1000,
       describe: 'Timeout in milliseconds.'
@@ -91,6 +91,9 @@ const parser = yargs
     },
     certfile: {
       describe: 'Path to the client\'s certificate chain file for mutual auth'
+    },
+    auth: {
+      describe: 'Specify client authentication mode'
     }
   })
 
@@ -116,7 +119,8 @@ function testDir () {
 
 options.getConfig = function () {
   const defaultPolicy = {
-    totalTimeout: options.timeout
+    totalTimeout: options.totalTimeout,
+    maxRetries: 6
   }
   const config = {
     log: {
@@ -170,6 +174,9 @@ options.getConfig = function () {
     }
   }
 
+  if (options.auth) {
+    config.auth = options.auth
+  }
   return config
 }
 

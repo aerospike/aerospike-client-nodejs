@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2019 Aerospike, Inc.
+// Copyright 2013-2022 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -146,12 +146,12 @@ context('Client Policies #noserver', function () {
     describe('new InfoPolicy', function () {
       it('sets the policy values from a value object', function () {
         const subject = new Aerospike.InfoPolicy({
-          totalTimeout: 1000,
+          timeout: 1000,
           sendAsIs: true,
           checkBounds: false
         })
 
-        expect(subject.totalTimeout).to.equal(1000)
+        expect(subject.timeout).to.equal(1000)
         expect(subject.sendAsIs).to.be.true()
         expect(subject.checkBounds).to.be.false()
       })

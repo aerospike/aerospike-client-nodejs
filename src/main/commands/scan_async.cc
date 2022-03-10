@@ -63,7 +63,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 
 	if (info[4]->IsNumber()) {
 		scan_id = Nan::To<int64_t>(info[4]).FromJust();
-		as_v8_info(log, "Using scan ID %lli for async scan.", scan_id);
+		as_v8_debug(log, "Using scan ID %lli for async scan.", scan_id);
 	}
 
 	as_v8_debug(log, "Sending async scan command");
@@ -77,5 +77,6 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 Cleanup:
 	delete cmd;
 	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
+	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
 	as_scan_destroy(&scan);
 }
