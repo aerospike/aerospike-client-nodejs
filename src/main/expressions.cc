@@ -32,13 +32,14 @@ int
 free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
-	int length = entries_ary->Length();
+	int i = 0, length = entries_ary->Length();
 	as_exp_entry* entry = entries;
-
-	for (int i = 0; i < length; i++,entry++) {
+	for (i = 0; i < length; i++,entry++) {
 		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 
 		if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
+			// it is freed by c-client in case of geojson exp but for other cases it may leak
+			// if (entry->v.val) as_val_destroy(entry->v.val);
 			continue;
 		}
 
@@ -74,10 +75,16 @@ free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log
 		}
 
 		if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+			if (entry->v.list_pol) {
+				cf_free(entry->v.list_pol);
+			}
 			continue;
 		}
 
 		if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+			if (entry->v.map_pol) {
+				cf_free(entry->v.map_pol);
+			}
 			continue;
 		}
 	}
@@ -104,19 +111,25 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
-		return get_asval_property(&entry->v.val, entry_obj, "value", log);
+		entry->v.val = NULL;
+		rc = get_asval_property(&entry->v.val, entry_obj, "value", log);
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
-		return get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
+		entry->v.str_val = NULL;
+		rc = get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
-		return get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		rc = get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
-		return get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
+		rc = get_int64_property(&entry->v.int_val, entry_obj, "intVal", log);
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
@@ -133,27 +146,30 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 
 	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
 		entry->v.ctx = NULL;
-		return get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
+		rc = get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
+		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
 		entry->v.list_pol = NULL;
 		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
-		if (policy_obj->IsObject() && 
-			get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log)) {
-			return AS_NODE_PARAM_OK;
+		if (policy_obj->IsObject()) {
+			entry->v.list_pol = (as_list_policy*) cf_malloc(sizeof(as_list_policy));
+			get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log);
 		}
+		return AS_NODE_PARAM_OK;
 	}
-
+	
 	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
 		entry->v.map_pol = NULL;
 		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).ToLocalChecked();
-		if (policy_obj->IsObject() && 
-			get_map_policy(entry->v.map_pol, policy_obj.As<Object>(), log)) {
-			return AS_NODE_PARAM_OK;
+		if (policy_obj->IsObject()) {
+			entry->v.map_pol = (as_map_policy*) cf_malloc(sizeof(as_map_policy));
+			get_map_policy(entry->v.map_pol, policy_obj.As<Object>(), log);
 		}
+		return AS_NODE_PARAM_OK;
 	}
-
+	
 	return rc;
 }
 
@@ -161,11 +177,12 @@ int
 compile_expression(Local<Array> entries_ary, as_exp** filter_exp, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
-	int length = entries_ary->Length();
+	int i = 0, length = entries_ary->Length();
 	as_v8_debug(log, "Compiling expression (length=%i)", length);
 	as_exp_entry* entries = (as_exp_entry*) cf_malloc(length * sizeof(as_exp_entry));
 	as_exp_entry* entry = entries;
-	for (int i = 0; i < length; i++) {
+
+	for (i = 0; i < length; i++) {
 		*entry = { };
 		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 		if ((rc = convert_entry(entry_obj, entry, log)) != AS_NODE_PARAM_OK) {
