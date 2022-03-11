@@ -39,6 +39,7 @@ free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log
 		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 
 		if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
+			if (entry->v.val) as_val_destroy(entry->v.val);
 			continue;
 		}
 
@@ -74,10 +75,18 @@ free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log
 		}
 
 		if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+			Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
+			if (policy_obj->IsObject()) {
+				cf_free(entry->v.list_pol);
+			}
 			continue;
 		}
 
 		if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+			Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).ToLocalChecked();
+			if (policy_obj->IsObject()) {
+				cf_free(entry->v.map_pol);
+			}
 			continue;
 		}
 	}
@@ -137,20 +146,22 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
-		entry->v.list_pol = NULL;
 		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
-		if (policy_obj->IsObject() && 
-			get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log)) {
-			return AS_NODE_PARAM_OK;
+		if (policy_obj->IsObject()) {
+			entry->v.list_pol = (as_list_policy*) cf_malloc(sizeof(as_list_policy));
+			if (get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log)) {
+				return AS_NODE_PARAM_OK;
+			}
 		}
 	}
-
+	
 	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
-		entry->v.map_pol = NULL;
 		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).ToLocalChecked();
-		if (policy_obj->IsObject() && 
-			get_map_policy(entry->v.map_pol, policy_obj.As<Object>(), log)) {
-			return AS_NODE_PARAM_OK;
+		if (policy_obj->IsObject()) {
+			entry->v.map_pol = (as_map_policy*) cf_malloc(sizeof(as_map_policy));
+			if (get_map_policy(entry->v.map_pol, policy_obj.As<Object>(), log)) {
+				return AS_NODE_PARAM_OK;
+			}
 		}
 	}
 
