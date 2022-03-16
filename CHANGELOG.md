@@ -5,16 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [4.0.0]
 
 * **New Features**
-  * Support boolean particle type. This feature requires server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
-  * Add support for Aerospike Expressions
-  * Added TypeScript typings. [#446](https://github.com/aerospike/aerospike-client-nodejs/pull/446) Thanks to [@bit0r1n](https://github.com/bit0r1n)!
+  * [CLIENT-1678] - Support boolean particle type. This feature requires Aerospike server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+  * [CLIENT-1679] - Add support for Aerospike Expressions.
+  * [CLIENT-1680] - Added TypeScript typings. [#446](https://github.com/aerospike/aerospike-client-nodejs/pull/446) Thanks to [@bit0r1n](https://github.com/bit0r1n)!
 
 * **Updates**
-  * *BREAKING*: This client requires server version 4.9 or later.
-  * *BREAKING*: Drop support for Node.js 8.
-  * *BREAKING*: Remove support for CentOS 6 as well as Ubuntu 16.0.4.
-  * *BREAKING*: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
-  * Add support for building c-client as sub-module
+  * BREAKING: This client requires server version 4.9 or later.
+  * BREAKING: Drop support for Node.js 8.
+  * BREAKING: Remove support for CentOS 6 as well as Ubuntu 16.04.
+  * BREAKING: Remove Scan#priority, Scan#percent, and ScanPolicy#failOnClusterChange, as the server no longer supports these fields.
+  * Add support for building c-client as a sub-module.
 
 ## [3.16.7] - 2022-01-10
 
