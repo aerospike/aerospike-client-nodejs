@@ -21,6 +21,7 @@
 
 extern "C" {
 #include <aerospike/as_policy.h>
+#include <aerospike/as_partition_filter.h>
 #include <aerospike/as_event.h>
 }
 
@@ -35,3 +36,4 @@ int infopolicy_from_jsobject(as_policy_info* policy, v8::Local<v8::Object> obj, 
 int applypolicy_from_jsobject(as_policy_apply* policy, v8::Local<v8::Object> obj, const LogInfo* log);
 int scanpolicy_from_jsobject(as_policy_scan* policy, v8::Local<v8::Object> obj, const LogInfo* log);
 int querypolicy_from_jsobject(as_policy_query* policy, v8::Local<v8::Object> obj, const LogInfo* log);
+int scanpartition_from_jsobject(as_partition_filter* pf, v8::Local<v8::Object> obj, const LogInfo* log);

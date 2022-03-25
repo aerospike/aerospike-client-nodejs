@@ -20,12 +20,10 @@
 #include "policy.h"
 #include "conversions.h"
 #include "expressions.h"
-#include "predexp.h"
 
 extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_event.h>
-#include <aerospike/as_predexp.h>
 }
 
 using namespace v8;
@@ -84,20 +82,6 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	}
 	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj, "compress", log)) != AS_NODE_PARAM_OK) {
 		return rc;
-	}
-
-	Local<Value> predexp_val = Nan::Get(obj, Nan::New("predexp").ToLocalChecked()).ToLocalChecked();
-	if (predexp_val->IsArray()) {
-		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
-		int size = predexp_ary->Length();
-		if (size > 0) {
-			policy->predexp = as_predexp_list_create(size);
-			for (int i = 0; i < size; i++) {
-				Local<Object> predexpObj = Nan::Get(predexp_ary, i).ToLocalChecked().As<Object>();
-				as_predexp_base* predexp = convert_predexp(predexpObj);
-				as_predexp_list_add(policy->predexp, predexp);
-			}
-		}
 	}
 
 	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
@@ -316,4 +300,46 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 	}
 	as_v8_detail( log, "Parsing scan policy: success");
 	return AS_NODE_PARAM_OK;
+}
+
+int scanpartition_from_jsobject(as_partition_filter* pf, v8::Local<v8::Object> obj, const LogInfo* log)
+{
+	int rc = AS_NODE_PARAM_OK;
+	bool pf_enabled = 0;
+
+
+	if ((rc = get_optional_bool_property(&pf_enabled, NULL, obj, "pfEnabled", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+
+	if(!pf_enabled) {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	if (Nan::Has(obj, Nan::New("partFilter").ToLocalChecked()).FromJust()) {
+		Local<Value> pf_obj = Nan::Get(obj, Nan::New("partFilter").ToLocalChecked()).ToLocalChecked();
+		if (!pf_obj->IsUndefined() && pf_obj->IsObject()) {
+			if ((rc = get_optional_uint32_property((uint32_t*) &pf->begin, NULL, pf_obj.As<Object>(), "begin", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			if ((rc = get_optional_uint32_property((uint32_t*) &pf->count, NULL, pf_obj.As<Object>(), "count", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			}
+			int len = AS_DIGEST_VALUE_SIZE;
+			bool defined = false;
+			if ((rc = get_optional_bytes_property((uint8_t **)&pf->digest.value, &len, &defined, pf_obj.As<Object>(), "digest", log)) != AS_NODE_PARAM_OK) {
+				return rc;
+			} else {
+				if (defined){
+					pf->digest.init = true;
+				}
+			}
+		} else {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+
+	as_v8_detail( log, "Parsing scan partition: success");
+
+	return rc;
 }
