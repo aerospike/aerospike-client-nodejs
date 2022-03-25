@@ -72,16 +72,14 @@ Aerospike supports the following data types:
 | Integer             | Number or BigInt             |
 | Double              | Number                       |
 | String              | String                       |
+| Boolean             | Boolean                      |
 | Bytes               | Buffer                       |
 | List                | Array                        |
 | Map                 | Object                       |
 | HyperLogLog         | Buffer                       |
 
-**Note:** Aerospike currently does not support a **Boolean** data type. To
-store boolean values in the database, the application needs to convert them to
-a supported data type as the client does not do any automatica data type
-conversions.  Attempting to store a boolean value in a record bin will lead to
-a parameter error being returned by the client.
+**Note:** Support for the **Boolean** data type requires Aerospike server version 5.6+
+and Aerospike Node.js client version 4.0+.
 
 ### Nested Data Structure
 
