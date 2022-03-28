@@ -111,6 +111,18 @@ context('Scans', function () {
       })
     })
 
+    it('retrieves all records from the given partitions', function (done) {
+      const scan = client.scan(helper.namespace, testSet)
+      let recordsReceived = 0
+      scan.partitions(0, 4096)
+      const stream = scan.foreach()
+      stream.on('data', () => recordsReceived++)
+      stream.on('end', () => {
+        expect(recordsReceived).to.equal(numberOfRecords)
+        done()
+      })
+    })
+
     it('returns the key if it is stored on the server', function (done) {
       // requires { key: Aerospike.policy.key.SEND } when creating the record
       const scan = client.scan(helper.namespace, testSet)

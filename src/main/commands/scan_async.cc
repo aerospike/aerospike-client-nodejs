@@ -27,6 +27,7 @@ extern "C" {
 	#include <aerospike/as_error.h>
 	#include <aerospike/as_policy.h>
 	#include <aerospike/as_scan.h>
+	#include <aerospike/as_partition_filter.h>
 	#include <aerospike/as_status.h>
 }
 
@@ -50,6 +51,8 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	as_policy_scan policy;
 	as_policy_scan* p_policy = NULL;
 	as_status status;
+	as_partition_filter pf;
+	as_partition_filter *p_pf = NULL;
 
 	setup_scan(&scan, info[0], info[1], info[2], log);
 
@@ -66,8 +69,19 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 		as_v8_debug(log, "Using scan ID %lli for async scan.", scan_id);
 	}
 
-	as_v8_debug(log, "Sending async scan command");
-	status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
+	as_partition_filter_set_all(&pf);
+	if (partitions_from_jsobject(&pf, info[2].As<Object>(), log) == AS_NODE_PARAM_OK) {
+		as_v8_debug(log, "Scan partition object is valid");
+		p_pf = &pf;
+	}
+
+	if (p_pf) {
+		as_v8_debug(log, "Sending async scan partitions command");
+		status = aerospike_scan_partitions_async(client->as, &cmd->err, p_policy, &scan, p_pf, async_scan_listener, cmd, NULL);
+	} else {
+		as_v8_debug(log, "Sending async scan command");
+		status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
+	}
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
 	} else {
