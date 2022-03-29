@@ -52,7 +52,7 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	as_policy_scan* p_policy = NULL;
 	as_status status;
 	as_partition_filter pf;
-	as_partition_filter *p_pf = NULL;
+	bool pf_defined = false;
 
 	setup_scan(&scan, info[0], info[1], info[2], log);
 
@@ -70,18 +70,19 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 	}
 
 	as_partition_filter_set_all(&pf);
-	if (partitions_from_jsobject(&pf, info[2].As<Object>(), log) == AS_NODE_PARAM_OK) {
-		as_v8_debug(log, "Scan partition object is valid");
-		p_pf = &pf;
+	if (partitions_from_jsobject(&pf, &pf_defined, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+		goto Cleanup;
 	}
 
-	if (p_pf) {
+	if (pf_defined) {
 		as_v8_debug(log, "Sending async scan partitions command");
-		status = aerospike_scan_partitions_async(client->as, &cmd->err, p_policy, &scan, p_pf, async_scan_listener, cmd, NULL);
+		status = aerospike_scan_partitions_async(client->as, &cmd->err, p_policy, &scan, &pf, async_scan_listener, cmd, NULL);
 	} else {
 		as_v8_debug(log, "Sending async scan command");
 		status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan, &scan_id, async_scan_listener, cmd, NULL);
 	}
+	
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
 	} else {

@@ -318,20 +318,20 @@ int scanpolicy_from_jsobject(as_policy_scan* policy, Local<Object> obj, const Lo
 	return AS_NODE_PARAM_OK;
 }
 
-int partitions_from_jsobject(as_partition_filter* pf, v8::Local<v8::Object> obj, const LogInfo* log)
+int partitions_from_jsobject(as_partition_filter* pf,  bool* defined, v8::Local<v8::Object> obj, const LogInfo* log)
 {
 	int rc = AS_NODE_PARAM_OK;
-	bool pf_enabled = 0;
 
-
-	if ((rc = get_optional_bool_property(&pf_enabled, NULL, obj, "pfEnabled", log)) != AS_NODE_PARAM_OK) {
+	*defined = false;
+	if ((rc = get_optional_bool_property(defined, NULL, obj, "pfEnabled", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 
-	if(!pf_enabled) {
-		return AS_NODE_PARAM_ERR;
+	if(!*defined) {
+		return AS_NODE_PARAM_OK;
 	}
-
+	
+	*defined = true;
 	if (Nan::Has(obj, Nan::New("partFilter").ToLocalChecked()).FromJust()) {
 		Local<Value> pf_obj = Nan::Get(obj, Nan::New("partFilter").ToLocalChecked()).ToLocalChecked();
 		if (!pf_obj->IsUndefined() && pf_obj->IsObject()) {
