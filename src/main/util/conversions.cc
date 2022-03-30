@@ -988,8 +988,8 @@ int asval_from_jsvalue(as_val** value, Local<Value> v8value, const LogInfo* log)
         *value = (as_val*) as_integer_new(int64_value);
 #endif
     } else if (node::Buffer::HasInstance(v8value)) {
-        int size;
-        uint8_t* data;
+        int size = 0;
+        uint8_t* data =  NULL;
         if (extract_blob_from_jsobject(&data, &size, v8value.As<Object>(), log) != AS_NODE_PARAM_OK) {
             as_v8_error(log, "Extractingb blob from a js object failed");
             return AS_NODE_PARAM_ERR;
@@ -1071,8 +1071,8 @@ int recordbins_from_jsobject(as_record* rec, Local<Object> obj, const LogInfo* l
         }
 #endif
         if (node::Buffer::HasInstance(value)) {
-            int size;
-            uint8_t* data;
+            int size = 0;
+            uint8_t* data = NULL;
             if (extract_blob_from_jsobject(&data, &size, value.As<Object>(), log) != AS_NODE_PARAM_OK) {
                 as_v8_error(log, "Extractingb blob from a js object failed");
                 return AS_NODE_PARAM_ERR;
@@ -1128,9 +1128,14 @@ int extract_blob_from_jsobject(uint8_t** data, int* len, Local<Object> obj, cons
         as_v8_error(log, "The binary data is not of the type UnsignedBytes");
         return AS_NODE_PARAM_ERR;
     }
-
-    (*len) = node::Buffer::Length(obj);
-    (*data) = (uint8_t*) cf_malloc(sizeof(uint8_t) * (*len));
+    if(len == 0) {
+        (*len) = node::Buffer::Length(obj);
+        (*data) = (uint8_t*) cf_malloc(sizeof(uint8_t) * (*len));
+    } else{
+        assert(*data);
+        assert(*len == (int)node::Buffer::Length(obj));
+    }
+    
     memcpy((*data), node::Buffer::Data(obj), (*len));
 
     return AS_NODE_PARAM_OK;
@@ -1329,8 +1334,8 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
 #endif
     } else if (val_obj->IsObject()) {
         Local<Object> obj = val_obj.As<Object>();
-        int size ;
-        uint8_t* data ;
+        int size = 0;
+        uint8_t* data = NULL;
         if (extract_blob_from_jsobject(&data, &size, obj, log) != AS_NODE_PARAM_OK) {
             return AS_NODE_PARAM_ERR;
         }
@@ -1361,8 +1366,8 @@ int key_from_jsobject(as_key* key, Local<Object> obj, const LogInfo* log)
         Local<Value> digest_value = Nan::Get(obj, Nan::New("digest").ToLocalChecked()).ToLocalChecked();
         if (digest_value->IsObject()) {
             Local<Object> digest_obj = digest_value.As<Object>();
-            int size;
-            uint8_t* data;
+            int size = 0;
+            uint8_t* data = NULL;
             if (extract_blob_from_jsobject(&data, &size, digest_obj, log) != AS_NODE_PARAM_OK) {
                 return AS_NODE_PARAM_ERR;
             }

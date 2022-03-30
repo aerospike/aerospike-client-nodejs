@@ -80,6 +80,5 @@ Cleanup:
 	if (udf_module) cf_free(udf_module);
 	if (udf_function) cf_free(udf_function);
 	if (udf_args) as_list_destroy(udf_args);
-	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
 	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
 }

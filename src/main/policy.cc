@@ -20,12 +20,10 @@
 #include "policy.h"
 #include "conversions.h"
 #include "expressions.h"
-#include "predexp.h"
 
 extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_event.h>
-#include <aerospike/as_predexp.h>
 }
 
 using namespace v8;
@@ -84,20 +82,6 @@ int basepolicy_from_jsobject(as_policy_base* policy, Local<Object> obj, const Lo
 	}
 	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj, "compress", log)) != AS_NODE_PARAM_OK) {
 		return rc;
-	}
-
-	Local<Value> predexp_val = Nan::Get(obj, Nan::New("predexp").ToLocalChecked()).ToLocalChecked();
-	if (predexp_val->IsArray()) {
-		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
-		int size = predexp_ary->Length();
-		if (size > 0) {
-			policy->predexp = as_predexp_list_create(size);
-			for (int i = 0; i < size; i++) {
-				Local<Object> predexpObj = Nan::Get(predexp_ary, i).ToLocalChecked().As<Object>();
-				as_predexp_base* predexp = convert_predexp(predexpObj);
-				as_predexp_list_add(policy->predexp, predexp);
-			}
-		}
 	}
 
 	Local<Value> exp_val = Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked()).ToLocalChecked();
