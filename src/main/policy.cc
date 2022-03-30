@@ -342,17 +342,19 @@ int partitions_from_jsobject(as_partition_filter* pf,  bool* defined, v8::Local<
 				return rc;
 			}
 			int len = AS_DIGEST_VALUE_SIZE;
-			bool defined = false;
-			if ((rc = get_optional_bytes_property((uint8_t **)&pf->digest.value, &len, &defined, pf_obj.As<Object>(), "digest", log)) != AS_NODE_PARAM_OK) {
+			bool digest_defined = false;
+			if ((rc = get_optional_bytes_property((uint8_t **)&pf->digest.value, &len, &digest_defined, pf_obj.As<Object>(), "digest", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			} else {
-				if (defined){
+				if (digest_defined){
 					pf->digest.init = true;
 				}
 			}
 		} else {
 			return AS_NODE_PARAM_ERR;
 		}
+	} else {
+		return AS_NODE_PARAM_ERR;
 	}
 
 	as_v8_detail( log, "Parsing scan partition: success");
