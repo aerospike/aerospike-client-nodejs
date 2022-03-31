@@ -29,12 +29,6 @@ extern "C" {
 	#include <aerospike/as_query.h>
 	#include <aerospike/as_status.h>
 	#include <aerospike/as_partition_filter.h>
-	as_status
-	aerospike_query_partitions_async(
-		aerospike* as, as_error* err, const as_policy_query* policy, as_query* query,
-		as_partition_filter* pf, as_async_query_record_listener listener, void* udata,
-		as_event_loop* event_loop
-		);
 }
 
 using namespace v8;
@@ -56,7 +50,7 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 	as_policy_query* p_policy = NULL;
 	as_status status;
 	as_partition_filter pf;
-	as_partition_filter *p_pf = NULL;
+	bool pf_defined = false;
 
 	setup_query(&query, info[0], info[1], info[2], log);
 
@@ -69,14 +63,14 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 	}
 
 	as_partition_filter_set_all(&pf);
-	if (partitions_from_jsobject(&pf, info[2].As<Object>(), log) == AS_NODE_PARAM_OK) {
-		as_v8_debug(log, "Scan partition object is valid");
-		p_pf = &pf;
+	if (partitions_from_jsobject(&pf, &pf_defined, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+		goto Cleanup;
 	}
 
-	if (p_pf) {
+	if (pf_defined) {
 		as_v8_debug(log, "Sending async query partitions command");
-		status = aerospike_query_partitions_async(client->as, &cmd->err, p_policy, &query, p_pf, async_scan_listener, cmd, NULL);
+		status = aerospike_query_partitions_async(client->as, &cmd->err, p_policy, &query, &pf, async_scan_listener, cmd, NULL);
 	} else{
 		as_v8_debug(log, "Sending async query command");
 		status = aerospike_query_async(client->as, &cmd->err, p_policy, &query, async_scan_listener, cmd, NULL);
