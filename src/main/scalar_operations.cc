@@ -48,8 +48,8 @@ add_write_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* lo
 		as_v8_debug(log, "value=%s", val);
 		return as_operations_add_write_strp(ops, bin, val, true);
 	} else if (node::Buffer::HasInstance(v8val)) {
-		int len ;
-		uint8_t* data ;
+		int len = 0;
+		uint8_t* data = NULL;
 		if (extract_blob_from_jsobject(&data, &len, v8val.As<Object>(), log) != AS_NODE_PARAM_OK) {
 			return false;
 		}
@@ -124,8 +124,8 @@ add_prepend_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* 
 		return as_operations_add_prepend_strp(ops, bin, binVal, true);
 	} else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val.As<Object>();
-		int len;
-		uint8_t* data;
+		int len = 0;
+		uint8_t* data = NULL;
 		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
 			return false;
 		}
@@ -147,8 +147,8 @@ add_append_op(as_operations* ops, const char* bin, Local<Object> obj, LogInfo* l
 		return as_operations_add_append_strp(ops, bin, binVal,true);
 	} else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val.As<Object>();
-		int len ;
-		uint8_t* data ;
+		int len = 0;
+		uint8_t* data = NULL;
 		if (extract_blob_from_jsobject(&data, &len, binObj, log) != AS_NODE_PARAM_OK) {
 			return false;
 		}

@@ -21,13 +21,11 @@
 #include "client.h"
 #include "conversions.h"
 #include "operations.h"
-#include "predexp.h"
 #include "log.h"
 #include "query.h"
 
 extern "C" {
 #include <aerospike/as_query.h>
-#include <aerospike/as_predexp.h>
 }
 
 using namespace v8;
@@ -131,21 +129,6 @@ void setup_query(as_query* query, Local<Value> ns, Local<Value> set, Local<Value
 		}
 	}
 
-	Local<Value> predexp_val = Nan::Get(options, Nan::New("predexp").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(predexp_val, IsArray, "predexp must be an array");
-	if (predexp_val->IsArray()) {
-		Local<Array> predexp_ary = Local<Array>::Cast(predexp_val);
-		int size = predexp_ary->Length();
-		if (size > 0) {
-			as_query_predexp_init(query, size);
-			for (int i = 0; i < size; i++) {
-				Local<Object> predexpObj = Nan::Get(predexp_ary, i).ToLocalChecked().As<Object>();
-				as_predexp_base* predexp = convert_predexp(predexpObj);
-				as_query_predexp_add(query, predexp);
-			}
-		}
-	}
-
 	Local<Value> selected = Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
@@ -212,9 +195,6 @@ void free_query(as_query* query, as_policy_query* policy)
 	}
 
 	if (policy) {
-		if (policy->base.predexp) {
-			as_predexp_list_destroy(policy->base.predexp);
-		}
 		if (policy->base.filter_exp) { as_exp_destroy(policy->base.filter_exp); }
 	}
 }
