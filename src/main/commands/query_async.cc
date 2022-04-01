@@ -56,7 +56,7 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 
 	if (info[3]->IsObject()) {
 		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Partitions object invalid");
 			goto Cleanup;
 		}
 		p_policy = &policy;
