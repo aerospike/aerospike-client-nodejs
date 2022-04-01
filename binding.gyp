@@ -71,7 +71,6 @@
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/expressions.cc',
-        'src/main/predexp.cc',
         'src/main/async.cc',
         'src/main/command.cc',
         'src/main/commands/apply_async.cc',

@@ -18,7 +18,6 @@
 #include "enums.h"
 #include "policy.h"
 #include "operations.h"
-#include "predexp.h"
 #include "expressions.h"
 #include "log.h"
 #include "conversions.h"
@@ -138,7 +137,6 @@ NAN_MODULE_INIT(Aerospike)
 	export("lists", list_enum_values());
 	export("maps", map_enum_values());
 	export("predicates", predicates());
-	export("predexp", predexp_codes());
 	export("exp", exp_opcode_values());
 	export("log", log_enum_values());
 	export("scalarOperations", scalar_opcode_values());
