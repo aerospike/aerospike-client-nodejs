@@ -18,9 +18,9 @@
 
 #include <node.h>
 
-#define TTL_NAMESPACE_DEFAULT  0
-#define TTL_NEVER_EXPIRE      -1
-#define TTL_DONT_UPDATE       -2
+#define TTL_NAMESPACE_DEFAULT 0
+#define TTL_NEVER_EXPIRE -1
+#define TTL_DONT_UPDATE -2
 
 v8::Local<v8::Object> auth_mode_enum_values();
 v8::Local<v8::Object> bitwise_enum_values();

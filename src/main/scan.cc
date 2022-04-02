@@ -31,18 +31,22 @@ extern "C" {
 
 using namespace v8;
 
-void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> maybe_options, LogInfo* log)
+void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, LogInfo *log)
 {
-    as_namespace as_ns  = {'\0'};
-    as_set       as_set = {'\0'};
+	as_namespace as_ns = {'\0'};
+	as_set as_set = {'\0'};
 
-	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
-		as_v8_error(log, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) >
+		AS_NAMESPACE_MAX_SIZE) {
+		as_v8_error(log, "Namespace exceeds max. length (%d)",
+					AS_NAMESPACE_MAX_SIZE);
 		// TODO: Return param error
 	}
 
 	if (set->IsString()) {
-		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
+			AS_SET_MAX_SIZE) {
 			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 			// TODO: Return param error
 		}
@@ -55,16 +59,18 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 	}
 	Local<Object> options = maybe_options.As<Object>();
 
-	Local<Value> selected = Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
+	Local<Value> selected =
+		Nan::Get(options, Nan::New("selected").ToLocalChecked())
+			.ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
 		int size = bins->Length();
 		as_v8_detail(log, "Number of bins to select in scan %d", size);
 		as_scan_select_init(scan, size);
-		for (int i=0; i < size; i++) {
+		for (int i = 0; i < size; i++) {
 			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
-			if(!bin->IsString()) {
+			if (!bin->IsString()) {
 				as_v8_error(log, "Bin value passed must be string");
 				return Nan::ThrowError("Bin name passed is not a string");
 			}
@@ -73,35 +79,41 @@ void setup_scan(as_scan* scan, Local<Value> ns, Local<Value> set, Local<Value> m
 		}
 	}
 
-	Local<Value> nobins = Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
+	Local<Value> nobins =
+		Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		as_scan_set_nobins(scan, Nan::To<bool>(nobins).FromJust());
 	}
 
-	Local<Value> concurrent = Nan::Get(options, Nan::New("concurrent").ToLocalChecked()).ToLocalChecked();
+	Local<Value> concurrent =
+		Nan::Get(options, Nan::New("concurrent").ToLocalChecked())
+			.ToLocalChecked();
 	TYPE_CHECK_OPT(concurrent, IsBoolean, "concurrent must be a boolean");
 	if (concurrent->IsBoolean()) {
 		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
 	}
 
-	Local<Value> udf = Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
+	Local<Value> udf =
+		Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {
 		char module[255];
 		char func[255];
-		char* filename = module;
-		char* funcname = func;
-		as_list* arglist = NULL;
-		int status = udfargs_from_jsobject(&filename, &funcname, &arglist, udf.As<Object>(), log);
+		char *filename = module;
+		char *funcname = func;
+		as_list *arglist = NULL;
+		int status = udfargs_from_jsobject(&filename, &funcname, &arglist,
+										   udf.As<Object>(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for scan object failed");
 			Nan::ThrowTypeError("Error in parsing the UDF parameters");
 		}
-        as_scan_apply_each(scan, filename, funcname, arglist);
+		as_scan_apply_each(scan, filename, funcname, arglist);
 	}
 
-	Local<Value> maybeOps = Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
+	Local<Value> maybeOps =
+		Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(maybeOps, IsArray, "ops must be an array");
 	if (maybeOps->IsArray()) {
 		Local<Array> ops = maybeOps.As<Array>();

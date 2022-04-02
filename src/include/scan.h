@@ -22,4 +22,6 @@ extern "C" {
 
 #include "log.h"
 
-void setup_scan(as_scan* scan, v8::Local<v8::Value> ns, v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options, LogInfo* log);
+void setup_scan(as_scan *scan, v8::Local<v8::Value> ns,
+				v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options,
+				LogInfo *log);

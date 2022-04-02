@@ -23,4 +23,5 @@ extern "C" {
 #include <aerospike/as_policy.h>
 }
 
-int config_from_jsobject(as_config* config, v8::Local<v8::Object> obj, const LogInfo* log);
+int config_from_jsobject(as_config *config, v8::Local<v8::Object> obj,
+						 const LogInfo *log);

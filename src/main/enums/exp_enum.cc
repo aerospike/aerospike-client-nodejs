@@ -23,7 +23,8 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> exp_opcode_values()
 {
@@ -121,7 +122,8 @@ Local<Object> exp_opcode_values()
 	set(exp_sys, "CALL_CDT", as_exp_call_system_type::_AS_EXP_SYS_CALL_CDT);
 	set(exp_sys, "CALL_BITS", as_exp_call_system_type::_AS_EXP_SYS_CALL_BITS);
 	set(exp_sys, "CALL_HLL", as_exp_call_system_type::_AS_EXP_SYS_CALL_HLL);
-	set(exp_sys, "FLAG_MODIFY_LOCAL", as_exp_call_system_type::_AS_EXP_SYS_FLAG_MODIFY_LOCAL);
+	set(exp_sys, "FLAG_MODIFY_LOCAL",
+		as_exp_call_system_type::_AS_EXP_SYS_FLAG_MODIFY_LOCAL);
 
 	Local<Object> exp_type = Nan::New<Object>();
 	set(exp_type, "NIL", as_exp_type::AS_EXP_TYPE_NIL);

@@ -23,7 +23,8 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> hll_enum_values()
 {

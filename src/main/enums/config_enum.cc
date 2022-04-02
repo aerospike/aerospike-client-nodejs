@@ -24,7 +24,8 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> log_enum_values()
 {
@@ -36,7 +37,8 @@ Local<Object> log_enum_values()
 	set(obj, "INFO", AS_LOG_LEVEL_INFO);
 	set(obj, "DEBUG", AS_LOG_LEVEL_DEBUG);
 	set(obj, "TRACE", AS_LOG_LEVEL_TRACE);
-	set(obj, "DETAIL", AS_LOG_LEVEL_TRACE); // renamed in v3.4 - keep old name for backwards compatibility
+	set(obj, "DETAIL",
+		AS_LOG_LEVEL_TRACE); // renamed in v3.4 - keep old name for backwards compatibility
 	return scope.Escape(obj);
 }
 

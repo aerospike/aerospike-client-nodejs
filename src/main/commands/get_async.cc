@@ -29,24 +29,27 @@ NAN_METHOD(AerospikeClient::GetAsync)
 	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
 
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand("Get", client, info[2].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AsyncCommand *cmd = new AsyncCommand("Get", client, info[2].As<Function>());
+	LogInfo *log = client->log;
 
 	as_key key;
 	bool key_initalized = false;
 	as_policy_read policy;
-	as_policy_read* p_policy = NULL;
+	as_policy_read *p_policy = NULL;
 	as_status status = AEROSPIKE_ERR;
 
-	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) !=
+		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
 	if (info[1]->IsObject()) {
-		if (readpolicy_from_jsobject(&policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		if (readpolicy_from_jsobject(&policy, info[1].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
@@ -54,15 +57,20 @@ NAN_METHOD(AerospikeClient::GetAsync)
 	}
 
 	as_v8_debug(log, "Sending async get command");
-	status = aerospike_key_get_async(client->as, &cmd->err, p_policy, &key, async_record_listener, cmd, NULL, NULL);
+	status = aerospike_key_get_async(client->as, &cmd->err, p_policy, &key,
+									 async_record_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
-	} else {
+	}
+	else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
 	delete cmd;
-	if (key_initalized) as_key_destroy(&key);
-	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
+	if (key_initalized)
+		as_key_destroy(&key);
+	if (p_policy && policy.base.filter_exp) {
+		as_exp_destroy(policy.base.filter_exp);
+	}
 }

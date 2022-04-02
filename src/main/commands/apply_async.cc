@@ -32,33 +32,38 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand("Apply", client, info[3].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AsyncCommand *cmd =
+		new AsyncCommand("Apply", client, info[3].As<Function>());
+	LogInfo *log = client->log;
 
 	as_key key;
 	bool key_initalized = false;
 	as_policy_apply policy;
-	as_policy_apply* p_policy = NULL;
+	as_policy_apply *p_policy = NULL;
 	as_status status;
 
-	as_list* udf_args = NULL;
-	char* udf_module = NULL;
-	char* udf_function = NULL;
+	as_list *udf_args = NULL;
+	char *udf_module = NULL;
+	char *udf_function = NULL;
 
-	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) !=
+		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
-	if (udfargs_from_jsobject(&udf_module, &udf_function, &udf_args, info[1].As<Object>(), log) != AS_NODE_PARAM_OK ) {
+	if (udfargs_from_jsobject(&udf_module, &udf_function, &udf_args,
+							  info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "UDF args object invalid");
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
-		if (applypolicy_from_jsobject(&policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		if (applypolicy_from_jsobject(&policy, info[2].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
@@ -67,18 +72,26 @@ NAN_METHOD(AerospikeClient::ApplyAsync)
 
 	as_v8_debug(log, "Sending async apply command");
 	status = aerospike_key_apply_async(client->as, &cmd->err, p_policy, &key,
-			udf_module, udf_function, udf_args, async_value_listener, cmd, NULL, NULL);
+									   udf_module, udf_function, udf_args,
+									   async_value_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
-	} else {
+	}
+	else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
 	delete cmd;
-	if (key_initalized) as_key_destroy(&key);
-	if (udf_module) cf_free(udf_module);
-	if (udf_function) cf_free(udf_function);
-	if (udf_args) as_list_destroy(udf_args);
-	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
+	if (key_initalized)
+		as_key_destroy(&key);
+	if (udf_module)
+		cf_free(udf_module);
+	if (udf_function)
+		cf_free(udf_function);
+	if (udf_args)
+		as_list_destroy(udf_args);
+	if (p_policy && policy.base.filter_exp) {
+		as_exp_destroy(policy.base.filter_exp);
+	}
 }

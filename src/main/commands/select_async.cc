@@ -30,31 +30,36 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand("Select", client, info[3].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AsyncCommand *cmd =
+		new AsyncCommand("Select", client, info[3].As<Function>());
+	LogInfo *log = client->log;
 
 	as_key key;
 	bool key_initalized = false;
-	char** bins = NULL;
+	char **bins = NULL;
 	uint32_t num_bins = 0;
 	as_policy_read policy;
-	as_policy_read* p_policy = NULL;
+	as_policy_read *p_policy = NULL;
 	as_status status;
 
-	if (key_from_jsobject(&key, info[0].As<Object>(), log) != AS_NODE_PARAM_OK) {
+	if (key_from_jsobject(&key, info[0].As<Object>(), log) !=
+		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Key object invalid");
 		goto Cleanup;
 	}
 	key_initalized = true;
 
-	if (bins_from_jsarray(&bins, &num_bins, info[1].As<Array>(), log) != AS_NODE_PARAM_OK) {
+	if (bins_from_jsarray(&bins, &num_bins, info[1].As<Array>(), log) !=
+		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Bins array invalid");
 		goto Cleanup;
 	}
 
 	if (info[2]->IsObject()) {
-		if (readpolicy_from_jsobject(&policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		if (readpolicy_from_jsobject(&policy, info[2].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
@@ -62,17 +67,23 @@ NAN_METHOD(AerospikeClient::SelectAsync)
 	}
 
 	as_v8_debug(log, "Sending async select command");
-	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key, (const char**)bins, async_record_listener, cmd, NULL, NULL);
+	status = aerospike_key_select_async(client->as, &cmd->err, p_policy, &key,
+										(const char **)bins,
+										async_record_listener, cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
-	} else {
+	}
+	else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
 	delete cmd;
-	if (key_initalized) as_key_destroy(&key);
-	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
+	if (key_initalized)
+		as_key_destroy(&key);
+	if (p_policy && policy.base.filter_exp) {
+		as_exp_destroy(policy.base.filter_exp);
+	}
 	if (bins) {
 		for (uint32_t i = 0; i < num_bins; i++) {
 			cf_free(bins[i]);

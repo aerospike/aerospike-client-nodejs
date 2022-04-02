@@ -52,9 +52,9 @@ AerospikeClient::~AerospikeClient() {}
  */
 NAN_METHOD(AerospikeClient::New)
 {
-	AerospikeClient* client = new AerospikeClient();
-	client->as = (aerospike*) cf_malloc(sizeof(aerospike));
-	client->log = (LogInfo*) cf_malloc(sizeof(LogInfo));
+	AerospikeClient *client = new AerospikeClient();
+	client->as = (aerospike *)cf_malloc(sizeof(aerospike));
+	client->log = (LogInfo *)cf_malloc(sizeof(LogInfo));
 
 	// initialize the log to default values.
 	client->log->fd = g_log_info.fd;
@@ -66,7 +66,8 @@ NAN_METHOD(AerospikeClient::New)
 
 	Local<Object> v8Config = info[0].As<Object>();
 
-	Local<Value> v8LogInfo = Nan::Get(v8Config, Nan::New("log").ToLocalChecked()).ToLocalChecked();
+	Local<Value> v8LogInfo =
+		Nan::Get(v8Config, Nan::New("log").ToLocalChecked()).ToLocalChecked();
 	if (v8LogInfo->IsObject()) {
 		log_from_jsobject(client->log, v8LogInfo.As<Object>());
 	}
@@ -88,15 +89,18 @@ NAN_METHOD(AerospikeClient::New)
 NAN_METHOD(AerospikeClient::Connect)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	Local<Function> callback = info[0].As<Function>();
-	AerospikeCommand* cmd = new AerospikeCommand("Connect", client, callback);
+	AerospikeCommand *cmd = new AerospikeCommand("Connect", client, callback);
 
 	as_error err;
 	if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
 		cmd->ErrorCallback(&err);
-	} else {
-		as_v8_debug(client->log, "Successfully connected to cluster: Enjoy your cake!");
+	}
+	else {
+		as_v8_debug(client->log,
+					"Successfully connected to cluster: Enjoy your cake!");
 		cmd->Callback(0, {});
 	}
 
@@ -109,7 +113,8 @@ NAN_METHOD(AerospikeClient::Connect)
 NAN_METHOD(AerospikeClient::Close)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
@@ -127,7 +132,8 @@ NAN_METHOD(AerospikeClient::Close)
 NAN_METHOD(AerospikeClient::IsConnected)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	bool connected = aerospike_cluster_is_connected(client->as);
 
@@ -140,7 +146,8 @@ NAN_METHOD(AerospikeClient::IsConnected)
 NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	bool pending = as_async_get_pending(client->as->cluster) > 0;
 
@@ -153,21 +160,21 @@ NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 NAN_METHOD(AerospikeClient::GetNodes)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
-	as_nodes* nodes = as_nodes_reserve(client->as->cluster);
+	as_nodes *nodes = as_nodes_reserve(client->as->cluster);
 	Local<Array> v8_nodes = Nan::New<Array>(nodes->size);
 
 	for (uint32_t i = 0; i < nodes->size; i++) {
-		as_node* node = nodes->array[i];
+		as_node *node = nodes->array[i];
 		// reserve node if it will be for a significant period of time.
 		as_node_reserve(node);
 		Local<Object> node_obj = Nan::New<Object>();
 		Nan::Set(node_obj, Nan::New("name").ToLocalChecked(),
-				Nan::New<String>(node->name).ToLocalChecked());
+				 Nan::New<String>(node->name).ToLocalChecked());
 		Nan::Set(node_obj, Nan::New("address").ToLocalChecked(),
-				Nan::New<String>(as_node_get_address_string(node))
-				.ToLocalChecked());
+				 Nan::New<String>(as_node_get_address_string(node))
+					 .ToLocalChecked());
 		Nan::Set(v8_nodes, i, node_obj);
 		as_node_release(node);
 	}
@@ -182,13 +189,14 @@ NAN_METHOD(AerospikeClient::GetNodes)
 NAN_METHOD(AerospikeClient::AddSeedHost)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
 	Nan::Utf8String hostname(info[0].As<String>());
-	uint16_t port = (uint16_t) Nan::To<uint32_t>(info[1]).FromJust();
+	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
 }
@@ -199,20 +207,22 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 NAN_METHOD(AerospikeClient::RemoveSeedHost)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	TYPE_CHECK_REQ(info[0], IsString, "hostname must be a string");
 	TYPE_CHECK_REQ(info[1], IsNumber, "port must be a number");
 
 	Nan::Utf8String hostname(info[0].As<String>());
-	uint16_t port = (uint16_t) Nan::To<uint32_t>(info[1]).FromJust();
+	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);
 }
 
 NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
 	if (info[0]->IsObject()) {
 		log_from_jsobject(client->log, info[0].As<Object>());
 	}
@@ -225,13 +235,15 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 NAN_METHOD(AerospikeClient::SetupEventCb)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	Local<Function> callback;
 	if (info.Length() > 0 && info[0]->IsFunction()) {
 		callback = info[0].As<Function>();
 		events_callback_init(&client->as->config, callback, client->log);
-	} else {
+	}
+	else {
 		as_v8_error(client->log, "Callback function required");
 		return Nan::ThrowError("Callback function required");
 	}
@@ -244,7 +256,7 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> config)
 {
 	Nan::EscapableHandleScope scope;
 	const int argc = 1;
-	Local<Value> argv[argc] = { config };
+	Local<Value> argv[argc] = {config};
 	Local<Function> cons = Nan::New<Function>(constructor());
 	Nan::TryCatch try_catch;
 	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
@@ -260,7 +272,8 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> config)
  */
 void AerospikeClient::Init()
 {
-	Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(AerospikeClient::New);
+	Local<FunctionTemplate> tpl =
+		Nan::New<FunctionTemplate>(AerospikeClient::New);
 	tpl->SetClassName(Nan::New("AerospikeClient").ToLocalChecked());
 
 	// A client object created in Node.js, holds reference to the wrapped C++
@@ -279,7 +292,8 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
-	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands",
+							HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
 	Nan::SetPrototypeMethod(tpl, "infoAny", InfoAny);

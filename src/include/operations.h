@@ -24,14 +24,23 @@ extern "C" {
 
 #include "log.h"
 
-int operations_from_jsarray(as_operations* ops, v8::Local<v8::Array> arr, LogInfo* log);
-int add_scalar_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int add_list_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int add_map_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int add_bit_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int add_hll_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int add_exp_op(as_operations* ops, uint32_t opcode, v8::Local<v8::Object> op, LogInfo* log);
-int get_optional_cdt_context(as_cdt_ctx* context, bool* has_context, v8::Local<v8::Object> obj, const char* prop, const LogInfo* log);
+int operations_from_jsarray(as_operations *ops, v8::Local<v8::Array> arr,
+							LogInfo *log);
+int add_scalar_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+				  LogInfo *log);
+int add_list_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+				LogInfo *log);
+int add_map_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+			   LogInfo *log);
+int add_bit_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+			   LogInfo *log);
+int add_hll_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+			   LogInfo *log);
+int add_exp_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+			   LogInfo *log);
+int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
+							 v8::Local<v8::Object> obj, const char *prop,
+							 const LogInfo *log);
 
 v8::Local<v8::Object> scalar_opcode_values();
 v8::Local<v8::Object> list_opcode_values();

@@ -31,44 +31,51 @@ extern "C" {
 using namespace v8;
 
 class UdfRemoveCommand : public AerospikeCommand {
-	public:
-		UdfRemoveCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("UdfRemove", client, callback_) { }
+  public:
+	UdfRemoveCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("UdfRemove", client, callback_)
+	{
+	}
 
-		~UdfRemoveCommand() {
-			if (policy != NULL) cf_free(policy);
-			if (module != NULL) free(module);
-		}
+	~UdfRemoveCommand()
+	{
+		if (policy != NULL)
+			cf_free(policy);
+		if (module != NULL)
+			free(module);
+	}
 
-		as_policy_info* policy = NULL;
-		char* module = NULL;
+	as_policy_info *policy = NULL;
+	char *module = NULL;
 };
 
-static void*
-prepare(const Nan::FunctionCallbackInfo<Value> &info)
+static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	UdfRemoveCommand* cmd = new UdfRemoveCommand(client, info[2].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	UdfRemoveCommand *cmd =
+		new UdfRemoveCommand(client, info[2].As<Function>());
+	LogInfo *log = client->log;
 
 	cmd->module = strdup(*Nan::Utf8String(info[0].As<String>()));
 
 	if (info[1]->IsObject()) {
-		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Policy parameter is invalid");
 		}
 	}
 
 	return cmd;
 }
 
-static void
-execute(uv_work_t* req)
+static void execute(uv_work_t *req)
 {
-	UdfRemoveCommand* cmd = reinterpret_cast<UdfRemoveCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	UdfRemoveCommand *cmd = reinterpret_cast<UdfRemoveCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
@@ -78,15 +85,15 @@ execute(uv_work_t* req)
 	aerospike_udf_remove(cmd->as, &cmd->err, cmd->policy, cmd->module);
 }
 
-static void
-respond(uv_work_t* req, int status)
+static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	UdfRemoveCommand* cmd = reinterpret_cast<UdfRemoveCommand*>(req->data);
+	UdfRemoveCommand *cmd = reinterpret_cast<UdfRemoveCommand *>(req->data);
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
-	} else {
+	}
+	else {
 		cmd->Callback(0, {});
 	}
 
