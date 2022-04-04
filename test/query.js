@@ -234,17 +234,22 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
-        const query = client.query(helper.namespace, testSet)
-        query.where(Aerospike.filter.equal('name', uniqueKey))
-        query.partitions(0, 4096)
-        const stream = query.foreach()
-        let count = 0
-        stream.on('data', record => {
-          expect(++count).to.equal(1)
-          expect(record.key).to.be.instanceof(Key)
-          expect(record.key.key).to.equal(uniqueKey)
-        })
-        stream.on('end', done)
+        try {
+          const query = client.query(helper.namespace, testSet)
+          query.where(Aerospike.filter.equal('name', uniqueKey))
+          query.partitions(0, 4096)
+          const stream = query.foreach()
+          let count = 0
+          stream.on('data', record => {
+            expect(++count).to.equal(1)
+            expect(record.key).to.be.instanceof(Key)
+            expect(record.key.key).to.equal(uniqueKey)
+          })
+          stream.on('end', done)
+        } catch (err) {
+          console.error('Partition query not supported by connected server!')
+          this.skip('Partition query not supported by connected server!')
+        }
       })
     })
 
