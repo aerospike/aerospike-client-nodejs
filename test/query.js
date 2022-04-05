@@ -223,18 +223,19 @@ describe('Queries', function () {
       })
     })
 
-    it('returns the key if it was stored on the given partitions', function (done) {
-      const uniqueKey = 'test/query/record_with_stored_key'
-      const key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
-      const record = { name: uniqueKey }
-      const meta = { ttl: 300 }
-      const policy = new Aerospike.WritePolicy({
-        key: Aerospike.policy.key.SEND
-      })
+    context('with partitions settings', function () {
+      helper.skipUnlessVersion('>= 6.0.0', this)
+      it('returns the key if it was stored on the given partitions', function (done) {
+        const uniqueKey = 'test/query/record_with_stored_key'
+        const key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
+        const record = { name: uniqueKey }
+        const meta = { ttl: 300 }
+        const policy = new Aerospike.WritePolicy({
+          key: Aerospike.policy.key.SEND
+        })
 
-      client.put(key, record, meta, policy, function (err) {
-        if (err) throw err
-        try {
+        client.put(key, record, meta, policy, function (err) {
+          if (err) throw err
           const query = client.query(helper.namespace, testSet)
           query.where(Aerospike.filter.equal('name', uniqueKey))
           query.partitions(0, 4096)
@@ -246,10 +247,7 @@ describe('Queries', function () {
             expect(record.key.key).to.equal(uniqueKey)
           })
           stream.on('end', done)
-        } catch (err) {
-          console.error('Partition query not supported by connected server!')
-          this.skip('Partition query not supported by connected server!')
-        }
+        })
       })
     })
 
