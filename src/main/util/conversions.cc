@@ -939,8 +939,8 @@ Local<Object> record_to_jsobject(const as_record *record, const as_key *key,
 	return scope.Escape(rec);
 }
 
-Local<Array> batch_records_to_jsarray(const as_batch_read_records *records,
-									  const LogInfo *log)
+Local<Array> batch_read_records_to_jsarray(const as_batch_read_records *records,
+										   const LogInfo *log)
 {
 	Nan::EscapableHandleScope scope;
 	const as_vector *list = &records->list;

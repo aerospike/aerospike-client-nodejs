@@ -39,3 +39,4 @@ v8::Local<v8::Object> predicates();
 v8::Local<v8::Object> retry_policy_values();
 v8::Local<v8::Object> status();
 v8::Local<v8::Object> ttl_enum_values();
+v8::Local<v8::Object> batchTypes();

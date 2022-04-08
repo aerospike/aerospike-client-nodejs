@@ -120,11 +120,30 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 	}
 	else {
 		Local<Value> argv[]{Nan::Null(),
-							batch_records_to_jsarray(records, cmd->log)};
+							batch_read_records_to_jsarray(records, cmd->log)};
 		cmd->Callback(2, argv);
 	}
 
 	free_batch_records(records);
+	delete cmd;
+}
+
+void async_batch_records_listener(as_error *err, as_batch_records *records,
+								  void *udata, as_event_loop *event_loop)
+{
+	Nan::HandleScope scope;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
+
+	if (err) {
+		cmd->ErrorCallback(err);
+	}
+	else {
+		Local<Value> argv[]{Nan::Null(),
+							batch_records_to_jsarray(records, cmd->log)};
+		cmd->Callback(2, argv);
+	}
+
+	batch_records_free(records, cmd->log);
 	delete cmd;
 }
 

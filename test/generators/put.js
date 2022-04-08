@@ -37,7 +37,7 @@ function createRecords (putCall, generator, recordsToCreate, maxConcurrent, call
     }
     currentRecordNo++
     if (currentRecordNo <= recordsToCreate && inFlight < maxConcurrent) {
-      record = new Record(generator.key(), generator.bins(), generator.metadata())
+      record = new Record.Record(generator.key(), generator.bins(), generator.metadata())
       const putCb = creator.bind(this, record)
       const policy = generator.policy()
       const meta = { ttl: record.ttl, gen: record.gen }

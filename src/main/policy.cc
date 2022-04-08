@@ -222,6 +222,167 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
+int batchread_policy_from_jsobject(as_policy_batch_read *policy,
+								   v8::Local<v8::Object> obj,
+								   const LogInfo *log)
+{
+	int rc = 0;
+
+	as_policy_batch_read_init(policy);
+
+	Local<Value> exp_val =
+		Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked())
+			.ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if (compile_expression(exp_ary, &policy->filter_exp, log) !=
+			AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
+										   NULL, obj, "readModeAP", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_sc,
+										   NULL, obj, "readModeSC", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+
+	return rc;
+}
+
+int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log)
+{
+	int rc = 0;
+
+	as_policy_batch_write_init(policy);
+
+	Local<Value> exp_val =
+		Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked())
+			.ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if (compile_expression(exp_ary, &policy->filter_exp, log) !=
+			AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
+										   "gen", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
+										   obj, "exists", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	return rc;
+}
+
+int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log)
+{
+	int rc = 0;
+
+	as_policy_batch_apply_init(policy);
+
+	Local<Value> exp_val =
+		Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked())
+			.ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if (compile_expression(exp_ary, &policy->filter_exp, log) !=
+			AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->ttl, NULL, obj,
+										   "ttl", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+
+	return rc;
+}
+
+int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log)
+{
+	int rc = 0;
+
+	as_policy_batch_remove_init(policy);
+
+	Local<Value> exp_val =
+		Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked())
+			.ToLocalChecked();
+	if (exp_val->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
+		if (compile_expression(exp_ary, &policy->filter_exp, log) !=
+			AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
+										   "gen", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->generation,
+										   NULL, obj, "generation", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	return rc;
+}
+
 int removepolicy_from_jsobject(as_policy_remove *policy, Local<Object> obj,
 							   const LogInfo *log)
 {

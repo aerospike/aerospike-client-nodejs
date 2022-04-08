@@ -117,8 +117,8 @@ v8::Local<v8::Object> recordmeta_to_jsobject(const as_record *record,
 v8::Local<v8::Object> record_to_jsobject(const as_record *record,
 										 const as_key *key, const LogInfo *log);
 v8::Local<v8::Array>
-batch_records_to_jsarray(const as_batch_read_records *record,
-						 const LogInfo *log);
+batch_read_records_to_jsarray(const as_batch_read_records *record,
+							  const LogInfo *log);
 v8::Local<v8::Object> key_to_jsobject(const as_key *key, const LogInfo *log);
 v8::Local<v8::Object> jobinfo_to_jsobject(const as_job_info *info,
 										  const LogInfo *log);
@@ -140,6 +140,23 @@ int batch_from_jsarray(as_batch *batch, v8::Local<v8::Array> arr,
 int batch_read_records_from_jsarray(as_batch_read_records **batch,
 									v8::Local<v8::Array> arr,
 									const LogInfo *log);
+v8::Local<v8::Array> batch_records_to_jsarray(const as_batch_records *records,
+											  const LogInfo *log);
+int batch_records_from_jsarray(as_batch_records **batch,
+							   v8::Local<v8::Array> arr, const LogInfo *log);
+int batch_read_record_from_jsobject(as_batch_records *batch,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batch_write_record_from_jsobject(as_batch_records *batch,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
+int batch_apply_record_from_jsobject(as_batch_records *batch,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
+int batch_remove_record_from_jsobject(as_batch_records *batch,
+									  v8::Local<v8::Object> obj,
+									  const LogInfo *log);
+void batch_records_free(as_batch_records *records, const LogInfo *log);
 int udfargs_from_jsobject(char **filename, char **funcname, as_list **args,
 						  v8::Local<v8::Object> obj, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,

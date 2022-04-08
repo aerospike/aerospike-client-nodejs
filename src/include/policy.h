@@ -36,6 +36,18 @@ int removepolicy_from_jsobject(as_policy_remove *policy,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int batchpolicy_from_jsobject(as_policy_batch *policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
+int batchread_policy_from_jsobject(as_policy_batch_read *policy,
+								   v8::Local<v8::Object> obj,
+								   const LogInfo *log);
+int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
 int operatepolicy_from_jsobject(as_policy_operate *policy,
 								v8::Local<v8::Object> obj, const LogInfo *log);
 int infopolicy_from_jsobject(as_policy_info *policy, v8::Local<v8::Object> obj,
