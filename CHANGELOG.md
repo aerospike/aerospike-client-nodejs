@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1]
+
+* **Updates**
+  * Update deprecated Aerospike PredExp usage
+  * Update Aerospike Expressions usage
+
 ## [4.0.0]
 
 * **New Features**
