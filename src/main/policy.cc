@@ -140,11 +140,6 @@ int readpolicy_from_jsobject(as_policy_read *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->async_heap_rec, NULL, obj,
-										 "asyncHeapRec", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	as_v8_detail(log, "Parsing read policy: success");
 	return AS_NODE_PARAM_OK;
 }
@@ -280,11 +275,6 @@ int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->async_heap_rec, NULL, obj,
-										 "asyncHeapRec", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
