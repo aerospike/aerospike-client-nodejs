@@ -60,7 +60,7 @@ exports.builder = yargs => {
   return yargs
     .command({
       command: 'create <bin> <index> <type>',
-      desc: 'Create a secondary index',
+      desc: 'Create a secondary index (SI)',
       handler: shared.run(sindexCreate),
       builder: {
         type: {
@@ -71,7 +71,7 @@ exports.builder = yargs => {
     })
     .command({
       command: 'remove <index>',
-      desc: 'Remove a secondary index',
+      desc: 'Remove a secondary index (SI)',
       handler: shared.run(sindexRemove)
     })
 }
