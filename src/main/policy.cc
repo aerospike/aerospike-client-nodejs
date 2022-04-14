@@ -101,8 +101,8 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj,
-										 "compress", log)) !=
+	if ((rc = get_optional_uint32_property(&policy->sleep_between_retries, NULL, obj,
+										   "sleepBetweenRetries", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -123,6 +123,12 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 	else {
 		as_v8_error(log, "Invalid filter expression value");
 		return AS_NODE_PARAM_ERR;
+	}
+
+	if ((rc = get_optional_bool_property(&policy->compress, NULL, obj,
+										 "compress", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
 	}
 
 	return AS_NODE_PARAM_OK;

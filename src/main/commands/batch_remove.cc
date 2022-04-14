@@ -65,7 +65,7 @@ class BatchRemoveCommand : public AerospikeCommand {
 
 	as_policy_batch *policy = NULL;
 	as_batch batch;
-	as_batch_read *results = NULL;
+	as_batch_result *results = NULL;
 	uint32_t results_len = 0;
 	/**
 	 * Optional remove policy.
@@ -73,7 +73,7 @@ class BatchRemoveCommand : public AerospikeCommand {
 	as_policy_batch_remove *policy_remove = NULL;
 };
 
-bool batch_callback(const as_batch_read *results, uint32_t n, void *udata)
+bool batch_remove_callback(const as_batch_result *results, uint32_t n, void *udata)
 {
 	BatchRemoveCommand *cmd = reinterpret_cast<BatchRemoveCommand *>(udata);
 	LogInfo *log = cmd->log;
@@ -130,7 +130,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	if (info[2]->IsObject()) {
 		cmd->policy_remove =
 			(as_policy_batch_remove *)cf_malloc(sizeof(as_policy_batch_remove));
-		if (batchremove_policy_from_jsobject(cmd->policy, info[2].As<Object>(),
+		if (batchremove_policy_from_jsobject(cmd->policy_remove, info[2].As<Object>(),
 											 log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Batch remove policy parameter invalid");
@@ -152,8 +152,8 @@ static void execute(uv_work_t *req)
 	as_v8_debug(log, "Executing BatchRemove command for %d keys",
 				cmd->batch.keys.size);
 	if (aerospike_batch_remove(cmd->as, &cmd->err, cmd->policy,
-							   cmd->policy_remove, &cmd->batch, cmd->module,
-							   cmd->function.cmd->argList, batch_callback,
+							   cmd->policy_remove, &cmd->batch, 
+							   batch_remove_callback,
 							   cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
 		cmd->results_len = 0;

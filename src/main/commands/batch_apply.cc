@@ -103,7 +103,7 @@ class BatchApplyCommand : public AerospikeCommand {
 	as_list *arglist = NULL;
 };
 
-bool batch_callback(const as_batch_read *results, uint32_t n, void *udata)
+bool batch_apply_callback(const as_batch_read *results, uint32_t n, void *udata)
 {
 	BatchApplyCommand *cmd = reinterpret_cast<BatchApplyCommand *>(udata);
 	LogInfo *log = cmd->log;
@@ -169,7 +169,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	if (info[3]->IsObject()) {
 		cmd->policy_apply =
 			(as_policy_batch_apply *)cf_malloc(sizeof(as_policy_batch_apply));
-		if (batchapply_policy_from_jsobject(cmd->policy, info[3].As<Object>(),
+		if (batchapply_policy_from_jsobject(cmd->policy_apply, info[3].As<Object>(),
 											log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Batch policy parameter invalid");
@@ -192,7 +192,7 @@ static void execute(uv_work_t *req)
 				cmd->batch.keys.size);
 	if (aerospike_batch_apply(cmd->as, &cmd->err, cmd->policy,
 							  cmd->policy_apply, &cmd->batch, cmd->module,
-							  cmd->function.cmd->argList, batch_callback,
+							  cmd->function, cmd->arglist, batch_apply_callback,
 							  cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
 		cmd->results_len = 0;

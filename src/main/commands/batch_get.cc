@@ -53,7 +53,7 @@ class BatchGetCommand : public AerospikeCommand {
 	uint32_t results_len = 0;
 };
 
-bool batch_callback(const as_batch_read *results, uint32_t n, void *udata)
+bool batch_get_callback(const as_batch_read *results, uint32_t n, void *udata)
 {
 	BatchGetCommand *cmd = reinterpret_cast<BatchGetCommand *>(udata);
 	LogInfo *log = cmd->log;
@@ -121,7 +121,7 @@ static void execute(uv_work_t *req)
 	as_v8_debug(log, "Executing BatchGet command for %d keys",
 				cmd->batch.keys.size);
 	if (aerospike_batch_get(cmd->as, &cmd->err, cmd->policy, &cmd->batch,
-							batch_callback, cmd) != AEROSPIKE_OK) {
+							batch_get_callback, cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
 		cmd->results_len = 0;
 	}

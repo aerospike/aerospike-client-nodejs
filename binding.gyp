@@ -78,6 +78,8 @@
         'src/main/commands/batch_get.cc',
         'src/main/commands/batch_select.cc',
         'src/main/commands/batch_read_async.cc',
+        'src/main/commands/batch_remove.cc',
+        'src/main/commands/batch_apply.cc',
         'src/main/commands/batch_write_async.cc',
         'src/main/commands/exists_async.cc',
         'src/main/commands/get_async.cc',
