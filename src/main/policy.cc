@@ -55,33 +55,6 @@ int eventpolicy_from_jsobject(as_policy_event *policy, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-int infopolicy_from_jsobject(as_policy_info *policy, Local<Object> obj,
-							 const LogInfo *log)
-{
-	if (obj->IsUndefined() || obj->IsNull()) {
-		return AS_NODE_PARAM_ERR;
-	}
-	int rc = 0;
-	as_policy_info_init(policy);
-	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
-										   "timeout", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj,
-										 "sendAsIs", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->check_bounds, NULL, obj,
-										 "checkBounds", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing info policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
 int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 							 const LogInfo *log)
 {
@@ -134,31 +107,17 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
-								const LogInfo *log)
+int readpolicy_from_jsobject(as_policy_read *policy, Local<Object> obj,
+							 const LogInfo *log)
 {
 	int rc = 0;
-	as_policy_operate_init(policy);
+	as_policy_read_init(policy);
 	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
-										   obj, "exists", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
-										   "gen", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
-										   NULL, obj, "commitLevel", log)) !=
-		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
@@ -181,22 +140,110 @@ int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->async_heap_rec, NULL, obj,
+										 "asyncHeapRec", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing read policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int writepolicy_from_jsobject(as_policy_write *policy, Local<Object> obj,
+							  const LogInfo *log)
+{
+	int rc = 0;
+	as_policy_write_init(policy);
+	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
+										   "replica", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
+										   "gen", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
+										   obj, "exists", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->compression_threshold, NULL,
+										   obj, "compressionThreshold", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	as_v8_detail(log, "Parsing operate policy: success");
+	as_v8_detail(log, "Parsing write policy: success");
 	return AS_NODE_PARAM_OK;
 }
 
-int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
+int applypolicy_from_jsobject(as_policy_apply *policy, Local<Object> obj,
 							  const LogInfo *log)
 {
 	int rc = 0;
-	as_policy_batch_init(policy);
+	as_policy_apply_init(policy);
 	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
 		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
+										   "replica", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->ttl, NULL, obj, "ttl",
+										   log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing apply policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
+								const LogInfo *log)
+{
+	int rc = 0;
+	as_policy_operate_init(policy);
+	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
+										   "replica", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
@@ -209,8 +256,103 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
+										   "gen", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
+										   obj, "exists", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj,
 										 "deserialize", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->async_heap_rec, NULL, obj,
+										 "asyncHeapRec", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing operate policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int removepolicy_from_jsobject(as_policy_remove *policy, Local<Object> obj,
+							   const LogInfo *log)
+{
+	int rc = 0;
+	as_policy_remove_init(policy);
+	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
+										   "key", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
+										   "replica", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
+										   NULL, obj, "commitLevel", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
+										   "gen", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint16_property((uint16_t *)&policy->generation, NULL, obj,
+										   "generation", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing remove policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
+							  const LogInfo *log)
+{
+	int rc = 0;
+	as_policy_batch_init(policy);
+	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
+										   "replica", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
+										   NULL, obj, "readModeAP", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_sc,
+										   NULL, obj, "readModeSC", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->concurrent, NULL, obj,
+										 "concurrent", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -219,8 +361,23 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->allow_inline_ssd, NULL, obj,
+										 "allowInlineSSD", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->respond_all_keys, NULL, obj,
+										 "respondAllKeys", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->send_set_name, NULL, obj,
 										 "sendSetName", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj,
+										 "deserialize", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -389,151 +546,6 @@ int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
 	return rc;
 }
 
-int removepolicy_from_jsobject(as_policy_remove *policy, Local<Object> obj,
-							   const LogInfo *log)
-{
-	int rc = 0;
-	as_policy_remove_init(policy);
-	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->generation,
-										   NULL, obj, "generation", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
-										   "key", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
-										   "gen", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
-										   NULL, obj, "commitLevel", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
-										 "durableDelete", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing remove policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
-int readpolicy_from_jsobject(as_policy_read *policy, Local<Object> obj,
-							 const LogInfo *log)
-{
-	int rc = 0;
-	as_policy_read_init(policy);
-	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
-										   "key", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
-										   obj, "replica", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
-										   NULL, obj, "readModeAP", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_sc,
-										   NULL, obj, "readModeSC", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj,
-										 "deserialize", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing read policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
-int writepolicy_from_jsobject(as_policy_write *policy, Local<Object> obj,
-							  const LogInfo *log)
-{
-	int rc = 0;
-	as_policy_write_init(policy);
-	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
-										   "gen", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property(&policy->compression_threshold, NULL,
-										   obj, "compressionThreshold", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
-										   "key", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
-										   obj, "exists", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
-										   NULL, obj, "commitLevel", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
-										 "durableDelete", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing write policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
-int applypolicy_from_jsobject(as_policy_apply *policy, Local<Object> obj,
-							  const LogInfo *log)
-{
-	int rc = 0;
-	as_policy_apply_init(policy);
-	if ((rc = basepolicy_from_jsobject(&policy->base, obj, log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
-										   "key", log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
-										   NULL, obj, "commitLevel", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_uint32_property(&policy->ttl, NULL, obj, "ttl",
-										   log)) != AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
-										 "durableDelete", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-	as_v8_detail(log, "Parsing apply policy: success");
-	return AS_NODE_PARAM_OK;
-}
-
 int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 							  const LogInfo *log)
 {
@@ -543,8 +555,23 @@ int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->info_timeout,
+										   NULL, obj, "infoTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj,
+										 "failOnClusterChange", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj,
 										 "deserialize", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->short_query, NULL, obj,
+										 "shortQuery", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -561,8 +588,8 @@ int scanpolicy_from_jsobject(as_policy_scan *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
-										 "durableDelete", log)) !=
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->max_records,
+										   NULL, obj, "maxRecords", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -571,12 +598,39 @@ int scanpolicy_from_jsobject(as_policy_scan *policy, Local<Object> obj,
 			 "recordsPerSecond", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->max_records,
-										   NULL, obj, "maxRecords", log)) !=
+	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
+										 "durableDelete", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	as_v8_detail(log, "Parsing scan policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int infopolicy_from_jsobject(as_policy_info *policy, Local<Object> obj,
+							 const LogInfo *log)
+{
+	if (obj->IsUndefined() || obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	int rc = 0;
+	as_policy_info_init(policy);
+	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
+										   "timeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj,
+										 "sendAsIs", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->check_bounds, NULL, obj,
+										 "checkBounds", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing info policy: success");
 	return AS_NODE_PARAM_OK;
 }
 

@@ -267,6 +267,32 @@ int get_optional_uint32_property(uint32_t *intp, bool *defined,
 	return AS_NODE_PARAM_OK;
 }
 
+int get_optional_uint16_property(uint16_t *intp, bool *defined,
+								 Local<Object> obj, char const *prop,
+								 const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (value->IsNumber()) {
+		if (defined != NULL)
+			(*defined) = true;
+		(*intp) = Nan::To<uint32_t>(value).FromJust();
+		as_v8_detail(log, "%s => (uint16_t) %d", prop, *intp);
+	}
+	else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL)
+			(*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
+	}
+	else {
+		as_v8_error(log, "Type error: %s property should be integer (uint16_t)",
+					prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_float_property(double *floatp, Local<Object> obj, char const *prop,
 					   const LogInfo *log)
 {

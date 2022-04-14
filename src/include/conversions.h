@@ -100,6 +100,9 @@ int get_optional_string_property(char **strp, bool *defined,
 int get_optional_uint32_property(uint32_t *intp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
+int get_optional_uint16_property(uint16_t *intp, bool *defined,
+								 v8::Local<v8::Object> obj, char const *prop,
+								 const LogInfo *log);
 int get_float_property(double *floatp, v8::Local<v8::Object> obj,
 					   char const *prop, const LogInfo *log);
 bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
