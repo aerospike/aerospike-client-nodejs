@@ -74,8 +74,8 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->sleep_between_retries, NULL, obj,
-										   "sleepBetweenRetries", log)) !=
+	if ((rc = get_optional_uint32_property(&policy->sleep_between_retries, NULL,
+										   obj, "sleepBetweenRetries", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -162,8 +162,9 @@ int writepolicy_from_jsobject(as_policy_write *policy, Local<Object> obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
-										   "replica", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
@@ -207,8 +208,9 @@ int applypolicy_from_jsobject(as_policy_apply *policy, Local<Object> obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
-										   "replica", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
@@ -242,8 +244,9 @@ int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
-										   "replica", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
@@ -302,8 +305,9 @@ int removepolicy_from_jsobject(as_policy_remove *policy, Local<Object> obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
-										   "replica", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
@@ -315,8 +319,9 @@ int removepolicy_from_jsobject(as_policy_remove *policy, Local<Object> obj,
 										   "gen", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint16_property((uint16_t *)&policy->generation, NULL, obj,
-										   "generation", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint16_property((uint16_t *)&policy->generation,
+										   NULL, obj, "generation", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
@@ -337,8 +342,9 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL, obj,
-										   "replica", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
@@ -560,8 +566,8 @@ int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj,
-										 "failOnClusterChange", log)) !=
+	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL,
+										 obj, "failOnClusterChange", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
