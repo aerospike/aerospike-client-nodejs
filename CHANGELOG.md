@@ -2,10 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.1]
+
+* **Updates**
+  * Update deprecated Aerospike PredExp usage
+  * Update Aerospike Expressions usage
+
 ## [4.0.0]
 
 * **New Features**
-  * [CLIENT-1678] - Support boolean particle type. This feature requires Aerospike server version 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
+  * [CLIENT-1678] - Support boolean particle type. This feature requires server 5.6+. [#428](https://github.com/aerospike/aerospike-client-nodejs/pull/428)
   * [CLIENT-1679] - Add support for Aerospike Expressions.
   * [CLIENT-1680] - Added TypeScript typings. [#446](https://github.com/aerospike/aerospike-client-nodejs/pull/446) Thanks to [@bit0r1n](https://github.com/bit0r1n)!
 
@@ -76,7 +82,7 @@ All notable changes to this project will be documented in this file.
 ## [3.16.1] - 2020-06-30
 
 * **Bug Fixes**
-  * Fix memory leaks when running secondary index queries with string filter predicates. [#370](https://github.com/aerospike/aerospike-client-nodejs/issues/370)
+  * Fix memory leaks when running secondary index (SI) queries with string filter predicates. [#370](https://github.com/aerospike/aerospike-client-nodejs/issues/370)
 
 ## [3.16.0] - 2020-05-18
 
@@ -331,7 +337,7 @@ All notable changes to this project will be documented in this file.
 * **New Features**
   * Support for Promises in addition to Callback functions [PR #210](https://github.com/aerospike/aerospike-client-nodejs/pull/210)
   * Support nobins flag on query operations
-  * Support CDT List Increment operation. Requires Aerospike server version 3.15 or later.
+  * Support CDT List Increment operation. Requires server 3.15 or later.
   * Improved timeout handling and automatic transaction retries - see [detailed API changes](https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html#version-3-0-0) for more info.
   * Support gen policy for apply UDF operation.
 
@@ -513,7 +519,7 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
 ## [2.1.0] - 2016-06-03
 
 * **New Features**
-  * Support for operations on Sorted Maps. Requires Aerospike server version 3.8.4 or later.
+  * Support for operations on Sorted Maps. Requires server 3.8.4 or later.
 
 * **Improvements**
   * Key objects returned in callbacks now include the digest
@@ -608,7 +614,7 @@ v2.5.x is the last release to support Node.js v0.12 and io.js. The next major cl
 
 * **Improvements**
   * Added support for creating secondary indexes on list and map values;
-    requires Aerospike server version >= 3.8. [CLIENT-684]
+    requires server >= 3.8. [CLIENT-684]
   * Added `Aerospike.info` module with `parseInfo` utility method to parse info
     string returned by Aerospike cluster nodes using `Client#info` method.
   * Added IndexTask class returned by `Client#createIndex` to replace
