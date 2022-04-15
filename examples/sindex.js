@@ -55,12 +55,12 @@ async function sindexRemove (client, argv) {
 }
 
 exports.command = 'sindex <command>'
-exports.describe = 'Manage secondary indexes'
+exports.describe = 'Manage secondary indexes (SI)'
 exports.builder = yargs => {
   return yargs
     .command({
       command: 'create <bin> <index> <type>',
-      desc: 'Create a secondary index (SI)',
+      desc: 'Create a SI',
       handler: shared.run(sindexCreate),
       builder: {
         type: {
@@ -71,7 +71,7 @@ exports.builder = yargs => {
     })
     .command({
       command: 'remove <index>',
-      desc: 'Remove a secondary index (SI)',
+      desc: 'Remove a SI',
       handler: shared.run(sindexRemove)
     })
 }
