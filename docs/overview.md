@@ -27,7 +27,7 @@ The main modules included in the `aerospike` package are:
 * The {@link module:aerospike/policy|policy module} defines policies and policy
   values that define the behavior of database operations.
 * The {@link module:aerospike/filter|filter module} and {@link
-  module:aerospike/predexp|predexp module} define secondary index filters and
+  module:aerospike/predexp|predexp module} define secondary index (SI) filters and
   predicate expressions that can be used to limit the scope of query
   operations.
 * The {@link module:aerospike/operations|operations}, {@link
@@ -72,16 +72,14 @@ Aerospike supports the following data types:
 | Integer             | Number or BigInt             |
 | Double              | Number                       |
 | String              | String                       |
+| Boolean             | Boolean                      |
 | Bytes               | Buffer                       |
 | List                | Array                        |
 | Map                 | Object                       |
 | HyperLogLog         | Buffer                       |
 
-**Note:** Aerospike currently does not support a **Boolean** data type. To
-store boolean values in the database, the application needs to convert them to
-a supported data type as the client does not do any automatica data type
-conversions.  Attempting to store a boolean value in a record bin will lead to
-a parameter error being returned by the client.
+**Note:** Support for the **Boolean** data type requires server 5.6+
+and Aerospike Node.js client version 4.0+.
 
 ### Nested Data Structure
 

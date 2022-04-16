@@ -39,7 +39,7 @@ class BatchRemoveCommand : public AerospikeCommand {
 	{
 		as_batch_init(&batch, 0);
 	}
-	static BatchRemoveCommandFree(BatchRemoveCommand *cmd)
+	static void BatchRemoveCommandFree(BatchRemoveCommand *cmd)
 	{
 		if (cmd->policy) {
 			if (cmd->policy->base.filter_exp) {

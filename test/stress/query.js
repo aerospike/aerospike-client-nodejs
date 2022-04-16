@@ -75,13 +75,13 @@ describe('client.query()', function () {
             index: 'queryPerfIndex',
             datatype: Aerospike.indexDataType.NUMERIC
           }
-          console.info('generating secondary index on performance data')
-          console.time('creating secondary index')
+          console.info('generating secondary index (SI) on performance data')
+          console.time('creating SI')
           client.createIndex(index, function (err, job) {
             if (err) throw err
             setTimeout(function () {
               job.waitUntilDone(function () {
-                console.timeEnd('creating secondary index')
+                console.timeEnd('creating SI')
                 client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
               })
             }, 5000)

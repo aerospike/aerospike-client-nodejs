@@ -23,6 +23,7 @@ const Aerospike = require('../lib/aerospike')
 const Query = require('../lib/query')
 const Job = require('../lib/job')
 const helper = require('./test_helper')
+const exp = Aerospike.exp
 
 const AerospikeError = Aerospike.AerospikeError
 const GeoJSON = Aerospike.GeoJSON
@@ -251,8 +252,51 @@ describe('Queries', function () {
       })
     })
 
+    it('returns the key matching the expression', function (done) {
+      const uniqueExpKey = 'test/query/record_with_stored_key'
+      const key = new Aerospike.Key(helper.namespace, testSet, uniqueExpKey)
+      const record = { name: uniqueExpKey }
+      const meta = { ttl: 300 }
+      const policy = new Aerospike.WritePolicy({
+        key: Aerospike.policy.key.SEND
+      })
+
+      client.put(key, record, meta, policy, function (err) {
+        if (err) throw err
+        const query = client.query(helper.namespace, testSet)
+        const queryPolicy = { filterExpression: exp.keyExist(uniqueExpKey) }
+        const stream = query.foreach(queryPolicy)
+        let count = 0
+        stream.on('data', record => {
+          expect(++count).to.equal(1)
+          expect(record.key).to.be.instanceof(Key)
+          expect(record.key.key).to.equal(uniqueExpKey)
+        })
+        stream.on('end', done)
+      })
+    })
+
     context('with nobins set to true', function () {
       helper.skipUnlessVersion('>= 3.15.0', this)
+
+      it('should return only meta data', function (done) {
+        const query = client.query(helper.namespace, testSet)
+        const queryPolicy = { filterExpression: exp.eq(exp.binInt('i'), exp.int(5)) }
+        query.nobins = true
+        let received = null
+        const stream = query.foreach(queryPolicy)
+        stream.on('error', error => { throw error })
+        stream.on('data', record => {
+          received = record
+          stream.abort()
+        })
+        stream.on('end', () => {
+          expect(received.bins).to.be.empty()
+          expect(received.gen).to.be.ok()
+          expect(received.ttl).to.be.ok()
+          done()
+        })
+      })
 
       it('should return only meta data', function (done) {
         const query = client.query(helper.namespace, testSet)
