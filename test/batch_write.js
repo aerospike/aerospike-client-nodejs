@@ -21,7 +21,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const util = require('util')
+// const util = require('util')
 
 const op = Aerospike.operations
 const GeoJSON = Aerospike.GeoJSON
@@ -63,14 +63,22 @@ describe('client.batchWrite()', function () {
         key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
         readAllBins: true
       },
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/3') },
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/5') },
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/no_such_key') },
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/not_either') }
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/3')
+      },
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/5')
+      },
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/no_such_key')
+      },
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/not_either')
+      }
     ]
 
     client.batchWrite(batchRecords, function (err, results) {
@@ -88,30 +96,40 @@ describe('client.batchWrite()', function () {
 
   it('returns only meta data if no bins are selected', function (done) {
     const batchRecords = [
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/1') },
-      { type: batchType.BATCH_WRITE,
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/1')
+      },
+      {
+        type: batchType.BATCH_WRITE,
         key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
-        ops:[
+        ops: [
           op.write('string', 'def'),
           op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
           op.write('blob', Buffer.from('bar')),
-          op.append('str2', "world")]},
-      { type: batchType.BATCH_READ,
+          op.append('str2', 'world')]
+      },
+      {
+        type: batchType.BATCH_READ,
         key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
-        readAllBins: true },
-      { type: batchType.BATCH_REMOVE,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/5') },
-      { type: batchType.BATCH_READ,
+        readAllBins: true
+      },
+      {
+        type: batchType.BATCH_REMOVE,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/5')
+      },
+      {
+        type: batchType.BATCH_READ,
         key: new Key(helper.namespace, helper.set, 'test/batch_write/5'),
-        readAllBins: true }
-      ]
+        readAllBins: true
+      }
+    ]
 
     client.batchWrite(batchRecords, function (err, results) {
       expect(err).not.to.be.ok()
       expect(results.length).to.equal(5)
       expect(results[0].record.bins).to.be.empty()
-      expect(results[2].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string') 
+      expect(results[2].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
       expect(results[3].record.bins).to.be.empty()
       expect(results[4].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
       // results.forEach(function (result) {
@@ -148,8 +166,11 @@ describe('client.batchWrite()', function () {
 
   it('returns a Promise that resolves to the batch results', function () {
     const batchRecords = [
-      { type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/1'), readAllBins: true }
+      {
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+        readAllBins: true
+      }
     ]
 
     return client.batchWrite(batchRecords)

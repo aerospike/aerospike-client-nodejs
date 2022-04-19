@@ -272,8 +272,8 @@ int batch_apply_record_from_jsobject(as_batch_records *batch_records,
 		Nan::Get(obj, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	if (udf->IsObject()) {
 		if (udfargs_from_jsobject((char **)&record->module,
-								(char **)&record->function, &record->arglist, obj,
-								log) != AS_NODE_PARAM_OK) {
+								  (char **)&record->function, &record->arglist,
+								  obj, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "UDF args object invalid");
 			return AS_NODE_PARAM_ERR;
 		}
@@ -412,9 +412,9 @@ int batch_read_records_from_jsarray(as_batch_read_records **records,
 {
 	int rc = AS_NODE_PARAM_OK;
 	uint32_t no_records = arr->Length();
-	
+
 	*records = as_batch_read_create(no_records);
-	
+
 	for (uint32_t i = 0; i < no_records; i++) {
 		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
 		rc = batch_read_record_from_jsobject(*records, obj, log);
