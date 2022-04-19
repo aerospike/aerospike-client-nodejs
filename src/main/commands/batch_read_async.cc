@@ -50,7 +50,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 		if (batchpolicy_from_jsobject(&policy, info[1].As<Object>(), log) !=
 			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
-			free_batch_records(records);
+			batch_records_free(records, log);
 			goto Cleanup;
 		}
 		p_policy = &policy;
@@ -64,7 +64,7 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 		cmd = NULL; // async callback responsible for deleting the command
 	}
 	else {
-		free_batch_records(records);
+		batch_records_free(records, log);
 		cmd->ErrorCallback();
 	}
 

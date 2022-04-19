@@ -59,7 +59,7 @@ NAN_METHOD(AerospikeClient::BatchWriteAsync)
 	as_v8_debug(log, "Sending async batch write command");
 	status =
 		aerospike_batch_write_async(client->as, &cmd->err, p_policy, records,
-									async_batch_records_listener, cmd, NULL);
+									async_batch_listener, cmd, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
 	}

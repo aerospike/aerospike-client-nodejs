@@ -119,9 +119,6 @@ v8::Local<v8::Object> recordmeta_to_jsobject(const as_record *record,
 											 const LogInfo *log);
 v8::Local<v8::Object> record_to_jsobject(const as_record *record,
 										 const as_key *key, const LogInfo *log);
-v8::Local<v8::Array>
-batch_read_records_to_jsarray(const as_batch_read_records *record,
-							  const LogInfo *log);
 v8::Local<v8::Object> key_to_jsobject(const as_key *key, const LogInfo *log);
 v8::Local<v8::Object> jobinfo_to_jsobject(const as_job_info *info,
 										  const LogInfo *log);
@@ -176,8 +173,6 @@ bool record_clone(const as_record *src, as_record **dest, const LogInfo *log);
 bool key_clone(const as_key *src, as_key **dest, const LogInfo *log,
 			   bool alloc_key = true);
 as_val *asval_clone(const as_val *val, const LogInfo *log);
-
-void free_batch_records(as_batch_read_records *records);
 
 // Functions to set metadata of the record.
 int setTTL(v8::Local<v8::Object> obj, uint32_t *ttl, const LogInfo *log);

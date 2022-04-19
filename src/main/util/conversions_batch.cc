@@ -141,11 +141,11 @@ int batch_read_record_from_jsobject(as_batch_records *records,
 		record->n_bin_names = n_bin_names;
 	}
 
-	Local<Value> v8_read_all_bins =
-		Nan::Get(obj, Nan::New("read_all_bins").ToLocalChecked())
+	Local<Value> v8_readAllBins =
+		Nan::Get(obj, Nan::New("readAllBins").ToLocalChecked())
 			.ToLocalChecked();
-	if (v8_read_all_bins->IsBoolean()) {
-		record->read_all_bins = Nan::To<bool>(v8_read_all_bins).FromJust();
+	if (v8_readAllBins->IsBoolean()) {
+		record->read_all_bins = Nan::To<bool>(v8_readAllBins).FromJust();
 	}
 
 	return rc;
@@ -268,11 +268,15 @@ int batch_apply_record_from_jsobject(as_batch_records *batch_records,
 		}
 	}
 
-	if (udfargs_from_jsobject((char **)&record->module,
-							  (char **)&record->function, &record->arglist, obj,
-							  log) != AS_NODE_PARAM_OK) {
-		as_v8_error(log, "UDF args object invalid");
-		return AS_NODE_PARAM_ERR;
+	Local<Value> udf =
+		Nan::Get(obj, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
+	if (udf->IsObject()) {
+		if (udfargs_from_jsobject((char **)&record->module,
+								(char **)&record->function, &record->arglist, obj,
+								log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "UDF args object invalid");
+			return AS_NODE_PARAM_ERR;
+		}
 	}
 
 	return rc;
@@ -326,45 +330,6 @@ int batch_remove_record_from_jsobject(as_batch_records *batch_records,
 	return rc;
 }
 
-int batch_records_from_jsarray(as_batch_records **records, Local<Array> arr,
-							   const LogInfo *log)
-{
-	int rc = AS_NODE_PARAM_OK;
-	uint32_t no_records = arr->Length();
-	uint32_t type = 0;
-
-	*records = as_batch_records_create(no_records);
-
-	for (uint32_t i = 0; i < no_records; i++) {
-		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
-
-		if ((rc = get_uint32_property((uint32_t *)&type, obj, "type", log)) !=
-			AS_NODE_PARAM_OK) {
-			return rc;
-		}
-
-		switch (type) {
-		case AS_BATCH_READ:
-			rc = batch_read_record_from_jsobject(*records, obj, log);
-			break;
-		case AS_BATCH_WRITE:
-			rc = batch_write_record_from_jsobject(*records, obj, log);
-			break;
-		case AS_BATCH_APPLY:
-			rc = batch_apply_record_from_jsobject(*records, obj, log);
-			break;
-		case AS_BATCH_REMOVE:
-			rc = batch_remove_record_from_jsobject(*records, obj, log);
-			break;
-		}
-
-		if (rc != AS_NODE_PARAM_OK) {
-			return rc;
-		}
-	}
-	return AS_NODE_PARAM_OK;
-}
-
 void batch_records_free(as_batch_records *records, const LogInfo *log)
 {
 	const as_vector *list = &records->list;
@@ -391,6 +356,79 @@ void batch_records_free(as_batch_records *records, const LogInfo *log)
 	as_batch_records_destroy(records);
 
 	return;
+}
+
+int batch_records_from_jsarray(as_batch_records **records, Local<Array> arr,
+							   const LogInfo *log)
+{
+	int rc = AS_NODE_PARAM_OK;
+	uint32_t no_records = arr->Length();
+	uint32_t type = 0;
+
+	*records = as_batch_records_create(no_records);
+
+	for (uint32_t i = 0; i < no_records; i++) {
+		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
+
+		if ((rc = get_uint32_property((uint32_t *)&type, obj, "type", log)) !=
+			AS_NODE_PARAM_OK) {
+			break;
+		}
+
+		switch (type) {
+		case AS_BATCH_READ:
+			rc = batch_read_record_from_jsobject(*records, obj, log);
+			break;
+		case AS_BATCH_WRITE:
+			rc = batch_write_record_from_jsobject(*records, obj, log);
+			break;
+		case AS_BATCH_APPLY:
+			rc = batch_apply_record_from_jsobject(*records, obj, log);
+			break;
+		case AS_BATCH_REMOVE:
+			rc = batch_remove_record_from_jsobject(*records, obj, log);
+			break;
+		default:
+			rc = AS_NODE_PARAM_ERR;
+			as_v8_error(log, "Invalid batch record type");
+			break;
+		}
+
+		if (rc != AS_NODE_PARAM_OK) {
+			break;
+		}
+	}
+
+	if (rc != AS_NODE_PARAM_OK) {
+		batch_records_free(*records, log);
+		*records = NULL;
+	}
+
+	return rc;
+}
+
+int batch_read_records_from_jsarray(as_batch_read_records **records,
+									Local<Array> arr, const LogInfo *log)
+{
+	int rc = AS_NODE_PARAM_OK;
+	uint32_t no_records = arr->Length();
+	
+	*records = as_batch_read_create(no_records);
+	
+	for (uint32_t i = 0; i < no_records; i++) {
+		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
+		rc = batch_read_record_from_jsobject(*records, obj, log);
+		if (rc != AS_NODE_PARAM_OK) {
+			break;
+		}
+	}
+
+	if (rc != AS_NODE_PARAM_OK) {
+		batch_records_free(*records, log);
+		*records = NULL;
+	}
+
+	return rc;
 }
 
 Local<Array> batch_records_to_jsarray(const as_batch_records *records,

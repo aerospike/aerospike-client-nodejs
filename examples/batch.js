@@ -28,7 +28,7 @@ async function batchRead (client, argv) {
     if (argv.bins) {
       request.bins = argv.bins
     } else {
-      request.read_all_bins = true
+      request.readAllBins = true
     }
     return request
   })
