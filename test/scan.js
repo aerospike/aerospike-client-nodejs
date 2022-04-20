@@ -154,11 +154,12 @@ context('Scans', function () {
       this.timeout(10000) // 10 second timeout
       const scan = client.scan(helper.namespace, testSet)
       const policy = new Aerospike.ScanPolicy({
-        totalTimeout: 1000,
-        socketTimeout: 1000,
+        totalTimeout: 10000,
+        socketTimeout: 10000,
         durableDelete: true,
         recordsPerSecond: 50,
-        maxRecords: 5000
+        maxRecords: 5000,
+        sleepBetweenRetries: 1000 
       })
 
       const stream = scan.foreach(policy)

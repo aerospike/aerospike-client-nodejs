@@ -249,12 +249,12 @@ describe('Client', function () {
 
   context('minConnsPerNode', function () {
     it('connects to the server and establishes the minimum number of connections', async function () {
-      this.timeout(10000) // 10 second timeout
+      this.timeout(15000) // 10 second timeout
       const test = async function (Aerospike, config) {
         Object.assign(config, { minConnsPerNode: 5, log: { level: 0 } })
         const client = await Aerospike.connect(config)
         // give client enough time to establish the requested min. connections
-        await new Promise((resolve) => setTimeout(resolve, 10))
+        await new Promise((resolve) => setTimeout(resolve, 10000))
         const stats = client.stats()
         client.close()
         return stats
