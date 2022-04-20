@@ -211,8 +211,9 @@ static void respond(uv_work_t *req, int status)
 NAN_METHOD(AerospikeClient::BatchRemove)
 {
 	TYPE_CHECK_REQ(info[0], IsArray, "Keys must be a array");
-	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[1], IsObject, "Batch policy must be an object");
+	TYPE_CHECK_OPT(info[2], IsObject, "Batch remove policy must be an object");
+	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

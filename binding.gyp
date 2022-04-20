@@ -144,8 +144,7 @@
             '-lssl'
           ],
           'defines': [
-            'AS_USE_LIBUV',
-            'DEBUG'
+            'AS_USE_LIBUV'
           ],
           'include_dirs': [
             'aerospike-client-c/target/Linux-x86_64/include',

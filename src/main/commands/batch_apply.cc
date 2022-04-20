@@ -251,8 +251,9 @@ NAN_METHOD(AerospikeClient::BatchApply)
 {
 	TYPE_CHECK_REQ(info[0], IsArray, "Keys must be a array");
 	TYPE_CHECK_OPT(info[1], IsObject, "UDF must be an object");
-	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[3], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[2], IsObject, "Batch policy must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Batch apply policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }
