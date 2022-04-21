@@ -159,7 +159,7 @@ context('Scans', function () {
         durableDelete: true,
         recordsPerSecond: 50,
         maxRecords: 5000,
-        sleepBetweenRetries: 1000 
+        sleepBetweenRetries: 1000
       })
 
       const stream = scan.foreach(policy)

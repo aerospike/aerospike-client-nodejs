@@ -139,7 +139,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	BatchApplyCommand *cmd =
-		new BatchApplyCommand(client, info[2].As<Function>());
+		new BatchApplyCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
 	Local<Array> keys = info[0].As<Array>();
