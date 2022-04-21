@@ -50,24 +50,27 @@ describe('client.batchRemove()', function () {
     return putgen.put(nrecords, generators)
   })
 
-  it('removes batch of records', function (done) {
-    const batchRecords = [
-      new Key(helper.namespace, helper.set, 'test/batch_remove/1'),
-      new Key(helper.namespace, helper.set, 'test/batch_remove/2'),
-      new Key(helper.namespace, helper.set, 'test/batch_remove/3'),
-      new Key(helper.namespace, helper.set, 'test/batch_remove/4'),
-      new Key(helper.namespace, helper.set, 'test/batch_remove/5')
-    ]
+  context('with batch remove', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+    it('removes batch of records', function (done) {
+      const batchRecords = [
+        new Key(helper.namespace, helper.set, 'test/batch_remove/1'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/2'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/3'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/4'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/5')
+      ]
 
-    client.batchRemove(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
-      expect(results.length).to.equal(5)
-      results.forEach(function (result) {
-        expect(result.status).to.equal(Aerospike.status.OK)
-        // expect(results.record.bins).to.be.empty()
-        // console.log(util.inspect(result, true, 10, true))
+      client.batchRemove(batchRecords, function (err, results) {
+        expect(err).not.to.be.ok()
+        expect(results.length).to.equal(5)
+        results.forEach(function (result) {
+          expect(result.status).to.equal(Aerospike.status.OK)
+          // expect(results.record.bins).to.be.empty()
+          // console.log(util.inspect(result, true, 10, true))
+        })
+        done()
       })
-      done()
     })
   })
 })

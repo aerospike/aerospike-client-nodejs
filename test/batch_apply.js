@@ -51,32 +51,36 @@ describe('client.batchApply()', function () {
     return putgen.put(nrecords, generators)
   })
 
-  it('apply udf on batch of records', function (done) {
-    const batchRecords = [
-      new Key(helper.namespace, helper.set, 'test/batch_apply/1'),
-      new Key(helper.namespace, helper.set, 'test/batch_apply/2'),
-      new Key(helper.namespace, helper.set, 'test/batch_apply/3'),
-      new Key(helper.namespace, helper.set, 'test/batch_apply/4'),
-      new Key(helper.namespace, helper.set, 'test/batch_apply/5')
-    ]
-    const policy = new Aerospike.BatchPolicy({
-      totalTimeout: 1500
-    })
-    const udf = {
-      module: 'udf',
-      funcname: 'withArguments',
-      args: [[1, 2, 3]]
-    }
+  context('with batch apply', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
 
-    client.batchApply(batchRecords, udf, policy, function (err, results) {
-      expect(err).not.to.be.ok()
-      expect(results.length).to.equal(5)
-      results.forEach(function (result) {
-        // console.log(util.inspect(result, true, 10, true))
-        expect(result.status).to.equal(Aerospike.status.OK)
-        expect(result.record.bins.SUCCESS).to.eql([1, 2, 3])
+    it('apply udf on batch of records', function (done) {
+      const batchRecords = [
+        new Key(helper.namespace, helper.set, 'test/batch_apply/1'),
+        new Key(helper.namespace, helper.set, 'test/batch_apply/2'),
+        new Key(helper.namespace, helper.set, 'test/batch_apply/3'),
+        new Key(helper.namespace, helper.set, 'test/batch_apply/4'),
+        new Key(helper.namespace, helper.set, 'test/batch_apply/5')
+      ]
+      const policy = new Aerospike.BatchPolicy({
+        totalTimeout: 1500
       })
-      done()
+      const udf = {
+        module: 'udf',
+        funcname: 'withArguments',
+        args: [[1, 2, 3]]
+      }
+
+      client.batchApply(batchRecords, udf, policy, function (err, results) {
+        expect(err).not.to.be.ok()
+        expect(results.length).to.equal(5)
+        results.forEach(function (result) {
+          // console.log(util.inspect(result, true, 10, true))
+          expect(result.status).to.equal(Aerospike.status.OK)
+          expect(result.record.bins.SUCCESS).to.eql([1, 2, 3])
+        })
+        done()
+      })
     })
   })
 })
