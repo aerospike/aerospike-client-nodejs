@@ -74,12 +74,7 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->sleep_between_retries, NULL,
-										   obj, "sleepBetweenRetries", log)) !=
-		AS_NODE_PARAM_OK) {
-		return rc;
-	}
-
+	
 	Local<Value> exp_val =
 		Nan::Get(obj, Nan::New("filterExpression").ToLocalChecked())
 			.ToLocalChecked();
