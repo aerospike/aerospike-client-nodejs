@@ -158,7 +158,7 @@ context('Scans', function () {
         socketTimeout: 10000,
         durableDelete: true,
         recordsPerSecond: 50,
-        maxRecords: 5000,
+        maxRecords: 5000
       })
 
       const stream = scan.foreach(policy)
