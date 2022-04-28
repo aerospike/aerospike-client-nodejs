@@ -155,7 +155,7 @@ context('Scans', function () {
       const stream = scan.foreach(policy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
-        if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {
+        if (error.code === Aerospike.status.ERR_TIMEOUT) {
           // ignore errors caused by cluster change events
         } else {
           throw error
