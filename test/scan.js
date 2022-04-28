@@ -139,6 +139,7 @@ context('Scans', function () {
     })
 
     it('sets a scan policy', function (done) {
+      this.timeout(10000) // 10 second timeout
       const scan = client.scan(helper.namespace, testSet)
       const policy = new Aerospike.ScanPolicy({
         totalTimeout: 1000,
