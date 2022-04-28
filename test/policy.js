@@ -239,12 +239,16 @@ context('Client Policies #noserver', function () {
         const subject = new Aerospike.QueryPolicy({
           socketTimeout: 1000,
           totalTimeout: 2000,
-          maxRetries: 1
+          maxRetries: 1,
+          failOnClusterChange: true,
+          infoTimeout: 5000
         })
 
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.totalTimeout).to.equal(2000)
         expect(subject.maxRetries).to.equal(1)
+        expect(subject.failOnClusterChange).to.equal(true)
+        expect(subject.infoTimeout).to.equal(5000)
       })
     })
   })
