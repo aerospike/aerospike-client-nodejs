@@ -47,5 +47,5 @@ jobs:
     - run: npm run coverage
       env:
         AEROSPIKE_HOSTS: "127.0.0.1:3000,127.0.0.1:3100"
-        OPTIONS: "--timeout 2000"
+        OPTIONS: "--timeout 30000"
     - run: npm run codecov
