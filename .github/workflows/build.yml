@@ -8,11 +8,13 @@ on:
     branches:
       - master
       - maint/3.x
+      - maint/4.x
       - gh-action
   pull_request:
     branches:
       - master
       - maint/3.x
+      - maint/4.x
 
 jobs:
   build:
@@ -26,6 +28,8 @@ jobs:
           - 12.x
           - 14.x
           - 16.x
+          - 17.x
+          - 18.x
 
     steps:
     - uses: actions/checkout@v2
