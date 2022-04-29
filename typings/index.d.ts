@@ -681,66 +681,66 @@ declare namespace Aerospike {
         constructor(props?: IBatchPolicyProps)
     }
 
-    interface IBitwisePolicyProps extends IBatchPolicyProps {
+    interface IBitwisePolicyProps {
         writeFlags?: BitwiseWriteFlags
     }
 
-    class BitwisePolicy extends BasePolicy {
+    class BitwisePolicy {
         public writeFlags: BitwiseWriteFlags;
         constructor(props?: IBitwisePolicyProps);
     }
 
-    interface ICommandQueuePolicyProps extends IBasePolicyProps {
+    interface ICommandQueuePolicyProps {
         maxCommandsInProcess?: number;
         maxCommandsInQueue?: number;
         queueInitialCapacity?: number;
     }
 
-    class CommandQueuePolicy extends BasePolicy {
+    class CommandQueuePolicy {
         public maxCommandsInProcess: number;
         public maxCommandsInQueue: number;
         public queueInitialCapacity: number;
         constructor(props?: ICommandQueuePolicyProps);
     }
 
-    interface IHLLPolicyProps extends IBasePolicyProps {
+    interface IHLLPolicyProps {
         writeFlags?: HLLWriteFlags;
     }
 
-    class HLLPolicy extends BasePolicy {
+    class HLLPolicy {
         public writeFlags: HLLWriteFlags;
         constructor(props?: IHLLPolicyProps);
     }
 
-    interface IInfoPolicyProps extends IBasePolicyProps {
+    interface IInfoPolicyProps {
         sendAsIs?: boolean;
         checkBounds?: boolean;
     }
 
-    class InfoPolicy extends BasePolicy {
+    class InfoPolicy {
         public sendAsIs: boolean;
         public checkBounds: boolean;
         constructor(props?: IInfoPolicyProps);
     }
 
-    interface IListPolicyProps extends IBasePolicyProps {
+    interface IListPolicyProps {
         order?: ListOrder;
         writeFlags?: ListWriteFlags;
     }
 
-    class ListPolicy extends BasePolicy {
+    class ListPolicy {
         public order: ListOrder;
         public writeFlags: ListWriteFlags;
         constructor(props?: IListPolicyProps);
     }
 
-    interface IMapPolicyProps extends IBasePolicyProps {
+    interface IMapPolicyProps {
         order?: MapOrder;
         writeMode?: MapWriteMode;
         writeFlags?: MapWriteFlags;
     }
 
-    class MapPolicy extends BasePolicy {
+    class MapPolicy {
         public order: MapOrder;
         public writeMode: MapWriteMode;
         public writeFlags: MapWriteFlags;
