@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Aerospike, Inc.
+ * Copyright 2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,25 @@
  * limitations under the License.
  ******************************************************************************/
 
-#pragma once
-
 #include <node.h>
+#include <nan.h>
 
 extern "C" {
-#include <aerospike/as_std.h>
-#include <aerospike/as_predexp.h>
+#include <aerospike/aerospike_batch.h>
 }
 
-as_predexp_base* convert_predexp(v8::Local<v8::Object> predexp);
+using namespace v8;
 
-v8::Local<v8::Object> predexp_codes();
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+
+Local<Object> batchTypes()
+{
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "BATCH_READ", AS_BATCH_READ);
+	set(obj, "BATCH_WRITE", AS_BATCH_WRITE);
+	set(obj, "BATCH_APPLY", AS_BATCH_APPLY);
+	set(obj, "BATCH_REMOVE", AS_BATCH_REMOVE);
+	return scope.Escape(obj);
+}

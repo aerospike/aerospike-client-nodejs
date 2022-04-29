@@ -21,8 +21,9 @@
 #include "log.h"
 
 extern "C" {
-	#include <aerospike/as_config.h>
+#include <aerospike/as_config.h>
 }
 
-void events_callback_init(as_config *config, v8::Local<v8::Function> callback, LogInfo *log);
+void events_callback_init(as_config *config, v8::Local<v8::Function> callback,
+						  LogInfo *log);
 void events_callback_close(as_config *config);

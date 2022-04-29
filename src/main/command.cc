@@ -26,9 +26,9 @@ extern "C" {
 
 using namespace v8;
 
-AerospikeCommand*
-AerospikeCommand::SetError(as_status code, const char* func, const char* file,
-		uint32_t line, const char* fmt, ...)
+AerospikeCommand *AerospikeCommand::SetError(as_status code, const char *func,
+											 const char *file, uint32_t line,
+											 const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -37,37 +37,37 @@ AerospikeCommand::SetError(as_status code, const char* func, const char* file,
 	return this;
 }
 
-bool
-AerospikeCommand::IsError()
-{
-	return err.code != AEROSPIKE_OK;
-}
+bool AerospikeCommand::IsError() { return err.code != AEROSPIKE_OK; }
 
-bool
-AerospikeCommand::CanExecute()
+bool AerospikeCommand::CanExecute()
 {
 	if (IsError()) {
-		as_v8_info(log, "Skipping execution of %s command because an error occurred", cmd.c_str());
+		as_v8_info(log,
+				   "Skipping execution of %s command because an error occurred",
+				   cmd.c_str());
 		return false;
 	}
 
 	if (as->cluster == NULL) {
-		as_v8_info(log, "Skipping execution of %s command because client is invalid", cmd.c_str());
+		as_v8_info(log,
+				   "Skipping execution of %s command because client is invalid",
+				   cmd.c_str());
 		return false;
 	}
 
 	return true;
 }
 
-Local<Value>
-AerospikeCommand::Callback(const int argc, Local<Value> argv[])
+Local<Value> AerospikeCommand::Callback(const int argc, Local<Value> argv[])
 {
 	Nan::EscapableHandleScope scope;
 	as_v8_debug(log, "Executing JS callback for %s command", cmd.c_str());
 
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New(callback);
-	Local<Value> result = runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv).ToLocalChecked();
+	Local<Value> result =
+		runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv)
+			.ToLocalChecked();
 	if (try_catch.HasCaught()) {
 		Nan::FatalException(try_catch);
 	}
@@ -75,23 +75,24 @@ AerospikeCommand::Callback(const int argc, Local<Value> argv[])
 	return scope.Escape(result);
 }
 
-Local<Value>
-AerospikeCommand::ErrorCallback()
+Local<Value> AerospikeCommand::ErrorCallback()
 {
 	Nan::EscapableHandleScope scope;
 
 	if (err.code <= AEROSPIKE_ERR_CLIENT) {
-		as_v8_error(log, "Client error in %s command: %s [%d]", cmd.c_str(), err.message, err.code);
-	} else {
-		as_v8_debug(log, "Server error in %s command: %s [%d]", cmd.c_str(), err.message, err.code);
+		as_v8_error(log, "Client error in %s command: %s [%d]", cmd.c_str(),
+					err.message, err.code);
+	}
+	else {
+		as_v8_debug(log, "Server error in %s command: %s [%d]", cmd.c_str(),
+					err.message, err.code);
 	}
 
-	Local<Value> args[] = { error_to_jsobject(&err, log) };
+	Local<Value> args[] = {error_to_jsobject(&err, log)};
 	return scope.Escape(Callback(1, args));
 }
 
-Local<Value>
-AerospikeCommand::ErrorCallback(as_error* error)
+Local<Value> AerospikeCommand::ErrorCallback(as_error *error)
 {
 	Nan::EscapableHandleScope scope;
 
@@ -100,9 +101,9 @@ AerospikeCommand::ErrorCallback(as_error* error)
 	return scope.Escape(ErrorCallback());
 }
 
-Local<Value>
-AerospikeCommand::ErrorCallback(as_status code, const char* func, const char* file,
-		uint32_t line, const char* fmt, ...)
+Local<Value> AerospikeCommand::ErrorCallback(as_status code, const char *func,
+											 const char *file, uint32_t line,
+											 const char *fmt, ...)
 {
 	Nan::EscapableHandleScope scope;
 

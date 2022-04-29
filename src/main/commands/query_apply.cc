@@ -33,80 +33,86 @@ extern "C" {
 using namespace v8;
 
 class QueryApplyCommand : public AerospikeCommand {
-	public:
-		QueryApplyCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("QueryApply", client, callback_) {}
+  public:
+	QueryApplyCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("QueryApply", client, callback_)
+	{
+	}
 
-		~QueryApplyCommand() {
-			free_query(&query, policy);
-			if (policy != NULL) cf_free(policy);
-			if (val != NULL) cf_free(val);
-		}
+	~QueryApplyCommand()
+	{
+		free_query(&query, policy);
+		if (policy != NULL)
+			cf_free(policy);
+		if (val != NULL)
+			cf_free(val);
+	}
 
-		as_policy_query* policy = NULL;
-		as_query query;
-		as_val* val = NULL;
+	as_policy_query *policy = NULL;
+	as_query query;
+	as_val *val = NULL;
 };
 
-static bool
-query_foreach_callback(const as_val* val, void* udata) {
+static bool query_foreach_callback(const as_val *val, void *udata)
+{
 	if (val) {
-		QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(udata);
+		QueryApplyCommand *cmd = reinterpret_cast<QueryApplyCommand *>(udata);
 		cmd->val = asval_clone(val, cmd->log);
 	}
 	return false;
 }
 
-static void*
-prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
+static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	QueryApplyCommand* cmd = new QueryApplyCommand(client, info[4].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	QueryApplyCommand *cmd =
+		new QueryApplyCommand(client, info[4].As<Function>());
+	LogInfo *log = client->log;
 
 	setup_query(&cmd->query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		cmd->policy = (as_policy_query*) cf_malloc(sizeof(as_policy_query));
-		if (querypolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+		cmd->policy = (as_policy_query *)cf_malloc(sizeof(as_policy_query));
+		if (querypolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Policy parameter is invalid");
 		}
 	}
 
 	return cmd;
 }
 
-static void
-execute(uv_work_t* req)
+static void execute(uv_work_t *req)
 {
-	QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	QueryApplyCommand *cmd = reinterpret_cast<QueryApplyCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
 	as_v8_debug(log, "Sending query command with stream UDF");
-	aerospike_query_foreach(cmd->as, &cmd->err, cmd->policy, &cmd->query, query_foreach_callback, cmd);
+	aerospike_query_foreach(cmd->as, &cmd->err, cmd->policy, &cmd->query,
+							query_foreach_callback, cmd);
 
-	if (cmd->policy && cmd->policy->base.predexp) as_predexp_list_destroy(cmd->policy->base.predexp);
-	if (cmd->policy && cmd->policy->base.filter_exp) { as_exp_destroy(cmd->policy->base.filter_exp); }
+	if (cmd->policy && cmd->policy->base.filter_exp) {
+		as_exp_destroy(cmd->policy->base.filter_exp);
+	}
 }
 
-static void
-respond(uv_work_t* req, int status)
+static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	QueryApplyCommand* cmd = reinterpret_cast<QueryApplyCommand*>(req->data);
+	QueryApplyCommand *cmd = reinterpret_cast<QueryApplyCommand *>(req->data);
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
-	} else {
-		Local<Value> argv[] = {
-			Nan::Null(),
-			val_to_jsvalue(cmd->val, cmd->log)
-		};
+	}
+	else {
+		Local<Value> argv[] = {Nan::Null(), val_to_jsvalue(cmd->val, cmd->log)};
 		cmd->Callback(2, argv);
 	}
 

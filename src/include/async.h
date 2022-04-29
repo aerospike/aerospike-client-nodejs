@@ -31,24 +31,28 @@ extern "C" {
 /**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
-v8::Local<v8::Value> async_invoke(
-    const Nan::FunctionCallbackInfo<v8::Value> &args,
-    void* (* prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
-    void  (* execute)(uv_work_t* req),
-    void  (* respond)(uv_work_t* req, int status)
-    );
+v8::Local<v8::Value>
+async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
+			 void *(*prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
+			 void (*execute)(uv_work_t *req),
+			 void (*respond)(uv_work_t *req, int status));
 
 // implements the as_async_record_listener interface
-void async_record_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
+void async_record_listener(as_error *err, as_record *record, void *udata,
+						   as_event_loop *event_loop);
 
 // implements the as_async_write_listener interface
-void async_write_listener(as_error* err, void* udata, as_event_loop* event_loop);
+void async_write_listener(as_error *err, void *udata,
+						  as_event_loop *event_loop);
 
 // implements the as_async_value_listener interface
-void async_value_listener(as_error* err, as_val* value, void* udata, as_event_loop* event_loop);
+void async_value_listener(as_error *err, as_val *value, void *udata,
+						  as_event_loop *event_loop);
 
 // implements the as_async_batch_listener interface
-void async_batch_listener(as_error* err, as_batch_read_records* records, void* udata, as_event_loop* event_loop);
+void async_batch_listener(as_error *err, as_batch_read_records *records,
+						  void *udata, as_event_loop *event_loop);
 
 // implements the as_async_scan_listener and as_async_query_record_listener interfaces
-bool async_scan_listener(as_error* err, as_record* record, void* udata, as_event_loop* event_loop);
+bool async_scan_listener(as_error *err, as_record *record, void *udata,
+						 as_event_loop *event_loop);

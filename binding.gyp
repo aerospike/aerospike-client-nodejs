@@ -71,7 +71,6 @@
         'src/main/query.cc',
         'src/main/scan.cc',
         'src/main/expressions.cc',
-        'src/main/predexp.cc',
         'src/main/async.cc',
         'src/main/command.cc',
         'src/main/commands/apply_async.cc',
@@ -79,6 +78,9 @@
         'src/main/commands/batch_get.cc',
         'src/main/commands/batch_select.cc',
         'src/main/commands/batch_read_async.cc',
+        'src/main/commands/batch_remove.cc',
+        'src/main/commands/batch_apply.cc',
+        'src/main/commands/batch_write_async.cc',
         'src/main/commands/exists_async.cc',
         'src/main/commands/get_async.cc',
         'src/main/commands/info_any.cc',
@@ -114,8 +116,10 @@
         'src/main/enums/ttl.cc',
         'src/main/enums/config_enum.cc',
         'src/main/enums/exp_enum.cc',
+        'src/main/enums/batch_type.cc',
         'src/main/stats.cc',
         'src/main/util/conversions.cc',
+        'src/main/util/conversions_batch.cc',
         'src/main/util/log.cc'
       ],
       'configurations': {

@@ -30,50 +30,46 @@ extern "C" {
 #include "enums.h"
 
 #if !defined(_MSC_VER)
-#include <unistd.h>
-#define as_gmtime(ts, tm) gmtime_r(ts, tm)
-#define as_getpid() getpid()
+	#include <unistd.h>
+	#define as_gmtime(ts, tm) gmtime_r(ts, tm)
+	#define as_getpid() getpid()
 #else
-#include <process.h>
-#define as_gmtime(ts, tm) gmtime_s(tm, ts)
-#define as_getpid() _getpid()
+	#include <process.h>
+	#define as_gmtime(ts, tm) gmtime_s(tm, ts)
+	#define as_getpid() _getpid()
 #endif
-
 
 //==========================================================
 // Typedefs & constants.
 //
 
-const char log_level_names[7][10] = {
-	"OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", {0}
-};
-
+const char log_level_names[7][10] = {"OFF",	  "ERROR", "WARN", "INFO",
+									 "DEBUG", "TRACE", {0}};
 
 //==========================================================
 // Forward declarations.
 //
 
-void _as_v8_log_function(const LogInfo* log, as_log_level level, const char* func, const char* file, uint32_t line, const char* fmt, va_list args);
-
+void _as_v8_log_function(const LogInfo *log, as_log_level level,
+						 const char *func, const char *file, uint32_t line,
+						 const char *fmt, va_list args);
 
 //==========================================================
 // Globals.
 //
 
-LogInfo g_log_info = { stderr, AS_LOG_LEVEL_ERROR };
+LogInfo g_log_info = {stderr, AS_LOG_LEVEL_ERROR};
 
 //==========================================================
 // Inlines and macros.
 //
 
-
 //==========================================================
 // Public API.
 //
 
-bool
-as_log_callback_fnct(as_log_level level, const char* func, const char * file,
-		uint32_t line, const char* fmt, ...)
+bool as_log_callback_fnct(as_log_level level, const char *func,
+						  const char *file, uint32_t line, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -82,9 +78,9 @@ as_log_callback_fnct(as_log_level level, const char* func, const char * file,
 	return true;
 }
 
-void
-as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
-		const char* file, uint32_t line, const char* fmt, ...)
+void as_v8_log_function(const LogInfo *log, as_log_level level,
+						const char *func, const char *file, uint32_t line,
+						const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -96,15 +92,14 @@ as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
 // Local helpers.
 //
 
-const char*
-log_level_name(as_log_level level)
+const char *log_level_name(as_log_level level)
 {
 	return log_level_names[level + 1];
 }
 
-void
-_as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
-		const char* file, uint32_t line, const char* fmt, va_list args)
+void _as_v8_log_function(const LogInfo *log, as_log_level level,
+						 const char *func, const char *file, uint32_t line,
+						 const char *fmt, va_list args)
 {
 	if (NULL == log) {
 		return;
@@ -117,7 +112,7 @@ _as_v8_log_function(const LogInfo* log, as_log_level level, const char* func,
 	strftime(ts, 64, "%b %d %Y %T %Z", &nowtm);
 
 	as_string file_string;
-	const char* filename = as_basename(&file_string, file);
+	const char *filename = as_basename(&file_string, file);
 
 	char msg[1024];
 	vsnprintf(msg, 1024, fmt, args);

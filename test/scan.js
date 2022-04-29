@@ -112,6 +112,18 @@ context('Scans', function () {
       })
     })
 
+    it('retrieves all records from the given partitions', function (done) {
+      const scan = client.scan(helper.namespace, testSet)
+      let recordsReceived = 0
+      scan.partitions(0, 4096)
+      const stream = scan.foreach()
+      stream.on('data', () => recordsReceived++)
+      stream.on('end', () => {
+        expect(recordsReceived).to.equal(numberOfRecords)
+        done()
+      })
+    })
+
     it('returns the key if it is stored on the server', function (done) {
       this.timeout(10000) // 10 second timeout
       // requires { key: Aerospike.policy.key.SEND } when creating the record
@@ -145,8 +157,8 @@ context('Scans', function () {
       this.timeout(10000) // 10 second timeout
       const scan = client.scan(helper.namespace, testSet)
       const policy = new Aerospike.ScanPolicy({
-        totalTimeout: 1000,
-        socketTimeout: 1000,
+        totalTimeout: 10000,
+        socketTimeout: 10000,
         durableDelete: true,
         recordsPerSecond: 50,
         maxRecords: 5000

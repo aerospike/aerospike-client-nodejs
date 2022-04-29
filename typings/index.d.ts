@@ -418,7 +418,6 @@ declare namespace Aerospike {
 
     interface IAddonQueryOptions {
         filters: SindexFilterPredicate[];
-        predexp: PredicateExpression[];
         selected: string[];
         nobins: boolean;
         udf: IAddonUDF;
@@ -512,13 +511,6 @@ declare namespace Aerospike {
         public val: GeoJSON;
     }
 
-    // predexp.js
-    class PredicateExpression {
-        constructor(code: number, arg?: string | number);
-        public code: number;
-        public arg: undefined | string | number;
-    }
-
     // query.js
     interface IQueryOptions {
         udf?: IAddonUDF; // query.js#581 Why udf with caps?
@@ -526,7 +518,6 @@ declare namespace Aerospike {
         percentage?;
         priority?;
         filters?;
-        predexp?;
         select?: string[];
         nobins?: boolean;
     }
@@ -536,7 +527,6 @@ declare namespace Aerospike {
         public ns: string;
         public set: string;
         public filters: SindexFilterPredicate[];
-        public predexp: PredicateExpression[];
         public selected: string[];
         public nobins: boolean;
         public udf: IAddonUDF;
@@ -546,7 +536,6 @@ declare namespace Aerospike {
         public select(...bins: string[]): void;
         public where(predicate: SindexFilterPredicate | PredicateExpression[]): void;
         public setSindexFilter(sindexFilter: SindexFilterPredicate): void;
-        public setPredexpFilter(predexpFilter: PredicateExpression[]): void;
         public setUdf(udfModule: string, udfFunction: string, udfArgs?: any[]): void;
         public foreach(policy?: QueryPolicy, dataCb?: (data: AerospikeRecord) => void, errorCb?: (error: Error) => void, endCb: () => void): RecordStream;
         public results(policy?: QueryPolicy): Promise<AerospikeRecord[]>;
@@ -649,7 +638,6 @@ declare namespace Aerospike {
         timeout?: number;
         maxRetries?: number;
         compress?: boolean;
-        predexp?: PredicateExpression[]
     }
 
     class BasePolicy {
@@ -657,7 +645,6 @@ declare namespace Aerospike {
         public totalTimeout: number;
         public maxRetries: number;
         public compress: boolean;
-        public predexp?: PredicateExpression[];
 
         constructor(props?: IBasePolicyProps);
     }
@@ -866,7 +853,7 @@ declare namespace Aerospike {
     interface IBatchReadRecord {
         key: IKey;
         bins?: string[];
-        read_all_bins?: boolean;
+        readAllBins?: boolean;
     }
 
     interface IBatchSelectEntity {
@@ -1258,45 +1245,6 @@ declare namespace Aerospike {
         geoContainsPoint(bin: string, lng: number, lat: number, indexType?: IndexType): GeoPredicate;
     }
 
-    export interface PredexpModule {
-        PredicateExpression: PredicateExpression,
-        and(nexpr: number): PredicateExpression;
-        or(count: number): PredicateExpression;
-        not(): PredicateExpression;
-        integerValue(value: number): PredicateExpression;
-        stringValue(value: string): PredicateExpression;
-        geojsonValue(value: GeoJSON): PredicateExpression;
-        integerBin(bin: string): PredicateExpression;
-        stringBin(bin: string): PredicateExpression;
-        geojsonBin(bin: string): PredicateExpression;
-        listBin(bin: string): PredicateExpression;
-        mapBin(bin: string): PredicateExpression;
-        integerVar(name: string): PredicateExpression;
-        stringVar(name: string): PredicateExpression;
-        geojsonVar(name: string): PredicateExpression;
-        recDeviceSize(): PredicateExpression;
-        recLastUpdate(): PredicateExpression;
-        recVoidTime(): PredicateExpression;
-        recDigestModulo(mod: number): PredicateExpression;
-        integerEqual(): PredicateExpression;
-        integerUnequal(): PredicateExpression;
-        integerGreater(): PredicateExpression;
-        integerGreaterEq(): PredicateExpression;
-        integerLess(): PredicateExpression;
-        integerLessEq(): PredicateExpression;
-        stringEqual(): PredicateExpression;
-        stringUnequal(): PredicateExpression;
-        stringRegex(flags?: number): PredicateExpression;
-        geojsonWithin(): PredicateExpression;
-        geojsonContains(): PredicateExpression;
-        listIterateOr(name: string): PredicateExpression;
-        listIterateAnd(name: string): PredicateExpression;
-        mapKeyIterateOr(name: string): PredicateExpression;
-        mapKeyIterateAnd(name: string): PredicateExpression;
-        mapValIterateOr(name: string): PredicateExpression;
-        mapValIterateAnd(name: string): PredicateExpression;
-    }
-
     export interface ListsModule {
         order: ListOrder;
         sortFlags: ListSortFlags;
@@ -1548,7 +1496,6 @@ declare namespace Aerospike {
     }
 
     export declare const filter: FilterModule;
-    export declare const predexp: PredexpModule;
     export declare enum regex {
         BASIC,
         EXTENDED,

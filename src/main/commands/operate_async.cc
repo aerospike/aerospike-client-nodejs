@@ -36,16 +36,17 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	Local<Array> ops = info[1].As<Array>();
 	Local<Function> cb = info[4].As<Function>();
 
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand* cmd = new AsyncCommand("Operate", client, cb);
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	AsyncCommand *cmd = new AsyncCommand("Operate", client, cb);
+	LogInfo *log = client->log;
 
 	as_key key;
 	bool key_initalized = false;
-    as_operations operations;
+	as_operations operations;
 	bool operations_initalized = false;
 	as_policy_operate policy;
-	as_policy_operate* p_policy = NULL;
+	as_policy_operate *p_policy = NULL;
 	as_status status;
 
 	if (key_from_jsobject(&key, keyObj, log) != AS_NODE_PARAM_OK) {
@@ -68,7 +69,8 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	}
 
 	if (info[3]->IsObject()) {
-		if (operatepolicy_from_jsobject(&policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		if (operatepolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
@@ -76,17 +78,23 @@ NAN_METHOD(AerospikeClient::OperateAsync)
 	}
 
 	as_v8_debug(log, "Sending async operate command");
-	status = aerospike_key_operate_async(client->as, &cmd->err, p_policy, &key, &operations, async_record_listener, cmd, NULL, NULL);
+	status = aerospike_key_operate_async(client->as, &cmd->err, p_policy, &key,
+										 &operations, async_record_listener,
+										 cmd, NULL, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
-	} else {
+	}
+	else {
 		cmd->ErrorCallback();
 	}
 
 Cleanup:
 	delete cmd;
-	if (key_initalized) as_key_destroy(&key);
-	if (operations_initalized) as_operations_destroy(&operations);
-	if (p_policy && policy.base.predexp) as_predexp_list_destroy(policy.base.predexp);
-	if (p_policy && policy.base.filter_exp) { as_exp_destroy(policy.base.filter_exp); }
+	if (key_initalized)
+		as_key_destroy(&key);
+	if (operations_initalized)
+		as_operations_destroy(&operations);
+	if (p_policy && policy.base.filter_exp) {
+		as_exp_destroy(policy.base.filter_exp);
+	}
 }

@@ -32,69 +32,75 @@ extern "C" {
 using namespace v8;
 
 class JobInfoCommand : public AerospikeCommand {
-	public:
-		JobInfoCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("JobInfo", client, callback_) { }
+  public:
+	JobInfoCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("JobInfo", client, callback_)
+	{
+	}
 
-		~JobInfoCommand() {
-			if (policy != NULL) cf_free(policy);
-			if (module) free(module);
-		}
+	~JobInfoCommand()
+	{
+		if (policy != NULL)
+			cf_free(policy);
+		if (module)
+			free(module);
+	}
 
-		as_policy_info* policy = NULL;
-		uint64_t job_id = 0;
-		char* module = NULL;
-		as_job_info job_info;
+	as_policy_info *policy = NULL;
+	uint64_t job_id = 0;
+	char *module = NULL;
+	as_job_info job_info;
 };
 
-static void*
-prepare(const Nan::FunctionCallbackInfo<Value> &info)
+static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	JobInfoCommand* cmd = new JobInfoCommand(client, info[3].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	JobInfoCommand *cmd = new JobInfoCommand(client, info[3].As<Function>());
+	LogInfo *log = client->log;
 
 	cmd->job_id = Nan::To<int64_t>(info[0]).FromJust();
 	cmd->module = strdup(*Nan::Utf8String(info[1].As<String>()));
 
 	if (info[2]->IsObject()) {
-		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Policy parameter is invalid");
 		}
 	}
 
 	return cmd;
 }
 
-static void
-execute(uv_work_t* req)
+static void execute(uv_work_t *req)
 {
-	JobInfoCommand* cmd = reinterpret_cast<JobInfoCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	JobInfoCommand *cmd = reinterpret_cast<JobInfoCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
-	as_v8_debug(log, "Executing JobInfo command: job ID: %lli, module: %s", cmd->job_id, cmd->module);
-	aerospike_job_info(cmd->as, &cmd->err, cmd->policy, cmd->module, cmd->job_id, false, &cmd->job_info);
+	as_v8_debug(log, "Executing JobInfo command: job ID: %lli, module: %s",
+				cmd->job_id, cmd->module);
+	aerospike_job_info(cmd->as, &cmd->err, cmd->policy, cmd->module,
+					   cmd->job_id, false, &cmd->job_info);
 }
 
-static void
-respond(uv_work_t* req, int status)
+static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	JobInfoCommand* cmd = reinterpret_cast<JobInfoCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	JobInfoCommand *cmd = reinterpret_cast<JobInfoCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
-	} else {
-		Local<Value> argv[] = {
-			Nan::Null(),
-			jobinfo_to_jsobject(&cmd->job_info, log)
-		};
+	}
+	else {
+		Local<Value> argv[] = {Nan::Null(),
+							   jobinfo_to_jsobject(&cmd->job_info, log)};
 		cmd->Callback(2, argv);
 	}
 

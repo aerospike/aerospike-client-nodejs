@@ -30,86 +30,105 @@ extern "C" {
 using namespace v8;
 
 class IndexCreateCommand : public AerospikeCommand {
-	public:
-		IndexCreateCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("IndexCreate", client, callback_) { }
+  public:
+	IndexCreateCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("IndexCreate", client, callback_)
+	{
+	}
 
-		~IndexCreateCommand() {
-			if (policy != NULL) cf_free(policy);
-			if (index != NULL) free(index);
-		}
+	~IndexCreateCommand()
+	{
+		if (policy != NULL)
+			cf_free(policy);
+		if (index != NULL)
+			free(index);
+	}
 
-		as_index_task task;
-		as_policy_info* policy = NULL;
-		as_namespace ns;
-		as_set set;
-		as_bin_name bin;
-		char* index = NULL;
-		as_index_type itype;
-		as_index_datatype dtype;
+	as_index_task task;
+	as_policy_info *policy = NULL;
+	as_namespace ns;
+	as_set set;
+	as_bin_name bin;
+	char *index = NULL;
+	as_index_type itype;
+	as_index_datatype dtype;
 };
 
-static void*
-prepare(const Nan::FunctionCallbackInfo<Value> &info)
+static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
 	Nan::HandleScope scope;
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	IndexCreateCommand* cmd = new IndexCreateCommand(client, info[7].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	IndexCreateCommand *cmd =
+		new IndexCreateCommand(client, info[7].As<Function>());
+	LogInfo *log = client->log;
 
-	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()), AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
-		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
+	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()),
+				   AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
+		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+						   "Namespace exceeds max. length (%d)",
+						   AS_NAMESPACE_MAX_SIZE);
 	}
 
 	if (info[1]->IsString()) {
-		if (as_strlcpy(cmd->set, *Nan::Utf8String(info[1].As<String>()), AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+		if (as_strlcpy(cmd->set, *Nan::Utf8String(info[1].As<String>()),
+					   AS_SET_MAX_SIZE) > AS_SET_MAX_SIZE) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 		}
 	}
 
-	if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2].As<String>()), AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
-		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Bin name exceeds max. length (%d)", AS_BIN_NAME_MAX_LEN);
+	if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2].As<String>()),
+				   AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
+		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+						   "Bin name exceeds max. length (%d)",
+						   AS_BIN_NAME_MAX_LEN);
 	}
 
 	cmd->index = strdup(*Nan::Utf8String(info[3].As<String>()));
-	cmd->itype = (as_index_type) Nan::To<int>(info[4]).FromJust();
-	cmd->dtype = (as_index_datatype) Nan::To<int>(info[5]).FromJust();
+	cmd->itype = (as_index_type)Nan::To<int>(info[4]).FromJust();
+	cmd->dtype = (as_index_datatype)Nan::To<int>(info[5]).FromJust();
 
 	if (info[6]->IsObject()) {
-		cmd->policy = (as_policy_info*) cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[6].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
+		if (infopolicy_from_jsobject(cmd->policy, info[6].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Policy parameter is invalid");
 		}
 	}
 
 	return cmd;
 }
 
-static void
-execute(uv_work_t* req)
+static void execute(uv_work_t *req)
 {
-	IndexCreateCommand* cmd = reinterpret_cast<IndexCreateCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	IndexCreateCommand *cmd = reinterpret_cast<IndexCreateCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
-	as_v8_debug(log, "Executing IndexCreate command: ns=%s, set=%s, bin=%s, index=%s, type=%d, datatype=%d",
-			cmd->ns, cmd->set, cmd->bin, cmd->index, cmd->itype, cmd->dtype);
-	aerospike_index_create_complex(cmd->as, &cmd->err, &cmd->task, cmd->policy, cmd->ns,
-			cmd->set, cmd->bin, cmd->index, cmd->itype, cmd->dtype);
+	as_v8_debug(log,
+				"Executing IndexCreate command: ns=%s, set=%s, bin=%s, "
+				"index=%s, type=%d, datatype=%d",
+				cmd->ns, cmd->set, cmd->bin, cmd->index, cmd->itype,
+				cmd->dtype);
+	aerospike_index_create_complex(cmd->as, &cmd->err, &cmd->task, cmd->policy,
+								   cmd->ns, cmd->set, cmd->bin, cmd->index,
+								   cmd->itype, cmd->dtype);
 }
 
-static void
-respond(uv_work_t* req, int status)
+static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	IndexCreateCommand* cmd = reinterpret_cast<IndexCreateCommand*>(req->data);
+	IndexCreateCommand *cmd = reinterpret_cast<IndexCreateCommand *>(req->data);
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
-	} else {
+	}
+	else {
 		cmd->Callback(0, {});
 	}
 

@@ -23,29 +23,28 @@
 
 using namespace v8;
 
-int
-add_operation(as_operations* ops, uint32_t opcode, Local<Object> params, LogInfo* log)
+int add_operation(as_operations *ops, uint32_t opcode, Local<Object> params,
+				  LogInfo *log)
 {
 	switch (opcode & OPS_MASK) {
-		case SCALAR_OPS_OFFSET:
-			return add_scalar_op(ops, opcode, params, log);
-		case LIST_OPS_OFFSET:
-			return add_list_op(ops, opcode, params, log);
-		case MAP_OPS_OFFSET:
-			return add_map_op(ops, opcode, params, log);
-		case BIT_OPS_OFFSET:
-			return add_bit_op(ops, opcode, params, log);
-		case HLL_OPS_OFFSET:
-			return add_hll_op(ops, opcode, params, log);
-		case EXPOP_OPS_OFFSET:
-			return add_exp_op(ops, opcode, params, log);
-		default:
-			return AS_NODE_PARAM_ERR;
+	case SCALAR_OPS_OFFSET:
+		return add_scalar_op(ops, opcode, params, log);
+	case LIST_OPS_OFFSET:
+		return add_list_op(ops, opcode, params, log);
+	case MAP_OPS_OFFSET:
+		return add_map_op(ops, opcode, params, log);
+	case BIT_OPS_OFFSET:
+		return add_bit_op(ops, opcode, params, log);
+	case HLL_OPS_OFFSET:
+		return add_hll_op(ops, opcode, params, log);
+	case EXPOP_OPS_OFFSET:
+		return add_exp_op(ops, opcode, params, log);
+	default:
+		return AS_NODE_PARAM_ERR;
 	}
 }
 
-int
-operations_from_jsarray(as_operations* ops, Local<Array> arr, LogInfo* log)
+int operations_from_jsarray(as_operations *ops, Local<Array> arr, LogInfo *log)
 {
 	uint32_t capacity = arr->Length();
 	if (capacity == 0) {

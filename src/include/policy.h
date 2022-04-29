@@ -21,17 +21,42 @@
 
 extern "C" {
 #include <aerospike/as_policy.h>
+#include <aerospike/as_partition_filter.h>
 #include <aerospike/as_event.h>
 }
 
 // Functions to convert v8 policies to C structures
-int eventpolicy_from_jsobject(as_policy_event* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int writepolicy_from_jsobject(as_policy_write* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int readpolicy_from_jsobject( as_policy_read* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int removepolicy_from_jsobject(as_policy_remove* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int batchpolicy_from_jsobject(as_policy_batch* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int operatepolicy_from_jsobject(as_policy_operate* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int infopolicy_from_jsobject(as_policy_info* policy, v8::Local<v8::Object> obj, const LogInfo* log );
-int applypolicy_from_jsobject(as_policy_apply* policy, v8::Local<v8::Object> obj, const LogInfo* log);
-int scanpolicy_from_jsobject(as_policy_scan* policy, v8::Local<v8::Object> obj, const LogInfo* log);
-int querypolicy_from_jsobject(as_policy_query* policy, v8::Local<v8::Object> obj, const LogInfo* log);
+int eventpolicy_from_jsobject(as_policy_event *policy,
+							  v8::Local<v8::Object> obj, const LogInfo *log);
+int writepolicy_from_jsobject(as_policy_write *policy,
+							  v8::Local<v8::Object> obj, const LogInfo *log);
+int readpolicy_from_jsobject(as_policy_read *policy, v8::Local<v8::Object> obj,
+							 const LogInfo *log);
+int removepolicy_from_jsobject(as_policy_remove *policy,
+							   v8::Local<v8::Object> obj, const LogInfo *log);
+int batchpolicy_from_jsobject(as_policy_batch *policy,
+							  v8::Local<v8::Object> obj, const LogInfo *log);
+int batchread_policy_from_jsobject(as_policy_batch_read *policy,
+								   v8::Local<v8::Object> obj,
+								   const LogInfo *log);
+int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
+int operatepolicy_from_jsobject(as_policy_operate *policy,
+								v8::Local<v8::Object> obj, const LogInfo *log);
+int infopolicy_from_jsobject(as_policy_info *policy, v8::Local<v8::Object> obj,
+							 const LogInfo *log);
+int applypolicy_from_jsobject(as_policy_apply *policy,
+							  v8::Local<v8::Object> obj, const LogInfo *log);
+int scanpolicy_from_jsobject(as_policy_scan *policy, v8::Local<v8::Object> obj,
+							 const LogInfo *log);
+int querypolicy_from_jsobject(as_policy_query *policy,
+							  v8::Local<v8::Object> obj, const LogInfo *log);
+int partitions_from_jsobject(as_partition_filter *pf, bool *defined,
+							 v8::Local<v8::Object> obj, const LogInfo *log);

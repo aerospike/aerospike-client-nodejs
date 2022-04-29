@@ -33,70 +33,81 @@ extern "C" {
 using namespace v8;
 
 class QueryBackgroundCommand : public AerospikeCommand {
-	public:
-		QueryBackgroundCommand(AerospikeClient* client, Local<Function> callback_)
-			: AerospikeCommand("QueryBackground", client, callback_) {}
+  public:
+	QueryBackgroundCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("QueryBackground", client, callback_)
+	{
+	}
 
-		~QueryBackgroundCommand() {
-			free_query(&query, NULL);
-			if (policy != NULL) cf_free(policy);
-		}
+	~QueryBackgroundCommand()
+	{
+		free_query(&query, NULL);
+		if (policy != NULL)
+			cf_free(policy);
+	}
 
-		as_policy_write* policy = NULL;
-		uint64_t query_id = 0;
-		as_query query;
+	as_policy_write *policy = NULL;
+	uint64_t query_id = 0;
+	as_query query;
 };
 
-static void*
-prepare(const Nan::FunctionCallbackInfo<Value> &info)
+static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 {
-	AerospikeClient* client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	QueryBackgroundCommand* cmd = new QueryBackgroundCommand(client, info[5].As<Function>());
-	LogInfo* log = client->log;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	QueryBackgroundCommand *cmd =
+		new QueryBackgroundCommand(client, info[5].As<Function>());
+	LogInfo *log = client->log;
 
 	setup_query(&cmd->query, info[0], info[1], info[2], log);
 
 	if (info[3]->IsObject()) {
-		cmd->policy = (as_policy_write*) cf_malloc(sizeof(as_policy_write));
-		if (writepolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) != AS_NODE_PARAM_OK) {
-			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Policy parameter is invalid");
+		cmd->policy = (as_policy_write *)cf_malloc(sizeof(as_policy_write));
+		if (writepolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Policy parameter is invalid");
 		}
 	}
 
 	if (info[4]->IsNumber()) {
 		cmd->query_id = Nan::To<int64_t>(info[4]).FromJust();
-		as_v8_info(log, "Using query ID %lli for background query.", cmd->query_id);
+		as_v8_info(log, "Using query ID %lli for background query.",
+				   cmd->query_id);
 	}
 
 	return cmd;
 }
 
-static void
-execute(uv_work_t* req)
+static void execute(uv_work_t *req)
 {
-	QueryBackgroundCommand* cmd = reinterpret_cast<QueryBackgroundCommand*>(req->data);
-	LogInfo* log = cmd->log;
+	QueryBackgroundCommand *cmd =
+		reinterpret_cast<QueryBackgroundCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
 	as_v8_debug(log, "Sending query background command");
-	aerospike_query_background(cmd->as, &cmd->err, cmd->policy, &cmd->query, &cmd->query_id);
+	aerospike_query_background(cmd->as, &cmd->err, cmd->policy, &cmd->query,
+							   &cmd->query_id);
 
-	if (cmd->policy && cmd->policy->base.predexp) as_predexp_list_destroy(cmd->policy->base.predexp);
-	if (cmd->policy && cmd->policy->base.filter_exp) { as_exp_destroy(cmd->policy->base.filter_exp); }
+	if (cmd->policy && cmd->policy->base.filter_exp) {
+		as_exp_destroy(cmd->policy->base.filter_exp);
+	}
 }
 
-static void
-respond(uv_work_t* req, int status)
+static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	QueryBackgroundCommand* cmd = reinterpret_cast<QueryBackgroundCommand*>(req->data);
+	QueryBackgroundCommand *cmd =
+		reinterpret_cast<QueryBackgroundCommand *>(req->data);
 
 	if (cmd->IsError()) {
 		cmd->ErrorCallback();
-	} else {
+	}
+	else {
 		cmd->Callback(0, {});
 	}
 

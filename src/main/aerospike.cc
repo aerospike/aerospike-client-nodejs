@@ -18,7 +18,6 @@
 #include "enums.h"
 #include "policy.h"
 #include "operations.h"
-#include "predexp.h"
 #include "expressions.h"
 #include "log.h"
 #include "conversions.h"
@@ -29,7 +28,8 @@ extern "C" {
 #include <aerospike/as_async_proto.h>
 }
 
-#define export(__name, __value) Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
+#define export(__name, __value)                                                \
+	Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
 
 using namespace v8;
 
@@ -49,12 +49,15 @@ NAN_METHOD(register_as_event_loop)
 	as_policy_event_init(&policy);
 	eventpolicy_from_jsobject(&policy, info[0].As<Object>(), &g_log_info);
 
-	as_event_loop* loop;
+	as_event_loop *loop;
 	as_error err;
-	as_status status = as_set_external_event_loop(&err, &policy, uv_default_loop(), &loop);
+	as_status status =
+		as_set_external_event_loop(&err, &policy, uv_default_loop(), &loop);
 	if (status != AEROSPIKE_OK) {
 		char errmsg[128 + AS_ERROR_MESSAGE_MAX_SIZE];
-		snprintf(errmsg, sizeof(errmsg), "Unable to register default event loop: %s [%i]", err.message, err.code);
+		snprintf(errmsg, sizeof(errmsg),
+				 "Unable to register default event loop: %s [%i]", err.message,
+				 err.code);
 		return Nan::ThrowError(errmsg);
 	}
 	uv_update_time(uv_default_loop());
@@ -69,15 +72,15 @@ NAN_METHOD(release_as_event_loop)
 NAN_METHOD(ref_as_event_loop)
 {
 	Nan::HandleScope();
-	as_event_loop* loop = as_event_loop_find(uv_default_loop());
-	uv_ref((uv_handle_t*) loop->wakeup);
+	as_event_loop *loop = as_event_loop_find(uv_default_loop());
+	uv_ref((uv_handle_t *)loop->wakeup);
 }
 
 NAN_METHOD(unref_as_event_loop)
 {
 	Nan::HandleScope();
-	as_event_loop* loop = as_event_loop_find(uv_default_loop());
-	uv_unref((uv_handle_t*) loop->wakeup);
+	as_event_loop *loop = as_event_loop_find(uv_default_loop());
+	uv_unref((uv_handle_t *)loop->wakeup);
 }
 
 NAN_METHOD(get_cluster_count)
@@ -90,13 +93,15 @@ NAN_METHOD(get_cluster_count)
 NAN_METHOD(setDefaultLogging)
 {
 	Nan::HandleScope();
-	if (info[0]->IsObject()){
-		if (log_from_jsobject(&g_log_info, info[0].As<Object>()) == AS_NODE_PARAM_OK) {
+	if (info[0]->IsObject()) {
+		if (log_from_jsobject(&g_log_info, info[0].As<Object>()) ==
+			AS_NODE_PARAM_OK) {
 			if (g_log_info.level < 0) {
 				// common logging does not support log level "OFF"
 				as_log_set_level(AS_LOG_LEVEL_ERROR);
 				as_log_set_callback(NULL);
-			} else {
+			}
+			else {
 				as_log_set_level(g_log_info.level);
 				as_log_set_callback(as_log_callback_fnct);
 			}
@@ -138,7 +143,6 @@ NAN_MODULE_INIT(Aerospike)
 	export("lists", list_enum_values());
 	export("maps", map_enum_values());
 	export("predicates", predicates());
-	export("predexp", predexp_codes());
 	export("exp", exp_opcode_values());
 	export("log", log_enum_values());
 	export("scalarOperations", scalar_opcode_values());
@@ -151,6 +155,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("status", status());
 	export("ttl", ttl_enum_values());
 	export("auth", auth_mode_enum_values());
+	export("batchTypes", batchTypes());
 }
 
 NODE_MODULE(aerospike, Aerospike);

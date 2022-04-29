@@ -23,7 +23,8 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> list_enum_values()
 {
@@ -84,15 +85,18 @@ Local<Object> list_enum_values()
 	set(opcodes, "GET_BY_INDEX_RANGE", AS_CDT_OP_LIST_GET_BY_INDEX_RANGE);
 	set(opcodes, "GET_BY_VALUE_INTERVAL", AS_CDT_OP_LIST_GET_BY_VALUE_INTERVAL);
 	set(opcodes, "GET_BY_RANK_RANGE", AS_CDT_OP_LIST_GET_BY_RANK_RANGE);
-	set(opcodes, "GET_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE);
+	set(opcodes, "GET_BY_VALUE_REL_RANK_RANGE",
+		AS_CDT_OP_LIST_GET_BY_VALUE_REL_RANK_RANGE);
 	set(opcodes, "REMOVE_BY_INDEX", AS_CDT_OP_LIST_REMOVE_BY_INDEX);
 	set(opcodes, "REMOVE_BY_RANK", AS_CDT_OP_LIST_REMOVE_BY_RANK);
 	set(opcodes, "REMOVE_ALL_BY_VALUE", AS_CDT_OP_LIST_REMOVE_ALL_BY_VALUE);
 	set(opcodes, "REMOVE_BY_VALUE_LIST", AS_CDT_OP_LIST_REMOVE_BY_VALUE_LIST);
 	set(opcodes, "REMOVE_BY_INDEX_RANGE", AS_CDT_OP_LIST_REMOVE_BY_INDEX_RANGE);
-	set(opcodes, "REMOVE_BY_VALUE_INTERVAL", AS_CDT_OP_LIST_REMOVE_BY_VALUE_INTERVAL);
+	set(opcodes, "REMOVE_BY_VALUE_INTERVAL",
+		AS_CDT_OP_LIST_REMOVE_BY_VALUE_INTERVAL);
 	set(opcodes, "REMOVE_BY_RANK_RANGE", AS_CDT_OP_LIST_REMOVE_BY_RANK_RANGE);
-	set(opcodes, "REMOVE_BY_VALUE_REL_RANK_RANGE", AS_CDT_OP_LIST_REMOVE_BY_VALUE_REL_RANK_RANGE);
+	set(opcodes, "REMOVE_BY_VALUE_REL_RANK_RANGE",
+		AS_CDT_OP_LIST_REMOVE_BY_VALUE_REL_RANK_RANGE);
 
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("order").ToLocalChecked(), order);

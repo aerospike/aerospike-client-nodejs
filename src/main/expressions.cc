@@ -28,60 +28,73 @@ extern "C" {
 
 using namespace v8;
 
-int
-free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log)
+int free_entries(Local<Array> entries_ary, as_exp_entry *entries,
+				 const LogInfo *log)
 {
 	int rc = AS_NODE_PARAM_OK;
 	int i = 0, length = entries_ary->Length();
-	as_exp_entry* entry = entries;
-	for (i = 0; i < length; i++,entry++) {
-		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
+	as_exp_entry *entry = entries;
+	for (i = 0; i < length; i++, entry++) {
+		Local<Object> entry_obj =
+			Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 
-		if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("value").ToLocalChecked())
+				.FromJust()) {
 			// it is freed by c-client in case of geojson exp but for other cases it may leak
 			// if (entry->v.val) as_val_destroy(entry->v.val);
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
-			if (entry->v.str_val) free((void*)entry->v.str_val);
+		if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked())
+				.FromJust()) {
+			if (entry->v.str_val)
+				free((void *)entry->v.str_val);
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
-			if (entry->v.str_val) cf_free((void*)entry->v.bytes_val);
+		if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked())
+				.FromJust()) {
+			if (entry->v.str_val)
+				cf_free((void *)entry->v.bytes_val);
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("intVal").ToLocalChecked())
+				.FromJust()) {
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked())
+				.FromJust()) {
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked())
+				.FromJust()) {
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked())
+				.FromJust()) {
 			continue;
 		}
 
 		if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
-			if (entry->v.ctx) as_cdt_ctx_destroy(entry->v.ctx);
+			if (entry->v.ctx)
+				as_cdt_ctx_destroy(entry->v.ctx);
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked())
+				.FromJust()) {
 			if (entry->v.list_pol) {
 				cf_free(entry->v.list_pol);
 			}
 			continue;
 		}
 
-		if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+		if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked())
+				.FromJust()) {
 			if (entry->v.map_pol) {
 				cf_free(entry->v.map_pol);
 			}
@@ -93,20 +106,23 @@ free_entries(Local<Array> entries_ary, as_exp_entry* entries, const LogInfo* log
 	return rc;
 }
 
-int
-convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
+int convert_entry(Local<Object> entry_obj, as_exp_entry *entry,
+				  const LogInfo *log)
 {
 	int rc = AS_NODE_PARAM_OK;
 
-	if ((rc = get_int_property((int*) &entry->op, entry_obj, "op", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_int_property((int *)&entry->op, entry_obj, "op", log)) !=
+		AS_NODE_PARAM_OK) {
 		return rc;
 	}
 
-	if ((rc = get_optional_uint32_property(&entry->count, NULL, entry_obj, "count", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property(&entry->count, NULL, entry_obj,
+										   "count", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 
-	if ((rc = get_optional_uint32_property(&entry->sz, NULL, entry_obj, "sz", log)) != AS_NODE_PARAM_OK) {
+	if ((rc = get_optional_uint32_property(&entry->sz, NULL, entry_obj, "sz",
+										   log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 
@@ -118,12 +134,16 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 
 	if (Nan::Has(entry_obj, Nan::New("strVal").ToLocalChecked()).FromJust()) {
 		entry->v.str_val = NULL;
-		rc = get_string_property((char**) &entry->v.str_val, entry_obj, "strVal", log);
+		rc = get_string_property((char **)&entry->v.str_val, entry_obj,
+								 "strVal", log);
 		return rc;
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("bytesVal").ToLocalChecked()).FromJust()) {
-		rc = get_bytes_property(&entry->v.bytes_val, (int*) &entry->sz, entry_obj, "bytesVal", log);
+		entry->v.bytes_val = NULL;
+		entry->sz = 0;
+		rc = get_bytes_property(&entry->v.bytes_val, (int *)&entry->sz,
+								entry_obj, "bytesVal", log);
 		return rc;
 	}
 
@@ -133,11 +153,13 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("uintVal").ToLocalChecked()).FromJust()) {
-		return get_uint64_property(&entry->v.uint_val, entry_obj, "uintVal", log);
+		return get_uint64_property(&entry->v.uint_val, entry_obj, "uintVal",
+								   log);
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("floatVal").ToLocalChecked()).FromJust()) {
-		return get_float_property(&entry->v.float_val, entry_obj, "floatVal", log);
+		return get_float_property(&entry->v.float_val, entry_obj, "floatVal",
+								  log);
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("boolVal").ToLocalChecked()).FromJust()) {
@@ -146,45 +168,57 @@ convert_entry(Local<Object> entry_obj, as_exp_entry* entry, const LogInfo* log)
 
 	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
 		entry->v.ctx = NULL;
-		rc = get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
+		rc =
+			get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
 		return rc;
 	}
 
-	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked()).FromJust()) {
+	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked())
+			.FromJust()) {
 		entry->v.list_pol = NULL;
-		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked()).ToLocalChecked();
+		Local<Value> policy_obj =
+			Nan::Get(entry_obj, Nan::New("listPolicy").ToLocalChecked())
+				.ToLocalChecked();
 		if (policy_obj->IsObject()) {
-			entry->v.list_pol = (as_list_policy*) cf_malloc(sizeof(as_list_policy));
-			get_optional_list_policy(entry->v.list_pol, NULL, policy_obj.As<Object>(), log);
+			entry->v.list_pol =
+				(as_list_policy *)cf_malloc(sizeof(as_list_policy));
+			get_optional_list_policy(entry->v.list_pol, NULL,
+									 policy_obj.As<Object>(), log);
 		}
 		return AS_NODE_PARAM_OK;
 	}
-	
-	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).FromJust()) {
+
+	if (Nan::Has(entry_obj, Nan::New("mapPolicy").ToLocalChecked())
+			.FromJust()) {
 		entry->v.map_pol = NULL;
-		Local<Value> policy_obj = Nan::Get(entry_obj, Nan::New("mapPolicy").ToLocalChecked()).ToLocalChecked();
+		Local<Value> policy_obj =
+			Nan::Get(entry_obj, Nan::New("mapPolicy").ToLocalChecked())
+				.ToLocalChecked();
 		if (policy_obj->IsObject()) {
-			entry->v.map_pol = (as_map_policy*) cf_malloc(sizeof(as_map_policy));
+			entry->v.map_pol =
+				(as_map_policy *)cf_malloc(sizeof(as_map_policy));
 			get_map_policy(entry->v.map_pol, policy_obj.As<Object>(), log);
 		}
 		return AS_NODE_PARAM_OK;
 	}
-	
+
 	return rc;
 }
 
-int
-compile_expression(Local<Array> entries_ary, as_exp** filter_exp, const LogInfo* log)
+int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
+					   const LogInfo *log)
 {
 	int rc = AS_NODE_PARAM_OK;
 	int i = 0, length = entries_ary->Length();
 	as_v8_debug(log, "Compiling expression (length=%i)", length);
-	as_exp_entry* entries = (as_exp_entry*) cf_malloc(length * sizeof(as_exp_entry));
-	as_exp_entry* entry = entries;
+	as_exp_entry *entries =
+		(as_exp_entry *)cf_malloc(length * sizeof(as_exp_entry));
+	as_exp_entry *entry = entries;
 
 	for (i = 0; i < length; i++) {
-		*entry = { };
-		Local<Object> entry_obj = Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
+		*entry = {};
+		Local<Object> entry_obj =
+			Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 		if ((rc = convert_entry(entry_obj, entry, log)) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Error converting expression entry: %i", i);
 			goto done;

@@ -19,12 +19,13 @@
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> languages()
 {
-    Nan::EscapableHandleScope scope;
-    Local<Object> obj = Nan::New<Object>();
-    set(obj, "LUA",   0);
-    return scope.Escape(obj);
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "LUA", 0);
+	return scope.Escape(obj);
 }

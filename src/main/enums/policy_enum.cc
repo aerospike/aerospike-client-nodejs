@@ -23,14 +23,15 @@ extern "C" {
 
 using namespace v8;
 
-#define set(__obj, __name, __value) Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
+#define set(__obj, __name, __value)                                            \
+	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
 Local<Object> key_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "DIGEST",  AS_POLICY_KEY_DIGEST);
-	set(obj, "SEND",    AS_POLICY_KEY_SEND);
+	set(obj, "DIGEST", AS_POLICY_KEY_DIGEST);
+	set(obj, "SEND", AS_POLICY_KEY_SEND);
 	return scope.Escape(obj);
 }
 
@@ -38,8 +39,8 @@ Local<Object> retry_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "NONE",    AS_POLICY_RETRY_NONE);
-	set(obj, "ONCE",    AS_POLICY_RETRY_ONCE);
+	set(obj, "NONE", AS_POLICY_RETRY_NONE);
+	set(obj, "ONCE", AS_POLICY_RETRY_ONCE);
 	return scope.Escape(obj);
 }
 
@@ -47,9 +48,9 @@ Local<Object> generation_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "IGNORE",  AS_POLICY_GEN_IGNORE);
-	set(obj, "EQ",      AS_POLICY_GEN_EQ);
-	set(obj, "GT",      AS_POLICY_GEN_GT);
+	set(obj, "IGNORE", AS_POLICY_GEN_IGNORE);
+	set(obj, "EQ", AS_POLICY_GEN_EQ);
+	set(obj, "GT", AS_POLICY_GEN_GT);
 	return scope.Escape(obj);
 }
 
@@ -57,9 +58,9 @@ Local<Object> exists_policy_values()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "IGNORE",  AS_POLICY_EXISTS_IGNORE);
-	set(obj, "CREATE",  AS_POLICY_EXISTS_CREATE);
-	set(obj, "UPDATE",  AS_POLICY_EXISTS_UPDATE);
+	set(obj, "IGNORE", AS_POLICY_EXISTS_IGNORE);
+	set(obj, "CREATE", AS_POLICY_EXISTS_CREATE);
+	set(obj, "UPDATE", AS_POLICY_EXISTS_UPDATE);
 	set(obj, "REPLACE", AS_POLICY_EXISTS_REPLACE);
 	set(obj, "CREATE_OR_REPLACE", AS_POLICY_EXISTS_CREATE_OR_REPLACE);
 	return scope.Escape(obj);
@@ -114,10 +115,14 @@ Local<Object> policy()
 	Nan::Set(obj, Nan::New("retry").ToLocalChecked(), retry_policy_values());
 	Nan::Set(obj, Nan::New("gen").ToLocalChecked(), generation_policy_values());
 	Nan::Set(obj, Nan::New("exists").ToLocalChecked(), exists_policy_values());
-	Nan::Set(obj, Nan::New("replica").ToLocalChecked(), replica_policy_values());
-	Nan::Set(obj, Nan::New("readModeAP").ToLocalChecked(), read_mode_ap_policy_values());
-	Nan::Set(obj, Nan::New("readModeSC").ToLocalChecked(), read_mode_sc_policy_values());
-	Nan::Set(obj, Nan::New("commitLevel").ToLocalChecked(), commit_level_policy_values());
+	Nan::Set(obj, Nan::New("replica").ToLocalChecked(),
+			 replica_policy_values());
+	Nan::Set(obj, Nan::New("readModeAP").ToLocalChecked(),
+			 read_mode_ap_policy_values());
+	Nan::Set(obj, Nan::New("readModeSC").ToLocalChecked(),
+			 read_mode_sc_policy_values());
+	Nan::Set(obj, Nan::New("commitLevel").ToLocalChecked(),
+			 commit_level_policy_values());
 
 	return scope.Escape(obj);
 }
