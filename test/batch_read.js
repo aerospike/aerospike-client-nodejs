@@ -110,9 +110,9 @@ describe('client.batchRead()', function () {
 
   it('returns the entire record', function (done) {
     const batchRecords = [
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true },
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: true },
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: true }
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), readAllBins: true },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), readAllBins: true },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), readAllBins: true }
     ]
 
     client.batchRead(batchRecords, function (err, results) {
@@ -130,9 +130,9 @@ describe('client.batchRead()', function () {
 
   it('returns selected bins for each key', function (done) {
     const batchRecords = [
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true },
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), read_all_bins: false, bins: ['i'] },
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), read_all_bins: false }
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), readAllBins: true },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/3'), readAllBins: false, bins: ['i'] },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), readAllBins: false }
     ]
 
     client.batchRead(batchRecords, function (err, results) {
@@ -167,7 +167,7 @@ describe('client.batchRead()', function () {
       it('returns list and map bins as byte buffers', function () {
         const batch = [{
           key: new Key(helper.namespace, helper.set, 'test/batch_read/1'),
-          read_all_bins: true
+          readAllBins: true
         }]
 
         return client.batchRead(batch, policy)
@@ -184,7 +184,7 @@ describe('client.batchRead()', function () {
 
   it('returns a Promise that resolves to the batch results', function () {
     const batchRecords = [
-      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), read_all_bins: true }
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/1'), readAllBins: true }
     ]
 
     return client.batchRead(batchRecords)

@@ -8,11 +8,14 @@ on:
     branches:
       - master
       - maint/3.x
+      - maint/4.x
       - gh-action
   pull_request:
     branches:
       - master
+      - stage
       - maint/3.x
+      - maint/4.x
 
 jobs:
   build:
@@ -26,6 +29,8 @@ jobs:
           - 12.x
           - 14.x
           - 16.x
+          - 17.x
+          - 18.x
 
     steps:
     - uses: actions/checkout@v2
@@ -42,6 +47,6 @@ jobs:
     - run: npm ci
     - run: npm run coverage
       env:
-        AEROSPIKE_HOSTS: "127.0.0.1:3000,127.0.0.1:3100"
-        OPTIONS: "--timeout 2000"
+        AEROSPIKE_HOSTS: "127.0.0.1:3000"
+        OPTIONS: "--timeout 30000"
     - run: npm run codecov

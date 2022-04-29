@@ -23,7 +23,7 @@
 
 using namespace v8;
 
-NAN_METHOD(AerospikeClient::BatchReadAsync)
+NAN_METHOD(AerospikeClient::BatchWriteAsync)
 {
 	TYPE_CHECK_REQ(info[0], IsArray, "Records must be an array of objects");
 	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
@@ -32,15 +32,15 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand *cmd =
-		new AsyncCommand("BatchRead", client, info[2].As<Function>());
+		new AsyncCommand("BatchWrite", client, info[2].As<Function>());
 	LogInfo *log = client->log;
 
-	as_batch_read_records *records = NULL;
+	as_batch_records *records = NULL;
 	as_policy_batch policy;
 	as_policy_batch *p_policy = NULL;
 	as_status status;
 
-	if (batch_read_records_from_jsarray(&records, info[0].As<Array>(), log) !=
+	if (batch_records_from_jsarray(&records, info[0].As<Array>(), log) !=
 		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Records array invalid");
 		goto Cleanup;
@@ -56,10 +56,10 @@ NAN_METHOD(AerospikeClient::BatchReadAsync)
 		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "Sending async batch read command");
+	as_v8_debug(log, "Sending async batch write command");
 	status =
-		aerospike_batch_read_async(client->as, &cmd->err, p_policy, records,
-								   async_batch_listener, cmd, NULL);
+		aerospike_batch_write_async(client->as, &cmd->err, p_policy, records,
+									async_batch_listener, cmd, NULL);
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
 	}

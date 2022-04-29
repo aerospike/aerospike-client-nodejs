@@ -124,7 +124,7 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 		cmd->Callback(2, argv);
 	}
 
-	free_batch_records(records);
+	batch_records_free(records, cmd->log);
 	delete cmd;
 }
 

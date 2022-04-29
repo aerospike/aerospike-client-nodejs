@@ -853,7 +853,7 @@ declare namespace Aerospike {
     interface IBatchReadRecord {
         key: IKey;
         bins?: string[];
-        read_all_bins?: boolean;
+        readAllBins?: boolean;
     }
 
     interface IBatchSelectEntity {

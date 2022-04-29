@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2020 Aerospike, Inc.
+ * Copyright 2022 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,33 +32,83 @@ extern "C" {
 
 using namespace v8;
 
-class BatchGetCommand : public AerospikeCommand {
+class BatchApplyCommand : public AerospikeCommand {
   public:
-	BatchGetCommand(AerospikeClient *client, Local<Function> callback_)
-		: AerospikeCommand("BatchGet", client, callback_)
+	BatchApplyCommand(AerospikeClient *client, Local<Function> callback_)
+		: AerospikeCommand("BatchApply", client, callback_)
 	{
+		as_batch_init(&batch, 0);
 	}
-
-	~BatchGetCommand()
+	static void BatchApplyCommandFree(BatchApplyCommand *cmd)
 	{
-		if (policy != NULL)
-			cf_free(policy);
-		if (results != NULL)
-			cf_free(results);
+		if (cmd->policy) {
+			if (cmd->policy->base.filter_exp) {
+				as_exp_destroy(cmd->policy->base.filter_exp);
+			}
+			cf_free(cmd->policy);
+			cmd->policy = NULL;
+		}
+		if (cmd->policy_apply) {
+			if (cmd->policy_apply->filter_exp) {
+				as_exp_destroy(cmd->policy_apply->filter_exp);
+			}
+			cf_free(cmd->policy_apply);
+			cmd->policy_apply = NULL;
+		}
+		if (cmd->module) {
+			cf_free(cmd->module);
+			cmd->module = NULL;
+		}
+		if (cmd->function) {
+			cf_free(cmd->function);
+			cmd->function = NULL;
+		}
+		if (cmd->arglist) {
+			as_list_destroy(cmd->arglist);
+			cmd->arglist = NULL;
+		}
+		if (cmd->results != NULL) {
+			cf_free(cmd->results);
+			cmd->results = NULL;
+		}
+		as_batch_destroy(&cmd->batch);
 	}
+	~BatchApplyCommand() { BatchApplyCommandFree(this); }
 
 	as_policy_batch *policy = NULL;
 	as_batch batch;
 	as_batch_read *results = NULL;
 	uint32_t results_len = 0;
+	/**
+	 * Optional apply policy.
+	 */
+	as_policy_batch_apply *policy_apply = NULL;
+
+	/**
+	 * Package or lua module name.
+	 * If heap defined, the user must free when done with the batch.
+	 */
+	char *module = NULL;
+
+	/**
+	 * Lua function name.
+	 * If heap defined, the user must free when done with the batch.
+	 */
+	char *function = NULL;
+
+	/**
+	 * Optional arguments to lua function.
+	 * If defined, the user must call as_arraylist_destroy() when done with the batch.
+	 */
+	as_list *arglist = NULL;
 };
 
-bool batch_get_callback(const as_batch_read *results, uint32_t n, void *udata)
+bool batch_apply_callback(const as_batch_read *results, uint32_t n, void *udata)
 {
-	BatchGetCommand *cmd = reinterpret_cast<BatchGetCommand *>(udata);
+	BatchApplyCommand *cmd = reinterpret_cast<BatchApplyCommand *>(udata);
 	LogInfo *log = cmd->log;
 
-	as_v8_debug(log, "BatchGet callback invoked with %d batch results", n);
+	as_v8_debug(log, "BatchApply callback invoked with %d batch results", n);
 
 	if (results == NULL) {
 		cmd->results = NULL;
@@ -66,7 +116,7 @@ bool batch_get_callback(const as_batch_read *results, uint32_t n, void *udata)
 		return false;
 	}
 
-	// Copy the batch result to the shared data structure BatchGetCommand, so
+	// Copy the batch result to the shared data structure BatchApplyCommand, so
 	// that the response can send it back to nodejs layer.
 	cmd->results = (as_batch_read *)calloc(n, sizeof(as_batch_read));
 	cmd->results_len = n;
@@ -88,7 +138,8 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	Nan::HandleScope scope;
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	BatchGetCommand *cmd = new BatchGetCommand(client, info[2].As<Function>());
+	BatchApplyCommand *cmd =
+		new BatchApplyCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
 	Local<Array> keys = info[0].As<Array>();
@@ -98,9 +149,29 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	if (info[1]->IsObject()) {
+		if (udfargs_from_jsobject(&cmd->module, &cmd->function, &cmd->arglist,
+								  info[1].As<Object>(),
+								  log) != AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Batch keys parameter invalid");
+		}
+	}
+
+	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_batch *)cf_malloc(sizeof(as_policy_batch));
-		if (batchpolicy_from_jsobject(cmd->policy, info[1].As<Object>(), log) !=
+		if (batchpolicy_from_jsobject(cmd->policy, info[2].As<Object>(), log) !=
 			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Batch policy parameter invalid");
+		}
+	}
+
+	if (info[3]->IsObject()) {
+		cmd->policy_apply =
+			(as_policy_batch_apply *)cf_malloc(sizeof(as_policy_batch_apply));
+		if (batchapply_policy_from_jsobject(cmd->policy_apply,
+											info[3].As<Object>(),
+											log) != AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Batch policy parameter invalid");
 		}
@@ -111,30 +182,28 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 static void execute(uv_work_t *req)
 {
-	BatchGetCommand *cmd = reinterpret_cast<BatchGetCommand *>(req->data);
+	BatchApplyCommand *cmd = reinterpret_cast<BatchApplyCommand *>(req->data);
 	LogInfo *log = cmd->log;
 
 	if (!cmd->CanExecute()) {
 		return;
 	}
 
-	as_v8_debug(log, "Executing BatchGet command for %d keys",
+	as_v8_debug(log, "Executing BatchApply command for %d keys",
 				cmd->batch.keys.size);
-	if (aerospike_batch_get(cmd->as, &cmd->err, cmd->policy, &cmd->batch,
-							batch_get_callback, cmd) != AEROSPIKE_OK) {
+	if (aerospike_batch_apply(cmd->as, &cmd->err, cmd->policy,
+							  cmd->policy_apply, &cmd->batch, cmd->module,
+							  cmd->function, cmd->arglist, batch_apply_callback,
+							  cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
 		cmd->results_len = 0;
-	}
-	as_batch_destroy(&cmd->batch);
-	if (cmd->policy && cmd->policy->base.filter_exp) {
-		as_exp_destroy(cmd->policy->base.filter_exp);
 	}
 }
 
 static void respond(uv_work_t *req, int status)
 {
 	Nan::HandleScope scope;
-	BatchGetCommand *cmd = reinterpret_cast<BatchGetCommand *>(req->data);
+	BatchApplyCommand *cmd = reinterpret_cast<BatchApplyCommand *>(req->data);
 	LogInfo *log = cmd->log;
 
 	if (cmd->IsError()) {
@@ -178,11 +247,13 @@ static void respond(uv_work_t *req, int status)
 	delete req;
 }
 
-NAN_METHOD(AerospikeClient::BatchGet)
+NAN_METHOD(AerospikeClient::BatchApply)
 {
 	TYPE_CHECK_REQ(info[0], IsArray, "Keys must be a array");
-	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[1], IsObject, "UDF must be an object");
+	TYPE_CHECK_OPT(info[2], IsObject, "Batch policy must be an object");
+	TYPE_CHECK_OPT(info[3], IsObject, "Batch apply policy must be an object");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

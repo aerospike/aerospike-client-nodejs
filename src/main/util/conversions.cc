@@ -267,6 +267,32 @@ int get_optional_uint32_property(uint32_t *intp, bool *defined,
 	return AS_NODE_PARAM_OK;
 }
 
+int get_optional_uint16_property(uint16_t *intp, bool *defined,
+								 Local<Object> obj, char const *prop,
+								 const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (value->IsNumber()) {
+		if (defined != NULL)
+			(*defined) = true;
+		(*intp) = Nan::To<uint32_t>(value).FromJust();
+		as_v8_detail(log, "%s => (uint16_t) %d", prop, *intp);
+	}
+	else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL)
+			(*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
+	}
+	else {
+		as_v8_error(log, "Type error: %s property should be integer (uint16_t)",
+					prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_float_property(double *floatp, Local<Object> obj, char const *prop,
 					   const LogInfo *log)
 {
@@ -939,37 +965,6 @@ Local<Object> record_to_jsobject(const as_record *record, const as_key *key,
 	return scope.Escape(rec);
 }
 
-Local<Array> batch_records_to_jsarray(const as_batch_read_records *records,
-									  const LogInfo *log)
-{
-	Nan::EscapableHandleScope scope;
-	const as_vector *list = &records->list;
-	Local<Array> results = Nan::New<Array>(list->size);
-
-	for (uint32_t i = 0; i < list->size; i++) {
-		as_batch_read_record *batch_record =
-			(as_batch_read_record *)as_vector_get((as_vector *)list, i);
-		as_status status = batch_record->result;
-		as_record *record = &batch_record->record;
-		as_key *key = &batch_record->key;
-
-		Local<Object> result = Nan::New<Object>();
-		Nan::Set(result, Nan::New("status").ToLocalChecked(), Nan::New(status));
-		Nan::Set(result, Nan::New("key").ToLocalChecked(),
-				 key_to_jsobject(key ? key : &record->key, log));
-		if (status == AEROSPIKE_OK) {
-			Nan::Set(result, Nan::New("meta").ToLocalChecked(),
-					 recordmeta_to_jsobject(record, log));
-			Nan::Set(result, Nan::New("bins").ToLocalChecked(),
-					 recordbins_to_jsobject(record, log));
-		}
-
-		Nan::Set(results, i, result);
-	}
-
-	return scope.Escape(results);
-}
-
 //Forward references;
 int asval_from_jsvalue(as_val **value, Local<Value> v8value,
 					   const LogInfo *log);
@@ -1608,48 +1603,6 @@ int batch_from_jsarray(as_batch *batch, Local<Array> arr, const LogInfo *log)
 	return AS_NODE_PARAM_OK;
 }
 
-int batch_read_records_from_jsarray(as_batch_read_records **records,
-									Local<Array> arr, const LogInfo *log)
-{
-	uint32_t no_records = arr->Length();
-	*records = as_batch_read_create(no_records);
-	for (uint32_t i = 0; i < no_records; i++) {
-		as_batch_read_record *record = as_batch_read_reserve(*records);
-		Local<Object> obj = Nan::Get(arr, i).ToLocalChecked().As<Object>();
-
-		Local<Object> key = Nan::Get(obj, Nan::New("key").ToLocalChecked())
-								.ToLocalChecked()
-								.As<Object>();
-		if (key_from_jsobject(&record->key, key, log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing batch keys failed");
-			return AS_NODE_PARAM_ERR;
-		}
-
-		Local<Value> v8_bins =
-			Nan::Get(obj, Nan::New("bins").ToLocalChecked()).ToLocalChecked();
-		if (v8_bins->IsArray()) {
-			char **bin_names;
-			uint32_t n_bin_names;
-			if (bins_from_jsarray(&bin_names, &n_bin_names,
-								  Local<Array>::Cast(v8_bins),
-								  log) != AS_NODE_PARAM_OK) {
-				as_v8_error(log, "Parsing batch bin names failed");
-				return AS_NODE_PARAM_ERR;
-			}
-			record->bin_names = bin_names;
-			record->n_bin_names = n_bin_names;
-		}
-
-		Local<Value> v8_read_all_bins =
-			Nan::Get(obj, Nan::New("read_all_bins").ToLocalChecked())
-				.ToLocalChecked();
-		if (v8_read_all_bins->IsBoolean()) {
-			record->read_all_bins = Nan::To<bool>(v8_read_all_bins).FromJust();
-		}
-	}
-	return AS_NODE_PARAM_OK;
-}
-
 int bins_from_jsarray(char ***bins, uint32_t *num_bins, Local<Array> arr,
 					  const LogInfo *log)
 {
@@ -1668,23 +1621,6 @@ int bins_from_jsarray(char ***bins, uint32_t *num_bins, Local<Array> arr,
 	*bins = c_bins;
 	*num_bins = (uint32_t)arr_length;
 	return AS_NODE_PARAM_OK;
-}
-
-void free_batch_records(as_batch_read_records *records)
-{
-	const as_vector *list = &records->list;
-	for (uint32_t i = 0; i < list->size; i++) {
-		as_batch_read_record *batch_record =
-			(as_batch_read_record *)as_vector_get((as_vector *)list, i);
-		if (batch_record->n_bin_names > 0) {
-			for (uint32_t j = 0; j < batch_record->n_bin_names; j++) {
-				cf_free(batch_record->bin_names[j]);
-			}
-			cf_free(batch_record->bin_names);
-		}
-	}
-
-	as_batch_read_destroy(records);
 }
 
 int udfargs_from_jsobject(char **filename, char **funcname, as_list **args,

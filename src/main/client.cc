@@ -285,6 +285,9 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "batchExists", BatchExists);
 	Nan::SetPrototypeMethod(tpl, "batchGet", BatchGet);
 	Nan::SetPrototypeMethod(tpl, "batchRead", BatchReadAsync);
+	Nan::SetPrototypeMethod(tpl, "batchWrite", BatchWriteAsync);
+	Nan::SetPrototypeMethod(tpl, "batchApply", BatchApply);
+	Nan::SetPrototypeMethod(tpl, "batchRemove", BatchRemove);
 	Nan::SetPrototypeMethod(tpl, "batchSelect", BatchSelect);
 	Nan::SetPrototypeMethod(tpl, "close", Close);
 	Nan::SetPrototypeMethod(tpl, "connect", Connect);

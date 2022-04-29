@@ -27,8 +27,8 @@ The main modules included in the `aerospike` package are:
 * The {@link module:aerospike/policy|policy module} defines policies and policy
   values that define the behavior of database operations.
 * The {@link module:aerospike/filter|filter module} and {@link
-  module:aerospike/predexp|predexp module} define secondary index (SI) filters and
-  predicate expressions that can be used to limit the scope of query
+  module:aerospike/exp|exp module} define secondary index (SI) filters and
+  expressions that can be used to limit the scope of query
   operations.
 * The {@link module:aerospike/operations|operations}, {@link
   module:aerospike/lists|lists} and {@link module:aerospike/maps|maps} modules

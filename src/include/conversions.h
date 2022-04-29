@@ -100,6 +100,9 @@ int get_optional_string_property(char **strp, bool *defined,
 int get_optional_uint32_property(uint32_t *intp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
+int get_optional_uint16_property(uint16_t *intp, bool *defined,
+								 v8::Local<v8::Object> obj, char const *prop,
+								 const LogInfo *log);
 int get_float_property(double *floatp, v8::Local<v8::Object> obj,
 					   char const *prop, const LogInfo *log);
 bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
@@ -116,9 +119,6 @@ v8::Local<v8::Object> recordmeta_to_jsobject(const as_record *record,
 											 const LogInfo *log);
 v8::Local<v8::Object> record_to_jsobject(const as_record *record,
 										 const as_key *key, const LogInfo *log);
-v8::Local<v8::Array>
-batch_records_to_jsarray(const as_batch_read_records *record,
-						 const LogInfo *log);
 v8::Local<v8::Object> key_to_jsobject(const as_key *key, const LogInfo *log);
 v8::Local<v8::Object> jobinfo_to_jsobject(const as_job_info *info,
 										  const LogInfo *log);
@@ -140,6 +140,23 @@ int batch_from_jsarray(as_batch *batch, v8::Local<v8::Array> arr,
 int batch_read_records_from_jsarray(as_batch_read_records **batch,
 									v8::Local<v8::Array> arr,
 									const LogInfo *log);
+v8::Local<v8::Array> batch_records_to_jsarray(const as_batch_records *records,
+											  const LogInfo *log);
+int batch_records_from_jsarray(as_batch_records **batch,
+							   v8::Local<v8::Array> arr, const LogInfo *log);
+int batch_read_record_from_jsobject(as_batch_records *batch,
+									v8::Local<v8::Object> obj,
+									const LogInfo *log);
+int batch_write_record_from_jsobject(as_batch_records *batch,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
+int batch_apply_record_from_jsobject(as_batch_records *batch,
+									 v8::Local<v8::Object> obj,
+									 const LogInfo *log);
+int batch_remove_record_from_jsobject(as_batch_records *batch,
+									  v8::Local<v8::Object> obj,
+									  const LogInfo *log);
+void batch_records_free(as_batch_records *records, const LogInfo *log);
 int udfargs_from_jsobject(char **filename, char **funcname, as_list **args,
 						  v8::Local<v8::Object> obj, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
@@ -156,8 +173,6 @@ bool record_clone(const as_record *src, as_record **dest, const LogInfo *log);
 bool key_clone(const as_key *src, as_key **dest, const LogInfo *log,
 			   bool alloc_key = true);
 as_val *asval_clone(const as_val *val, const LogInfo *log);
-
-void free_batch_records(as_batch_read_records *records);
 
 // Functions to set metadata of the record.
 int setTTL(v8::Local<v8::Object> obj, uint32_t *ttl, const LogInfo *log);
