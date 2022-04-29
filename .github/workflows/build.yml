@@ -13,12 +13,9 @@ on:
   pull_request:
     branches:
       - master
-      - maint/3.x
-<<<<<<< HEAD
       - stage
-=======
+      - maint/3.x
       - maint/4.x
->>>>>>> origin/master
 
 jobs:
   build:
