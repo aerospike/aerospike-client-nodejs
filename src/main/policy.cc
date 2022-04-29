@@ -566,7 +566,13 @@ int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	as_v8_detail(log, "Parsing query policy : success");
+	if ((rc = get_optional_bool_property(&policy->fail_on_cluster_change, NULL, obj, "failOnClusterChange", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->info_timeout, NULL, obj, "infoTimeout", log)) != AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail( log, "Parsing query policy : success");
 	return AS_NODE_PARAM_OK;
 }
 

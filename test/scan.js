@@ -101,6 +101,7 @@ context('Scans', function () {
 
   describe('scan.foreach() #slow', function () {
     it('retrieves all records in the set', function (done) {
+      this.timeout(10000) // 10 second timeout
       const scan = client.scan(helper.namespace, testSet)
       let recordsReceived = 0
       const stream = scan.foreach()
@@ -124,6 +125,7 @@ context('Scans', function () {
     })
 
     it('returns the key if it is stored on the server', function (done) {
+      this.timeout(10000) // 10 second timeout
       // requires { key: Aerospike.policy.key.SEND } when creating the record
       const scan = client.scan(helper.namespace, testSet)
       const stream = scan.foreach()
@@ -136,6 +138,7 @@ context('Scans', function () {
     })
 
     it('attaches event handlers to the stream', function (done) {
+      this.timeout(10000) // 10 second timeout
       const scan = client.scan(helper.namespace, testSet)
       let dataHandlerCalled = false
       const stream = scan.foreach(null,
@@ -164,7 +167,7 @@ context('Scans', function () {
       const stream = scan.foreach(policy)
       stream.on('data', () => stream.abort())
       stream.on('error', error => {
-        if (error.code === Aerospike.status.ERR_CLUSTER_CHANGE) {
+        if (error.code === Aerospike.status.ERR_TIMEOUT) {
           // ignore errors caused by cluster change events
         } else {
           throw error
@@ -175,6 +178,7 @@ context('Scans', function () {
 
     context('with nobins set to true', function () {
       it('should return only meta data', function (done) {
+        this.timeout(10000) // 10 second timeout
         const scan = client.scan(helper.namespace, testSet, { nobins: true })
         const stream = scan.foreach()
         stream.on('data', record => {
@@ -189,6 +193,7 @@ context('Scans', function () {
 
     context('with bin selection', function () {
       it('should return only selected bins', function (done) {
+        this.timeout(10000) // 10 second timeout
         const scan = client.scan(helper.namespace, testSet)
         scan.select('i')
         const stream = scan.foreach()
@@ -204,6 +209,7 @@ context('Scans', function () {
       helper.skipUnlessVersion('>= 4.9.0', this)
 
       it('returns at most X number of records', function (done) {
+        this.timeout(10000) // 10 second timeout
         const scan = client.scan(helper.namespace, testSet, { nobins: true })
 
         const maxRecords = 33
@@ -221,6 +227,7 @@ context('Scans', function () {
 
     context('without set', function () {
       it('executes a scan without set', function (done) {
+        this.timeout(10000) // 10 second timeout
         const scan = client.scan(helper.namespace)
         let recordsReceived = 0
         const stream = scan.foreach()
