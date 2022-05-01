@@ -30,7 +30,7 @@ jobs:
           - 16.x
           - 17.x
           - 18.x
-    continue-on-error: ${{ matrix.node-version }}
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v2
       with:
