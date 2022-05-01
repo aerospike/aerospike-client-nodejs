@@ -21,7 +21,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
@@ -31,7 +30,7 @@ jobs:
           - 16.x
           - 17.x
           - 18.x
-
+    continue-on-error: ${{ matrix.node-version }}
     steps:
     - uses: actions/checkout@v2
       with:
