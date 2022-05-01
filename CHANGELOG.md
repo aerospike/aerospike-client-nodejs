@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.0]
+
+* **New Features**
+  * [CLIENT-1713] - Node.js: Support batch apply command.
+  * [CLIENT-1712] - Node.js: Support batch remove operations.
+  * [CLIENT-1711] - Node.js: Support batch write operations.
+  * [CLIENT-1715] - Node.js: Support query partition.
+  * [CLIENT-1714] - Node.js: Support scan partition.
+
+* **Updates**
+  * BREAKING: Remove deprecated PredicateExpression filtering which has been replaced by new Filter Expressions
+  * npm registry includes images for nodejs v17.8.0 and v18.0.0
+
 ## [4.0.1]
 
 * **Updates**
