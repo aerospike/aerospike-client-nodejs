@@ -42,12 +42,15 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=linux
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
+  # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
-  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+
+  LIBUV_DIR=/usr/local/opt/libuv
+  LIBUV_ABS_DIR=${LIBUV_DIR}
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
+  LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 else
     # Unknown.
@@ -77,29 +80,33 @@ configure_nvm() {
 }
 
 download_libuv() {
-  if [ ! -f ${LIBUV_TAR} ]; then
-      echo Download ${LIBUV_URL}
-      wget ${LIBUV_URL}
-  fi
+  if [[ "$OSTYPE" != "darwin"* ]]; then
+    if [ ! -f ${LIBUV_TAR} ]; then
+        echo Download ${LIBUV_URL}
+        wget ${LIBUV_URL}
+    fi
 
-  if [ ! -d ${LIBUV_DIR} ]; then
-      echo Extract ${LIBUV_TAR} 
-      tar xf ${LIBUV_TAR}
+    if [ ! -d ${LIBUV_DIR} ]; then
+        echo Extract ${LIBUV_TAR}
+        tar xf ${LIBUV_TAR}
+    fi
   fi
 }
 
 rebuild_libuv() {
-  # if [ ! -f ${LIBUV_LIBRARY} ]; then
-      echo Make ${LIBUV_DIR}
-      cd ${LIBUV_DIR}
-      sh autogen.sh
-      ./configure -q
-      make clean
-      make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
-      # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
-      # make V=1 LIBUV_VERSIONBOSE=1 install
-      cd ..
-  # fi
+  if [[ "$OSTYPE" != "darwin"* ]]; then
+    # if [ ! -f ${LIBUV_LIBRARY} ]; then
+        echo Make ${LIBUV_DIR}
+        cd ${LIBUV_DIR}
+        sh autogen.sh
+        ./configure -q
+        make clean
+        make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 install
+        cd ..
+    # fi
+  fi
 }
 
 check_libuv() {
@@ -127,8 +134,8 @@ rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
     make clean
-    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
-    # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
+    # make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
+    make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
 }
 
