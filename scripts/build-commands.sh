@@ -146,13 +146,15 @@ perform_check() {
   printf "\n" >&1
   printf "CHECK\n" >&1
 
-  if [ -f ${LIBUV_LIBRARY} ]; then
-    printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
-  else
-    printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
-    FAILED=1
+  if [[ "$OSTYPE" != "darwin"* ]]; then
+    if [ -f ${LIBUV_LIBRARY} ]; then
+      printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
+    else
+      printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
+      FAILED=1
+    fi
   fi
-
+  
   if [ -f ${AEROSPIKE_LIBRARY} ]; then
     printf "   [✓] %s\n" "${AEROSPIKE_LIBRARY}" >&1
   else
