@@ -156,12 +156,12 @@
         }],
         ['OS=="mac"',{
           'libraries': [
-            '../libuv-v1.8.0/.libs/libuv.a',
             '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
             '-lz'
           ],
           'defines': [
-            'AS_USE_LIBUV'
+            'AS_USE_LIBUV',
+            'DEBUG'
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-x86_64/include',
