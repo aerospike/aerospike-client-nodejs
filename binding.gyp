@@ -138,7 +138,6 @@
       'conditions': [
         ['OS=="linux"',{
           'libraries': [
-            '../libuv-v1.8.0/.libs/libuv.a',
             '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
             '-lz',
             '-lssl'
@@ -160,8 +159,7 @@
             '-lz'
           ],
           'defines': [
-            'AS_USE_LIBUV',
-            'DEBUG'
+            'AS_USE_LIBUV'
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-x86_64/include',
