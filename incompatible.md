@@ -4,19 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [5.0.0]
 
-### PredicateExpression filter Replaced by new Expressions Filter
+### Predicate Expression Filter Replaced by New Filter Expressions
 * Usage
-  * New Expressions Filter
-
+  * New Filter Expressions
+    ```
     const query = client.query(helper.namespace, helper.set)
     const queryPolicy = { filterExpression:  exp.eq(exp.binInt('a'), exp.int(9))}
     const stream = query.foreach(queryPolicy)
-
+    ```
   * Deprecated PredicateExpression Filter
-
+    ```
     const query = client.query(helper.namespace, helper.set)
-    query.where(Aerospike.filter.equal('a', 9))
+    const pexp = Aerospike.predexp
+    query.where([pexp.IntVar('a'), pexp.IntValue(9),pexp.stringEqual()])
     const stream = query.foreach()
+    ```
 
 ## [4.0.0]
 
