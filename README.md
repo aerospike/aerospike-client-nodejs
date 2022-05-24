@@ -160,8 +160,10 @@ services:
 #### Openssl library installation in Mac OS X.
 
 ```bash
-$ brew install openssl
-$ brew link openssl --force
+$ brew install openssl@1.1
+$ brew link openssl@1.1 --force
+$ unlink /usr/local/opt/openssl
+$ ln -s /usr/local/Cellar/openssl@1.1/1.1.1o/ /usr/local/opt/openssl
 ```
 
 ### Windows
