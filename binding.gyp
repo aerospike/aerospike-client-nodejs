@@ -156,7 +156,8 @@
         ['OS=="mac"',{
           'libraries': [
             '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lssl'
           ],
           'defines': [
             'AS_USE_LIBUV'
