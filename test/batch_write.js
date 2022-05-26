@@ -20,7 +20,6 @@
 /* global expect */
 
 const Aerospike = require('../lib/aerospike')
-const batchType = Aerospike.batch_type
 const helper = require('./test_helper')
 // const util = require('util')
 
@@ -34,6 +33,9 @@ const putgen = helper.putgen
 const valgen = helper.valgen
 
 const Key = Aerospike.Key
+
+const as = require('bindings')('aerospike.node')
+const batchType = as.batchTypes
 
 describe('client.batchWrite()', function () {
   const client = helper.client
