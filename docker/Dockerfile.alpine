@@ -13,19 +13,17 @@
 # aerospike-client-c.ini file.
 
 # Stage 1: Build Aerospike C client
-FROM alpine:3.11 as c-builder
+FROM node:lts-alpine as c-builder
+
 WORKDIR /src
 
-ENV AS_C_VERSION 4.6.12
+ENV AS_C_VERSION 6.0.2
 
 RUN apk update
 RUN apk add --no-cache \
     build-base \
-    linux-headers \
-    bash \
     libuv-dev \
     openssl-dev \
-    lua5.1-dev \
     zlib-dev
 
 RUN wget https://artifacts.aerospike.com/aerospike-client-c/${AS_C_VERSION}/aerospike-client-c-src-${AS_C_VERSION}.zip \
@@ -35,32 +33,29 @@ RUN wget https://artifacts.aerospike.com/aerospike-client-c/${AS_C_VERSION}/aero
     && make EVENT_LIB=libuv
 
 # Stage 2: Build Aerospike Node.js client
-FROM node:12-alpine3.11 as node-builder
+FROM node:lts-alpine as node-builder
 WORKDIR /src
 
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/include/ aerospike-client-c/include/
 COPY --from=c-builder /src/aerospike-client-c/target/Linux-x86_64/lib/ aerospike-client-c/lib/
 
-ENV AS_NODEJS_VERSION 3.14.1
-ENV PREFIX=/src/aerospike-client-c
+ENV AS_NODEJS_VERSION 5.0.1
+ENV PREFIX=/src/aerospike-client-c/
 
 RUN apk update
 RUN apk add --no-cache \
-      build-base \
-      bash \
-      python \
-      linux-headers \
-      zlib-dev \
-      openssl-dev
+    build-base \
+    python3 \
+    zlib-dev
 
 RUN npm install aerospike@${AS_NODEJS_VERSION}
 
 # Stage 3: Aerospike Node.js Runtime
-FROM node:12-alpine3.11
+FROM node:lts-alpine
 WORKDIR /src
 
 RUN apk add --no-cache \
-      zlib \
-      openssl
+    zlib \
+    openssl
 
 COPY --from=node-builder /src/node_modules/ node_modules/
