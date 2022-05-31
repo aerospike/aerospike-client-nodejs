@@ -159,7 +159,8 @@
             '-lz'
           ],
           'defines': [
-            'AS_USE_LIBUV'
+            'AS_USE_LIBUV',
+            'DEBUG'
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-x86_64/include',

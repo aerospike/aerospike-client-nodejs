@@ -33,6 +33,8 @@ extern "C" {
 #include <aerospike/as_record.h>
 }
 
+uint32_t outstanding_connections = 0;
+
 using namespace v8;
 
 /*******************************************************************************
@@ -95,7 +97,9 @@ NAN_METHOD(AerospikeClient::Connect)
 	AerospikeCommand *cmd = new AerospikeCommand("Connect", client, callback);
 
 	as_error err;
+	outstanding_connections++;
 	if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+		outstanding_connections--;
 		cmd->ErrorCallback(&err);
 	}
 	else {
@@ -118,7 +122,7 @@ NAN_METHOD(AerospikeClient::Close)
 
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
-	events_callback_close(&client->as->config);
+	outstanding_connections--;
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 	free(client->as);
@@ -250,6 +254,26 @@ NAN_METHOD(AerospikeClient::SetupEventCb)
 }
 
 /**
+ * close event callback for cluster events.
+ */
+NAN_METHOD(AerospikeClient::CloseEventCb)
+{
+	Nan::HandleScope scope;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	Local<Function> callback;
+	if (info.Length() > 0 && info[0]->IsFunction()) {
+		callback = info[0].As<Function>();
+		events_callback_close(&client->as->config, callback, client->log);
+	}
+	else {
+		as_v8_error(client->log, "Callback function required");
+		return Nan::ThrowError("Callback function required");
+	}
+}
+
+/**
  *  Instantiate a new AerospikeClient.
  */
 Local<Value> AerospikeClient::NewInstance(Local<Object> config)
@@ -317,6 +341,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);
+	Nan::SetPrototypeMethod(tpl, "closeEventCb", CloseEventCb);
 	Nan::SetPrototypeMethod(tpl, "truncate", Truncate);
 	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);

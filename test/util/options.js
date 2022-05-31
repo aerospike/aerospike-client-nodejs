@@ -49,7 +49,7 @@ const parser = yargs
     },
     log: {
       alias: 'l',
-      default: Aerospike.log.WARN,
+      default: Aerospike.log.DEBUG,
       describe: 'Log level [0-5]'
     },
     log_file: {

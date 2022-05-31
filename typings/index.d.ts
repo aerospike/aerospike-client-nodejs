@@ -474,6 +474,7 @@ declare namespace Aerospike {
         public scanBackground(ns: string, set: string, options: IAddonScanOptions, policy: ScanPolicy, scanID: number, callback: AddonCallback): void;
         public selectAsync(key: string, bins: string[], policy: ReadPolicy, callback: AddonCallback): void;
         public setupEventCb(callback: AddonEventCallback): void;
+        public closeEventCb(callback: AddonEventCallback): void;
         public truncate(ns: string, set: string, beforeNanos: number, policy: InfoPolicy, callback: AddonCallback): void;
         public udfRegister(filename: string, type: Language, policy: InfoPolicy, callback: AddonCallback): void;
         public udfRemove(module: string, policy: InfoPolicy, callback: AddonCallback): void;

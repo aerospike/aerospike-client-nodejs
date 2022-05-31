@@ -39,8 +39,8 @@ describe('Aerospike', function () {
           if (error) throw error
           client.close(false)
           done()
-        })
-      })
+        }).catch(done);
+      }).catch(done);
     })
 
     it('returns a Promise that resolves to a client', function () {
@@ -48,8 +48,7 @@ describe('Aerospike', function () {
         .then(client => {
           expect(client).to.be.instanceof(Aerospike.Client)
           return client
-        })
-        .then(client => client.close(false))
-    })
+        }).then(client => client.close(false))
+      })
   })
 })

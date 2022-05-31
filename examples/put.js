@@ -25,8 +25,8 @@ async function put (client, argv) {
   const bins = shared.cli.parseBins(argv.bins)
   const meta = buildMeta(argv)
   const policy = buildPolicy(argv)
-  console.info(key, bins, meta, policy)
   await client.put(key, bins, meta, policy)
+  console.info(key, bins, meta, policy)
 }
 
 function buildMeta (argv) {
