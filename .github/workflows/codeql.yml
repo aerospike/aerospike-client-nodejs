@@ -49,6 +49,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - run: npm install --unsafe-perm --build-from-source
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
