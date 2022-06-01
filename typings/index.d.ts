@@ -119,26 +119,6 @@ declare namespace Aerospike {
         INVERTED
     }
 
-    enum MapsOrder {
-        UNORDERED,
-        KEY_ORDERED,
-        KEY_VALUE_ORDERED = 3
-    }
-
-    enum MapsWriteMode {
-        UPDATE,
-        UPDATE_ONLY,
-        CREATE_ONLY
-    }
-
-    enum MapsWriteFlags {
-        DEFAULT,
-        CREATE_ONLY,
-        UPDATE_ONLY,
-        NO_FAIL,
-        PARTIAL
-    }
-
     enum MapReturnType {
         NONE,
         INDEX,
@@ -1286,9 +1266,9 @@ declare namespace Aerospike {
     }
 
     export interface MapsModule {
-        order: MapsOrder;
-        writeMode: MapsWriteMode;
-        writeFlags: MapsWriteFlags;
+        order: MapOrder;
+        writeMode: MapWriteMode;
+        writeFlags: MapWriteFlags;
         returnType: MapReturnType;
         MapPolicy: MapPolicy;
         setPolicy(bin: string, policy: MapPolicy): MapOperation;
