@@ -213,10 +213,6 @@ To clone the repository use the following command:
 
 	$ git clone --recursive git@github.com:aerospike/aerospike-client-nodejs.git
 
-:::note
-Install the Aerospike Node.js module locally.
-:::
-
 #### Building dependancy C client
 
 Make sure to build the C client before doing npm install variants
