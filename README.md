@@ -131,16 +131,16 @@ sudo apt-get install g++ libssl1.0.0 libssl-dev zlib1g-dev
 
 ### Mac OS X (Intel)
 
-Before starting with the Aerospike Nodejs Client, please make sure the following prerequisites are met:
+Before starting with the Aerospike Nodejs Client, verify that you have the following prerequisites:
 
 - Mac OS X 10.8 or greater.
 - Xcode 5 or greater.
 
 ### Mac OS X (M1 Chip)
 
-Currently C library does not support M1, so you can't install Aerospike Nodejs Client directly on your mac, see [Issue](https://github.com/aerospike/aerospike-client-nodejs/issues/430).
-As a workaround, you can build your app inside of Docker with using `--platform` [option](https://docs.docker.com/engine/reference/commandline/build/).
-Example of working docker-compose.yaml file will look like this:
+Currently the C library does not support M1, so you cannot install Aerospike Nodejs Client directly on your mac, see [Issue](https://github.com/aerospike/aerospike-client-nodejs/issues/430).
+As a workaround, you can build your app inside of Docker before using `--platform` [option](https://docs.docker.com/engine/reference/commandline/build/).
+Example of a working docker-compose.yaml file will look like this:
 ```
 version: '2.4'
 services:
@@ -151,15 +151,25 @@ services:
 
 **Openssl Library**
 
+The below example shows how to install the library.
+
 ```bash
-$ brew install openssl
+$ brew install openssl@3
 $ brew link openssl --force
+$ unlink /usr/local/opt/openssl
+$ ln -s /usr/local/Cellar/openssl@3/3.0.3/ /usr/local/opt/openssl
 ```
+For 4x client support, install openssl@1.1 version.
+
 **LIBUV Library**
+
+The below example shows how to install the library.
 
 ```bash
 $ brew install libuv
 $ brew link libuv --force
+$ unlink /usr/local/opt/libuv
+$ ln -s /usr/local/Cellar/libuv/1.44.1_1/ /usr/local/opt/libuv
 ```
 
 ## Installation
