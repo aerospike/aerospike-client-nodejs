@@ -1270,6 +1270,7 @@ declare namespace Aerospike {
         writeMode: MapWriteMode;
         writeFlags: MapWriteFlags;
         returnType: MapReturnType;
+        MapPolicy: MapPolicy;
         setPolicy(bin: string, policy: MapPolicy): MapOperation;
         put(bin: string, key: string, value: AerospikeRecordValue, policy?: MapPolicy): MapOperation;
         putItems(bin: string, items: AerospikeBins, policy?: MapPolicy): MapOperation;
