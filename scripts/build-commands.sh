@@ -47,7 +47,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+elif [[ "$OSTYPE" == "linux"* ]]; then
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
@@ -56,13 +56,9 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=linux
 else
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
-  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
-  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
-  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
-  OS_FLAVOR=linux
+    # Unknown.
+    printf "Unsupported OS version:" "$OSTYPE"
+    exit 1
 fi
 
 configure_nvm() {
