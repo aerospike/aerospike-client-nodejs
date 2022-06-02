@@ -233,7 +233,6 @@ if (process.env.GLOBAL_CLIENT !== 'false') {
     .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
     .catch(error => {
       console.error('ERROR:', error)
-      console.error('CONFIG:', client.config)
       throw error
     })
   )
