@@ -42,12 +42,3 @@ RUN yum install -y \
     openssl-devel \
     zlib-devel
 RUN npm install /src/aerospike
-RUN rm -rf /src/node_modules/aerospike \
-    && rm -rf /src/aerospike/node_modules \
-    && mv /src/aerospike /src/node_modules
-
-# Stage 3: Deploy Node.js Client Packages Only
-FROM scratch
-WORKDIR /src
-
-COPY --from=installer /src/node_modules ./node_modules
