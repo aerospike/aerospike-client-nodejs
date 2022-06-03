@@ -35,15 +35,7 @@ LIBUV_URL=http://dist.libuv.org/dist/v1.8.0/${LIBUV_TAR}
 LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 LIBUV_BUILD=0
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
-  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
-  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
-  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
-  OS_FLAVOR=linux
-elif [[ "$OSTYPE" == "darwin"* ]]; then
+if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
@@ -55,6 +47,14 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
+elif [[ "$OSTYPE" == "linux"* ]]; then
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
+  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
+  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
+  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
+  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+  OS_FLAVOR=linux
 else
     # Unknown.
     printf "Unsupported OS version:" "$OSTYPE"
