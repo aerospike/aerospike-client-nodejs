@@ -18,7 +18,7 @@ RUN yum install -y \
     linux-headers \
     libuv-devel \
     lua5.1-devel \
-    openssl-devel \
+    openssl11-devel \
     zlib-devel \
     python3 \
     make \
@@ -39,6 +39,6 @@ COPY --from=builder /src/aerospike ./aerospike
 
 RUN yum update -y
 RUN yum install -y \
-    openssl-devel \
-    zlib-devel
+    openssl11 \
+    zlib
 RUN npm install /src/aerospike
