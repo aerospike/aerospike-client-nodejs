@@ -17,6 +17,8 @@ ENV AS_NODEJS_VERSION v5.0.1
 RUN apk update
 RUN apk add --no-cache \
     build-base \
+    linux-headers \
+    bash \
     libuv-dev \
     openssl-dev \
     lua5.1-dev \
