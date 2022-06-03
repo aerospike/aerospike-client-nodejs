@@ -20,7 +20,6 @@ RUN yum install -y \
     lua5.1-devel \
     openssl-devel \
     zlib-devel \
-    openssh-client \
     python3 \
     make \
     wget \
