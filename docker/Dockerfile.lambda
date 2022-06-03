@@ -1,0 +1,58 @@
+# This Dockerfile demonstrates how to build the Aerospike Node.js client on
+# AWS Linux 2 for AWS Lambda. Since there is no pre-built package for the
+# Aerospike C Client SDK for AWS Linux 2, this Dockerfile uses a multi-stage
+# approach to building the client and deploying the runtime to minimize the
+# size of the final image (i.e. no build dependencies).
+#
+# Note: The AS_NODEJS_VERSION and AS_C_VERSION need to be set to compatible
+# versions. To find out which version of the C client is compatible with a
+# given Node.js client version, check out the Node.js client repo at the given
+# version, and look up the supported C client version in the
+# aerospike-client-c.ini file.
+
+# Stage 1: Build Aerospike C Client & Node.js Client
+FROM public.ecr.aws/lambda/nodejs:16 as builder
+WORKDIR /src
+
+ENV AS_NODEJS_VERSION v5.0.1
+
+RUN yum update -y
+RUN yum install -y \
+    gcc-c++ \
+    linux-headers \
+    libuv-devel \
+    lua5.1-devel \
+    openssl-devel \
+    zlib-devel \
+    openssh-client \
+    python3 \
+    make \
+    wget \
+    tar \
+    git
+
+RUN git clone --branch ${AS_NODEJS_VERSION} --recursive https://github.com/aerospike/aerospike-client-nodejs aerospike
+RUN cd /src/aerospike \
+    && /src/aerospike/scripts/build-c-client.sh \
+    && npm install /src/aerospike --unsafe-perm --build-from-source
+
+# Stage 2: Install Node.js Client Dependencies
+FROM public.ecr.aws/lambda/nodejs:16 as installer
+WORKDIR /src
+
+COPY --from=builder /src/aerospike ./aerospike
+
+RUN yum update -y
+RUN yum install -y \
+    openssl-devel \
+    zlib-devel
+RUN npm install /src/aerospike
+RUN rm -rf /src/node_modules/aerospike \
+    && rm -rf /src/aerospike/node_modules \
+    && mv /src/aerospike /src/node_modules
+
+# Stage 3: Deploy Node.js packages only
+FROM scratch
+WORKDIR /src
+
+COPY --from=installer /src/node_modules ./node_modules
