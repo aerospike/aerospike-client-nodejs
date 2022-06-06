@@ -151,6 +151,26 @@ rebuild_c_client() {
   # fi
 }
 
+setup() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # # install xcode CLI
+    # xcode-select —-install 
+    # Check for Homebrew to be present, install if it's missing
+    if test ! $(which brew); then
+        echo "Installing homebrew..."
+        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    fi
+    brew update
+    PACKAGES=(
+        openssl
+    )
+    echo "Installing packages..."
+    brew install ${PACKAGES[@]}
+    # link openssl
+    brew link --force openssl
+  fi
+}
+
 check_aerospike() {
 
   cd ${CWD}

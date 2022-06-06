@@ -25,9 +25,12 @@
 CWD=$(pwd)
 SCRIPT_DIR=$(dirname $0)
 BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
+SETUP=$1
 
 . ${SCRIPT_DIR}/build-commands.sh
 
+if [ -n "$1" ]; then setup
+fi
 download_libuv
 rebuild_libuv
 check_libuv
