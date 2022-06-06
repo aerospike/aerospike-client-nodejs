@@ -18,7 +18,13 @@ on:
       - maint/4.x
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@v1
   build:
+    needs: setup
     runs-on: macos-latest # https://github.com/actions/virtual-environments
     strategy:
       matrix:
@@ -40,8 +46,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@v1
     - run: npm ci
     - run: npm run coverage
       env:
