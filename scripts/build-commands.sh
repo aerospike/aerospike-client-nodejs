@@ -167,7 +167,8 @@ setup() {
     echo "Installing packages..."
     brew install ${PACKAGES[@]}
     # link openssl
-    brew link --force openssl
+    unlink /usr/local/opt/openssl
+    ln -s /usr/local/Cellar/openssl@3/3.0.3/ /usr/local/opt/openssl
   fi
 }
 
