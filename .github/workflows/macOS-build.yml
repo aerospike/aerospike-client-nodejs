@@ -47,12 +47,12 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm install --unsafe-perm --build-from-source
-  test:
-      needs: build
-      runs-on: macos-latest
-      steps:
-    - run: npm test
-      env:
-        AEROSPIKE_HOSTS: "127.0.0.1:3000"
-        OPTIONS: "--timeout 30000"
-    - run: npm run codecov
+  # test:
+  #   needs: build
+  #   runs-on: macos-latest
+  #   steps:
+  #   - run: npm test
+  #   env:
+  #     AEROSPIKE_HOSTS: "127.0.0.1:3000"
+  #     OPTIONS: "--timeout 30000"
+  #   - run: npm run codecov
