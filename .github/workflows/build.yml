@@ -19,8 +19,9 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: # https://github.com/actions/virtual-environments
+        - ubuntu-latest
+        - macos-latest
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
