@@ -27,14 +27,14 @@ jobs:
     needs: setup
     runs-on: windows-latest # https://github.com/actions/virtual-environments
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - name: Use Node.js 16.x
       uses: actions/setup-node@v2
       with:
         node-version: 16.x
         cache: 'npm'
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
     - run: ./scripts/build-package.ps1 1
   # test:
   #   needs: build
