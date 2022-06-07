@@ -75,11 +75,10 @@ Aerospike.connect(config)
   })
 ```
 
-
 ## Prerequisites
 
 The client is compatible with Node.js 10, 12 (LTS), 14 (LTS), 16 (LTS) and 18 (LTS). It
-supports the following operating systems: CentOS/RHEL 7/8, Debian 8/9/10,
+supports the following operating systems: CentOS/RHEL 7/8, Debian 8/9/10/11,
 Ubuntu 18.04/20.04, as well as many Linux distributions compatible with one of
 these OS releases. macOS is also supported. The client port to Windows is a
 community supported project and suitable for application prototyping and
@@ -91,26 +90,40 @@ install the latest stable version of Node.js, visit
 [nodejs.org](http://nodejs.org/) or use the version that comes bundled with
 your operating system.
 
-### Libraries
+Make sure to install necessary "development tools" and other libraries to build the client software.
 
-The client library requires the following libraries to be present on the machine for building and running:
-
-|Library Name |	.rpm Package | Description
-|--|--|--
-| libssl | openssl |
-|libcrypto | openssl | Required for the `RIPEMD160` hash function.
+Reference various docker files in the repository under the docker / directory for more information.
 
 #### CentOS/RHEL
 
 To install library prerequisites using `yum`:
 
 ```bash
-sudo yum install openssl-devel
+sudo yum group install "Development Tools" 
+sudo yum install openssl openssl-devel
+sudo yum install python3 python3-devel
 ```
-Some CentOS installation paths do not include required C development tools. These packages may also be required:
+
+#### Alpine Linux
 
 ```bash
-sudo yum install gcc gcc-c++
+apk add build-base \
+    linux-headers \
+    bash \
+    libuv-dev \
+    openssl-dev \
+    lua5.1-dev \
+    zlib-dev \
+    git \
+    python3
+```
+
+#### Amazon Linux
+
+```bash
+yum groupinstall "Development Tools"
+yum install openssl openssl-devel
+yum install python3 python3-devel
 ```
 
 #### Debian
@@ -118,7 +131,14 @@ sudo yum install gcc gcc-c++
 To install library prerequisites using `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
+sudo apt -y install software-properties-common
+sudo apt -y install build-essential
+sudo apt -y install libssl-dev
+sudo apt -y install libarchive-dev cmake rsync curl libcurl4-openssl-dev zip
+sudo apt -y install python3 python3-dev python3-pip
+sudo apt install zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \
+    libsqlite3-dev libreadline-dev libffi-dev libbz2-dev -y
+sudo apt -y install wget libtool m4 automake
 ```
 
 #### Ubuntu
@@ -126,17 +146,17 @@ sudo apt-get install g++ libssl1.0.0 libssl-dev libz-dev
 To install library prerequisites using `apt-get`:
 
 ```bash
-sudo apt-get install g++ libssl1.0.0 libssl-dev zlib1g-dev
+sudo apt-get install g++ libssl libssl-dev zlib1g-dev
 ```
 
-### Mac OS X (Intel)
+### macOS (Intel)
 
 Before starting with the Aerospike Nodejs Client, verify that you have the following prerequisites:
 
-- Mac OS X 10.8 or greater.
+- macOS 10.8 or greater.
 - Xcode 5 or greater.
 
-### Mac OS X (M1 Chip)
+### macOS (M1 Chip)
 
 Currently the C library does not support M1, so you cannot install Aerospike Nodejs Client directly on your mac, see [Issue](https://github.com/aerospike/aerospike-client-nodejs/issues/430).
 As a workaround, you can build your app inside of Docker before using `--platform` [option](https://docs.docker.com/engine/reference/commandline/build/).
@@ -154,21 +174,23 @@ services:
 The below example shows how to install the library.
 
 ```bash
-$ brew install openssl@3
+$ brew install openssl
 $ brew link openssl --force
 $ unlink /usr/local/opt/openssl
-$ ln -s /usr/local/Cellar/openssl@3/3.0.3/ /usr/local/opt/openssl
+$ # Change the below linking based on openssl version and installation path
+$ ln -s /usr/local/Cellar/openssl@x/y.z/ /usr/local/opt/openssl
 ```
-For 4x client support, install openssl@1.1 version.
+For 4x client support, install openssl&#64;1.1 version.
 
 **LIBUV Library**
 
-The below example shows how to install the library.
+The example below shows how to install the library.
 
 ```bash
 $ brew install libuv
 $ brew link libuv --force
 $ unlink /usr/local/opt/libuv
+$ # Change the below linking based on libuv version and installation path
 $ ln -s /usr/local/Cellar/libuv/1.44.1_1/ /usr/local/opt/libuv
 ```
 
@@ -236,7 +258,7 @@ const Aerospike = require('aerospike')
 
 Detailed documentation of the client's API can be found at
 [http://www.aerospike.com/apidocs/nodejs](https://www.aerospike.com/apidocs/nodejs).
-This documentation is build from the client's source using [JSDocs
+This documentation is built from the client's source using [JSDocs
 v3](http://usejsdoc.org/index.html) for every release.
 
 The API docs also contain a few basic tutorials:
@@ -262,8 +284,7 @@ second and third version number, will always be backwards compatible.
 ## Tests
 
 The client includes a comprehensive test suite using
-[Mocha](http://mochajs.org). The tests can be found in the ['test'](test)
-directory.
+[Mocha](http://mochajs.org). The tests can be found in the repository under test directory.
 
 Before running the tests, you need to update the dependencies:
 
@@ -279,14 +300,12 @@ To run the tests and also report on test coverage:
 
 ## Benchmarks
 
-Benchmark utilies are provided in the [`benchmarks`](benchmarks) directory.
-See the [`benchmarks/README.md`](benchmarks/README.md) for details.
-
+Benchmark utilies are provided in the repository under benchmarks directory. See the benchmarks/README.md for details
 
 ## License
 
 The Aerospike Node.js Client is made available under the terms of the Apache
-License, Version 2, as stated in the file `LICENSE`.
+License, Version 2, as stated in the LICENSE file.
 
 Individual files may be made available under their own specific license, all
 compatible with Apache License, Version 2. Please see individual files for
