@@ -26,27 +26,11 @@ jobs:
   build:
     needs: setup
     runs-on: macos-latest # https://github.com/actions/virtual-environments
-    strategy:
-      matrix:
-        node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-          - 10.x
-          - 12.x
-          - 14.x
-          - 16.x
-          - 17.x
-          - 18.x
-    continue-on-error: true
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - run: ./scripts/build-c-client.sh 1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm install --unsafe-perm --build-from-source
+    - run: ./scripts/build-package.sh 1
   # test:
   #   needs: build
   #   runs-on: macos-latest
