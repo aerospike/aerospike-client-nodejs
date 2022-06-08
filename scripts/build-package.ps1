@@ -21,7 +21,7 @@ function build_nodejs_client {
 
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
 Invoke-WebRequest https://github.com/coreybutler/nvm-windows/releases/download/1.1.9/nvm-setup.exe -UseBasicParsing -OutFile .\nvm-setup.exe
-.\nvm-setup.exe /VERYSILENT /SUPRESSMSGBOXES
+.\nvm-setup.exe /VERYSILENT /SUPRESSMSGBOXES /SP
 nvm root .\nvm
 
 build_nodejs_client v10.20.0
