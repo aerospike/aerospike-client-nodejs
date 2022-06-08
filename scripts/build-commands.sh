@@ -37,20 +37,14 @@ LIBUV_BUILD=0
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
-  AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
 
-  # AEROSPIKE_C_HOME=${CWD}
-  # AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/download/usr/local
-  # AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  # AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-
   LIBUV_DIR=/usr/local/opt/libuv
-  # LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
-  # LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+  LIBUV_ABS_DIR=${LIBUV_DIR}
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
+  LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
@@ -62,13 +56,9 @@ elif [[ "$OSTYPE" == "linux"* ]]; then
   LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=linux
 else
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
-  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
-  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
-  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
-  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
-  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
-  OS_FLAVOR=linux
+    # Unknown.
+    printf "Unsupported OS version:" "$OSTYPE"
+    exit 1
 fi
 
 configure_nvm() {
@@ -108,49 +98,48 @@ download_libuv() {
 
 rebuild_libuv() {
   echo "rebuild_libuv"
-  # if [[ "$OSTYPE" != "darwin"* ]]; then
-  #   # if [ ! -f ${LIBUV_LIBRARY} ]; then
-  #       echo Make ${LIBUV_DIR}
-  #       cd ${LIBUV_DIR}
-  #       sh autogen.sh
-  #       ./configure -q
-  #       make clean
-  #       make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
-  #       # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
-  #       # make V=1 LIBUV_VERSIONBOSE=1 install
-  #       cd ..
-  #   # fi
-  # fi
+  if [ $LIBUV_BUILD -eq 1 ]; then
+    if [ ! -f ${LIBUV_LIBRARY} ]; then
+        echo "Make ${LIBUV_ABS_DIR}"
+        cd ${LIBUV_ABS_DIR}
+        sh autogen.sh
+        ./configure -q
+        make clean
+        make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 install
+        cd ..
+    fi
+  fi
 }
 
 check_libuv() {
-  echo "check_libuv"
 
-  # cd ${CWD}
+  cd ${CWD}
 
-  # printf "\n" >&1
+  printf "\n" >&1
 
-  # if [ $LIBUV_BUILD -eq 1 ]; then
-  #   if [ -f ${LIBUV_LIBRARY} ]; then
-  #     printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
-  #   else
-  #     printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
-  #     FAILED=1
-  #   fi
-  # fi
+  if [ $LIBUV_BUILD -eq 1 ]; then
+    if [ -f ${LIBUV_LIBRARY} ]; then
+      printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
+    else
+      printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
+      FAILED=1
+    fi
+  fi
 
-  # if [ -f ${LIBUV_INCLUDE_DIR}/uv.h ]; then
-  #   printf "   [✓] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
-  # else
-  #   printf "   [✗] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
-  #   FAILED=1
-  # fi
+  if [ -f ${LIBUV_INCLUDE_DIR}/uv.h ]; then
+    printf "   [✓] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
+  else
+    printf "   [✗] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
+    FAILED=1
+  fi
 
-  # printf "\n" >&1
+  printf "\n" >&1
 
-  # if [ $FAILED ]; then
-  #   exit 1
-  # fi
+  if [ $FAILED ]; then
+    exit 1
+  fi
 }
 
 rebuild_c_client() {
