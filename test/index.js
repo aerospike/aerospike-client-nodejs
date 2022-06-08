@@ -96,7 +96,7 @@ context('secondary indexes', function () {
         .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
 
-    it('re-creating an index with identical options returns an error', function () {
+    it('re-creating an index with identical options returns an error (success with new server, verify the existence)', function () {
       const options = {
         ns: helper.namespace,
         set: helper.set,
@@ -108,10 +108,11 @@ context('secondary indexes', function () {
       return client.createIndex(options)
         .then(job => job.wait(10))
         .then(() => client.createIndex(options)
-          .then(job => Promise.reject(new Error('Recreating existing index should have returned an error')))
           .catch(error => {
-            if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
+            if (error.code === Aerospike.status.ERR_INDEX_FOUND ||
+              error.code === Aerospike.status.AEROSPIKE_OK) {
               // All good!
+              verifyIndexExists(helper.namespace, testIndex.name)
             } else {
               return Promise.reject(error)
             }
