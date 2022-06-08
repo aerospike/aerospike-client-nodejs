@@ -110,7 +110,6 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(SelectAsync);
 	static NAN_METHOD(SetLogLevel);
 	static NAN_METHOD(SetupEventCb);
-	static NAN_METHOD(CloseEventCb);
 	static NAN_METHOD(Truncate);
 	static NAN_METHOD(UDFRemove);
 	static NAN_METHOD(UDFScan);

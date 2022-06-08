@@ -116,7 +116,6 @@ class EventQueue : public Nan::AsyncResource {
 static void cluster_event_callback(as_cluster_event *event);
 static void cluster_event_async(uv_async_t *handle);
 static void events_async_close(uv_handle_t *handle);
-extern uint32_t outstanding_connections;
 
 //==========================================================
 // Inlines and Macros.
@@ -130,27 +129,22 @@ void events_callback_init(as_config *config, Local<Function> callback,
 						  LogInfo *log)
 {
 	Nan::HandleScope scope;
-	if (outstanding_connections == 0) {
-		uv_async_t *handle = (uv_async_t *)cf_malloc(sizeof(uv_async_t));
-		uv_async_init(uv_default_loop(), handle, cluster_event_async);
-		handle->data = new EventQueue(callback, log);
-		config->event_callback_udata = (void *)handle;
-		config->event_callback = cluster_event_callback;
-	}
+	uv_async_t *handle = (uv_async_t *)cf_malloc(sizeof(uv_async_t));
+	uv_async_init(uv_default_loop(), handle, cluster_event_async);
+	handle->data = new EventQueue(callback, log);
+	config->event_callback_udata = (void *)handle;
+	config->event_callback = cluster_event_callback;
 }
 
-void events_callback_close(as_config *config, Local<Function> callback,
-						  LogInfo *log)
+void events_callback_close(as_config *config)
 {
 	Nan::HandleScope scope;
 	uv_handle_t *handle = (uv_handle_t *)config->event_callback_udata;
-	if (outstanding_connections == 0) {
-		// EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
-		// delete queue;
-		config->event_callback_udata = NULL;
-		handle->data = NULL;
-		uv_close(handle, events_async_close);
-	}
+	// EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
+	// delete queue;
+	config->event_callback_udata = NULL;
+	handle->data = NULL;
+	uv_close(handle, events_async_close);
 }
 
 //==========================================================
