@@ -53,6 +53,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
+elif [[ "$OSTYPE" == "linux"* ]]; then
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
+  AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
+  AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
+  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
+  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
+  OS_FLAVOR=linux
 else
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
@@ -152,6 +160,29 @@ rebuild_c_client() {
     # make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
     make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
+}
+
+setup() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # # install xcode CLI
+    # xcode-select —-install 
+    # Check for Homebrew to be present, install if it's missing
+    if test ! $(which brew); then
+        echo "Installing homebrew..."
+        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    fi
+    brew update
+    PACKAGES=(
+        openssl
+    )
+    echo "Installing packages..."
+    brew install ${PACKAGES[@]}
+    # link openssl
+    unlink /usr/local/opt/openssl
+    ln -s /usr/local/Cellar/openssl@3/3.0.3/ /usr/local/opt/openssl
+    export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
+    export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+  fi
 }
 
 check_aerospike() {

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.0.2]
+
+* **Bug Fixes**
+  * [CLIENT-1745] Running node.js client on Alpine 3.15 + node 17.9 results with an error.
+  * [CLIENT-1746] Node.js batch type js object and documentation incomplete.
+
+## [5.0.1]
+
+* **Bug Fixes**
+  * [CLIENT-1743] - Node.js mac client exits on first database operation. (4.00+)
+  * [CLIENT-1734] - Node.js client: Typescript file missing in npm package version 4.0.2.
+
 ## [5.0.0]
 
 * **New Features**
@@ -14,6 +26,28 @@ All notable changes to this project will be documented in this file.
 * **Updates**
   * BREAKING: Remove deprecated PredicateExpression filtering which has been replaced by new Filter Expressions
   * npm registry includes images for nodejs v17.8.0 and v18.0.0
+
+## [4.0.4]
+
+* **Bug Fixes**
+  * [CLIENT-1745] Running node.js client on Alpine 3.15 + node 17.9 results with an error.
+
+## [4.0.3]
+
+* **Bug Fixes**
+  * [CLIENT-1743] - Node.js mac client exits on first database operation. (4.00+)
+  * [CLIENT-1734] - Node.js client: Typescript file missing in npm package version 4.0.2.
+
+## [4.0.2]
+
+* **New Features**
+  * [CLIENT-1629] - Node.js: Support for Debian 11.
+
+* **Updates**
+  * [CLIENT-1404] - Node.js: Use the new C client ability to sort maps client-side ahead of operations.
+  
+* **Bug Fixes**
+  * [CLIENT-1718] - Support failOnClusterChange for query policy.
 
 ## [4.0.1]
 

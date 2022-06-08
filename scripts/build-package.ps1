@@ -19,6 +19,11 @@ function build_nodejs_client {
   # node ${CWD}/node_modules/.bin/mocha --exit --U ${AS_USER} --P ${AS_PWD} --h ${AS_HOST} --port ${AS_PORT} --namespace ${AS_NAMESPACE}
 }
 
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
+Invoke-WebRequest https://github.com/coreybutler/nvm-windows/releases/download/1.1.9/nvm-setup.exe -UseBasicParsing -OutFile .\nvm-setup.exe
+.\nvm-setup.exe /VERYSILENT /SUPRESSMSGBOXES /SP
+nvm root .\nvm
+
 build_nodejs_client v10.20.0
 build_nodejs_client v12.22.10
 build_nodejs_client v14.19.0
