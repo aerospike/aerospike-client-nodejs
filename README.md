@@ -90,7 +90,7 @@ install the latest stable version of Node.js, visit
 [nodejs.org](http://nodejs.org/) or use the version that comes bundled with
 your operating system.
 
-Make sure to install necessary "development tools" and other libraries to build the client software.
+Ensure to install necessary "development tools" and other libraries to build the client software.
 
 Reference various docker files in the repository under the docker / directory for more information.
 
@@ -160,7 +160,7 @@ Before starting with the Aerospike Nodejs Client, verify that you have the follo
 
 Currently the C library does not support M1, so you cannot install Aerospike Nodejs Client directly on your mac, see [Issue](https://github.com/aerospike/aerospike-client-nodejs/issues/430).
 As a workaround, you can build your app inside of Docker before using `--platform` [option](https://docs.docker.com/engine/reference/commandline/build/).
-Example of a working docker-compose.yaml file will look like this:
+Example of a working docker-compose.yaml file looks similar to this:
 ```
 version: '2.4'
 services:
@@ -171,7 +171,7 @@ services:
 
 **Openssl Library**
 
-The below example shows how to install the library.
+The below example shows how to install the Openssl library.
 
 ```bash
 $ brew install openssl
@@ -184,7 +184,7 @@ For 4x client support, install openssl&#64;1.1 version.
 
 **LIBUV Library**
 
-The example below shows how to install the library.
+The example below shows how to install the LIBUV library.
 
 ```bash
 $ brew install libuv
@@ -256,7 +256,7 @@ const Aerospike = require('aerospike')
 
 ## Documentation
 
-Detailed documentation of the client's API can be found at
+Access the client API documentation at:
 [http://www.aerospike.com/apidocs/nodejs](https://www.aerospike.com/apidocs/nodejs).
 This documentation is built from the client's source using [JSDocs
 v3](http://usejsdoc.org/index.html) for every release.
@@ -270,15 +270,16 @@ The API docs also contain a few basic tutorials:
 A variety of additional example applications are provided in the
 [`examples`](examples) directory of this repository.
 
-Backward incompatible API changes by release are documented at
+Access backward incompatible API changes by a release at:
 https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html.
 
 ### API Versioning
 
 The Aerospike Node.js client library follows [semantic versioning](http://semver.org/).
-Changes which break backwards compatibility will be indicated by an increase in
-the major version number. Minor and patch releases, which increment only the
-second and third version number, will always be backwards compatible.
+By Aerospike versioning guidelines, changes which may break backwards compatibility are
+indicated by an increase in the major version number.
+Minor, or patch releases, which are incremented only the
+second and third version number, are always backwards compatible.
 
 
 ## Tests
@@ -300,7 +301,7 @@ To run the tests and also report on test coverage:
 
 ## Benchmarks
 
-Benchmark utilies are provided in the repository under benchmarks directory. See the benchmarks/README.md for details
+Benchmark utilities are provided in the repository under benchmarks directory. See the benchmarks/README.md for details.
 
 ## License
 
@@ -308,5 +309,5 @@ The Aerospike Node.js Client is made available under the terms of the Apache
 License, Version 2, as stated in the LICENSE file.
 
 Individual files may be made available under their own specific license, all
-compatible with Apache License, Version 2. Please see individual files for
+compatible with Apache License, Version 2. Refer to individual files for
 details.
