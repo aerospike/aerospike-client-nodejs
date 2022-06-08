@@ -1,0 +1,47 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Aerospike Node.js Windows Client Tests
+
+on:
+  push:
+    branches:
+      - master
+      - maint/3.x
+      - maint/4.x
+      - gh-action
+  pull_request:
+    branches:
+      - master
+      - stage
+      - maint/3.x
+      - maint/4.x
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@v1
+  build:
+    needs: setup
+    runs-on: windows-latest # https://github.com/actions/virtual-environments
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16.x
+        cache: 'npm' 
+    - run: ./scripts/build-package.ps1 1
+  # test:
+  #   needs: build
+  #   runs-on: macos-latest
+  #   steps:
+  #   - run: npm test
+  #   env:
+  #     AEROSPIKE_HOSTS: "127.0.0.1:3000"
+  #     OPTIONS: "--timeout 30000"
+  #   - run: npm run codecov
