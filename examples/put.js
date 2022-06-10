@@ -52,7 +52,7 @@ function buildPolicy (argv) {
 }
 
 exports.command = 'put <key> <bins...>'
-exports.describe = 'Write a record to the database.'
+exports.describe = 'Write a record to the database.\n bins format is a key value pair as "<bin_name>=<bin_value>"'
 exports.handler = shared.run(put)
 exports.builder = {
   'time-to-live': {

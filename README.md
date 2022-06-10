@@ -295,6 +295,8 @@ To run all the test cases:
 
     $ npm test
 
+Note: make sure your server has TTL enabled for the `test` namespace ([Namespace Retention Configuration](https://docs.aerospike.com/server/operations/configure/namespace/retention)) to allow all tests to run correctly.
+
 To run the tests and also report on test coverage:
 
     $ npm run coverage
