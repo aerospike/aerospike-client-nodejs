@@ -4,7 +4,7 @@
 # Note: The AS_NODEJS_VERSION must use version 4.0.3 and up since this is where
 # the C client submodule was introduced.
 
-# Stage 2: Install Node.js Client Dependencies
+# Stage 1: Install Node.js Client Dependencies
 FROM node:lts-bullseye-slim as installer
 WORKDIR /src
 
