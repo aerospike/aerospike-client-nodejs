@@ -52,5 +52,7 @@ jobs:
           }
           cd $NodeModulesPath
           npm install node-gyp@8.x
-      - run: npm install --unsafe-perm --build-from-source
+      - name: Install nodejs Client
+        shell: pwsh
+        run: npm install --unsafe-perm --build-from-source
         #      - run: npm test
