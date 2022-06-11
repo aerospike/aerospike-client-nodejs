@@ -105,14 +105,6 @@ function Build-Project {
 	return $process.ExitCode -eq 0
 }
 
-### DEBUG
-Write-Host "DEBUG"
-Write-Host($PSVersionTable | Out-String)
-Write-Host(Get-command get-file* | Out-String)
-Write-Host((get-filehash $PSHOME\powershell.exe).hash | Out-String)
-Write-Host "END DEBUG"
-###
-
 $CClientCfg = Parse-IniFile $CClientIni
 Write-Debug ($CClientCfg | Out-String)
 $FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
