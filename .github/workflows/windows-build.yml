@@ -10,6 +10,7 @@ on:
       - maint/3.x
       - maint/4.x
       - gh-action
+      - win-workflow-new
   pull_request:
     branches:
       - master
@@ -23,13 +24,15 @@ jobs:
     steps:
     - name: Set up Aerospike Database
       uses: reugn/github-action-aerospike@v1
-  # build:
-  #   needs: setup
-  #   runs-on: windows-latest # https://github.com/actions/virtual-environments
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
+
+  build:
+    needs: setup
+    runs-on: windows-latest # https://github.com/actions/virtual-environments
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - run: ./scripts/build-package.ps1 1
     # - name: Use Node.js 16.x
     #   uses: actions/setup-node@v2
     #   with:
