@@ -18,6 +18,7 @@ on:
       - maint/3.x
       - maint/4.x
 
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -26,25 +27,18 @@ jobs:
       uses: reugn/github-action-aerospike@v1
 
   build:
-    needs: setup
-    runs-on: windows-latest # https://github.com/actions/virtual-environments
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node: [ 10, 12, 14, 16 ]
+    name: Node ${{ matrix.node }} sample
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-    - run: ./scripts/build-package.ps1 1
-    # - name: Use Node.js 16.x
-    #   uses: actions/setup-node@v2
-    #   with:
-    #     node-version: 16.x
-    #     cache: 'npm' 
-    # - run: ./scripts/build-package.ps1 1
-  # test:
-  #   needs: build
-  #   runs-on: macos-latest
-  #   steps:
-  #   - run: npm test
-  #   env:
-  #     AEROSPIKE_HOSTS: "127.0.0.1:3000"
-  #     OPTIONS: "--timeout 30000"
-  #   - run: npm run codecov
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install --unsafe-perm --build-from-source
+        #      - run: npm test
