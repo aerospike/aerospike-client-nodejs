@@ -24,6 +24,11 @@ function build_nodejs_client {
 # .\nvm-setup.exe /VERYSILENT /SUPRESSMSGBOXES /SP
 # nvm root .\nvm
 
+cd $Env:USERPROFILE;
+Invoke-WebRequest https://raw.githubusercontent.com/jchip/nvm/v1.5.4/install.ps1 -OutFile install.ps1;
+.\install.ps1 -nvmhome $Env:USERPROFILE\nvm;
+del install.ps1
+
 build_nodejs_client v10.20.0
 build_nodejs_client v12.22.10
 build_nodejs_client v14.19.0
