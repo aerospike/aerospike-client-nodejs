@@ -44,7 +44,12 @@ jobs:
         run: |
           $WhereNode = Get-Command node | Select-Object -ExpandProperty Definition
           $NodeDirPath = Split-Path $WhereNode -Parent
-          $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\npm-lifecycle"
+          [Version]$npmVersion = npm --version
+          if ($npmVersion -lt [Version]"7.0") {
+            $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\npm-lifecycle"
+          } else {
+            $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\@npmcli\run-script"
+          }
           cd $NodeModulesPath
           npm install node-gyp@8.x
       - run: npm install --unsafe-perm --build-from-source
