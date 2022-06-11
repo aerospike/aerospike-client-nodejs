@@ -40,5 +40,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+      - name: Update node-gyp
+        run: |
+          $WhereNode = Get-Command node | Select-Object -ExpandProperty Definition
+          $NodeDirPath = Split-Path $WhereNode -Parent
+          $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\npm-lifecycle"
+          cd $NodeModulesPath
+          npm install node-gyp@8.x
       - run: npm install --unsafe-perm --build-from-source
         #      - run: npm test
