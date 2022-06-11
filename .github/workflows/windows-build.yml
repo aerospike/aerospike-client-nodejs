@@ -10,7 +10,6 @@ on:
       - maint/3.x
       - maint/4.x
       - gh-action
-      - win-workflow-new
   pull_request:
     branches:
       - master
@@ -18,20 +17,26 @@ on:
       - maint/3.x
       - maint/4.x
 
-
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@v1
+  #    setup:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #    - name: Set up Aerospike Database
+  #      uses: reugn/github-action-aerospike@v1
 
   build:
     runs-on: windows-latest
     strategy:
       matrix:
-        node: [ 10, 12, 14, 16 ]
-    name: Node ${{ matrix.node }} sample
+        node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+           - 10.x
+           - 12.x
+           - 14.x
+           - 16.x
+           - 17.x
+           - 18.x
+    continue-on-error: true
+    name: Node ${{ matrix.node-version }} tester
     steps:
       - uses: actions/checkout@v3
         with:
@@ -43,7 +48,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ matrix.node-version }}
       - name: Update node-gyp
         run: |
           $WhereNode = Get-Command node | Select-Object -ExpandProperty Definition
@@ -59,4 +64,8 @@ jobs:
       - name: Install nodejs Client
         shell: pwsh
         run: npm install --unsafe-perm --build-from-source
-        #      - run: npm test
+          #      - name: Test nodejs client
+          #        run: npm test
+          #        env:
+          #          AEROSPIKE_HOSTS: "127.0.0.1:3000"
+          #          OPTIONS: "--timeout 30000 --set demp ${{ matrix.node }}"
