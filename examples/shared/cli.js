@@ -23,7 +23,7 @@ function str2num (value) {
 // @param { String[] } binStrs - list of "<name>=<value>" pairs
 exports.parseBins = function (binStrs) {
   return binStrs.reduce((bins, current) => {
-    const [name, value] = current.split('=')
+    const [name, value] = current.toString().split('=')
     bins[name] = str2num(value)
     return bins
   }, {})

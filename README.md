@@ -90,7 +90,7 @@ install the latest stable version of Node.js, visit
 [nodejs.org](http://nodejs.org/) or use the version that comes bundled with
 your operating system.
 
-Ensure to install necessary "development tools" and other libraries to build the client software.
+Install the necessary "development tools" and other libraries to build the client software.
 
 Reference various docker files in the repository under the docker / directory for more information.
 
@@ -143,10 +143,10 @@ sudo apt -y install wget libtool m4 automake
 
 #### Ubuntu
 
-To install library prerequisites using `apt-get`:
+To install library prerequisites using `apt`:
 
 ```bash
-sudo apt-get install g++ libssl libssl-dev zlib1g-dev
+sudo apt install g++ libssl libssl-dev zlib1g-dev
 ```
 
 ### macOS (Intel)
@@ -242,6 +242,8 @@ Run the following commands to build the C client:
 
 	$ ./scripts/build-c-client.sh
 
+#### Building and installing Node.js client
+
 To install the module as a dependency of your application, run the following in the application directory:
 
 ```bash
@@ -257,7 +259,7 @@ const Aerospike = require('aerospike')
 ## Documentation
 
 Access the client API documentation at:
-[http://www.aerospike.com/apidocs/nodejs](https://www.aerospike.com/apidocs/nodejs).
+[https://docs.aerospike.com/apidocs/nodejs](https://docs.aerospike.com/apidocs/nodejs).
 This documentation is built from the client's source using [JSDocs
 v3](http://usejsdoc.org/index.html) for every release.
 
@@ -271,7 +273,7 @@ A variety of additional example applications are provided in the
 [`examples`](examples) directory of this repository.
 
 Access backward incompatible API changes by a release at:
-https://www.aerospike.com/docs/client/nodejs/usage/incompatible.html.
+https://developer.aerospike.com/client/nodejs/usage/incompatible.
 
 ### API Versioning
 
@@ -294,6 +296,8 @@ Before running the tests, you need to update the dependencies:
 To run all the test cases:
 
     $ npm test
+
+Note: make sure your server has TTL enabled for the `test` namespace ([Namespace Retention Configuration](https://docs.aerospike.com/server/operations/configure/namespace/retention)) to allow all tests to run correctly.
 
 To run the tests and also report on test coverage:
 
