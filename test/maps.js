@@ -40,7 +40,7 @@ const {
 } = require('./util/statefulAsyncTest')
 
 const orderMap = (bin, order, ctx) => {
-  const policy = new maps.MapPolicy({ order })
+  const policy = new Aerospike.MapPolicy({ order })
   const setMapPolicy = maps.setPolicy(bin, policy)
   if (ctx) setMapPolicy.withContext(ctx)
   return operate(setMapPolicy)
@@ -100,7 +100,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('update-only write mode', function () {
-      const updateOnlyPolicy = new maps.MapPolicy({
+      const updateOnlyPolicy = new Aerospike.MapPolicy({
         writeMode: maps.writeMode.UPDATE_ONLY
       })
 
@@ -126,7 +126,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with update-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      const policy = new maps.MapPolicy({
+      const policy = new Aerospike.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
       })
 
@@ -149,7 +149,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        const policy = new maps.MapPolicy({
+        const policy = new Aerospike.MapPolicy({
           writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -165,7 +165,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     context('create-only write mode', function () {
-      const createOnlyPolicy = new maps.MapPolicy({
+      const createOnlyPolicy = new Aerospike.MapPolicy({
         writeMode: maps.writeMode.CREATE_ONLY
       })
 
@@ -191,7 +191,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with create-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      const policy = new maps.MapPolicy({
+      const policy = new Aerospike.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
       })
 
@@ -214,7 +214,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        const policy = new maps.MapPolicy({
+        const policy = new Aerospike.MapPolicy({
           writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -256,7 +256,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with update-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      const policy = new maps.MapPolicy({
+      const policy = new Aerospike.MapPolicy({
         writeFlags: maps.writeFlags.UPDATE_ONLY
       })
 
@@ -270,7 +270,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        const policy = new maps.MapPolicy({
+        const policy = new Aerospike.MapPolicy({
           writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -284,7 +284,7 @@ describe('client.operate() - CDT Map operations', function () {
         })
 
         context('with partial flag', function () {
-          const policy = new maps.MapPolicy({
+          const policy = new Aerospike.MapPolicy({
             writeFlags: maps.writeFlags.UPDATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
           })
 
@@ -303,7 +303,7 @@ describe('client.operate() - CDT Map operations', function () {
     context('with create-only flag', function () {
       helper.skipUnlessVersion('>= 4.3.0', this)
 
-      const policy = new maps.MapPolicy({
+      const policy = new Aerospike.MapPolicy({
         writeFlags: maps.writeFlags.CREATE_ONLY
       })
 
@@ -317,7 +317,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       context('with no-fail flag', function () {
-        const policy = new maps.MapPolicy({
+        const policy = new Aerospike.MapPolicy({
           writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL
         })
 
@@ -331,7 +331,7 @@ describe('client.operate() - CDT Map operations', function () {
         })
 
         context('with partial flag', function () {
-          const policy = new maps.MapPolicy({
+          const policy = new Aerospike.MapPolicy({
             writeFlags: maps.writeFlags.CREATE_ONLY | maps.writeFlags.NO_FAIL | maps.writeFlags.PARTIAL
           })
 
