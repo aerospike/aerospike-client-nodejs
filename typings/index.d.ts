@@ -908,13 +908,13 @@ declare module "bigint" {
 }
 declare module "key" {
     export = Key;
-    function Key(ns: string, set: string, key: (string | number | Buffer), digest: any): void;
+    function Key(ns: string, set: string, key: (string | number | Buffer), digest?: string | undefined): void;
     class Key {
-        constructor(ns: string, set: string, key: (string | number | Buffer), digest: any);
+        constructor(ns: string, set: string, key: (string | number | Buffer), digest?: string | undefined);
         ns: string;
         set: string;
         key: string | number | Buffer;
-        digest: any;
+        digest: string | null;
         equals(other: any): any;
     }
     namespace Key {
@@ -950,16 +950,14 @@ declare module "job" {
         module: any;
         private hasCompleted;
         private checkStatus;
-        info(policy: any, callback: any): Promise<any> | null;
-        wait(pollInterval?: number | undefined, callback: any): Promise<any> | null;
+        info(policy: any, callback?: JobinfoCallback | undefined): Promise<any> | null;
+        wait(pollInterval?: number | undefined, callback?: JobdoneCallback | undefined): Promise<any> | null;
         waitUntilDone: any;
     }
     namespace Job {
-        export { safeRandomJobID, pollUntilDone, Job };
+        function safeRandomJobID(): number;
+        function pollUntilDone(statusFunction: any, pollInterval: any): Promise<any>;
     }
-    function safeRandomJobID(): number;
-    function pollUntilDone(statusFunction: any, pollInterval: any): Promise<any>;
-    type Job = () => any;
 }
 declare module "commands/query_background_command" {
     function _exports(asCommand: any): {
@@ -1181,7 +1179,7 @@ declare module "config" {
         port: any;
         tls: any;
         hosts: (Host[] | string);
-        policies: Config;
+        policies: Policies;
         log: any;
         connTimeoutMs: any;
         loginTimeoutMs: any;
@@ -1195,21 +1193,9 @@ declare module "config" {
         rackAware: boolean;
         rackId: any;
         setDefaultPolicies(policies: any): void;
+        private [inspect];
     }
-    namespace Config {
-        export { Config };
-    }
-    type Config = {
-        apply: ApplyPolicy;
-        batch: BatchPolicy;
-        info: InfoPolicy;
-        operate: OperatePolicy;
-        read: ReadPolicy;
-        remove: RemovePolicy;
-        scan: ScanPolicy;
-        query: QueryPolicy;
-        write: WritePolicy;
-    };
+    const inspect: unique symbol;
 }
 declare module "index_job" {
     export = IndexJob;
@@ -1269,16 +1255,12 @@ declare module "query" {
         } | undefined;
         foreach(policy?: QueryPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
         results(policy?: QueryPolicy): Promise<object[]>;
-        apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback: any): Promise<any> | null;
+        apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
         background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: WritePolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         operate(operations: any, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         ops: any;
     }
-    namespace Query {
-        export { Query };
-    }
     import RecordStream = require("record_stream");
-    type Query = () => any;
 }
 declare module "scan" {
     export = Scan;
@@ -1538,6 +1520,9 @@ type connectCallback = () => any;
 type infoCallback = () => any;
 type infoAllCallback = () => any;
 type jobCallback = () => any;
+type JobdoneCallback = () => any;
+type JobinfoCallback = () => any;
+type QueryaggregationResultCallback = () => any;
 type AerospikeExp = object;
 type ApplyPolicy = object;
 type BatchPolicy = object;
@@ -1551,6 +1536,17 @@ type WritePolicy = object;
 type BitwisePolicy = object;
 type MapPolicy = object;
 type CommandQueuePolicy = object;
+type Policies = {
+    apply: ApplyPolicy;
+    batch: BatchPolicy;
+    info: InfoPolicy;
+    operate: OperatePolicy;
+    read: ReadPolicy;
+    remove: RemovePolicy;
+    scan: ScanPolicy;
+    query: QueryPolicy;
+    write: WritePolicy;
+};
 type Operation = object;
 type Client = object;
 type Key = object;
