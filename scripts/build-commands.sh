@@ -168,7 +168,7 @@ setup() {
     brew install ${PACKAGES[@]}
     # link openssl
     unlink /usr/local/opt/openssl
-    ln -s /usr/local/Cellar/openssl@3/3.0.3/ /usr/local/opt/openssl
+    ln -s /usr/local/Cellar/openssl@3/*/ /usr/local/opt/openssl
     export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
     export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
   fi
