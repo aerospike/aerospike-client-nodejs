@@ -18,30 +18,54 @@ on:
       - maint/4.x
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
+  #    setup:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #    - name: Set up Aerospike Database
+  #      uses: reugn/github-action-aerospike@v1
+
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+           - 10.x
+           - 12.x
+           - 14.x
+           - 16.x
+           - 17.x
+           - 18.x
+    continue-on-error: true
+    name: Node ${{ matrix.node-version }} tester
     steps:
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@v1
-  # build:
-  #   needs: setup
-  #   runs-on: windows-latest # https://github.com/actions/virtual-environments
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-    # - name: Use Node.js 16.x
-    #   uses: actions/setup-node@v2
-    #   with:
-    #     node-version: 16.x
-    #     cache: 'npm' 
-    # - run: ./scripts/build-package.ps1 1
-  # test:
-  #   needs: build
-  #   runs-on: macos-latest
-  #   steps:
-  #   - run: npm test
-  #   env:
-  #     AEROSPIKE_HOSTS: "127.0.0.1:3000"
-  #     OPTIONS: "--timeout 30000"
-  #   - run: npm run codecov
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup Windows SDK
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.6
+        with:
+          sdk-version: 17763
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Update node-gyp
+        run: |
+          $WhereNode = Get-Command node | Select-Object -ExpandProperty Definition
+          $NodeDirPath = Split-Path $WhereNode -Parent
+          [Version]$npmVersion = npm --version
+          if ($npmVersion -lt [Version]"7.0") {
+            $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\npm-lifecycle"
+          } else {
+            $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\@npmcli\run-script"
+          }
+          cd $NodeModulesPath
+          npm install node-gyp@8.x
+      - name: Install nodejs Client
+        shell: pwsh
+        run: npm install --unsafe-perm --build-from-source
+          #      - name: Test nodejs client
+          #        run: npm test
+          #        env:
+          #          AEROSPIKE_HOSTS: "127.0.0.1:3000"
+          #          OPTIONS: "--timeout 30000 --set demp ${{ matrix.node }}"
