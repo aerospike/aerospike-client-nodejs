@@ -22,7 +22,7 @@
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 // const util = require('util')
-const batchType = Aerospike.batchType.types
+const batchType = Aerospike.batchType
 
 const op = Aerospike.operations
 const GeoJSON = Aerospike.GeoJSON

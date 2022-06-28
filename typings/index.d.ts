@@ -1438,12 +1438,10 @@ declare module "double" {
     }
 }
 declare module "batch_type" {
-    export namespace types {
-        const BATCH_READ: any;
-        const BATCH_WRITE: any;
-        const BATCH_APPLY: any;
-        const BATCH_REMOVE: any;
-    }
+    export const BATCH_READ: any;
+    export const BATCH_WRITE: any;
+    export const BATCH_APPLY: any;
+    export const BATCH_REMOVE: any;
 }
 declare module "aerospike" {
     export const filter: typeof import("filter");
@@ -1504,7 +1502,12 @@ declare module "aerospike" {
     export function connect(config?: any, callback?: connectCallback | undefined): Promise<any> | null;
     export function setDefaultLogging(logInfo: any): void;
     export function setupGlobalCommandQueue(policy: CommandQueuePolicy): void;
-    export const batchType: typeof import("batch_type");
+    export const batchType: {
+        BATCH_READ: any;
+        BATCH_WRITE: any;
+        BATCH_APPLY: any;
+        BATCH_REMOVE: any;
+    };
     import AerospikeError = require("error");
     import EventLoop = require("event_loop");
 }
