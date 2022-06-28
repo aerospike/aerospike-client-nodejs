@@ -87,7 +87,9 @@ describe('client.batchWrite()', function () {
         expect(results.length).to.equal(5)
         const found = results.filter(
           result => result.status === Aerospike.status.OK)
-        expect(found.length).to.equal(3)
+        const inDoubt = results.filter(
+          result => result.inDoubt === true)
+        expect(found.length).to.equal(3-inDoubt)
         const notFound = results.filter(
           result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
         expect(notFound.length).to.equal(2)
