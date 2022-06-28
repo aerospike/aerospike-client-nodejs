@@ -1254,7 +1254,7 @@ declare module "query" {
             digest: string;
         } | undefined;
         foreach(policy?: QueryPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
-        results(policy?: QueryPolicy): Promise<object[]>;
+        results(policy?: QueryPolicy): Promise<RecordObject[]>;
         apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
         background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: WritePolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         operate(operations: any, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
@@ -1345,21 +1345,21 @@ declare module "client" {
         batchGet(keys: Key[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchRead(records: {
             type: number;
-            key: string;
+            key: Key;
             bins?: string[];
             readAllBins?: boolean;
         }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchWrite(records: {
             type: number;
-            key: string;
+            key: Key;
         }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchApply(records: {
             type: number;
-            key: string;
+            key: Key;
         }, udf: object[], batchPolicy?: BatchPolicy, batchApplyPolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchRemove(records: {
             type: number;
-            key: string;
+            key: Key;
         }, batchPolicy?: BatchPolicy, batchRemovePolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchSelect(keys: Key[], bins: string[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         close(releaseEventLoop?: boolean | undefined): void;
@@ -1553,6 +1553,7 @@ type Policies = {
 type Operation = object;
 type Client = object;
 type Key = object;
+type RecordObject = object;
 declare module "policies/bitwise_policy" {
     export = BitwisePolicy;
     class BitwisePolicy {
