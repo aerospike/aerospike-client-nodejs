@@ -1,5 +1,7 @@
 {
+  "include": ["lib/*", "lib/commands/*", "lib/policies/*"], 
   "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig.json to read more about this file */
     "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -8,9 +10,9 @@
       "es2020",
       "dom"
     ],
-    "removeComments": false,
+    "removeComments": true,
     "alwaysStrict": true,
-    "pretty": true,
+    "pretty": false,
     "incremental": true,
     "noEmitHelpers": true,
     "importHelpers": true,
@@ -22,11 +24,5 @@
     "isolatedModules": false,
     "skipLibCheck": true,
     "baseUrl": ".",
-  },
-  "exclude": [
-    "node_modules",
-  ],
-  "include": [
-    "typings"
-  ]
+  }
 }

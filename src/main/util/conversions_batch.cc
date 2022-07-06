@@ -455,6 +455,8 @@ Local<Array> batch_records_to_jsarray(const as_batch_records *records,
 			Nan::Set(result, Nan::New("bins").ToLocalChecked(),
 					 recordbins_to_jsobject(record, log));
 		}
+		Nan::Set(result, Nan::New("inDoubt").ToLocalChecked(),
+				batch_record->in_doubt ? Nan::True() : Nan::False());
 
 		Nan::Set(results, i, result);
 	}

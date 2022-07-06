@@ -40,7 +40,7 @@
                 'aerospike-client-c-output/lib/aerospike.lib'
               ],
               'action': [
-                'powershell', 'scripts/build-c-client.ps1',
+                'pwsh', 'scripts/build-c-client.ps1',
                     '-Configuration', "$(ConfigurationName)",
                     '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
