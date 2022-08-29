@@ -573,10 +573,10 @@ declare module "hll" {
 }
 declare module "maps" {
     export function setPolicy(bin: string, policy: MapPolicy): any;
-    export function put(bin: string, key: any, value: any, policy?: MapPolicy): any;
-    export function putItems(bin: string, items: object, policy?: MapPolicy): any;
-    export function increment(bin: string, key: any, incr: number, policy?: MapPolicy): any;
-    export function decrement(bin: string, key: any, decr: number, policy?: MapPolicy): any;
+    export function put(bin: string, key: any, value: any, policy?: any): any;
+    export function putItems(bin: string, items: object, policy?: any): any;
+    export function increment(bin: string, key: any, incr: number, policy?: any): any;
+    export function decrement(bin: string, key: any, decr: number, policy?: any): any;
     export function clear(bin: string): any;
     export function removeByKey(bin: string, key: any, returnType?: number | undefined): any;
     export function removeByKeyList(bin: string, keys: Array<any>, returnType?: number | undefined): any;
@@ -1235,7 +1235,7 @@ declare module "query" {
             select?: string[] | undefined;
             nobins?: boolean | undefined;
         } | undefined);
-        client: any;
+        client: Client;
         ns: string;
         set: string;
         filters: any[];
@@ -1253,11 +1253,11 @@ declare module "query" {
             count: number;
             digest: string;
         } | undefined;
-        foreach(policy?: QueryPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
-        results(policy?: QueryPolicy): Promise<RecordObject[]>;
-        apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
-        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: WritePolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
-        operate(operations: any, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
+        foreach(policy?: any, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
+        results(policy?: any): Promise<RecordObject[]>;
+        apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: any, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
+        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: any, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
+        operate(operations: any, policy?: any, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         ops: any;
     }
     import RecordStream = require("record_stream");
@@ -1275,7 +1275,7 @@ declare module "scan" {
             nobins?: boolean | undefined;
             concurrent?: boolean | undefined;
         } | undefined);
-        client: any;
+        client: Client;
         ns: string;
         set: string;
         selected: string[] | undefined;
@@ -1289,15 +1289,15 @@ declare module "scan" {
             count: number;
             digest: string;
         } | undefined;
-        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: ScanPolicy, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
+        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: any, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         udf: {
             module: string;
             funcname: string;
             args: any[] | undefined;
         } | undefined;
-        operate(operations: any, policy?: ScanPolicy, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
+        operate(operations: any, policy?: any, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
         ops: any;
-        foreach(policy?: ScanPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
+        foreach(policy?: any, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
     }
     import RecordStream = require("record_stream");
 }
@@ -1341,27 +1341,27 @@ declare module "client" {
         }>;
         addSeedHost(hostname: string, port?: number | undefined): void;
         removeSeedHost(hostname: string, port?: number | undefined): void;
-        batchExists(keys: Key[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchGet(keys: Key[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        batchExists(keys: Key[], policy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        batchGet(keys: Key[], policy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchRead(records: {
             type: number;
             key: Key;
             bins?: string[];
             readAllBins?: boolean;
-        }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchWrite(records: {
             type: number;
             key: Key;
-        }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchApply(records: {
             type: number;
             key: Key;
-        }, udf: object[], batchPolicy?: BatchPolicy, batchApplyPolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        }, udf: object[], batchPolicy?: any, batchApplyPolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         batchRemove(records: {
             type: number;
             key: Key;
-        }, batchPolicy?: BatchPolicy, batchRemovePolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchSelect(keys: Key[], bins: string[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        }, batchPolicy?: any, batchRemovePolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+        batchSelect(keys: Key[], bins: string[], policy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
         close(releaseEventLoop?: boolean | undefined): void;
         connect(callback?: connectCallback | undefined): Promise<any> | null;
         createIndex(options: {
@@ -1371,57 +1371,57 @@ declare module "client" {
             index: string;
             type?: any;
             datatype: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: jobCallback | undefined): Promise<any> | null;
         createIntegerIndex(options: {
             ns: string;
             set: string;
             bin: string;
             index: string;
             type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: jobCallback | undefined): Promise<any> | null;
         createStringIndex(options: {
             ns: string;
             set: string;
             bin: string;
             index: string;
             type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: jobCallback | undefined): Promise<any> | null;
         createGeo2DSphereIndex(options: {
             ns: string;
             set: string;
             bin: string;
             index: string;
             type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: jobCallback | undefined): Promise<any> | null;
         apply(key: Key, udfArgs: {
             module: string;
             funcname: string;
             args: Array<(number | string)>;
-        }, policy?: ApplyPolicy, callback?: valueCallback | undefined): Promise<any> | null;
-        exists(key: Key, policy?: ReadPolicy, callback?: valueCallback | undefined): Promise<any> | null;
-        get(key: Key, policy?: ReadPolicy, callback?: recordCallback | undefined): Promise<any> | null;
-        indexRemove(namespace: string, index: string, policy?: InfoPolicy, callback?: doneCallback | undefined): Promise<any> | null;
+        }, policy?: any, callback?: valueCallback | undefined): Promise<any> | null;
+        exists(key: Key, policy?: any, callback?: valueCallback | undefined): Promise<any> | null;
+        get(key: Key, policy?: any, callback?: recordCallback | undefined): Promise<any> | null;
+        indexRemove(namespace: string, index: string, policy?: any, callback?: doneCallback | undefined): Promise<any> | null;
         info(request: string | null, host: {
             addr: string;
             port?: number | undefined;
-        }, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        infoAny(request?: string | undefined, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        infoAll(request?: string | undefined, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
+        }, policy?: any, callback?: infoCallback | undefined): any;
+        infoAny(request?: string | undefined, policy?: any, callback?: infoCallback | undefined): any;
+        infoAll(request?: string | undefined, policy?: any, callback?: infoCallback | undefined): any;
         infoNode(request: string | null, node: {
             name: string;
-        }, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
+        }, policy?: any, callback?: infoCallback | undefined): any;
         isConnected(checkTenderErrors?: boolean | undefined): boolean;
-        operate(key: Key, operations: any, metadata?: any, policy?: OperatePolicy, callback?: recordCallback | undefined): any;
+        operate(key: Key, operations: any, metadata?: any, policy?: any, callback?: recordCallback | undefined): any;
         incr: any;
-        put(key: Key, bins: object, meta?: object, policy?: WritePolicy, callback?: writeCallback | undefined): any;
+        put(key: Key, bins: object, meta?: object, policy?: any, callback?: writeCallback | undefined): any;
         query(ns: string, set: string, options?: object): Query;
-        remove(key: Key, policy?: RemovePolicy, callback?: writeCallback | undefined): any;
+        remove(key: Key, policy?: any, callback?: writeCallback | undefined): any;
         scan(ns: string, set: string, options?: object): Scan;
-        select(key: Key, bins: string[], policy?: ReadPolicy, callback?: recordCallback | undefined): any;
-        truncate(ns: string, set: string, beforeNanos: any, policy?: InfoPolicy, callback?: doneCallback | undefined): any;
-        udfRegister(udfPath: any, udfType?: number | undefined, policy?: InfoPolicy, callback?: jobCallback | undefined): any;
+        select(key: Key, bins: string[], policy?: any, callback?: recordCallback | undefined): any;
+        truncate(ns: string, set: string, beforeNanos: any, policy?: any, callback?: doneCallback | undefined): any;
+        udfRegister(udfPath: any, udfType?: number | undefined, policy?: any, callback?: jobCallback | undefined): any;
         stats(): ClientStats;
-        udfRemove(udfModule: string, policy?: InfoPolicy, callback?: jobCallback | undefined): any;
+        udfRemove(udfModule: string, policy?: any, callback?: jobCallback | undefined): any;
         updateLogging(logConfig: any): void;
     }
     import Config = require("config");
@@ -1527,32 +1527,7 @@ type JobdoneCallback = () => any;
 type JobinfoCallback = () => any;
 type QueryaggregationResultCallback = () => any;
 type AerospikeExp = object;
-type ApplyPolicy = object;
-type BatchPolicy = object;
-type InfoPolicy = object;
-type OperatePolicy = object;
-type ReadPolicy = object;
-type RemovePolicy = object;
-type ScanPolicy = object;
-type QueryPolicy = object;
-type WritePolicy = object;
-type BitwisePolicy = object;
-type MapPolicy = object;
-type CommandQueuePolicy = object;
-type Policies = {
-    apply: ApplyPolicy;
-    batch: BatchPolicy;
-    info: InfoPolicy;
-    operate: OperatePolicy;
-    read: ReadPolicy;
-    remove: RemovePolicy;
-    scan: ScanPolicy;
-    query: QueryPolicy;
-    write: WritePolicy;
-};
 type Operation = object;
-type Client = object;
-type Key = object;
 type RecordObject = object;
 declare module "policies/bitwise_policy" {
     export = BitwisePolicy;
