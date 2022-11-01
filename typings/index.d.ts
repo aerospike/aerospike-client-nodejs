@@ -1,1563 +1,1947 @@
-declare module "status" {
-    export const ERR_INVALID_NODE: any;
-    export const ERR_NO_MORE_CONNECTIONS: any;
-    export const ERR_ASYNC_CONNECTION: any;
-    export const ERR_CLIENT_ABORT: any;
-    export const ERR_INVALID_HOST: any;
-    export const NO_MORE_RECORDS: any;
-    export const ERR_PARAM: any;
-    export const ERR_CLIENT: any;
-    export const OK: any;
-    export const ERR_SERVER: any;
-    export const ERR_RECORD_NOT_FOUND: any;
-    export const ERR_RECORD_GENERATION: any;
-    export const ERR_REQUEST_INVALID: any;
-    export const ERR_RECORD_EXISTS: any;
-    export const ERR_BIN_EXISTS: any;
-    export const ERR_CLUSTER_CHANGE: any;
-    export const ERR_SERVER_FULL: any;
-    export const ERR_TIMEOUT: any;
-    export const ERR_ALWAYS_FORBIDDEN: any;
-    export const ERR_CLUSTER: any;
-    export const ERR_BIN_INCOMPATIBLE_TYPE: any;
-    export const ERR_RECORD_TOO_BIG: any;
-    export const ERR_RECORD_BUSY: any;
-    export const ERR_SCAN_ABORTED: any;
-    export const ERR_UNSUPPORTED_FEATURE: any;
-    export const ERR_BIN_NOT_FOUND: any;
-    export const ERR_DEVICE_OVERLOAD: any;
-    export const ERR_RECORD_KEY_MISMATCH: any;
-    export const ERR_NAMESPACE_NOT_FOUND: any;
-    export const ERR_BIN_NAME: any;
-    export const ERR_FAIL_FORBIDDEN: any;
-    export const ERR_FAIL_ELEMENT_NOT_FOUND: any;
-    export const ERR_FAIL_ELEMENT_EXISTS: any;
-    export const ERR_ENTERPRISE_ONLY: any;
-    export const ERR_FAIL_ENTERPRISE_ONLY: any;
-    export const ERR_OP_NOT_APPLICABLE: any;
-    export const FILTERED_OUT: any;
-    export const LOST_CONFLICT: any;
-    export const QUERY_END: any;
-    export const SECURITY_NOT_SUPPORTED: any;
-    export const SECURITY_NOT_ENABLED: any;
-    export const SECURITY_SCHEME_NOT_SUPPORTED: any;
-    export const INVALID_COMMAND: any;
-    export const INVALID_FIELD: any;
-    export const ILLEGAL_STATE: any;
-    export const INVALID_USER: any;
-    export const USER_ALREADY_EXISTS: any;
-    export const INVALID_PASSWORD: any;
-    export const EXPIRED_PASSWORD: any;
-    export const FORBIDDEN_PASSWORD: any;
-    export const INVALID_CREDENTIAL: any;
-    export const INVALID_ROLE: any;
-    export const ROLE_ALREADY_EXISTS: any;
-    export const INVALID_PRIVILEGE: any;
-    export const NOT_AUTHENTICATED: any;
-    export const ROLE_VIOLATION: any;
-    export const ERR_UDF: any;
-    export const ERR_BATCH_DISABLED: any;
-    export const ERR_BATCH_MAX_REQUESTS_EXCEEDED: any;
-    export const ERR_BATCH_QUEUES_FULL: any;
-    export const ERR_GEO_INVALID_GEOJSON: any;
-    export const ERR_INDEX_FOUND: any;
-    export const ERR_INDEX_NOT_FOUND: any;
-    export const ERR_INDEX_OOM: any;
-    export const ERR_INDEX_NOT_READABLE: any;
-    export const ERR_INDEX: any;
-    export const ERR_INDEX_NAME_MAXLEN: any;
-    export const ERR_INDEX_MAXCOUNT: any;
-    export const ERR_QUERY_ABORTED: any;
-    export const ERR_QUERY_QUEUE_FULL: any;
-    export const ERR_QUERY_TIMEOUT: any;
-    export const ERR_QUERY: any;
-    export const ERR_UDF_NOT_FOUND: any;
-    export const ERR_LUA_FILE_NOT_FOUND: any;
-    export function getMessage(code: any): string;
-}
-declare module "error" {
-    export = AerospikeError;
-    class AerospikeError extends Error {
-        private static fromASError;
-        private static copyASErrorProperties;
-        private static formatMessage;
-        private constructor();
-        code: number;
-        command: any | null;
-        func: string | null;
-        file: string | null;
-        line: number | null;
-        inDoubt: boolean;
-        private setStackTrace;
-        isServerError(): boolean;
-        get client(): any;
+import * as Buffer from "buffer";
+import { EventEmitter, Stream } from "stream";
+
+declare namespace Aerospike {
+
+    type PartialAerospikeRecordValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON;
+    type AerospikeRecordValue = PartialAerospikeRecordValue | PartialAerospikeRecordValue[] | Record<string, PartialAerospikeRecordValue>;
+
+    type AerospikeBins = {
+        [key: string]: AerospikeRecordValue
+    };
+
+    // Commands
+
+    class Command {
+        readonly client: Client;
+        private args: any[];
+        protected callback(...args: any[]): any;
+        readonly captureStackTraces: boolean;
+        public key?: IKey;
+        public ensureConnected: boolean;
+        constructor(client: Client, args: any[], callback?: AddonCallback);
+        private captureStackTrace(): void;
+        private connected(): boolean;
+        private convertError(): AerospikeError;
+        protected convertResult(arg1, arg2, arg3): any;
+        private convertResponse(err, arg1, arg2, arg3): [AerospikeError, any];
+        private execute(): Promise<any> | void;
+        private executeWithCallback(callback: AddonCallback): void;
+        private executeAndReturnPromise(): Promise<any>;
+        private expectsPromise(): boolean;
+        private asCommand(): string;
+        private process(cb: AddonCallback): void;
+        private sendError(message: string): void;
     }
-}
-declare module "policies/command_queue_policy" {
-    export = CommandQueuePolicy;
-    class CommandQueuePolicy {
-        constructor(props?: {
-            maxCommandsInProcess?: number | undefined;
-            maxCommandsInQueue?: number | undefined;
-            queueInitialCapacity?: number | undefined;
-        } | undefined);
-        maxCommandsInProcess: number;
-        maxCommandsInQueue: number;
-        queueInitialCapacity: number;
+
+    interface IBatchResult {
+        status: Status;
+        record: AerospikeRecord;
     }
-}
-declare module "event_loop" {
-    export function releaseEventLoop(): void;
-    export function registerASEventLoop(): void;
-    export function referenceEventLoop(): void;
-    export function unreferenceEventLoop(): void;
-    export function setCommandQueuePolicy(policy: any): void;
-}
-declare module "geojson" {
-    export = GeoJSON;
-    function GeoJSON(json: any): GeoJSON;
-    class GeoJSON {
-        constructor(json: any);
-        str: string | undefined;
-        toJSON(): any;
-        toString(): string;
-        value(): any;
+
+    class BatchCommand extends Command {
+        protected convertResult(results: AerospikeRecord[]): IBatchResult[];
     }
-    namespace GeoJSON {
-        function Point(lng: number, lat: number): GeoJSON;
-        function Polygon(...args: number[][]): GeoJSON;
-        function Circle(lng: number, lat: number, radius: number): GeoJSON;
+
+    class ConnectCommand extends Command {
+        constructor(client: Client, callback: AddonCallback);
     }
-}
-declare module "filter" {
-    export function range(bin: string, min: number, max: number, indexType?: number | undefined): any;
-    export function equal(bin: string, value: string): any;
-    export function contains(bin: string, value: (string | number), indexType: number): any;
-    export function geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: number | undefined): any;
-    export function geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: number | undefined): any;
-    export function geoWithinRadius(bin: string, lon: any, lat: number, radius: number, indexType?: number | undefined): any;
-    export function geoContainsPoint(bin: string, lon: any, lat: number, indexType?: number | undefined): any;
-    export class SindexFilterPredicate {
-        constructor(predicate: any, bin: any, dataType: any, indexType: any, props: any);
-        predicate: any;
-        bin: any;
-        datatype: any;
-        type: any;
+
+    class QueryBackgroundBaseCommand extends Command {
+        public queryID: number;
+        public queryObj: IQueryOptions;
+        constructor(client: Client, ns: string, set: string, queryObj: IQueryOptions, policy: QueryPolicy, queryID: number, callback: AddonCallback);
+        public convertResult(): Job;
     }
-    import GeoJSON = require("geojson");
-}
-declare module "cdt_context" {
-    export = CdtContext;
+
+    class ReadRecordCommand extends Command {
+        constructor(client: Client, key: IKey, args: any[]);
+        public convertResult(bins: AerospikeBins, metadata: IRecordMetadata): AerospikeRecord;
+    }
+
+    class StreamCommand extends Command {
+        public stream: RecordStream;
+        constructor(stream: RecordStream, args: any[]);
+        protected callback(error: Error, record: AerospikeRecord): boolean;
+        protected convertResult(bins: AerospikeBins, meta: IRecordMetadata, asKey: IKey): AerospikeRecord;
+    }
+
+    class WriteRecordCommand extends Command {
+        constructor(client: Client, key: IKey, args: any[], callback: AddOperation);
+        protected convertResult(): IKey;
+    }
+
+    // C++ bindings
+    enum ExpOpcodes {
+        CMP_EQ = 1,
+        CMP_NE,
+        CMP_GT,
+        CMP_GE,
+        CMP_LT,
+        CMP_LE,
+
+        CMP_REGEX,
+        CMP_GEO,
+
+        AND = 16,
+        OR,
+        NOT,
+        EXCLUSIVE,
+
+        DIGEST_MODULO,
+        DEVICE_SIZE,
+        LAST_UPDATE,
+        SINCE_UPDATE,
+        VOID_TIME,
+        TTL,
+        SET_NAME,
+        KEY_EXIST,
+        IS_TOMBSTONE,
+        MEMORY_SIZE,
+
+        KEY = 80,
+        BIN,
+        BIN_TYPE,
+
+        QUOTE = 126,
+        CALL,
+
+        AS_VAL,
+        VAL_GEO,
+        VAL_PK,
+        VAL_INT,
+        VAL_UINT,
+        VAL_FLOAT,
+        VAL_BOOL,
+        VAL_STR,
+        VAL_BYTES,
+        VAL_RAWSTR,
+        VAL_RTYPE,
+
+        CALL_VOP_START,
+        CDT_LIST_CRMOD,
+        CDT_LIST_MOD,
+        CDT_MAP_CRMOD,
+        CDT_MAP_CR,
+        CDT_MAP_MOD,
+
+        END_OF_VA_ARGS,
+
+        ADD = 20,
+        SUB,
+        MUL,
+        DIV,
+        POW,
+        LOG,
+        MOD,
+        ABS,
+        FLOOR,
+        CEIL,
+        TO_INT,
+        TO_FLOAT,
+        INT_AND,
+        INT_OR,
+        INT_XOR,
+        INT_NOT,
+        INT_LSHIFT,
+        INT_RSHIFT,
+        INT_ARSHIFT,
+        INT_COUNT,
+        INT_LSCAN,
+        INT_RSCAN,
+        MIN = 50,
+        MAX,
+
+        COND = 123,
+        VAR,
+        LET
+    }
+
+    enum ExpSystemTypes {
+        CALL_CDT,
+        CALL_BITS,
+        CALL_HLL,
+
+        FLAG_MODIFY_LOCAL = 64
+    }
+
+    enum ExpTypes {
+        NIL,
+        // BOOL - no boolean type in src/main/enums/exp_enum.cc#L127
+        INT = 2,
+        STR,
+        LIST,
+        MAP,
+        BLOB,
+        FLOAT,
+        GEOJSON,
+        HLL,
+
+        AUTO,
+        ERROR
+    }
+
+    interface IExpOpcodesValues {
+        ops: ExpOpcodes,
+        sys: ExpSystemTypes,
+        type: ExpTypes
+    }
+
+    enum ExpOperations {
+        WRITE = 1280,
+        READ
+    }
+
+    enum Predicates {
+        EQUAL,
+        RANGE
+    }
+
+    enum IndexDataType {
+        STRING,
+        NUMERIC,
+        GEO2DSPHERE
+    }
+
+    enum IndexType {
+        DEFAULT,
+        LIST,
+        MAPKEYS,
+        MAPVALUES
+    }
+
+    enum ListOrder {
+        UNORDERED,
+        ORDERED
+    }
+
+    enum ListSortFlags {
+        DEFAULT,
+        DROP_DUPLICATES
+    }
+
+    enum ListWriteFlags {
+        DEFAULT,
+        ADD_UNIQUE,
+        INSERT_BOUNDED,
+        NO_FAIL,
+        PARTIAL
+    }
+
+    enum ListReturnType {
+        NONE,
+        INDEX,
+        REVERSE_INDEX,
+        RANK,
+        REVERSE_RANK,
+        COUNT,
+        VALUE,
+        INVERTED
+    }
+
+    enum MapsOrder {
+        UNORDERED,
+        KEY_ORDERED,
+        KEY_VALUE_ORDERED = 3
+    }
+
+    enum MapsWriteMode {
+        UPDATE,
+        UPDATE_ONLY,
+        CREATE_ONLY
+    }
+
+    enum MapsWriteFlags {
+        DEFAULT,
+        CREATE_ONLY,
+        UPDATE_ONLY,
+        NO_FAIL,
+        PARTIAL
+    }
+
+    enum MapReturnType {
+        NONE,
+        INDEX,
+        REVERSE_INDEX,
+        RANK,
+        REVERSE_RANK,
+        COUNT,
+        KEY,
+        VALUE,
+        KEY_VALUE
+    }
+
+    enum ScalarOperations {
+        WRITE,
+        READ,
+        INCR,
+        PREPEND,
+        APPEND,
+        TOUCH,
+        DELETE
+    }
+
+    enum PolicyGen {
+        IGNORE,
+        EQ,
+        GT
+    }
+
+    enum PolicyKey {
+        DIGEST,
+        SEND
+    }
+
+    enum PolicyExists {
+        IGNORE,
+        CREATE,
+        UPDATE,
+        REPLACE,
+        CREATE_OR_REPLACE
+    }
+
+    enum PolicyReplica {
+        MASTER,
+        ANY,
+        SEQUENCE,
+        PREFER_RACK
+    }
+
+    enum PolicyReadModeAP {
+        ONE,
+        ALL
+    }
+
+    enum PolicyReadModeSC {
+        SESSION,
+        LINEARIZE,
+        ALLOW_REPLICA,
+        ALLOW_UNAVAILABLE
+    }
+
+    enum PolicyCommitLevel {
+        ALL,
+        MASTER
+    }
+
+    enum BitwiseWriteFlags {
+        DEFAULT,
+        CREATE_ONLY,
+        UPDATE_ONLY,
+        NO_FAIL,
+        PARTIAL = 8
+    }
+
+    enum BitwiseResizeFlags {
+        DEFAULT,
+        FROM_FRONT,
+        GROW_ONLY,
+        SHRINK_ONLY = 4
+    }
+
+    enum BitwiseOverflow {
+        FAIL,
+        SATURATE = 2,
+        WRAP = 4
+    }
+
+    enum HLLWriteFlags {
+        DEFAULT,
+        CREATE_ONLY,
+        UPDATE_ONLY,
+        NO_FAIL = 4,
+        ALLOW_FOLD = 8
+    }
+
+    enum LogLevel {
+        OFF = -1,
+        ERROR,
+        WARN,
+        INFO,
+        DEBUG,
+        TRACE,
+        DETAIL
+    }
+
+    enum Auth {
+        INTERNAL,
+        EXTERNAL,
+        EXTERNAL_INSECURE,
+        AUTH_PKI
+    }
+
+    enum Language {
+        LUA
+    }
+
+    enum Log {
+        OFF = -1,
+        ERROR,
+        WARN,
+        INFO,
+        DEBUG,
+        TRACE,
+        DETAIL = 4
+    }
+
+    enum TTL {
+        DONT_UPDATE = -2,
+        NEVER_EXPIRE,
+        NAMESPACE_DEFAULT
+    }
+
+    enum JobStatus {
+        UNDEF,
+        INPROGRESS,
+        COMPLETED
+    }
+
+    enum Status {
+        AEROSPIKE_ERR_ASYNC_QUEUE_FULL = -11,
+        AEROSPIKE_ERR_CONNECTION,
+        AEROSPIKE_ERR_TLS_ERROR,
+        AEROSPIKE_ERR_INVALID_NODE,
+        AEROSPIKE_ERR_NO_MORE_CONNECTIONS,
+        AEROSPIKE_ERR_ASYNC_CONNECTION,
+        AEROSPIKE_ERR_CLIENT_ABORT,
+        AEROSPIKE_ERR_INVALID_HOST,
+        AEROSPIKE_NO_MORE_RECORDS,
+        AEROSPIKE_ERR_PARAM,
+        AEROSPIKE_ERR_CLIENT,
+        AEROSPIKE_OK,
+        AEROSPIKE_ERR_SERVER,
+        AEROSPIKE_ERR_RECORD_NOT_FOUND,
+        AEROSPIKE_ERR_RECORD_GENERATION,
+        AEROSPIKE_ERR_REQUEST_INVALID,
+        AEROSPIKE_ERR_RECORD_EXISTS,
+        AEROSPIKE_ERR_BIN_EXISTS,
+        AEROSPIKE_ERR_CLUSTER_CHANGE,
+        AEROSPIKE_ERR_SERVER_FULL,
+        AEROSPIKE_ERR_TIMEOUT,
+        AEROSPIKE_ERR_ALWAYS_FORBIDDEN,
+        AEROSPIKE_ERR_CLUSTER,
+        AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE,
+        AEROSPIKE_ERR_RECORD_TOO_BIG,
+        AEROSPIKE_ERR_RECORD_BUSY,
+        AEROSPIKE_ERR_SCAN_ABORTED,
+        AEROSPIKE_ERR_UNSUPPORTED_FEATURE,
+        AEROSPIKE_ERR_BIN_NOT_FOUND,
+        AEROSPIKE_ERR_DEVICE_OVERLOAD,
+        AEROSPIKE_ERR_RECORD_KEY_MISMATCH,
+        AEROSPIKE_ERR_NAMESPACE_NOT_FOUND,
+        AEROSPIKE_ERR_BIN_NAME,
+        AEROSPIKE_ERR_FAIL_FORBIDDEN,
+        AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND,
+        AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS,
+        AEROSPIKE_ERR_ENTERPRISE_ONLY,
+        AEROSPIKE_ERR_OP_NOT_APPLICABLE,
+        AEROSPIKE_FILTERED_OUT,
+        AEROSPIKE_LOST_CONFLICT,
+        AEROSPIKE_QUERY_END = 50,
+        AEROSPIKE_SECURITY_NOT_SUPPORTED,
+        AEROSPIKE_SECURITY_NOT_ENABLED,
+        AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED,
+        AEROSPIKE_INVALID_COMMAND,
+        AEROSPIKE_INVALID_FIELD,
+        AEROSPIKE_ILLEGAL_STATE,
+        AEROSPIKE_INVALID_USER = 60,
+        AEROSPIKE_USER_ALREADY_EXISTS,
+        AEROSPIKE_INVALID_PASSWORD,
+        AEROSPIKE_EXPIRED_PASSWORD,
+        AEROSPIKE_FORBIDDEN_PASSWORD,
+        AEROSPIKE_INVALID_CREDENTIAL,
+        AEROSPIKE_INVALID_ROLE = 70,
+        AEROSPIKE_ROLE_ALREADY_EXISTS,
+        AEROSPIKE_INVALID_PRIVILEGE,
+        AEROSPIKE_NOT_AUTHENTICATED = 80,
+        AEROSPIKE_ROLE_VIOLATION,
+        AEROSPIKE_ERR_UDF = 100,
+        AEROSPIKE_ERR_BATCH_DISABLED = 150,
+        AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED,
+        AEROSPIKE_ERR_BATCH_QUEUES_FULL,
+        AEROSPIKE_ERR_GEO_INVALID_GEOJSON = 160,
+        AEROSPIKE_ERR_INDEX_FOUND = 200,
+        AEROSPIKE_ERR_INDEX_NOT_FOUND,
+        AEROSPIKE_ERR_INDEX_OOM,
+        AEROSPIKE_ERR_INDEX_NOT_READABLE,
+        AEROSPIKE_ERR_INDEX,
+        AEROSPIKE_ERR_INDEX_NAME_MAXLEN,
+        AEROSPIKE_ERR_INDEX_MAXCOUNT,
+        AEROSPIKE_ERR_QUERY_ABORTED = 210,
+        AEROSPIKE_ERR_QUERY_QUEUE_FULL,
+        AEROSPIKE_ERR_QUERY_TIMEOUT,
+        AEROSPIKE_ERR_QUERY,
+        AEROSPIKE_ERR_UDF_NOT_FOUND = 1301,
+        AEROSPIKE_ERR_LUA_FILE_NOT_FOUND
+    }
+
+    interface IAddonUDF {
+        module: string;
+        funcname: string;
+        args: AerospikeRecordValue[];
+    }
+
+    interface IAddonNode {
+        name: string;
+        address: string;
+    }
+
+    interface IEventLoopStats {
+        inFlight: number;
+        queued: number;
+    }
+
+    interface IAddonConnectionStats {
+        inPool: number;
+        inUse: number;
+        opened: number;
+        closed: number;
+    }
+
+    interface IAddonNodeStats {
+        name: string;
+        syncConnections: IAddonConnectionStats;
+        asyncConnections: IAddonConnectionStats;
+    }
+
+    interface IAddonStats {
+        commands: IEventLoopStats;
+        nodes: IAddonNodeStats[];
+    }
+
+    interface IAddonQueryOptions {
+        filters: SindexFilterPredicate[];
+        selected: string[];
+        nobins: boolean;
+        udf: IAddonUDF;
+        ops: Operation[]
+    }
+
+    interface IAddonScanOptions {
+        selected: string[];
+        nobins: boolean;
+        concurrent: boolean;
+        udf: IAddonUDF;
+        ops: Operation[]
+    }
+
+    interface IAddonEvent {
+        name: string;
+        [key: string]: any;
+    }
+
+    type AddonCallback = (error: Error | undefined, result: any) => void;
+    type AddonEventCallback = (event: IAddonEvent) => void;
+
+    class AddonAerospikeClient {
+        public addSeedHost(hostname: string, port: number): void;
+        public applyAsync(key: IKey, udf: IAddonUDF, policy: BasePolicy, callback: AddonCallback): void;
+        public batchExists(keys: IKey[], policy: BasePolicy, callback: AddonCallback): void;
+        public batchGet(keys: IKey[], policy: BasePolicy, callback: AddonCallback): void;
+        public batchRead(records: AerospikeRecord[], policy: BasePolicy, callback: AddonCallback): void;
+        public batchSelect(keys: IKey[], bins: string[], policy: BasePolicy, callback: AddonCallback): void;
+        public close(): void;
+        public connect(callback: AddonCallback): void;
+        public existsAsync(key: IKey, policy: BasePolicy, callback: AddonCallback): void;
+        public getAsync(key: IKey, policy: BasePolicy, callback: AddonCallback): void;
+        public getNodes(): IAddonNode[];
+        public getStats(): IAddonStats;
+        public hasPendingAsyncCommands(): boolean;
+        public indexCreate(ns: string, set: string, bin: string, indexName: string, indexType: IndexType, indexDataType: IndexDataType, policy: InfoPolicy, callback: AddonCallback): void;
+        public indexRemove(ns: string, indexName: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public infoAny(request: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public infoForeach(request: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public infoHost(request: string, host: IHost, policy: InfoPolicy, callback: AddonCallback): void;
+        public infoNode(request: string, node: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public isConnected(): boolean;
+        public jobInfo(jobID: number, module: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public operateAsync(key: IKey, operations: Operation[], meta: IRecordMetadata, policy: OperatePolicy, callback: AddonCallback): void;
+        public putAsync(key: IKey, record: AerospikeRecord, meta: IRecordMetadata, policy: WritePolicy, callback: AddonCallback): void;
+        public queryApply(ns: string, set: string, options: IAddonQueryOptions, policy: QueryPolicy, callback: AddonCallback): void;
+        public queryAsync(ns: string, set: string, options: IAddonQueryOptions, policy: QueryPolicy, callback: AddonCallback): void;
+        public queryBackground(ns: string, set: string, options: IAddonQueryOptions, policy: QueryPolicy, queryID: number, callback: AddonCallback);
+        public queryForeach(ns: string, set: string, options: IAddonQueryOptions, policy: QueryPolicy, callback: AddonCallback): void;
+        public removeAsync(key: IKey, policy: RemovePolicy, callback: AddonCallback): void;
+        public removeSeedHost(hostname: string, port: number): void;
+        public scanAsync(ns: string, set: string, options: IAddonScanOptions, policy: ScanPolicy, scanID: number, callback: AddonCallback): void;
+        public scanBackground(ns: string, set: string, options: IAddonScanOptions, policy: ScanPolicy, scanID: number, callback: AddonCallback): void;
+        public selectAsync(key: string, bins: string[], policy: ReadPolicy, callback: AddonCallback): void;
+        public setupEventCb(callback: AddonEventCallback): void;
+        public truncate(ns: string, set: string, beforeNanos: number, policy: InfoPolicy, callback: AddonCallback): void;
+        public udfRegister(filename: string, type: Language, policy: InfoPolicy, callback: AddonCallback): void;
+        public udfRemove(module: string, policy: InfoPolicy, callback: AddonCallback): void;
+        public updateLogging(log: ILogInfo): AddonAerospikeClient;
+    }
+
+    // filter.js
+    class SindexFilterPredicate {
+        public constructor (
+            predicate: Predicates,
+            bin: string,
+            dataType: IndexDataType,
+            indexType: IndexType,
+            props?: Record<string, any>
+        );
+        public predicate: Predicates;
+        public bin: string;
+        public datatype: IndexDataType;
+        public type: IndexType;
+    }
+
+    class EqualPredicate extends SindexFilterPredicate {
+        constructor(bin: string, value: string | number, dataType: IndexDataType, indexType: IndexType);
+        public val: string | number;
+    }
+
+    class RangePredicate extends SindexFilterPredicate {
+        constructor(bin: string, min: number, max: number, dataType: IndexDataType, indexType: IndexType);
+        public min: number;
+        public max: number;
+    }
+
+    class GeoPredicate extends SindexFilterPredicate {
+        constructor (bin: string, value: GeoJSON, indexType: IndexType);
+        public val: GeoJSON;
+    }
+
+    // query.js
+    interface IQueryOptions {
+        udf?: IAddonUDF; // query.js#581 Why udf with caps?
+        filters?: SindexFilterPredicate[];
+        select?: string[];
+        nobins?: boolean;
+    }
+
+    class Query {
+        public client: Client;
+        public ns: string;
+        public set: string;
+        public filters: SindexFilterPredicate[];
+        public selected: string[];
+        public nobins: boolean;
+        public udf: IAddonUDF;
+        public ops?: Operation[]
+        constructor(client: Client, ns: string, set: string, options?: IQueryOptions);
+        public select(bins: string[]): void;
+        public select(...bins: string[]): void;
+        public where(predicate: SindexFilterPredicate): void;
+        public setSindexFilter(sindexFilter: SindexFilterPredicate): void;
+        public setUdf(udfModule: string, udfFunction: string, udfArgs?: any[]): void;
+        public foreach(policy?: QueryPolicy, dataCb?: (data: AerospikeRecord) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
+        public results(policy?: QueryPolicy): Promise<AerospikeRecord[]>;
+        public apply(udfModule: string, udfFunction: string, udfArgs?: any[], policy?: QueryPolicy): Promise<AerospikeRecordValue>;
+        public apply(udfModule: string, udfFunction: string, callback: TypedCallback<AerospikeRecordValue>): void;
+        public apply(udfModule: string, udfFunction: string, udfArgs: any[], callback: TypedCallback<AerospikeRecordValue>): void;
+        public apply(udfModule: string, udfFunction: string, udfArgs: any[], policy: QueryPolicy, callback: TypedCallback<AerospikeRecordValue>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs?: any[], policy?: WritePolicy, queryID?: number): Promise<Job>;
+        public background(udfModule: string, udfFunction: string, callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], policy: WritePolicy, callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], policy: WritePolicy, queryID: number, callback: TypedCallback<Job>): void;
+        public operate(operations: Operation[], policy?: QueryPolicy, queryID?: number): Promise<Job>;
+        public operate(operations: Operation[], callback: TypedCallback<Job>): void;
+        public operate(operations: Operation[], policy: QueryPolicy, callback: TypedCallback<Job>): void;
+        public operate(operations: Operation[], policy: QueryPolicy, queryID: number, callback: TypedCallback<Job>): void;
+    }
+
+    // cdt_context.js
+    enum CdtItemTypes {
+        LIST_INDEX = 0x10,
+        LIST_RANK,
+        LIST_VALUE = 0x13,
+        MAP_INDEX = 0x20,
+        MAP_RANK,
+        MAP_KEY,
+        MAP_VALUE
+    }
+
+    class CdtItems extends Array {
+        public push(v: [number, CdtContext]);
+    }
+
     class CdtContext {
-        static getContextType(ctx: CdtContext, type: number): number;
-        items: any[];
-        addListIndex(index: number): CdtContext;
-        addListRank(rank: number): CdtContext;
-        addListValue(value: any): CdtContext;
-        addMapIndex(index: number): CdtContext;
-        addMapRank(rank: number): CdtContext;
-        addMapKey(key: any): CdtContext;
-        addMapValue(value: any): CdtContext;
-        private add;
+        public items: CdtItems;
+        private add(type: CdtItemTypes, value: CdtContext): CdtContext;
+        public addListIndex(index: number): CdtContext;
+        public addListRank(rank: number): CdtContext;
+        public addListValue(value: AerospikeRecordValue): CdtContext;
+        public addMapIndex(index: number): CdtContext;
+        public addMapRank(rank: number): CdtContext;
+        public addMapKey(key: string): CdtContext;
+        public addMapValue(value: AerospikeRecordValue): CdtContext;
+        static getContextType(ctx: CdtContext, type: CdtItemTypes): ExpTypes | CdtItemTypes;
     }
-}
-declare module "exp" {
-    export function bool(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function int(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function uint(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function float(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function str(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function bytes(value: any, size: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function geo(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function nil(): {
-        op: any;
-        value: null;
-    }[];
-    export function keyInt(): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function keyStr(): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function keyBlob(): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function keyExist(): AerospikeExp;
-    export function binBool(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binInt(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binFloat(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binStr(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binBlob(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binGeo(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binList(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binMap(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binHll(binName: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export function binType(binName: any): ({
-        op: any;
-        strVal: any;
-    } | {
-        op: any;
-        count: number;
-    })[];
-    export function binExists(binName: string): boolean;
-    export function setName(): {
-        op: any;
-        count: number;
-    }[];
-    export function deviceSize(): {
-        op: any;
-        count: number;
-    }[];
-    export function lastUpdate(): {
-        op: any;
-        count: number;
-    }[];
-    export function sinceUpdate(): {
-        op: any;
-        count: number;
-    }[];
-    export function voidTime(): {
-        op: any;
-        count: number;
-    }[];
-    export function ttl(): {
-        op: any;
-        count: number;
-    }[];
-    export function isTombstone(): {
-        op: any;
-        count: number;
-    }[];
-    export function memorySize(): {
-        op: any;
-        count: number;
-    }[];
-    export function digestModulo(): {
-        op: any;
-        count: number;
-    }[];
-    export function eq(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function ne(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function gt(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function ge(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function lt(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function le(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function cmpRegex(options: number, regex: string, cmpStr: AerospikeExp): AerospikeExp;
-    export function cmpGeo(left: any, right: any): {
-        op: any;
-        count: number;
-    }[];
-    export function not(expr: AerospikeExp): AerospikeExp;
-    export function and(...expr: any[]): never[];
-    export function or(...expr: any[]): never[];
-    export function exclusive(...expr: any[]): never[];
-    export function add(...expr: any[]): never[];
-    export function sub(...expr: any[]): never[];
-    export function mul(...expr: any[]): never[];
-    export function div(...expr: any[]): never[];
-    export function pow(...params: any[]): any[];
-    export function log(...params: any[]): any[];
-    export function mod(...params: any[]): any[];
-    export function abs(...params: any[]): any[];
-    export function floor(...params: any[]): any[];
-    export function ceil(...params: any[]): any[];
-    export function toInt(...params: any[]): any[];
-    export function toFloat(...params: any[]): any[];
-    export function intAnd(...expr: any[]): never[];
-    export function intOr(...expr: any[]): never[];
-    export function intXor(...expr: any[]): never[];
-    export function intNot(...params: any[]): any[];
-    export function intLshift(...params: any[]): any[];
-    export function intRshift(...params: any[]): any[];
-    export function intArshift(...params: any[]): any[];
-    export function intCount(...params: any[]): any[];
-    export function intLscan(...params: any[]): any[];
-    export function intRscan(...params: any[]): any[];
-    export function min(...expr: any[]): never[];
-    export function max(...expr: any[]): never[];
-    export function cond(...expr: any[]): never[];
-    function _let(...expr: any[]): never[];
-    export function def(varName: string, expr: AerospikeExp): AerospikeExp;
-    function _var(varName: string): AerospikeExp;
-    export namespace lists {
-        function size(bin: any, ctx?: any): any;
-        function getByValue(bin: any, value: any, returnType: any, ctx?: any): any;
-        function getByValueRange(bin: any, begin: any, end: any, returnType: any, ctx?: any): any;
-        function getByValueList(bin: any, value: any, returnType: any, ctx?: any): any;
-        function getByRelRankRangeToEnd(bin: any, value: any, rank: any, returnType: any, ctx?: any): any;
-        function getByRelRankRange(bin: any, value: any, rank: any, count: any, returnType: any, ctx?: any): any;
-        function getByIndex(bin: any, index: any, valueType: any, returnType: any, ctx?: any): any;
-        function getByIndexRangeToEnd(bin: any, index: any, returnType: any, ctx?: any): any;
-        function getByIndexRange(bin: any, index: any, count: any, returnType: any, ctx?: any): any;
-        function getByRank(bin: any, rank: any, valueType: any, returnType: any, ctx?: any): any;
-        function getByRankRangeToEnd(bin: any, rank: any, returnType: any, ctx?: any): any;
-        function getByRankRange(bin: any, rank: any, count: any, returnType: any, ctx?: any): any;
-        function append(bin: any, value: any, policy?: any, ctx?: any): any;
-        function appendItems(bin: any, value: any, policy?: any, ctx?: any): any;
-        function insert(bin: any, value: any, idx: any, policy?: any, ctx?: any): any;
-        function insertItems(bin: any, value: any, idx: any, policy?: any, ctx?: any): any;
-        function increment(bin: any, value: any, idx: any, policy?: any, ctx?: any): any;
-        function set(bin: any, value: any, idx: any, policy?: any, ctx?: any): any;
-        function clear(bin: any, ctx?: any): any;
-        function sort(bin: any, order: number, ctx?: any): any;
-        function removeByValue(bin: any, value: any, ctx?: any): any;
-        function removeByValueList(bin: any, values: any, ctx?: any): any;
-        function removeByValueRange(bin: any, end: any, begin: any, ctx?: any): any;
-        function removeByRelRankRangeToEnd(bin: any, rank: any, value: any, ctx?: any): any;
-        function removeByRelRankRange(bin: any, count: any, rank: any, value: any, ctx?: any): any;
-        function removeByIndex(bin: any, idx: any, ctx?: any): any;
-        function removeByIndexRangeToEnd(bin: any, idx: any, ctx?: any): any;
-        function removeByIndexRange(bin: any, count: any, idx: any, ctx?: any): any;
-        function removeByRank(bin: any, rank: any, ctx?: any): any;
-        function removeByRankRangeToEnd(bin: any, rank: any, ctx?: any): any;
-        function removeByRankRange(bin: any, count: any, rank: any, ctx?: any): any;
+
+    // operations.js
+    class Operation {
+        public op: ScalarOperations;
+        public bin: string;
+        constructor(op: ScalarOperations, bin: string, props?: Record<string, any>);
     }
-    export namespace maps {
-        export function put(bin: any, value: any, key: any, policy?: any, ctx?: any): any;
-        export function putItems(bin: any, map: any, policy?: any, ctx?: any): any;
-        export function increment_1(bin: any, value: any, key: any, policy?: any, ctx?: any): any;
-        export { increment_1 as increment };
-        export function clear_1(bin: any, ctx?: any): any;
-        export { clear_1 as clear };
-        export function removeByKey(bin: any, key: any, ctx?: any): any;
-        export function removeByKeyList(bin: any, keys: any, ctx?: any): any;
-        export function removeByKeyRange(bin: any, end: any, begin: any, ctx?: any): any;
-        export function removeByKeyRelIndexRangeToEnd(bin: any, idx: any, key: any, ctx?: any): any;
-        export function removeByKeyRelIndexRange(bin: any, count: any, idx: any, key: any, ctx?: any): any;
-        export function removeByValue_1(bin: any, value: any, ctx?: any): any;
-        export { removeByValue_1 as removeByValue };
-        export function removeByValueList_1(bin: any, values: any, ctx?: any): any;
-        export { removeByValueList_1 as removeByValueList };
-        export function removeByValueRange_1(bin: any, end: any, begin: any, ctx?: any): any;
-        export { removeByValueRange_1 as removeByValueRange };
-        export function removeByValueRelRankRangeToEnd(bin: any, rank: any, value: any, ctx?: any): any;
-        export function removeByValueRelRankRange(bin: any, count: any, rank: any, value: any, key: any, ctx?: any): any;
-        export function removeByIndex_1(bin: any, idx: any, ctx?: any): any;
-        export { removeByIndex_1 as removeByIndex };
-        export function removeByIndexRangeToEnd_1(bin: any, idx: any, ctx?: any): any;
-        export { removeByIndexRangeToEnd_1 as removeByIndexRangeToEnd };
-        export function removeByIndexRange_1(bin: any, count: any, idx: any, ctx?: any): any;
-        export { removeByIndexRange_1 as removeByIndexRange };
-        export function removeByRank_1(bin: any, rank: any, ctx?: any): any;
-        export { removeByRank_1 as removeByRank };
-        export function removeByRankRangeToEnd_1(bin: any, rank: any, ctx?: any): any;
-        export { removeByRankRangeToEnd_1 as removeByRankRangeToEnd };
-        export function removeByRankRange_1(bin: any, count: any, rank: any, ctx?: any): any;
-        export { removeByRankRange_1 as removeByRankRange };
-        export function size_1(bin: any, ctx?: any): any;
-        export { size_1 as size };
-        export function getByKey(bin: any, key: any, valueType: any, returnType: any, ctx?: any): any;
-        export function getByKeyRange(bin: any, end: any, begin: any, returnType: any, ctx?: any): any;
-        export function getByKeyList(bin: any, keys: any, returnType: any, ctx?: any): any;
-        export function getByKeyRelIndexRangeToEnd(bin: any, idx: any, key: any, returnType: any, ctx?: any): any;
-        export function getByKeyRelIndexRange(bin: any, count: any, idx: any, key: any, returnType: any, ctx?: any): any;
-        export function getByValue_1(bin: any, value: any, returnType: any, ctx?: any): any;
-        export { getByValue_1 as getByValue };
-        export function getByValueRange_1(bin: any, end: any, begin: any, returnType: any, ctx?: any): any;
-        export { getByValueRange_1 as getByValueRange };
-        export function getByValueList_1(bin: any, values: any, returnType: any, ctx?: any): any;
-        export { getByValueList_1 as getByValueList };
-        export function getByValueRelRankRangeToEnd(bin: any, rank: any, value: any, returnType: any, ctx?: any): any;
-        export function getByValueRelRankRange(bin: any, count: any, rank: any, value: any, returnType: any, ctx?: any): any;
-        export function getByIndex_1(bin: any, idx: any, valueType: any, returnType: any, ctx?: any): any;
-        export { getByIndex_1 as getByIndex };
-        export function getByIndexRangeToEnd_1(bin: any, idx: any, returnType: any, ctx?: any): any;
-        export { getByIndexRangeToEnd_1 as getByIndexRangeToEnd };
-        export function getByIndexRange_1(bin: any, count: any, idx: any, returnType: any, ctx?: any): any;
-        export { getByIndexRange_1 as getByIndexRange };
-        export function getByRank_1(bin: any, rank: any, valueType: any, returnType: any, ctx?: any): any;
-        export { getByRank_1 as getByRank };
-        export function getByRankRangeToEnd_1(bin: any, rank: any, returnType: any, ctx?: any): any;
-        export { getByRankRangeToEnd_1 as getByRankRangeToEnd };
-        export function getByRankRange_1(bin: any, count: any, rank: any, returnType: any, ctx?: any): any;
-        export { getByRankRange_1 as getByRankRange };
+
+    class WriteOperation extends Operation {
+        public value: any;
     }
-    export namespace bit {
-        export function reSize(bin: any, flags: number, byteSize: number, policy?: any): any;
-        export function insert_1(bin: any, value: any, byteOffset: any, policy?: any): any;
-        export { insert_1 as insert };
-        export function remove(bin: any, byteSize: number, byteOffset: any, policy?: any): any;
-        export function set_1(bin: any, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export { set_1 as set };
-        export function or(bin: any, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function xor(bin: any, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function and(bin: any, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function not(bin: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function lShift(bin: any, shift: number, bitSize: any, bitOffset: any, policy?: any): any;
-        export function rShift(bin: any, shift: number, bitSize: any, bitOffset: any, policy?: any): any;
-        export function add(bin: any, action: number, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function subtract(bin: any, action: number, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function setInt(bin: any, value: any, bitSize: any, bitOffset: any, policy?: any): any;
-        export function get(bin: any, bitSize: any, bitOffset: any): any;
-        export function count(bin: any, bitSize: any, bitOffset: any): number;
-        export function lScan(bin: any, value: any, bitSize: any, bitOffset: any): number;
-        export function rScan(bin: any, value: any, bitSize: any, bitOffset: any): number;
-        export function getInt(bin: any, sign: boolean, bitSize: any, bitOffset: any): any;
+
+    class AddOperation extends Operation {
+        public value: number | Double;
     }
-    export namespace hll {
-        export function initMH(bin: any, mhBitCount: number, indexBitCount: number, policy?: any): any;
-        export function init(bin: any, indexBitCount: number, policy?: any): any;
-        export function addMH(bin: any, mhBitCount: number, indexBitCount: number, list: any, policy?: any): any;
-        export function add_1(bin: any, indexBitCount: number, list: any, policy?: any): any;
-        export { add_1 as add };
-        export function update(bin: any, list: any, policy?: any): any;
-        export function getCount(bin: any): any;
-        export function getUnion(bin: any, list: any): any;
-        export function getUnionCount(bin: any, list: any): any;
-        export function getIntersectCount(bin: any, list: any): any;
-        export function getSimilarity(bin: any, list: any): any[];
-        export function describe(bin: any): any;
-        export function mayContain(bin: any, list: any): any;
+
+    class AppendOperation extends Operation {
+        public value: string | Buffer;
     }
-    function _val(value: any): {
-        [x: number]: any;
-        op: any;
-    }[];
-    export { _val as list, _val as map, _let as let, _var as var };
-}
-declare module "info" {
-    export function parse(info: string): any;
-    export const separators: {
-        bins: (string | typeof splitBins)[];
-        'bins/*': (typeof splitBins)[];
-        'namespace/*': string[];
-        service: string[];
-        sindex: string[];
-        'sindex/*': string[];
-        'sindex/*/**': string[];
-        'udf-list': string[];
-        'get-dc-config': string[];
-        sets: string[];
-        'sets/*': string[];
-        'sets/*/**': (string | typeof chop)[];
-    };
-    function splitBins(str: any): {
-        stats: {};
-        names: any[];
-    };
-    function chop(str: any): any;
-    export {};
-}
-declare module "operations" {
-    export function read(bin: string): Operation;
-    export function write(bin: string, value: any): Operation;
-    export function add(bin: string, value: (number | any)): Operation;
-    export function incr(bin: any, value: any): any;
-    export function append(bin: string, value: (string | Buffer)): Operation;
-    export function prepend(bin: string, value: (string | Buffer)): Operation;
-    export function touch(ttl?: number | undefined): Operation;
-    function _delete(): Operation;
-    export class Operation {
-        protected constructor();
-        op: any;
-        bin: any;
+
+    class PrependOperation extends Operation {
+        public value: string | Buffer;
     }
-    export { _delete as delete };
-}
-declare module "lists" {
-    export function setOrder(bin: string, order: number): any;
-    export function sort(bin: string, flags: number): any;
-    export function append(bin: string, value: any, policy?: any): any;
-    export function appendItems(bin: string, list: Array<any>, policy?: any): any;
-    export function insert(bin: string, index: number, value: any, policy?: any): any;
-    export function insertItems(bin: string, index: number, list: Array<any>, policy: any): any;
-    export function pop(bin: string, index: number): any;
-    export function popRange(bin: string, index: number, count?: number | undefined): any;
-    export function remove(bin: string, index: number): any;
-    export function removeRange(bin: string, index: number, count?: number | undefined): any;
-    export function removeByIndex(bin: string, index: number, returnType?: number | undefined): any;
-    export function removeByIndexRange(bin: string, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function removeByValue(bin: string, value: any, returnType?: number | undefined): any;
-    export function removeByValueList(bin: string, values: Array<any>, returnType?: number | undefined): any;
-    export function removeByValueRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function removeByValueRelRankRange(bin: string, value: any, rank: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function removeByRank(bin: string, rank: number, returnType?: number | undefined): any;
-    export function removeByRankRange(bin: string, rank: any, count?: number | undefined, returnType?: number | undefined): any;
-    export function clear(bin: string): any;
-    export function set(bin: string, index: number, value: any, policy?: any): any;
-    export function trim(bin: string, index: number, count: number): any;
-    export function get(bin: string, index: number): any;
-    export function getRange(bin: string, index: number, count?: number | undefined): any;
-    export function getByIndex(bin: string, index: number, returnType?: number | undefined): any;
-    export function getByIndexRange(bin: string, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function getByValue(bin: string, value: any, returnType?: number | undefined): any;
-    export function getByValueList(bin: string, values: Array<any>, returnType?: number | undefined): any;
-    export function getByValueRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function getByValueRelRankRange(bin: string, value: any, rank: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function getByRank(bin: string, rank: number, returnType?: number | undefined): any;
-    export function getByRankRange(bin: string, rank: any, count?: number | undefined, returnType?: number | undefined): any;
-    export function increment(bin: string, index: number, value?: number | undefined, policy?: any): any;
-    export function size(bin: string): any;
-}
-declare module "hll" {
-    export function init(bin: string, indexBits: number, minhashBits?: number | undefined): any;
-    export function add(bin: string, list: any[], indexBits?: number | undefined, minhashBits?: number | undefined): any;
-    export function setUnion(bin: string, list: any[]): any;
-    export function refreshCount(bin: string): any;
-    export function fold(bin: string, indexBits: number): any;
-    export function getCount(bin: string): any;
-    export function getUnion(bin: string, list: any[]): any;
-    export function getUnionCount(bin: string, list: any[]): any;
-    export function getIntersectCount(bin: string, list: any[]): any;
-    export function getSimilarity(bin: string, list: any[]): any;
-    export function describe(bin: string): any;
-}
-declare module "maps" {
-    export function setPolicy(bin: string, policy: MapPolicy): any;
-    export function put(bin: string, key: any, value: any, policy?: MapPolicy): any;
-    export function putItems(bin: string, items: object, policy?: MapPolicy): any;
-    export function increment(bin: string, key: any, incr: number, policy?: MapPolicy): any;
-    export function decrement(bin: string, key: any, decr: number, policy?: MapPolicy): any;
-    export function clear(bin: string): any;
-    export function removeByKey(bin: string, key: any, returnType?: number | undefined): any;
-    export function removeByKeyList(bin: string, keys: Array<any>, returnType?: number | undefined): any;
-    export function removeByKeyRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function removeByKeyRelIndexRange(bin: string, key: any, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function removeByValue(bin: string, value: any, returnType?: number | undefined): any;
-    export function removeByValueList(bin: string, values: Array<any>, returnType?: number | undefined): any;
-    export function removeByValueRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function removeByValueRelRankRange(bin: string, value: any, rank: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function removeByIndex(bin: string, index: number, returnType?: number | undefined): any;
-    export function removeByIndexRange(bin: string, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function removeByRank(bin: string, rank: number, returnType?: number | undefined): any;
-    export function removeByRankRange(bin: string, rank: any, count?: number | undefined, returnType?: number | undefined): any;
-    export function size(bin: string): any;
-    export function getByKey(bin: string, key: any, returnType?: number | undefined): any;
-    export function getByKeyRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function getByKeyRelIndexRange(bin: string, key: any, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function getByValue(bin: string, value: any, returnType?: number | undefined): any;
-    export function getByValueRange(bin: string, begin: any | null, end: any | null, returnType?: number | undefined): any;
-    export function getByValueRelRankRange(bin: string, value: any, rank: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function getByIndex(bin: string, index: number, returnType?: number | undefined): any;
-    export function getByIndexRange(bin: string, index: number, count?: number | undefined, returnType?: number | undefined): any;
-    export function getByRank(bin: string, rank: number, returnType?: number | undefined): any;
-    export function getByRankRange(bin: string, rank: any, count: number, returnType?: number | undefined): any;
-}
-declare module "bitwise" {
-    export function resize(bin: string, size: number, flags?: number | undefined): BitwiseOperation;
-    export function insert(bin: string, byteOffset: any, value: Buffer): BitwiseOperation;
-    export function remove(bin: string, byteOffset: number, byteSize: number): BitwiseOperation;
-    export function set(bin: string, bitOffset: number, bitSize: number, value: number | Buffer): BitwiseOperation;
-    export function or(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
-    export function xor(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
-    export function and(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
-    export function not(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
-    export function lshift(bin: string, bitOffset: number, bitSize: number, shift: number): BitwiseOperation;
-    export function rshift(bin: string, bitOffset: number, bitSize: number, shift: number): BitwiseOperation;
-    export function add(bin: string, bitOffset: number, bitSize: number, value: number, sign: boolean): OverflowableBitwiseOp;
-    export function subtract(bin: string, bitOffset: number, bitSize: number, value: number, sign: boolean): OverflowableBitwiseOp;
-    export function get(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
-    export function getInt(bin: string, bitOffset: number, bitSize: number, sign: boolean): BitwiseOperation;
-    export function lscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
-    export function rscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
+
+    class TouchOperation extends Operation {
+        public ttl: number;
+    }
+
+    class ListOperation extends Operation {
+        public andReturn(returnType: ListReturnType): ListOperation;
+        public withContext(contextOrFunction: CdtContext | Function): ListOperation;
+        public invertSelection(): void;
+    }
+
+    class InvertibleListOp extends ListOperation {
+        public inverted: boolean;
+        public invertSelection(): InvertibleListOp;
+    }
+
+    class MapOperation extends Operation {
+        andReturn(returnType: MapReturnType): MapOperation;
+        public withContext(contextOrFunction: CdtContext | Function): MapOperation;
+    }
+
     class BitwiseOperation extends Operation {
         withPolicy(policy: BitwisePolicy): BitwiseOperation;
-        policy: any;
     }
+
     class OverflowableBitwiseOp extends BitwiseOperation {
-        overflowAction: any;
-        onOverflow(action: number): OverflowableBitwiseOp;
+        public overflowAction: BitwiseOverflow;
+        public onOverflow(action: BitwiseOverflow): OverflowableBitwiseOp;
     }
-    import Operation_1 = require("operations");
-    import Operation = Operation_1.Operation;
-    export {};
-}
-declare module "exp_operations" {
-    export function read(bin: string, exp: any, flags: any): Operation;
-    export function write(bin: string, exp: any, flags: any): Operation;
-    export class ExpOperation {
-        protected constructor();
-        op: any;
-        bin: any;
-        exp: any;
-        flags: any;
+
+    // exp_operations.js
+    class ExpOperation extends Operation {
+        public exp: AerospikeExp;
+        public flags: number;
+        constructor(op: ExpOperations, bin: string, exp: AerospikeExp, flags: number, props?: Record<string, any>);
     }
-}
-declare module "policies/base_policy" {
-    export = BasePolicy;
-    class BasePolicy {
-        constructor(props: any);
-        socketTimeout: number;
-        totalTimeout: number;
-        maxRetries: number;
-        filterExpression: any;
-        compress: boolean;
+
+    type AnyOperation = Operation | ExpOperation;
+
+    // policies
+    interface IBasePolicyProps {
+        socketTimeout?: number;
+        totalTimeout?: number;
+        timeout?: number;
+        maxRetries?: number;
+        compress?: boolean;
+        filterExpression?: Operation[];
     }
-}
-declare module "policies/apply_policy" {
-    export = ApplyPolicy;
-    class ApplyPolicy extends BasePolicy {
-        key: number;
-        commitLevel: number;
-        ttl: number;
-        durableDelete: boolean;
+
+    export class BasePolicy {
+        public socketTimeout?: number;
+        public totalTimeout?: number;
+        public maxRetries?: number;
+        public filterExpression?: Operation[];
+        public compress?: boolean;
+
+        constructor(props?: IBasePolicyProps);
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/operate_policy" {
-    export = OperatePolicy;
-    class OperatePolicy extends BasePolicy {
-        key: number;
-        gen: number;
-        exists: number;
-        replica: number;
-        commitLevel: number;
-        deserialize: boolean;
-        durableDelete: boolean;
-        readModeAP: number;
-        readModeSC: number;
+
+    interface IApplyPolicyProps extends IBasePolicyProps {
+        key?: PolicyKey;
+        commitLevel?: PolicyCommitLevel;
+        ttl?: number;
+        durableDelete?: boolean;
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/query_policy" {
-    export = QueryPolicy;
-    class QueryPolicy extends BasePolicy {
-        deserialize: boolean;
-        failOnClusterChange: boolean;
-        infoTimeout: number;
+
+    export class ApplyPolicy extends BasePolicy {
+        public key?: PolicyKey;
+        public commitLevel?: PolicyCommitLevel;
+        public ttl?: number;
+        public durableDelete?: boolean;
+        constructor(props?: IApplyPolicyProps);
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/read_policy" {
-    export = ReadPolicy;
-    class ReadPolicy extends BasePolicy {
-        key: number;
-        replica: number;
-        readModeAP: number;
-        readModeSC: number;
-        deserialize: boolean;
+
+    interface IBatchPolicyProps extends IBasePolicyProps {
+        deserialize?: boolean;
+        allowInline?: boolean;
+        sendSetName?: boolean;
+        readModeAP?: PolicyReadModeAP;
+        readModeSC?: PolicyReadModeSC;
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/remove_policy" {
-    export = RemovePolicy;
-    class RemovePolicy extends BasePolicy {
-        generation: number;
-        key: number;
-        gen: number;
-        commitLevel: number;
-        durableDelete: boolean;
+
+    export class BatchPolicy extends BasePolicy {
+        public deserialize?: boolean;
+        public allowInline?: boolean;
+        public sendSetName?: boolean;
+        public readModeAP?: PolicyReadModeAP;
+        public readModeSC?: PolicyReadModeSC;
+        constructor(props?: IBatchPolicyProps)
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/scan_policy" {
-    export = ScanPolicy;
-    class ScanPolicy extends BasePolicy {
-        durableDelete: boolean;
-        recordsPerSecond: number;
-        maxRecords: number;
+
+    interface IBitwisePolicyProps extends IBatchPolicyProps {
+        writeFlags?: BitwiseWriteFlags
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/write_policy" {
-    export = WritePolicy;
-    class WritePolicy extends BasePolicy {
-        compressionThreshold: number;
-        key: number;
-        gen: number;
-        exists: number;
-        commitLevel: number;
-        durableDelete: boolean;
+
+    class BitwisePolicy extends BasePolicy {
+        public writeFlags: BitwiseWriteFlags;
+        constructor(props?: IBitwisePolicyProps);
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/batch_policy" {
-    export = BatchPolicy;
-    class BatchPolicy extends BasePolicy {
-        replica: number;
-        readModeAP: number;
-        readModeSC: number;
-        concurrent: boolean;
-        allowInline: boolean;
-        allowInlineSSD: boolean;
-        respondAllKeys: boolean;
-        sendSetName: boolean;
-        deserialize: boolean;
+
+    interface ICommandQueuePolicyProps extends IBasePolicyProps {
+        maxCommandsInProcess?: number;
+        maxCommandsInQueue?: number;
+        queueInitialCapacity?: number;
     }
-    import BasePolicy = require("policies/base_policy");
-}
-declare module "policies/batch_apply_policy" {
-    export = BatchApplyPolicy;
-    class BatchApplyPolicy {
-        constructor(props?: any);
-        filterExpression: any;
-        key: number;
-        commitLevel: number;
-        ttl: number;
-        durableDelete: boolean;
+
+    class CommandQueuePolicy extends BasePolicy {
+        public maxCommandsInProcess?: number;
+        public maxCommandsInQueue?: number;
+        public queueInitialCapacity?: number;
+        constructor(props?: ICommandQueuePolicyProps);
     }
-}
-declare module "policies/batch_read_policy" {
-    export = BatchReadPolicy;
-    class BatchReadPolicy {
-        constructor(props?: any);
-        filterExpression: any;
-        readModeAP: number;
-        readModeSC: number;
+
+    interface IHLLPolicyProps extends IBasePolicyProps {
+        writeFlags?: HLLWriteFlags;
     }
-}
-declare module "policies/batch_remove_policy" {
-    export = BatchRemovePolicy;
-    class BatchRemovePolicy {
-        constructor(props?: any);
-        filterExpression: any;
-        key: number;
-        commitLevel: number;
-        gen: number;
-        generation: number;
-        durableDelete: boolean;
+
+    class HLLPolicy extends BasePolicy {
+        public writeFlags: HLLWriteFlags;
+        constructor(props?: IHLLPolicyProps);
     }
-}
-declare module "policies/batch_write_policy" {
-    export = BatchWritePolicy;
-    class BatchWritePolicy {
-        constructor(props?: any);
-        filterExpression: any;
-        key: number;
-        commitLevel: number;
-        gen: number;
-        exists: number;
-        durableDelete: boolean;
+
+    interface IInfoPolicyProps extends IBasePolicyProps {
+        sendAsIs?: boolean;
+        checkBounds?: boolean;
     }
-}
-declare module "policies/hll_policy" {
-    export = HLLPolicy;
-    class HLLPolicy {
-        constructor(props?: any);
-        writeFlags: number;
+
+    class InfoPolicy extends BasePolicy {
+        public sendAsIs?: boolean;
+        public checkBounds?: boolean;
+        constructor(props?: IInfoPolicyProps);
     }
-}
-declare module "policies/info_policy" {
-    export = InfoPolicy;
-    class InfoPolicy {
-        constructor(props?: any);
-        timeout: number;
-        sendAsIs: boolean;
-        checkBounds: boolean;
+
+    interface IListPolicyProps extends IBasePolicyProps {
+        order?: ListOrder;
+        writeFlags?: ListWriteFlags;
     }
-}
-declare module "policies/list_policy" {
-    export = ListPolicy;
-    class ListPolicy {
-        constructor(props?: any);
-        order: number;
-        writeFlags: number;
+
+    class ListPolicy extends BasePolicy {
+        public order?: ListOrder;
+        public writeFlags?: ListWriteFlags;
+        constructor(props?: IListPolicyProps);
     }
-}
-declare module "policies/map_policy" {
-    export = MapPolicy;
-    class MapPolicy {
-        constructor(props?: any);
-        order: number;
-        writeMode: number;
-        writeFlags: number;
+
+    interface IMapPolicyProps extends IBasePolicyProps {
+        order?: MapsOrder;
+        writeMode?: MapsWriteMode;
+        writeFlags?: MapsWriteFlags;
     }
-}
-declare module "policy" {
-    export function createPolicy(type: any, values: any): CommandQueuePolicy | BasePolicy | BatchApplyPolicy | BatchReadPolicy | BatchRemovePolicy | BatchWritePolicy | HLLPolicy | InfoPolicy | undefined;
-    import BasePolicy = require("policies/base_policy");
-    import ApplyPolicy = require("policies/apply_policy");
-    import OperatePolicy = require("policies/operate_policy");
-    import QueryPolicy = require("policies/query_policy");
-    import ReadPolicy = require("policies/read_policy");
-    import RemovePolicy = require("policies/remove_policy");
-    import ScanPolicy = require("policies/scan_policy");
-    import WritePolicy = require("policies/write_policy");
-    import BatchPolicy = require("policies/batch_policy");
-    import BatchApplyPolicy = require("policies/batch_apply_policy");
-    import BatchReadPolicy = require("policies/batch_read_policy");
-    import BatchRemovePolicy = require("policies/batch_remove_policy");
-    import BatchWritePolicy = require("policies/batch_write_policy");
-    import CommandQueuePolicy = require("policies/command_queue_policy");
-    import HLLPolicy = require("policies/hll_policy");
-    import InfoPolicy = require("policies/info_policy");
-    import ListPolicy = require("policies/list_policy");
-    import MapPolicy = require("policies/map_policy");
-    export { BasePolicy, ApplyPolicy, OperatePolicy, QueryPolicy, ReadPolicy, RemovePolicy, ScanPolicy, WritePolicy, BatchPolicy, BatchApplyPolicy, BatchReadPolicy, BatchRemovePolicy, BatchWritePolicy, CommandQueuePolicy, HLLPolicy, InfoPolicy, ListPolicy, MapPolicy };
-}
-declare module "features" {
-    export const CDT_MAP: "cdt-map";
-    export const CDT_LIST: "cdt-list";
-    export const BLOB_BITS: "blob-bits";
-}
-declare module "commands/command" {
-    const _exports: Class;
-    export = _exports;
-}
-declare module "record" {
-    export = Record;
-    class Record {
-        private constructor();
-        key: any;
-        bins: any;
-        ttl: any;
-        gen: any;
-        type: any;
-        policy: any;
-        readAllBins: any;
-        ops: any;
-        udf: any;
+
+    class MapPolicy extends BasePolicy {
+        public order?: MapsOrder;
+        public writeMode?: MapsWriteMode;
+        public writeFlags?: MapsWriteFlags;
+        constructor(props?: IMapPolicyProps);
     }
-}
-declare module "commands/batch_command" {
-    function _exports(asCommand: any): {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    export = _exports;
-}
-declare module "commands/connect_command" {
-    function _exports(asCommand: any): {
-        new (client: any, callback: any): {
-            ensureConnected: boolean;
-        };
-    };
-    export = _exports;
-}
-declare module "commands/exists_command" {
-    function _exports(asCommand: any): {
-        new (): {
-            convertResponse(error: any): any[];
-        };
-    };
-    export = _exports;
-}
-declare module "commands/read_record_command" {
-    function _exports(asCommand: any): {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(bins: any, metadata: any): any;
-        };
-    };
-    export = _exports;
-}
-declare module "bigint" {
-    export const BigInt: BigIntConstructor;
-    export const bigIntSupported: true;
-    export function isInt64(value: any): boolean;
-}
-declare module "key" {
-    export = Key;
-    function Key(ns: string, set: string, key: (string | number | Buffer), digest?: string | undefined): void;
-    class Key {
-        constructor(ns: string, set: string, key: (string | number | Buffer), digest?: string | undefined);
+
+    interface IOperatePolicyProps extends IBasePolicyProps {
+        key?: PolicyKey;
+        gen?: PolicyGen;
+        exists?: PolicyExists;
+        replica?: PolicyReplica;
+        commitLevel?: PolicyCommitLevel;
+        deserialize?: boolean;
+        durableDelete?: boolean;
+        readModeAP?: PolicyReadModeAP;
+        readModeSC?: PolicyReadModeSC;
+    }
+
+    export class OperatePolicy extends BasePolicy {
+        public key?: PolicyKey;
+        public gen?: PolicyGen;
+        public exists?: PolicyExists;
+        public replica?: PolicyReplica;
+        public commitLevel?: PolicyCommitLevel;
+        public deserialize: boolean;
+        public durableDelete: boolean;
+        public readModeAP: PolicyReadModeAP;
+        public readModeSC: PolicyReadModeSC;
+        constructor(props?: IOperatePolicyProps);
+    }
+
+    interface IQueryPolicyProps extends IBasePolicyProps {
+        deserialize?: boolean;
+        failOnClusterChange?: boolean;
+    }
+
+    export class QueryPolicy extends BasePolicy {
+        public deserialize: boolean;
+        public failOnClusterChange: boolean;
+        constructor(props?: IQueryPolicyProps);
+    }
+
+    interface IReadPolicyProps extends IBasePolicyProps {
+        key?: PolicyKey;
+        replica?: PolicyReplica;
+        readModeAP?: PolicyReadModeAP;
+        readModeSC?: PolicyReadModeSC;
+        deserialize?: boolean;
+    }
+
+    export class ReadPolicy extends BasePolicy {
+        public key?: PolicyKey;
+        public replica?: PolicyReplica;
+        public readModeAP: PolicyReadModeAP;
+        public readModeSC: PolicyReadModeSC;
+        public deserialize: boolean;
+        constructor(props?: IReadPolicyProps);
+    }
+
+    interface IRemovePolicyProps extends IBasePolicyProps {
+        generation?: number;
+        key?: PolicyKey;
+        gen?: PolicyGen;
+        commitLevel?: PolicyCommitLevel;
+        durableDelete?: boolean;
+    }
+
+    export class RemovePolicy extends BasePolicy {
+        public generation?: number;
+        public key?: PolicyKey;
+        public gen?: PolicyGen;
+        public commitLevel?: PolicyCommitLevel;
+        public durableDelete: boolean;
+        constructor(props?: IRemovePolicyProps);
+    }
+
+    interface IScanPolicyProps extends IBasePolicyProps {
+        durableDelete?: boolean;
+        recordsPerSecond?: number;
+        maxRecords?: number;
+    }
+
+    export class ScanPolicy extends BasePolicy {
+        public durableDelete: boolean;
+        public recordsPerSecond: number;
+        public maxRecords?: number; // server version >= 4.9, so probably it should be optional
+        constructor(props?: IScanPolicyProps);
+    }
+
+    interface IWritePolicyProps extends IBasePolicyProps {
+        compressionThreshold?: number;
+        key?: PolicyKey;
+        gen?: PolicyGen;
+        exists?: PolicyExists;
+        commitLevel?: PolicyCommitLevel;
+        durableDelete?: boolean;
+    }
+
+    export class WritePolicy extends BasePolicy {
+        public compressionThreshold?: number;
+        public key?: PolicyKey;
+        public gen?: PolicyGen;
+        public exists?: PolicyExists;
+        public commitLevel?: PolicyCommitLevel;
+        public durableDelete: boolean;
+        constructor(props?: IWritePolicyProps);
+    }
+
+    interface IBatchApplyPolicyProps {
+        filterExpression?: Operation[];
+        key?: PolicyKey;
+        commitLevel?: PolicyCommitLevel;
+        ttl?: number;
+        durableDelete?: boolean;
+    }
+
+    export class BatchApplyPolicy {
+        public filterExpression?: Operation[];
+        public key?: PolicyKey;
+        public commitLevel?: PolicyCommitLevel;
+        public ttl?: number;
+        public durableDelete?: boolean;
+        constructor(props?: IBatchApplyPolicyProps);
+    }
+
+    interface IBatchReadPolicyProps {
+        filterExpression?: Operation[];
+        readModeAP?: PolicyReadModeAP;
+        readModeSC?: PolicyReadModeSC;
+    }
+
+    export class BatchReadPolicy {
+        public filterExpression?: Operation[];
+        public readModeAP?: PolicyReadModeAP;
+        public readModeSC?: PolicyReadModeSC;
+        constructor(props?: IBatchReadPolicyProps);
+    }
+
+    interface IBatchRemovePolicyProps {
+        filterExpression?: Operation[];
+        key?: PolicyKey;
+        commitLevel?: PolicyCommitLevel;
+        gen?: PolicyGen;
+        generation?: number;
+        durableDelete?: boolean;
+    }
+
+    export class BatchRemovePolicy {
+        public filterExpression?: Operation[];
+        public key?: PolicyKey;
+        public commitLevel?: PolicyCommitLevel;
+        public gen?: PolicyGen;
+        public generation?: number;
+        public durableDelete?: boolean;
+        constructor(props?: IBatchRemovePolicyProps);
+    }
+
+    interface IBatchWritePolicyProps {
+        filterExpression?: Operation[];
+        key?: PolicyKey;
+        commitLevel?: PolicyCommitLevel;
+        gen?: PolicyGen;
+        exists?: PolicyExists;
+        durableDelete?: boolean;
+    }
+
+    export class BatchWritePolicy {
+        public filterExpression?: Operation[];
+        public key?: PolicyKey;
+        public commitLevel?: PolicyCommitLevel;
+        public gen?: PolicyGen;
+        public exists?: PolicyExists;
+        public durableDelete?: boolean;
+        constructor(props?: IBatchWritePolicyProps);
+    }
+
+    // client.js
+    interface IBatchReadRecord {
+        key: IKey;
+        bins?: string[];
+        read_all_bins?: boolean;
+    }
+
+    interface IBatchSelectEntity {
+        status: Status;
+        key: IKey;
+        meta?: IRecordMetadata;
+        bins?: AerospikeBins;
+    }
+
+    interface IIndexOptions {
         ns: string;
         set: string;
-        key: string | number | Buffer;
-        digest: string | null;
-        equals(other: any): any;
+        bin: string;
+        index: string;
+        type?: IndexType;
+        datatype: IndexDataType;
     }
-    namespace Key {
-        function fromASKey(keyObj: any): Key | null;
-    }
-}
-declare module "commands/stream_command" {
-    function _exports(asCommand: any): {
-        new (stream: any, args: any): {
-            stream: any;
-            callback(error: any, record: any): boolean;
-            convertResult(bins: any, meta: any, asKey: any): any;
-        };
-    };
-    export = _exports;
-}
-declare module "commands/write_record_command" {
-    function _exports(asCommand: any): {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(): any;
-        };
-    };
-    export = _exports;
-}
-declare module "job" {
-    export = Job;
-    function Job(client: any, jobID: any, module: any): void;
-    class Job {
-        constructor(client: any, jobID: any, module: any);
-        client: any;
-        jobID: any;
-        module: any;
-        private hasCompleted;
-        private checkStatus;
-        info(policy: any, callback?: JobinfoCallback | undefined): Promise<any> | null;
-        wait(pollInterval?: number | undefined, callback?: JobdoneCallback | undefined): Promise<any> | null;
-        waitUntilDone: any;
-    }
-    namespace Job {
-        function safeRandomJobID(): number;
-        function pollUntilDone(statusFunction: any, pollInterval: any): Promise<any>;
-    }
-}
-declare module "commands/query_background_command" {
-    function _exports(asCommand: any): {
-        new (client: any, ns: any, set: any, queryObj: any, policy: any, queryID: any, callback: any): {
-            client: any;
-            queryID: any;
-            queryObj: any;
-            convertResult(): Job;
-        };
-    };
-    export = _exports;
-    import Job = require("job");
-}
-declare module "commands/index" {
-    class ApplyCommand {
-    }
-    const BatchExistsCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchExistsCommand extends BatchExistsCommand_base {
-    }
-    const BatchGetCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchGetCommand extends BatchGetCommand_base {
-    }
-    const BatchReadCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchReadCommand extends BatchReadCommand_base {
-    }
-    const BatchWriteCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchWriteCommand extends BatchWriteCommand_base {
-    }
-    const BatchApplyCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchApplyCommand extends BatchApplyCommand_base {
-    }
-    const BatchRemoveCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchRemoveCommand extends BatchRemoveCommand_base {
-    }
-    const BatchSelectCommand_base: {
-        new (): {
-            convertResult(results: any): any;
-        };
-    };
-    class BatchSelectCommand extends BatchSelectCommand_base {
-    }
-    const ConnectCommand_base: {
-        new (client: any, callback: any): {
-            ensureConnected: boolean;
-        };
-    };
-    class ConnectCommand extends ConnectCommand_base {
-    }
-    const ExistsCommand_base: {
-        new (): {
-            convertResponse(error: any): any[];
-        };
-    };
-    class ExistsCommand extends ExistsCommand_base {
-    }
-    const GetCommand_base: {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(bins: any, metadata: any): any;
-        };
-    };
-    class GetCommand extends GetCommand_base {
-    }
-    class IndexCreateCommand {
-    }
-    class IndexRemoveCommand {
-    }
-    class InfoAnyCommand {
-    }
-    class InfoForeachCommand {
-    }
-    class InfoHostCommand {
-    }
-    class InfoNodeCommand {
-    }
-    class JobInfoCommand {
-    }
-    const OperateCommand_base: {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(bins: any, metadata: any): any;
-        };
-    };
-    class OperateCommand extends OperateCommand_base {
-    }
-    const PutCommand_base: {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(): any;
-        };
-    };
-    class PutCommand extends PutCommand_base {
-    }
-    const QueryCommand_base: {
-        new (stream: any, args: any): {
-            stream: any;
-            callback(error: any, record: any): boolean;
-            convertResult(bins: any, meta: any, asKey: any): any;
-        };
-    };
-    class QueryCommand extends QueryCommand_base {
-    }
-    class QueryApplyCommand {
-    }
-    const QueryBackgroundCommand_base: {
-        new (client: any, ns: any, set: any, queryObj: any, policy: any, queryID: any, callback: any): {
-            client: any;
-            queryID: any;
-            queryObj: any;
-            convertResult(): import("job");
-        };
-    };
-    class QueryBackgroundCommand extends QueryBackgroundCommand_base {
-    }
-    const QueryOperateCommand_base: {
-        new (client: any, ns: any, set: any, queryObj: any, policy: any, queryID: any, callback: any): {
-            client: any;
-            queryID: any;
-            queryObj: any;
-            convertResult(): import("job");
-        };
-    };
-    class QueryOperateCommand extends QueryOperateCommand_base {
-    }
-    const QueryForeachCommand_base: {
-        new (stream: any, args: any): {
-            stream: any;
-            callback(error: any, record: any): boolean;
-            convertResult(bins: any, meta: any, asKey: any): any;
-        };
-    };
-    class QueryForeachCommand extends QueryForeachCommand_base {
-    }
-    const RemoveCommand_base: {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(): any;
-        };
-    };
-    class RemoveCommand extends RemoveCommand_base {
-    }
-    const ScanCommand_base: {
-        new (stream: any, args: any): {
-            stream: any;
-            callback(error: any, record: any): boolean;
-            convertResult(bins: any, meta: any, asKey: any): any;
-        };
-    };
-    class ScanCommand extends ScanCommand_base {
-    }
-    const ScanBackgroundCommand_base: {
-        new (client: any, ns: any, set: any, queryObj: any, policy: any, queryID: any, callback: any): {
-            client: any;
-            queryID: any;
-            queryObj: any;
-            convertResult(): import("job");
-        };
-    };
-    class ScanBackgroundCommand extends ScanBackgroundCommand_base {
-    }
-    const ScanOperateCommand_base: {
-        new (client: any, ns: any, set: any, queryObj: any, policy: any, queryID: any, callback: any): {
-            client: any;
-            queryID: any;
-            queryObj: any;
-            convertResult(): import("job");
-        };
-    };
-    class ScanOperateCommand extends ScanOperateCommand_base {
-    }
-    const SelectCommand_base: {
-        new (client: any, key: any, args: any, callback: any): {
-            key: any;
-            convertResult(bins: any, metadata: any): any;
-        };
-    };
-    class SelectCommand extends SelectCommand_base {
-    }
-    class TruncateCommand {
-    }
-    class UdfRegisterCommand {
-    }
-    class UdfRemoveCommand {
-    }
-    export { ApplyCommand as Apply, BatchExistsCommand as BatchExists, BatchGetCommand as BatchGet, BatchReadCommand as BatchRead, BatchWriteCommand as BatchWrite, BatchApplyCommand as BatchApply, BatchRemoveCommand as BatchRemove, BatchSelectCommand as BatchSelect, ConnectCommand as Connect, ExistsCommand as Exists, GetCommand as Get, IndexCreateCommand as IndexCreate, IndexRemoveCommand as IndexRemove, InfoAnyCommand as InfoAny, InfoForeachCommand as InfoForeach, InfoHostCommand as InfoHost, InfoNodeCommand as InfoNode, JobInfoCommand as JobInfo, OperateCommand as Operate, PutCommand as Put, QueryCommand as Query, QueryApplyCommand as QueryApply, QueryBackgroundCommand as QueryBackground, QueryOperateCommand as QueryOperate, QueryForeachCommand as QueryForeach, RemoveCommand as Remove, ScanCommand as Scan, ScanBackgroundCommand as ScanBackground, ScanOperateCommand as ScanOperate, SelectCommand as Select, TruncateCommand as Truncate, UdfRegisterCommand as UdfRegister, UdfRemoveCommand as UdfRemove };
-}
-declare module "config" {
-    export = Config;
-    class Config {
-        constructor(config?: any);
-        user: any;
-        password: any;
-        authMode: any;
-        clusterName: string;
-        port: any;
-        tls: any;
-        hosts: (Host[] | string);
-        policies: Policies;
-        log: any;
-        connTimeoutMs: any;
-        loginTimeoutMs: any;
-        maxSocketIdle: any;
-        tenderInterval: any;
-        maxConnsPerNode: any;
-        minConnsPerNode: any;
-        modlua: any;
-        sharedMemory: any;
-        useAlternateAccessAddress: boolean;
-        rackAware: boolean;
-        rackId: any;
-        setDefaultPolicies(policies: any): void;
-        private [inspect];
-    }
-    const inspect: unique symbol;
-}
-declare module "index_job" {
-    export = IndexJob;
-    function IndexJob(client: any, namespace: any, indexName: any): void;
-    class IndexJob {
-        constructor(client: any, namespace: any, indexName: any);
-        client: any;
-        namespace: any;
-        indexName: any;
-        private hasCompleted;
-        private info;
-    }
-}
-declare module "record_stream" {
-    export = RecordStream;
-    function RecordStream(client: any): void;
-    class RecordStream {
-        constructor(client: any);
-        aborted: boolean;
-        client: any;
-        writable: boolean;
-        readable: boolean;
-        _read(): void;
-        abort(): void;
-    }
-}
-declare module "query" {
-    export = Query;
-    function Query(client: Client, ns: string, set: string, options?: {
-        filters?: any[] | undefined;
-        select?: string[] | undefined;
-        nobins?: boolean | undefined;
-    } | undefined): void;
-    class Query {
-        constructor(client: Client, ns: string, set: string, options?: {
-            filters?: any[] | undefined;
-            select?: string[] | undefined;
-            nobins?: boolean | undefined;
-        } | undefined);
-        client: any;
+
+    interface ITypedIndexOptions {
         ns: string;
         set: string;
-        filters: any[];
-        selected: string[] | undefined;
-        nobins: boolean | undefined;
-        udf: any;
-        private pfEnabled;
-        select(...args: string[]): void;
-        where(predicate: any): void;
-        setSindexFilter(sindexFilter: any): void;
-        setUdf(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined): void;
-        partitions(begin: number, count: number, digest: string): void;
-        partFilter: {
-            begin: number;
-            count: number;
-            digest: string;
-        } | undefined;
-        foreach(policy?: QueryPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
-        results(policy?: QueryPolicy): Promise<RecordObject[]>;
-        apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
-        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: WritePolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
-        operate(operations: any, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
-        ops: any;
+        bin: string;
+        index: string;
+        type?: IndexType;
     }
-    import RecordStream = require("record_stream");
-}
-declare module "scan" {
-    export = Scan;
-    function Scan(client: Client, ns: string, set: string, options?: {
-        select?: string[] | undefined;
-        nobins?: boolean | undefined;
-        concurrent?: boolean | undefined;
-    } | undefined): void;
-    class Scan {
-        constructor(client: Client, ns: string, set: string, options?: {
-            select?: string[] | undefined;
-            nobins?: boolean | undefined;
-            concurrent?: boolean | undefined;
-        } | undefined);
-        client: any;
-        ns: string;
-        set: string;
-        selected: string[] | undefined;
-        nobins: boolean | undefined;
-        concurrent: boolean | undefined;
-        private pfEnabled;
-        select(...args: string[]): void;
-        partitions(begin: number, count: number, digest: string): void;
-        partFilter: {
-            begin: number;
-            count: number;
-            digest: string;
-        } | undefined;
-        background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: ScanPolicy, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
-        udf: {
-            module: string;
-            funcname: string;
-            args: any[] | undefined;
-        } | undefined;
-        operate(operations: any, policy?: ScanPolicy, scanID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
-        ops: any;
-        foreach(policy?: ScanPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
-    }
-    import RecordStream = require("record_stream");
-}
-declare module "udf_job" {
-    export = UdfJob;
-    function UdfJob(client: any, udfModule: any, command: any): void;
-    class UdfJob {
-        constructor(client: any, udfModule: any, command: any);
-        client: any;
-        udfModule: any;
-        command: any;
-        private hasCompleted;
-        private info;
-    }
-    namespace UdfJob {
-        const REGISTER: string;
-        const UNREGISTER: string;
-    }
-}
-declare module "utils" {
-    export function parseHostString(hostString: any): {
-        addr: any;
-        tlsname: any;
-        port: number;
+
+    type TypedCallback<T> = (error?: Error, result?: T) => void;
+
+    type PickEnum<T, K extends T> = {
+        [P in keyof K]: P extends K ? P : never;
     };
-    export function print(err: any, result: any): void;
-}
-declare module "client" {
-    export = Client;
-    function Client(config: Config): void;
-    class Client {
-        constructor(config: Config);
-        config: Config;
-        private as_client;
-        private connected;
-        captureStackTraces: boolean;
-        private asExec;
-        getNodes(): Array<{
-            name: string;
-            address: string;
-        }>;
-        addSeedHost(hostname: string, port?: number | undefined): void;
-        removeSeedHost(hostname: string, port?: number | undefined): void;
-        batchExists(keys: Key[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchGet(keys: Key[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchRead(records: {
-            type: number;
-            key: Key;
-            bins?: string[];
-            readAllBins?: boolean;
-        }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchWrite(records: {
-            type: number;
-            key: Key;
-        }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchApply(records: {
-            type: number;
-            key: Key;
-        }, udf: object[], batchPolicy?: BatchPolicy, batchApplyPolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchRemove(records: {
-            type: number;
-            key: Key;
-        }, batchPolicy?: BatchPolicy, batchRemovePolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        batchSelect(keys: Key[], bins: string[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-        close(releaseEventLoop?: boolean | undefined): void;
-        connect(callback?: connectCallback | undefined): Promise<any> | null;
-        createIndex(options: {
-            ns: string;
-            set: string;
-            bin: string;
-            index: string;
-            type?: any;
-            datatype: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
-        createIntegerIndex(options: {
-            ns: string;
-            set: string;
-            bin: string;
-            index: string;
-            type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
-        createStringIndex(options: {
-            ns: string;
-            set: string;
-            bin: string;
-            index: string;
-            type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
-        createGeo2DSphereIndex(options: {
-            ns: string;
-            set: string;
-            bin: string;
-            index: string;
-            type?: any;
-        }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
-        apply(key: Key, udfArgs: {
-            module: string;
-            funcname: string;
-            args: Array<(number | string)>;
-        }, policy?: ApplyPolicy, callback?: valueCallback | undefined): Promise<any> | null;
-        exists(key: Key, policy?: ReadPolicy, callback?: valueCallback | undefined): Promise<any> | null;
-        get(key: Key, policy?: ReadPolicy, callback?: recordCallback | undefined): Promise<any> | null;
-        indexRemove(namespace: string, index: string, policy?: InfoPolicy, callback?: doneCallback | undefined): Promise<any> | null;
-        info(request: string | null, host: {
-            addr: string;
-            port?: number | undefined;
-        }, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        infoAny(request?: string | undefined, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        infoAll(request?: string | undefined, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        infoNode(request: string | null, node: {
-            name: string;
-        }, policy?: InfoPolicy, callback?: infoCallback | undefined): any;
-        isConnected(checkTenderErrors?: boolean | undefined): boolean;
-        operate(key: Key, operations: any, metadata?: any, policy?: OperatePolicy, callback?: recordCallback | undefined): any;
-        incr: any;
-        put(key: Key, bins: object, meta?: object, policy?: WritePolicy, callback?: writeCallback | undefined): any;
-        query(ns: string, set: string, options?: object): Query;
-        remove(key: Key, policy?: RemovePolicy, callback?: writeCallback | undefined): any;
-        scan(ns: string, set: string, options?: object): Scan;
-        select(key: Key, bins: string[], policy?: ReadPolicy, callback?: recordCallback | undefined): any;
-        truncate(ns: string, set: string, beforeNanos: any, policy?: InfoPolicy, callback?: doneCallback | undefined): any;
-        udfRegister(udfPath: any, udfType?: number | undefined, policy?: InfoPolicy, callback?: jobCallback | undefined): any;
-        stats(): ClientStats;
-        udfRemove(udfModule: string, policy?: InfoPolicy, callback?: jobCallback | undefined): any;
-        updateLogging(logConfig: any): void;
+
+    interface IInfoNode {
+        node_id: string;
     }
-    import Config = require("config");
-    import Query = require("query");
-    import Scan = require("scan");
-}
-declare module "double" {
-    export = Double;
-    function Double(value: number): void;
-    class Double {
+
+    interface IInfoAllResponse {
+        host: IInfoNode;
+        info: string;
+    }
+
+    interface IInfoNodeParam {
+        name: string;
+    }
+
+    export class Client extends EventEmitter {
+        public config: Config;
+        private as_client: AddonAerospikeClient;
+        private connected: boolean;
+        public captureStackTraces: boolean;
+        constructor(config: IConfigOptions);
+        private asExec(cmd: string, args?: any): any;
+        public getNodes(): IAddonNode[];
+        public addSeedHost(hostname: string, number?: number): void;
+        public removeSeedHost(hostname: string, number?: number): void;
+        public batchExists(keys: IKey[], policy?: BatchPolicy): Promise<IBatchResult[]>;
+        public batchExists(keys: IKey[], callback: TypedCallback<IBatchResult[]>): void;
+        public batchExists(keys: IKey[], policy: BatchPolicy, callback: TypedCallback<IBatchResult[]>): void;
+        public batchGet(keys: IBatchReadRecord[], policy?: BatchPolicy): Promise<AerospikeRecord[]>;
+        public batchGet(keys: IBatchReadRecord[], callback: TypedCallback<AerospikeRecord[]>): void;
+        public batchGet(keys: IBatchReadRecord[], policy: BatchPolicy, callback: TypedCallback<AerospikeRecord[]>): void;
+        public batchSelect(keys: IKey[], bins: string[], policy?: BatchPolicy): Promise<IBatchSelectEntity[]>;
+        public batchSelect(keys: IKey[], bins: string[], callback: TypedCallback<IBatchSelectEntity[]>): void;
+        public batchSelect(keys: IKey[], bins: string[], policy: BatchPolicy, callback: TypedCallback<IBatchSelectEntity[]>): void;
+        public close(releaseEventLoop?: boolean): void;
+        public connect(callback?: TypedCallback<Client>): Promise<Client>;
+        public createIndex(options: IIndexOptions, policy?: InfoPolicy): Promise<IndexJob>;
+        public createIndex(options: IIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createIndex(options: IIndexOptions, policy: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createIntegerIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createIntegerIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createIntegerIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createStringIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createStringIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createStringIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, policy: InfoPolicy): Promise<IndexJob>;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, callback: TypedCallback<IndexJob>): void;
+        public createGeo2DSphereIndex(options: ITypedIndexOptions, policy: InfoPolicy, callback: TypedCallback<IndexJob>): void;
+        public apply(key: IKey, udfArgs: IAddonUDF, policy?: ApplyPolicy): Promise<any>;
+        public apply(key: IKey, udfArgs: IAddonUDF, callback: AddonCallback): void;
+        public apply(key: IKey, udfArgs: IAddonUDF, policy: ApplyPolicy, callback: AddonCallback): void;
+        public exists(key: IKey, policy?: ReadPolicy): Promise<boolean>;
+        public exists(key: IKey, policy: ReadPolicy, callback: TypedCallback<boolean>): void;
+        public get(key: IKey, policy?: ReadPolicy): Promise<AerospikeRecord>;
+        public get(key: IKey, policy: ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public indexRemove(namespace: string, index: string, policy?: InfoPolicy): Promise<void>;
+        public indexRemove(namespace: string, index: string, callback: TypedCallback<void>): void;
+        public indexRemove(namespace: string, index: string, policy: InfoPolicy, callback: TypedCallback<void>): void;
+        public info(request: string, host: IHost | string, policy?: InfoPolicy): Promise<string>;
+        public info(request: string | undefined, host: IHost | string, callback: TypedCallback<string>): void;
+        public info(request: string | undefined, host: IHost | string, policy: InfoPolicy, callback: TypedCallback<string>): void;
+        public infoAny(request: string | undefined, policy?: InfoPolicy): Promise<string>;
+        public infoAny(request: string | undefined, callback: TypedCallback<string>): void;
+        public infoAny(request: string | undefined, policy: InfoPolicy, callback: TypedCallback<string>): void;
+        public infoAll(request: string | undefined, policy?: InfoPolicy): Promise<IInfoAllResponse[]>;
+        public infoAll(request: string | undefined, callback: TypedCallback<IInfoAllResponse[]>): void;
+        public infoAll(request: string | undefined, policy: InfoPolicy, callback: TypedCallback<IInfoAllResponse[]>): void;
+        public infoNode(request: string | undefined, node: IInfoNodeParam, policy?: InfoPolicy): Promise<string>;
+        public infoNode(request: string | undefined, node: IInfoNodeParam, callback: TypedCallback<string>): void;
+        public infoNode(request: string | undefined, node: IInfoNodeParam, policy: InfoPolicy, callback: TypedCallback<string>): void;
+        public isConnected(checkTenderErrors?: boolean): boolean;
+        public operate(key: IKey, operations: Operation[], metadata?: IRecordMetadata, policy?: OperatePolicy): Promise<AerospikeRecord>;
+        public operate(key: IKey, operations: Operation[], callback: TypedCallback<AerospikeRecord>): void;
+        public operate(key: IKey, operations: Operation[], metadata: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public operate(key: IKey, operations: Operation[], metadata: IRecordMetadata, policy: OperatePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public append(key: IKey, bins: AerospikeBins, metadata?: IRecordMetadata, policy?: OperatePolicy): Promise<AerospikeRecord>;
+        public append(key: IKey, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+        public append(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public append(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, policy: OperatePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public prepend(key: IKey, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+        public prepend(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public prepend(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, policy: OperatePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public add(key: IKey, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+        public add(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public add(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, policy: OperatePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public incr(key: IKey, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+        public incr(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public incr(key: IKey, bins: AerospikeBins, metadata: IRecordMetadata, policy: OperatePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public put(key: IKey, bins: AerospikeBins, meta?: IRecordMetadata, policy?: WritePolicy): Promise<AerospikeRecord>;
+        public put(key: IKey, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+        public put(key: IKey, bins: AerospikeBins, meta: IRecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+        public put(key: IKey, bins: AerospikeBins, meta: IRecordMetadata, policy: WritePolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public query(ns: string, set: string, options?: IQueryOptions): Query;
+        public remove(key: IKey, policy?: RemovePolicy): Promise<IKey>;
+        public remove(key: IKey, callback: TypedCallback<IKey>): void;
+        public remove(key: IKey, policy: RemovePolicy, callback: TypedCallback<IKey>): void;
+        public scan(ns: string, set: string, options: IScanOptions): Scan;
+        public select(key: IKey, bins: string[], policy?: ReadPolicy): Promise<AerospikeRecord>;
+        public select(key: IKey, bins: string[], callback: TypedCallback<AerospikeRecord>): void;
+        public select(key: IKey, bins: string[], policy: ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
+        public truncate(ns: string, set: string | null, beforeNanos: number, policy?: InfoPolicy): Promise<void>;
+        public truncate(ns: string, set: string | null, beforeNanos: number, callback: TypedCallback<void>): void;
+        public udfRegister(udfPath: string, udfType?: Language, policy?: InfoPolicy): Promise<Job>;
+        public udfRegister(udfPath: string, callback: TypedCallback<Job>): void;
+        public udfRegister(udfPath: string, udfType: Language, callback: TypedCallback<Job>): void;
+        public udfRegister(udfPath: string, udfType: Language, policy: InfoPolicy, callback: TypedCallback<Job>): void;
+        public stats(): IAddonStats;
+        public udfRemove(udfModule: string, policy?: InfoPolicy): Promise<Job>;
+        public udfRemove(udfModule: string, callback: TypedCallback<Job>): void;
+        public udfRemove(udfModule: string, policy: InfoPolicy, callback: TypedCallback<Job>): void;
+        public updateLogging(logConfig: ILogInfo): void;
+        keyfilePassword?: string;
+        certfile?: string;
+        crlCheck?: boolean;
+        crlCheckAll?: boolean;
+        logSessionInfo?: boolean;
+        forLoginOnly?: boolean;
+    }
+
+    interface IHost {
+        addr: string;
+        port?: number;
+        tlsname?: string;
+    }
+
+    interface IConfigPolicies {
+        apply?: ApplyPolicy;
+        batch?: BasePolicy;
+        info?: InfoPolicy;
+        operate?: OperatePolicy;
+        read?: ReadPolicy;
+        remove?: RemovePolicy;
+        scan?: ScanPolicy;
+        query?: QueryPolicy;
+        write?: WritePolicy;
+    }
+
+    interface IConfigLog {
+        level?: Log;
+        file?: number;
+    }
+
+    interface IConfigModLua {
+        userPath?: string;
+    }
+
+    interface IConfigSharedMemory {
+        enable?: boolean;
+        key: number;
+        maxNodes?: number;
+        maxNamespaces?: number;
+        takeoverThresholdSeconds?: number;
+    }
+
+    interface IConfigTLS {
+        enable?: boolean;
+        cafile?: string;
+        capath?: string;
+        protocols?: string;
+        cipherSuite?: string;
+        certBlacklist?: string;
+        keyfile?: string;
+        keyfilePassword?: string;
+        certfile?: string;
+        crlCheck?: boolean;
+        crlCheckAll?: boolean;
+        logSessionInfo?: boolean;
+        forLoginOnly?: boolean;
+    }
+
+    interface IConfigOptions {
+        user?: string;
+        password?: string;
+        authMode?: Auth;
+        clusterName?: string;
+        port?: number;
+        tls?: IConfigTLS;
+        hosts?: IHost[] | string;
+        policies?: IConfigPolicies;
+        log?: IConfigLog;
+        connTimeoutMs?: number;
+        loginTimeoutMs?: number;
+        maxSocketIdle?: number;
+        tenderInterval?: number;
+        maxConnsPerNode?: number;
+        minConnsPerNode?: number;
+        modlua?: IConfigModLua;
+        sharedMemory?: IConfigSharedMemory;
+        useAlternateAccessAddress?: boolean;
+        rackAware?: boolean;
+        rackId?: number;
+    }
+
+    export class Config {
+        public user?: string;
+        public password?: string;
+        public authMode?: Auth;
+        public clusterName?: string;
+        public port: number;
+        public tls?: IConfigTLS;
+        public hosts: IHost[] | string;
+        public policies: IConfigPolicies;
+        public log?: IConfigLog;
+        public connTimeoutMs?: number;
+        public loginTimeoutMs?: number;
+        public maxSocketIdle?: number;
+        public tenderInterval?: number;
+        public maxConnsPerNode?: number;
+        public minConnsPerNode?: number;
+        public modlua: IConfigModLua;
+        public sharedMemory?: IConfigSharedMemory;
+        public useAlternateAccessAddress: boolean;
+        public rackAware?: boolean;
+        public rackId?: number;
+        constructor(config?: IConfigOptions);
+        public setDefaultPolicies(policies?: IConfigPolicies): void;
+    }
+
+    // double.js
+    export class Double {
         constructor(value: number);
-        Double: number;
-        value(): number;
+        public Double: number;
+        public value(): number;
     }
-}
-declare module "batch_type" {
-    export const BATCH_READ: any;
-    export const BATCH_WRITE: any;
-    export const BATCH_APPLY: any;
-    export const BATCH_REMOVE: any;
-}
-declare module "aerospike" {
-    export const filter: typeof import("filter");
-    export const exp: typeof import("exp");
-    export namespace regex {
-        const BASIC: number;
-        const EXTENDED: number;
-        const ICASE: number;
-        const NEWLINE: number;
+
+    // error.js
+    export class AerospikeError extends Error {
+        readonly code: Status;
+        readonly command: Command | null;
+        readonly func: string | null;
+        readonly file: string | null;
+        readonly line: number | null;
+        readonly inDoubt: boolean;
+        constructor(message: string, command: Command);
+        static fromASError(asError: AerospikeError | Error, command: Command): AerospikeError;
+        static copyASErrorProperties(target: AerospikeError, source: Error): void;
+        static formatMessage(message: string, code: Status): string;
+        private setStackTrace(stack: string): void;
+        public isServerError(): boolean;
+        get client(): Client | void;
     }
-    export type regex = number;
-    export const info: typeof import("info");
-    export const lists: typeof import("lists");
-    export const hll: typeof import("hll");
-    export const maps: typeof import("maps");
-    export namespace cdt {
-        const Context: typeof import("cdt_context");
+
+    // geojson.js
+    type GeoJSONType = {
+        type: string,
+        coordinates: Array<number[] | number>
     }
-    export const bitwise: typeof import("bitwise");
-    export const operations: typeof import("operations");
-    export const policy: typeof import("policy");
-    export const BasePolicy: typeof import("policies/base_policy");
-    export const ApplyPolicy: typeof import("policies/apply_policy");
-    export const BatchPolicy: typeof import("policies/batch_policy");
-    export const OperatePolicy: typeof import("policies/operate_policy");
-    export const QueryPolicy: typeof import("policies/query_policy");
-    export const ReadPolicy: typeof import("policies/read_policy");
-    export const RemovePolicy: typeof import("policies/remove_policy");
-    export const ScanPolicy: typeof import("policies/scan_policy");
-    export const WritePolicy: typeof import("policies/write_policy");
-    export const BatchApplyPolicy: typeof import("policies/batch_apply_policy");
-    export const BatchReadPolicy: typeof import("policies/batch_read_policy");
-    export const BatchRemovePolicy: typeof import("policies/batch_remove_policy");
-    export const BatchWritePolicy: typeof import("policies/batch_write_policy");
-    export const CommandQueuePolicy: typeof import("policies/command_queue_policy");
-    export const InfoPolicy: typeof import("policies/info_policy");
-    export const ListPolicy: typeof import("policies/list_policy");
-    export const MapPolicy: typeof import("policies/map_policy");
-    export const status: typeof import("status");
-    export const features: typeof import("features");
-    export { AerospikeError };
-    export const Client: typeof import("client");
-    export const Config: typeof import("config");
-    export const Double: typeof import("double");
-    export const GeoJSON: typeof import("geojson");
-    export const Key: typeof import("key");
-    export const Record: typeof import("record");
-    export type auth = number;
-    export type language = number;
-    export type log = number;
-    export type ttl = number;
-    export type jobStatus = number;
-    export type indexDataType = number;
-    export type indexType = number;
-    export const print: typeof import("utils").print;
-    export const releaseEventLoop: typeof EventLoop.releaseEventLoop;
-    export function client(config?: any): import("client");
-    export function connect(config?: any, callback?: connectCallback | undefined): Promise<any> | null;
-    export function setDefaultLogging(logInfo: any): void;
+
+    export class GeoJSON {
+        public str: string;
+        constructor(json: string | object);
+        static Point(lng: number, lat: number): GeoJSON;
+        static Polygon(...coordinates: number[][]): GeoJSON;
+        static Circle(lng: number, lat: number, radius: number);
+        public toJSON(): GeoJSONType;
+        public value(): GeoJSONType;
+        public toString(): string;
+    }
+
+    // hll.js
+    class HLLOperation extends Operation {
+        public withPolicy(policy: HLLPolicy): HLLOperation;
+    }
+
+    // index_job.js
+    interface ISindexInfoEntity {
+        load_pct: number;
+    }
+    class IndexJob extends Job<ISindexInfoEntity> {
+        public namespace: string;
+        public indexName: string;
+        constructor(client: Client, namespace: string, indexName: string);
+    }
+
+    // job.js
+    interface IJobInfoResponse {
+        progressPct: number;
+        recordsRead: number;
+        status: JobStatus;
+    }
+
+    class Job<T = IJobInfoResponse> {
+        public client: Client;
+        public jobID: number;
+        public module: string;
+        constructor(client: Client, jobID: number, module: string);
+        static safeRandomJobID(): number;
+        static pollUntilDone(statusFunction: () => Promise<boolean>, pollInterval?: number): Promise<void>;
+        private hasCompleted(info: T): boolean;
+        private checkStatus(): Promise<boolean>;
+        public info(policy?: InfoPolicy): Promise<T>;
+        public info(callback: TypedCallback<T>): void;
+        public info(policy: InfoPolicy, callback: TypedCallback<T>): void;
+        public wait(poolInterval?: number): Promise<void>;
+        public wait(callback: TypedCallback<void>): void;
+        public wait(pollInterval: number, callback: TypedCallback<void>): void;
+        public waitUntilDone(pollInterval?: number): Promise<void>;
+        public waitUntilDone(callback: TypedCallback<void>): void;
+        public waitUntilDone(pollInterval: number, callback: TypedCallback<void>): void;
+    }
+
+    // key.js
+    interface IKey {
+        ns: string;
+        set: string;
+        key?: string | number | Buffer;
+        digest?: Buffer;
+    }
+
+    class Key implements IKey {
+        public ns: string;
+        public set: string;
+        public key: string | number | Buffer;
+        public digest: Buffer | undefined;
+        constructor(ns: string, set: string, key: string | number | Buffer, digest?: Buffer);
+        static fromASKey(keyObj: IKey): Key;
+        public equals(other: IKey): boolean;
+    }
+
+    // record.js
+    interface IRecordMetadata {
+        ttl: number;
+        gen: number;
+    }
+
+    // record_stream.js
+    class RecordStream extends Stream {
+        public aborted: boolean;
+        public client: Client;
+        public writable: boolean;
+        public readable: boolean;
+        public _read(): void;
+        public abort(): void;
+    }
+
+    // scan.js
+    interface IScanOptions {
+        select?: string[];
+        nobins?: boolean;
+        concurrent?: boolean;
+    }
+
+    class Scan {
+        public client: Client;
+        public ns: string;
+        public set: string;
+        public selected?: string[];
+        public nobins?: boolean;
+        public concurrent?: boolean;
+        public udf?: IAddonUDF;
+        public ops?: Operation[];
+        constructor(client: Client, ns: string, set: string, options?: IScanOptions);
+        public select(bins: string[]): void;
+        public select(...bins: string[]): void;
+        public background(udfModule: string, udfFunction: string, udfArgs?: any[], policy?: ScanPolicy, scanID?: number): Promise<Job>;
+        public background(udfModule: string, udfFunction: string, callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], policy: ScanPolicy, callback: TypedCallback<Job>): void;
+        public background(udfModule: string, udfFunction: string, udfArgs: any[], policy: ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
+        public operate(operations: Operation[], policy?: ScanPolicy, scanID?: number): Promise<Job>;
+        public operate(operations: Operation[], policy: ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
+        public foreach(policy?: ScanPolicy, dataCb?: (data: AerospikeRecord) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
+    }
+
+    // exp.js
+    type AerospikeExp = { op: number, [key: string]: any }[]
+
+    class AerospikeRecord {
+        public key: IKey;
+        public bins: AerospikeBins;
+        public ttl: number;
+        public gen: number;
+        constructor(key: IKey, bins: AerospikeBins, metadata?: IRecordMetadata);
+    }
+
+    export interface FilterModule {
+        SindexFilterPredicate: typeof SindexFilterPredicate,
+        range(bin: string, min: number, max: number, indexType?: IndexType): RangePredicate;
+        equal(bin: string, value: string): EqualPredicate;
+        contains(bin: string, value: string | number, indexType?: IndexType): EqualPredicate;
+        geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
+        geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: IndexType): GeoPredicate;
+        geoWithinRadius(bin: string, lng: number, lat: number, radius: number, indexType?: IndexType): GeoPredicate;
+        geoContainsPoint(bin: string, lng: number, lat: number, indexType?: IndexType): GeoPredicate;
+    }
+
+    export interface ListsModule {
+        order: typeof ListOrder;
+        sortFlags: typeof ListSortFlags;
+        writeFlags: typeof ListWriteFlags;
+        returnType: typeof ListReturnType;
+        setOrder(bin: string, order: ListOrder): ListOperation;
+        sort(bin: string, flags: ListSortFlags): ListOperation;
+        append(bin: string, value: AerospikeRecordValue, policy?: ListPolicy): ListOperation;
+        appendItems(bin: string, list: AerospikeRecordValue[], policy?: ListPolicy): ListOperation;
+        insert(bin: string, index: number, value: AerospikeRecordValue, policy?: ListPolicy): ListOperation;
+        insertItems(bin: string, index: number, list: AerospikeRecordValue[], policy?: ListPolicy): ListOperation;
+        pop(bin: string, index: number): ListOperation;
+        popRange(bin: string, index: number, count?: number): ListOperation;
+        remove(bin: string, index: number): ListOperation;
+        removeRange(bin: string, index: number, count?: number): ListOperation;
+        removeByIndex(bin: string, index: number, returnType?: ListReturnType): ListOperation;
+        removeByIndexRange(bin: string, index: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        removeByValue(bin: string, value: AerospikeRecordValue, returnType?: ListReturnType): InvertibleListOp;
+        removeByValueList(bin: string, values: AerospikeRecordValue[], returnType?: ListReturnType): InvertibleListOp;
+        removeByValueRange(bin: string, begin: number | null, end: number | null, returnType?: ListReturnType): InvertibleListOp;
+        removeByValueRelRankRange(bin: string, value: number, rank: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        removeByRank(bin: string, rank: number, returnType?: ListReturnType): ListOperation;
+        removeByRankRange(bin: string, rank: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        clear(bin: string): ListOperation;
+        set(bin: string, index: number, value: AerospikeRecordValue, policy?: ListPolicy): ListOperation;
+        trim(bin: string, index: number, count: number): ListOperation;
+        get(bin: string, index: number): ListOperation;
+        getRange(bin: string, index: number, count?: number): ListOperation;
+        getByIndex(bin: string, index: number, returnType?: ListReturnType): ListOperation;
+        getByIndexRange(bin: string, index: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        getByValue(bin: string, value: AerospikeRecordValue, returnType?: ListReturnType): InvertibleListOp;
+        getByValueList(bin: string, values: AerospikeRecordValue[], returnType?: ListReturnType): InvertibleListOp;
+        getByValueRange(bin: string, begin: number | null, end: number | null, returnType?: ListReturnType): InvertibleListOp;
+        getByValueRelRankRange(bin: string, value: number, rank: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        getByRank(bin: string, rank: number, returnType?: ListReturnType): ListOperation;
+        getByRankRange(bin: string, rank: number, count?: number, returnType?: ListReturnType): InvertibleListOp;
+        increment(bin: string, index: number, value?: number, policy?: ListPolicy): ListOperation;
+        size(bin: string): ListOperation;
+    }
+
+    export interface MapsModule {
+        order: typeof MapsOrder;
+        writeMode: typeof MapsWriteMode;
+        writeFlags: typeof MapsWriteFlags;
+        returnType: typeof MapReturnType;
+        MapPolicy: typeof MapPolicy;
+        setPolicy(bin: string, policy: MapPolicy): MapOperation;
+        put(bin: string, key: string, value: AerospikeRecordValue, policy?: MapPolicy): MapOperation;
+        putItems(bin: string, items: AerospikeBins, policy?: MapPolicy): MapOperation;
+        increment(bin: string, key: string, incr?: number, policy?: MapPolicy): MapOperation;
+        decrement(bin: string, key: string, decr: number, policy?: MapPolicy): MapOperation;
+        clear(bin: string): MapOperation;
+        removeByKey(bin: string, key: string, returnType?: MapReturnType): MapOperation;
+        removeByKeyList(bin: string, keys: string[], returnType?: MapReturnType): MapOperation;
+        removeByKeyRange(bin: string, begin: string | null, end: string | null, returnType?: MapReturnType): MapOperation;
+        removeByKeyRelIndexRange(bin: string, key: string, index: number, count?: number, returnType?: MapReturnType): MapOperation;
+        removeByValue(bin: string, value: AerospikeRecordValue, returnType?: MapReturnType): MapOperation;
+        removeByValueList(bin: string, values: AerospikeRecordValue[], returnType?: MapReturnType): MapOperation;
+        removeByValueRange(bin: string, begin: number | null, end: number | null, returnType?: MapReturnType): MapOperation;
+        removeByValueRelRankRange(bin: string, value: number, rank: number, count?: number, returnType?: MapReturnType): MapOperation;
+        removeByIndex(bin: string, index: number, returnType?: MapReturnType): MapOperation;
+        removeByIndexRange(bin: string, index: number, count?: number, returnType?: MapReturnType): MapOperation;
+        removeByRank(bin: string, rank: number, returnType?: MapReturnType): MapOperation;
+        removeByRankRange(bin: string, rank: number, count?: number, returnType?: MapReturnType): MapOperation;
+        size(bin: string): MapOperation;
+        getByKey(bin: string, key: string, returnType?: MapReturnType): MapOperation;
+        getByKeyRange(bin: string, begin: string | null, end: string | null, returnType?: MapReturnType): MapOperation;
+        getByKeyRelIndexRange(bin: string, key: string, index: number, count?: number, returnType?: MapReturnType): MapOperation;
+        getByValue(bin: string, value: AerospikeRecordValue, returnType?: MapReturnType): MapOperation;
+        getByValueRange(bin: string, begin: number | null, end: number | null, returnType?: MapReturnType): MapOperation;
+        getByValueRelRankRange(bin: string, value: number, rank: number, count?: number, returnType?: MapReturnType): MapOperation;
+        getByIndex(bin: string, index: number, returnType?: MapReturnType): MapOperation;
+        getByIndexRange(bin: string, index: number, count?: number, returnType?: MapReturnType): MapOperation;
+        getByRank(bin: string, rank: number, returnType?: MapReturnType): MapOperation;
+        getByRankRange(bin: string, rank: number, count?: number, returnType?: MapReturnType): MapOperation;
+    }
+
+    export interface BitwiseModule {
+        writeFlags: typeof BitwiseWriteFlags;
+        resizeFlags: typeof BitwiseResizeFlags;
+        overflow: typeof BitwiseOverflow;
+        resize(bin: string, size: number, flags?: BitwiseResizeFlags): BitwiseOperation;
+        insert(bin: string, byteOffset: number, value: Buffer): BitwiseOperation;
+        remove(bin: string, byteOffset: number, byteSize: number): BitwiseOperation;
+        set(bin: string, bitOffset: number, bitSize: number, value: number | Buffer): BitwiseOperation;
+        or(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
+        xor(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
+        and(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
+        not(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
+        lshift(bin: string, bitOffset: number, bitSize: string, shift: number): BitwiseOperation;
+        rshift(bin: string, bitOffset: number, bitSize: string, shift: number): BitwiseOperation;
+        add(bin: string, bitOffset: number, bitSize: number, value: number, sign: boolean): OverflowableBitwiseOp;
+        subtract(bin: string, bitOffset: number, bitSize: number, value: number, sign: boolean): OverflowableBitwiseOp;
+        get(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
+        getInt(bin: string, bitOffset: number, bitSize: number, sign: boolean): BitwiseOperation;
+        lscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
+        rscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
+    }
+
+    export interface InfoModule {
+        parse(info: string): Record<string, any>;
+        separators: Record<string, string[]>;
+    }
+
+    export interface CdtModule {
+        Context: typeof CdtContext;
+    }
+
+    type AnyPolicy = BasePolicy | ApplyPolicy | BatchPolicy | OperatePolicy | QueryPolicy | ReadPolicy | RemovePolicy | ScanPolicy | WritePolicy | BatchReadPolicy | BatchRemovePolicy | BatchWritePolicy | BatchApplyPolicy | CommandQueuePolicy | HLLPolicy | InfoPolicy | ListPolicy | MapPolicy;
+
+    export interface PolicyModule {
+        gen: typeof PolicyGen;
+        exists: typeof PolicyExists;
+        replica: typeof PolicyReplica;
+        readModeAP: typeof PolicyReadModeAP;
+        readModeSC: typeof PolicyReadModeSC;
+        commitLevel: typeof PolicyCommitLevel;
+        ApplyPolicy: typeof ApplyPolicy;
+        BatchPolicy: typeof BatchPolicy;
+        BatchApplyPolicy: typeof BatchApplyPolicy;
+        BatchReadPolicy: typeof BatchReadPolicy;
+        BatchRemovePolicy: typeof BatchRemovePolicy;
+        BatchWritePolicy: typeof BatchWritePolicy;
+        CommandQueuePolicy: typeof CommandQueuePolicy;
+        InfoPolicy: typeof InfoPolicy;
+        ListPolicy: typeof ListPolicy;
+        MapPolicy: typeof MapPolicy;
+        OperatePolicy: typeof OperatePolicy;
+        QueryPolicy: typeof QueryPolicy;
+        ReadPolicy: typeof ReadPolicy;
+        RemovePolicy: typeof RemovePolicy;
+        ScanPolicy: typeof ScanPolicy;
+        WritePolicy: typeof WritePolicy;
+        createPolicy(type: string, values: AnyPolicy | Record<string, any>): AnyPolicy;
+    }
+
+    export interface StatusModule {
+        ERR_ASYNC_QUEUE_FULL: Status;
+        ERR_CONNECTION: Status;
+        ERR_INVALID_NODE: Status,
+        ERR_NO_MORE_CONNECTIONS: Status;
+        ERR_ASYNC_CONNECTION: Status;
+        ERR_CLIENT_ABORT: Status;
+        ERR_INVALID_HOST: Status;
+        NO_MORE_RECORDS: Status;
+        ERR_PARAM: Status;
+        OK: Status;
+        ERR_SERVER: Status;
+        ERR_RECORD_NOT_FOUND: Status;
+        ERR_RECORD_GENERATION: Status;
+        ERR_REQUEST_INVALID: Status;
+        ERR_RECORD_EXISTS: Status;
+        ERR_BIN_EXISTS: Status;
+        ERR_CLUSTER_CHANGE: Status;
+        ERR_SERVER_FULL: Status;
+        ERR_TIMEOUT: Status;
+        ERR_ALWAYS_FORBIDDEN: Status;
+        ERR_CLUSTER: Status;
+        ERR_BIN_INCOMPATIBLE_TYPE: Status;
+        ERR_RECORD_TOO_BIG: Status;
+        ERR_RECORD_BUSY: Status;
+        ERR_SCAN_ABORTED: Status;
+        ERR_UNSUPPORTED_FEATURE: Status;
+        ERR_BIN_NOT_FOUND: Status;
+        ERR_DEVICE_OVERLOAD: Status;
+        ERR_RECORD_KEY_MISMATCH: Status;
+        ERR_NAMESPACE_NOT_FOUND: Status;
+        ERR_BIN_NAME: Status;
+        ERR_FAIL_FORBIDDEN: Status;
+        ERR_FAIL_ELEMENT_NOT_FOUND: Status;
+        ERR_FAIL_ELEMENT_EXISTS: Status;
+        ERR_ENTERPRISE_ONLY: Status;
+        // TODO: Remove ERR_FAIL_ENTERPRISE_ONLY - referring to lib/status.js#252
+        ERR_FAIL_ENTERPRISE_ONLY: Status;
+        ERR_OP_NOT_APPLICABLE: Status;
+        FILTERED_OUT: Status;
+        LOST_CONFLICT: Status;
+        QUERY_END: Status;
+        SECURITY_NOT_SUPPORTED: Status;
+        SECURITY_NOT_ENABLED: Status;
+        SECURITY_SCHEME_NOT_SUPPORTED: Status;
+        INVALID_COMMAND: Status;
+        INVALID_FIELD: Status;
+        ILLEGAL_STATE: Status;
+        INVALID_USER: Status;
+        USER_ALREADY_EXISTS: Status;
+        INVALID_PASSWORD: Status;
+        EXPIRED_PASSWORD: Status;
+        FORBIDDEN_PASSWORD: Status;
+        INVALID_CREDENTIAL: Status;
+        INVALID_ROLE: Status;
+        ROLE_ALREADY_EXISTS: Status;
+        INVALID_PRIVILEGE: Status;
+        NOT_AUTHENTICATED: Status;
+        ROLE_VIOLATION: Status;
+        ERR_UDF: Status;
+        ERR_BATCH_DISABLED: Status;
+        ERR_BATCH_MAX_REQUESTS_EXCEEDED: Status;
+        ERR_BATCH_QUEUES_FULL: Status;
+        ERR_GEO_INVALID_GEOJSON: Status;
+        ERR_INDEX_FOUND: Status;
+        ERR_INDEX_NOT_FOUND: Status;
+        ERR_INDEX_OOM: Status;
+        ERR_INDEX_NOT_READABLE: Status;
+        ERR_INDEX: Status;
+        ERR_INDEX_NAME_MAXLEN: Status;
+        ERR_INDEX_MAXCOUNT: Status;
+        ERR_QUERY_ABORTED: Status;
+        ERR_QUERY_QUEUE_FULL: Status;
+        ERR_QUERY_TIMEOUT: Status;
+        ERR_QUERY: Status;
+        ERR_UDF_NOT_FOUND: Status;
+        ERR_LUA_FILE_NOT_FOUND: Status;
+        getMessage(code: Status): string;
+    }
+
+    export interface HLLModule {
+        writeFlags: typeof HLLWriteFlags;
+        init(bin: string, indexBits: number, minhashBits: number): HLLOperation;
+        add(bin: string, list: AerospikeRecordValue[], indexBits?: number, minhashBits?: number): HLLOperation;
+        setUnion(bin: string, list: AerospikeRecordValue[]): HLLOperation;
+        refreshCount(bin: string): HLLOperation;
+        fold(bin: string, indexBits: number): HLLOperation;
+        getCount(bin: string): HLLOperation;
+        getUnion(bin: string, list: AerospikeRecordValue[]): HLLOperation;
+        getUnionCount(bin: string, list: AerospikeRecordValue[]): HLLOperation;
+        getIntersectCount(bin: string, list: AerospikeRecordValue[]);
+        getSimilarity(bin: string, list: AerospikeRecordValue[]): HLLOperation;
+        describe(bin: string): HLLOperation;
+    }
+
+    interface FeaturesModule {
+        CDT_MAP: string;
+        CDT_LIST: string;
+        BLOB_BITS: string;
+    }
+
+    interface OperationsModule {
+        Operation: typeof Operation;
+        read(bin: string): Operation;
+        write(bin: string, value: AerospikeRecordValue): WriteOperation;
+        add(bin: string, value: number | Double): AddOperation;
+        incr(bin: string, value: number | Double): AddOperation;
+        append(bin: string, value: string | Buffer): AppendOperation;
+        prepend(bin: string, value: string | Buffer): PrependOperation;
+        touch(ttl: number): TouchOperation;
+        delete(): Operation;
+    }
+
+    interface ExpOperationsModule {
+        ExpOperation: typeof ExpOperation;
+        read: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        write: (bin: string, value: AerospikeExp, flags?: number) => ExpOperation;
+    }
+
+    type _valueExp<T> = (value: T) => AerospikeExp;
+    type _keyTypeExp = () => AerospikeExp;
+    type _binTypeExp = (binName: string) => AerospikeExp;
+    type _metaExp = () => AerospikeExp;
+    type _cmpExp = (left: number, right: number) => AerospikeExp;
+    type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
+
+    interface ExpModule {
+        bool: _valueExp<boolean>;
+        int: _valueExp<number>;
+        uint: _valueExp<number>;
+        float: _valueExp<number>;
+        str: _valueExp<string>;
+        bytes: (value: string[], size: number) => AerospikeExp;
+        geo: _valueExp<GeoJSON>;
+        nil: () => AerospikeExp;
+        list: _valueExp<AerospikeRecordValue[]>;
+        map: _valueExp<Record<string, AerospikeRecordValue>>;
+
+        keyInt: _keyTypeExp;
+        keyStr: _keyTypeExp;
+        keyBlob: _keyTypeExp;
+        keyExists: _keyTypeExp;
+        
+        binBool: _binTypeExp;
+        binInt: _binTypeExp;
+        binFloat: _binTypeExp;
+        binStr: _binTypeExp;
+        binBlob: _binTypeExp;
+        binGeo: _binTypeExp;
+        binList: _binTypeExp;
+        binMap: _binTypeExp;
+        binHll: _binTypeExp;
+        binType: _binTypeExp;
+        binExists: _binTypeExp;
+
+        setName: _metaExp;
+        deviceSize: _metaExp;
+        lastUpdate: _metaExp;
+        sinceUpdate: _metaExp;
+        voidTime: _metaExp;
+        ttl: _metaExp;
+        isTombstone: _metaExp;
+        memorySize: _metaExp;
+        digestModulo: _metaExp;
+
+        eq: _cmpExp;
+        ne: _cmpExp;
+        gt: _cmpExp;
+        ge: _cmpExp;
+        lt: _cmpExp;
+        le: _cmpExp;
+        cmpRegex: (options: regex, regex: string, cmpStr: AerospikeExp) => AerospikeExp;
+        cmpGeo: _cmpExp;
+
+        not: (expr: AerospikeExp) => AerospikeExp;
+        and: _VAExp;
+        or: _VAExp;
+        exclusive: _VAExp;
+
+        add: _VAExp;
+        sub: _VAExp;
+        mul: _VAExp;
+        div: _VAExp;
+        pow: _VAExp;
+        log: _VAExp;
+        mod: _VAExp;
+        abs: _VAExp;
+        floor: _VAExp;
+        ceil: _VAExp;
+        toInt: _VAExp;
+        toFloat: _VAExp;
+        intAnd: _VAExp;
+        intOr: _VAExp;
+        intXor: _VAExp;
+        intNot: _VAExp;
+        intLshift: _VAExp;
+        intRshift: _VAExp;
+        intArshift: _VAExp;
+        intCount: _VAExp;
+        intLscan: _VAExp;
+        intRscan: _VAExp;
+        min: _VAExp;
+        max: _VAExp;
+        cond: _VAExp;
+        let: _VAExp;
+        def: (varName: string, expr: AerospikeExp) => AerospikeExp;
+        var: (varName: string) => AerospikeExp;
+        lists: {
+            size: (bin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValue: (bin: AerospikeExp, value: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueRange: (bin: AerospikeExp, begin: AerospikeExp, end: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueList: (bin: AerospikeExp, value: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRelRankRangeToEnd: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRelRankRange: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndex: (bin: AerospikeExp, index: AerospikeExp, valueType: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndexRangeToEnd: (bin: AerospikeExp, index: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndexRange: (bin: AerospikeExp, index: AerospikeExp, count: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRank: (bin: AerospikeExp, rank: AerospikeExp, valueType: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRankRange: (bin: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            append: (bin: AerospikeExp, value: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            appendItems: (bin: AerospikeExp, value: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            insert: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            insertItems: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            increment: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            set: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: ListPolicy, ctx?: CdtContext) => AerospikeExp,
+            clear: (bin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            sort: (bin: AerospikeExp, order: ListSortFlags, ctx?: CdtContext) => AerospikeExp,
+            removeByValue: (bin: AerospikeExp, value: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueList: (bin: AerospikeExp, values: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndex: (bin: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRank: (bin: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp
+        };
+        maps: {
+            put: (bin: AerospikeExp, value: AerospikeExp, key: AerospikeExp, policy?: MapPolicy, ctx?: CdtContext) => AerospikeExp,
+            putItems: (bin: AerospikeExp, map: AerospikeExp, policy?: MapPolicy, ctx?: CdtContext) => AerospikeExp,
+            increment: (bin: AerospikeExp, value: AerospikeExp, key: AerospikeExp, policy?: MapPolicy, ctx?: CdtContext) => AerospikeExp,
+            clear: (bin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByKey: (bin: AerospikeExp, key: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByKeyList: (bin: AerospikeExp, keys: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByKeyRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByKeyRelIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByKeyRelIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValue: (bin: AerospikeExp, value: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueList: (bin: AerospikeExp, values: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByValueRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, key: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndex: (bin: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRank: (bin: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            removeByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            size: (bin: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByKey: (bin: AerospikeExp, key: AerospikeExp, valueType: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByKeyRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByKeyList: (bin: AerospikeExp, keys: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByKeyRelIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByKeyRelIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValue: (bin: AerospikeExp, value: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueList: (bin: AerospikeExp, values: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByValueRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndex: (bin: AerospikeExp, idx: AerospikeExp, valueType: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRank: (bin: AerospikeExp, rank: AerospikeExp, valueType: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp,
+            getByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, returnType: AerospikeExp, ctx?: CdtContext) => AerospikeExp
+        };
+        bit: {
+            reSize: (bin: AerospikeExp, flags: BitwiseResizeFlags, byteSize: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            insert: (bin: AerospikeExp, value: AerospikeExp, byteOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            remove: (bin: AerospikeExp, byteSize: AerospikeExp, byteOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            set: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            or: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            xor: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            and: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            not: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            lShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            rShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            add: (bin: AerospikeExp, action: BitwiseOverflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            subtract: (bin: AerospikeExp, action: BitwiseOverflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            setInt: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: BitwisePolicy) => AerospikeExp,
+            get: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp,
+            count: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp,
+            lScan: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp,
+            rScan: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp,
+            getInt: (bin: AerospikeExp, sign: boolean, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp
+        };
+        hll: {
+            initMH: (bin: AerospikeExp, mhBitCount: number, indexBitCount: number, policy?: HLLPolicy) => AerospikeExp,
+            init: (bin: AerospikeExp, indexBitCount: number, policy?: HLLPolicy) => AerospikeExp,
+            addMH: (bin: AerospikeExp, mhBitCount: number, indexBitCount: number, list: AerospikeExp, policy?: HLLPolicy) => AerospikeExp,
+            add: (bin: AerospikeExp, indexBitCount: number, list: AerospikeExp, policy?: HLLPolicy) => AerospikeExp,
+            update: (bin: AerospikeExp, list: AerospikeExp, policy?: HLLPolicy) => AerospikeExp,
+            getCount: (bin: AerospikeExp) => AerospikeExp,
+            getUnion: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp,
+            getUnionCount: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp,
+            getIntersectCount: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp,
+            getSimilarity: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp,
+            describe: (bin: AerospikeExp) => AerospikeExp,
+            mayContain: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp
+        }
+
+        type: typeof ExpTypes;
+        operations: ExpOperationsModule;
+    }
+
+    interface ILogInfo {
+        level?: LogLevel;
+        file?: number;
+    }
+
+    export const filter: FilterModule;
+    export const exp: ExpModule;
+    export enum regex {
+        BASIC,
+        EXTENDED,
+        ICASE,
+        NEWLINE
+    }
+    export const lists: ListsModule
+    export const hll: HLLModule;
+    export const maps: MapsModule;
+    export const cdt: CdtModule;
+    export const bitwise: BitwiseModule;
+    export const operations: OperationsModule;
+    export const policy: PolicyModule;
+    export const status: StatusModule;
+    export const features: FeaturesModule;
+    export const Record: typeof AerospikeRecord;
+    export const auth: typeof Auth;
+    export const language: typeof Language;
+    export const log: typeof Log;
+    export const ttl: typeof TTL;
+    export const jobStatus: typeof JobStatus;
+    export const indexDataType: typeof IndexDataType;
+    export const indexType: typeof IndexType;
+    export function print(err: Error, result: any): void;
+    export function releaseEventLoop(): void;
+    export function client(config: IConfigOptions): Client;
+    export function connect(config: IConfigOptions): Promise<Client>;
+    export function connect(callback: TypedCallback<Client>): Client;
+    export function connect(config: IConfigOptions, callback: TypedCallback<Client>): Client;
+    export function connect(config: IConfigOptions): Promise<Client>;
+    export function setDefaultLogging(ILogInfo: ILogInfo): void;
     export function setupGlobalCommandQueue(policy: CommandQueuePolicy): void;
-    export const batchType: {
-        BATCH_READ: any;
-        BATCH_WRITE: any;
-        BATCH_APPLY: any;
-        BATCH_REMOVE: any;
-    };
-    import AerospikeError = require("error");
-    import EventLoop = require("event_loop");
-}
-type Host = object;
-type ClientStats = any;
-type doneCallback = () => any;
-type errorCallback = () => any;
-type recordCallback = () => any;
-type valueCallback = () => any;
-type writeCallback = () => any;
-type batchRecordsCallback = () => any;
-type connectCallback = () => any;
-type infoCallback = () => any;
-type infoAllCallback = () => any;
-type jobCallback = () => any;
-type JobdoneCallback = () => any;
-type JobinfoCallback = () => any;
-type QueryaggregationResultCallback = () => any;
-type AerospikeExp = object;
-type ApplyPolicy = object;
-type BatchPolicy = object;
-type InfoPolicy = object;
-type OperatePolicy = object;
-type ReadPolicy = object;
-type RemovePolicy = object;
-type ScanPolicy = object;
-type QueryPolicy = object;
-type WritePolicy = object;
-type BitwisePolicy = object;
-type MapPolicy = object;
-type CommandQueuePolicy = object;
-type Policies = {
-    apply: ApplyPolicy;
-    batch: BatchPolicy;
-    info: InfoPolicy;
-    operate: OperatePolicy;
-    read: ReadPolicy;
-    remove: RemovePolicy;
-    scan: ScanPolicy;
-    query: QueryPolicy;
-    write: WritePolicy;
-};
-type Operation = object;
-type Client = object;
-type Key = object;
-type RecordObject = object;
-declare module "policies/bitwise_policy" {
-    export = BitwisePolicy;
-    class BitwisePolicy {
-        constructor(props?: any);
-        writeFlags: number;
+    export enum batchType {
+        BATCH_READ,
+        BATCH_WRITE,
+        BATCH_APPLY,
+        BATCH_REMOVE
     }
 }
+
+export = Aerospike
