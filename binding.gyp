@@ -1,4 +1,8 @@
 {
+  'variables': {
+    'build_arch%': '<(target_arch)'
+    '<(build_arch)=="x64"', 'build_arch%': 'x86_64'
+  },
   'targets': [
     {
       'target_name': 'aerospike-core-client',
@@ -13,14 +17,14 @@
               'conditions': [
                 ['OS=="linux"',{
                   'outputs': [
-                    'aerospike-client-c/target/Linux-x86_64/include/aerospike/aerospike.h',
-                    'aerospike-client-c/target/Linux-x86_64/lib/aerospike.lib'
+                    'aerospike-client-c/target/Linux-<(build_arch)/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Linux-<(build_arch)/lib/aerospike.lib'
                   ],
                 }],
                 ['OS=="mac"',{
                   'outputs': [
-                    'aerospike-client-c/target/Darwin-x86_64/include/aerospike/aerospike.h',
-                    'aerospike-client-c/target/Darwin-x86_64/lib/aerospike.lib'
+                    'aerospike-client-c/target/Darwin-<(build_arch)/include/aerospike/aerospike.h',
+                    'aerospike-client-c/target/Darwin-<(build_arch)/lib/aerospike.lib'
                   ],
                 }],
               ],
@@ -42,7 +46,7 @@
               'action': [
                 'pwsh', 'scripts/build-c-client.ps1',
                     '-Configuration', "$(ConfigurationName)",
-                    '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
+                    '-NodeLibFile', "<(node_root_dir)/<(build_arch)/node.lib"
               ]
             }
           ]
@@ -138,7 +142,7 @@
       'conditions': [
         ['OS=="linux"',{
           'libraries': [
-            '../aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a',
+            '../aerospike-client-c/target/Linux-<(build_arch)/lib/libaerospike.a',
             '-lz',
             '-lssl'
           ],
@@ -146,7 +150,7 @@
             'AS_USE_LIBUV'
           ],
           'include_dirs': [
-            'aerospike-client-c/target/Linux-x86_64/include',
+            'aerospike-client-c/target/Linux-<(build_arch)/include',
             'aerospike-client-c/src/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
@@ -155,7 +159,7 @@
         }],
         ['OS=="mac"',{
           'libraries': [
-            '../aerospike-client-c/target/Darwin-x86_64/lib/libaerospike.a',
+            '../aerospike-client-c/target/Darwin-<(build_arch)/lib/libaerospike.a',
             '-lz',
             '-lssl'
           ],
@@ -163,7 +167,7 @@
             'AS_USE_LIBUV'
           ],
           'include_dirs': [
-            'aerospike-client-c/target/Darwin-x86_64/include',
+            'aerospike-client-c/target/Darwin-<(build_arch)/include',
             'aerospike-client-c/src/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
