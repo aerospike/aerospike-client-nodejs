@@ -1,7 +1,11 @@
 {
   'variables': {
-    'build_arch%': '<(target_arch)'
-    '<(build_arch)=="x64"', 'build_arch%': 'x86_64'
+    'build_arch%': '<(target_arch)',
+    'conditions': [
+      ['target_arch=="x64"', {
+        'build_arch%': 'x86_64'
+      }]
+    ]
   },
   'targets': [
     {
