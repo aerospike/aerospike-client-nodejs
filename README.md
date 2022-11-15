@@ -19,9 +19,16 @@ record using the Aerospike database.
 ```js
 const Aerospike = require('aerospike')
 
+// INSERT HOSTNAME AND PORT NUMBER OF AEROPSIKE SERVER NODE HERE!
 const config = {
-  hosts: '192.168.33.10:3000'
+  hosts: '192.168.33.10:3000',
+  // Timeouts disabled, latency varies with hardware selection. Configure as needed.
+  policies: {
+    read : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout: 0}),
+    write : new Aerospike.ReadPolicy({socketTimeout : 0, totalTimeout: 0})
+  }
 }
+
 const key = new Aerospike.Key('test', 'demo', 'demo')
 
 Aerospike.connect(config)
@@ -37,7 +44,10 @@ Aerospike.connect(config)
     }
     const meta = { ttl: 10000 }
     const policy = new Aerospike.WritePolicy({
-      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
+      // Timeouts disabled, latency varies with hardware selection. Configure as needed.
+      socketTimeout : 0, 
+      totalTimeout: 0
     })
 
     return client.put(key, bins, meta, policy)
