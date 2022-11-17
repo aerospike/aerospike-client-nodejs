@@ -29,7 +29,7 @@ jobs:
           - 16.x
           - 17.x
           - 18.x
-    continue-on-error: true
+    continue-on-error: false
     steps:
     - uses: actions/checkout@v2
       with:
