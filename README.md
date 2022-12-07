@@ -170,6 +170,22 @@ unlink /usr/local/opt/openssl
 # Change the below linking based on openssl version and installation path
 ln -s /usr/local/Cellar/openssl@x/y.z/ /usr/local/opt/openssl
 ```
+
+If you are looking upgrade switch from openssl&#64;1 or an older version of openssl&#64;3, add these variables to your .bashrc, .profile, or .zshrc file.
+```bash
+export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
+export LDFLAGS="-L/usr/local/opt/openssl/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl/include"  
+export EXT_CFLAGS="-I/usr/local/opt/openssl/include"
+```
+
+Afterwards, source the file that was changed and confirm the desired openssl version is installed
+```bash
+source ~/.bashrc
+source ~/.profile
+source ~/.zshrc
+openssl version
+```
 For 4x client support, install openssl&#64;1.1 version.
 
 **LIBUV Library**
