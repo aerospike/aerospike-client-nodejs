@@ -40,7 +40,6 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "node-pre-gyp install --fallback-to-build",
-    //"install": "./scripts/ssl_check.sh",
     "postinstall": "mkdir -p lib/binding/openssl@1 lib/binding/openssl@3",
     "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
