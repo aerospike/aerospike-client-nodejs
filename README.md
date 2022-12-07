@@ -237,15 +237,17 @@ const Aerospike = require('aerospike')
 When using a cloned repository, install `aerospike` as a dependency of your application. Instead of referencing the module by name, you reference it by path.
 
 To clone the repository use the following command:
-
+```bash
   git clone --recursive git@github.com:aerospike/aerospike-client-nodejs.git
+```
 
 #### Building dependancy C client
 
 Make sure to build the C client before doing npm install variants
 Run the following commands to build the C client:
-
+```bash
   ./scripts/build-c-client.sh
+```
 
 #### Building and installing Node.js client
 
