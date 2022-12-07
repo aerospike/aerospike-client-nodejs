@@ -1,20 +1,19 @@
 # Aerospike Node.js Client API
 
 This documentation describes the Aerospike Node.js Client API in detail. The
-client API package is available for download from
-[www.aerospike.com](http://www.aerospike.com/download/client/nodejs/) or can be
+Aerospike Client API package is available for download from
+[www.aerospike.com](http://www.aerospike.com/download/client/nodejs/).
+The source code is available on [GitHub](https://github.com/aerospike/aerospike-client-nodejs). 
+The Aerospike Client API package can also be
 installed via npm from the [npmjs.com](https://www.npmjs.com/package/aerospike)
-package repository. The source code is available on
-[GitHub](https://github.com/aerospike/aerospike-client-nodejs). For more
-information about the Aerospike high-performance NoSQL database, please refer
-to [http://www.aerospike.com/](http://www.aerospike.com/).
+package repository. For more information about the Aerospike high-performance 
+NoSQL database, please refer to [http://www.aerospike.com/](http://www.aerospike.com/).
 
 ## Contents
 
-The `aerospike` npm package provides the `aerospike` module, which includes a
-number of submodules, classes as well as module level functions which together
-form the Client SDK enabling Node.js applications to connect to Aerospike
-database clusters.
+The `aerospike`  package provides the `aerospike` module, which includes 
+submodules, classes, and module level functions that enable Node.js
+applications to connect to Aerospike database clusters.
 
 ### Modules
 
@@ -34,25 +33,24 @@ The main modules included in the `aerospike` package are:
   module:aerospike/lists|lists} and {@link module:aerospike/maps|maps} modules
   define the operations on scalar, list and map values that can be executed
   with the {@link Client#operate} command.
-* The info protocol provides access to configuration and statistics for the
-  Aerospike server. The {@link module:aerospike/info|info module} includes
-  utility functions for parsing the info data returned by the Aerospike cluster.
+* The {@link module:aerospike/info|info module} includes utility functions 
+  for parsing the info data returned by the Aerospike cluster. 
+  The info protocol provides access to configuration and statistics for the Aerospike server.
 
 ### Classes
 
 The main classes included in the `aerospike` module are:
 
-* {@link Client} - The main interface of the Aerospike client. Through the
-  Client class commands such as put, get or query can be sent to an Aerospike
-  database cluster.
+* {@link Client} - The main interface of the Aerospike client. Commands such as put, get or query can be sent to an Aerospike
+  database cluster using the Client class.
 * {@link Key} - Keys are used to uniquely identify a record in the Aerospike database.
 * {@link Record} - Records consists of one or more record "bins" (name-value
-  pairs) and meta-data, incl. time-to-live and generation; a
+  pairs) and meta-data (time-to-live and generation); a
   record is uniquely identified by it's key within a given namespace.
 * {@link Query} - The Query class can be used to perform value-based searches
   on secondary indexes.
-* {@link Scan} - Through the Scan class scans of an entire namespaces can be
-  performed.
+* {@link Scan} - The Scan class scans the entirety of a namespace and performs 
+  various read and write operations on records within.
 * {@link RecordStream} - Queries and scans return records through a
   RecordStream instance which acts as an EventEmitter.
 * {@link Job} - The Job class is used to query the status of long running
@@ -96,9 +94,11 @@ The following is very simple example of how to write and read a record from Aero
 ```js
 const Aerospike = require('aerospike')
 
+// INSERT HOSTNAME AND PORT NUMBER OF AEROPSIKE SERVER NODE HERE!
 const config = {
-  hosts: '192.168.33.10:3000'
+  hosts: '192.168.33.10:3000',
 }
+
 const key = new Aerospike.Key('test', 'demo', 'demo')
 
 Aerospike.connect(config)
@@ -114,7 +114,10 @@ Aerospike.connect(config)
     }
     const meta = { ttl: 10000 }
     const policy = new Aerospike.WritePolicy({
-      exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+      exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
+      // Timeouts disabled, latency dependent on server location. Configure as needed.
+      socketTimeout : 0, 
+      totalTimeout : 0
     })
 
     return client.put(key, bins, meta, policy)
