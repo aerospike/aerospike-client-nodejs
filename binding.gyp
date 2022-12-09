@@ -4,6 +4,9 @@
     'conditions': [
       ['target_arch=="x64"', {
         'build_arch%': 'x86_64'
+      }, ],
+      ['target_arch=="arm64"', {
+        'build_arch%': 'aarch64'
       }]
     ]
   },
