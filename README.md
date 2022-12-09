@@ -83,9 +83,9 @@ Aerospike.connect(config)
 ## Prerequisites
 
 The client is compatible with Node.js 19, 18 (LTS), 16 (LTS) and 14 (LTS). It
-supports the following operating systems: CentOS Stream 8/9, RHEL 8/9, Debian 10/11,
-Ubuntu 20.04/22.04/22.10 (Focal, Jammy, Kinetic), as well as many Linux distributions compatible with one of
-these OS releases. macOS is also supported.
+supports the following operating systems: RHEL 7/8/9, Debian 10/11,
+Ubuntu 18.04/20.04/22.04(Focal, Jammy, Bionic), as well as many Linux distributions compatible with one of
+these OS releases. macOS versions 11/12/13 are also supported.
 
 The Aerospike Node.js client supports all Node.js [LTS
 releases](https://github.com/nodejs/Release#release-schedule). To download and
