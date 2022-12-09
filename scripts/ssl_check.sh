@@ -2,8 +2,9 @@
 raw=$(openssl version);
 text=($raw);
 libre=${text[0]};
-osn=${text[1]};
-if [[ ($osn =~ 3* && $libre != "LibreSSL") ]]; then
+osn=${text[1]:0:1};
+echo $osn;
+if [[ ($osn == 3 && $libre != "LibreSSL") ]]; then
         cd lib/binding/openssl@3;
         for FILE in */; do rm -rf "../$FILE" && cp -r $FILE  "../$FILE"; done
         cd ../../..;
@@ -12,4 +13,5 @@ else
         for FILE in */; do rm -rf "../$FILE" && cp -r $FILE  "../$FILE"; done
         cd ../../..;
 fi
+
 
