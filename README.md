@@ -89,6 +89,7 @@ It supports the following operating systems:
 - Ubuntu 18.04/20.04/22.04 (Focal, Jammy, Bionic)
 - Many Linux distributions compatible with one of the above OS releases.
 - macOS versions 11/12/13 are also supported. (Node.js 14 install unavailable on M1 Mac systems)
+
 The client is compatible with arm64, aarch64, and x86_64 architectures.
 
 The Aerospike Node.js client supports all Node.js [LTS
