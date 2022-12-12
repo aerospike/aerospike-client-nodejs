@@ -9,8 +9,6 @@
 [downloads-image]: https://img.shields.io/npm/dm/aerospike.svg
 [downloads-url]: http://npm-stat.com/charts.html?package=aerospike
 
-## Prerequisites
-
 The client is compatible with Node.js 19, 18 (LTS), 16 (LTS) and 14 (LTS).
 It supports the following operating systems:
 - RHEL 8/9
@@ -132,8 +130,9 @@ Aerospike.connect(config)
     }
   })
 ```
+## Prerequisites
 
-#### CentOS/RHEL
+#### RHEL/CentOS
 
 To install library prerequisites using `yum`:
 
