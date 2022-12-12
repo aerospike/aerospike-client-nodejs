@@ -9,7 +9,60 @@
 [downloads-image]: https://img.shields.io/npm/dm/aerospike.svg
 [downloads-url]: http://npm-stat.com/charts.html?package=aerospike
 
+## Prerequisites
+
+The client is compatible with Node.js 19, 18 (LTS), 16 (LTS) and 14 (LTS).
+It supports the following operating systems:
+- RHEL 8/9
+- Debian 10/11
+- Ubuntu 18.04/20.04/22.04 (Focal, Jammy, Bionic)
+- Many Linux distributions compatible with one of the above OS releases.
+- macOS versions 11/12/13 are also supported. (Node.js 14 install unavailable on M1 Mac systems)
+
+The client is compatible with arm64, aarch64, and x86_64 architectures.
+
+The Aerospike Node.js client supports all Node.js [LTS
+releases](https://github.com/nodejs/Release#release-schedule). To download and
+install the latest stable version of Node.js, visit
+[nodejs.org](http://nodejs.org/).
+
+Install the necessary "development tools" and other libraries to build the client software. 
+Reference various docker files in the repository under the docker directory for more information.
+
 The Aerospike Node.js client is a Node.js add-on module, written using V8.
+
+## Installation
+
+The Aerospike Node.js client is an add-on module that uses the Aerospike C client. The installation will attempt to install the pre-built binaries including dependent C client.
+
+You can install the Aerospike Node.js client like any other Node.js module.
+
+### Primer on Node.js Modules
+
+Node.js modules are containers of JavaScript code and a `package.json`, which defines
+the module, its dependencies and requirements. Modules are usually installed as
+dependencies of other Node.js applications or modules. The modules are installed in
+the application's `node_modules` directory, and can be utilized within the program
+by requiring the module by name.
+
+### npm Registry Installations
+
+To install `aerospike` as a dependency of your project, in your project directory run:
+
+```bash
+npm install aerospike
+```
+
+To add `aerospike` as a dependency in _package.json_, run:
+
+```bash
+npm install aerospike --save-dev
+```
+
+To require the module in your application:
+```bash
+const Aerospike = require('aerospike')
+```
 
 ## Usage
 
@@ -78,59 +131,6 @@ Aerospike.connect(config)
       error.client.close()
     }
   })
-```
-
-## Prerequisites
-
-The client is compatible with Node.js 19, 18 (LTS), 16 (LTS) and 14 (LTS).
-It supports the following operating systems:
-- RHEL 8/9
-- Debian 10/11
-- Ubuntu 18.04/20.04/22.04 (Focal, Jammy, Bionic)
-- Many Linux distributions compatible with one of the above OS releases.
-- macOS versions 11/12/13 are also supported. (Node.js 14 install unavailable on M1 Mac systems)
-
-The client is compatible with arm64, aarch64, and x86_64 architectures.
-
-The Aerospike Node.js client supports all Node.js [LTS
-releases](https://github.com/nodejs/Release#release-schedule). To download and
-install the latest stable version of Node.js, visit
-[nodejs.org](http://nodejs.org/).
-
-Install the necessary "development tools" and other libraries to build the client software. 
-Reference various docker files in the repository under the docker directory for more information.
-
-## Installation
-
-The Aerospike Node.js client is an add-on module that uses the Aerospike C client. The installation will attempt to install the pre-built binaries including dependent C client.
-
-You can install the Aerospike Node.js client like any other Node.js module.
-
-### Primer on Node.js Modules
-
-Node.js modules are containers of JavaScript code and a `package.json`, which defines
-the module, its dependencies and requirements. Modules are usually installed as
-dependencies of other Node.js applications or modules. The modules are installed in
-the application's `node_modules` directory, and can be utilized within the program
-by requiring the module by name.
-
-### npm Registry Installations
-
-To install `aerospike` as a dependency of your project, in your project directory run:
-
-```bash
-npm install aerospike
-```
-
-To add `aerospike` as a dependency in _package.json_, run:
-
-```bash
-npm install aerospike --save-dev
-```
-
-To require the module in your application:
-```bash
-const Aerospike = require('aerospike')
 ```
 
 #### CentOS/RHEL
