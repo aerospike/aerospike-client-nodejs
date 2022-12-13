@@ -43,6 +43,6 @@ jobs:
     - run: npm ci
     - run: npm run coverage
       env:
-        AEROSPIKE_HOSTS: "35.91.219.209:3000"
+        AEROSPIKE_HOSTS: "127.0.0.1:3000"
         OPTIONS: "--timeout 30000"
     - run: npm run codecov
