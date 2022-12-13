@@ -23,12 +23,10 @@ jobs:
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-          - 10.x
-          - 12.x
           - 14.x
           - 16.x
-          - 17.x
           - 18.x
+          - 19.x
     continue-on-error: true
     steps:
     - uses: actions/checkout@v2

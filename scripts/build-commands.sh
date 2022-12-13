@@ -34,10 +34,10 @@ LIBUV_TAR=${LIBUV_DIR}.tar.gz
 LIBUV_URL=http://dist.libuv.org/dist/v1.8.0/${LIBUV_TAR}
 LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 LIBUV_BUILD=0
-
+build_arch=$(uname -m)
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-x86_64
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-${build_arch}
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
 
@@ -48,7 +48,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
-  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-x86_64
+  AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-${build_arch}
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
