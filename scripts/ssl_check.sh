@@ -1,8 +1,23 @@
 #!/bin/bash
-raw=$(openssl version);
-text=($raw);
-libre=${text[0]};
-osn=${text[1]:0:1};
+
+# Get the version string
+raw=$(openssl version)
+
+# Split the string on spaces
+IFS=' ' read -ra arr <<< "$raw"
+
+# Extract the first word from the array
+libre=${arr[0]}
+
+# Extract the version number from the second element of the array
+version=${arr[1]}
+
+# Split the version number on dots
+IFS='.' read -ra arr <<< "$version"
+
+# Extract the osn version number
+osn=${arr[0]}
+
 echo $osn;
 if [[ ($osn == 3 && $libre != "LibreSSL") ]]; then
         cd lib/binding/openssl@3;
