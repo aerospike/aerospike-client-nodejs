@@ -7,6 +7,8 @@ param (
   [string]$FileHashesIni = "..\aerospike-client-c.sha256"
 )
 
+Write-Host "NodeLibFile: $NodeLibFile"
+
 # Required to unzip files
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -93,16 +95,34 @@ function Build-Project {
 		[switch]$verbose = ($VerbosePreference -ne 'SilentlyContinue')
 	)
 
+	# debug
+	$verbose = $true
+
 	$params = "${params} /nr:False /m:4"
 	$logdir = Resolve-Path ".\"
 	Write-Host "Building VS project ${projectfile} using build params `"${params}`""
-	$process = Invoke-MsBuild -PassThru -Path $projectfile -Params $params -BuildLogDirectory $logdir -ShowBuildOutputInCurrentWindow:$verbose
-	while (!$process.HasExited) {
-		Start-Sleep -Seconds 1
-		if (!$verbose) { Write-Host "." -NoNewline }
-	}
-	if (!$verbose) { Write-Host "" }
-	return $process.ExitCode -eq 0
+
+	$buildResult = Invoke-MsBuild  -Path $projectfile -Params $params -BuildLogDirectory $logdir -ShowBuildOutputInCurrentWindow
+	# while (!$process.HasExited) {
+	# 	Start-Sleep -Seconds 1
+	# 	if (!$verbose) { Write-Host "." -NoNewline }
+	# }
+	# if (!$verbose) { Write-Host "" }
+
+	if ($buildResult.BuildSucceeded -eq $true)
+    {
+        Write-Output ("Build completed successfully in {0:N1} seconds." -f $buildResult.BuildDuration.TotalSeconds)
+    }
+    elseif ($buildResult.BuildSucceeded -eq $false)
+    {
+        Write-Output ("Build failed after {0:N1} seconds. Check the build log file '$($buildResult.BuildLogFilePath)' for errors." -f $buildResult.BuildDuration.TotalSeconds)
+    }
+    elseif ($null -eq $buildResult.BuildSucceeded)
+    {
+        Write-Output "Unsure if build passed or failed: $($buildResult.Message)"
+    }
+
+	return $process.BuildSucceeded
 }
 
 $CClientCfg = Parse-IniFile $CClientIni
@@ -130,7 +150,7 @@ $PackagesPath = Resolve-Path ".\"
 $BuildParams = "/p:Configuration=`"$CClientConfiguration`" /p:Platform=$Platform /p:NodejsPath=$NodePath /p:PackagesPath=$PackagesPath"
 Write-Host "ProjectFile: $ProjectFile"
 $BuildSuccess = Build-Project $ProjectFile $BuildParams
-if (-not $BuildSuccess) {
+if (! $BuildSuccess) {
 	Write-Error -Message "Failed to build aerospike-client-c dependency"
 	throw "Failed to build aerospike-client-c dependency"
 }
