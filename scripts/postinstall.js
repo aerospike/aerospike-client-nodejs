@@ -10,4 +10,3 @@ function createDir (folder) {
 
 createDir('./lib/binding/openssl@1')
 createDir('./lib/binding/openssl@3')
-
