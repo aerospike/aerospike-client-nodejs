@@ -116,7 +116,8 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
 
 	if (err) {
-		cmd->ErrorCallback(err);
+		Local<Value> arg = batch_records_to_jsarray(records, cmd->log);
+		cmd->ErrorCallback(err, arg);
 	}
 	else {
 		Local<Value> argv[]{Nan::Null(),

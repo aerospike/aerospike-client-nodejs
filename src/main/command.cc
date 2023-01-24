@@ -92,6 +92,25 @@ Local<Value> AerospikeCommand::ErrorCallback()
 	return scope.Escape(Callback(1, args));
 }
 
+Local<Value> AerospikeCommand::ErrorCallback(Local<Value> arg)
+{
+	Nan::EscapableHandleScope scope;
+
+	if (err.code <= AEROSPIKE_ERR_CLIENT) {
+		as_v8_error(log, "Client error in %s command: %s [%d]", cmd.c_str(),
+					err.message, err.code);
+		Local<Value> args[] = {error_to_jsobject(&err, log), arg};
+		return scope.Escape(Callback(2, args));
+	}
+	else {
+		as_v8_debug(log, "Server error in %s command: %s [%d]", cmd.c_str(),
+					err.message, err.code);
+	}
+
+	Local<Value> args[] = {error_to_jsobject(&err, log)};
+	return scope.Escape(Callback(1, args));
+}
+
 Local<Value> AerospikeCommand::ErrorCallback(as_error *error)
 {
 	Nan::EscapableHandleScope scope;
@@ -99,6 +118,15 @@ Local<Value> AerospikeCommand::ErrorCallback(as_error *error)
 	as_error_copy(&err, error);
 
 	return scope.Escape(ErrorCallback());
+}
+
+Local<Value> AerospikeCommand::ErrorCallback(as_error *error, Local<Value> arg)
+{
+	Nan::EscapableHandleScope scope;
+
+	as_error_copy(&err, error);
+
+	return scope.Escape(ErrorCallback(arg));
 }
 
 Local<Value> AerospikeCommand::ErrorCallback(as_status code, const char *func,
