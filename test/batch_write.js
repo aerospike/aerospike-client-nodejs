@@ -133,15 +133,9 @@ describe('client.batchWrite()', function () {
         expect(err).not.to.be.ok()
         expect(results.length).to.equal(5)
         expect(results[1].record.bins).to.be.empty()
-<<<<<<< Updated upstream
-        expect(results[4].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
-        expect(results[2].record.bins).to.be.empty()
-        expect(results[3].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
-=======
         expect(results[2].record.bins).to.be.empty()
         expect(results[3].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
         expect(results[4].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
->>>>>>> Stashed changes
         // results.forEach(function (result) {
         //   console.log(util.inspect(result, true, 10, true))
         // })
