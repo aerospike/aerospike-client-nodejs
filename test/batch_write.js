@@ -133,7 +133,7 @@ describe('client.batchWrite()', function () {
       ]
 
       client.batchWrite(batchWriteRecords, function (err, results) {
-        expect(err).to.be.ok()
+        expect(err).to.be.null()
         expect(results.length).to.equal(2)
         expect(results[1].record.bins).to.be.empty()
         client.batchWrite(batchReadRecords, function (err, results) {
@@ -146,6 +146,7 @@ describe('client.batchWrite()', function () {
           //   console.log(util.inspect(result, true, 10, true))
           // })
           done()
+        })
       })
     })
   })
