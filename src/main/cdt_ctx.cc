@@ -124,7 +124,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_UNORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 0);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 0);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 		case CDT_CTX_LIST_INDEX_CREATE_UNORDERED_PAD:
@@ -135,7 +135,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_KEY_ORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 1);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 1);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 		case CDT_CTX_LIST_INDEX_CREATE_ORDERED:
@@ -146,7 +146,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_KEY_VALUE_ORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 3);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 
