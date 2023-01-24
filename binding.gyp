@@ -52,7 +52,7 @@
               'action': [
                 'pwsh', 'scripts/build-c-client.ps1',
                     '-Configuration', "$(ConfigurationName)",
-                    '-NodeLibFile', "<(node_root_dir)/<(build_arch)/node.lib"
+                    '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
             }
           ]
