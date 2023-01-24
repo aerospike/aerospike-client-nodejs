@@ -101,10 +101,6 @@ describe('client.batchWrite()', function () {
     it('returns only meta data if no bins are selected', function (done) {
       const batchRecords = [
         {
-          type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/1')
-        },
-        {
           type: batchType.BATCH_WRITE,
           key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
           ops: [
@@ -115,8 +111,7 @@ describe('client.batchWrite()', function () {
         },
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
-          readAllBins: true
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/1')
         },
         {
           type: batchType.BATCH_REMOVE,
@@ -126,16 +121,21 @@ describe('client.batchWrite()', function () {
           type: batchType.BATCH_READ,
           key: new Key(helper.namespace, helper.set, 'test/batch_write/5'),
           readAllBins: true
+        },
+        {
+          type: batchType.BATCH_READ,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
+          readAllBins: true
         }
       ]
 
       client.batchWrite(batchRecords, function (err, results) {
         expect(err).not.to.be.ok()
         expect(results.length).to.equal(5)
-        expect(results[0].record.bins).to.be.empty()
-        expect(results[2].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
-        expect(results[3].record.bins).to.be.empty()
-        expect(results[4].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
+        expect(results[1].record.bins).to.be.empty()
+        expect(results[4].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
+        expect(results[2].record.bins).to.be.empty()
+        expect(results[3].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
         // results.forEach(function (result) {
         //   console.log(util.inspect(result, true, 10, true))
         // })
