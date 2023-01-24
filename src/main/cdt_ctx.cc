@@ -22,6 +22,7 @@
 
 extern "C" {
 #include <aerospike/as_cdt_ctx.h>
+#include <aerospike/as_cdt_order.h>
 }
 
 using namespace v8;
@@ -117,35 +118,35 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			break;
 		case CDT_CTX_LIST_INDEX_CREATE_UNORDERED_NO_PAD:
 			intValue = Nan::To<int>(v8value).FromJust();
-			as_cdt_ctx_add_list_index_create(context, intValue, 0, false);
+			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 0, false);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_UNORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, 0);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 0);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 		case CDT_CTX_LIST_INDEX_CREATE_UNORDERED_PAD:
 			intValue = Nan::To<int>(v8value).FromJust();
-			as_cdt_ctx_add_list_index_create(context, intValue, 0, true);
+			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 0, true);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_KEY_ORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, 1);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 1);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 		case CDT_CTX_LIST_INDEX_CREATE_ORDERED:
 			intValue = Nan::To<int>(v8value).FromJust();
-			as_cdt_ctx_add_list_index_create(context, intValue, 1, false);
+			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 1, false);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 			break;
 		case CDT_CTX_MAP_KEY_CREATE_KEY_VALUE_ORDERED:
 			asval_from_jsvalue(&asValue, v8value, log);
-			as_cdt_ctx_add_map_key_create(context, asValue, 3);
+			as_cdt_ctx_add_map_key_create(context, asValue, (as_list_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
 
