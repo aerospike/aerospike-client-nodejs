@@ -41,8 +41,6 @@ jobs:
           submodules: recursive
       - name: Setup Windows SDK
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
-        with:
-          sdk-version: 22621
       - name: Setup node
         uses: actions/setup-node@v3
         with:
