@@ -62,71 +62,71 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 		int type = Nan::To<int>(v8type).FromJust();
 		int intValue;
 		as_val *asValue;
-		if(type == (int) CDT_CTX_LIST_INDEX){
+		if(type == (int) AS_CDT_CTX_LIST_INDEX){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_list_index(context, intValue);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 		}
-		else if(type == (int) CDT_CTX_LIST_RANK){
+		else if(type == (int) AS_CDT_CTX_LIST_RANK){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_list_rank(context, intValue);
 			as_v8_detail(log, "Adding List Rank context - rank: %d", intValue);
 		}
-		else if(type == (int) CDT_CTX_LIST_VALUE){
+		else if(type == (int) AS_CDT_CTX_LIST_VALUE){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_list_value(context, asValue);
 			as_v8_detail(log, "Adding List Value context");
 		}
-		else if(type == (int) CDT_CTX_MAP_INDEX){
+		else if(type == (int) AS_CDT_CTX_MAP_INDEX){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_map_index(context, intValue);
 			as_v8_detail(log, "Adding Map Index context - index: %d", intValue);
 		}
-		else if(type == (int) CDT_CTX_MAP_RANK){
+		else if(type == (int) AS_CDT_CTX_MAP_RANK){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_map_rank(context, intValue);
 			as_v8_detail(log, "Adding Map Rank context - rank: %d", intValue);
 		}
-		else if(type == (int) CDT_CTX_MAP_KEY){
+		else if(type == (int) AS_CDT_CTX_MAP_KEY){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key(context, asValue);
 			as_v8_detail(log, "Adding Map Key context");
 		}
-		else if(type == (int) CDT_CTX_MAP_VALUE){
+		else if(type == (int) AS_CDT_CTX_MAP_VALUE){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_value(context, asValue);
 			as_v8_detail(log, "Adding Map Value context");
 		}
-		else if(type == ((int) CDT_CTX_LIST_INDEX | 0x40)){
+		else if(type == ((int) AS_CDT_CTX_LIST_INDEX | 0x40)){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 0, false);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 		}
-		else if(type == ((int) CDT_CTX_MAP_KEY | 0x40) ){
+		else if(type == ((int) AS_CDT_CTX_MAP_KEY | 0x40) ){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 0);
 			as_v8_detail(log, "Adding Map Value context");
 		}
-		else if(type == ((int) CDT_CTX_LIST_INDEX | 0x80)){
+		else if(type == ((int) AS_CDT_CTX_LIST_INDEX | 0x80)){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 0, true);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 		}
-		else if(type == ((int) CDT_CTX_MAP_KEY | 0x80)){
+		else if(type == ((int) AS_CDT_CTX_MAP_KEY | 0x80)){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 1);
 			as_v8_detail(log, "Adding Map Value context");
 		}
-		else if(type == ((int) CDT_CTX_LIST_INDEX | 0xc0)){
+		else if(type == ((int) AS_CDT_CTX_LIST_INDEX | 0xc0)){
 			intValue = Nan::To<int>(v8value).FromJust();
 			as_cdt_ctx_add_list_index_create(context, intValue, (as_list_order) 1, false);
 			as_v8_detail(log, "Adding List Index context - index: %d",
 						 intValue);
 		}
-		else if(type == ((int) CDT_CTX_MAP_KEY | 0xc0)){
+		else if(type == ((int) AS_CDT_CTX_MAP_KEY | 0xc0)){
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
