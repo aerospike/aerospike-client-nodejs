@@ -15,7 +15,8 @@ exec('openssl version; uname -s; uname -m; node -v;', (error, stdout, stderr) =>
     Linux: 'linux',
     Darwin: 'darwin',
     arm64: 'arm64',
-    x86_64: 'x64'
+    x86_64: 'x64',
+    aarch64: 'x64'
   }
   if ((words[1][0] === '3') && (words[0] !== 'LibreSSL')) {
     fs.rename('lib/binding/openssl@3/node-' + dict[nodeVersion] + '-' + dict[OS] + '-' + dict[arch],
