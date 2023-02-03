@@ -61,16 +61,16 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/2'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
           readAllBins: true
         },
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/4')
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/2')
         },
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/6')
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/3')
         },
         {
           type: batchType.BATCH_READ,
@@ -101,7 +101,7 @@ describe('client.batchWrite()', function () {
       const batchWriteRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4'),
           ops: [
             op.write('string', 'def'),
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
@@ -117,17 +117,17 @@ describe('client.batchWrite()', function () {
       const batchReadRecords = [
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/1')
-        },
-        {
-          type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4'),
           readAllBins: true
         },
         {
           type: batchType.BATCH_READ,
           key: new Key(helper.namespace, helper.set, 'test/batch_write/5'),
           readAllBins: true
+        },
+        {
+          type: batchType.BATCH_READ,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4')
         }
       ]
 
@@ -138,9 +138,9 @@ describe('client.batchWrite()', function () {
         client.batchWrite(batchReadRecords, function (err, results) {
           expect(err).not.to.be.ok()
           expect(results.length).to.equal(3)
-          expect(results[0].record.bins).to.be.empty()
-          expect(results[1].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
-          expect(results[2].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
+          expect(results[0].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
+          expect(results[1].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
+          expect(results[2].record.bins).to.be.empty()
           // results.forEach(function (result) {
           //   console.log(util.inspect(result, true, 10, true))
           // })
@@ -156,7 +156,7 @@ describe('client.batchWrite()', function () {
     it('returns list and map bins as byte buffers', function () {
       const batch = [{
         type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/7'),
         readAllBins: true
       }]
       const policy = new Aerospike.BatchPolicy({
@@ -177,7 +177,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/8'),
           readAllBins: true
         }
       ]
@@ -201,7 +201,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/9'),
           ops: [
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
             op.write('blob', Buffer.from('bar'))
@@ -231,7 +231,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/10'),
           ops: [
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
             op.write('blob', Buffer.from('bar'))
@@ -291,7 +291,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/12'),
           ops: [
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
             op.write('blob', Buffer.from('bar'))
@@ -303,7 +303,7 @@ describe('client.batchWrite()', function () {
 
       ]
 
-      client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/11'), function (error, results) {
+      client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/12'), function (error, results) {
         if (error) { error = null }
         client.batchWrite(batchRecords, function (error, results) {
           expect(error).not.to.be.ok()
@@ -321,7 +321,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/13'),
           ops: [
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
             op.write('blob', Buffer.from('bar'))
