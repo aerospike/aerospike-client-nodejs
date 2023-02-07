@@ -29,12 +29,9 @@ jobs:
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-           - 10.x
-           - 12.x
-           - 14.x
            - 16.x
-           - 17.x
            - 18.x
+           - 19.x
     continue-on-error: true
     name: Node ${{ matrix.node-version }} tester
     steps:
@@ -42,7 +39,7 @@ jobs:
         with:
           submodules: recursive
       - name: Setup Windows SDK
-        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.6
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
         with:
           sdk-version: 17763
       - name: Setup node
@@ -60,7 +57,7 @@ jobs:
             $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\@npmcli\run-script"
           }
           cd $NodeModulesPath
-          npm install node-gyp@8.x
+          npm install node-gyp@9.x
       - name: Install nodejs Client
         shell: pwsh
         run: npm install --unsafe-perm --build-from-source
