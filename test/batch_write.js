@@ -18,11 +18,11 @@
 
 /* eslint-env mocha */
 /* global expect */
-
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 // const util = require('util')
 const batchType = Aerospike.batchType
+const status = Aerospike.status
 
 const op = Aerospike.operations
 const GeoJSON = Aerospike.GeoJSON
@@ -66,11 +66,11 @@ describe('client.batchWrite()', function () {
         },
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3')
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/2')
         },
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/5')
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/3')
         },
         {
           type: batchType.BATCH_READ,
@@ -89,7 +89,6 @@ describe('client.batchWrite()', function () {
           result => result.inDoubt === true)
         const notFound = results.filter(
           result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
-        console.log('found:', found.length, 'inDoubt:', inDoubt.length, 'notFound:', notFound.length)
         expect(err).not.to.be.ok()
         expect(results.length).to.equal(5)
         expect(found.length).to.equal(3 - inDoubt.length)
@@ -99,14 +98,10 @@ describe('client.batchWrite()', function () {
     })
 
     it('returns only meta data if no bins are selected', function (done) {
-      const batchRecords = [
-        {
-          type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/1')
-        },
+      const batchWriteRecords = [
         {
           type: batchType.BATCH_WRITE,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4'),
           ops: [
             op.write('string', 'def'),
             op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
@@ -114,32 +109,43 @@ describe('client.batchWrite()', function () {
             op.append('str2', 'world')]
         },
         {
-          type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/3'),
-          readAllBins: true
-        },
-        {
           type: batchType.BATCH_REMOVE,
           key: new Key(helper.namespace, helper.set, 'test/batch_write/5')
+        }
+      ]
+
+      const batchReadRecords = [
+        {
+          type: batchType.BATCH_READ,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4'),
+          readAllBins: true
         },
         {
           type: batchType.BATCH_READ,
           key: new Key(helper.namespace, helper.set, 'test/batch_write/5'),
           readAllBins: true
+        },
+        {
+          type: batchType.BATCH_READ,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/4')
         }
       ]
 
-      client.batchWrite(batchRecords, function (err, results) {
-        expect(err).not.to.be.ok()
-        expect(results.length).to.equal(5)
-        expect(results[0].record.bins).to.be.empty()
-        expect(results[2].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
-        expect(results[3].record.bins).to.be.empty()
-        expect(results[4].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
-        // results.forEach(function (result) {
-        //   console.log(util.inspect(result, true, 10, true))
-        // })
-        done()
+      client.batchWrite(batchWriteRecords, function (err, results) {
+        expect(err).to.be.null()
+        expect(results.length).to.equal(2)
+        expect(results[1].record.bins).to.be.empty()
+        client.batchWrite(batchReadRecords, function (err, results) {
+          expect(err).not.to.be.ok()
+          expect(results.length).to.equal(3)
+          expect(results[0].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
+          expect(results[1].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
+          expect(results[2].record.bins).to.be.empty()
+          // results.forEach(function (result) {
+          //   console.log(util.inspect(result, true, 10, true))
+          // })
+          done()
+        })
       })
     })
   })
@@ -150,7 +156,7 @@ describe('client.batchWrite()', function () {
     it('returns list and map bins as byte buffers', function () {
       const batch = [{
         type: batchType.BATCH_READ,
-        key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/7'),
         readAllBins: true
       }]
       const policy = new Aerospike.BatchPolicy({
@@ -171,7 +177,7 @@ describe('client.batchWrite()', function () {
       const batchRecords = [
         {
           type: batchType.BATCH_READ,
-          key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/8'),
           readAllBins: true
         }
       ]
@@ -185,6 +191,156 @@ describe('client.batchWrite()', function () {
           expect(result.status).to.equal(Aerospike.status.OK)
           expect(result.record).to.be.instanceof(Aerospike.Record)
         })
+    })
+  })
+
+  context('with exists.IGNORE ', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns the status whether each key was found or not', function (done) {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/9'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.IGNORE
+          })
+        }
+
+      ]
+
+      client.batchWrite(batchRecords, function (error, results) {
+        if (error) throw error
+        client.batchWrite(batchRecords, function (error, results) {
+          expect(error).not.to.be.ok()
+          expect(results[0].status).to.equal(status.OK)
+          done()
+        })
+      })
+    })
+  })
+
+  context('with exists.CREATE ', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns the correct status and error value', function (done) {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/10'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.CREATE
+          })
+        }
+
+      ]
+
+      client.batchWrite(batchRecords, function (error, results) {
+        if (error) { error = null }
+        client.batchWrite(batchRecords, function (error, results) {
+          expect(error.code).to.equal(status.BATCH_FAILED)
+          expect(results[0].status).to.equal(status.ERR_RECORD_EXISTS)
+          done()
+        })
+      })
+    })
+  })
+
+  context('with exists.UPDATE ', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns the status whether each key was found or not', function (done) {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.UPDATE
+          })
+        }
+
+      ]
+
+      client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/11'), function (error, results) {
+        if (error) { error = null }
+        client.batchWrite(batchRecords, function (error, results) {
+          expect(error).not.to.be.ok()
+          expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
+          done()
+        })
+      })
+    })
+  })
+
+  context('with exists.REPLACE ', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns the status whether each key was found or not', function (done) {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/12'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.REPLACE
+          })
+        }
+
+      ]
+
+      client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/12'), function (error, results) {
+        if (error) { error = null }
+        client.batchWrite(batchRecords, function (error, results) {
+          expect(error).not.to.be.ok()
+          expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
+          done()
+        })
+      })
+    })
+  })
+
+  context('with exists.CREATE_OR_REPLACE ', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns the status whether each key was found or not', function (done) {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/13'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.CREATE_OR_REPLACE
+          })
+        }
+
+      ]
+
+      client.batchWrite(batchRecords, function (error, results) {
+        if (error) throw error
+        client.batchWrite(batchRecords, function (error, results) {
+          expect(error).not.to.be.ok()
+          expect(results[0].status).to.equal(status.OK)
+          done()
+        })
+      })
     })
   })
 })

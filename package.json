@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -40,7 +40,7 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "node-pre-gyp install --fallback-to-build",
-    "postinstall": "mkdir -p lib/binding/openssl@1 lib/binding/openssl@3",
+    "postinstall": "node scripts/postinstall.js",
     "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
@@ -95,12 +95,5 @@
     "src/",
     "test/",
     "typings/"
-  ],
-  "directories": {
-    "doc": "docs",
-    "example": "examples",
-    "lib": "lib",
-    "test": "test"
-  },
-  "author": ""
+  ]
 }
