@@ -50,9 +50,7 @@ class AerospikeCommand : public Nan::AsyncResource {
 
 	v8::Local<v8::Value> Callback(const int argc, v8::Local<v8::Value> argv[]);
 	v8::Local<v8::Value> ErrorCallback();
-	v8::Local<v8::Value> ErrorCallback(v8::Local<v8::Value> arg);
 	v8::Local<v8::Value> ErrorCallback(as_error *err);
-	v8::Local<v8::Value> ErrorCallback(as_error *err, v8::Local<v8::Value> arg);
 	v8::Local<v8::Value> ErrorCallback(as_status code, const char *func,
 									   const char *file, uint32_t line,
 									   const char *fmt, ...);

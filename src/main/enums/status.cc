@@ -30,7 +30,6 @@ Local<Object> status()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "AEROSPIKE_BATCH_FAILED", AEROSPIKE_BATCH_FAILED);
 	set(obj, "AEROSPIKE_NO_RESPONSE", AEROSPIKE_NO_RESPONSE);
 	set(obj, "AEROSPIKE_MAX_ERROR_RATE", AEROSPIKE_MAX_ERROR_RATE);
 	set(obj, "AEROSPIKE_USE_NORMAL_RETRY", AEROSPIKE_USE_NORMAL_RETRY);
