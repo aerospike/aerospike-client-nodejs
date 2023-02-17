@@ -26,6 +26,7 @@
 
 extern "C" {
 #include <aerospike/as_error.h>
+#include <aerospike/as_status.h>
 }
 
 using namespace v8;
@@ -116,8 +117,14 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
 
 	if (err) {
-		Local<Value> arg = batch_records_to_jsarray(records, cmd->log);
-		cmd->ErrorCallback(err, arg);
+		if (err->code == AEROSPIKE_BATCH_FAILED) {
+			Local<Value> argv[]{Nan::Null(),
+							batch_records_to_jsarray(records, cmd->log)};
+			cmd->Callback(2, argv);
+		}
+		else {
+			cmd->ErrorCallback(err);
+		}
 	}
 	else {
 		Local<Value> argv[]{Nan::Null(),
