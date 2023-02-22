@@ -945,7 +945,7 @@ describe('client.operate() - CDT Map operations', function () {
   })
 
   describe('maps.getByKeyList', function () {
-    it('fetches a map entry identified by key', function () {
+    it('fetches a map entry identified by keys', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.getByKeyList('map', ['b', 'c'], maps.returnType.KEY_VALUE)))
@@ -961,10 +961,18 @@ describe('client.operate() - CDT Map operations', function () {
         .then(cleanup())
     })
 
+    it('does not fail if only some keys exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['a', 'z'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['a', 1] }))
+        .then(cleanup())
+    })
+
     context('with nested map context', function () {
       helper.skipUnlessVersion('>= 4.6.0', this)
 
-      it('fetches a map entry identified by key', function () {
+      it('fetches a map entries identified by keys', function () {
         return initState()
           .then(createRecord({ list: [{ a: 1, b: 2, c: 3 }, { b: 3 }] }))
           .then(operate(
