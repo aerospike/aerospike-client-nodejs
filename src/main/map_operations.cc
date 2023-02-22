@@ -661,6 +661,30 @@ bool add_map_get_by_key_op(as_operations *ops, const char *bin,
 	return true;
 }
 
+bool add_map_get_by_key_list_op(as_operations *ops, const char *bin,
+								   as_cdt_ctx *context, Local<Object> obj,
+								   LogInfo *log)
+{
+	as_list *keys = NULL;
+	if (get_list_property(&keys, obj, "keys", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_map_return_type return_type;
+	if (!get_map_return_type(&return_type, obj, log)) {
+		return false;
+	}
+
+	if (as_v8_debug_enabled(log)) {
+		char *keys_str = as_val_tostring(keys);
+		as_v8_debug(log, "keys=%s, return_type=%i", keys_str, return_type);
+		cf_free(keys_str);
+	}
+	as_operations_map_get_by_key_list(ops, bin, context, keys, return_type);
+
+	return true;
+}
+
 bool add_map_get_by_key_range_op(as_operations *ops, const char *bin,
 								 as_cdt_ctx *context, Local<Object> obj,
 								 LogInfo *log)
@@ -1003,6 +1027,7 @@ const ops_table_entry ops_table[] = {
 	{"MAP_REMOVE_BY_RANK_RANGE", add_map_remove_by_rank_range_op},
 	{"MAP_SIZE", add_map_size_op},
 	{"MAP_GET_BY_KEY", add_map_get_by_key_op},
+	{"MAP_GET_BY_KEY_LIST", add_map_get_by_key_list_op},
 	{"MAP_GET_BY_KEY_RANGE", add_map_get_by_key_range_op},
 	{"MAP_GET_BY_KEY_REL_INDEX_RANGE", add_map_get_by_key_rel_index_range_op},
 	{"MAP_GET_BY_VALUE", add_map_get_by_value_op},

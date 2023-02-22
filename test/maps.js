@@ -944,6 +944,41 @@ describe('client.operate() - CDT Map operations', function () {
     })
   })
 
+  describe('maps.getByKeyList', function () {
+    it('fetches a map entry identified by key', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['b', 'c'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 3] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if the key does not exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['z'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [] }))
+        .then(cleanup())
+    })
+
+    context('with nested map context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('fetches a map entry identified by key', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 1, b: 2, c: 3 }, { b: 3 }] }))
+          .then(operate(
+            maps
+              .getByKeyList('list', ['a', 'b'])
+              .withContext(ctx => ctx.addListIndex(0))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ list: ['a', 1, 'b', 2] }))
+          .then(cleanup())
+      })
+    })
+  })
+
   describe('maps.getByKeyRange', function () {
     it('fetches map entries identified by key range', function () {
       return initState()
