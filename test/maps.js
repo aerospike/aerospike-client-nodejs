@@ -1106,6 +1106,49 @@ describe('client.operate() - CDT Map operations', function () {
     })
   })
 
+  describe('maps.getByValueList', function () {
+    it('fetches a map keys and values identified by values', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [2, 3], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 3] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if the value does not exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [4], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if only some values exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [1, 4], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['a', 1] }))
+        .then(cleanup())
+    })
+
+    context('with nested map context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('fetches a map keys and values identified by values', function () {
+        return initState()
+          .then(createRecord({ map: { nested: { a: 1, b: 2, c: 3 } } }))
+          .then(operate(
+            maps
+              .getByValueList('map', [1, 2])
+              .withContext(ctx => ctx.addMapKey('nested'))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
+          .then(cleanup())
+      })
+    })
+  })
+
   describe('maps.getByValueRange', function () {
     it('fetches map entries identified by value range', function () {
       return initState()

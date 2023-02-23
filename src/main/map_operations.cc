@@ -796,6 +796,31 @@ bool add_map_get_by_value_op(as_operations *ops, const char *bin,
 	return true;
 }
 
+bool add_map_get_by_value_list_op(as_operations *ops, const char *bin,
+									 as_cdt_ctx *context, Local<Object> obj,
+									 LogInfo *log)
+{
+	as_list *values = NULL;
+	if (get_list_property(&values, obj, "values", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_map_return_type return_type;
+	if (!get_map_return_type(&return_type, obj, log)) {
+		return false;
+	}
+
+	if (as_v8_debug_enabled(log)) {
+		char *values_str = as_val_tostring(values);
+		as_v8_debug(log, "values=%s, return_type=%i", values_str, return_type);
+		cf_free(values_str);
+	}
+	as_operations_map_get_by_value_list(ops, bin, context, values,
+										   return_type);
+
+	return true;
+}
+
 bool add_map_get_by_value_range_op(as_operations *ops, const char *bin,
 								   as_cdt_ctx *context, Local<Object> obj,
 								   LogInfo *log)
@@ -1031,6 +1056,7 @@ const ops_table_entry ops_table[] = {
 	{"MAP_GET_BY_KEY_RANGE", add_map_get_by_key_range_op},
 	{"MAP_GET_BY_KEY_REL_INDEX_RANGE", add_map_get_by_key_rel_index_range_op},
 	{"MAP_GET_BY_VALUE", add_map_get_by_value_op},
+	{"MAP_GET_BY_VALUE_LIST", add_map_get_by_value_list_op},
 	{"MAP_GET_BY_VALUE_RANGE", add_map_get_by_value_range_op},
 	{"MAP_GET_BY_VALUE_REL_RANK_RANGE", add_map_get_by_value_rel_rank_range_op},
 	{"MAP_GET_BY_INDEX", add_map_get_by_index_op},
