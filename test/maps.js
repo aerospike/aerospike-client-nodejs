@@ -1501,5 +1501,23 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
         .then(cleanup())
     })
+
+    it('returns true or false for a single key read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByKeyList('map', ['a', 'b', 'd'], maps.returnType.EXISTS)))
+        .then(assertResultEql({ map: true }))
+        .then(cleanup())
+    })
+
+    it('returns true if any values exisst', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByValueList('map', [1, 2 ,4], maps.returnType.EXISTS)))
+        .then(assertResultEql({ map: true }))
+        .then(cleanup())
+    })
   })
 })
