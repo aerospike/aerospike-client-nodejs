@@ -62,6 +62,8 @@ Local<Object> map_enum_values()
 	set(return_type, "VALUE", AS_MAP_RETURN_VALUE);
 	set(return_type, "KEY_VALUE", AS_MAP_RETURN_KEY_VALUE);
 	set(return_type, "INVERTED", AS_MAP_RETURN_INVERTED);
+	set(return_type, "MAP_ORDERED", AS_MAP_RETURN_MAP_ORDERED);
+	set(return_type, "MAP_UNORDERED", AS_MAP_RETURN_MAP_UNORDERED);
 
 	// as_cdt_op_map
 	Local<Object> opcodes = Nan::New<Object>();
