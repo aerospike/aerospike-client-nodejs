@@ -1515,7 +1515,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
-        .then(operate(maps.getByValueList('map', [1, 2 ,4], maps.returnType.EXISTS)))
+        .then(operate(maps.getByValueList('map', [1, 2, 4], maps.returnType.EXISTS)))
         .then(assertResultEql({ map: true }))
         .then(cleanup())
     })
