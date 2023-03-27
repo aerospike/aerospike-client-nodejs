@@ -61,7 +61,9 @@ Local<Object> map_enum_values()
 	set(return_type, "KEY", AS_MAP_RETURN_KEY);
 	set(return_type, "VALUE", AS_MAP_RETURN_VALUE);
 	set(return_type, "KEY_VALUE", AS_MAP_RETURN_KEY_VALUE);
-	set(return_type, "EXISTS", AS_MAP_RETURN_EXISTS);
+  set(return_type, "EXISTS", AS_MAP_RETURN_EXISTS);
+	set(return_type, "UNORDERED_MAP", AS_MAP_RETURN_UNORDERED_MAP);
+	set(return_type, "ORDERED_MAP", AS_MAP_RETURN_ORDERED_MAP);
 	set(return_type, "INVERTED", AS_MAP_RETURN_INVERTED);
 
 	// as_cdt_op_map

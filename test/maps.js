@@ -1519,5 +1519,41 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: true }))
         .then(cleanup())
     })
+    
+    it('returns key/value for a single read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByIndex('map', 0, maps.returnType.ORDERED_MAP)))
+        .then(assertResultEql({ map: { a: 1 } }))
+        .then(cleanup())
+    })
+
+    it('returns key/value for a range read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.ORDERED_MAP)))
+        .then(assertResultEql({ map: { a: 1, b: 2 } }))
+        .then(cleanup())
+    })
+
+    it('returns key/value for a single read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByIndex('map', 0, maps.returnType.UNORDERED_MAP)))
+        .then(assertResultEql({ map: { a: 1 } }))
+        .then(cleanup())
+    })
+
+    it('returns key/value for a range read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.UNORDERED_MAP)))
+        .then(assertResultEql({ map: { a: 1, b: 2 } }))
+        .then(cleanup())
+    })
   })
 })
