@@ -944,6 +944,49 @@ describe('client.operate() - CDT Map operations', function () {
     })
   })
 
+  describe('maps.getByKeyList', function () {
+    it('fetches a map entry identified by keys', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['b', 'c'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 3] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if the key does not exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['z'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if only some keys exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByKeyList('map', ['a', 'z'], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['a', 1] }))
+        .then(cleanup())
+    })
+
+    context('with nested map context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('fetches a map entries identified by keys', function () {
+        return initState()
+          .then(createRecord({ list: [{ a: 1, b: 2, c: 3 }, { b: 3 }] }))
+          .then(operate(
+            maps
+              .getByKeyList('list', ['a', 'b'])
+              .withContext(ctx => ctx.addListIndex(0))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ list: ['a', 1, 'b', 2] }))
+          .then(cleanup())
+      })
+    })
+  })
+
   describe('maps.getByKeyRange', function () {
     it('fetches map entries identified by key range', function () {
       return initState()
@@ -1058,6 +1101,49 @@ describe('client.operate() - CDT Map operations', function () {
               .andReturn(maps.returnType.KEY)
           ))
           .then(assertResultSatisfy(result => eql(result.map.sort(), ['b', 'c'])))
+          .then(cleanup())
+      })
+    })
+  })
+
+  describe('maps.getByValueList', function () {
+    it('fetches a map keys and values identified by values', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [2, 3], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['b', 2, 'c', 3] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if the value does not exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [4], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: [] }))
+        .then(cleanup())
+    })
+
+    it('does not fail if only some values exist', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(operate(maps.getByValueList('map', [1, 4], maps.returnType.KEY_VALUE)))
+        .then(assertResultEql({ map: ['a', 1] }))
+        .then(cleanup())
+    })
+
+    context('with nested map context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('fetches a map keys and values identified by values', function () {
+        return initState()
+          .then(createRecord({ map: { nested: { a: 1, b: 2, c: 3 } } }))
+          .then(operate(
+            maps
+              .getByValueList('map', [1, 2])
+              .withContext(ctx => ctx.addMapKey('nested'))
+              .andReturn(maps.returnType.KEY_VALUE)
+          ))
+          .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
           .then(cleanup())
       })
     })
@@ -1413,6 +1499,24 @@ describe('client.operate() - CDT Map operations', function () {
         .then(orderByKey('map'))
         .then(operate(maps.getByIndexRange('map', 0, 2, maps.returnType.KEY_VALUE)))
         .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
+        .then(cleanup())
+    })
+
+    it('returns true or false for a single key read', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByKeyList('map', ['a', 'b', 'd'], maps.returnType.EXISTS)))
+        .then(assertResultEql({ map: true }))
+        .then(cleanup())
+    })
+
+    it('returns true if any values exisst', function () {
+      return initState()
+        .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.getByValueList('map', [1, 2, 4], maps.returnType.EXISTS)))
+        .then(assertResultEql({ map: true }))
         .then(cleanup())
     })
   })
