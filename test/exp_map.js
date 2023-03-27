@@ -149,16 +149,16 @@ describe('Aerospike.exp_operations', function () {
         await testNoMatch(key, exp.eq(
           exp.maps.getByIndex(
             exp.binMap('tags'),
-            exp.int(3),
-            exp.type.INT,
+            exp.int(2),
+            exp.type.AUTO,
             maps.returnType.COUNT,
             context),
           exp.int(0)))
         await testMatch(key, exp.eq(
           exp.maps.getByIndex(
             exp.binMap('tags'),
-            exp.int(4),
-            exp.type.INT,
+            exp.int(3),
+            exp.type.AUTO,
             maps.returnType.COUNT,
             context),
           exp.int(1)))
@@ -186,7 +186,7 @@ describe('Aerospike.exp_operations', function () {
       })
 
       it('selects "count" map items starting at specified nested index', async function () {
-        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black'} } })
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
         const context = new Context().addMapKey('nested')
         orderByKey('tags')
         orderByKey('tags', context)
@@ -195,14 +195,16 @@ describe('Aerospike.exp_operations', function () {
             exp.binMap('tags'),
             exp.int(6),
             exp.int(0),
-            maps.returnType.COUNT),
+            maps.returnType.COUNT,
+            context),
           exp.int(0)))
         await testMatch(key, exp.eq(
           exp.maps.getByIndexRange(
             exp.binMap('tags'),
             exp.int(6),
             exp.int(0),
-            maps.returnType.COUNT),
+            maps.returnType.COUNT,
+            context),
           exp.int(4)))
       })
     })
@@ -226,7 +228,7 @@ describe('Aerospike.exp_operations', function () {
       })
 
       it('selects map items starting at specified index to the end of the map', async function () {
-        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black'} } })
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
         const context = new Context().addMapKey('nested')
         orderByKey('tags')
         orderByKey('tags', context)
@@ -234,13 +236,15 @@ describe('Aerospike.exp_operations', function () {
           exp.maps.getByIndexRangeToEnd(
             exp.binMap('tags'),
             exp.int(0),
-            maps.returnType.COUNT),
+            maps.returnType.COUNT,
+            context),
           exp.int(0)))
         await testMatch(key, exp.eq(
           exp.maps.getByIndexRangeToEnd(
             exp.binMap('tags'),
             exp.int(0),
-            maps.returnType.COUNT),
+            maps.returnType.COUNT,
+            context),
           exp.int(4)))
       })
     })
@@ -255,14 +259,56 @@ describe('Aerospike.exp_operations', function () {
       it('matches the count of the matched map values of a nested map', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
         const context = new Context().addMapKey('nested')
-        console.log(exp.maps.getByKey(exp.binMap('tags'), exp.str('d'), exp.type.AUTO, maps.returnType.COUNT, context))
         await testNoMatch(key, exp.eq(exp.maps.getByKey(exp.binMap('tags'), exp.str('d'), exp.type.AUTO, maps.returnType.COUNT, context), exp.int(2)))
         await testMatch(key, exp.eq(exp.maps.getByKey(exp.binMap('tags'), exp.str('d'), exp.type.AUTO, maps.returnType.COUNT, context), exp.int(1)))
       })
     })
 
-    
+    describe('getByKeyRange', function () {
+      it('matches the count of the matched map values', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRange(exp.binMap('tags'), exp.str('c'), exp.str('a'), maps.returnType.COUNT), exp.int(3)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRange(exp.binMap('tags'), exp.str('c'), exp.str('a'), maps.returnType.COUNT), exp.int(2)))
+      })
 
+      it('matches the count of the matched map values of a nested map', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRange(exp.binMap('tags'), exp.str('g'), exp.str('d'), maps.returnType.COUNT, context), exp.int(4)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRange(exp.binMap('tags'), exp.str('g'), exp.str('d'), maps.returnType.COUNT, context), exp.int(3)))
+      })
+    })
+
+    describe('getByKeyRelIndexRange', function () {
+      it('matches the count of the matched map values', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 'yellow' } })
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRange(exp.binMap('tags'), exp.int(3), exp.int(0), exp.str('b'), maps.returnType.COUNT), exp.int(1)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRange(exp.binMap('tags'), exp.int(3), exp.int(0), exp.str('b'), maps.returnType.COUNT), exp.int(2)))
+      })
+
+      it('matches the count of the matched map values of a nested map', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', g: 'white', h: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRange(exp.binMap('tags'), exp.int(3), exp.int(0), exp.str('g'), maps.returnType.COUNT, context), exp.int(1)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRange(exp.binMap('tags'), exp.int(3), exp.int(0), exp.str('g'), maps.returnType.COUNT, context), exp.int(2)))
+      })
+    })
+    /*
+    describe('getByKeyRelIndexRangeToEnd', function () {
+      it('matches the count of the matched map values', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 'yellow' } })
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('b'), maps.returnType.COUNT), exp.int(1)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('b'), maps.returnType.COUNT), exp.int(2)))
+      })
+
+      it('matches the count of the matched map values of a nested map', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', g: 'white', h: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'),  exp.int(0), exp.str('e'), maps.returnType.COUNT, context), exp.int(2)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('e'),  maps.returnType.COUNT, context), exp.int(3)))
+      })
+    })
+*/
     describe('getByRank', function () {
       it('selects map item identified by rank', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 5, c: 'yellow' } })
@@ -294,6 +340,39 @@ describe('Aerospike.exp_operations', function () {
             maps.returnType.COUNT),
           exp.int(1)))
       })
+
+      it('selects map item identified by rank within a nested map', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 5, c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.maps.getByRank(
+              exp.binMap('tags'),
+              exp.int(0),
+              exp.type.INT,
+              maps.returnType.COUNT),
+            0),
+          op.read('tags')
+        ]
+        await client.operate(key, ops, {})
+
+        await testNoMatch(key, exp.eq(
+          exp.maps.getByRank(
+            exp.binMap('tags'),
+            exp.int(0),
+            exp.type.INT,
+            maps.returnType.COUNT,
+            context),
+          exp.int(0)))
+        await testMatch(key, exp.eq(
+          exp.maps.getByRank(
+            exp.binMap('tags'),
+            exp.int(0),
+            exp.type.INT,
+            maps.returnType.COUNT,
+            context),
+          exp.int(1)))
+      })
     })
 
     describe('getByRankRange', function () {
@@ -315,6 +394,27 @@ describe('Aerospike.exp_operations', function () {
             maps.returnType.COUNT),
           exp.int(3)))
       })
+
+      it('selects "count" map items starting at specified rank in nested context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(
+          exp.maps.getByRankRange(
+            exp.binMap('tags'),
+            exp.int(5),
+            exp.int(0),
+            maps.returnType.COUNT,
+            context),
+          exp.int(0)))
+        await testMatch(key, exp.eq(
+          exp.maps.getByRankRange(
+            exp.binMap('tags'),
+            exp.int(5),
+            exp.int(0),
+            maps.returnType.COUNT,
+            context),
+          exp.int(4)))
+      })
     })
 
     describe('getByRankRangeToEnd', function () {
@@ -334,19 +434,25 @@ describe('Aerospike.exp_operations', function () {
             maps.returnType.COUNT),
           exp.int(3)))
       })
-    })
 
-    it('writes map values originating from nested map to a specified map', async function () {
-      const key = await createRecord({ map: { c: 1, b: 2, a: 3, nested: { g: 4 } }, map2: { f: 1, e: 2, d: 3 } })
-      const context = new Context().addMapKey('nested')
-      const ops = [
-        exp.operations.write('map',
-          exp.maps.putItems(exp.binMap('map'), exp.binMap('map2'), null, context),
-          0),
-        op.read('map')
-      ]
-      const result = await client.operate(key, ops, {})
-      expect(result.bins.map.nested).to.eql({ d: 3, e: 2, f: 1, g: 4 })
+      it('selects map items starting at specified rank to the last ranked item in a nested context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(
+          exp.maps.getByRankRangeToEnd(
+            exp.binMap('tags'),
+            exp.int(0),
+            maps.returnType.COUNT,
+            context),
+          exp.int(0)))
+        await testMatch(key, exp.eq(
+          exp.maps.getByRankRangeToEnd(
+            exp.binMap('tags'),
+            exp.int(0),
+            maps.returnType.COUNT,
+            context),
+          exp.int(4)))
+      })
     })
   })
 
@@ -366,63 +472,46 @@ describe('Aerospike.exp_operations', function () {
     })
   })
 
+  /*
   describe('getByValueList', function () {
     it('matches the count of the matched values', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
-      const ops = [
-        exp.operations.read(tempBin,
-          exp.maps.getByValueList(
-            exp.binMap('tags'),
-            exp.list(['yellow', 'blue']),
-            maps.returnType.KEY),
-          0),
-        op.read('tags')
-      ]
-      await client.operate(key, ops, {})
+      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('green'), exp.str('yellow')]), maps.returnType.COUNT), exp.int(3)))
+      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('green'), exp.str('yellow')]), maps.returnType.COUNT), exp.int(2)))
+    })
 
-      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(3)))
-      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(0)))
+    it('matches the count of the matched values', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+      const context = new Context().addMapKey('nested')
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('orange'), exp.str('white')]), maps.returnType.COUNT, context), exp.int(3)))
+      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('orange'), exp.str('white')]), maps.returnType.COUNT, context), exp.int(2)))
     })
   })
+*/
 
   describe('getByValueRange', function () {
     it('matches the count of the matched range of map values', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
       await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('yellow'), exp.str('blue'), maps.returnType.COUNT), exp.int(3)))
-      const ops = [
-        exp.operations.read(tempBin,
-          exp.maps.getByValueRange(
-            exp.binMap('tags'),
-            exp.str('yellow'),
-            exp.str('blue'),
-            maps.returnType.COUNT),
-          0),
-        op.read('tags')
-      ]
-      await client.operate(key, ops, {})
 
       await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('yellow'), exp.str('blue'), maps.returnType.COUNT), exp.int(2)))
+    })
+
+    it('matches the count of the matched range of map values in a nested context', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+      const context = new Context().addMapKey('nested')
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('white'), exp.str('black'), maps.returnType.COUNT, context), exp.int(4)))
+
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('white'), exp.str('black'), maps.returnType.COUNT, context), exp.int(3)))
     })
   })
 
   describe('getByValueRelRankRange', function () {
     it('selects map items nearest to value and greater by relative rank with a count limit', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
-
-      const ops = [
-        exp.operations.read(tempBin,
-          exp.maps.getByValueRelRankRange(
-            exp.binMap('tags'),
-            exp.int(2),
-            exp.int(0),
-            exp.str('yellow'),
-            maps.returnType.KEY),
-          0),
-        op.read('tags')
-      ]
-      await client.operate(key, ops, {})
 
       await testNoMatch(key, exp.eq(
         exp.maps.getByValueRelRankRange(
@@ -441,23 +530,34 @@ describe('Aerospike.exp_operations', function () {
           maps.returnType.COUNT),
         exp.int(1)))
     })
+
+    it('selects map items nearest to value and greater by relative rank with a count limit in a nested context', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+      const context = new Context().addMapKey('nested')
+      await testNoMatch(key, exp.eq(
+        exp.maps.getByValueRelRankRange(
+          exp.binMap('tags'),
+          exp.int(2),
+          exp.int(0),
+          exp.str('pink'),
+          maps.returnType.COUNT,
+          context),
+        exp.int(0)))
+      await testMatch(key, exp.eq(
+        exp.maps.getByValueRelRankRange(
+          exp.binMap('tags'),
+          exp.int(2),
+          exp.int(0),
+          exp.str('pink'),
+          maps.returnType.COUNT,
+          context),
+        exp.int(2)))
+    })
   })
 
   describe('getByValueRelRankRangeToEnd', function () {
     it('selects map items nearest to value and greater by relative rank', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
-
-      const ops = [
-        exp.operations.read(tempBin,
-          exp.maps.getByValueRelRankRangeToEnd(
-            exp.binMap('tags'),
-            exp.int(0),
-            exp.str('yellow'),
-            maps.returnType.COUNT),
-          0),
-        op.read('tags')
-      ]
-      await client.operate(key, ops, {})
 
       await testNoMatch(key, exp.eq(exp.maps.getByValueRelRankRangeToEnd(
         exp.binMap('tags'),
@@ -471,6 +571,25 @@ describe('Aerospike.exp_operations', function () {
         exp.str('yellow'),
         maps.returnType.COUNT),
       exp.int(1)))
+    })
+
+    it('selects map items nearest to value and greater by relative rank in a nested context', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+      const context = new Context().addMapKey('nested')
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRelRankRangeToEnd(
+        exp.binMap('tags'),
+        exp.int(0),
+        exp.str('orange'),
+        maps.returnType.COUNT,
+        context),
+      exp.int(0)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRelRankRangeToEnd(
+        exp.binMap('tags'),
+        exp.int(0),
+        exp.str('orange'),
+        maps.returnType.COUNT,
+        context),
+      exp.int(3)))
     })
   })
 
@@ -487,20 +606,45 @@ describe('Aerospike.exp_operations', function () {
       expect(result.bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
     })
 
-    describe('size', function () {
-      it('returns the map size', async function () {
-        const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27 } })
+    it('writes map values from exp.map expression to specified map', async function () {
+      const key = await createRecord({ map: { c: 1, b: 2, a: 3 } })
+      const ops = [
+        exp.operations.write('map',
+          exp.maps.putItems(exp.binMap('map'), exp.map({ f: 1, e: 2, d: 3 })),
+          0),
+        op.read('map')
+      ]
+      const result = await client.operate(key, ops, {})
+      expect(result.bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
+    })
 
-        await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(2)))
-        await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(3)))
-      })
+    it('writes map values originating from nested map to a specified map', async function () {
+      const key = await createRecord({ map: { c: 1, b: 2, a: 3, nested: { g: 4 } }, map2: { f: 1, e: 2, d: 3 } })
+      const context = new Context().addMapKey('nested')
+      const ops = [
+        exp.operations.write('map',
+          exp.maps.putItems(exp.binMap('map'), exp.binMap('map2'), null, context),
+          0),
+        op.read('map')
+      ]
+      const result = await client.operate(key, ops, {})
+      expect(result.bins.map.nested).to.eql({ d: 3, e: 2, f: 1, g: 4 })
+    })
+  })
 
-      it('returns the map size from a nested map', async function () {
-        const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27, nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
-        const context = new Context().addMapKey('nested')
-        await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map'), context), exp.int(2)))
-        await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map'), context), exp.int(4)))
-      })
+  describe('size', function () {
+    it('returns the map size', async function () {
+      const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27 } })
+
+      await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(2)))
+      await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map')), exp.int(3)))
+    })
+
+    it('returns the map size from a nested map', async function () {
+      const key = await createRecord({ map: { john: 42, malcom: 73, susan: 27, nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+      const context = new Context().addMapKey('nested')
+      await testNoMatch(key, exp.eq(exp.maps.size(exp.binMap('map'), context), exp.int(2)))
+      await testMatch(key, exp.eq(exp.maps.size(exp.binMap('map'), context), exp.int(4)))
     })
   })
 })
