@@ -1103,6 +1103,33 @@ describe('client.operate() - CDT List operations', function () {
       })
     })
 
+    context('returnType=EXISTS', function () {
+      it('fetches all items with the specified values and returns the indexes', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))
+          .then(operate(lists.getByValueList('list', [1, 3, 5]).andReturn(lists.returnType.EXISTS)))
+          .then(assertResultEql({ list: true }))
+          .then(cleanup)
+      })
+
+      context('with nested list context', function () {
+        helper.skipUnlessVersion('>= 4.6.0', this)
+
+        it('fetches all items with the specified values and returns the indexes', function () {
+          return initState()
+            .then(createRecord({ list: [['a', 'b', 'c'], [1, 2, 3, 1, 2, 3]] }))
+            .then(operate(
+              lists
+                .getByValueList('list', [7, 5, 4])
+                .withContext(ctx => ctx.addListIndex(1))
+                .andReturn(lists.returnType.EXISTS)
+            ))
+            .then(assertResultEql({ list: false }))
+            .then(cleanup)
+        })
+      })
+    })
+
     context('invert results', function () {
       it('fetches all items except with the specified values', function () {
         return initState()
