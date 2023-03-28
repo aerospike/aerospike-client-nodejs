@@ -85,7 +85,9 @@ int add_exp_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 		entry->op_name, opcode, bin);
 
 	bool success = (entry->op_function)(ops, bin, exp, flags, log);
-
+	free(bin);
+	as_exp_destroy(exp);
+	
 	return success ? AS_NODE_PARAM_OK : AS_NODE_PARAM_ERR;
 }
 

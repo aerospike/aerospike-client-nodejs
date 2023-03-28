@@ -57,6 +57,7 @@ Local<Object> list_enum_values()
 	set(return_type, "REVERSE_RANK", AS_LIST_RETURN_REVERSE_RANK);
 	set(return_type, "COUNT", AS_LIST_RETURN_COUNT);
 	set(return_type, "VALUE", AS_LIST_RETURN_VALUE);
+	set(return_type, "EXISTS", AS_LIST_RETURN_EXISTS);
 	set(return_type, "INVERTED", AS_LIST_RETURN_INVERTED);
 
 	// as_cdt_op_list

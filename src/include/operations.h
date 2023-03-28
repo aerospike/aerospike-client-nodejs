@@ -41,6 +41,9 @@ int add_exp_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
 int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 							 v8::Local<v8::Object> obj, const char *prop,
 							 const LogInfo *log);
+as_cdt_ctx* get_optional_cdt_context_heap(int * rc,
+                             v8::Local<v8::Object> obj, const char *prop,
+                             const LogInfo *log);
 
 v8::Local<v8::Object> scalar_opcode_values();
 v8::Local<v8::Object> list_opcode_values();

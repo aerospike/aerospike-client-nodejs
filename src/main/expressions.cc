@@ -167,9 +167,8 @@ int convert_entry(Local<Object> entry_obj, as_exp_entry *entry,
 	}
 
 	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
-		entry->v.ctx = NULL;
-		rc =
-			get_optional_cdt_context(entry->v.ctx, NULL, entry_obj, "ctx", log);
+		entry->v.ctx =
+			get_optional_cdt_context_heap(&rc, entry_obj, "ctx", log);
 		return rc;
 	}
 
