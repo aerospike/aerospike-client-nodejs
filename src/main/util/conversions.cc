@@ -1056,14 +1056,14 @@ int map_from_jsobject(as_map **map, Local<Object> obj, const LogInfo *log)
 	const Local<Array> props =
 		Nan::GetOwnPropertyNames(obj.As<Object>()).ToLocalChecked();
 	const uint32_t capacity = props->Length();
-	as_v8_detail(log, "Creating new as_hashmap with capacity %d", capacity);
-	as_hashmap *hashmap = as_hashmap_new(capacity);
-	if (hashmap == NULL) {
+	as_v8_detail(log, "Creating new as_orderedmap with capacity %d", capacity);
+	as_orderedmap *orderedmap = as_orderedmap_new(capacity);
+	if (orderedmap == NULL) {
 		as_v8_error(log, "Map allocation failed");
 		Nan::ThrowError("Map allocation failed");
 		return AS_NODE_PARAM_ERR;
 	}
-	*map = (as_map *)hashmap;
+	*map = (as_map *)orderedmap;
 	for (uint32_t i = 0; i < capacity; i++) {
 		const Local<Value> name = Nan::Get(props, i).ToLocalChecked();
 		const Local<Value> value = Nan::Get(obj, name).ToLocalChecked();
