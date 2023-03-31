@@ -1519,7 +1519,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: true }))
         .then(cleanup())
     })
-    
+
     it('returns key/value for a single read', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
