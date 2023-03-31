@@ -36,6 +36,15 @@ describe('Aerospike.exp', function () {
 
   const client = helper.client
 
+  const orderMap = (key, bin, order, ctx) => {
+    const policy = new Aerospike.MapPolicy({ order })
+    const setMapPolicy = Aerospike.maps.setPolicy(bin, policy)
+    if (ctx) setMapPolicy.withContext(ctx)
+    return client.operate(key, [setMapPolicy])
+  }
+
+  const orderByKey = (key, bin, ctx) => orderMap(key, bin, Aerospike.maps.order.KEY_ORDERED, ctx)
+
   async function createRecord (bins, meta = null) {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exp' })()
     await client.put(key, bins, meta)
@@ -73,6 +82,38 @@ describe('Aerospike.exp', function () {
 
         await testNoMatch(key, exp.eq(exp.binInt('intVal'), exp.int(37)))
         await testMatch(key, exp.eq(exp.binInt('intVal'), exp.int(42)))
+      })
+    })
+
+    describe('eq on map bin', function () {
+      it('evaluates to true if a map bin matches a value', async function () {
+        const key = await createRecord({ map: { c: 1, b: 2, a: 3 } })
+        await orderByKey(key, 'map')
+        await testNoMatch(key, exp.eq(exp.map({ d: 4, e: 5 }), exp.binMap('map')))
+        await testMatch(key, exp.eq(exp.map({ c: 1, b: 2, a: 3 }), exp.binMap('map')))
+      })
+
+      it('evaluates to true if a map bin matches a map bin', async function () {
+        const key = await createRecord({ map: { c: 1, b: 2, a: 3 }, map2: { c: 1, b: 2, a: 3 }, map3: { c: 1, b: 2 } })
+        await orderByKey(key, 'map')
+        await testNoMatch(key, exp.eq(exp.binMap('map'), exp.binMap('map3')))
+        await testMatch(key, exp.eq(exp.binMap('map'), exp.binMap('map2')))
+      })
+    })
+
+    describe('eq on list bin', function () {
+      it('evaluates to true if a list bin matches a value', async function () {
+        const key = await createRecord({ list: [4, 2, 0] })
+        await orderByKey(key, 'map')
+        await testNoMatch(key, exp.eq(exp.list([0, 2, 4]), exp.binList('list')))
+        await testMatch(key, exp.eq(exp.list([4, 2, 0]), exp.binList('list')))
+      })
+
+      it('evaluates to true if a list bin matches a list bin', async function () {
+        const key = await createRecord({ list: [4, 2, 0], list2: [4, 2, 0], list3: [4, 2] })
+        await orderByKey(key, 'map')
+        await testNoMatch(key, exp.eq(exp.binList('list'), exp.binList('list3')))
+        await testMatch(key, exp.eq(exp.binList('list'), exp.binList('list2')))
       })
     })
 
