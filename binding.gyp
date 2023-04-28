@@ -106,6 +106,7 @@
         'src/main/commands/query_foreach.cc',
         'src/main/commands/remove_async.cc',
         'src/main/commands/scan_async.cc',
+        'src/main/commands/scan_pages.cc',
         'src/main/commands/scan_background.cc',
         'src/main/commands/select_async.cc',
         'src/main/commands/truncate.cc',

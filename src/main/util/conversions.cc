@@ -1430,6 +1430,29 @@ Local<Object> jobinfo_to_jsobject(const as_job_info *info, const LogInfo *log)
 	return jobinfo;
 }
 
+Local<Object> scan_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const LogInfo *log)
+{
+	Nan::EscapableHandleScope scope;
+
+	Local<Object> v8_saved_scan;
+	if (bytes == NULL) {
+		as_v8_debug(
+			log,
+			"Bytes ( C structure) is NULL, cannot form node.js record object");
+		return scope.Escape(v8_saved_scan);
+	}
+
+	v8_saved_scan = Nan::New<Object>();
+
+	Local<Array> v8_bytes = Nan::New<Array>();
+	for(uint32_t i = 0; i < bytes_size; i++) {
+		Nan::Set(v8_bytes, i, Nan::New<Uint32>((uint32_t) bytes[i]));
+	}
+	Nan::Set(v8_saved_scan, Nan::New("bytes").ToLocalChecked(), v8_bytes);
+	Nan::Set(v8_saved_scan, Nan::New("bytesSize").ToLocalChecked(), Nan::New<Uint32>(bytes_size));
+	return scope.Escape(v8_saved_scan);
+}
+
 int key_from_jsobject(as_key *key, Local<Object> obj, const LogInfo *log)
 {
 	Nan::EscapableHandleScope scope;

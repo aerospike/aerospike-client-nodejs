@@ -314,6 +314,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
+	Nan::SetPrototypeMethod(tpl, "scanPages", ScanPages);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);

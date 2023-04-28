@@ -57,11 +57,13 @@ void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	Local<Object> options = maybe_options.As<Object>();
+	setup_options(scan, maybe_options.As<Object>(), log);
+}
 
+void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
+{
 	Local<Value> selected =
-		Nan::Get(options, Nan::New("selected").ToLocalChecked())
-			.ToLocalChecked();
+		Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
@@ -125,3 +127,91 @@ void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
 		}
 	}
 }
+
+void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+{
+	as_namespace as_ns = {'\0'};
+	as_set as_set = {'\0'};
+
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) >
+		AS_NAMESPACE_MAX_SIZE) {
+		as_v8_error(log, "Namespace exceeds max. length (%d)",
+					AS_NAMESPACE_MAX_SIZE);
+		// TODO: Return param error
+	}
+
+	if (set->IsString()) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
+			AS_SET_MAX_SIZE) {
+			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+			// TODO: Return param error
+		}
+	}
+
+	*scan = as_scan_new(as_ns, as_set);
+
+	if(bytes_size){
+		as_scan_from_bytes(*scan, bytes, bytes_size);
+		return;
+	}
+	as_scan_set_paginate(*scan, true);
+	
+	if (!maybe_options->IsObject()) {
+		printf("returnthis");
+		return;
+	}
+	
+	setup_options(*scan, maybe_options.As<Object>(), log);
+
+
+}
+
+void load_bytes_size(Local<Object> saved_scan, uint32_t* bytes_size, LogInfo *log)
+{
+
+	Local<Value> v8_byte_size =
+		Nan::Get(saved_scan.As<Object>(), Nan::New("bytesSize").ToLocalChecked())
+			.ToLocalChecked();
+	TYPE_CHECK_OPT(v8_byte_size, IsNumber, "paginate must be a boolean");
+	if (v8_byte_size->IsUint32()) {
+		*bytes_size = (uint32_t)Nan::To<uint32_t>(v8_byte_size).FromJust();
+
+	}
+
+}
+
+void load_bytes(Local<Object> saved_scan, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+{
+
+	Local<Value> v8_byte_size =
+		Nan::Get(saved_scan.As<Object>(), Nan::New("bytesSize").ToLocalChecked())
+			.ToLocalChecked();
+	TYPE_CHECK_OPT(v8_byte_size, IsNumber, "paginate must be a boolean");
+	if (v8_byte_size->IsUint32()) 
+	{
+		bytes_size = (uint32_t)Nan::To<uint32_t>(v8_byte_size).FromJust();
+
+	}
+
+	Local<Value> v8_bytes =
+		Nan::Get(saved_scan.As<Object>(), Nan::New("bytes").ToLocalChecked())
+			.ToLocalChecked();
+	TYPE_CHECK_OPT(v8_bytes, IsArray, "paginate must be a boolean");
+	if (v8_bytes->IsArray())
+	{
+		for(uint32_t i = 0; i < (bytes_size); i++) 
+		{
+			Local<Value> v8_bytes_val = Nan::Get(v8_bytes.As<Array>(), i).ToLocalChecked();
+			TYPE_CHECK_OPT(v8_bytes_val, IsNumber, "paginate must be a boolean");
+			if (v8_bytes_val->IsNumber()) 
+			{
+				bytes[i] = (uint8_t) Nan::To<uint32_t>(v8_bytes_val).FromJust();
+			}
+		}
+
+			
+			
+
+	}
+}	

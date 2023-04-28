@@ -246,7 +246,7 @@ void free_query(as_query *query, as_policy_query *policy)
 			as_predicate entry = query->where.entries[i];
 			if (entry.dtype == AS_INDEX_STRING ||
 				entry.dtype == AS_INDEX_GEO2DSPHERE) {
-				free(entry.value.string);
+				free(entry.value.string_val.string);
 			}
 		}
 		as_query_destroy(query);

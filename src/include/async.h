@@ -56,3 +56,6 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 // implements the as_async_scan_listener and as_async_query_record_listener interfaces
 bool async_scan_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop);
+
+bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
+                         as_event_loop *event_loop);

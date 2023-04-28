@@ -111,6 +111,35 @@ context('Scans', function () {
         done()
       })
     })
+    it('retrieves all records in the set using pagination', async function () {
+      this.timeout(10000) // 10 second timeout
+      const scan = client.scan(helper.namespace, testSet, {paginate: true})
+      let recordsReceived = 0
+      let recordTotal = 0
+      let maxRecs = 11
+      while(1){
+        let stream = scan.foreach({maxRecords: maxRecs})
+        stream.on('error', (error) => { throw error })
+        stream.on('data', (record) => {
+          recordsReceived++
+        })
+        await new Promise(resolve => {
+          stream.on('end', (savedScan) => {
+            scan.savedScan = savedScan
+            resolve()
+          })
+        })
+        if(recordsReceived != maxRecs){
+          recordTotal += recordsReceived
+          break;
+        }
+        else{
+          recordTotal += recordsReceived
+          recordsReceived = 0
+        }
+      }
+      expect(recordTotal).to.equal(numberOfRecords)
+    })
 
     it('retrieves all records from the given partitions', function (done) {
       const scan = client.scan(helper.namespace, testSet)
