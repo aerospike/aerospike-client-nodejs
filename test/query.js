@@ -203,10 +203,10 @@ describe('Queries', function () {
     it('paginates with the correct amount of keys and pages', async function () {
       let recordsReceived = 0
       let recordTotal = 0
-      let pageTotal = 0
-      const lastPage = 4
+      //   let pageTotal = 0
+      //   const lastPage = 4
       const maxRecs = 10
-      let retry = true;
+      let retry = true
       const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs })
       while (1) {
         const stream = query.foreach()
@@ -221,20 +221,19 @@ describe('Queries', function () {
             resolve()
           })
         })
-        pageTotal += 1
+        //       pageTotal += 1
         console.log(recordTotal)
         console.log(recordsReceived)
         if (recordsReceived !== maxRecs) {
           recordTotal += recordsReceived
           console.log(recordTotal)
           console.log(numberOfSamples)
-       //   expect(pageTotal).to.equal(lastPage)
-          if(retry && numberOfSamples != recordTotal){
+          //   expect(pageTotal).to.equal(lastPage)
+          if (retry && numberOfSamples !== recordTotal) {
             retry = true
-          }
-          else{
+          } else {
             expect(recordTotal).to.equal(numberOfSamples)
-            break;
+            break
           }
           break
         } else {
