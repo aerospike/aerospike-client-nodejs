@@ -226,7 +226,7 @@ describe('Queries', function () {
         console.log(recordsReceived)
         if (recordsReceived !== maxRecs) {
           recordTotal += recordsReceived
-          
+          console.log(recordTotal)
           expect(recordTotal).to.equal(numberOfSamples)
           expect(pageTotal).to.equal(lastPage)
           break
