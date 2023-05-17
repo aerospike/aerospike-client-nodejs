@@ -81,7 +81,7 @@ describe('Queries', function () {
     { name: 'filter', value: 3 },
     { name: 'filter', value: 4 }
   ]
-  let numberOfSamples = samples.length
+  const numberOfSamples = samples.length
   const indexes = [
     ['qidxName', 'name', STRING],
     ['qidxInt', 'i', NUMERIC],
@@ -203,16 +203,14 @@ describe('Queries', function () {
     it('paginates with the correct amount of keys and pages', async function () {
       let recordsReceived = 0
       let recordTotal = 0
-      //   let pageTotal = 0
-      //   const lastPage = 4
-      const maxRecs = 10
-      let retry = true
-      const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs })
+      let pageTotal = 0
+      const lastPage = 3
+      const maxRecs = 2
+      const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
       while (1) {
         const stream = query.foreach()
         stream.on('error', (error) => { throw error })
         stream.on('data', (record) => {
-          console.log(record.bins)
           recordsReceived++
         })
         await new Promise(resolve => {
@@ -221,20 +219,11 @@ describe('Queries', function () {
             resolve()
           })
         })
-        //       pageTotal += 1
-        console.log(recordTotal)
-        console.log(recordsReceived)
+        pageTotal += 1
         if (recordsReceived !== maxRecs) {
           recordTotal += recordsReceived
-          console.log(recordTotal)
-          console.log(numberOfSamples)
-          //   expect(pageTotal).to.equal(lastPage)
-          if (retry && numberOfSamples !== recordTotal) {
-            retry = true
-          } else {
-            expect(recordTotal).to.equal(numberOfSamples)
-            break
-          }
+          expect(pageTotal).to.equal(lastPage)
+          expect(recordTotal).to.equal(4)
           break
         } else {
           recordTotal += recordsReceived
@@ -254,7 +243,6 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
-        numberOfSamples = samples.length + 1
 
         const query = client.query(helper.namespace, testSet)
         query.where(Aerospike.filter.equal('name', uniqueKey))
@@ -282,7 +270,6 @@ describe('Queries', function () {
 
         client.put(key, record, meta, policy, function (err) {
           if (err) throw err
-          numberOfSamples = samples.length + 1
           const query = client.query(helper.namespace, testSet)
           query.where(Aerospike.filter.equal('name', uniqueKey))
           query.partitions(0, 4096)
@@ -309,7 +296,6 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
-        numberOfSamples = samples.length + 1
         const query = client.query(helper.namespace, testSet)
         const queryPolicy = { filterExpression: exp.keyExist(uniqueExpKey) }
         const stream = query.foreach(queryPolicy)

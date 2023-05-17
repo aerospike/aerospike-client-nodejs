@@ -293,13 +293,6 @@ void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 void free_query(as_query *query, as_policy_query *policy)
 {
 	if (query) {
-		for (int i = 0; i < query->where.size; i++) {
-			as_predicate entry = query->where.entries[i];
-			if (entry.dtype == AS_INDEX_STRING ||
-				entry.dtype == AS_INDEX_GEO2DSPHERE) {
-				free(entry.value.string_val.string);
-			}
-		}
 		as_query_destroy(query);
 	}
 
