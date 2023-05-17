@@ -246,15 +246,16 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 	else if (qu->count >= qu->max_records) {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
 		uint32_t bytes_size;
-		as_query_to_bytes(query, &qu->bytes, &bytes_size);
+		uint8_t* bytes = NULL;
+		as_query_to_bytes(query, &bytes, &bytes_size);
 		Local<Value> argv[] = {Nan::Null(),
 							   Nan::Null(),
-							   query_bytes_to_jsobject(qu->bytes, bytes_size, log),
+							   query_bytes_to_jsobject(bytes, bytes_size, log),
 							   Nan::Null()};
 
 		cmd->Callback(4, {argv});
 		free_query(query, NULL);
-		free(qu->bytes);
+		free(bytes);
 		delete cmd;
 		free(qu);
 		return false;
