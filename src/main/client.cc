@@ -124,6 +124,7 @@ NAN_METHOD(AerospikeClient::Close)
 	free(client->as);
 	free(client->log);
 	client->closed = true;
+	delete client;
 }
 
 /**
@@ -311,6 +312,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "queryAsync", QueryAsync);
 	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
+	Nan::SetPrototypeMethod(tpl, "queryPages", QueryPages);
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);

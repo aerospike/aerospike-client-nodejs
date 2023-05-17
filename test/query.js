@@ -190,6 +190,7 @@ describe('Queries', function () {
       }
       const query = client.query(helper.namespace, testSet, args)
       query.setUdf('udf', 'even')
+      console.log(query.udf)
       const stream = query.foreach()
       const results = []
       stream.on('error', error => { throw error })
@@ -198,6 +199,40 @@ describe('Queries', function () {
         expect(results.sort()).to.eql([2, 4])
         done()
       })
+    })
+
+    it('paginates with the correct amount of keys and pages', async function () {
+      let recordsReceived = 0
+      let recordTotal = 0
+      let pageTotal = 0
+      const lastPage = 4
+      const maxRecs = 10
+
+      const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs })
+      while (1) {
+        const stream = query.foreach()
+        stream.on('error', (error) => { throw error })
+        stream.on('data', (record) => {
+          recordsReceived++
+        })
+        await new Promise(resolve => {
+          stream.on('end', (savedQuery) => {
+            query.savedQuery = savedQuery
+            resolve()
+          })
+        })
+        pageTotal += 1
+
+        if (recordsReceived !== maxRecs) {
+          recordTotal += recordsReceived
+          expect(recordTotal).to.equal(numberOfSamples)
+          expect(pageTotal).to.equal(lastPage)
+          break
+        } else {
+          recordTotal += recordsReceived
+          recordsReceived = 0
+        }
+      }
     })
 
     it('returns the key if it was stored on the server', function (done) {

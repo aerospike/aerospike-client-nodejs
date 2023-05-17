@@ -59,3 +59,6 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 
 bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
                          as_event_loop *event_loop);
+
+bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
+                         as_event_loop *event_loop);

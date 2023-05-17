@@ -56,7 +56,13 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	Local<Object> options = maybe_options.As<Object>();
+	setup_options(query, maybe_options.As<Object>(), log);
+
+
+}
+
+void setup_options(as_query *query, Local<Object> options, LogInfo *log)
+{
 
 	Local<Value> filters_val =
 		Nan::Get(options, Nan::New("filters").ToLocalChecked())
@@ -187,7 +193,7 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
 		int size = bins->Length();
-		as_v8_detail(log, "Number of bins to select in scan %d", size);
+		as_v8_detail(log, "Number of bins to select in query %d", size);
 		as_query_select_init(query, size);
 		for (int i = 0; i < size; i++) {
 			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
@@ -205,6 +211,13 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		query->no_bins = Nan::To<bool>(nobins).FromJust();
+	}
+
+	Local<Value> max_records =
+		Nan::Get(options, Nan::New("maxRecords").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(max_records, IsNumber, "max_records must be a number");
+	if (max_records->IsNumber()) {
+		query->max_records = (uint64_t) Nan::To<uint32_t>(max_records).FromJust();
 	}
 
 	Local<Value> udf =
@@ -238,6 +251,44 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 		}
 	}
 }
+
+void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+{
+	as_namespace as_ns = {'\0'};
+	as_set as_set = {'\0'};
+
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) >
+		AS_NAMESPACE_MAX_SIZE) {
+		as_v8_error(log, "Namespace exceeds max. length (%d)",
+					AS_NAMESPACE_MAX_SIZE);
+		// TODO: Return param error
+	}
+
+	if (set->IsString()) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
+			AS_SET_MAX_SIZE) {
+			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+			// TODO: Return param error
+		}
+	}
+
+	*query = as_query_new(as_ns, as_set);
+
+	if(bytes_size){
+		as_query_from_bytes(*query, bytes, bytes_size);
+		return;
+	}
+	as_query_set_paginate(*query, true);
+
+	if (!maybe_options->IsObject()) {
+		return;
+	}
+
+	setup_options(*query, maybe_options.As<Object>(), log);
+
+}
+
 
 void free_query(as_query *query, as_policy_query *policy)
 {

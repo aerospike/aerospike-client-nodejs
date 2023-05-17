@@ -113,12 +113,12 @@ context('Scans', function () {
     })
     it('retrieves all records in the set using pagination', async function () {
       this.timeout(10000) // 10 second timeout
-      const scan = client.scan(helper.namespace, testSet, {paginate: true})
+      const scan = client.scan(helper.namespace, testSet, { paginate: true })
       let recordsReceived = 0
       let recordTotal = 0
-      let maxRecs = 11
-      while(1){
-        let stream = scan.foreach({maxRecords: maxRecs})
+      const maxRecs = 11
+      while (1) {
+        const stream = scan.foreach({ maxRecords: maxRecs })
         stream.on('error', (error) => { throw error })
         stream.on('data', (record) => {
           recordsReceived++
@@ -129,11 +129,11 @@ context('Scans', function () {
             resolve()
           })
         })
-        if(recordsReceived != maxRecs){
+        if (recordsReceived !== maxRecs) {
+          expect(recordsReceived).to.equal(numberOfRecords - recordTotal)
           recordTotal += recordsReceived
-          break;
-        }
-        else{
+          break
+        } else {
           recordTotal += recordsReceived
           recordsReceived = 0
         }

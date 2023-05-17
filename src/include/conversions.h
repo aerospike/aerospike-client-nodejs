@@ -122,7 +122,11 @@ v8::Local<v8::Object> record_to_jsobject(const as_record *record,
 v8::Local<v8::Object> key_to_jsobject(const as_key *key, const LogInfo *log);
 v8::Local<v8::Object> jobinfo_to_jsobject(const as_job_info *info,
 										  const LogInfo *log);
-v8::Local<v8::Object> scan_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const LogInfo *log);
+v8::Local<v8::Object> query_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const LogInfo *log);
+
+void load_bytes_size(v8::Local<v8::Object> saved_object, uint32_t* bytes_size, LogInfo *log);
+
+void load_bytes(v8::Local<v8::Object> saved_object, uint8_t* bytes, uint32_t bytes_size, LogInfo *log);
 
 // Functions to convert v8 objects(maps) to C client structures
 int host_from_jsobject(v8::Local<v8::Object> obj, char **addr, uint16_t *port,

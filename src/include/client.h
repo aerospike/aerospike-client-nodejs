@@ -102,6 +102,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(QueryAsync);
 	static NAN_METHOD(QueryBackground);
 	static NAN_METHOD(QueryForeach);
+	static NAN_METHOD(QueryPages);
 	static NAN_METHOD(Register);
 	static NAN_METHOD(RemoveAsync);
 	static NAN_METHOD(RemoveSeedHost);
