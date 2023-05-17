@@ -212,6 +212,7 @@ describe('Queries', function () {
         const stream = query.foreach()
         stream.on('error', (error) => { throw error })
         stream.on('data', (record) => {
+          console.log(record)
           recordsReceived++
         })
         await new Promise(resolve => {
@@ -224,6 +225,7 @@ describe('Queries', function () {
 
         if (recordsReceived !== maxRecs) {
           recordTotal += recordsReceived
+          conosole.log(pageTotal)
           expect(recordTotal).to.equal(numberOfSamples)
           expect(pageTotal).to.equal(lastPage)
           break
