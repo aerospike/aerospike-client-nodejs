@@ -55,14 +55,16 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	bool pf_defined = false;
 	as_status status;
 
-	struct query_udata* qu = cf_malloc(sizeof(struct query_udata));
+	struct query_udata* qu = (query_udata*) cf_malloc(sizeof(struct query_udata));
 	qu->cmd = cmd;
 	qu->count = 0;
 
 	if (info[4]->IsObject()) {
 		uint32_t bytes_size = 0;
 		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
-		uint8_t bytes[bytes_size];
+		const uint32_t const_bytes_size = bytes_size;
+		uint8_t bytes[const_bytes_size];
+
 		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
 		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
 		qu->query->_free = true;

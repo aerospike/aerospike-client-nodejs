@@ -58,14 +58,16 @@ NAN_METHOD(AerospikeClient::ScanPages)
 	bool pf_defined = false;
 	as_status status;
 
-	struct scan_udata* su = cf_malloc(sizeof(struct scan_udata));
+	struct scan_udata* su = (scan_udata*) cf_malloc(sizeof(struct scan_udata));
 	su->cmd = cmd;
 	su->count = 0;
 
 	if (info[5]->IsObject()) {
 		uint32_t bytes_size = 0;
 		load_bytes_size(info[5].As<Object>(), &bytes_size, log);
-		uint8_t bytes[bytes_size];
+		const uint32_t const_bytes_size = bytes_size;
+		uint8_t bytes[const_bytes_size];
+
 		load_bytes(info[5].As<Object>(), bytes, bytes_size, log);
 		setup_scan_pages(&su->scan, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
 	}
