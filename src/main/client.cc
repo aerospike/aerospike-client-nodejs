@@ -124,7 +124,6 @@ NAN_METHOD(AerospikeClient::Close)
 	free(client->as);
 	free(client->log);
 	client->closed = true;
-	delete client;
 }
 
 /**

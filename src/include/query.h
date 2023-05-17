@@ -30,7 +30,6 @@ struct query_udata {
     AsyncCommand* cmd;
     uint32_t count;
     uint32_t max_records;
-    uint8_t* bytes;
 };
 
 void setup_query(as_query *query, v8::Local<v8::Value> ns,

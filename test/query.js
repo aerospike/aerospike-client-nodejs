@@ -81,7 +81,7 @@ describe('Queries', function () {
     { name: 'filter', value: 3 },
     { name: 'filter', value: 4 }
   ]
-  const numberOfSamples = samples.length
+  let numberOfSamples = samples.length
   const indexes = [
     ['qidxName', 'name', STRING],
     ['qidxInt', 'i', NUMERIC],
@@ -190,7 +190,6 @@ describe('Queries', function () {
       }
       const query = client.query(helper.namespace, testSet, args)
       query.setUdf('udf', 'even')
-      console.log(query.udf)
       const stream = query.foreach()
       const results = []
       stream.on('error', error => { throw error })
@@ -236,7 +235,7 @@ describe('Queries', function () {
     })
 
     it('returns the key if it was stored on the server', function (done) {
-      const uniqueKey = 'test/query/record_with_stored_key'
+      const uniqueKey = 'test/query/record_with_stored_key_1'
       const key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
       const record = { name: uniqueKey }
       const meta = { ttl: 300 }
@@ -246,6 +245,7 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
+        numberOfSamples += 1
         const query = client.query(helper.namespace, testSet)
         query.where(Aerospike.filter.equal('name', uniqueKey))
         const stream = query.foreach()
@@ -262,7 +262,7 @@ describe('Queries', function () {
     context('with partitions settings', function () {
       helper.skipUnlessVersion('>= 6.0.0', this)
       it('returns the key if it was stored on the given partitions', function (done) {
-        const uniqueKey = 'test/query/record_with_stored_key'
+        const uniqueKey = 'test/query/record_with_stored_key_2'
         const key = new Aerospike.Key(helper.namespace, testSet, uniqueKey)
         const record = { name: uniqueKey }
         const meta = { ttl: 300 }
@@ -272,6 +272,7 @@ describe('Queries', function () {
 
         client.put(key, record, meta, policy, function (err) {
           if (err) throw err
+          numberOfSamples += 1
           const query = client.query(helper.namespace, testSet)
           query.where(Aerospike.filter.equal('name', uniqueKey))
           query.partitions(0, 4096)
@@ -288,7 +289,7 @@ describe('Queries', function () {
     })
 
     it('returns the key matching the expression', function (done) {
-      const uniqueExpKey = 'test/query/record_with_stored_key'
+      const uniqueExpKey = 'test/query/record_with_stored_key_3'
       const key = new Aerospike.Key(helper.namespace, testSet, uniqueExpKey)
       const record = { name: uniqueExpKey }
       const meta = { ttl: 300 }
@@ -298,6 +299,7 @@ describe('Queries', function () {
 
       client.put(key, record, meta, policy, function (err) {
         if (err) throw err
+        numberOfSamples += 1
         const query = client.query(helper.namespace, testSet)
         const queryPolicy = { filterExpression: exp.keyExist(uniqueExpKey) }
         const stream = query.foreach(queryPolicy)

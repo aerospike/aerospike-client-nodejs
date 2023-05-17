@@ -180,7 +180,11 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 	
 	const LogInfo *log = cmd->log;
 
-	if (su->count >= su->max_records) {
+	Local<Value> result;
+	if (err) {
+		result = cmd->ErrorCallback(err);
+	}
+	else if (su->count >= su->max_records) {
 		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
 		uint32_t bytes_size;
 		uint8_t* bytes = NULL;
@@ -195,12 +199,8 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 		as_scan_destroy(scan);
 		free(bytes);
 		delete cmd;
+		free(su);
 		return false;
-	}
-
-	Local<Value> result;
-	if (err) {
-		result = cmd->ErrorCallback(err);
 	}
 	else if (record) {
 		Local<Value> argv[] = {Nan::Null(),
@@ -214,6 +214,7 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 		cmd->Callback(0, {});
 		as_scan_destroy(scan);
 		delete cmd;
+		free(su);
 		return false;
 	}
 
@@ -238,7 +239,11 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
     
 	const LogInfo *log = cmd->log;
 
-	if (qu->count >= qu->max_records) {
+	Local<Value> result;
+	if (err) {
+		result = cmd->ErrorCallback(err);
+	}
+	else if (qu->count >= qu->max_records) {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
 		uint32_t bytes_size;
 		as_query_to_bytes(query, &qu->bytes, &bytes_size);
@@ -253,11 +258,6 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 		delete cmd;
 		free(qu);
 		return false;
-	}
-
-	Local<Value> result;
-	if (err) {
-		result = cmd->ErrorCallback(err);
 	}
 	else if (record) {
 		Local<Value> argv[] = {Nan::Null(),
