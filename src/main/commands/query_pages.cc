@@ -63,9 +63,9 @@ NAN_METHOD(AerospikeClient::QueryPages)
 		uint32_t bytes_size = 0;
 		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
 		uint8_t* bytes = new uint8_t[bytes_size];
-
 		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
 		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
+		delete bytes;
 		qu->query->_free = true;
 	}
 	else{
