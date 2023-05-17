@@ -175,7 +175,7 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
 	Nan::HandleScope scope;
-	struct scan_udata* su = udata;
+	struct scan_udata* su = (scan_udata* su) udata;
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(su->cmd);
 	
 	const LogInfo *log = cmd->log;
@@ -233,7 +233,7 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
 	Nan::HandleScope scope;
-	struct query_udata* qu = udata;
+	struct query_udata* qu = (query_udata*) udata;
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(qu->cmd);
 	
     
