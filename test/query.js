@@ -223,6 +223,7 @@ describe('Queries', function () {
         })
         pageTotal += 1
         console.log(recordTotal)
+        console.log(recordsReceived)
         if (recordsReceived !== maxRecs) {
           recordTotal += recordsReceived
           
