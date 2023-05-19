@@ -111,34 +111,106 @@ context('Scans', function () {
         done()
       })
     })
-    it('retrieves all records in the set using pagination', async function () {
-      this.timeout(10000) // 10 second timeout
-      const scan = client.scan(helper.namespace, testSet, { paginate: true })
-      let recordsReceived = 0
-      let recordTotal = 0
-      const maxRecs = 11
-      while (1) {
-        const stream = scan.foreach({ maxRecords: maxRecs })
-        stream.on('error', (error) => { throw error })
-        stream.on('data', (record) => {
-          recordsReceived++
-        })
-        await new Promise(resolve => {
-          stream.on('end', (savedScan) => {
-            scan.savedScan = savedScan
-            resolve()
+
+    describe('scan.paginate', function () {
+      it('Paginates with the correct amount of keys and pages', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
           })
-        })
-        if (recordsReceived !== maxRecs) {
-          expect(recordsReceived).to.equal(numberOfRecords - recordTotal)
-          recordTotal += recordsReceived
-          break
-        } else {
-          recordTotal += recordsReceived
-          recordsReceived = 0
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.scanState = scanState
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.scanState).to.equal(undefined)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
         }
-      }
-      expect(recordTotal).to.equal(numberOfRecords)
+      })
+
+      it('Paginates correctly using scan.hasNextPage() and scan.nextPage()', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.nextPage(scanState)
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
+
+      it('Paginates correctly using query.results()', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.nextPage(scanState)
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
     })
 
     it('retrieves all records from the given partitions', function (done) {

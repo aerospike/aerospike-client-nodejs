@@ -200,36 +200,109 @@ describe('Queries', function () {
       })
     })
 
-    it('paginates with the correct amount of keys and pages', async function () {
-      let recordsReceived = 0
-      let recordTotal = 0
-      let pageTotal = 0
-      const lastPage = 3
-      const maxRecs = 2
-      const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
-      while (1) {
-        const stream = query.foreach()
-        stream.on('error', (error) => { throw error })
-        stream.on('data', (record) => {
-          recordsReceived++
-        })
-        await new Promise(resolve => {
-          stream.on('end', (savedQuery) => {
-            query.savedQuery = savedQuery
-            resolve()
+    describe('query.paginate()', function () {
+      it('paginates with the correct amount of keys and pages', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 3
+        const maxRecs = 2
+        const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
+        while (1) {
+          const stream = query.foreach()
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
           })
-        })
-        pageTotal += 1
-        if (recordsReceived !== maxRecs) {
+          await new Promise(resolve => {
+            stream.on('end', (queryState) => {
+              query.queryState = queryState
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(query.queryState).to.equal(undefined)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(4)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
+
+      it('Paginates correctly using query.hasNextPage() and query.nextPage()', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 3
+        const maxRecs = 2
+        const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
+        while (1) {
+          const stream = query.foreach()
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (queryState) => {
+              query.nextPage(queryState)
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(query.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(4)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
+
+      it('Paginates correctly using query.results()', async function () {
+        let recordTotal = 0
+        let recordsReceived = 0
+        let pageTotal = 0
+        const lastPage = 3
+        const maxRecs = 2
+        const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
+        let results = []
+        while (1) {
+          results = await query.results()
+          recordsReceived += results.length
+          results = []
+
+          pageTotal += 1
           recordTotal += recordsReceived
-          expect(pageTotal).to.equal(lastPage)
-          expect(recordTotal).to.equal(4)
-          break
-        } else {
-          recordTotal += recordsReceived
+          if (recordsReceived !== maxRecs) {
+            expect(query.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(4)
+            break
+          }
           recordsReceived = 0
         }
-      }
+      })
+
+      it('Throw error when query.UDF is set and query.paginate is true', async function () {
+        const maxRecs = 2
+        const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.equal('name', 'filter')] })
+        query.setUdf('ANYVALUE')
+        try {
+          await query.results()
+          expect(1).to.equal(2)
+        } catch (error) {
+          expect(error.message).to.equal('Stream UDF cannot be applied using a paginated stream. Please disable pagination or UDF.')
+        }
+      })
     })
 
     it('returns the key if it was stored on the server', function (done) {

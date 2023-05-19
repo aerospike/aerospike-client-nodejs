@@ -268,7 +268,6 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 		result = cmd->Callback(4, argv);
 	}
 	else {
-		
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
 		cmd->Callback(0, {});
 		free_query(query, NULL);
