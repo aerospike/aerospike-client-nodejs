@@ -276,7 +276,7 @@ void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 	*query = as_query_new(as_ns, as_set);
 
 	if(bytes_size){
-		as_query_from_bytes(*query, bytes, bytes_size);
+		*query = as_query_from_bytes_new(bytes, bytes_size);
 		return;
 	}
 	as_query_set_paginate(*query, true);

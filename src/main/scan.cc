@@ -152,7 +152,7 @@ void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
 	*scan = as_scan_new(as_ns, as_set);
 
 	if(bytes_size){
-		as_scan_from_bytes(*scan, bytes, bytes_size);
+		*scan = as_scan_from_bytes_new(bytes, bytes_size);
 		return;
 	}
 	as_scan_set_paginate(*scan, true);
