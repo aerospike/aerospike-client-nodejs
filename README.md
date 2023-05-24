@@ -16,6 +16,7 @@ It supports the following operating systems:
 - RHEL 8/9
 - Debian 10 (x86_64 architecture only)
 - Debian 11
+- Amazon Linux 2023
 - Ubuntu 20.04/22.04 (Focal Fossa, Jammy Jellyfish)
 - Many Linux distributions compatible with one of the above OS releases.
 - macOS versions 11/12/13 are also supported. (Node.js 14 install unavailable on M1 Mac systems)
