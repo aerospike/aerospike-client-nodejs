@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2018 Aerospike, Inc.
+ * Copyright 2013-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,3 +56,9 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 // implements the as_async_scan_listener and as_async_query_record_listener interfaces
 bool async_scan_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop);
+
+bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
+                         as_event_loop *event_loop);
+
+bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
+                         as_event_loop *event_loop);

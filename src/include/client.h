@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,11 +102,13 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(QueryAsync);
 	static NAN_METHOD(QueryBackground);
 	static NAN_METHOD(QueryForeach);
+	static NAN_METHOD(QueryPages);
 	static NAN_METHOD(Register);
 	static NAN_METHOD(RemoveAsync);
 	static NAN_METHOD(RemoveSeedHost);
 	static NAN_METHOD(ScanBackground);
 	static NAN_METHOD(ScanAsync);
+	static NAN_METHOD(ScanPages);
 	static NAN_METHOD(SelectAsync);
 	static NAN_METHOD(SetLogLevel);
 	static NAN_METHOD(SetupEventCb);

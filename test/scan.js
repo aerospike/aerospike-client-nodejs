@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2022 Aerospike, Inc.
+// Copyright 2013-2023 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -109,6 +109,107 @@ context('Scans', function () {
       stream.on('end', () => {
         expect(recordsReceived).to.equal(numberOfRecords)
         done()
+      })
+    })
+
+    describe('scan.paginate', function () {
+      it('Paginates with the correct amount of keys and pages', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.scanState = scanState
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.scanState).to.equal(undefined)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
+
+      it('Paginates correctly using scan.hasNextPage() and scan.nextPage()', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.nextPage(scanState)
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
+      })
+
+      it('Paginates correctly using query.results()', async function () {
+        let recordsReceived = 0
+        let recordTotal = 0
+        let pageTotal = 0
+        const lastPage = 11
+        const maxRecs = 10
+        const scan = client.scan(helper.namespace, testSet, { paginate: true })
+        while (1) {
+          const stream = scan.foreach({ maxRecords: maxRecs })
+          stream.on('error', (error) => { throw error })
+          stream.on('data', (record) => {
+            recordsReceived++
+          })
+          await new Promise(resolve => {
+            stream.on('end', (scanState) => {
+              scan.nextPage(scanState)
+              resolve()
+            })
+          })
+          pageTotal += 1
+          if (recordsReceived !== maxRecs) {
+            recordTotal += recordsReceived
+            expect(scan.hasNextPage()).to.equal(false)
+            expect(pageTotal).to.equal(lastPage)
+            expect(recordTotal).to.equal(numberOfRecords)
+            break
+          } else {
+            recordTotal += recordsReceived
+            recordsReceived = 0
+          }
+        }
       })
     })
 

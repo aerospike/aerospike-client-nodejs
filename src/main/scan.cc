@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2021 Aerospike, Inc.
+ * Copyright 2013-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,11 +57,13 @@ void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	Local<Object> options = maybe_options.As<Object>();
+	setup_options(scan, maybe_options.As<Object>(), log);
+}
 
+void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
+{
 	Local<Value> selected =
-		Nan::Get(options, Nan::New("selected").ToLocalChecked())
-			.ToLocalChecked();
+		Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
@@ -125,3 +127,43 @@ void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
 		}
 	}
 }
+
+void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+{
+	as_namespace as_ns = {'\0'};
+	as_set as_set = {'\0'};
+
+	if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) >
+		AS_NAMESPACE_MAX_SIZE) {
+		as_v8_error(log, "Namespace exceeds max. length (%d)",
+					AS_NAMESPACE_MAX_SIZE);
+		// TODO: Return param error
+	}
+
+	if (set->IsString()) {
+		if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
+			AS_SET_MAX_SIZE) {
+			as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+			// TODO: Return param error
+		}
+	}
+
+	*scan = as_scan_new(as_ns, as_set);
+
+	if(bytes_size){
+		*scan = as_scan_from_bytes_new(bytes, bytes_size);
+		return;
+	}
+	as_scan_set_paginate(*scan, true);
+	
+	if (!maybe_options->IsObject()) {
+		printf("returnthis");
+		return;
+	}
+	
+	setup_options(*scan, maybe_options.As<Object>(), log);
+
+
+}
+

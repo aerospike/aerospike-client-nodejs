@@ -1,6 +1,18 @@
 # Backward Incompatible API Changes
 
 All notable changes to this project will be documented in this file.
+## [5.5.0]
+
+### Client no longer supports Node.js version 14
+
+## [5.4.0]
+
+### Client no longer supports Ubuntu 18.04
+### Client no longer supports Debian 10 on ARM64 architecture
+
+## [5.2.0]
+
+### Client does not support Node.js LTS version 14 on macOS using ARM architecture
 
 ## [5.0.0]
 

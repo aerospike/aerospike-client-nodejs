@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,28 +33,44 @@ extern "C" {
 
 using namespace v8;
 
-NAN_METHOD(AerospikeClient::QueryAsync)
+NAN_METHOD(AerospikeClient::QueryPages)
 {
 	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
 	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
 	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[4], IsObject, "saved_query must be an object");
+	TYPE_CHECK_OPT(info[5], IsNumber, "max_records must be an object");
+	TYPE_CHECK_REQ(info[6], IsFunction, "Callback must be a function");
 
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand *cmd =
-		new AsyncCommand("Query", client, info[4].As<Function>());
+		new AsyncCommand("Query", client, info[6].As<Function>());
 	LogInfo *log = client->log;
 
-	as_query query;
+	as_policy_query* p_policy = NULL;
 	as_policy_query policy;
-	as_policy_query *p_policy = NULL;
-	as_status status;
 	as_partition_filter pf;
 	bool pf_defined = false;
+	as_status status;
 
-	setup_query(&query, info[0], info[1], info[2], log);
+	struct query_udata* qu = (query_udata*) cf_malloc(sizeof(struct query_udata));
+	qu->cmd = cmd;
+	qu->count = 0;
+
+	if (info[4]->IsObject()) {
+		uint32_t bytes_size = 0;
+		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
+		uint8_t* bytes = new uint8_t[bytes_size];
+		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
+		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
+		delete bytes;
+	}
+	else{
+		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, log);
+	}
+
 
 	if (info[3]->IsObject()) {
 		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
@@ -73,16 +89,23 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 		goto Cleanup;
 	}
 
+	if(info[5]->IsNumber()){
+		qu->max_records = Nan::To<int32_t>(info[5]).FromJust();
+		qu->query->max_records = 0;
+	}
+
+
 	if (pf_defined) {
 		as_v8_debug(log, "Sending async query partitions command");
 		status = aerospike_query_partitions_async(
-			client->as, &cmd->err, p_policy, &query, &pf, async_scan_listener,
-			cmd, NULL);
+			client->as, &cmd->err, p_policy, (as_query*) qu->query, &pf, async_query_pages_listener,
+			qu, NULL);
 	}
 	else {
 		as_v8_debug(log, "Sending async query command");
-		status = aerospike_query_async(client->as, &cmd->err, p_policy, &query,
-									   async_scan_listener, cmd, NULL);
+	
+		status = aerospike_query_async(client->as, &cmd->err, p_policy, (as_query*) qu->query,
+									   async_query_pages_listener, qu, NULL);
 	}
 
 	if (status == AEROSPIKE_OK) {
@@ -94,5 +117,8 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 
 Cleanup:
 	delete cmd;
-	free_query(&query, p_policy);
+	if (p_policy && policy.base.filter_exp) {
+		as_exp_destroy(policy.base.filter_exp);
+	}
+
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,30 +33,48 @@ extern "C" {
 
 using namespace v8;
 
-NAN_METHOD(AerospikeClient::ScanAsync)
+NAN_METHOD(AerospikeClient::ScanPages)
 {
 	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
 	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
 	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
 	TYPE_CHECK_OPT(info[4], IsNumber, "Scan_id must be a number");
-	TYPE_CHECK_REQ(info[5], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[5], IsObject, "saved_scan must be an object");
+	TYPE_CHECK_REQ(info[6], IsFunction, "Callback must be a function");
 
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand *cmd =
-		new AsyncCommand("Scan", client, info[5].As<Function>());
+		new AsyncCommand("Scan", client, info[6].As<Function>());
+
 	LogInfo *log = client->log;
 
-	as_scan scan;
 	uint64_t scan_id = 0;
-	as_policy_scan policy;
+
 	as_policy_scan *p_policy = NULL;
-	as_status status;
+	as_policy_scan policy;
 	as_partition_filter pf;
 	bool pf_defined = false;
+	as_status status;
 
-	setup_scan(&scan, info[0], info[1], info[2], log);
+	struct scan_udata* su = (scan_udata*) cf_malloc(sizeof(struct scan_udata));
+	su->cmd = cmd;
+	su->count = 0;
+
+	if (info[5]->IsObject()) {
+		uint32_t bytes_size = 0;
+		load_bytes_size(info[5].As<Object>(), &bytes_size, log);
+		uint8_t* bytes = new uint8_t[bytes_size];
+		load_bytes(info[5].As<Object>(), bytes, bytes_size, log);
+		setup_scan_pages(&su->scan, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
+		delete bytes;
+	}
+	else{
+		setup_scan_pages(&su->scan, info[0], info[1], info[2], NULL, 0, log);
+	}
+
+
 
 	if (info[3]->IsObject()) {
 		if (scanpolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
@@ -72,25 +90,28 @@ NAN_METHOD(AerospikeClient::ScanAsync)
 		as_v8_debug(log, "Using scan ID %lli for async scan.", scan_id);
 	}
 
+	
 	as_partition_filter_set_all(&pf);
 	if (partitions_from_jsobject(&pf, &pf_defined, info[2].As<Object>(), log) !=
 		AS_NODE_PARAM_OK) {
 		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Partitions object invalid");
 		goto Cleanup;
 	}
+	
+	su->max_records = p_policy->max_records;
+	p_policy->max_records = 0;
 
 	if (pf_defined) {
 		as_v8_debug(log, "Sending async scan partitions command");
 		status = aerospike_scan_partitions_async(
-			client->as, &cmd->err, p_policy, &scan, &pf, async_scan_listener,
-			cmd, NULL);
+			client->as, &cmd->err, p_policy, su->scan, &pf, async_scan_pages_listener,
+			su, NULL);
 	}
 	else {
 		as_v8_debug(log, "Sending async scan command");
-		status = aerospike_scan_async(client->as, &cmd->err, p_policy, &scan,
-									  &scan_id, async_scan_listener, cmd, NULL);
+		status = aerospike_scan_async(client->as, &cmd->err, p_policy, su->scan,
+									  &scan_id, async_scan_pages_listener, su, NULL);
 	}
-
 	if (status == AEROSPIKE_OK) {
 		cmd = NULL; // async callback responsible for deleting the command
 	}
@@ -103,5 +124,4 @@ Cleanup:
 	if (p_policy && policy.base.filter_exp) {
 		as_exp_destroy(policy.base.filter_exp);
 	}
-	as_scan_destroy(&scan);
 }

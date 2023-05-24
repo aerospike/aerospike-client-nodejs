@@ -1,6 +1,99 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [5.5.0]
+
+* **Breaking Changes**
+  * [CLIENT-2343] - Dropped support for Node.js 14
+
+* **New Features**
+  * [CLIENT-2108] - Added pagination support for queries and scans.
+  * [CLIENT-2224] - Added support for rack aware reads when the replication factor is three.
+  * [CLIENT-2303] - Added support for Amazon Linux 2023.
+  * [CLIENT-2342] - Added support for Node.js 20
+
+* **Improvements**
+  * [CLIENT-1819] - Fixed issue which caused the configuration class property "rackId" to be ignored.
+
+* **Bug Fixes**
+  * [CLIENT-2231] - Fixed expression API documentation to show parameters for functions.
+
+## [5.4.0]
+* The new features require Aerospike Server version 6.3 or newer.
+
+* **Breaking Changes**
+  * Dropped support for:
+    * Ubuntu 18.04
+    * Debian 10 (ARM64 only).
+
+* **New Features**
+  * [CLIENT-2178] - Added ORDERED_MAP and UNORDERED_MAP map operation return types.
+  * [CLIENT-2187] - Added comparison of map values using expressions.
+
+## [5.3.0]
+
+* **New Features**
+  * [CLIENT-1750] - Added 'returnType.EXISTS' for 'aerospike/maps' and 'aerospike/list' module read operations. This feature requires server version 6.1+.
+  * [CLIENT-1818] - Added the 'getByKeyList' method 'aerospike/maps' module.
+  * [CLIENT-2210] - Added the 'getByValueList' method 'aerospike/maps' module.
+
+* **Improvements**
+  * [CLIENT-1819] - Corrected 'Client.batchApply' to have a keys parameter rather than a records parameter.
+
+* **Bug Fixes**
+  * [CLIENT-2231] - Fixed segmentation fault caused by using context with map and list expressions. Added unit tests for map and list expressions using context. Fixed parameter order for map and list expression methods.
+
+## [5.2.2]
+* **Improvements**
+  * [CLIENT-2202] - Corrected default values for MaxConnsPerNode, maxSocketIdle, and totalTimeout policies within the API documentation.
+
+* **Bug Fixes**
+  * [CLIENT-2195] - Reworked batch write to accommodate promises and callbacks. Batch write will no longer return "AEROSPIKE_BATCH_FAILED" as an error, and will instead return results with status codes detailing the status of each batch operation.
+
+## [5.2.1]
+
+* **New Features**
+  * [CLIENT-1248] - AddListIndexCreate and AddMapKeyCreate added to cdt_context.js.
+
+* **Improvements**
+  * [CLIENT-2011] - Batch writes now returns the results of transactions ending in the AEROSPIKE_BATCH_FAILED status as well as the status of each record.
+  * [CLIENT-2150] - Reduced install size from 500MB to 166MB.
+
+* **Bug Fixes**
+  * [CLIENT-2167] - Fixed broken API documentation links.
+  * [CLIENT-2168] - Added missing methods from operations classes.
+
+## [5.2.0]
+
+* **Updates**
+  * BREAKING: Client does not support Node.js LTS version 14 on macOS using ARM architecture - see Incompatible API Changes for details.
+  * Added support for
+    * Node.js 19
+    * Ubuntu 22.04
+    * RHEL 9
+  * Dropped support for:
+    * Node.js 10, 12, 17
+    * RHEL 7
+    * Debian 8, 9
+
+* **New Features**
+  * [CLIENT-2000] - Added ARM architecture support for all currently supported OS systems.
+
+## [5.1.1]
+
+* **Bug Fixes**
+  * [CLIENT-1944] - Node.js: Revamped existing API documentation.
+  * [CLIENT-1943] - Node.js: Added documentation for list, map, hll, and bit expressions
+  * [CLIENT-1942] - Node.js: Improved examples within the API documentation.
+
+## [5.0.3]
+
+* **Updates**
+  * Debian 9 Stretch LTS has reached its End of Life on June 30 2022. We will drop support for Debian 9 in an upcoming client release.
+
+* **Bug Fixes**
+  * [CLIENT-1778] Node.js: document client support for PKI auth.
+  * [CLIENT-1762] Add Node.js client TypeScript support.
 
 ## [5.0.2]
 

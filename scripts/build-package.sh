@@ -1,6 +1,6 @@
 #!/bin/bash
 ################################################################################
-# Copyright 2013-2022 Aerospike, Inc.
+# Copyright 2013-2023 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,11 +56,11 @@ perform_check
 
 rm -rf ${AEROSPIKE_NODEJS_RELEASE_HOME}/node-*-${OS_FLAVOR}-*
 
-build_nodejs_client v14.21.1
-build_nodejs_client v16.18.1
-build_nodejs_client v18.12.1
-build_nodejs_client v19.2.0
+build_nodejs_client v16
+build_nodejs_client v18
+build_nodejs_client v19
+build_nodejs_client v20
 
-nvm use v18.12.1
+nvm use v20
 
 cd ${CWD}

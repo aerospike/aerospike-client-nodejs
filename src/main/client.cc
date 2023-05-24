@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2019 Aerospike, Inc.
+ * Copyright 2013-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -311,9 +311,11 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "queryAsync", QueryAsync);
 	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
+	Nan::SetPrototypeMethod(tpl, "queryPages", QueryPages);
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
+	Nan::SetPrototypeMethod(tpl, "scanPages", ScanPages);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
 	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);
