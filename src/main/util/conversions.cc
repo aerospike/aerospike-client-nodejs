@@ -1430,6 +1430,64 @@ Local<Object> jobinfo_to_jsobject(const as_job_info *info, const LogInfo *log)
 	return jobinfo;
 }
 
+Local<Object> query_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const LogInfo *log)
+{
+	Nan::EscapableHandleScope scope;
+
+	Local<Object> v8_saved_query;
+	if (bytes == NULL) {
+		as_v8_debug(
+			log,
+			"Bytes ( C structure) is NULL, cannot form node.js record object");
+		return scope.Escape(v8_saved_query);
+	}
+
+	v8_saved_query = Nan::New<Object>();
+
+	Local<Array> v8_bytes = Nan::New<Array>();
+	for(uint32_t i = 0; i < bytes_size; i++) {
+		Nan::Set(v8_bytes, i, Nan::New<Uint32>((uint32_t) bytes[i]));
+	}
+	Nan::Set(v8_saved_query, Nan::New("bytes").ToLocalChecked(), v8_bytes);
+	Nan::Set(v8_saved_query, Nan::New("bytesSize").ToLocalChecked(), Nan::New<Uint32>(bytes_size));
+	return scope.Escape(v8_saved_query);
+}
+
+void load_bytes_size(Local<Object> saved_object, uint32_t* bytes_size, LogInfo *log)
+{
+
+	Local<Value> v8_byte_size =
+		Nan::Get(saved_object, Nan::New("bytesSize").ToLocalChecked())
+			.ToLocalChecked();
+	TYPE_CHECK_OPT(v8_byte_size, IsNumber, "paginate must be a boolean");
+	if (v8_byte_size->IsUint32()) {
+		*bytes_size = (uint32_t)Nan::To<uint32_t>(v8_byte_size).FromJust();
+
+	}
+
+}
+
+void load_bytes(Local<Object> saved_object, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+{
+
+	Local<Value> v8_bytes =
+		Nan::Get(saved_object, Nan::New("bytes").ToLocalChecked())
+			.ToLocalChecked();
+	TYPE_CHECK_OPT(v8_bytes, IsArray, "paginate must be a boolean");
+	if (v8_bytes->IsArray())
+	{
+		for(uint32_t i = 0; i < (bytes_size); i++) 
+		{
+			Local<Value> v8_bytes_val = Nan::Get(v8_bytes.As<Array>(), i).ToLocalChecked();
+			TYPE_CHECK_OPT(v8_bytes_val, IsNumber, "paginate must be a boolean");
+			if (v8_bytes_val->IsNumber()) 
+			{
+				bytes[i] = (uint8_t) Nan::To<uint32_t>(v8_bytes_val).FromJust();
+			}
+		}
+	}
+}	
+
 int key_from_jsobject(as_key *key, Local<Object> obj, const LogInfo *log)
 {
 	Nan::EscapableHandleScope scope;

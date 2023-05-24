@@ -453,7 +453,7 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 		goto Cleanup;
 	}
 	if ((rc = get_optional_int_property(&config->rack_id, NULL, configObj,
-										"rack_id", log)) != AS_NODE_PARAM_OK) {
+										"rackId", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 

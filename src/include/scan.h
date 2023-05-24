@@ -22,6 +22,18 @@ extern "C" {
 
 #include "log.h"
 
+struct scan_udata {
+    as_scan* scan;
+    AsyncCommand * cmd;
+    uint32_t count;
+    uint32_t max_records;
+};
+
 void setup_scan(as_scan *scan, v8::Local<v8::Value> ns,
 				v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options,
 				LogInfo *log);
+
+void setup_options(as_scan *scan, v8::Local<v8::Object> options, LogInfo *log);
+
+void setup_scan_pages(as_scan **scan, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
+                      v8::Local<v8::Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log);

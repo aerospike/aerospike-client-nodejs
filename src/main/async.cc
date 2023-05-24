@@ -23,6 +23,8 @@
 #include "client.h"
 #include "conversions.h"
 #include "log.h"
+#include "scan.h"
+#include "query.h"
 
 extern "C" {
 #include <aerospike/as_error.h>
@@ -168,3 +170,120 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 	}
 	return continue_scan;
 }
+
+bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
+						 as_event_loop *event_loop)
+{
+	Nan::HandleScope scope;
+	struct scan_udata* su = (scan_udata*) udata;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(su->cmd);
+	
+	const LogInfo *log = cmd->log;
+
+	Local<Value> result;
+	if (err) {
+		result = cmd->ErrorCallback(err);
+	}
+	else if (su->count >= su->max_records) {
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
+		uint32_t bytes_size;
+		uint8_t* bytes = NULL;
+
+		as_scan_to_bytes(scan, &bytes, &bytes_size);
+		Local<Value> argv[] = {Nan::Null(),
+							   Nan::Null(),
+							   query_bytes_to_jsobject(bytes, bytes_size, log),
+							   Nan::Null()};
+
+		cmd->Callback(4, {argv});
+		as_scan_destroy(scan);
+		free(bytes);
+		delete cmd;
+		free(su);
+		return false;
+	}
+	else if (record) {
+		Local<Value> argv[] = {Nan::Null(),
+							   recordbins_to_jsobject(record, log),
+							   recordmeta_to_jsobject(record, log),
+							   key_to_jsobject(&record->key, log)};
+		result = cmd->Callback(4, argv);
+	}
+	else {
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
+		cmd->Callback(0, {});
+		as_scan_destroy(scan);
+		delete cmd;
+		free(su);
+		return false;
+	}
+
+	su->count += 1;
+
+	bool continue_scan = true;
+	if (result->IsBoolean()) {
+		continue_scan = Nan::To<bool>(result).FromJust();
+		as_v8_debug(log, "Async scan callback returned: %s",
+					continue_scan ? "true" : "false");
+	}
+	return continue_scan;
+}
+
+bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
+						 as_event_loop *event_loop)
+{
+	Nan::HandleScope scope;
+	struct query_udata* qu = (query_udata*) udata;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(qu->cmd);
+	
+    
+	const LogInfo *log = cmd->log;
+
+	Local<Value> result;
+	if (err) {
+		result = cmd->ErrorCallback(err);
+	}
+	else if (qu->count >= qu->max_records) {
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		uint32_t bytes_size;
+		uint8_t* bytes = NULL;
+		as_query_to_bytes(query, &bytes, &bytes_size);
+		Local<Value> argv[] = {Nan::Null(),
+							   Nan::Null(),
+							   query_bytes_to_jsobject(bytes, bytes_size, log),
+							   Nan::Null()};
+
+		cmd->Callback(4, {argv});
+		free_query(query, NULL);
+		free(bytes);
+		delete cmd;
+		free(qu);
+		return false;
+	}
+	else if (record) {
+		Local<Value> argv[] = {Nan::Null(),
+							   recordbins_to_jsobject(record, log),
+							   recordmeta_to_jsobject(record, log),
+							   key_to_jsobject(&record->key, log)};
+		result = cmd->Callback(4, argv);
+	}
+	else {
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		cmd->Callback(0, {});
+		free_query(query, NULL);
+		delete cmd;
+		free(qu);
+		return false;
+	}
+
+	qu->count += 1;
+
+	bool continue_scan = true;
+	if (result->IsBoolean()) {
+		continue_scan = Nan::To<bool>(result).FromJust();
+		as_v8_debug(log, "Async scan callback returned: %s",
+					continue_scan ? "true" : "false");
+	}
+	return continue_scan;
+}
+
