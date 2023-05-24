@@ -61,6 +61,6 @@ build_nodejs_client v18
 build_nodejs_client v19
 build_nodejs_client v20
 
-nvm use v18.12.1
+nvm use v20
 
 cd ${CWD}
