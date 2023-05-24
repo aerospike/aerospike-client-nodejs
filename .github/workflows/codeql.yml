@@ -30,7 +30,7 @@ jobs:
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-          - 18.x
+          - 20.x
 
     steps:
     - name: Checkout repository
