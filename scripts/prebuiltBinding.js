@@ -31,8 +31,8 @@ exec('openssl version', (error, stdout, stderr) => {
                 fs.rename('lib/binding/openssl@3/node-v93-' + dict[OS] + '-' + dict[arch],
                   'lib/binding/node-v93-' + dict[OS] + '-' + dict[arch], (err) => {
                     if (err) throw err
-                    fs.rename('lib/binding/openssl@3/node-v83-' + dict[OS] + '-' + dict[arch],
-                      'lib/binding/node-v83-' + dict[OS] + '-' + dict[arch], (err) => {
+                    fs.rename('lib/binding/openssl@3/node-v115-' + dict[OS] + '-' + dict[arch],
+                      'lib/binding/node-v115-' + dict[OS] + '-' + dict[arch], (err) => {
                         if (err) return
                         fs.rm('lib/binding/openssl@3', { recursive: true, force: true }, (e) => {
                           if (e) throw e
@@ -54,8 +54,8 @@ exec('openssl version', (error, stdout, stderr) => {
                 fs.rename('lib/binding/openssl@1/node-v93-' + dict[OS] + '-' + dict[arch],
                   'lib/binding/node-v93-' + dict[OS] + '-' + dict[arch], (err) => {
                     if (err) throw err
-                    fs.rename('lib/binding/openssl@1/node-v83-' + dict[OS] + '-' + dict[arch],
-                      'lib/binding/node-v83-' + dict[OS] + '-' + dict[arch], (err) => {
+                    fs.rename('lib/binding/openssl@1/node-v115-' + dict[OS] + '-' + dict[arch],
+                      'lib/binding/node-v115-' + dict[OS] + '-' + dict[arch], (err) => {
                         if (err) return
                         fs.rm('lib/binding/openssl@3', { recursive: true, force: true }, (e) => {
                           if (e) throw e
