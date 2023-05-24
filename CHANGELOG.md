@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 ## [5.5.0]
 
+* **Breaking Changes**
+  * Dropped support for Node.js 14
+
 * **New Features**
   * [CLIENT-2108] - Added pagination support for queries and scans.
   * [CLIENT-2224] - Added support for rack aware reads when the replication factor is three.
