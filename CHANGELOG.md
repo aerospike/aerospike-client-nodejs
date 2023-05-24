@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [5.5.0]
 
 * **Breaking Changes**
-  * Dropped support for Node.js 14
+  * [CLIENT-2343] - Dropped support for Node.js 14
 
 * **New Features**
   * [CLIENT-2108] - Added pagination support for queries and scans.
