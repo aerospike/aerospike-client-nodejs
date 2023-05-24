@@ -4,16 +4,17 @@ All notable changes to this project will be documented in this file.
 ## [5.5.0]
 
 * **New Features**
-  * [CLIENT-1750] - [CLIENT-2108] - Added pagination support for queries and scans.
-  * [CLIENT-1818] - Added support for rack aware reads when the replication factor is three.
-  * [CLIENT-2210] - Added support for Amazon Linux 2023.
+  * [CLIENT-2108] - Added pagination support for queries and scans.
+  * [CLIENT-2224] - Added support for rack aware reads when the replication factor is three.
+  * [CLIENT-2303] - Added support for Amazon Linux 2023.
+  * [CLIENT-2342] - Added support for Node.js 20
 
 * **Improvements**
   * [CLIENT-1819] - Fixed issue which caused the configuration class property "rackId" to be ignored.
 
 * **Bug Fixes**
   * [CLIENT-2231] - Fixed expression API documentation to show parameters for functions.
-  
+
 ## [5.4.0]
 * The new features require Aerospike Server version 6.3 or newer.
 
