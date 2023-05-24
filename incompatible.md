@@ -1,6 +1,10 @@
 # Backward Incompatible API Changes
 
 All notable changes to this project will be documented in this file.
+## [5.5.0]
+
+### Client no longer supports Node.js version 14
+
 ## [5.4.0]
 
 ### Client no longer supports Ubuntu 18.04

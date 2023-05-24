@@ -56,10 +56,10 @@ perform_check
 
 rm -rf ${AEROSPIKE_NODEJS_RELEASE_HOME}/node-*-${OS_FLAVOR}-*
 
-build_nodejs_client v14.21.1
-build_nodejs_client v16.18.1
-build_nodejs_client v18.12.1
-build_nodejs_client v19.2.0
+build_nodejs_client v16
+build_nodejs_client v18
+build_nodejs_client v19
+build_nodejs_client v20
 
 nvm use v18.12.1
 
