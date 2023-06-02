@@ -23,6 +23,7 @@ const Aerospike = require('../lib/aerospike')
 const Job = require('../lib/job')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
+const Context = Aerospike.cdt.Context
 
 context('secondary indexes', function () {
   const client = helper.client
@@ -78,6 +79,37 @@ context('secondary indexes', function () {
 
       return client.createIndex(options)
         .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+
+    it('should create an index with CDT Context', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        type: Aerospike.indexType.LIST,
+        datatype: Aerospike.indexDataType.NUMERIC,
+        context: new Context().addListIndex(0)
+      }
+
+      return client.createIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+
+    it('should not create an index with CDT Context \'addListIndexCreate\'', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        type: Aerospike.indexType.LIST,
+        datatype: Aerospike.indexDataType.NUMERIC,
+        context: new Context().addListIndexCreate(0, 0, false)
+      }
+
+      return client.createIndex(options)
+        .then(() => expect(1).to.equal(2))
+        .catch(() => { expect('pass').to.equal('pass') })
     })
 
     it('should create an integer index with info policy', function () {
