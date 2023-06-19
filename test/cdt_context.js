@@ -16,7 +16,7 @@
 
 'use strict'
 
-/* eslint-env mocha */
+/* global expect, describe, it */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -48,6 +48,12 @@ describe('Aerospike.cdt.Context', function () {
         .then(operate(lists.get('nested', 0).withContext(context)))
         .then(assertResultEql({ nested: 5 }))
         .then(cleanup)
+    })
+    it('Throws an error when index is too large', function () {
+      expect(() => new Context().addListIndex(2147483648)).to.throw(Error)
+    })
+    it('Throws an error when index is too small', function () {
+      expect(() => new Context().addListIndex(-2147483649)).to.throw(Error)
     })
   })
 
@@ -127,6 +133,12 @@ describe('Aerospike.cdt.Context', function () {
         .then(assertError(status.ERR_OP_NOT_APPLICABLE))
         .then(cleanup)
     })
+    it('Throws an error when index is too large', function () {
+      expect(() => new Context().addListIndexCreate(2147483648)).to.throw(Error)
+    })
+    it('Throws an error when index is too small', function () {
+      expect(() => new Context().addListIndexCreate(-2147483649)).to.throw(Error)
+    })
   })
 
   describe('Context.addListRank', function () {
@@ -138,6 +150,12 @@ describe('Aerospike.cdt.Context', function () {
         .then(operate(lists.get('nested', 0).withContext(context)))
         .then(assertResultEql({ nested: 3 }))
         .then(cleanup)
+    })
+    it('Throws an error when rank is too large', function () {
+      expect(() => new Context().addListRank(2147483648)).to.throw(Error)
+    })
+    it('Throws an error when rank is too small', function () {
+      expect(() => new Context().addListRank(-2147483649)).to.throw(Error)
     })
   })
 
@@ -163,6 +181,12 @@ describe('Aerospike.cdt.Context', function () {
         .then(assertResultEql({ nested: 3 }))
         .then(cleanup)
     })
+    it('Throws an error when index is too large', function () {
+      expect(() => new Context().addMapIndex(2147483648)).to.throw(Error)
+    })
+    it('Throws an error when index is too small', function () {
+      expect(() => new Context().addMapIndex(-2147483649)).to.throw(Error)
+    })
   })
 
   describe('Context.addMapRank', function () {
@@ -174,6 +198,12 @@ describe('Aerospike.cdt.Context', function () {
         .then(operate(lists.get('nested', 0).withContext(context)))
         .then(assertResultEql({ nested: 3 }))
         .then(cleanup)
+    })
+    it('Throws an error when rank is too large', function () {
+      expect(() => new Context().addMapRank(2147483648)).to.throw(Error)
+    })
+    it('Throws an error when rank is too small', function () {
+      expect(() => new Context().addMapRank(-2147483649)).to.throw(Error)
     })
   })
 
