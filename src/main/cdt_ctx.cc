@@ -26,6 +26,82 @@ extern "C" {
 
 using namespace v8;
 
+NAN_METHOD(AerospikeClient::ContextToBase64)
+{
+	TYPE_CHECK_REQ(info[0], IsObject, "Context must be an object");
+
+	as_cdt_ctx context;
+	bool has_context = false;
+	
+	if (info[0]->IsObject()) {
+		get_optional_cdt_context(&context, &has_context, info[0].As<Object>(), "context", NULL);
+	}
+
+	if(has_context){
+		uint32_t capacity = as_cdt_ctx_base64_capacity(&context);
+		char serializedContext[capacity];
+		as_cdt_ctx_to_base64(&context, serializedContext, capacity);;
+		as_cdt_ctx_destroy(&context);
+		info.GetReturnValue().Set(Nan::New(serializedContext).ToLocalChecked());
+	}
+	else{
+		Nan::ThrowError("Context is invalid, cannot serialize");
+	}
+
+}
+
+NAN_METHOD(AerospikeClient::ContextFromBase64)
+{
+	TYPE_CHECK_REQ(info[0], IsObject, "Serialized context must be an object");
+
+	char* serializedContext = NULL;
+	if (info[0]->IsObject()) {
+		if(get_string_property(&serializedContext, info[0].As<Object>(), "context", NULL) != AS_NODE_PARAM_OK){
+			Nan::ThrowError("Serialized context is invalid");
+			return;
+		}
+	}
+
+	as_cdt_ctx context;
+	as_cdt_ctx_from_base64(&context, serializedContext);
+	Local<Array> v8_items = Nan::New<Array>(context.list.size);
+	get_v8_cdt_context(&context, v8_items);
+	cf_free(serializedContext);
+	as_cdt_ctx_destroy(&context);
+	info.GetReturnValue().Set(v8_items);
+
+}
+
+int get_v8_cdt_context(as_cdt_ctx *context, Local<Array> items)
+{
+	Nan::HandleScope scope;
+	for(uint32_t i = 0; i < context->list.size; i++){
+		
+		as_cdt_ctx_item* item = (as_cdt_ctx_item*) as_vector_get(&context->list, i);
+		Local<Array> v8Item = Nan::New<Array>(2);
+
+		if((item->type & 0xF) > 0x1){
+			Nan::Set(v8Item, 0, Nan::New(item->type));
+			Nan::Set(v8Item, 1, val_to_jsvalue(item->val.pval, NULL));
+
+			Nan::Set(items, i, v8Item);
+		}
+		else{
+			Nan::Set(v8Item, 0, Nan::New(item->type));
+			//First 31 bits mask
+			int32_t ival = item->val.ival & 0x7FFFFFFF;
+			//Signed bit mask
+			if(item->val.ival & 0x8000000000000000){
+				ival = ival | 0x80000000;
+			}
+			Nan::Set(v8Item, 1, Nan::New(ival));
+
+			Nan::Set(items, i, v8Item);
+		}	
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 							 Local<Object> obj, const char *prop,
 							 const LogInfo *log)
