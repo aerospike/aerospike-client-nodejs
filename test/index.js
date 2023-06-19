@@ -194,15 +194,34 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('Client#indexRemove()', function () {
-    beforeEach(() => helper.index.create(testIndex.name, helper.set, testIndex.bin,
-      Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT))
+  describe('Client#indexRemove()', async function () {
+    beforeEach(() => {
+      helper.index.create(testIndex.name, helper.set, testIndex.bin,
+        Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT)
+    })
 
-    it('should drop an index', function (done) {
-      client.indexRemove(helper.namespace, testIndex.name, function (err) {
-        expect(err).to.be.null()
-        done()
-      })
+    it('should drop an index', async function () {
+      // Wait for index creation to complete
+      await new Promise(resolve => setTimeout(resolve, 5000))
+
+      // Do query on the secondary index to ensure proper creation.
+      let query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
+      let results = await query.results()
+
+      await client.indexRemove(helper.namespace, testIndex.name)
+
+      // Do query on the secondary index to ensure proper deletion
+      query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
+      try {
+        results = await query.results()
+        // Fail test if this code is reached
+        expect('fail').to.equal('now')
+      } catch (error) {
+        expect(error.code).to.equal(201)
+        expect('pass').to.equal('pass')
+      }
     })
 
     it('should return a Promise if called without callback function', function () {
