@@ -53,8 +53,10 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 	as_status status;
 	as_partition_filter pf;
 	bool pf_defined = false;
+	as_cdt_ctx context;
+	bool with_context = false;
 
-	setup_query(&query, info[0], info[1], info[2], log);
+	setup_query(&query, info[0], info[1], info[2], &context, &with_context, log);
 
 	if (info[3]->IsObject()) {
 		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
@@ -95,4 +97,8 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 Cleanup:
 	delete cmd;
 	free_query(&query, p_policy);
+	if(with_context){
+		as_cdt_ctx_destroy(&context);
+	}
+
 }

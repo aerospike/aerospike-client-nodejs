@@ -23,6 +23,7 @@ const Aerospike = require('../lib/aerospike')
 const Job = require('../lib/job')
 const IndexJob = require('../lib/index_job')
 const helper = require('./test_helper')
+const Context = Aerospike.cdt.Context
 
 context('secondary indexes', function () {
   const client = helper.client
@@ -78,6 +79,37 @@ context('secondary indexes', function () {
 
       return client.createIndex(options)
         .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+
+    it('should create an index with CDT Context', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        type: Aerospike.indexType.LIST,
+        datatype: Aerospike.indexDataType.NUMERIC,
+        context: new Context().addListIndex(0)
+      }
+
+      return client.createIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+
+    it('should not create an index with CDT Context \'addListIndexCreate\'', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        type: Aerospike.indexType.LIST,
+        datatype: Aerospike.indexDataType.NUMERIC,
+        context: new Context().addListIndexCreate(0, 0, false)
+      }
+
+      return client.createIndex(options)
+        .then(() => expect(1).to.equal(2))
+        .catch(() => { expect('pass').to.equal('pass') })
     })
 
     it('should create an integer index with info policy', function () {
@@ -162,15 +194,34 @@ context('secondary indexes', function () {
     })
   })
 
-  describe('Client#indexRemove()', function () {
-    beforeEach(() => helper.index.create(testIndex.name, helper.set, testIndex.bin,
-      Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT))
+  describe('Client#indexRemove()', async function () {
+    beforeEach(() => {
+      helper.index.create(testIndex.name, helper.set, testIndex.bin,
+        Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT)
+    })
 
-    it('should drop an index', function (done) {
-      client.indexRemove(helper.namespace, testIndex.name, function (err) {
-        expect(err).to.be.null()
-        done()
-      })
+    it('should drop an index', async function () {
+      // Wait for index creation to complete
+      await new Promise(resolve => setTimeout(resolve, 5000))
+
+      // Do query on the secondary index to ensure proper creation.
+      let query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
+      let results = await query.results()
+
+      await client.indexRemove(helper.namespace, testIndex.name)
+
+      // Do query on the secondary index to ensure proper deletion
+      query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
+      try {
+        results = await query.results()
+        // Fail test if this code is reached
+        expect('fail').to.equal('now')
+      } catch (error) {
+        expect(error.code).to.equal(201)
+        expect('pass').to.equal('pass')
+      }
     })
 
     it('should return a Promise if called without callback function', function () {

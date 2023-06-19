@@ -44,11 +44,16 @@ class QueryBackgroundCommand : public AerospikeCommand {
 		free_query(&query, NULL);
 		if (policy != NULL)
 			cf_free(policy);
+		if(with_context){
+			as_cdt_ctx_destroy(&context);
+		}
 	}
 
 	as_policy_write *policy = NULL;
 	uint64_t query_id = 0;
 	as_query query;
+	as_cdt_ctx context;
+	bool with_context = false;
 };
 
 static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
@@ -59,7 +64,8 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		new QueryBackgroundCommand(client, info[5].As<Function>());
 	LogInfo *log = client->log;
 
-	setup_query(&cmd->query, info[0], info[1], info[2], log);
+
+	setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context, &cmd->with_context, log);
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_write *)cf_malloc(sizeof(as_policy_write));
