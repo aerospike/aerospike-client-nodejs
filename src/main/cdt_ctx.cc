@@ -42,6 +42,7 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 		char* serializedContext = new char[capacity];
 		as_cdt_ctx_to_base64(&context, serializedContext, capacity);;
 		as_cdt_ctx_destroy(&context);
+		delete serializedContext;
 		info.GetReturnValue().Set(Nan::New(serializedContext).ToLocalChecked());
 	}
 	else{
