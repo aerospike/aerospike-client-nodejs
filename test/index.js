@@ -201,9 +201,6 @@ context('secondary indexes', function () {
     })
 
     it('should drop an index', async function () {
-      // Wait for index creation to complete
-      await new Promise(resolve => setTimeout(resolve, 5000))
-
       // Do query on the secondary index to ensure proper creation.
       let query = client.query(helper.namespace, helper.set)
       query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
