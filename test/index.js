@@ -207,7 +207,7 @@ context('secondary indexes', function () {
       // Do query on the secondary index to ensure proper creation.
       let query = client.query(helper.namespace, helper.set)
       query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
-      let results = await query.results()
+      await query.results()
 
       await client.indexRemove(helper.namespace, testIndex.name)
 
@@ -215,7 +215,7 @@ context('secondary indexes', function () {
       query = client.query(helper.namespace, helper.set)
       query.where(Aerospike.filter.equal(testIndex.bin, 'value'))
       try {
-        results = await query.results()
+        await query.results()
         // Fail test if this code is reached
         expect('fail').to.equal('now')
       } catch (error) {
