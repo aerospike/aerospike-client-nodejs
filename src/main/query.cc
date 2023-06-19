@@ -31,7 +31,7 @@ extern "C" {
 using namespace v8;
 
 void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
-				 Local<Value> maybe_options, LogInfo *log)
+				 Local<Value> maybe_options, as_cdt_ctx* context, bool* with_context, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -50,18 +50,18 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 			// TODO: Return param error
 		}
 	}
-
 	as_query_init(query, as_ns, as_set);
 
 	if (!maybe_options->IsObject()) {
 		return;
 	}
-	setup_options(query, maybe_options.As<Object>(), log);
+
+	setup_options(query, maybe_options.As<Object>(), context, with_context, log);
 
 
 }
 
-void setup_options(as_query *query, Local<Object> options, LogInfo *log)
+void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, bool* with_context, LogInfo *log)
 {
 
 	Local<Value> filters_val =
@@ -76,6 +76,14 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 		for (int i = 0; i < size; i++) {
 			Local<Object> filter =
 				Nan::Get(filters, i).ToLocalChecked().As<Object>();
+			if(!(*with_context)){
+				if (get_optional_cdt_context(context, with_context, filter, "context", log) !=
+					AS_NODE_PARAM_OK) {
+					as_v8_error(log, "Parsing context arguments for query index filter failed");
+					Nan::ThrowTypeError("Error in filter context");
+				}				
+			}
+
 			Local<Value> bin =
 				Nan::Get(filter, Nan::New("bin").ToLocalChecked())
 					.ToLocalChecked();
@@ -115,7 +123,7 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 					if (v8min->IsNumber() && v8max->IsNumber()) {
 						const int64_t min = Nan::To<int64_t>(v8min).FromJust();
 						const int64_t max = Nan::To<int64_t>(v8max).FromJust();
-						as_query_where(query, bin_name, predicate, type,
+						as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 									   datatype, min, max);
 						as_v8_debug(log,
 									"Integer range predicate from %llu to %llu",
@@ -140,7 +148,7 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 							"The region value passed is not a GeoJSON string");
 					}
 					const char *bin_val = strdup(*Nan::Utf8String(value));
-					as_query_where(query, bin_name, predicate, type, datatype,
+					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype,
 								   bin_val);
 					as_v8_debug(log, "Geo range predicate %s", bin_val);
 				}
@@ -153,7 +161,7 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 							.ToLocalChecked();
 					if (value->IsNumber()) {
 						const int64_t val = Nan::To<int64_t>(value).FromJust();
-						as_query_where(query, bin_name, predicate, type,
+						as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 									   datatype, val);
 						as_v8_debug(log, "Integer equality predicate %d", val);
 					}
@@ -175,7 +183,7 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 										"predicate - value is not a string");
 					}
 					const char *bin_val = strdup(*Nan::Utf8String(value));
-					as_query_where(query, bin_name, predicate, type, datatype,
+					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype,
 								   bin_val);
 					as_v8_debug(log, "String equality predicate %s", bin_val);
 				}
@@ -253,7 +261,8 @@ void setup_options(as_query *query, Local<Object> options, LogInfo *log)
 }
 
 void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
-				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size,
+				as_cdt_ctx* context, bool* with_context, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -285,7 +294,7 @@ void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 		return;
 	}
 
-	setup_options(*query, maybe_options.As<Object>(), log);
+	setup_options(*query, maybe_options.As<Object>(), context, with_context, log);
 
 }
 

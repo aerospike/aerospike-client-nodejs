@@ -21,6 +21,7 @@
 #include "policy.h"
 #include "log.h"
 #include "query.h"
+#include "operations.h"
 
 extern "C" {
 #include <aerospike/aerospike_query.h>
@@ -40,13 +41,14 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	TYPE_CHECK_OPT(info[2], IsObject, "Options must be an object");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
 	TYPE_CHECK_OPT(info[4], IsObject, "saved_query must be an object");
-	TYPE_CHECK_OPT(info[5], IsNumber, "max_records must be an object");
-	TYPE_CHECK_REQ(info[6], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[5], IsNumber, "max_records must be a number");
+	TYPE_CHECK_OPT(info[6], IsObject, "context must be an object");	
+	TYPE_CHECK_REQ(info[7], IsFunction, "Callback must be a function");
 
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	AsyncCommand *cmd =
-		new AsyncCommand("Query", client, info[6].As<Function>());
+		new AsyncCommand("Query", client, info[7].As<Function>());
 	LogInfo *log = client->log;
 
 	as_policy_query* p_policy = NULL;
@@ -54,23 +56,36 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	as_partition_filter pf;
 	bool pf_defined = false;
 	as_status status;
+	as_cdt_ctx context;
+	bool with_context = false;
 
 	struct query_udata* qu = (query_udata*) cf_malloc(sizeof(struct query_udata));
 	qu->cmd = cmd;
 	qu->count = 0;
+
+	if (info[6]->IsObject()) {
+		if (get_optional_cdt_context(&context, &with_context, info[6].As<Object>(), "context", log) !=
+			AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Parsing context arguments for query index filter failed");
+			Nan::ThrowTypeError("Error in filter context");
+		}
+	}
 
 	if (info[4]->IsObject()) {
 		uint32_t bytes_size = 0;
 		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
 		uint8_t* bytes = new uint8_t[bytes_size];
 		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
-		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
+		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, &context, &with_context, log);
 		delete bytes;
 	}
 	else{
-		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, log);
+		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, &context, &with_context, log);
 	}
 
+	if(with_context) {
+		qu->query->where.entries[0].ctx = &context;
+	}
 
 	if (info[3]->IsObject()) {
 		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
@@ -119,6 +134,9 @@ Cleanup:
 	delete cmd;
 	if (p_policy && policy.base.filter_exp) {
 		as_exp_destroy(policy.base.filter_exp);
+	}
+	if(with_context) {
+		as_cdt_ctx_destroy(&context);
 	}
 
 }
