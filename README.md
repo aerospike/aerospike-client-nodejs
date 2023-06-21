@@ -225,15 +225,23 @@ sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl@1.1;
 For a Mac using X86 architecture, OpenSSL should be linked as shown below:
 
 ```bash
-# When building from source before version 5.6 with openssl@3
-sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
-# link here if before version 5.6.0
-sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl@3;
-
-# When building from source before version 5.6 with openssl@3
+# When building from source before version 5.6 with openssl@1.1
 sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl;
 # link here if before version 5.6.0 with openssl@1.1
 sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl@1.1;
+```
+
+Before version 5.6.0, you may need to some add some variables to your profile for OpenSSL to be found.
+
+```bash
+export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
+export LDFLAGS="-L/usr/local/opt/openssl/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl/include"  
+export EXT_CFLAGS="-I/usr/local/opt/openssl/include"
+# Make sure to source the changes to your shell profile
+source ~/.bashrc
+source ~/.profile
+source ~/.zshrc
 ```
 
 For 4x client support, install OpenSSL&#64;1.1 version.
