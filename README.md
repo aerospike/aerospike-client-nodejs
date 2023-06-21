@@ -231,7 +231,7 @@ sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
 sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl@3;
 
 # When building from source before version 5.6 with openssl@3
-sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
+sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl;
 # link here if before version 5.6.0 with openssl@1.1
 sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl@1.1;
 ```
@@ -250,9 +250,10 @@ We recommend using brew to install Libuv:
 brew install libuv
 ```
 
-For Macs using ARM architecture, Libuv should be linked as shown below:
+For a Mac using ARM architecture, Libuv should be linked as shown below:
 
 ```bash
+# When building from source before version 5.6
 sudo ln -s /opt/homebrew/opt/libuv/ /usr/local/opt/libuv;
 ```
 
