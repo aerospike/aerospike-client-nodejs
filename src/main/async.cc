@@ -195,7 +195,7 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 							   query_bytes_to_jsobject(bytes, bytes_size, log),
 							   Nan::Null()};
 
-		cmd->Callback(4, {argv});
+		cmd->Callback(4, argv);
 		as_scan_destroy(scan);
 		free(bytes);
 		delete cmd;
@@ -253,7 +253,7 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 							   query_bytes_to_jsobject(bytes, bytes_size, log),
 							   Nan::Null()};
 
-		cmd->Callback(4, {argv});
+		cmd->Callback(4, argv);
 		free_query(query, NULL);
 		free(bytes);
 		delete cmd;
