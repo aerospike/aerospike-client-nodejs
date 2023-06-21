@@ -80,7 +80,8 @@
     "ignore": [
       "apidocs",
       "tmp-*.js",
-      "/*.js"
+      "/*.js",
+      "libuv-v*"
     ]
   },
   "files": [
