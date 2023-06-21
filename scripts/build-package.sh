@@ -44,12 +44,6 @@ build_nodejs_client() {
 
 configure_nvm
 
-if [ -n "$1" ]; then setup
-fi
-download_libuv
-rebuild_libuv
-check_libuv
-
 rebuild_c_client
 
 perform_check
