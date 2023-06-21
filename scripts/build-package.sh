@@ -44,6 +44,8 @@ build_nodejs_client() {
 
 configure_nvm
 
+download_libuv
+
 rebuild_c_client
 
 perform_check

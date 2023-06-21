@@ -28,6 +28,8 @@ BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 
 . ${SCRIPT_DIR}/build-commands.sh
 
+download_libuv
+
 rebuild_c_client
 
 perform_check

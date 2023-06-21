@@ -28,12 +28,17 @@ BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
 OS_FLAVOR=linux
 AEROSPIKE_NODEJS_RELEASE_HOME=${CWD}/lib/binding
+LIBUV_VERSION=1.45.0
+LIBUV_DIR=libuv-v${LIBUV_VERSION}
+LIBUV_TAR=${LIBUV_DIR}.tar.gz
+LIBUV_URL=http://dist.libuv.org/dist/v1.45.0/${LIBUV_TAR}
 build_arch=$(uname -m)
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-${build_arch}
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_DIR=/usr/local/opt/libuv
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-${build_arch}
@@ -64,6 +69,20 @@ configure_nvm() {
   else
     echo "WARN: not able to configure nvm"
     exit 1
+  fi
+}
+
+download_libuv() {
+  if [[ "$OSTYPE" != "darwin"* ]]; then
+    if [ ! -f ${LIBUV_TAR} ]; then
+        echo Download ${LIBUV_URL}
+        wget ${LIBUV_URL}
+    fi
+
+    if [ ! -d ${LIBUV_DIR} ]; then
+        echo Extract ${LIBUV_TAR}
+        tar xf ${LIBUV_TAR}
+    fi
   fi
 }
 
