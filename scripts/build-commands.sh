@@ -32,18 +32,28 @@ LIBUV_VERSION=1.45.0
 LIBUV_DIR=libuv-v${LIBUV_VERSION}
 LIBUV_TAR=${LIBUV_DIR}.tar.gz
 LIBUV_URL=http://dist.libuv.org/dist/v1.45.0/${LIBUV_TAR}
+LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
+LIBUV_BUILD=0
 build_arch=$(uname -m)
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-${build_arch}
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+
   LIBUV_DIR=/usr/local/opt/libuv
+  LIBUV_ABS_DIR=${LIBUV_DIR}
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
+  LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
+  LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Linux-${build_arch}
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
+  LIBUV_LIBRARY_DIR=${LIBUV_DIR}/.libs
+  LIBUV_INCLUDE_DIR=${CWD}/${LIBUV_DIR}/include
+  LIBUV_LIBRARY=${CWD}/${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=linux
 else
     # Unknown.
@@ -82,6 +92,23 @@ download_libuv() {
     if [ ! -d ${LIBUV_DIR} ]; then
         echo Extract ${LIBUV_TAR}
         tar xf ${LIBUV_TAR}
+    fi
+  fi
+}
+
+rebuild_libuv() {
+  echo "rebuild_libuv"
+  if [ $LIBUV_BUILD -eq 1 ]; then
+    if [ ! -f ${LIBUV_LIBRARY} ]; then
+        echo "Make ${LIBUV_ABS_DIR}"
+        cd ${LIBUV_ABS_DIR}
+        sh autogen.sh
+        ./configure -q
+        make clean
+        make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 CFLAGS="-w -fPIC -DDEBUG" 2>&1 | tee ${CWD}/${0}-libuv-output.log
+        # make V=1 LIBUV_VERSIONBOSE=1 install
+        cd ..
     fi
   fi
 }
