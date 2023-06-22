@@ -68,7 +68,7 @@ NAN_METHOD(AerospikeClient::ScanPages)
 		uint8_t* bytes = new uint8_t[bytes_size];
 		load_bytes(info[5].As<Object>(), bytes, bytes_size, log);
 		setup_scan_pages(&su->scan, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
-		delete bytes;
+		delete [] bytes;
 	}
 	else{
 		setup_scan_pages(&su->scan, info[0], info[1], info[2], NULL, 0, log);

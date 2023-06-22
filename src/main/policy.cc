@@ -546,6 +546,11 @@ int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}	
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->info_timeout,
 										   NULL, obj, "infoTimeout", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -597,6 +602,11 @@ int scanpolicy_from_jsobject(as_policy_scan *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->replica, NULL,
+										   obj, "replica", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}

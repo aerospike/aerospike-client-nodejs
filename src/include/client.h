@@ -83,6 +83,8 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(BatchApply);
 	static NAN_METHOD(BatchRemove);
 	static NAN_METHOD(BatchSelect);
+	static NAN_METHOD(ContextFromBase64);
+	static NAN_METHOD(ContextToBase64);
 	static NAN_METHOD(Close);
 	static NAN_METHOD(Connect);
 	static NAN_METHOD(ExistsAsync);

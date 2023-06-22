@@ -72,14 +72,15 @@ function IndexHelper (client) {
   this.client = client
 }
 
-IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType) {
+IndexHelper.prototype.create = function (indexName, setName, binName, dataType, indexType, context) {
   const index = {
     ns: options.namespace,
     set: setName,
     bin: binName,
     index: indexName,
     type: indexType || Aerospike.indexType.DEFAULT,
-    datatype: dataType
+    datatype: dataType,
+    context
   }
   return this.client.createIndex(index)
     .then(job => job.wait(10))

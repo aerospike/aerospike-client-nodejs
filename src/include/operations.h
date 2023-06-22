@@ -44,6 +44,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 as_cdt_ctx* get_optional_cdt_context_heap(int * rc,
                              v8::Local<v8::Object> obj, const char *prop,
                              const LogInfo *log);
+int get_v8_cdt_context(as_cdt_ctx *context, v8::Local<v8::Array> items);
 
 v8::Local<v8::Object> scalar_opcode_values();
 v8::Local<v8::Object> list_opcode_values();

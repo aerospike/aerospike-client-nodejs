@@ -20,6 +20,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
+const Context = Aerospike.cdt.Context
 const helper = require('./test_helper')
 const keygen = helper.keygen
 
@@ -149,6 +150,74 @@ describe('Client', function () {
         expect(node.name).to.match(/^[0-9A-F]{15}$/)
         expect(node.address).to.be.a('string')
       })
+    })
+  })
+
+  describe('Client#contextToBase64', function () {
+    const client = helper.client
+    const context = new Context().addMapKey('nested')
+    it('Serializes a CDT context', function () {
+      expect(typeof client.contextToBase64(context)).to.equal('string')
+    })
+    it('Throws an error if no context is given', function () {
+      expect(() => { client.contextToBase64() }).to.throw(Error)
+    })
+    it('Throws an error if a non-object is given', function () {
+      expect(() => { client.contextToBase64('test') }).to.throw(Error)
+    })
+  })
+
+  describe('Client#contextFromBase64', function () {
+    const client = helper.client
+    const addListIndex = new Context().addListIndex(5)
+    const addListIndexCreate = new Context().addListIndexCreate(45, Aerospike.lists.order.KEY_ORDERED, true)
+    const addListRank = new Context().addListRank(15)
+    const addListValueString = new Context().addListValue('apple')
+    const addListValueInt = new Context().addListValue(4500)
+    const addMapIndex = new Context().addMapIndex(10)
+    const addMapRank = new Context().addMapRank(11)
+    const addMapKey = new Context().addMapKey('nested')
+    const addMapKeyCreate = new Context().addMapKeyCreate('nested', Aerospike.maps.order.ORDERED)
+    const addMapValueString = new Context().addMapValue('nested')
+    const addMapValueInt = new Context().addMapValue(1000)
+    it('Deserializes a cdt context with addListIndex', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addListIndex))).to.eql(addListIndex)
+    })
+    it('Deserializes a cdt context with addListIndexCreate', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addListIndexCreate))).to.eql(addListIndexCreate)
+    })
+    it('Deserializes a cdt context with addListRank', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addListRank))).to.eql(addListRank)
+    })
+    it('Deserializes a cdt context with addListValueString', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addListValueString))).to.eql(addListValueString)
+    })
+    it('Deserializes a cdt context with addListValueInt', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addListValueInt))).to.eql(addListValueInt)
+    })
+    it('Deserializes a cdt context with addMapIndex', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapIndex))).to.eql(addMapIndex)
+    })
+    it('Deserializes a cdt context with addMapRank', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapRank))).to.eql(addMapRank)
+    })
+    it('Deserializes a cdt context with addMapKey', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapKey))).to.eql(addMapKey)
+    })
+    it('Deserializes a cdt context with addMapKeyCreate', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapKeyCreate))).to.eql(addMapKeyCreate)
+    })
+    it('Deserializes a cdt context with addMapValueString', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapValueString))).to.eql(addMapValueString)
+    })
+    it('Deserializes a cdt context with addMapValueInt', function () {
+      expect(client.contextFromBase64(client.contextToBase64(addMapValueInt))).to.eql(addMapValueInt)
+    })
+    it('Throws an error if no value is given', function () {
+      expect(() => { client.contextFromBase64() }).to.throw(Error)
+    })
+    it('Throws an error if an non-string value is given', function () {
+      expect(() => { client.contextFromBase64(45) }).to.throw(Error)
     })
   })
 
