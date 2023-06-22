@@ -28,10 +28,10 @@ BASE_DIR=$(cd "${SCRIPT_DIR}/.."; pwd)
 AEROSPIKE_C_HOME=${CWD}/aerospike-client-c
 OS_FLAVOR=linux
 AEROSPIKE_NODEJS_RELEASE_HOME=${CWD}/lib/binding
-LIBUV_VERSION=1.8.0
+LIBUV_VERSION=1.45.0
 LIBUV_DIR=libuv-v${LIBUV_VERSION}
 LIBUV_TAR=${LIBUV_DIR}.tar.gz
-LIBUV_URL=http://dist.libuv.org/dist/v1.8.0/${LIBUV_TAR}
+LIBUV_URL=http://dist.libuv.org/dist/v1.45.0/${LIBUV_TAR}
 LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 LIBUV_BUILD=0
 build_arch=$(uname -m)
@@ -113,35 +113,6 @@ rebuild_libuv() {
   fi
 }
 
-check_libuv() {
-
-  cd ${CWD}
-
-  printf "\n" >&1
-
-  if [ $LIBUV_BUILD -eq 1 ]; then
-    if [ -f ${LIBUV_LIBRARY} ]; then
-      printf "   [✓] %s\n" "${LIBUV_LIBRARY}" >&1
-    else
-      printf "   [✗] %s\n" "${LIBUV_LIBRARY}" >&1
-      FAILED=1
-    fi
-  fi
-
-  if [ -f ${LIBUV_INCLUDE_DIR}/uv.h ]; then
-    printf "   [✓] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
-  else
-    printf "   [✗] %s\n" "${LIBUV_INCLUDE_DIR}/uv.h" >&1
-    FAILED=1
-  fi
-
-  printf "\n" >&1
-
-  if [ $FAILED ]; then
-    exit 1
-  fi
-}
-
 rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
@@ -149,29 +120,6 @@ rebuild_c_client() {
     make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
     # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
-}
-
-setup() {
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    # # install xcode CLI
-    # xcode-select —-install 
-    # Check for Homebrew to be present, install if it's missing
-    if test ! $(which brew); then
-        echo "Installing homebrew..."
-        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    fi
-    brew update
-    PACKAGES=(
-        openssl
-    )
-    echo "Installing packages..."
-    brew install ${PACKAGES[@]}
-    # link openssl
-    unlink /usr/local/opt/openssl
-    ln -s /usr/local/Cellar/openssl@3/*/ /usr/local/opt/openssl
-    export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
-    export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
-  fi
 }
 
 check_aerospike() {
@@ -208,6 +156,5 @@ perform_check() {
   printf "\n" >&1
   printf "CHECK\n" >&1
 
-  check_libuv
   check_aerospike
 }

@@ -20,6 +20,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
+#include "operations.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -42,6 +43,8 @@ class IndexCreateCommand : public AerospikeCommand {
 			cf_free(policy);
 		if (index != NULL)
 			free(index);
+		if (with_context)
+			as_cdt_ctx_destroy(&context);
 	}
 
 	as_index_task task;
@@ -52,6 +55,8 @@ class IndexCreateCommand : public AerospikeCommand {
 	char *index = NULL;
 	as_index_type itype;
 	as_index_datatype dtype;
+	as_cdt_ctx context;
+	bool with_context;
 };
 
 static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
@@ -60,7 +65,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	IndexCreateCommand *cmd =
-		new IndexCreateCommand(client, info[7].As<Function>());
+		new IndexCreateCommand(client, info[8].As<Function>());
 	LogInfo *log = client->log;
 
 	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()),
@@ -90,8 +95,16 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	cmd->dtype = (as_index_datatype)Nan::To<int>(info[5]).FromJust();
 
 	if (info[6]->IsObject()) {
+		if (get_optional_cdt_context(&cmd->context, &cmd->with_context, info[6].As<Object>(), "context", log) !=
+			AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+								   "Context parameter is invalid");
+		}
+	}
+
+	if (info[7]->IsObject()) {
 		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[6].As<Object>(), log) !=
+		if (infopolicy_from_jsobject(cmd->policy, info[7].As<Object>(), log) !=
 			AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Policy parameter is invalid");
@@ -115,9 +128,9 @@ static void execute(uv_work_t *req)
 				"index=%s, type=%d, datatype=%d",
 				cmd->ns, cmd->set, cmd->bin, cmd->index, cmd->itype,
 				cmd->dtype);
-	aerospike_index_create_complex(cmd->as, &cmd->err, &cmd->task, cmd->policy,
+	aerospike_index_create_ctx(cmd->as, &cmd->err, &cmd->task, cmd->policy,
 								   cmd->ns, cmd->set, cmd->bin, cmd->index,
-								   cmd->itype, cmd->dtype);
+								   cmd->itype, cmd->dtype, cmd->with_context ? &cmd->context : NULL);
 }
 
 static void respond(uv_work_t *req, int status)
@@ -144,8 +157,9 @@ NAN_METHOD(AerospikeClient::IndexCreate)
 	TYPE_CHECK_REQ(info[3], IsString, "Index name must be a string");
 	TYPE_CHECK_OPT(info[4], IsNumber, "Index type must be an integer");
 	TYPE_CHECK_REQ(info[5], IsNumber, "Index datatype must be an integer");
-	TYPE_CHECK_OPT(info[6], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[7], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[6], IsObject, "Context must be an object");
+	TYPE_CHECK_OPT(info[7], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[8], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

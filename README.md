@@ -197,43 +197,72 @@ Before starting with the Aerospike Nodejs Client, verify that you have the follo
 - Xcode 5 or greater.
 
 
-**Openssl Library**
+**OpenSSL Library**
+OpenSSL is needed to build the Aerospike C Client. If downloading from NPM at version 5.6.0 or later, you will not need to 
+have OpenSSL installed to use the Aerospike Nodejs Client. If you are using version 5.5.0 and below, you will need to do 
+some additional linking to use the client, which is specified below.
 
-The below example shows how to install the Openssl library.
+We recommend using brew to install OpenSSL:
 
 ```bash
 brew install openssl
-unlink /usr/local/opt/openssl
-# Change the below linking based on openssl version and installation path
-ln -s /usr/local/Cellar/openssl@x/y.z/ /usr/local/opt/openssl
 ```
 
-If you are looking upgrade switch from openssl&#64;1 or an older version of openssl&#64;3, add these variables to your .bashrc, .profile, or .zshrc file.
+For a Mac using ARM architecture, OpenSSL should be linked as shown below:
+
+```bash
+# When building from source before version 5.6 with openssl@3
+sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
+# link here if before version 5.6.0
+sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl@3;
+
+# When building from source with openssl@1.1
+sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl;
+# link here if before version 5.6.0 with openssl@1.1
+sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl@1.1;
+```
+
+For a Mac using X86 architecture, OpenSSL should be linked as shown below:
+
+```bash
+# When building from source before version 5.6 with openssl@1.1
+sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl;
+# link here if before version 5.6.0 with openssl@1.1
+sudo ln -s /opt/homebrew/opt/openssl@1.1/ /usr/local/opt/openssl@1.1;
+```
+
+Before version 5.6.0, you may need to some add some variables to your profile for OpenSSL to be found.
+
 ```bash
 export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
 export LDFLAGS="-L/usr/local/opt/openssl/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl/include"  
 export EXT_CFLAGS="-I/usr/local/opt/openssl/include"
-```
-
-Afterwards, source the file that was changed and confirm the desired openssl version is installed
-```bash
+# Make sure to source the changes to your shell profile
 source ~/.bashrc
 source ~/.profile
 source ~/.zshrc
-openssl version
 ```
-For 4x client support, install openssl&#64;1.1 version.
+
+For 4x client support, install OpenSSL&#64;1.1 version.
 
 **LIBUV Library**
 
-The example below shows how to install the LIBUV library.
+Libuv is needed to build the Aerospike C Client. If downloading from NPM at version 5.6.0 or later, you will not need to 
+have Libuv installed to use the Aerospike Nodejs Client. If you are using version 5.5.0 and below, you will need to do 
+some additional linking to use the client, which is specified below.
+
+We recommend using brew to install Libuv:
 
 ```bash
 brew install libuv
-unlink /usr/local/opt/libuv
-# Change the below linking based on libuv version and installation path
-ln -s /usr/local/Cellar/libuv/1.44.1_1/ /usr/local/opt/libuv
+```
+
+For a Mac using ARM architecture, Libuv should be linked as shown below:
+
+```bash
+# When building from source before version 5.6
+sudo ln -s /opt/homebrew/opt/libuv/ /usr/local/opt/libuv;
 ```
 
 ### Git Repository Installations

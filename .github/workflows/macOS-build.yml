@@ -27,7 +27,7 @@ jobs:
     needs: setup
     runs-on: macos-latest # https://github.com/actions/virtual-environments
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
     - run: ./scripts/build-package.sh 1

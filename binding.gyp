@@ -151,8 +151,7 @@
         ['OS=="linux"',{
           'libraries': [
             '../aerospike-client-c/target/Linux-<(build_arch)/lib/libaerospike.a',
-            '-lz',
-            '-lssl'
+            '-lz'
           ],
           'defines': [
             'AS_USE_LIBUV'
@@ -168,8 +167,7 @@
         ['OS=="mac"',{
           'libraries': [
             '../aerospike-client-c/target/Darwin-<(build_arch)/lib/libaerospike.a',
-            '-lz',
-            '-lssl'
+            '-lz'
           ],
           'defines': [
             'AS_USE_LIBUV'

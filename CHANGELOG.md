@@ -1,13 +1,31 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [5.6.0]
+
+* **New Features**
+  * [CLIENT-1803] - Added support for creation of a secondary index on elements within a Collection Data Type.
+  * [CLIENT-1990] - Added support for Collection Data Type (CDT) Context Base64 serialization.
+  * [CLIENT-2085] - Added support for rack aware queries and scans.
+  * [CLIENT-2347] - Added the 'replica' property to the QueryPolicy and ScanPolicy Classes.
+  * [CLIENT-2348] - Added filter support for secondary indices on elements within a Collection Data Type.
+
+* **Improvements**
+  * [CLIENT-1823] - Changed the example and parameters in the API Documentation for Client.batchApply.
+  * [CLIENT-2345] - Improved Client.indexRemove unit test by verifying deletion with a query.
+  * [CLIENT-2373] - Modified Query.where() to replace the current filter rather than add a filter to Query.filters.
+  * [CLIENT-2376] - Removed dynamic linking to OpenSSL.
+
+* **Updates**
+  * The typescript description file 'index.d.ts' has not been updated. The next release will update 'index.d.ts' and restore typescript support.
+
 ## [5.5.0]
 
 * **Breaking Changes**
   * [CLIENT-2343] - Dropped support for Node.js 14
 
 * **New Features**
-  * [CLIENT-2108] - Added pagination support for queries and scans.
+  * [CLIENT-2108] - Added pagination support for queries and scans. Requires Aerospike Server version 6.0 or above.
   * [CLIENT-2224] - Added support for rack aware reads when the replication factor is three.
   * [CLIENT-2303] - Added support for Amazon Linux 2023.
   * [CLIENT-2342] - Added support for Node.js 20

@@ -46,11 +46,16 @@ class QueryApplyCommand : public AerospikeCommand {
 			cf_free(policy);
 		if (val != NULL)
 			cf_free(val);
+		if(with_context){
+			as_cdt_ctx_destroy(&context);
+		}
 	}
 
 	as_policy_query *policy = NULL;
 	as_query query;
 	as_val *val = NULL;
+	as_cdt_ctx context;
+	bool with_context = false;
 };
 
 static bool query_foreach_callback(const as_val *val, void *udata)
@@ -71,7 +76,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 		new QueryApplyCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
-	setup_query(&cmd->query, info[0], info[1], info[2], log);
+	setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context, &cmd->with_context, log);
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query *)cf_malloc(sizeof(as_policy_query));

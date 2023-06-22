@@ -54,6 +54,9 @@ class QueryForeachCommand : public AerospikeCommand {
 			as_queue_mt_destroy(results);
 			results = NULL;
 		}
+		if(with_context){
+			as_cdt_ctx_destroy(&context);
+		}
 	}
 
 	as_policy_query *policy = NULL;
@@ -62,6 +65,8 @@ class QueryForeachCommand : public AerospikeCommand {
 	uint32_t max_q_size;
 	uint32_t signal_interval = 0;
 	uv_async_t async_handle;
+	as_cdt_ctx context;
+	bool with_context = false;
 };
 
 // Push the record from the server to a queue.
@@ -151,7 +156,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		new QueryForeachCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
-	setup_query(&cmd->query, info[0], info[1], info[2], log);
+	setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context, &cmd->with_context, log);
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query *)cf_malloc(sizeof(as_policy_query));
