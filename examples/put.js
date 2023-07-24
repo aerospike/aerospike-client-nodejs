@@ -38,7 +38,7 @@ function buildMeta (argv) {
 }
 
 function buildPolicy (argv, config) {
-  const policy = config.policies.write
+  const policy = {...config.policies.write}
   if (argv.create) {
     policy.exists = Aerospike.policy.exists.CREATE
   }
