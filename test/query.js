@@ -226,9 +226,7 @@ describe('Queries', function () {
   })
 
   describe('query.foreach() #slow', function () {
-
     it('Should run a regular primary index query', function (done) {
-
       const query = client.query(helper.namespace, testSet)
       const stream = query.foreach()
       const results = []
