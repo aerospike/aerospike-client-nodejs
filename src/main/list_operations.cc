@@ -158,7 +158,7 @@ bool add_list_append_op(as_operations *ops, const char *bin,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, op, log)) {
 		return false;
@@ -196,7 +196,7 @@ bool add_list_append_items_op(as_operations *ops, const char *bin,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, op, log)) {
 		if (list)
@@ -238,7 +238,7 @@ bool add_list_insert_op(as_operations *ops, const char *bin,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, op, log)) {
 		return false;
@@ -281,7 +281,7 @@ bool add_list_insert_items_op(as_operations *ops, const char *bin,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, op, log)) {
 		if (list)
@@ -664,7 +664,7 @@ bool add_list_set_op(as_operations *ops, const char *bin, as_cdt_ctx *context,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, obj, log)) {
 		return false;
@@ -1005,7 +1005,7 @@ bool add_list_increment_op(as_operations *ops, const char *bin,
 		return false;
 	}
 
-	bool with_policy;
+	bool with_policy = false;
 	as_list_policy policy;
 	if (!get_optional_list_policy(&policy, &with_policy, op, log)) {
 		return false;

@@ -25,6 +25,7 @@
 extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_udf.h>
+#include <aerospike/as_bytes.h>
 #include <aerospike/as_udf.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_string.h>
@@ -45,13 +46,14 @@ class UdfRegisterCommand : public AerospikeCommand {
 	{
 		if (policy != NULL)
 			cf_free(policy);
-		if (content.type != 0)
+		if (flag && content.type != AS_BYTES_UNDEF)
 			as_bytes_destroy(&content);
 	}
 
 	as_policy_info *policy = NULL;
 	char filename[MAX_FILENAME_LEN] = {'\0'};
 	as_bytes content;
+	bool flag = false;
 	as_udf_type type;
 };
 
@@ -136,6 +138,8 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	//Wrap the local buffer as an as_bytes object.
 	as_bytes_init_wrap(&cmd->content, file_content, size, true);
 
+	cmd->flag = true;
+	
 	if (info[1]->IsNumber()) {
 		cmd->type = (as_udf_type)Nan::To<int>(info[1]).FromJust();
 	}
