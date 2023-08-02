@@ -29,6 +29,7 @@ extern "C" {
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_key.h>
+#include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/aerospike_scan.h>
@@ -44,7 +45,9 @@ extern "C" {
 #include <aerospike/as_nil.h>
 #include <aerospike/as_stringmap.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/as_admin.h>
 #include <citrusleaf/alloc.h>
+
 }
 
 #include "client.h"
@@ -1129,7 +1132,7 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 		uint8_t *data = NULL;
 		if (extract_blob_from_jsobject(&data, &size, v8value.As<Object>(),
 									   log) != AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Extractingb blob from a js object failed");
+			as_v8_error(log, "Extracting blob from a js object failed");
 			return AS_NODE_PARAM_ERR;
 		}
 		*value = (as_val *)as_bytes_new_wrap(data, size, true);
@@ -1160,6 +1163,79 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 
 	return AEROSPIKE_OK;
 }
+int string_from_jsarray(char*** roles, int roles_size, Local<Array> role_array, const LogInfo *log) {
+	*roles =  new char*[roles_size];
+	for(int i = 0; i < roles_size; i++){
+		Local<Value> role = Nan::Get(role_array, i).ToLocalChecked();
+		if(role->IsString()){
+			(*roles)[i] = strdup(*Nan::Utf8String(role.As<String>()));
+		}
+		else{
+			as_v8_error(log, "Failed to parse roles from jsarray");
+			return AS_NODE_PARAM_ERR;
+
+		}
+		
+	}
+
+	return AS_NODE_PARAM_OK;
+}
+
+int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Local<Array> privilege_array, const LogInfo *log) {
+	*privileges =  new as_privilege*[privileges_size];
+	for(int i = 0; i < privileges_size; i++){
+		Local<Value> maybe_privilege = Nan::Get(privilege_array, i).ToLocalChecked();
+		if(maybe_privilege->IsObject()){
+			Local<Object> privilege = maybe_privilege.As<Object>();	
+			as_privilege* priv = new as_privilege;
+
+			Local<Value> code = Nan::Get(privilege, Nan::New("code").ToLocalChecked()).ToLocalChecked();
+			if(code->IsNumber()){
+				priv->code = (as_privilege_code) Nan::To<uint32_t>(code).FromJust();
+			}
+			else{
+				as_v8_error(log, "Failed to parse roles from jsarray");
+				return AS_NODE_PARAM_ERR;
+			}
+
+			as_namespace as_ns = {'\0'};
+			as_set as_set = {'\0'};
+
+			Local<Value> ns = Nan::Get(privilege, Nan::New("namespace").ToLocalChecked()).ToLocalChecked();
+			Local<Value> set = Nan::Get(privilege, Nan::New("set").ToLocalChecked()).ToLocalChecked();
+
+ 			if (ns->IsString()) {
+				if (as_strlcpy(as_ns, *Nan::Utf8String(ns), AS_NAMESPACE_MAX_SIZE) >
+					AS_NAMESPACE_MAX_SIZE) {
+					as_v8_error(log, "Namespace exceeds max. length (%d)",
+								AS_NAMESPACE_MAX_SIZE);
+					return AS_NODE_PARAM_ERR;
+					// TODO: Return param error
+				}
+			}
+
+			if (set->IsString()) {
+				if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
+					AS_SET_MAX_SIZE) {
+					as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
+					return AS_NODE_PARAM_ERR;
+					// TODO: Return param error
+				}
+			}
+			as_strncpy(priv->ns, as_ns, AS_NAMESPACE_MAX_SIZE);
+			as_strncpy(priv->set, as_set, AS_SET_MAX_SIZE);
+			(*privileges)[i] = priv;
+		}
+		else{
+			as_v8_error(log, "Failed to parse roles from jsarray");
+			return AS_NODE_PARAM_ERR;
+
+		}
+		
+	}
+	return AS_NODE_PARAM_OK;
+}
+			
 
 int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 							 const LogInfo *log)
@@ -1451,6 +1527,83 @@ Local<Object> query_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const
 	Nan::Set(v8_saved_query, Nan::New("bytes").ToLocalChecked(), v8_bytes);
 	Nan::Set(v8_saved_query, Nan::New("bytesSize").ToLocalChecked(), Nan::New<Uint32>(bytes_size));
 	return scope.Escape(v8_saved_query);
+}
+
+Local<Array> as_users_to_jsobject(as_user** users, uint32_t users_size, const LogInfo *log)
+{
+	Nan::EscapableHandleScope scope;
+	Local<Array> v8_users = Nan::New<Array>();
+	for(uint32_t i = 0; i < users_size; i++) {
+		as_user* user = users[i];
+		Local<Object> v8_user = Nan::New<Object>();
+
+		Nan::Set(v8_user, Nan::New("name").ToLocalChecked(), Nan::New(user->name).ToLocalChecked());
+
+		Local<Array> v8_read_info = Nan::New<Array>();
+		for(int j = 0; j < user->read_info_size; j++){
+			Nan::Set(v8_read_info,  j, Nan::New<Uint32>((uint32_t) user->read_info[j]));			
+		}
+		Nan::Set(v8_user, Nan::New("readInfo").ToLocalChecked(), v8_read_info);
+
+		Local<Array> v8_write_info = Nan::New<Array>();
+		for(int j = 0; j < user->write_info_size; j++){
+			Nan::Set(v8_write_info,  j, Nan::New<Uint32>((uint32_t) user->write_info[j]));			
+		}
+		Nan::Set(v8_user, Nan::New("writeInfo").ToLocalChecked(), v8_write_info);
+
+		Nan::Set(v8_user, Nan::New("connsInUse").ToLocalChecked(), Nan::New<Int32>((int32_t) user->conns_in_use));
+
+		Local<Array> v8_roles = Nan::New<Array>();
+		for(int j = 0; j < user->roles_size; j++){
+			Nan::Set(v8_roles, j, Nan::New(user->roles[j]).ToLocalChecked());		
+		}
+		Nan::Set(v8_user, Nan::New("roles").ToLocalChecked(), v8_roles);
+
+		Nan::Set(v8_users, i, v8_user);
+	}
+	return scope.Escape(v8_users);
+}
+
+Local<Array> as_roles_to_jsobject(as_role** roles, int roles_size, const LogInfo *log)
+{
+	Nan::EscapableHandleScope scope;
+	Local<Array> v8_roles = Nan::New<Array>();
+	for(int i = 0; i < roles_size; i++) {
+		as_role* role = roles[i];
+		Local<Object> v8_role = Nan::New<Object>();
+
+		Nan::Set(v8_role, Nan::New("name").ToLocalChecked(), Nan::New(role->name).ToLocalChecked());
+		Nan::Set(v8_role, Nan::New("readQuota").ToLocalChecked(), Nan::New(role->read_quota));
+		Nan::Set(v8_role, Nan::New("writeQuota").ToLocalChecked(), Nan::New(role->write_quota));
+		Local<Array> v8_whitelist = Nan::New<Array>();
+		for(int j = 0; j < role->whitelist_size; j++){
+			Nan::Set(v8_whitelist,  j, Nan::New(role->whitelist[j]).ToLocalChecked());			
+		}
+		Nan::Set(v8_role, Nan::New("whitelist").ToLocalChecked(), v8_whitelist);
+
+
+		Nan::Set(v8_role, Nan::New("privileges").ToLocalChecked(),  as_privileges_to_jsarray(role->privileges, role->privileges_size, log) );
+
+		Nan::Set(v8_roles, i, v8_role);
+	}
+	return scope.Escape(v8_roles);
+}
+
+Local<Array> as_privileges_to_jsarray(as_privilege* privileges, int privileges_size, const LogInfo *log)
+{
+	Nan::EscapableHandleScope scope;
+	Local<Array> v8_privileges = Nan::New<Array>();
+	for(int i = 0; i < privileges_size; i++) {
+		as_privilege privilege = privileges[i];
+		Local<Object> v8_privilege = Nan::New<Object>();
+
+		Nan::Set(v8_privilege, Nan::New("namespace").ToLocalChecked(), Nan::New(privilege.ns).ToLocalChecked());
+		Nan::Set(v8_privilege, Nan::New("set").ToLocalChecked(), Nan::New(privilege.set).ToLocalChecked());
+		Nan::Set(v8_privilege, Nan::New("code").ToLocalChecked(), Nan::New(privilege.code));
+		
+		Nan::Set(v8_privileges, i, v8_privilege);
+	}
+	return scope.Escape(v8_privileges);
 }
 
 void load_bytes_size(Local<Object> saved_object, uint32_t* bytes_size, LogInfo *log)
