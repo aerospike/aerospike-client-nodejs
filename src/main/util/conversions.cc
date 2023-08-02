@@ -459,7 +459,9 @@ int host_from_jsobject(Local<Object> obj, char **addr, uint16_t *port,
 
 	if (v8_addr->IsString()) {
 		*addr = (char *)malloc(HOST_ADDRESS_SIZE);
-		strcpy(*addr, *Nan::Utf8String(v8_addr.As<String>()));
+		Local<String> v8_string_addr = v8_addr.As<String>();
+		strncpy(*addr, *Nan::Utf8String(v8_string_addr), ((v8_string_addr->Length() + 1) < HOST_ADDRESS_SIZE) ?
+		(v8_string_addr->Length() + 1) : HOST_ADDRESS_SIZE);
 		as_v8_detail(log, "host addr : %s", (*addr));
 	}
 	else {
