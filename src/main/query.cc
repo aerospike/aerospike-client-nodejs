@@ -228,6 +228,14 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 		query->max_records = (uint64_t) Nan::To<uint32_t>(max_records).FromJust();
 	}
 
+	Local<Value> ttl =
+		Nan::Get(options, Nan::New("ttl").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(ttl, IsNumber, "ttl must be a number");
+	if (ttl->IsNumber()) {
+		query->ttl = (uint64_t) Nan::To<uint32_t>(ttl).FromJust();
+	}
+
+
 	Local<Value> udf =
 		Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
