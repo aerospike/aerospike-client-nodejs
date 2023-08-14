@@ -387,14 +387,25 @@ context('Scans', function () {
 
     it('should set TTL to the specified value #slow', async function () {
       const scan = client.scan(helper.namespace, testSet)
-      scan.ttl = 45
+      scan.ttl = 10800
       const ops = [op.incr('backgroundOps', 1)]
       const job = await scan.operate(ops)
       await job.waitUntilDone()
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(44)
+      expect(record.ttl).to.equal(10799)
+    })
+
+    it('should set TTL to the specified value with scan options #slow', async function () {
+      const scan = client.scan(helper.namespace, testSet, { ttl: 14400 })
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await scan.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.ttl).to.equal(14399)
     })
 
     it('should perform a background scan that executes the touch operation #slow', async function () {
