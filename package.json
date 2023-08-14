@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "5.6.0",
+  "version": "5.7.0",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
