@@ -933,7 +933,7 @@ describe('Queries', function () {
 
     it('should perform a background query that executes the operations #slow', async function () {
       const query = client.query(helper.namespace, testSet)
-      const ops = [op.write('backgroundOps', 1)]
+      const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
       await job.waitUntilDone()
 
@@ -944,14 +944,25 @@ describe('Queries', function () {
 
     it('should set TTL to the specified value #slow', async function () {
       const query = client.query(helper.namespace, testSet)
-      query.ttl = 45
+      query.ttl = 3600
       const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
       await job.waitUntilDone()
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(44)
+      expect(record.ttl).to.equal(3599)
+    })
+
+    it('should set TTL to the specified value using query options #slow', async function () {
+      const query = client.query(helper.namespace, testSet, { ttl: 7200 })
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await query.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.ttl).to.equal(7199)
     })
   })
 
