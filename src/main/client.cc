@@ -291,14 +291,14 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "batchSelect", BatchSelect);
 	Nan::SetPrototypeMethod(tpl, "contextFromBase64", ContextFromBase64);
 	Nan::SetPrototypeMethod(tpl, "contextToBase64", ContextToBase64);
+	Nan::SetPrototypeMethod(tpl, "changePassword", ChangePassword);
 	Nan::SetPrototypeMethod(tpl, "close", Close);
 	Nan::SetPrototypeMethod(tpl, "connect", Connect);
 	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
-	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands",
-							HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
 	Nan::SetPrototypeMethod(tpl, "infoAny", InfoAny);
@@ -308,14 +308,26 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "isConnected", IsConnected);
 	Nan::SetPrototypeMethod(tpl, "jobInfo", JobInfo);
 	Nan::SetPrototypeMethod(tpl, "operateAsync", OperateAsync);
+	Nan::SetPrototypeMethod(tpl, "privilegeGrant", PrivilegeGrant);
+	Nan::SetPrototypeMethod(tpl, "privilegeRevoke", PrivilegeRevoke);
 	Nan::SetPrototypeMethod(tpl, "putAsync", PutAsync);
 	Nan::SetPrototypeMethod(tpl, "queryApply", QueryApply);
 	Nan::SetPrototypeMethod(tpl, "queryAsync", QueryAsync);
 	Nan::SetPrototypeMethod(tpl, "queryBackground", QueryBackground);
 	Nan::SetPrototypeMethod(tpl, "queryForeach", QueryForeach);
 	Nan::SetPrototypeMethod(tpl, "queryPages", QueryPages);
+	Nan::SetPrototypeMethod(tpl, "queryRole", QueryRole);
+	Nan::SetPrototypeMethod(tpl, "queryRoles", QueryRoles);
+	Nan::SetPrototypeMethod(tpl, "queryUser", QueryUser);
+	Nan::SetPrototypeMethod(tpl, "queryUsers", QueryUsers);
 	Nan::SetPrototypeMethod(tpl, "removeAsync", RemoveAsync);
 	Nan::SetPrototypeMethod(tpl, "removeSeedHost", RemoveSeedHost);
+	Nan::SetPrototypeMethod(tpl, "roleCreate", RoleCreate);
+	Nan::SetPrototypeMethod(tpl, "roleDrop", RoleDrop);
+	Nan::SetPrototypeMethod(tpl, "roleGrant", RoleGrant);
+	Nan::SetPrototypeMethod(tpl, "roleRevoke", RoleRevoke);
+	Nan::SetPrototypeMethod(tpl, "roleSetWhitelist", RoleSetWhitelist);
+	Nan::SetPrototypeMethod(tpl, "roleSetQuotas", RoleSetQuotas);
 	Nan::SetPrototypeMethod(tpl, "scanAsync", ScanAsync);
 	Nan::SetPrototypeMethod(tpl, "scanPages", ScanPages);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
@@ -325,6 +337,8 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "udfRegister", Register);
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);
 	Nan::SetPrototypeMethod(tpl, "updateLogging", SetLogLevel);
+	Nan::SetPrototypeMethod(tpl, "userCreate", UserCreate);
+	Nan::SetPrototypeMethod(tpl, "userDrop", UserDrop);
 
 	constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
 }

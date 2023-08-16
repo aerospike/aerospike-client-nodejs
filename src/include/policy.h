@@ -52,6 +52,8 @@ int operatepolicy_from_jsobject(as_policy_operate *policy,
 								v8::Local<v8::Object> obj, const LogInfo *log);
 int infopolicy_from_jsobject(as_policy_info *policy, v8::Local<v8::Object> obj,
 							 const LogInfo *log);
+int adminpolicy_from_jsobject(as_policy_admin *policy, v8::Local<v8::Object> obj,
+							 const LogInfo *log);
 int applypolicy_from_jsobject(as_policy_apply *policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
 int scanpolicy_from_jsobject(as_policy_scan *policy, v8::Local<v8::Object> obj,

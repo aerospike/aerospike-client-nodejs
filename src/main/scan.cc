@@ -96,6 +96,13 @@ void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
 		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
 	}
 
+	Local<Value> ttl =
+		Nan::Get(options, Nan::New("ttl").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(ttl, IsNumber, "ttl must be a number");
+	if (ttl->IsNumber()) {
+		scan->ttl = (uint64_t) Nan::To<uint32_t>(ttl).FromJust();
+	}
+
 	Local<Value> udf =
 		Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");

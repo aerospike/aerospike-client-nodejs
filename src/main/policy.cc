@@ -641,6 +641,23 @@ int infopolicy_from_jsobject(as_policy_info *policy, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
+int adminpolicy_from_jsobject(as_policy_admin *policy, Local<Object> obj,
+							 const LogInfo *log)
+{
+	if (obj->IsUndefined() || obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	int rc = 0;
+	as_policy_admin_init(policy);
+	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
+										   "timeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing info policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
 int partitions_from_jsobject(as_partition_filter *pf, bool *defined,
 							 v8::Local<v8::Object> obj, const LogInfo *log)
 {
