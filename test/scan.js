@@ -179,7 +179,7 @@ context('Scans', function () {
         }
       })
 
-      it('Paginates correctly using query.results()', async function () {
+      it('Paginates correctly using scan.results()', async function () {
         let recordsReceived = 0
         let recordTotal = 0
         let pageTotal = 0
@@ -383,6 +383,29 @@ context('Scans', function () {
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.bins.backgroundOps).to.equal(1)
+    })
+
+    it('should set TTL to the specified value #slow', async function () {
+      const scan = client.scan(helper.namespace, testSet)
+      scan.ttl = 10800
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await scan.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.ttl).to.equal(10799)
+    })
+
+    it('should set TTL to the specified value with scan options #slow', async function () {
+      const scan = client.scan(helper.namespace, testSet, { ttl: 14400 })
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await scan.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.ttl).to.equal(14399)
     })
 
     it('should perform a background scan that executes the touch operation #slow', async function () {

@@ -226,6 +226,39 @@ describe('Queries', function () {
   })
 
   describe('query.foreach() #slow', function () {
+    it('Should run a regular primary index query', function (done) {
+      const query = client.query(helper.namespace, testSet)
+      const stream = query.foreach()
+      const results = []
+      stream.on('error', error => { throw error })
+      stream.on('data', record => results.push(record.bins))
+      stream.on('end', () => {
+        expect(results.length).to.be.above(60)
+        done()
+      })
+    })
+
+    it('Should run a paginated primary index query', async function () {
+      let recordTotal = 0
+      let recordsReceived = 0
+      const maxRecs = 8
+      const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs })
+      let results = []
+      while (1) {
+        results = await query.results()
+        recordsReceived += results.length
+        expect(results.length).to.be.below(9)
+        results = []
+        recordTotal += recordsReceived
+        if (recordsReceived !== maxRecs) {
+          expect(query.hasNextPage()).to.equal(false)
+          expect(recordTotal).to.be.above(60)
+          break
+        }
+        recordsReceived = 0
+      }
+    })
+
     it('should apply a stream UDF to filter the results', function (done) {
       const args = {
         filters: [filter.equal('name', 'filter')]
@@ -359,9 +392,7 @@ describe('Queries', function () {
         const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))] })
         let results = []
         while (1) {
-          console.log(results)
           results = await query.results()
-          console.log(results)
           recordsReceived += results.length
           results = []
           pageTotal += 1
@@ -902,13 +933,36 @@ describe('Queries', function () {
 
     it('should perform a background query that executes the operations #slow', async function () {
       const query = client.query(helper.namespace, testSet)
+      const ops = [op.write('backgroundOps', 4)]
+      const job = await query.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.bins.backgroundOps).to.equal(4)
+    })
+
+    it('should set TTL to the specified value #slow', async function () {
+      const query = client.query(helper.namespace, testSet)
+      query.ttl = 3600
       const ops = [op.incr('backgroundOps', 1)]
       const job = await query.operate(ops)
       await job.waitUntilDone()
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.bins.backgroundOps).to.equal(1)
+      expect(record.ttl).to.equal(3599)
+    })
+
+    it('should set TTL to the specified value using query options #slow', async function () {
+      const query = client.query(helper.namespace, testSet, { ttl: 7200 })
+      const ops = [op.incr('backgroundOps', 1)]
+      const job = await query.operate(ops)
+      await job.waitUntilDone()
+
+      const key = keys[Math.floor(Math.random() * keys.length)]
+      const record = await client.get(key)
+      expect(record.ttl).to.equal(7199)
     })
   })
 

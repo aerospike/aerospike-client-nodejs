@@ -32,6 +32,7 @@ extern "C" {
 #include <aerospike/as_map.h>
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_exp.h>
+#include <aerospike/as_admin.h>
 }
 
 #include "client.h"
@@ -124,6 +125,12 @@ v8::Local<v8::Object> jobinfo_to_jsobject(const as_job_info *info,
 										  const LogInfo *log);
 v8::Local<v8::Object> query_bytes_to_jsobject(uint8_t* bytes, uint32_t bytes_size, const LogInfo *log);
 
+v8::Local<v8::Array> as_users_to_jsobject(as_user** users, uint32_t users_size, const LogInfo *log);
+
+v8::Local<v8::Array> as_roles_to_jsobject(as_role** roles, int roles_size, const LogInfo *log);
+
+v8::Local<v8::Array> as_privileges_to_jsarray(as_privilege* privileges, int privileges_size, const LogInfo *log);
+
 void load_bytes_size(v8::Local<v8::Object> saved_object, uint32_t* bytes_size, LogInfo *log);
 
 void load_bytes(v8::Local<v8::Object> saved_object, uint8_t* bytes, uint32_t bytes_size, LogInfo *log);
@@ -172,6 +179,9 @@ int map_from_jsobject(as_map **map, v8::Local<v8::Object> obj,
 					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);
+int string_from_jsarray(char*** roles, int roles_size, v8::Local<v8::Array> role_array, const LogInfo *log);
+
+int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 
 
 //clone functions for record and key
 bool record_clone(const as_record *src, as_record **dest, const LogInfo *log);

@@ -24,7 +24,7 @@ async function put (client, argv) {
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
   const bins = shared.cli.parseBins(argv.bins)
   const meta = buildMeta(argv)
-  const policy = buildPolicy(argv)
+  const policy = buildPolicy(argv, client.config)
   console.info(key, bins, meta, policy)
   await client.put(key, bins, meta, policy)
 }
@@ -37,8 +37,8 @@ function buildMeta (argv) {
   return meta
 }
 
-function buildPolicy (argv) {
-  const policy = { }
+function buildPolicy (argv, config) {
+  const policy = { ...config.policies.write }
   if (argv.create) {
     policy.exists = Aerospike.policy.exists.CREATE
   }
