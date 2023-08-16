@@ -44,7 +44,7 @@ NAN_METHOD(AerospikeClient::QueryRoles)
 
 	as_policy_admin policy;
 	as_role** roles = NULL;
-	int roles_size;
+	int roles_size = 0;
 	as_status status;
 	
 

@@ -45,7 +45,7 @@ NAN_METHOD(AerospikeClient::QueryUsers)
 	as_policy_admin policy;
 	as_status status;
 	as_user** users = NULL;
-	int users_size;
+	int users_size = 0;
 	
 
 	if (info[0]->IsObject()) {
