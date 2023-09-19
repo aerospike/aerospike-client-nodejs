@@ -177,6 +177,8 @@ int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,
 					  const LogInfo *log);
 int map_from_jsobject(as_map **map, v8::Local<v8::Object> obj,
 					  const LogInfo *log);
+int map_from_jsmap(as_map **map, v8::Local<v8::Map> obj,
+					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);
 int string_from_jsarray(char*** roles, int roles_size, v8::Local<v8::Array> role_array, const LogInfo *log);
