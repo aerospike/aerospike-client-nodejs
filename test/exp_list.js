@@ -84,6 +84,434 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('clear', function () {
+      it('removes all items in a map', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.clear(
+              exp.binList('tags')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: [] })
+      })
+
+      it('selects item identified by index inside nested map', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.clear(
+              exp.binList('tags'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', []] })
+      })
+    })
+
+    describe('removeByValue', function () {
+      it('removes list item by value', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValue(
+              exp.binList('tags'),
+              exp.str('green')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'yellow'] })
+      })
+
+      it('removes list item by value in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValue(
+              exp.binList('tags'),
+              exp.str('white'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['orange', 'pink', 'black']] })
+      })
+    })
+
+    describe('removeByValueList', function () {
+      it('removes list item by value list', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValueList(
+              exp.binList('tags'),
+              exp.list(['green', 'yellow'])),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue'] })
+      })
+
+      it('removes list item by value list in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValueList(
+              exp.binList('tags'),
+              exp.list(['orange', 'white']),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['pink', 'black']] })
+      })
+    })
+
+    describe('removeByValueRange', function () {
+      it('removes list item by value range', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValueRange(
+              exp.binList('tags'),
+              exp.str('green'),
+              exp.str('blue')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['green', 'yellow'] })
+      })
+
+      it('removes list item by value range in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByValueRange(
+              exp.binList('tags'),
+              exp.str('pink'),
+              exp.str('black'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['pink', 'white']] })
+      })
+    })
+
+    describe('removeByRelRankRangeToEnd', function () {
+      it('removes list item by value relative rank range to end', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRelRankRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1),
+              exp.str('blue')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue'] })
+      })
+
+      it('removes list item by value relative rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRelRankRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1),
+              exp.str('orange'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['orange', 'black']] })
+      })
+    })
+
+    describe('removeByRelRankRange', function () {
+      it('removes list item by value relative rank range', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRelRankRange(
+              exp.binList('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('green')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['green', 'yellow'] })
+      })
+
+      it('removes list item by value relative rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRelRankRange(
+              exp.binList('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('pink'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['pink', 'white', 'black']] })
+      })
+    })
+
+    describe('removeByIndex', function () {
+      it('removes a list item by index', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndex(
+              exp.binList('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        expect(result.bins).to.eql({ tags: ['blue', 'yellow'] })
+      })
+
+      it('removes a list item by index in a cdt context in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndex(
+              exp.binList('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['orange', 'white', 'black']] })
+      })
+    })
+
+    describe('removeByIndexRangeToEnd', function () {
+      it('removes a list item by index range to end', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndexRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue'] })
+      })
+
+      it('removes a list item by index range to end in a cdt context in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndexRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['orange']] })
+      })
+    })
+
+    describe('removeByIndexRange', function () {
+      it('removes a list item by index range', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndexRange(
+              exp.binList('tags'),
+              exp.int(2),
+              exp.int(0)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['yellow'] })
+      })
+
+      it('removes a list item by index range in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByIndexRange(
+              exp.binList('tags'),
+              exp.int(2),
+              exp.int(0),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['white', 'black']] })
+      })
+    })
+
+    describe('removeByRank', function () {
+      it('removes a list item by rank', async function () {
+        const key = await createRecord({ tags: ['yellow', 'green', 'blue'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRank(
+              exp.binList('tags'),
+              exp.int(2)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['green', 'blue'] })
+      })
+
+      it('removes a list item by rank in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRank(
+              exp.binList('tags'),
+              exp.int(2),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['orange', 'white', 'black']] })
+      })
+    })
+
+    describe('removeByRankRangeToEnd', function () {
+      it('removes a list item by rank range to end', async function () {
+        const key = await createRecord({ tags: ['yellow', 'green', 'blue'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRankRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue'] })
+      })
+
+      it('removes a list item by rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRankRangeToEnd(
+              exp.binList('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['black']] })
+      })
+    })
+
+    describe('removeByRankRange', function () {
+      it('removes a list item by rank range', async function () {
+        const key = await createRecord({ tags: ['yellow', 'green', 'blue'] })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRankRange(
+              exp.binList('tags'),
+              exp.int(2),
+              exp.int(0)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['yellow'] })
+      })
+
+      it('removes a list item by rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })
+        const context = new Context().addListIndex(2)
+        const ops = [
+          exp.operations.write('tags',
+            exp.lists.removeByRankRange(
+              exp.binList('tags'),
+              exp.int(2),
+              exp.int(0),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: ['blue', 'green', ['pink', 'white']] })
+      })
+    })
+
     describe('getByValue', function () {
       it('matches the count of the matched list values', async function () {
         const key = await createRecord({ tags: ['blue', 'green', 'yellow', 'green'] })
@@ -292,7 +720,7 @@ describe('Aerospike.exp_operations', function () {
           op.read('list')
         ]
         const result = await client.operate(key, ops, {})
-        // console.log(result)
+
         expect(result.bins.list).to.eql([2, 3, 4, 5])
         expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 6])
       })
@@ -307,7 +735,7 @@ describe('Aerospike.exp_operations', function () {
           op.read('list')
         ]
         const result = await client.operate(key, ops, {})
-        // console.log(result)
+
         expect(result.bins.list).to.eql([2, 3, 4, 5, [4]])
         expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [4, 6]])
       })
@@ -323,7 +751,7 @@ describe('Aerospike.exp_operations', function () {
           op.read('list')
         ]
         const result = await client.operate(key, ops, {})
-        // console.log(result)
+
         expect(result.bins.list).to.eql([2, 3, 4, 5])
         expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 2, 3, 4, 5])
       })
@@ -338,7 +766,7 @@ describe('Aerospike.exp_operations', function () {
           op.read('list')
         ]
         const result = await client.operate(key, ops, {})
-        // console.log(result)
+
         expect(result.bins.list).to.eql([2, 3, 4, 5, [80, 90, 100]])
         expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [80, 90, 100, 2, 3, 4, 5, [80, 90, 100]]])
       })
@@ -354,7 +782,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      // console.log(result)
+
       expect(result.bins.list).to.eql([2, 3, 4, 5])
       expect(result.bins.ExpVar).to.eql([2, 3, 6, 4, 5])
     })
@@ -369,7 +797,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      // console.log(result)
+
       expect(result.bins.list).to.eql([2, 3, 4, 5, [4, 1, 9]])
       expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [4, 1, 7, 9]])
     })
@@ -384,7 +812,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      // console.log(result)
+
       expect(result.bins.list).to.eql([2, 3, 4, 5])
       expect(result.bins.ExpVar).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
     })
@@ -399,7 +827,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      // console.log(result)
+
       expect(result.bins.list).to.eql([2, 3, [9, 9]])
       expect(result.bins.ExpVar).to.eql([2, 3, [9, 2, 3, [9, 9], 9]])
     })
@@ -418,7 +846,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      // console.log(result)
+
       expect(result.bins.ExpVar).to.eql([5, 5, 4, 4, 3, 3, 2, 2])
       expect(result.bins.list).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
     })
@@ -433,8 +861,7 @@ describe('Aerospike.exp_operations', function () {
         op.read('list')
       ]
       const result = await client.operate(key, ops, {})
-      console.log(result.bins.ExpVar)
-      // console.log(result)
+
       expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [100, 9]])
       expect(result.bins.list).to.eql([2, 3, 4, 5, [9, 100]])
     })
