@@ -201,6 +201,16 @@ int convert_entry(Local<Object> entry_obj, as_exp_entry *entry,
 		return AS_NODE_PARAM_OK;
 	}
 
+	if (Nan::Has(entry_obj, Nan::New("inf").ToLocalChecked()).FromJust()) {
+		entry->v.val = NULL;
+		get_inf_property(&entry->v.val, log);
+	}
+
+	if (Nan::Has(entry_obj, Nan::New("wildcard").ToLocalChecked()).FromJust()) {
+		entry->v.val = NULL;
+		get_wildcard_property(&entry->v.val, log);
+	}
+
 	return rc;
 }
 

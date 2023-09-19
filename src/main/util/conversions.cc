@@ -420,6 +420,18 @@ int get_optional_bytes_property(uint8_t **bytes, int *size, bool *defined,
 	return AS_NODE_PARAM_OK;
 }
 
+void get_inf_property(as_val **value, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	*value = (as_val *)&as_cmp_inf;
+}
+
+void get_wildcard_property(as_val **value, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	*value = (as_val *)&as_cmp_wildcard;
+}
+
 int get_asval_property(as_val **value, Local<Object> obj, const char *prop,
 					   const LogInfo *log)
 {

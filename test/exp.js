@@ -22,6 +22,7 @@
 const Aerospike = require('../lib/aerospike')
 const exp = Aerospike.exp
 const op = Aerospike.operations
+const maps = Aerospike.maps
 
 const GeoJSON = Aerospike.GeoJSON
 
@@ -233,6 +234,34 @@ describe('Aerospike.exp', function () {
 
       await testNoMatch(key, exp.or(exp.binExists('d'), exp.binExists('e')))
       await testMatch(key, exp.or(exp.binExists('a'), exp.binExists('d')))
+    })
+  })
+
+  describe('nil', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('green'), exp.nil(), maps.returnType.COUNT), exp.int(2)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.str('green'), exp.nil(), maps.returnType.COUNT), exp.int(1)))
+    })
+  })
+
+  describe('inf', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(1)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(2)))
+    })
+
+  })
+
+  describe('wildcard', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(2)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(3)))
     })
   })
 
