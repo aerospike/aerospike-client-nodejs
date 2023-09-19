@@ -73,6 +73,8 @@ int get_uint64_property(uint64_t *intp, v8::Local<v8::Object> obj,
 						char const *prop, const LogInfo *log);
 int get_uint32_property(uint32_t *intp, v8::Local<v8::Object> obj,
 						char const *prop, const LogInfo *log);
+void get_inf_property(as_val **value, const LogInfo *log);
+void get_wildcard_property(as_val **value, const LogInfo *log);
 int get_asval_property(as_val **value, v8::Local<v8::Object> obj,
 					   const char *prop, const LogInfo *log);
 int get_string_property(char **strp, v8::Local<v8::Object> obj,
