@@ -645,7 +645,7 @@ as_val *asval_clone(const as_val *val, const LogInfo *log)
 			as_val *clone_mapval = asval_clone(orig_val, log);
 			as_orderedmap_set((as_orderedmap *)clone_val, clone_key, clone_mapval);
 		}
-		as_orderedmap_set_flags((as_orderedmap *)clone_val, (as_orderedmap *)val->_.flags);
+		as_orderedmap_set_flags((as_orderedmap *)clone_val, map->_.flags);
 		as_v8_detail(log, "Cloning a map SUCCESS");
 		break;
 	}
