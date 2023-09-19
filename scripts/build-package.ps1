@@ -33,9 +33,8 @@ function build_nodejs_client {
 
 # cd D:\a\aerospike-client-nodejs\aerospike-client-nodejs
  
-build_nodejs_client v14.21.1
-build_nodejs_client v16.18.1
-build_nodejs_client v18.12.1
-# build_nodejs_client v19.1.0
+
+build_nodejs_client v18
+build_nodejs_client v20
 
 nvm use v18.12.1
