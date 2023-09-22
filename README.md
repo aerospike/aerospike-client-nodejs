@@ -11,7 +11,7 @@
 
 The Aerospike Node.js client is a Node.js add-on module, written using V8.
 
-The client is compatible with Node.js 20 (LTS), 19, 18 (LTS), 16 (LTS).
+The client is compatible with Node.js 20 (Upcoming LTS) and 18 (LTS).
 It supports the following operating systems:
 - RHEL 8/9
 - Debian 10 (x86_64 architecture only)
