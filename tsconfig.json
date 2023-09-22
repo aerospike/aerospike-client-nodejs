@@ -10,6 +10,9 @@
       "es2020",
       "dom"
     ],
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "removeComments": true,
     "alwaysStrict": true,
     "pretty": false,

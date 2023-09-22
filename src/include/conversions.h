@@ -73,6 +73,8 @@ int get_uint64_property(uint64_t *intp, v8::Local<v8::Object> obj,
 						char const *prop, const LogInfo *log);
 int get_uint32_property(uint32_t *intp, v8::Local<v8::Object> obj,
 						char const *prop, const LogInfo *log);
+void get_inf_property(as_val **value, const LogInfo *log);
+void get_wildcard_property(as_val **value, const LogInfo *log);
 int get_asval_property(as_val **value, v8::Local<v8::Object> obj,
 					   const char *prop, const LogInfo *log);
 int get_string_property(char **strp, v8::Local<v8::Object> obj,
@@ -176,6 +178,8 @@ int extract_blob_from_jsobject(uint8_t **data, int *len,
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,
 					  const LogInfo *log);
 int map_from_jsobject(as_map **map, v8::Local<v8::Object> obj,
+					  const LogInfo *log);
+int map_from_jsmap(as_map **map, v8::Local<v8::Map> obj,
 					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);

@@ -240,11 +240,12 @@ describe('client.put()', function () {
       putGetVerify(record, expected, done)
     })
 
-    it.skip('writes bin with Map value as map and reads it back', function (done) {
+    it('writes bin with Map value as map and reads it back as an ordered object', function (done) {
       const record = {
-        map: new Map([['a', 1], ['b', 'foo'], ['c', 1.23],
+        map: new Map([['g', [1, 2, 3]], ['h', { a: 1, b: 2 }], ['j', new Map([['b', 'foo'], ['a', 1]])],
           ['d', new Double(3.14)], ['e', Buffer.from('bar')], ['f', GeoJSON.Point(103.8, 1.283)],
-          ['g', [1, 2, 3]], ['h', { a: 1, b: 2 }]])
+          ['a', 1], ['b', 'foo'], ['c', 1.23]]
+        )
       }
       const expected = {
         map: {
@@ -255,7 +256,36 @@ describe('client.put()', function () {
           e: Buffer.from('bar'),
           f: '{"type":"Point","coordinates":[103.8,1.283]}',
           g: [1, 2, 3],
-          h: { a: 1, b: 2 }
+          h: { a: 1, b: 2 },
+          j: { a: 1, b: 'foo' }
+        }
+      }
+      putGetVerify(record, expected, done)
+    })
+
+    it('writes bin with the Bin class and reads it back as an object', function (done) {
+      const record = new Aerospike.Bin('map', {
+        g: [1, 2, 3],
+        h: { a: 1, b: 2 },
+        j: new Map([['b', 'foo'], ['a', 1]]),
+        e: Buffer.from('bar'),
+        f: '{"type":"Point","coordinates":[103.8,1.283]}',
+        a: 1,
+        b: 'foo',
+        c: 1.23,
+        d: 3.14
+      })
+      const expected = {
+        map: {
+          a: 1,
+          b: 'foo',
+          c: 1.23,
+          d: 3.14,
+          e: Buffer.from('bar'),
+          f: '{"type":"Point","coordinates":[103.8,1.283]}',
+          g: [1, 2, 3],
+          h: { a: 1, b: 2 },
+          j: { a: 1, b: 'foo' }
         }
       }
       putGetVerify(record, expected, done)
