@@ -37,7 +37,7 @@ const rm = util.promisify(fs.rm)
     rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
     rm('lib/binding/node-v108-darwin-x64', { recursive: true, force: true })
 
-    output = await exec('openssl version')
+    const output = await exec('openssl version')
     const version = output.stdout
     const openssl = version.split(' ')[1].slice(0, 1)
 
