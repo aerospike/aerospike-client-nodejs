@@ -40,7 +40,7 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "npm run build",
-    "build": "npm install @mapbox/node-pre-gyp",
+    "build": "node-pre-gyp install --fallback-to-build",
     "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
