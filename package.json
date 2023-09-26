@@ -39,7 +39,7 @@
   },
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
-    "install": "npm-run-all -s build",
+    "install": "npm run build",
     "build": "npm install @mapbox/node-pre-gyp",
     "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
