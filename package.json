@@ -39,7 +39,9 @@
   },
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
-    "install": "node-pre-gyp install --fallback-to-build",
+    "install": "npm-run-all -s build",
+    "prebuild": "node ./scripts/prebuiltBinding.js",
+    "build": "npm install @mapbox/node-pre-gyp",
     "test": "mocha",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
