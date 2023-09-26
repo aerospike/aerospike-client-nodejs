@@ -14,11 +14,11 @@ const rm = util.promisify(fs.rm)
     rm('lib/binding/node-v115-win32-x64', { recursive: true, force: true })
     rm('lib/binding/node-v108-win32-x64', { recursive: true, force: true })
     if (arch === 'x64') {
-      rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
-      rm('lib/binding/node-v108-darwin-x64', { recursive: true, force: true })
-    } else {
       rm('lib/binding/node-v115-darwin-arm64', { recursive: true, force: true })
       rm('lib/binding/node-v108-darwin-arm64', { recursive: true, force: true })
+    } else {
+      rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
+      rm('lib/binding/node-v108-darwin-x64', { recursive: true, force: true })
     }
     await rm('lib/binding/openssl@3', { recursive: true, force: true })
     await rm('lib/binding/openssl@1', { recursive: true, force: true })
