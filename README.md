@@ -301,7 +301,7 @@ const Aerospike = require('aerospike')
 Access the client API documentation at:
 [https://docs.aerospike.com/apidocs/nodejs](https://docs.aerospike.com/apidocs/nodejs).
 This documentation is built from the client's source using [JSDocs
-v3](http://usejsdoc.org/index.html) for every release.
+v4](https://www.npmjs.com/package/jsdoc) for every release.
 
 The API docs also contain a few basic tutorials:
 
