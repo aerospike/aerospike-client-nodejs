@@ -29,9 +29,7 @@ jobs:
     strategy:
       matrix:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-           - 16.x
            - 18.x
-           - 19.x
            - 20.x
     continue-on-error: true
     name: Node ${{ matrix.node-version }} tester

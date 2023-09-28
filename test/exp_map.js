@@ -109,6 +109,967 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('removeByKey', function () {
+      it('removes map item by key', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKey(
+              exp.binMap('tags'),
+              exp.str('a')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { b: 'green', c: 'yellow' } })
+      })
+
+      it('removes map item by key in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKey(
+              exp.binMap('tags'),
+              exp.str('e'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByKeyList', function () {
+      it('removes map item by key list', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyList(
+              exp.binMap('tags'),
+              exp.list(['a', 'b'])),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'yellow' } })
+      })
+
+      it('removes map item by key list in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyList(
+              exp.binMap('tags'),
+              exp.list(['d', 'e']),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByKeyRange', function () {
+      it('removes map item by key range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRange(
+              exp.binMap('tags'),
+              exp.str('c'),
+              exp.str('a')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'yellow' } })
+      })
+
+      it('removes map item by key range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRange(
+              exp.binMap('tags'),
+              exp.str('h'),
+              exp.str('e'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange' } } })
+      })
+
+      it('removes inverted map item by key range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRange(
+              exp.binMap('tags'),
+              exp.str('c'),
+              exp.str('a'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', b: 'green' } })
+      })
+
+      it('removes inverted map item by key range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRange(
+              exp.binMap('tags'),
+              exp.str('h'),
+              exp.str('e'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByKeyRelIndexRangeToEnd', function () {
+      it('removes map item by key relative index range to end', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('b')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', b: 'green' } })
+      })
+
+      it('removes map item by key relative index range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('e'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink' } } })
+      })
+
+      it('removes inverted map item by key relative index range to end', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('b'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'yellow' } })
+      })
+
+      it('removes inverted map item by key relative index range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('e'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByKeyRelIndexRange', function () {
+      it('removes map item by key relative index range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              exp.str('a')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'yellow' } })
+      })
+
+      it('removes map item by key relative index range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              exp.str('d'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { f: 'white', g: 'black' } } })
+      })
+
+      it('removes inverted map item by key relative index range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              exp.str('a'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', b: 'green' } })
+      })
+
+      it('removes inverted map item by key relative index range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByKeyRelIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              exp.str('a'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink' } } })
+      })
+    })
+
+    describe('removeByValue', function () {
+      it('removes map item by value', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValue(
+              exp.binMap('tags'),
+              exp.str('green')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', c: 'yellow' } })
+      })
+
+      it('removes map item by value in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValue(
+              exp.binMap('tags'),
+              exp.str('white'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', g: 'black' } } })
+      })
+    })
+
+    describe('removeByValueList', function () {
+      it('removes map item by value list', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueList(
+              exp.binMap('tags'),
+              exp.list(['green', 'yellow'])),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue' } })
+      })
+
+      it('removes map item by value list in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueList(
+              exp.binMap('tags'),
+              exp.list(['orange', 'white']),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', g: 'black' } } })
+      })
+    })
+
+    describe('removeByValueRange', function () {
+      it('removes map item by value range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRange(
+              exp.binMap('tags'),
+              exp.str('green'),
+              exp.str('blue')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { b: 'green', c: 'yellow' } })
+      })
+
+      it('removes map item by value range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRange(
+              exp.binMap('tags'),
+              exp.str('pink'),
+              exp.str('black'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', f: 'white' } } })
+      })
+
+      it('removes inverted map item by value range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRange(
+              exp.binMap('tags'),
+              exp.str('green'),
+              exp.str('blue'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue' } })
+      })
+
+      it('removes inverted map item by value range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRange(
+              exp.binMap('tags'),
+              exp.str('pink'),
+              exp.str('black'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', g: 'black' } } })
+      })
+    })
+
+    describe('removeByValueRelRankRangeToEnd', function () {
+      it('removes map item by value relative rank range to end', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('blue')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'blue' } })
+      })
+
+      it('removes map item by value relative rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('orange'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', g: 'black' } } })
+      })
+
+      it('removes inverted map item by value relative rank range to end', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('blue'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'yellow', b: 'green' } })
+      })
+
+      it('removes inverted map item by value relative rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.str('black'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white' } } })
+      })
+    })
+
+    describe('removeByValueRelRankRange', function () {
+      it('removes map item by value relative rank range', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRange(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('green')),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'yellow', b: 'green' } })
+      })
+
+      it('removes map item by value relative rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRange(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('pink'),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', f: 'white', g: 'black' } } })
+      })
+
+      it('removes inverted map item by value relative rank range', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRange(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('green'),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'blue' } })
+      })
+
+      it('removes inverted map item by value relative rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByValueRelRankRange(
+              exp.binMap('tags'),
+              exp.int(1),
+              exp.int(-1),
+              exp.str('pink'),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange' } } })
+      })
+    })
+
+    describe('removeByIndex', function () {
+      it('removes a map item by index', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndex(
+              exp.binMap('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        let result = await client.operate(key, ops, {})
+        result = await client.get(key)
+        console.log(result)
+        expect(result.bins).to.eql({ tags: { a: 'blue', c: 'yellow' } })
+      })
+
+      it('removes a map item by index in a cdt context in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndex(
+              exp.binMap('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        let result = await client.operate(key, ops, {})
+        result = await client.get(key)
+        console.log(result)
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByIndexRangeToEnd', function () {
+      it('removes a map item by index range to end', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue' } })
+      })
+
+      it('removes a map item by index range to end in a cdt context in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange' } } })
+      })
+
+      it('removes an inverted map item by index range to end', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { b: 'green', c: 'yellow' } })
+      })
+
+      it('removes an inverted map item by index range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByIndexRange', function () {
+      it('removes a map item by index range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'yellow' } })
+      })
+
+      it('removes a map item by index range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { f: 'white', g: 'black' } } })
+      })
+
+      it('removes a inverted map item by index range', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', b: 'green' } })
+      })
+
+      it('removes a inverted map item by index range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByIndexRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink' } } })
+      })
+    })
+
+    describe('removeByRank', function () {
+      it('removes a map item by rank', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRank(
+              exp.binMap('tags'),
+              exp.int(2)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { b: 'green', c: 'blue' } })
+      })
+
+      it('removes a map item by rank in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRank(
+              exp.binMap('tags'),
+              exp.int(2),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', f: 'white', g: 'black' } } })
+      })
+    })
+
+    describe('removeByRankRangeToEnd', function () {
+      it('removes a map item by rank range to end', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { c: 'blue' } })
+      })
+
+      it('removes a map item by rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { g: 'black' } } })
+      })
+
+      it('removes an inverted map item by rank range to end', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'yellow', b: 'green' } })
+      })
+
+      it('removes an inverted map item by rank range to end in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRangeToEnd(
+              exp.binMap('tags'),
+              exp.int(1),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white' } } })
+      })
+    })
+
+    describe('removeByRankRange', function () {
+      it('removes a map item by rank range', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0)),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'yellow' } })
+      })
+
+      it('removes a map item by rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              context),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { e: 'pink', f: 'white' } } })
+      })
+
+      it('removes an inverted map item by rank range', async function () {
+        const key = await createRecord({ tags: { a: 'yellow', b: 'green', c: 'blue' } })
+
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              null,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { b: 'green', c: 'blue' } })
+      })
+
+      it('removes an inverted map item by rank range in a cdt context', async function () {
+        const key = await createRecord({ tags: { a: 'blue', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        const ops = [
+          exp.operations.write('tags',
+            exp.maps.removeByRankRange(
+              exp.binMap('tags'),
+              exp.int(2),
+              exp.int(0),
+              context,
+              maps.returnType.INVERTED),
+            0),
+          op.read('tags')
+        ]
+        const result = await client.operate(key, ops, {})
+
+        expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', g: 'black' } } })
+      })
+    })
+
     describe('getByIndex', function () {
       it('selects item identified by index', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
@@ -264,6 +1225,21 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('getByKeyList', function () {
+      it('matches the count of the matched map values', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyList(exp.binMap('tags'), exp.list(['a', 'b']), maps.returnType.COUNT), exp.int(1)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyList(exp.binMap('tags'), exp.list(['a', 'b']), maps.returnType.COUNT), exp.int(2)))
+      })
+
+      it('matches the count of the matched map values of a nested map', async function () {
+        const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
+        const context = new Context().addMapKey('nested')
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyList(exp.binMap('tags'), exp.list(['d', 'e']), maps.returnType.COUNT, context), exp.int(1)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyList(exp.binMap('tags'), exp.list(['d', 'e']), maps.returnType.COUNT, context), exp.int(2)))
+      })
+    })
+
     describe('getByKeyRange', function () {
       it('matches the count of the matched map values', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
@@ -293,7 +1269,7 @@ describe('Aerospike.exp_operations', function () {
         await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRange(exp.binMap('tags'), exp.int(3), exp.int(0), exp.str('g'), maps.returnType.COUNT, context), exp.int(2)))
       })
     })
-    /*
+
     describe('getByKeyRelIndexRangeToEnd', function () {
       it('matches the count of the matched map values', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 'yellow' } })
@@ -304,11 +1280,11 @@ describe('Aerospike.exp_operations', function () {
       it('matches the count of the matched map values of a nested map', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', g: 'white', h: 'black' } } })
         const context = new Context().addMapKey('nested')
-        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'),  exp.int(0), exp.str('e'), maps.returnType.COUNT, context), exp.int(2)))
-        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('e'),  maps.returnType.COUNT, context), exp.int(3)))
+        await testNoMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('e'), maps.returnType.COUNT, context), exp.int(2)))
+        await testMatch(key, exp.eq(exp.maps.getByKeyRelIndexRangeToEnd(exp.binMap('tags'), exp.int(0), exp.str('e'), maps.returnType.COUNT, context), exp.int(3)))
       })
     })
-*/
+
     describe('getByRank', function () {
       it('selects map item identified by rank', async function () {
         const key = await createRecord({ tags: { a: 'blue', b: 'green', d: 5, c: 'yellow' } })
@@ -472,24 +1448,22 @@ describe('Aerospike.exp_operations', function () {
     })
   })
 
-  /*
   describe('getByValueList', function () {
     it('matches the count of the matched values', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
-      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('green'), exp.str('yellow')]), maps.returnType.COUNT), exp.int(3)))
-      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('green'), exp.str('yellow')]), maps.returnType.COUNT), exp.int(2)))
+      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(3)))
+      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['green', 'yellow']), maps.returnType.COUNT), exp.int(2)))
     })
 
     it('matches the count of the matched values', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow', nested: { d: 'orange', e: 'pink', f: 'white', g: 'black' } } })
       const context = new Context().addMapKey('nested')
 
-      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('orange'), exp.str('white')]), maps.returnType.COUNT, context), exp.int(3)))
-      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list([exp.str('orange'), exp.str('white')]), maps.returnType.COUNT, context), exp.int(2)))
+      await testNoMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['orange', 'white']), maps.returnType.COUNT, context), exp.int(3)))
+      await testMatch(key, exp.eq(exp.maps.getByValueList(exp.binMap('tags'), exp.list(['orange', 'white']), maps.returnType.COUNT, context), exp.int(2)))
     })
   })
-*/
 
   describe('getByValueRange', function () {
     it('matches the count of the matched range of map values', async function () {

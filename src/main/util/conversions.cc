@@ -37,8 +37,7 @@ extern "C" {
 #include <aerospike/as_arraylist_iterator.h>
 #include <aerospike/as_boolean.h>
 #include <aerospike/as_geojson.h>
-#include <aerospike/as_hashmap.h>
-#include <aerospike/as_hashmap_iterator.h>
+#include <aerospike/as_orderedmap.h>
 #include <aerospike/as_pair.h>
 #include <aerospike/as_scan.h>
 #include <aerospike/as_map.h>
@@ -61,6 +60,7 @@ using namespace v8;
 
 const char *DoubleType = "Double";
 const char *GeoJSONType = "GeoJSON";
+const char *BinType = "Bin";
 
 const int64_t MIN_SAFE_INTEGER = -1 * (std::pow(2, 53) - 1);
 const int64_t MAX_SAFE_INTEGER = std::pow(2, 53) - 1;
@@ -420,6 +420,18 @@ int get_optional_bytes_property(uint8_t **bytes, int *size, bool *defined,
 	return AS_NODE_PARAM_OK;
 }
 
+void get_inf_property(as_val **value, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	*value = (as_val *)&as_cmp_inf;
+}
+
+void get_wildcard_property(as_val **value, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	*value = (as_val *)&as_cmp_wildcard;
+}
+
 int get_asval_property(as_val **value, Local<Object> obj, const char *prop,
 					   const LogInfo *log)
 {
@@ -620,19 +632,20 @@ as_val *asval_clone(const as_val *val, const LogInfo *log)
 		break;
 	}
 	case AS_MAP: {
-		as_hashmap *map = (as_hashmap *)as_map_fromval(val);
+		as_orderedmap *map = (as_orderedmap *)as_map_fromval(val);
 		clone_val =
-			as_map_toval((as_map *)as_hashmap_new(as_hashmap_size(map)));
-		as_hashmap_iterator it;
-		as_hashmap_iterator_init(&it, map);
-		while (as_hashmap_iterator_has_next(&it)) {
-			as_pair *pair = (as_pair *)as_hashmap_iterator_next(&it);
+			as_map_toval((as_map *)as_orderedmap_new(as_orderedmap_size(map)));
+		as_orderedmap_iterator it;
+		as_orderedmap_iterator_init(&it, map);
+		while (as_orderedmap_iterator_has_next(&it)) {
+			as_pair *pair = (as_pair *)as_orderedmap_iterator_next(&it);
 			as_val *orig_key = as_pair_1(pair);
 			as_val *orig_val = as_pair_2(pair);
 			as_val *clone_key = asval_clone(orig_key, log);
 			as_val *clone_mapval = asval_clone(orig_val, log);
-			as_hashmap_set((as_hashmap *)clone_val, clone_key, clone_mapval);
+			as_orderedmap_set((as_orderedmap *)clone_val, clone_key, clone_mapval);
 		}
+		as_orderedmap_set_flags((as_orderedmap *)clone_val, map->_.flags);
 		as_v8_detail(log, "Cloning a map SUCCESS");
 		break;
 	}
@@ -860,12 +873,12 @@ Local<Value> val_to_jsvalue(as_val *val, const LogInfo *log)
 	}
 	case AS_MAP: {
 		Local<Object> jsobj = Nan::New<Object>();
-		as_hashmap *map = (as_hashmap *)as_map_fromval(val);
-		as_hashmap_iterator it;
-		as_hashmap_iterator_init(&it, map);
+		as_orderedmap *map = (as_orderedmap *)as_map_fromval(val);
+		as_orderedmap_iterator it;
+		as_orderedmap_iterator_init(&it, map);
 
-		while (as_hashmap_iterator_has_next(&it)) {
-			as_pair *p = (as_pair *)as_hashmap_iterator_next(&it);
+		while (as_orderedmap_iterator_has_next(&it)) {
+			as_pair *p = (as_pair *)as_orderedmap_iterator_next(&it);
 			as_val *key = as_pair_1(p);
 			as_val *val = as_pair_2(p);
 			Nan::Set(jsobj, val_to_jsvalue(key, log), val_to_jsvalue(val, log));
@@ -1026,6 +1039,11 @@ bool is_geojson_value(Local<Value> value)
 	return instanceof (value, GeoJSONType);
 }
 
+bool is_bin_value(Local<Value> value)
+{
+	return instanceof (value, BinType);
+}
+
 char *geojson_as_string(Local<Value> value)
 {
 	Local<Value> strval =
@@ -1072,6 +1090,31 @@ int map_from_jsobject(as_map **map, Local<Object> obj, const LogInfo *log)
 	for (uint32_t i = 0; i < capacity; i++) {
 		const Local<Value> name = Nan::Get(props, i).ToLocalChecked();
 		const Local<Value> value = Nan::Get(obj, name).ToLocalChecked();
+		as_val *val = NULL;
+		if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+		as_stringmap_set(*map, *Nan::Utf8String(name), val);
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int map_from_jsmap(as_map **map, Local<Map> obj, const LogInfo *log)
+{
+	const Local<Array> data = obj->AsArray();
+	const uint32_t capacity = data->Length();
+	as_v8_detail(log, "Creating new as_orderedmap with capacity %d", capacity);
+	as_orderedmap *orderedmap = as_orderedmap_new(capacity);
+	if (orderedmap == NULL) {
+		as_v8_error(log, "Map allocation failed");
+		Nan::ThrowError("Map allocation failed");
+		return AS_NODE_PARAM_ERR;
+	}
+	*map = (as_map *)orderedmap;
+
+	for (uint32_t i = 0; i < capacity; i = i + 2) {
+		const Local<Value> name = Nan::Get(data, i).ToLocalChecked();
+		const Local<Value> value = Nan::Get(data, i+1).ToLocalChecked();
 		as_val *val = NULL;
 		if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
@@ -1142,6 +1185,12 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 	else if (v8value->IsArray()) {
 		if (list_from_jsarray((as_list **)value, Local<Array>::Cast(v8value),
 							  log) != AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
+	else if (v8value->IsMap()) {
+		if (map_from_jsmap((as_map **)value, v8value.As<Map>(), log) !=
+			AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
 	}
@@ -1242,6 +1291,11 @@ int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Loc
 int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 							 const LogInfo *log)
 {
+	if (is_bin_value(obj)) {
+		Local<Object> jsobj = Nan::New<Object>();
+		Nan::Set(jsobj, Nan::Get(obj, Nan::New("name").ToLocalChecked()).ToLocalChecked(), Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked());	
+		obj = jsobj;
+	}
 	const Local<Array> props = Nan::GetOwnPropertyNames(obj).ToLocalChecked();
 	const uint32_t count = props->Length();
 	as_record_init(rec, count);
@@ -1317,6 +1371,15 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 				return AS_NODE_PARAM_ERR;
 			}
 			as_record_set_list(rec, *n, list);
+			continue;
+		}
+		if (value->IsMap()) {
+			as_map *map;
+			if (map_from_jsmap(&map, value.As<Map>(), log) !=
+				AS_NODE_PARAM_OK) {
+				return AS_NODE_PARAM_ERR;
+			}
+			as_record_set_map(rec, *n, map);
 			continue;
 		}
 		if (value->IsObject()) {

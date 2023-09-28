@@ -24,10 +24,27 @@
       "domain": "aerospike.com"
     }
   },
+  "docdash": {
+    "sectionOrder": [               
+      "Modules",
+      "Classes",
+      "Events",
+      "Tutorials",
+      "Global"
+  ],"meta": {
+      "title": "Aerospike Node.js Client API Documentation",
+      "description": "Explore the comprehensive documentation for the Aerospike Node.js Client API, covering usage, configuration, and examples. Learn how to integrate Aerospike with your Node.js applications efficiently.",
+      "keyword": "Aerospike, Node.js, Client API, Documentation, Usage, Configuration, Examples, Integration"
+    }
+  },
   "opts": {
     "destination": "./build/apidocs",
-    "template": "./node_modules/ink-docstrap/template",
+    "template": "./node_modules/docdash",
     "readme": "./docs/overview.md",
-    "tutorials" : "./docs/tutorials"
+    "tutorials" : "./docs/tutorials",
+    "recurse": true,
+    "verbose": true
   }
+
+
 }

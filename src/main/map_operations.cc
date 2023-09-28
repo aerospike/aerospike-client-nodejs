@@ -157,7 +157,14 @@ bool add_map_put_items_op(as_operations *ops, const char *bin,
 		as_v8_error(log, "Type error: items property should be an Object");
 		return false;
 	}
-	if (map_from_jsobject(&items, v8items.As<Object>(), log) !=
+	if(v8items->IsMap()){
+		if (map_from_jsmap(&items, v8items.As<Map>(), log) !=
+			AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Type error: items property should be an Object");
+			return false;
+		}
+	}
+	else if (map_from_jsobject(&items, v8items.As<Object>(), log) !=
 		AS_NODE_PARAM_OK) {
 		as_v8_error(log, "Type error: items property should be an Object");
 		return false;

@@ -1,6 +1,11 @@
 # Backward Incompatible API Changes
 
 All notable changes to this project will be documented in this file.
+## [5.8.0]
+
+### Client no longer supports Node.js version 19
+### Client no longer supports Node.js version 16
+
 ## [5.5.0]
 
 ### Client no longer supports Node.js version 14
