@@ -38,7 +38,7 @@
     "host": "https://www.npmjs.com/package/aerospike"
   },
   "scripts": {
-    "preinstall": "npm install @mapbox/node-pre-gyp",
+    "preinstall": "npm install @mapbox/node-pre-gyp --no-audit",
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
     "test": "mocha",
