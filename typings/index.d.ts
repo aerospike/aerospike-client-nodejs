@@ -104,6 +104,7 @@ declare module 'bin' {
     private constructor();
     name: any;
     value: any;
+  }
 }
 declare module 'bitwise' {
   export function resize(bin: string, size: number, flags?: number | undefined): BitwiseOperation;
@@ -865,39 +866,39 @@ declare module 'exp' {
       set: (bin: any, value: any, idx: any, policy?: any, ctx?: any) => any;
       clear: (bin: any, ctx?: any) => any;
       sort: (bin: any, order: number, ctx?: any) => any;
-      removeByValue: (bin: any, value: any, ctx?: any) => any;
-      removeByValueList: (bin: any, values: any, ctx?: any) => any;
-      removeByValueRange: (bin: any, end: any, begin: any, ctx?: any) => any;
-      removeByRelRankRangeToEnd: (bin: any, rank: any, value: any, ctx?: any) => any;
-      removeByRelRankRange: (bin: any, count: any, rank: any, value: any, ctx?: any) => any;
-      removeByIndex: (bin: any, idx: any, ctx?: any) => any;
-      removeByIndexRangeToEnd: (bin: any, idx: any, ctx?: any) => any;
-      removeByIndexRange: (bin: any, count: any, idx: any, ctx?: any) => any;
-      removeByRank: (bin: any, rank: any, ctx?: any) => any;
-      removeByRankRangeToEnd: (bin: any, rank: any, ctx?: any) => any;
-      removeByRankRange: (bin: any, count: any, rank: any, ctx?: any) => any;
+      removeByValue: (bin: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByValueList: (bin: any, values: any, ctx?: any, returnType?: any) => any;
+      removeByValueRange: (bin: any, end: any, begin: any, ctx?: any, returnType?: any) => any;
+      removeByRelRankRangeToEnd: (bin: any, rank: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByRelRankRange: (bin: any, count: any, rank: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByIndex: (bin: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByIndexRangeToEnd: (bin: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByIndexRange: (bin: any, count: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByRank: (bin: any, rank: any, ctx?: any, returnType?: any) => any;
+      removeByRankRangeToEnd: (bin: any, rank: any, ctx?: any, returnType?: any) => any;
+      removeByRankRange: (bin: any, count: any, rank: any, ctx?: any, returnType?: any) => any;
   };
   export const maps: {
       put: (bin: any, value: any, key: any, policy?: any, ctx?: any) => any;
       putItems: (bin: any, map: any, policy?: any, ctx?: any) => any;
       increment: (bin: any, value: any, key: any, policy?: any, ctx?: any) => any;
       clear: (bin: any, ctx?: any) => any;
-      removeByKey: (bin: any, key: any, ctx?: any) => any;
-      removeByKeyList: (bin: any, keys: any, ctx?: any) => any;
-      removeByKeyRange: (bin: any, end: any, begin: any, ctx?: any) => any;
-      removeByKeyRelIndexRangeToEnd: (bin: any, idx: any, key: any, ctx?: any) => any;
-      removeByKeyRelIndexRange: (bin: any, count: any, idx: any, key: any, ctx?: any) => any;
-      removeByValue: (bin: any, value: any, ctx?: any) => any;
-      removeByValueList: (bin: any, values: any, ctx?: any) => any;
-      removeByValueRange: (bin: any, end: any, begin: any, ctx?: any) => any;
-      removeByValueRelRankRangeToEnd: (bin: any, rank: any, value: any, ctx?: any) => any;
-      removeByValueRelRankRange: (bin: any, count: any, rank: any, value: any, ctx?: any) => any;
-      removeByIndex: (bin: any, idx: any, ctx?: any) => any;
-      removeByIndexRangeToEnd: (bin: any, idx: any, ctx?: any) => any;
-      removeByIndexRange: (bin: any, count: any, idx: any, ctx?: any) => any;
-      removeByRank: (bin: any, rank: any, ctx?: any) => any;
-      removeByRankRangeToEnd: (bin: any, rank: any, ctx?: any) => any;
-      removeByRankRange: (bin: any, count: any, rank: any, ctx?: any) => any;
+      removeByKey: (bin: any, key: any, ctx?: any, returnType?: any) => any;
+      removeByKeyList: (bin: any, keys: any, ctx?: any, returnType?: any) => any;
+      removeByKeyRange: (bin: any, end: any, begin: any, ctx?: any, returnType?: any) => any;
+      removeByKeyRelIndexRangeToEnd: (bin: any, idx: any, key: any, ctx?: any, returnType?: any) => any;
+      removeByKeyRelIndexRange: (bin: any, count: any, idx: any, key: any, ctx?: any, returnType?: any) => any;
+      removeByValue: (bin: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByValueList: (bin: any, values: any, ctx?: any, returnType?: any) => any;
+      removeByValueRange: (bin: any, end: any, begin: any, ctx?: any, returnType?: any) => any;
+      removeByValueRelRankRangeToEnd: (bin: any, rank: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByValueRelRankRange: (bin: any, count: any, rank: any, value: any, ctx?: any, returnType?: any) => any;
+      removeByIndex: (bin: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByIndexRangeToEnd: (bin: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByIndexRange: (bin: any, count: any, idx: any, ctx?: any, returnType?: any) => any;
+      removeByRank: (bin: any, rank: any, ctx?: any, returnType?: any) => any;
+      removeByRankRangeToEnd: (bin: any, rank: any, ctx?: any, returnType?: any) => any;
+      removeByRankRange: (bin: any, count: any, rank: any, ctx?: any, returnType?: any) => any;
       size: (bin: any, ctx?: any) => any;
       getByKey: (bin: any, key: any, valueType: any, returnType: any, ctx?: any) => any;
       getByKeyRange: (bin: any, end: any, begin: any, returnType: any, ctx?: any) => any;
@@ -1079,13 +1080,13 @@ declare module 'features' {
   export const BLOB_BITS: "blob-bits";
 }
 declare module 'filter' {
-  export function range(bin: string, min: number, max: number, indexType?: number | undefined, context: any): any;
+  export function range(bin: string, min: number, max: number, indexType?: number | undefined, context?: any): any;
   export function equal(bin: string, value: string): any;
-  export function contains(bin: string, value: (string | number), indexType: number, context: any): any;
-  export function geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: number | undefined, context: any): any;
-  export function geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: number | undefined, context: any): any;
-  export function geoWithinRadius(bin: string, lon: any, lat: number, radius: number, indexType?: number | undefined, context: any): any;
-  export function geoContainsPoint(bin: string, lon: any, lat: number, indexType?: number | undefined, context: any): any;
+  export function contains(bin: string, value: (string | number), indexType: number, context?: any): any;
+  export function geoWithinGeoJSONRegion(bin: string, value: GeoJSON, indexType?: number | undefined, context?: any): any;
+  export function geoContainsGeoJSONPoint(bin: string, value: GeoJSON, indexType?: number | undefined, context?: any): any;
+  export function geoWithinRadius(bin: string, lon: any, lat: number, radius: number, indexType?: number | undefined, context?: any): any;
+  export function geoContainsPoint(bin: string, lon: any, lat: number, indexType?: number | undefined, context?: any): any;
   export class SindexFilterPredicate {
       constructor(predicate: any, bin: any, dataType: any, indexType: any, context: any, props: any);
       predicate: any;
