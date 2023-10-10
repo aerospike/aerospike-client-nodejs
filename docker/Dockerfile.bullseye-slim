@@ -5,7 +5,7 @@
 # the C client submodule was introduced.
 
 # Stage 1: Install Node.js Client Dependencies
-FROM node:lts-bullseye-slim as installer
+FROM node:20.7.0-slim as installer
 WORKDIR /src
 
 ENV AS_NODEJS_VERSION v5.0.1
