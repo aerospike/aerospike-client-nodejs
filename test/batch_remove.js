@@ -72,5 +72,21 @@ describe('client.batchRemove()', function () {
         done()
       })
     })
+
+    it('Will return records even if generation values is not correct', async function () {
+      const batchRecords = [
+        new Key(helper.namespace, helper.set, 'test/batch_remove/6'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/7'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/8'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/9'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/0')
+      ]
+      try {
+        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.EQ, generation: 3 }))
+        expect(1).to.eql(2)
+      } catch (error) {
+        expect(error.code).to.eql(-16)
+      }
+    })
   })
 })

@@ -28,7 +28,9 @@ extern "C" {
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/as_status.h>
 }
+
 
 using namespace v8;
 
@@ -167,10 +169,8 @@ static void respond(uv_work_t *req, int status)
 	BatchRemoveCommand *cmd = reinterpret_cast<BatchRemoveCommand *>(req->data);
 	LogInfo *log = cmd->log;
 
-	if (cmd->IsError()) {
-		cmd->ErrorCallback();
-	}
-	else {
+
+	if (!(cmd->IsError()) || ((cmd->err.code == AEROSPIKE_BATCH_FAILED) && (cmd->results_len != 0))) {
 		as_batch_read *batch_results = cmd->results;
 		Local<Array> results = Nan::New<Array>(cmd->results_len);
 		for (uint32_t i = 0; i < cmd->results_len; i++) {
@@ -202,6 +202,9 @@ static void respond(uv_work_t *req, int status)
 
 		Local<Value> argv[] = {Nan::Null(), results};
 		cmd->Callback(2, argv);
+	}
+	else {
+		cmd->ErrorCallback();
 	}
 
 	delete cmd;
