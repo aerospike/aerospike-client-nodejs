@@ -56,6 +56,7 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "KEY_EXIST", as_exp_ops::_AS_EXP_CODE_KEY_EXIST);
 	set(exp_ops, "IS_TOMBSTONE", as_exp_ops::_AS_EXP_CODE_NOT);
 	set(exp_ops, "MEMORY_SIZE", as_exp_ops::_AS_EXP_CODE_MEMORY_SIZE);
+	set(exp_ops, "RECORD_SIZE", as_exp_ops::_AS_EXP_CODE_RECORD_SIZE);
 
 	set(exp_ops, "KEY", as_exp_ops::_AS_EXP_CODE_KEY);
 	set(exp_ops, "BIN", as_exp_ops::_AS_EXP_CODE_BIN);
