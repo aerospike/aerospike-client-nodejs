@@ -264,6 +264,23 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  describe('expWriteFlags', function () {
+    it('write flags have correct value', async function () {
+      expect(exp.expWriteFlags).to.have.property('DEFAULT', 0)
+      expect(exp.expWriteFlags).to.have.property('CREATE_ONLY', 1)
+      expect(exp.expWriteFlags).to.have.property('UPDATE_ONLY', 2)
+      expect(exp.expWriteFlags).to.have.property('ALLOW_DELETE', 4)
+      expect(exp.expWriteFlags).to.have.property('POLICY_NO_FAIL', 8)
+      expect(exp.expWriteFlags).to.have.property('EVAL_NO_FAIL', 16)
+    })
+  })
+  describe('expReadFlags', function () {
+    it('read flags have correct value', async function () {
+      expect(exp.expReadFlags).to.have.property('DEFAULT', 0)
+      expect(exp.expReadFlags).to.have.property('EVAL_NO_FAIL', 16)
+    })
+  })
+
   describe('arithmetic expressions', function () {
     describe('int bin add expression', function () {
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
@@ -271,7 +288,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.read(tempBin,
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})
@@ -284,7 +301,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.write('intVal',
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})
@@ -296,7 +313,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.read(tempBin,
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})

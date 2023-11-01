@@ -157,6 +157,8 @@ NAN_MODULE_INIT(Aerospike)
 	export("auth", auth_mode_enum_values());
 	export("batchTypes", batchTypes());
 	export("privilegeCode", privilegeCode());
+	export("expReadFlags", expReadFlags());
+	export("expWriteFlags", expWriteFlags());
 }
 
 NODE_MODULE(aerospike, Aerospike);
