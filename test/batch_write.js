@@ -281,6 +281,28 @@ describe('client.batchWrite()', function () {
         })
       })
     })
+
+    it('Returns correct status and error with async', async function () {
+      const batchRecords = [
+        {
+          type: batchType.BATCH_WRITE,
+          key: new Key(helper.namespace, helper.set, 'test/batch_write/11'),
+          ops: [
+            op.write('geo', new GeoJSON({ type: 'Point', coordinates: [123.456, 1.308] })),
+            op.write('blob', Buffer.from('bar'))
+          ],
+          policy: new Aerospike.BatchWritePolicy({
+            exists: Aerospike.policy.exists.CREATE
+          })
+        }
+
+      ]
+
+      await client.batchWrite(batchRecords)
+      const results = await client.batchWrite(batchRecords)
+
+      expect(results[0].status).to.equal(status.ERR_RECORD_EXISTS)
+    })
   })
 
   context('with exists.CREATE returning promise', function () {

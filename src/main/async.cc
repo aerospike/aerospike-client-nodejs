@@ -117,21 +117,14 @@ void async_batch_listener(as_error *err, as_batch_read_records *records,
 {
 	Nan::HandleScope scope;
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
+	if (!err || (err->code == AEROSPIKE_BATCH_FAILED && records->list.size != 0)) {
 
-	if (err) {
-		if (err->code == AEROSPIKE_BATCH_FAILED) {
-			Local<Value> argv[]{Nan::Null(),
-							batch_records_to_jsarray(records, cmd->log)};
-			cmd->Callback(2, argv);
-		}
-		else {
-			cmd->ErrorCallback(err);
-		}
-	}
-	else {
 		Local<Value> argv[]{Nan::Null(),
 							batch_records_to_jsarray(records, cmd->log)};
 		cmd->Callback(2, argv);
+	}
+	else {
+		cmd->ErrorCallback(err);
 	}
 
 	batch_records_free(records, cmd->log);
