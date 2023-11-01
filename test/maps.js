@@ -21,7 +21,11 @@
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
+const { Buffer } = require('node:buffer');
+
+
 const maps = Aerospike.maps
+const op = Aerospike.operations
 const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
@@ -58,6 +62,36 @@ describe('client.operate() - CDT Map operations', function () {
         .then(orderByKey('map'))
         .then(operate(maps.getByKeyRange('map', 'a', 'z', maps.returnType.KEY)))
         .then(assertResultEql({ map: ['a', 'b', 'c'] }))
+        .then(cleanup())
+    })
+  })
+
+  describe('maps.create', function () {
+    it('Creates a new map', function () {
+      return initState()
+        .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED)))
+        .then(operate(op.read('dap')))
+        .then(assertRecordEql({emptyMap: {}, map: {a: 3, b: 2, c: 1}}))
+        .then(cleanup())
+    })
+
+    it('Creates a new map from a cdt context', function () {
+      return initState()
+        .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.create('map', maps.order.KEY_ORDERED).withContext(ctx => ctx.addMapKeyCreate('nested'))))
+        .then(assertRecordEql({map: {a: 3, b: 2, c: 1, nested: {}}}))
+        .then(cleanup())
+    })
+
+    it('Creates a new map with persistent index', function () {
+      return initState()
+        .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+        .then(orderByKey('map'))
+        .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED, true)))
+        .then(assertRecordEql({ emptyMap: {}, map: {a: 3, b: 2, c: 1}}))
         .then(cleanup())
     })
   })
