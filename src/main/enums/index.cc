@@ -33,6 +33,7 @@ Local<Object> indexDataType()
 	set(obj, "STRING", AS_INDEX_STRING);
 	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
 	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);
+	set(obj, "BLOB", AS_INDEX_BLOB);
 	return scope.Escape(obj);
 }
 

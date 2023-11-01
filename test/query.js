@@ -35,6 +35,8 @@ const op = Aerospike.operations
 const NUMERIC = Aerospike.indexDataType.NUMERIC
 const STRING = Aerospike.indexDataType.STRING
 const GEO2DSPHERE = Aerospike.indexDataType.GEO2DSPHERE
+const BLOB = Aerospike.indexDataType.BLOB
+
 const LIST = Aerospike.indexType.LIST
 const MAPVALUES = Aerospike.indexType.MAPVALUES
 const MAPKEYS = Aerospike.indexType.MAPKEYS
@@ -74,6 +76,14 @@ describe('Queries', function () {
     { name: 'region list non-match', lg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
     { name: 'region map match', mg: { a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } },
     { name: 'region map non-match', mg: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] },
+    { name: 'blob match', blob: Buffer.from('guava')},
+    { name: 'blob non-match', blob: Buffer.from('pumpkin')},      
+    { name: 'blob list match', lblob: [Buffer.from('guava'), Buffer.from('papaya')]},
+    { name: 'blob list non-match', lblob: [Buffer.from('pumpkin'), Buffer.from('turnip')]},
+    { name: 'blob map match', mblob: {a: Buffer.from('guava'), b: Buffer.from('papaya')}},
+    { name: 'blob map non-match', mblob: {a: Buffer.from('pumpkin'), b: Buffer.from('turnip')}},
+    { name: 'blob mapkeys match', mkblob: new Map([[Buffer.from('guava'), 1], [Buffer.from('papaya'), 2]])},
+    { name: 'blob mapkeys non-match', mkblob: new Map([[Buffer.from('pumpkin'), 3], [Buffer.from('turnip'), 4]])},
     { name: 'aggregate', value: 10 },
     { name: 'aggregate', value: 20 },
     { name: 'aggregate', value: 30 },
@@ -104,6 +114,14 @@ describe('Queries', function () {
     { name: 'nested region list non-match', lg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } },
     { name: 'nested region map match', mg: { nested: { a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } } },
     { name: 'nested region map non-match', mg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } },
+    { name: 'nested blob match', blob: {nested: Buffer.from('guava')}},
+    { name: 'nested blob non-match', blob: {nested: Buffer.from('pumpkin')}},      
+    { name: 'nested blob list match', lblob: {nested: [Buffer.from('guava'), Buffer.from('papaya')]}},
+    { name: 'nested blob list non-match', lblob: {nested: [Buffer.from('pumpkin'), Buffer.from('turnip')]}},
+    { name: 'nested blob map match', mblob: {nested: {a: Buffer.from('guava'), b: Buffer.from('papaya')}}},
+    { name: 'nested blob map non-match', mblob: {nested: {a: Buffer.from('pumpkin'), b: Buffer.from('turnip')}}},
+    { name: 'nested blob mapkeys match', mkblob: {nested: new Map([[Buffer.from('guava'), 1], [Buffer.from('papaya'), 2]])}},
+    { name: 'nested blob mapkeys non-match', mkblob: {nested: new Map([[Buffer.from('pumpkin'), 3], [Buffer.from('turnip'), 4]])}},
     { name: 'nested aggregate', nested: { value: 10 } },
     { name: 'nested aggregate', nested: { value: 20 } },
     { name: 'nested aggregate', nested: { value: 30 } },
@@ -125,6 +143,10 @@ describe('Queries', function () {
     ['qidxGeo', 'g', GEO2DSPHERE],
     ['qidxGeoList', 'lg', GEO2DSPHERE, LIST],
     ['qidxGeoMap', 'mg', GEO2DSPHERE, MAPVALUES],
+    ['qidxBlob', 'blob', BLOB],
+    ['qidxBlobList', 'lblob', BLOB, LIST],
+    ['qidxBlobMap', 'mblob', BLOB, MAPVALUES],
+    ['qidxBlobMapKeys', 'mkblob', BLOB, MAPKEYS],
     // CDT context indexes
     ['qidxNameNested', 'name', STRING, MAPKEYS, new Context().addMapKey('nested')],
     ['qidxIntListNested', 'li', NUMERIC, LIST, new Context().addMapKey('nested')],
@@ -134,6 +156,9 @@ describe('Queries', function () {
     ['qidxStrMapKeysNested', 'mks', STRING, MAPKEYS, new Context().addMapKey('nested')],
     ['qidxGeoListNested', 'lg', GEO2DSPHERE, LIST, new Context().addMapKey('nested')],
     ['qidxGeoMapNested', 'mg', GEO2DSPHERE, MAPVALUES, new Context().addMapKey('nested')],
+    ['qidxBlobListNested', 'lblob', BLOB, LIST, new Context().addMapKey('nested')],
+    ['qidxBlobMapNested', 'mblob', BLOB, MAPVALUES, new Context().addMapKey('nested')],
+    ['qidxBlobMapKeysNested', 'mkblob', BLOB, MAPKEYS, new Context().addMapKey('nested')],
     ['qidxAggregateMapNested', 'nested', STRING, MAPKEYS],
     ['qidxAggregateMapDoubleNested', 'nested', STRING, MAPKEYS, new Context().addMapKey('doubleNested')]
   ]
@@ -579,6 +604,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'string match', done)
         })
 
+
+        it('should match equal blob values', function (done) {
+          const args = { filters: [filter.equal('blob', Buffer.from('guava'))] }
+          verifyQueryResults(args, 'blob match', done)
+        })
+
         it('throws a type error if the comparison value is of invalid type', function () {
           const fn = () => filter.equal('str', { foo: 'bar' })
           expect(fn).to.throw(TypeError)
@@ -663,10 +694,42 @@ describe('Queries', function () {
           verifyQueryResults(args, 'nested string mapkeys match', done)
         })
 
+        it('should match lists containing a blob', function (done) {
+          const args = { filters: [filter.contains('lblob', Buffer.from('guava'), LIST)] }
+          verifyQueryResults(args, 'blob list match', done)
+        })
+
+        it('should match lists containing a blob in a nested context', function (done) {
+          const args = { filters: [filter.contains('lblob', Buffer.from('guava'), LIST, new Context().addMapKey('nested'))] }
+          verifyQueryResults(args, 'nested blob list match', done)
+        })
+
+        it('should match maps containing a blob value', function (done) {
+          const args = { filters: [filter.contains('mblob', Buffer.from('guava'), MAPVALUES)] }
+          verifyQueryResults(args, 'blob map match', done)
+        })
+
+        it('should match maps containing a blob value in a nested context', function (done) {
+          const args = { filters: [filter.contains('mblob', Buffer.from('guava'), MAPVALUES, new Context().addMapKey('nested'))] }
+          verifyQueryResults(args, 'nested blob map match', done)
+        })  
+
+        
+        it('should match maps containing a blob key', function (done) {
+          const args = { filters: [filter.contains('mkblob', Buffer.from('guava'), MAPKEYS)] }
+          verifyQueryResults(args, 'blob mapkeys match', done)
+        })
+
+        it('should match maps containing a blob key in a nested context', function (done) {
+          const args = { filters: [filter.contains('mkblob', Buffer.from('guava'), MAPKEYS, new Context().addMapKey('nested'))] }
+          verifyQueryResults(args, 'nested blob mapkeys match', done)
+        })  
+      
         it('throws a type error if the comparison value is of invalid type', function () {
           const fn = () => filter.contains('list', { foo: 'bar' }, LIST)
           expect(fn).to.throw(TypeError)
         })
+        
       })
 
       describe('filter.geoWithinGeoJSONRegion()', function () {
