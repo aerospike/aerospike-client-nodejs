@@ -21,9 +21,6 @@
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 
-const { Buffer } = require('node:buffer');
-
-
 const maps = Aerospike.maps
 const op = Aerospike.operations
 const Context = Aerospike.cdt.Context
@@ -73,7 +70,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(orderByKey('map'))
         .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED)))
         .then(operate(op.read('dap')))
-        .then(assertRecordEql({emptyMap: {}, map: {a: 3, b: 2, c: 1}}))
+        .then(assertRecordEql({ emptyMap: {}, map: { a: 3, b: 2, c: 1 } }))
         .then(cleanup())
     })
 
@@ -82,7 +79,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.create('map', maps.order.KEY_ORDERED).withContext(ctx => ctx.addMapKeyCreate('nested'))))
-        .then(assertRecordEql({map: {a: 3, b: 2, c: 1, nested: {}}}))
+        .then(assertRecordEql({ map: { a: 3, b: 2, c: 1, nested: {} } }))
         .then(cleanup())
     })
 
@@ -91,7 +88,7 @@ describe('client.operate() - CDT Map operations', function () {
         .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
         .then(orderByKey('map'))
         .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED, true)))
-        .then(assertRecordEql({ emptyMap: {}, map: {a: 3, b: 2, c: 1}}))
+        .then(assertRecordEql({ emptyMap: {}, map: { a: 3, b: 2, c: 1 } }))
         .then(cleanup())
     })
   })
