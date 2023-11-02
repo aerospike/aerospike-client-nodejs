@@ -56,7 +56,7 @@ jobs:
             $NodeModulesPath = $NodeDirPath + "\node_modules\npm\node_modules\@npmcli\run-script"
           }
           cd $NodeModulesPath
-          npm install node-gyp@9.x
+          npm install node-gyp@10.x
       - name: Install nodejs Client
         shell: pwsh
         run: npm install --unsafe-perm --build-from-source
