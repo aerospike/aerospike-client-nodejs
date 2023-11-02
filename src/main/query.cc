@@ -198,19 +198,10 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						Nan::ThrowError(
 							"The region value passed is not a buffer");
 					}
-					uint8_t *tempbytes;
+					uint8_t *bytes;
 					int size = 0;
-					get_bytes_property(&tempbytes, &size, filter, "val" , log);
-					uint8_t *bytes = (uint8_t *)malloc(sizeof(uint8_t) * size);
-					for(i = 0; i<size; i++){
-						bytes[i] = tempbytes[i];
-					}
+					get_bytes_property(&bytes, &size, filter, "val" , log);
 
-					for(int i = 0; i< size; i++){
-						printf("val%d: %u", i, bytes[i]);
-					}
-					printf("datatype: %d\n", datatype);
-					printf("indexType %d\n", type);
 					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype, bytes, size, true);
 					as_v8_debug(log, "Blob equality predicate");
 				}

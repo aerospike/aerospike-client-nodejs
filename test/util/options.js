@@ -177,6 +177,8 @@ options.getConfig = function () {
   if (options.auth) {
     config.auth = options.auth
   }
+  // Disable maxErrorRate
+  config.maxErrorRate = 0
   return config
 }
 

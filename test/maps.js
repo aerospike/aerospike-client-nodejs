@@ -83,13 +83,25 @@ describe('client.operate() - CDT Map operations', function () {
         .then(cleanup())
     })
 
-    it('Creates a new map with persistent index', function () {
+    it('Creates a new map from a cdt context as parameter', function () {
       return initState()
         .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
         .then(orderByKey('map'))
-        .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED, true)))
-        .then(assertRecordEql({ emptyMap: {}, map: { a: 3, b: 2, c: 1 } }))
+        .then(operate(maps.create('map', maps.order.KEY_ORDERED, false, new Context().addMapKeyCreate('nested'))))
+        .then(assertRecordEql({ map: { a: 3, b: 2, c: 1, nested: {} } }))
         .then(cleanup())
+    })
+
+    context('persistent indexes added in 7.0', function () {
+      helper.skipUnlessVersion('>= 7.0.0', this)
+      it('Creates a new map with persistent index', function () {
+        return initState()
+          .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+          .then(orderByKey('map'))
+          .then(operate(maps.create('emptyMap', maps.order.KEY_ORDERED, true)))
+          .then(assertRecordEql({ emptyMap: {}, map: { a: 3, b: 2, c: 1 } }))
+          .then(cleanup())
+      })
     })
   })
 

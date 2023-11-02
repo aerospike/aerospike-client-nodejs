@@ -256,6 +256,7 @@ describe('Aerospike.exp', function () {
   })
 
   describe('recordSize', function () {
+    helper.skipUnlessVersion('>= 7.0.0', this)
     it('evaluates to true if any expression evaluates to true', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
       await testNoMatch(key, exp.eq(exp.recordSize(), exp.int(1)))
