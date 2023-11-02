@@ -419,12 +419,22 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->tender_interval, NULL,
-										   configObj, "tendInterval", log)) !=
+										   configObj, "tenderInterval", log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->async_max_conns_per_node,
 										   NULL, configObj, "maxConnsPerNode",
+										   log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = get_optional_uint32_property(&config->max_error_rate,
+										   NULL, configObj, "maxErrorRate",
+										   log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = get_optional_uint32_property(&config->error_rate_window,
+										   NULL, configObj, "errorRateWindow",
 										   log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
