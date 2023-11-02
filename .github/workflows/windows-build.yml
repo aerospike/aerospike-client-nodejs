@@ -59,7 +59,7 @@ jobs:
           npm install node-gyp@10.x
       - name: Install nodejs Client
         shell: pwsh
-        run: npm install --unsafe-perm --build-from-source
+        run: npm ci --unsafe-perm --build-from-source
           #      - name: Test nodejs client
           #        run: npm test
           #        env:
