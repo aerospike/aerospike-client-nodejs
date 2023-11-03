@@ -37,8 +37,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses:
-        with: actions/setup-python@v4
+      - uses: actions/setup-python@v4
+        with:
           python-version: '3.11'
       - name: Setup Windows SDK
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
