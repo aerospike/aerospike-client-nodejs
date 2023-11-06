@@ -74,6 +74,8 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('authMode')
       expect(config).to.have.property('clusterName')
       expect(config).to.have.property('connTimeoutMs')
+      expect(config).to.have.property('maxErrorRate')
+      expect(config).to.have.property('errorRateWindow')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
       expect(config).to.have.property('loginTimeoutMs')
