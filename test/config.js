@@ -48,6 +48,8 @@ describe('Config #noserver', function () {
         maxConnsPerNode: 200,
         maxSocketIdle: 30,
         minConnsPerNode: 10,
+        maxErrorRate: 100,
+        errorRateWindow: 1,
         modlua: { userPath: '/user/path' },
         password: 'sekret',
         port: 3333,
