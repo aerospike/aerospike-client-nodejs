@@ -49,7 +49,7 @@ jobs:
         with:
           nuget-version: latest
       - run: nuget restore aerospike.sln
-        working-directory: ./aerospike-client-c/vs/aerospike.sln
+        working-directory: aerospike-client-c\vs\
       - name: Setup node
         uses: actions/setup-node@v3
         with:
