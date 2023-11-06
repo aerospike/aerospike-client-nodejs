@@ -44,6 +44,12 @@ jobs:
         uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.11
         with:
           sdk-version: 17763
+      - name: Setup NuGet.exe
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: latest
+      - run: nuget restore aerospike.sln
+        working-directory: ./aerospike-client-c/vs/aerospike.sln
       - name: Setup node
         uses: actions/setup-node@v3
         with:
