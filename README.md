@@ -71,7 +71,7 @@ record using the Aerospike database.
 ```js
 const Aerospike = require('aerospike')
 
-// INSERT HOSTNAME AND PORT NUMBER OF AEROPSIKE SERVER NODE HERE!
+// INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
 const config = {
   hosts: '192.168.33.10:3000',
 }

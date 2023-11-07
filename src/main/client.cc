@@ -108,7 +108,7 @@ NAN_METHOD(AerospikeClient::Connect)
 }
 
 /**
- *  Close the connections to the Aeropsike cluster.
+ *  Close the connections to the Aerospike cluster.
  */
 NAN_METHOD(AerospikeClient::Close)
 {
