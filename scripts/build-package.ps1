@@ -35,6 +35,8 @@ function build_nodejs_client {
  
 
 build_nodejs_client v18
+Copy-Item -Recurse build\release\* lib\binding\node-v108-win32-x64
 build_nodejs_client v20
+Copy-Item -Recurse build\release\* lib\binding\node-v115-win32-x64
 
 nvm use v18.12.1
