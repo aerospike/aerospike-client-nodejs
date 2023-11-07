@@ -72,5 +72,30 @@ describe('client.batchRemove()', function () {
         done()
       })
     })
+
+    it('Will return records even if generation values is not correct', async function () {
+      const batchRecords = [
+        new Key(helper.namespace, helper.set, 'test/batch_remove/6'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/7'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/8'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/9'),
+        new Key(helper.namespace, helper.set, 'test/batch_remove/0')
+      ]
+      try {
+        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.EQ, generation: 10 }))
+        // Will fail if code makes it here
+        expect(1).to.eql(2)
+      } catch (error) {
+        // code will fail with undefined if expect(1).to.eql(2) executes
+        expect(error.code).to.eql(-16)
+        const results = await client.batchRemove(batchRecords)
+        expect(results.length).to.equal(5)
+        results.forEach(function (result) {
+          expect(result.status).to.equal(Aerospike.status.OK)
+          // expect(results.record.bins).to.be.empty()
+          // console.log(util.inspect(result, true, 10, true))
+        })
+      }
+    })
   })
 })

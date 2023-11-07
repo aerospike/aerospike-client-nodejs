@@ -145,6 +145,8 @@
         'src/main/enums/exp_enum.cc',
         'src/main/enums/batch_type.cc',
         'src/main/enums/privilege_code.cc',
+        'src/main/enums/exp_read_flags.cc',
+        'src/main/enums/exp_write_flags.cc',
         'src/main/stats.cc',
         'src/main/util/conversions.cc',
         'src/main/util/conversions_batch.cc',

@@ -194,6 +194,21 @@ context('secondary indexes', function () {
     })
   })
 
+  describe('Client#createBlobIndex()', function () {
+    helper.skipUnlessVersion('>= 7.0.0', this)
+    it('should create a blob index', function () {
+      const args = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name
+      }
+
+      return client.createBlobIndex(args)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+  })
+
   describe('Client#indexRemove()', async function () {
     beforeEach(() => {
       helper.index.create(testIndex.name, helper.set, testIndex.bin,

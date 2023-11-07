@@ -187,6 +187,24 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 								   bin_val);
 					as_v8_debug(log, "String equality predicate %s", bin_val);
 				}
+				else if (datatype == AS_INDEX_BLOB) {
+					Local<Value> value =
+						Nan::Get(filter, Nan::New("val").ToLocalChecked())
+							.ToLocalChecked();
+					if (!node::Buffer::HasInstance(value)) {
+						as_v8_error(
+							log,
+							"The region value passed must be a Buffer");
+						Nan::ThrowError(
+							"The region value passed is not a buffer");
+					}
+					uint8_t *bytes;
+					int size = 0;
+					get_bytes_property(&bytes, &size, filter, "val" , log);
+
+					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype, bytes, size, true);
+					as_v8_debug(log, "Blob equality predicate");
+				}
 				break;
 			}
 			}

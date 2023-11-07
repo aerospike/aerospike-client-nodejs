@@ -1116,10 +1116,14 @@ int map_from_jsmap(as_map **map, Local<Map> obj, const LogInfo *log)
 		const Local<Value> name = Nan::Get(data, i).ToLocalChecked();
 		const Local<Value> value = Nan::Get(data, i+1).ToLocalChecked();
 		as_val *val = NULL;
+		as_val *nameVal = NULL;
 		if (asval_from_jsvalue(&val, value, log) != AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
-		as_stringmap_set(*map, *Nan::Utf8String(name), val);
+		if (asval_from_jsvalue(&nameVal, name, log) != AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+		as_map_set(*map, nameVal, val);
 	}
 	return AS_NODE_PARAM_OK;
 }

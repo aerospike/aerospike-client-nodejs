@@ -255,12 +255,44 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  describe('recordSize', function () {
+    helper.skipUnlessVersion('>= 7.0.0', this)
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+      await testNoMatch(key, exp.eq(exp.recordSize(), exp.int(1)))
+      await testMatch(key, exp.eq(exp.recordSize(), exp.int(96)))
+    })
+
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: '123456789', b: 'green', c: 'yellow' } })
+      await testNoMatch(key, exp.eq(exp.recordSize(), exp.int(1)))
+      await testMatch(key, exp.eq(exp.recordSize(), exp.int(112)))
+    })
+  })
+
   describe('wildcard', function () {
     it('evaluates to true if any expression evaluates to true', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
 
       await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(2)))
       await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(3)))
+    })
+  })
+
+  describe('expWriteFlags', function () {
+    it('write flags have correct value', async function () {
+      expect(exp.expWriteFlags).to.have.property('DEFAULT', 0)
+      expect(exp.expWriteFlags).to.have.property('CREATE_ONLY', 1)
+      expect(exp.expWriteFlags).to.have.property('UPDATE_ONLY', 2)
+      expect(exp.expWriteFlags).to.have.property('ALLOW_DELETE', 4)
+      expect(exp.expWriteFlags).to.have.property('POLICY_NO_FAIL', 8)
+      expect(exp.expWriteFlags).to.have.property('EVAL_NO_FAIL', 16)
+    })
+  })
+  describe('expReadFlags', function () {
+    it('read flags have correct value', async function () {
+      expect(exp.expReadFlags).to.have.property('DEFAULT', 0)
+      expect(exp.expReadFlags).to.have.property('EVAL_NO_FAIL', 16)
     })
   })
 
@@ -271,7 +303,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.read(tempBin,
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})
@@ -284,7 +316,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.write('intVal',
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})
@@ -296,7 +328,7 @@ describe('Aerospike.exp', function () {
         const ops = [
           exp.operations.read(tempBin,
             exp.add(exp.binInt('intVal'), exp.binInt('intVal')),
-            0),
+            exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
         const result = await client.operate(key, ops, {})

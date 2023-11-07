@@ -198,14 +198,8 @@ declare module 'client' {
           type: number;
           key: Key;
       }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-      batchApply(records: {
-          type: number;
-          key: Key;
-      }, udf: object[], batchPolicy?: BatchPolicy, batchApplyPolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
-      batchRemove(records: {
-          type: number;
-          key: Key;
-      }, batchPolicy?: BatchPolicy, batchRemovePolicy?: any, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+      batchApply(keys: Key[], udf: object[], batchPolicy?: BatchPolicy, batchApplyPolicy?: BatchApplyPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+      batchRemove(keys: Key[], batchPolicy?: BatchPolicy, batchRemovePolicy?: BatchRemovePolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
       batchSelect(keys: Key[], bins: string[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
       close(releaseEventLoop?: boolean | undefined): void;
       connect(callback?: connectCallback | undefined): Promise<any> | null;
@@ -233,6 +227,13 @@ declare module 'client' {
           type?: any;
       }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
       createGeo2DSphereIndex(options: {
+          ns: string;
+          set: string;
+          bin: string;
+          index: string;
+          type?: any;
+      }, policy?: InfoPolicy, callback?: jobCallback | undefined): Promise<any> | null;
+      createBlobIndex(options: {
           ns: string;
           set: string;
           bin: string;
@@ -273,6 +274,7 @@ declare module 'client' {
   import Config = require("config");
   import Query = require("query");
   import Scan = require("scan");
+
 }
 declare module 'commands/batch_command' {
   function _exports(asCommand: any): {
@@ -281,10 +283,12 @@ declare module 'commands/batch_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'commands/command' {
   const _exports: Class;
   export = _exports;
+
 }
 declare module 'commands/connect_command' {
   function _exports(asCommand: any): {
@@ -293,6 +297,7 @@ declare module 'commands/connect_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'commands/exists_command' {
   function _exports(asCommand: any): {
@@ -301,6 +306,7 @@ declare module 'commands/exists_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'commands/index' {
   class ApplyCommand {
@@ -546,6 +552,7 @@ declare module 'commands/index' {
   class UserDropCommand {
   }
   export { ApplyCommand as Apply, BatchExistsCommand as BatchExists, BatchGetCommand as BatchGet, BatchReadCommand as BatchRead, BatchWriteCommand as BatchWrite, BatchApplyCommand as BatchApply, BatchRemoveCommand as BatchRemove, BatchSelectCommand as BatchSelect, ChangePasswordCommand as ChangePassword, ConnectCommand as Connect, ExistsCommand as Exists, GetCommand as Get, IndexCreateCommand as IndexCreate, IndexRemoveCommand as IndexRemove, InfoAnyCommand as InfoAny, InfoForeachCommand as InfoForeach, InfoHostCommand as InfoHost, InfoNodeCommand as InfoNode, JobInfoCommand as JobInfo, OperateCommand as Operate, PrivilegeGrantCommand as PrivilegeGrant, PrivilegeRevokeCommand as PrivilegeRevoke, PutCommand as Put, QueryCommand as Query, QueryPagesCommand as QueryPages, QueryApplyCommand as QueryApply, QueryBackgroundCommand as QueryBackground, QueryOperateCommand as QueryOperate, QueryForeachCommand as QueryForeach, QueryRoleCommand as QueryRole, QueryRolesCommand as QueryRoles, QueryUserCommand as QueryUser, QueryUsersCommand as QueryUsers, RemoveCommand as Remove, RoleCreateCommand as RoleCreate, RoleDropCommand as RoleDrop, RoleGrantCommand as RoleGrant, RoleRevokeCommand as RoleRevoke, RoleSetWhitelistCommand as RoleSetWhitelist, RoleSetQuotasCommand as RoleSetQuotas, ScanCommand as Scan, ScanPagesCommand as ScanPages, ScanBackgroundCommand as ScanBackground, ScanOperateCommand as ScanOperate, SelectCommand as Select, TruncateCommand as Truncate, UdfRegisterCommand as UdfRegister, UdfRemoveCommand as UdfRemove, UserCreateCommand as UserCreate, UserDropCommand as UserDrop };
+
 }
 declare module 'commands/query_background_command' {
   function _exports(asCommand: any): {
@@ -558,6 +565,7 @@ declare module 'commands/query_background_command' {
   };
   export = _exports;
   import Job = require(".job");
+
 }
 declare module 'commands/read_record_command' {
   function _exports(asCommand: any): {
@@ -567,6 +575,7 @@ declare module 'commands/read_record_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'commands/stream_command' {
   function _exports(asCommand: any): {
@@ -577,6 +586,7 @@ declare module 'commands/stream_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'commands/write_record_command' {
   function _exports(asCommand: any): {
@@ -586,6 +596,7 @@ declare module 'commands/write_record_command' {
       };
   };
   export = _exports;
+
 }
 declare module 'config' {
   export = Config;
@@ -605,6 +616,8 @@ declare module 'config' {
       maxSocketIdle: any;
       tenderInterval: any;
       maxConnsPerNode: any;
+      maxErrorRate: any;
+      errorRateWindow: any;
       minConnsPerNode: any;
       modlua: any;
       sharedMemory: any;
@@ -615,6 +628,7 @@ declare module 'config' {
       private [inspect];
   }
   const inspect: unique symbol;
+
 }
 declare module 'double' {
   export = Double;
@@ -624,6 +638,7 @@ declare module 'double' {
       Double: number;
       value(): number;
   }
+
 }
 declare module 'error' {
   export = AerospikeError;
@@ -642,6 +657,7 @@ declare module 'error' {
       isServerError(): boolean;
       get client(): any;
   }
+
 }
 declare module 'event_loop' {
   export function releaseEventLoop(): void;
@@ -649,6 +665,7 @@ declare module 'event_loop' {
   export function referenceEventLoop(): void;
   export function unreferenceEventLoop(): void;
   export function setCommandQueuePolicy(policy: any): void;
+
 }
 declare module 'exp' {
   export function bool(value: any): {
@@ -777,6 +794,10 @@ declare module 'exp' {
       count: number;
   }[];
   export function memorySize(): {
+      op: any;
+      count: number;
+  }[];
+  export function recordSize(): {
       op: any;
       count: number;
   }[];
@@ -951,11 +972,26 @@ declare module 'exp' {
       describe: (bin: any) => any;
       mayContain: (bin: any, list: any) => any;
   };
+  export const expReadFlags {
+      const DEFAULT: 0;
+      const EVAL_NO_FAIL: 16;
+  }
+  export type expReadFlags = number;
+  export const expWriteFlags {
+      const DEFAULT: 0;
+      const CREATE_ONLY: 1;
+      const UPDATE_ONLY: 2;
+      const ALLOW_DELETE: 4;
+      const POLICY_NO_FAIL: 8;
+      const EVAL_NO_FAIL: 16;
+  }
+  export type expWriteFlags = number;
   function _val(value: any): {
       [x: number]: any;
       op: any;
   }[];
   export { _val as list, _val as map, _let as let, _var as var };
+
 }
 declare module 'exp_bit' {
   export function reSize(bin: any, flags: number, byteSize: number, policy?: any): any;
@@ -976,6 +1012,7 @@ declare module 'exp_bit' {
   export function lScan(bin: any, value: any, bitSize: any, bitOffset: any): number;
   export function rScan(bin: any, value: any, bitSize: any, bitOffset: any): number;
   export function getInt(bin: any, sign: boolean, bitSize: any, bitOffset: any): any;
+
 }
 declare module 'exp_hll' {
   export function initMH(bin: any, mhBitCount: number, indexBitCount: number, policy?: any): any;
@@ -990,6 +1027,7 @@ declare module 'exp_hll' {
   export function getSimilarity(bin: any, list: any): any[];
   export function describe(bin: any): any;
   export function mayContain(bin: any, list: any): any;
+
 }
 declare module 'exp_lists' {
   export function size(bin: any, ctx?: any): any;
@@ -1023,6 +1061,7 @@ declare module 'exp_lists' {
   export function removeByRank(bin: any, rank: any, ctx?: any, returnType?: any): any;
   export function removeByRankRangeToEnd(bin: any, rank: any, ctx?: any, returnType?: any): any;
   export function removeByRankRange(bin: any, count: any, rank: any, ctx?: any, returnType?: any): any;
+
 }
 declare module 'exp_maps' {
   export function put(bin: any, value: any, key: any, policy?: any, ctx?: any): any;
@@ -1062,10 +1101,11 @@ declare module 'exp_maps' {
   export function getByRank(bin: any, rank: any, valueType: any, returnType: any, ctx?: any): any;
   export function getByRankRangeToEnd(bin: any, rank: any, returnType: any, ctx?: any): any;
   export function getByRankRange(bin: any, count: any, rank: any, returnType: any, ctx?: any): any;
+
 }
 declare module 'exp_operations' {
-  export function read(bin: string, exp: any, flags: any): Operation;
-  export function write(bin: string, exp: any, flags: any): Operation;
+  export function read(bin: string, exp: AerospikeExp, flags: expReadFlags): Operation;
+  export function write(bin: string, exp: AerospikeExp, flags: expWriteFlags): Operation;
   export class ExpOperation {
       protected constructor();
       op: any;
@@ -1073,11 +1113,13 @@ declare module 'exp_operations' {
       exp: any;
       flags: any;
   }
+
 }
 declare module 'features' {
   export const CDT_MAP: "cdt-map";
   export const CDT_LIST: "cdt-list";
   export const BLOB_BITS: "blob-bits";
+
 }
 declare module 'filter' {
   export function range(bin: string, min: number, max: number, indexType?: number | undefined, context?: any): any;
@@ -1096,6 +1138,7 @@ declare module 'filter' {
       context: any;
   }
   import GeoJSON = require("geojson");
+
 }
 declare module 'geojson' {
   export = GeoJSON;
@@ -1112,6 +1155,7 @@ declare module 'geojson' {
       function Polygon(...args: number[][]): GeoJSON;
       function Circle(lng: number, lat: number, radius: number): GeoJSON;
   }
+
 }
 declare module 'hll' {
   export function init(bin: string, indexBits: number, minhashBits?: number | undefined): any;
@@ -1125,6 +1169,7 @@ declare module 'hll' {
   export function getIntersectCount(bin: string, list: any[]): any;
   export function getSimilarity(bin: string, list: any[]): any;
   export function describe(bin: string): any;
+
 }
 declare module 'index_job' {
   export = IndexJob;
@@ -1137,6 +1182,7 @@ declare module 'index_job' {
       private hasCompleted;
       private info;
   }
+
 }
 declare module 'info' {
   export function parse(info: string): any;
@@ -1160,6 +1206,7 @@ declare module 'info' {
   };
   function chop(str: any): any;
   export {};
+
 }
 declare module 'job' {
   export = Job;
@@ -1179,6 +1226,7 @@ declare module 'job' {
       function safeRandomJobID(): number;
       function pollUntilDone(statusFunction: any, pollInterval: any): Promise<any>;
   }
+
 }
 declare module 'key' {
   export = Key;
@@ -1194,6 +1242,7 @@ declare module 'key' {
   namespace Key {
       function fromASKey(keyObj: any): Key | null;
   }
+
 }
 declare module 'lists' {
   export function setOrder(bin: string, order: number): any;
@@ -1229,6 +1278,7 @@ declare module 'lists' {
   export function getByRankRange(bin: string, rank: any, count?: number | undefined, returnType?: number | undefined): any;
   export function increment(bin: string, index: number, value?: number | undefined, policy?: any): any;
   export function size(bin: string): any;
+
 }
 declare module 'maps' {
   export function setPolicy(bin: string, policy: MapPolicy): any;
@@ -1262,6 +1312,8 @@ declare module 'maps' {
   export function getByIndexRange(bin: string, index: number, count?: number | undefined, returnType?: number | undefined): any;
   export function getByRank(bin: string, rank: number, returnType?: number | undefined): any;
   export function getByRankRange(bin: string, rank: any, count: number, returnType?: number | undefined): any;
+  export function create(bin: string, order: number, persistIndex: boolean | undefined, ctx: any): any;
+
 }
 declare module 'operations' {
   export function read(bin: string): Operation;
@@ -1278,6 +1330,7 @@ declare module 'operations' {
       bin: any;
   }
   export { _delete as delete };
+
 }
 declare module 'policies/admin_policy' {
   export = AdminPolicy;
@@ -1285,6 +1338,7 @@ declare module 'policies/admin_policy' {
       constructor(props?: any);
       timeout: number;
   }
+
 }
 declare module 'policies/apply_policy' {
   export = ApplyPolicy;
@@ -1295,6 +1349,7 @@ declare module 'policies/apply_policy' {
       durableDelete: boolean;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/base_policy' {
   export = BasePolicy;
@@ -1306,6 +1361,7 @@ declare module 'policies/base_policy' {
       filterExpression: any;
       compress: boolean;
   }
+
 }
 declare module 'policies/batch_apply_policy' {
   export = BatchApplyPolicy;
@@ -1317,6 +1373,7 @@ declare module 'policies/batch_apply_policy' {
       ttl: number;
       durableDelete: boolean;
   }
+
 }
 declare module 'policies/batch_policy' {
   export = BatchPolicy;
@@ -1332,6 +1389,7 @@ declare module 'policies/batch_policy' {
       deserialize: boolean;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/batch_read_policy' {
   export = BatchReadPolicy;
@@ -1341,6 +1399,7 @@ declare module 'policies/batch_read_policy' {
       readModeAP: number;
       readModeSC: number;
   }
+
 }
 declare module 'policies/batch_remove_policy' {
   export = BatchRemovePolicy;
@@ -1353,6 +1412,7 @@ declare module 'policies/batch_remove_policy' {
       generation: number;
       durableDelete: boolean;
   }
+
 }
 declare module 'policies/batch_write_policy' {
   export = BatchWritePolicy;
@@ -1365,6 +1425,7 @@ declare module 'policies/batch_write_policy' {
       exists: number;
       durableDelete: boolean;
   }
+
 }
 declare module 'policies/bitwise_policy' {
   export = BitwisePolicy;
@@ -1372,6 +1433,7 @@ declare module 'policies/bitwise_policy' {
       constructor(props?: any);
       writeFlags: number;
   }
+
 }
 declare module 'policies/command_queue_policy' {
   export = CommandQueuePolicy;
@@ -1385,6 +1447,7 @@ declare module 'policies/command_queue_policy' {
       maxCommandsInQueue: number;
       queueInitialCapacity: number;
   }
+
 }
 declare module 'policies/hll_policy' {
   export = HLLPolicy;
@@ -1392,6 +1455,7 @@ declare module 'policies/hll_policy' {
       constructor(props?: any);
       writeFlags: number;
   }
+
 }
 declare module 'policies/info_policy' {
   export = InfoPolicy;
@@ -1401,6 +1465,7 @@ declare module 'policies/info_policy' {
       sendAsIs: boolean;
       checkBounds: boolean;
   }
+
 }
 declare module 'policies/list_policy' {
   export = ListPolicy;
@@ -1409,6 +1474,7 @@ declare module 'policies/list_policy' {
       order: number;
       writeFlags: number;
   }
+
 }
 declare module 'policies/map_policy' {
   export = MapPolicy;
@@ -1418,6 +1484,7 @@ declare module 'policies/map_policy' {
       writeMode: number;
       writeFlags: number;
   }
+
 }
 declare module 'policies/operate_policy' {
   export = OperatePolicy;
@@ -1433,6 +1500,7 @@ declare module 'policies/operate_policy' {
       readModeSC: number;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/query_policy' {
   export = QueryPolicy;
@@ -1443,6 +1511,7 @@ declare module 'policies/query_policy' {
       infoTimeout: number;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/read_policy' {
   export = ReadPolicy;
@@ -1454,6 +1523,7 @@ declare module 'policies/read_policy' {
       deserialize: boolean;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/remove_policy' {
   export = RemovePolicy;
@@ -1465,6 +1535,7 @@ declare module 'policies/remove_policy' {
       durableDelete: boolean;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/scan_policy' {
   export = ScanPolicy;
@@ -1475,6 +1546,7 @@ declare module 'policies/scan_policy' {
       maxRecords: number;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policies/write_policy' {
   export = WritePolicy;
@@ -1487,6 +1559,7 @@ declare module 'policies/write_policy' {
       durableDelete: boolean;
   }
   import BasePolicy = require("policies/base_policy");
+
 }
 declare module 'policy' {
   export function createPolicy(type: any, values: any): CommandQueuePolicy | BasePolicy | BatchApplyPolicy | BatchReadPolicy | BatchRemovePolicy | BatchWritePolicy | HLLPolicy | InfoPolicy | AdminPolicy | undefined;
@@ -1510,6 +1583,7 @@ declare module 'policy' {
   import ListPolicy = require("policies/list_policy");
   import MapPolicy = require("policies/map_policy");
   export { BasePolicy, ApplyPolicy, OperatePolicy, QueryPolicy, ReadPolicy, RemovePolicy, ScanPolicy, WritePolicy, BatchPolicy, BatchApplyPolicy, BatchReadPolicy, BatchRemovePolicy, BatchWritePolicy, CommandQueuePolicy, HLLPolicy, InfoPolicy, AdminPolicy, ListPolicy, MapPolicy };
+
 }
 declare module 'privilege' {
   export = Privilege;
@@ -1520,6 +1594,7 @@ declare module 'privilege' {
       namespace: any;
       set: any;
   }
+
 }
 declare module 'privilege_code' {
   export const USER_ADMIN: any;
@@ -1532,6 +1607,7 @@ declare module 'privilege_code' {
   export const READ_WRITE_UDF: any;
   export const WRITE: any;
   export const TRUNCATE: any;
+
 }
 declare module 'query' {
   export = Query;
@@ -1575,11 +1651,12 @@ declare module 'query' {
       foreach(policy?: QueryPolicy, dataCb?: recordCallback | undefined, errorCb?: errorCallback | undefined, endCb?: doneCallback | undefined): RecordStream;
       results(policy?: QueryPolicy): Promise<RecordObject[]>;
       apply(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, callback?: QueryaggregationResultCallback | undefined): Promise<any> | null;
-      background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: WritePolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
+      background(udfModule: string, udfFunction: string, udfArgs?: any[] | undefined, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
       operate(operations: any, policy?: QueryPolicy, queryID?: number | undefined, callback?: jobCallback | undefined): Promise<any> | null;
       ops: any;
   }
   import RecordStream = require("record_stream");
+
 }
 declare module 'record' {
   export = Record;
@@ -1595,6 +1672,7 @@ declare module 'record' {
       ops: any;
       udf: any;
   }
+
 }
 declare module 'record_stream' {
   export = RecordStream;
@@ -1608,6 +1686,7 @@ declare module 'record_stream' {
       _read(): void;
       abort(): void;
   }
+
 }
 declare module 'role' {
   export = Role;
@@ -1620,6 +1699,7 @@ declare module 'role' {
       whitelist: any;
       privileges: any;
   }
+
 }
 declare module 'scan' {
   export = Scan;
@@ -1667,6 +1747,7 @@ declare module 'scan' {
       results(policy?: ScanPolicy): Promise<RecordObject[]>;
   }
   import RecordStream = require("record_stream");
+
 }
 declare module 'status' {
   export const ERR_ASYNC_QUEUE_FULL: any;
@@ -1749,7 +1830,9 @@ declare module 'status' {
   export const ERR_UDF_NOT_FOUND: any;
   export const ERR_LUA_FILE_NOT_FOUND: any;
   export function getMessage(code: any): string;
+
 }
+
 type Host = object;
 type ClientStats = any;
 type doneCallback = () => any;
@@ -1816,6 +1899,7 @@ declare module 'udf_job' {
       const REGISTER: string;
       const UNREGISTER: string;
   }
+
 }
 declare module 'user' {
   export = User;
@@ -1828,6 +1912,7 @@ declare module 'user' {
       writeInfo: any;
       roles: any;
   }
+
 }
 declare module 'utils' {
   export function parseHostString(hostString: any): {
@@ -1836,4 +1921,5 @@ declare module 'utils' {
       port: number;
   };
   export function print(err: any, result: any): void;
+
 }

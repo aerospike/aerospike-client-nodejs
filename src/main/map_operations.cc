@@ -1027,6 +1027,28 @@ bool add_map_get_by_rank_range_op(as_operations *ops, const char *bin,
 	return true;
 }
 
+bool add_map_create_op(as_operations *ops, const char *bin,
+								  as_cdt_ctx *context, Local<Object> obj,
+								  LogInfo *log)
+{
+	as_map_order order;
+	if (get_uint32_property((uint32_t*)&order, obj, "order", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	bool persist_index;
+	if (get_bool_property(&persist_index, obj, "persistIndex", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+
+	as_v8_debug(log, "order=%i, persist_index=%s", order, persist_index ? "true" : "false");
+	as_operations_map_create_all(ops, bin, context, order, persist_index);
+
+
+	return true;
+}
+
 typedef bool (*MapOperation)(as_operations *ops, const char *bin,
 							 as_cdt_ctx *context, Local<Object> op,
 							 LogInfo *log);
@@ -1069,7 +1091,8 @@ const ops_table_entry ops_table[] = {
 	{"MAP_GET_BY_INDEX", add_map_get_by_index_op},
 	{"MAP_GET_BY_INDEX_RANGE", add_map_get_by_index_range_op},
 	{"MAP_GET_BY_RANK", add_map_get_by_rank_op},
-	{"MAP_GET_BY_RANK_RANGE", add_map_get_by_rank_range_op}};
+	{"MAP_GET_BY_RANK_RANGE", add_map_get_by_rank_range_op},
+	{"MAP_CREATE", add_map_create_op}};
 
 int add_map_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 			   LogInfo *log)
