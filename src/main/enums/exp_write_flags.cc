@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #include <nan.h>
 
 extern "C" {
-#include <aerospike/aerospike_index.h>
+#include <aerospike/as_exp_operations.h>
 }
 
 using namespace v8;
@@ -26,24 +26,16 @@ using namespace v8;
 #define set(__obj, __name, __value)                                            \
 	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Local<Object> indexDataType()
+Local<Object> expWriteFlags()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "STRING", AS_INDEX_STRING);
-	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
-	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);
-	set(obj, "BLOB", AS_INDEX_BLOB);
-	return scope.Escape(obj);
-}
+	set(obj, "DEFAULT", AS_EXP_WRITE_DEFAULT);
+	set(obj, "CREATE_ONLY", AS_EXP_WRITE_CREATE_ONLY);
+	set(obj, "UPDATE_ONLY", AS_EXP_WRITE_UPDATE_ONLY);
+	set(obj, "ALLOW_DELETE", AS_EXP_WRITE_ALLOW_DELETE);
+	set(obj, "POLICY_NO_FAIL", AS_EXP_WRITE_POLICY_NO_FAIL);
+	set(obj, "EVAL_NO_FAIL", AS_EXP_WRITE_EVAL_NO_FAIL);
 
-Local<Object> indexType()
-{
-	Nan::EscapableHandleScope scope;
-	Local<Object> obj = Nan::New<Object>();
-	set(obj, "DEFAULT", AS_INDEX_TYPE_DEFAULT);
-	set(obj, "LIST", AS_INDEX_TYPE_LIST);
-	set(obj, "MAPKEYS", AS_INDEX_TYPE_MAPKEYS);
-	set(obj, "MAPVALUES", AS_INDEX_TYPE_MAPVALUES);
 	return scope.Escape(obj);
 }

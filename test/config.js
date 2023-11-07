@@ -48,6 +48,8 @@ describe('Config #noserver', function () {
         maxConnsPerNode: 200,
         maxSocketIdle: 30,
         minConnsPerNode: 10,
+        maxErrorRate: 100,
+        errorRateWindow: 1,
         modlua: { userPath: '/user/path' },
         password: 'sekret',
         port: 3333,
@@ -74,6 +76,8 @@ describe('Config #noserver', function () {
       expect(config).to.have.property('authMode')
       expect(config).to.have.property('clusterName')
       expect(config).to.have.property('connTimeoutMs')
+      expect(config).to.have.property('maxErrorRate')
+      expect(config).to.have.property('errorRateWindow')
       expect(config).to.have.property('hosts')
       expect(config).to.have.property('log')
       expect(config).to.have.property('loginTimeoutMs')
