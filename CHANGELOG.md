@@ -1,6 +1,106 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [5.10.0]
+
+* **New Features**
+  * [CLIENT-2672] - Added support for MacOS 14.
+
+* **Bug Fixes**
+  * [CLIENT-2599] - Added documentation to avoid build issues on Windows with Python 3.12.
+  * [CLIENT-2709] - The C Client submodule now marks node’s partitions for retry on the next scan/query page when a node returns records records that are discarded due to exceeding maxRecords.
+  * [CLIENT-2749] - Added missing BOOL enumeration to Aerospike.exp.type. In scan/query with maxRecords set, mark node's partitions for retry on next scan/query page when that node returns records that are discarded due to exceeding maxRecords.
+  * [CLIENT-2750] - Changed npm-run-all from a dev-dependency to a dependency.
+
+
+## [5.9.0]
+
+* **Breaking Changes**
+  * [CLIENT-2659] - Dropped support for Debian 10.
+  * [CLIENT-2660] - Dropped support for CentOS 7.
+  * [CLIENT-2661] - Dropped support for Red Hat Enterprise Linux 7.
+  * [CLIENT-2662] - Dropped support for Oracle Linux 7.
+  * [CLIENT-2663] - Dropped support for Amazon Linux 2.
+  * [CLIENT-2668] - Dropped support for macOS 11.
+
+* **New Features**
+  * [CLIENT-2095] - The Aerospike client can now be installed using “npm install aerospike” on windows.
+  * [CLIENT-2572] - Added exp.recordSize expression.
+  * [CLIENT-2587] - Added Client.createBlobIndex.
+  * [CLIENT-2587] - Added indexDatatype.BLOB.
+  * [CLIENT-2615] - Added exp.expWriteFlags and exp.expReadFlags.
+  * [CLIENT-2617] - Added map.create method with parameter to create a persistent map index.
+  * [CLIENT-2669] - Added config.errorRateWindow and config.maxErrorRate.
+    * [CLIENT-1421] - maxErrorRate and errorRateWindow can be adjusted to modify the circuit breaker pattern implemented by the C client.
+
+* **Improvements**
+  * [CLIENT-2671] - Updated batch examples on the Node.js Client API docs page.
+
+* **Bug Fixes**
+  * [CLIENT-2629] - Fixed bug in which some batch methods returned an AEROSPIKE_BATCH_FAILED error rather than records with detailed status codes.
+  * [CLIENT-2670] - Fixed bug in which config.tenderInterval was not being applied.
+
+* **New Features**
+## [5.8.0]
+
+* **Breaking Changes**
+  * [CLIENT-2517] - Dropped support for Node.js 19.
+  * [CLIENT-2581] - Dropped support for Node.js 16.
+
+* **New Features**
+  * [CLIENT-1983] - Added support for the javascript “Map” class as a bin value in client.put method and maps.putItems method.
+  * [CLIENT-1983] - Added the Bin class for use in the client.put method.
+  * [CLIENT-2378] - Added exp.inf and exp.wildcard expressions.
+  * [CLIENT-2488] - Added a “returnType” parameter to map expression remove methods. Acceptable “returnType” values are maps.returnType.INVERTED and maps.returnType.NONE.
+
+* **Improvements**
+  * [CLIENT-1601] - Switched API docs theme to docdash.
+  * [CLIENT-2374] - Restored typescript support.
+
+* **Bug Fixes**
+  * [CLIENT-2538] - Fixed bug in which list expression remove methods and map expression remove methods resulted in a segmentation fault.
+
+## [5.7.0]
+
+* **New Features**
+  * [CLIENT-630] - Added the following role-based access control (RBAC) security features:
+    * Modules
+      * Aerospike.Client.admin
+      * Aerospike.Client.privilegeCode
+    * classes
+      * Aerospike.Client.admin.User
+      * Aerospike.Client.admin.Role
+      * Aerospike.Client.admin.Privilege
+      * Aerospike.Client.adminPolicy
+    * Methods
+      * Aerospike.Client.changePassword
+      * Aerospike.Client.createUser
+      * Aerospike.Client.createRole
+      * Aerospike.Client.dropRole
+      * Aerospike.Client.dropUser
+      * Aerospike.Client.grantPrivileges
+      * Aerospike.Client.grantRoles
+      * Aerospike.Client.queryRole
+      * Aerospike.Client.queryRoles
+      * Aerospike.Client.queryUser
+      * Aerospike.Client.queryUsers
+      * Aerospike.Client.revokePrivileges
+      * Aerospike.Client.revokeRoles
+      * Aerospike.Client.setQuotas
+      * Aerospike.Client.setWhitelist
+  * [CLIENT-1303] - Added the ‘TTL' property to the query and scan classes. Note: records will only have their ‘TTL’ value set if query.operate or scan.operate is called when the ‘TTL’ property is set.
+  * [CLIENT-2393] - Added support for Debian 12.
+
+* **Improvements**
+  * [CLIENT-2350] - Initialized values depended on by conditional jumps.
+  * [CLIENT-2466] - Added additional input validation.
+
+* **Bug Fixes**
+  * [CLIENT-2463] - Paginated queries without a filter specified will no longer throw a TypeError for reading an undefined value
+
+* **updates**
+  * The typescript description file 'index.d.ts' has not been updated. The next release will update 'index.d.ts' and restore typescript support.
+
 ## [5.6.0]
 
 * **New Features**
