@@ -48,7 +48,7 @@ For further information, please refer to the PowerShell documentation [About Exe
 
 #### Distutils has been removed from Python 3.12, which causes my node-gyp build to fail. How can I fix this?
 
-Since Distutils is no longer include in Python after 3.12, it is necessary to install them yourself if using Python 3.12 or above.
+Since Distutils is no longer included in Python after 3.12, it is necessary to install Distutils yourself if using Python 3.12 or above.
 
 The following command should allow you to build with Python 3.12:
 
