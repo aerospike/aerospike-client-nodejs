@@ -56,6 +56,7 @@ rm -rf ${AEROSPIKE_NODEJS_RELEASE_HOME}/node-*-${OS_FLAVOR}-*
 
 build_nodejs_client v18
 build_nodejs_client v20
+build_nodejs_client v21
 
 nvm use v20
 

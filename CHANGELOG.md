@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 
 * **New Features**
   * [CLIENT-2672] - Added support for MacOS 14.
+  * [CLIENT-2751] - Added support for Node.js 21.
 
 * **Bug Fixes**
   * [CLIENT-2599] - Added documentation to avoid build issues on Windows with Python 3.12.
-  * [CLIENT-2709] - The C Client submodule now marks node’s partitions for retry on the next scan/query page when a node returns records records that are discarded due to exceeding maxRecords.
+  * [CLIENT-2709] - The C Client submodule now marks node’s partitions for retry on the next scan/query page when a node returns records that are discarded due to exceeding maxRecords.
   * [CLIENT-2749] - Added missing BOOL enumeration to Aerospike.exp.type. In scan/query with maxRecords set, mark node's partitions for retry on next scan/query page when that node returns records that are discarded due to exceeding maxRecords.
   * [CLIENT-2750] - Changed npm-run-all from a dev-dependency to a dependency.
 
