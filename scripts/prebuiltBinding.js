@@ -1,6 +1,7 @@
 const os = require('node:os')
 const fs = require('fs')
 const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const rename = util.promisify(fs.rename)
 const rm = util.promisify(fs.rm)
 
@@ -44,7 +45,17 @@ const rm = util.promisify(fs.rm)
     rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
     rm('lib/binding/node-v108-darwin-x64', { recursive: true, force: true })
 
-    const openssl = process.versions.openssl.at(0)
+    const output = await exec('ldd --version | awk 'NR==1{print $NF}'')
+    const version = Number(output)
+
+    let openssl
+    if(version < 2.33){
+      openssl = 1
+    }
+    else{
+      openssl = 3
+    }
+    console.log(openssl)
 
     if (arch === 'x64') {
       await rename('lib/binding/openssl@' + openssl + '/node-v120-linux-x64', 'lib/binding/node-v120-linux-x64')
