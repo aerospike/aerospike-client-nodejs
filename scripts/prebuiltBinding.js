@@ -1,7 +1,6 @@
 const os = require('node:os')
 const fs = require('fs')
 const util = require('util')
-const exec = util.promisify(require('child_process').exec)
 const rename = util.promisify(fs.rename)
 const rm = util.promisify(fs.rm)
 
