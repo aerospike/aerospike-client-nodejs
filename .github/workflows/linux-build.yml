@@ -25,6 +25,7 @@ jobs:
         node-version: # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
           - 18.x
           - 20.x
+          - 21.x
     continue-on-error: true
     steps:
     - uses: actions/checkout@v3

@@ -86,6 +86,15 @@ describe('Aerospike.exp', function () {
       })
     })
 
+    describe('eq on bool bin', function () {
+      it('evaluates to true if an integer bin equals the given value', async function () {
+        const key = await createRecord({ boolVal: true })
+
+        await testNoMatch(key, exp.eq(exp.binBool('boolVal'), exp.bool(false)))
+        await testMatch(key, exp.eq(exp.binBool('boolVal'), exp.bool(true)))
+      })
+    })
+
     describe('eq on map bin', function () {
       it('evaluates to true if a map bin matches a value', async function () {
         const key = await createRecord({ map: { c: 1, b: 2, a: 3 } })
