@@ -45,3 +45,13 @@ PowerShell's execution policy prevents you from running the client's installatio
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 
 For further information, please refer to the PowerShell documentation [About Execution Policies](https://docs.microsoft.com/en-sg/powershell/module/microsoft.powershell.core/about/about_execution_policies).
+
+#### Distutils has been removed from Python 3.12, which causes my node-gyp build to fail. How can I fix this?
+
+Since Distutils is no longer included in Python after 3.12, it is necessary to install Distutils yourself if using Python 3.12 or above.
+
+The following command should allow you to build with Python 3.12:
+
+    python3 -m pip install packaging
+
+For more information on this topic, see [here.](https://github.com/nodejs/node-gyp/issues/2869)
