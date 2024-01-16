@@ -49,10 +49,9 @@ const rm = util.promisify(fs.rm)
     const version = Number(output.stdout)
 
     let openssl
-    if(version < 2.33){
+    if (version < 2.33) {
       openssl = '1'
-    }
-    else{
+    } else {
       openssl = '3'
     }
 
