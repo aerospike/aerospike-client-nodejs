@@ -85,7 +85,7 @@ jobs:
 #        python-version: ${{ matrix.nodejs-version }}
 #        architecture: 'x64'
 #
-#    - uses: actions/download-artifact@v3
+#    - uses: actions/download-artifact@v4
 #      with:
 #        name: binding-18
 #
@@ -133,7 +133,7 @@ jobs:
         node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
 
@@ -175,7 +175,7 @@ jobs:
         python-version: ${{ matrix.node-version }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: binding-${{ matrix.py-version }}
 
@@ -227,7 +227,7 @@ jobs:
         node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
 
@@ -263,7 +263,7 @@ jobs:
         node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
 
