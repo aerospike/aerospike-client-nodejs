@@ -1566,7 +1566,6 @@ describe('client.operate() - CDT Map operations', function () {
       })
 
       it('returns true if any values exisst', function () {
-
         return initState()
           .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
           .then(orderByKey('map'))
