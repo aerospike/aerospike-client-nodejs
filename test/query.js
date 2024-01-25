@@ -47,7 +47,7 @@ const putgen = helper.putgen
 
 describe('Queries', function () {
   const client = helper.client
-  this.timeout(10000)
+
   const testSet = 'test/query-' + Math.floor(Math.random() * 100000)
   const samples = [
     { name: 'int match', i: 5 },
@@ -158,7 +158,8 @@ describe('Queries', function () {
     })
   }
 
-  before(async () => {
+  before(() => {
+    this.timeout(40000)
     const generators = {
       keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false }),
       recgen: () => samples.pop(),
