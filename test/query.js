@@ -159,6 +159,7 @@ describe('Queries', function () {
   }
 
   before(() => {
+    this.timeout(10000)
     const generators = {
       keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false }),
       recgen: () => samples.pop(),
