@@ -307,7 +307,7 @@ jobs:
       run: sleep 5
 
     - name: Run tests
-      run: npm run test -- --h localhost
+      run: npm run test -- --h localhost --U superuser --P superuser
 
     - name: Show logs if failed
       if: ${{ failure() }}
