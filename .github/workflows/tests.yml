@@ -83,7 +83,7 @@ jobs:
 #
 #    - uses: actions/setup-node@v4
 #      with:
-#        python-version: ${{ matrix.nodejs-version }}
+#        node-version: ${{ matrix.nodejs-version }}
 #        architecture: 'x64'
 #
 #    - uses: actions/download-artifact@v4
@@ -136,7 +136,8 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: binding-${{ matrix.node-version }}
+        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+
 
     - name: make binding folder
       run: mkdir lib/binding
@@ -173,12 +174,12 @@ jobs:
 
     - uses: actions/setup-node@v4
       with:
-        python-version: ${{ matrix.node-version }}
+        node-version: ${{ matrix.node-version }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: binding-${{ matrix.py-version }}
+        name: binding-${{ matrix.node-version }}
 
     - name: make binding folder
       run: mkdir lib/binding
