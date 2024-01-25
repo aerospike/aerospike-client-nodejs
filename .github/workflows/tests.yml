@@ -59,7 +59,9 @@ jobs:
       run: sudo apt install build-essential;
 
     - name: Build client
-      run: ./scripts/build-c-client.sh
+      run: |
+        ./scripts/build-c-client.sh
+        npm install
       env:
         CFLAGS: '-Werror'
 
