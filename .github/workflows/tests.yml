@@ -290,6 +290,9 @@ jobs:
     - name: make binding folder
       run: mkdir lib/binding
 
+    - name: install mocha
+      run: npm install mocha
+      
     - name: Install client
       #fix the convention here
       run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
