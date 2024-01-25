@@ -54,7 +54,7 @@ jobs:
         architecture: 'x64'
     - name: debugging
       run: |
-      echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
+        echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
 
     - run: sudo apt update
     - name: Install build dependencies (C Client dependency packages)
