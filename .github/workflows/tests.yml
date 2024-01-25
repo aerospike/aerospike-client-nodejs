@@ -31,7 +31,7 @@ jobs:
       with:
         submodules: recursive
     - name: lint
-      run: npm lint
+      run: npm run lint
 
   build:
     runs-on: ubuntu-latest
@@ -65,11 +65,13 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
+    - name: list
+      run: ls lib/binding
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
       with:
         name: binding-${{ matrix.nodejs-version }}
-        path: ./lib/binding/node-*-linux-arm64
+        path: ./lib/binding/node-*-linux-arm64/aero
 
 #  test-memray:
 #    needs: build
@@ -103,7 +105,7 @@ jobs:
 #      run: sleep 3
 #
 #    - name: Get number of tests
-#      run: echo "NUM_TESTS=$(npm test-dry-run | grep -oP '\d+ (passing|pending)' | awk '{ sum += $1 } END { print sum }')" >> $GITHUB_ENV
+#      run: echo "NUM_TESTS=$(npm run test-dry-run | grep -oP '\d+ (passing|pending)' | awk '{ sum += $1 } END { print sum }')" >> $GITHUB_ENV
 #      working-directory: test
 #
 #    - name: Run tests
@@ -148,7 +150,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm test
+      run: npm run test
 
   test-ce:
     runs-on: ubuntu-latest
@@ -209,7 +211,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm test
+      run: npm run test
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
@@ -245,7 +247,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm test
+      run: npm run test
 
   test-ee:
     runs-on: ubuntu-latest
@@ -281,7 +283,7 @@ jobs:
       run: sleep 5
 
     - name: Run tests
-      run: npm test
+      run: npm run test
 
     - name: Show logs if failed
       if: ${{ failure() }}
