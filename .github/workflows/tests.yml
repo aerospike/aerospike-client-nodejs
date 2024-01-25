@@ -62,7 +62,8 @@ jobs:
 
     - name: Build client
       run: |
-        ./scripts/build-package.sh
+        ./scripts/build-c-client.sh
+        npm install
       env:
         CFLAGS: '-Werror'
 
@@ -135,7 +136,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        name: binding-${{ matrix.node-version }}
 
     - name: make binding folder
       run: mkdir lib/binding
@@ -229,7 +230,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        name: binding-${{ matrix.node-version }}
 
     - name: make binding folder
       run: mkdir lib/binding
@@ -265,7 +266,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        name: binding-${{ matrix.node-version }}
 
     - name: make binding folder
       run: mkdir lib/binding
