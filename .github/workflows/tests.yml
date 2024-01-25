@@ -143,6 +143,8 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+      env:
+        LOWEST_SUPPORTED_NODEJS_VERSION: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
 
 
     - name: make binding folder
