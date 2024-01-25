@@ -30,10 +30,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        architecture: 'x64'
+    - name: lint
       run: npm lint
 
   build:
