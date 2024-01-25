@@ -42,6 +42,7 @@
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
     "test": "mocha",
+    "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
     "posttest": "npm run lint",
