@@ -132,7 +132,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    -  name: debugging
+    - name: debugging
       run: |
         echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
     - uses: actions/setup-node@v4
