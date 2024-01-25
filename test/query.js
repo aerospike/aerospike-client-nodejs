@@ -192,9 +192,11 @@ describe('Queries', function () {
       indexes.push(['qidxBlobMapKeysNested', 'mkblob', BLOB, MAPKEYS, new Context().addMapKey('nested')])
     }
     const numberOfSamples = samples.length
+    console.log("SPOT 1")
     return Promise.all([
       putgen.put(numberOfSamples, generators)
-        .then((records) => { keys = records.map((rec) => rec.key) })
+        .then((records) => { keys = records.map((rec) => rec.key)
+                             console.log("SPOT 2") })
         .then(() => Promise.all(indexes.map(idx =>
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], idx[4])))),
       helper.udf.register('udf.lua')
