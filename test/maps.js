@@ -1556,6 +1556,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns true or false for a single key read', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
@@ -1565,6 +1566,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns true if any values exisst', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
@@ -1574,6 +1576,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns key/value for a single read', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
@@ -1583,6 +1586,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns key/value for a range read', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
@@ -1592,6 +1596,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns key/value for a single read', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
@@ -1601,6 +1606,7 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('returns key/value for a range read', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(orderByKey('map'))
