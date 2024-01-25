@@ -201,9 +201,9 @@ jobs:
         if [ "${{ matrix.node-version }}" = "18" ]; then
           cp -r node-v108-linux-x64 lib/binding/node-v108-linux-x64
         elif [ "${{ matrix.node-version }}" = "20" ]; then
-          cp -r node-v108-linux-x64 lib/binding/node-v115-linux-x64
+          cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
         elif [ "${{ matrix.node-version }}" = "21" ]; then
-          cp -r node-v108-linux-x64 lib/binding/node-v120-linux-x64
+          cp -r node-v120-linux-x64 lib/binding/node-v120-linux-x64
         fi
 
     - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -249,6 +249,9 @@ jobs:
     - name: make binding folder
       run: mkdir lib/binding
 
+    - name: install mocha
+      run: npm install mocha
+
     - name: Install client
       #fix the convention here
       run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
@@ -283,7 +286,7 @@ jobs:
         name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
       env:
         LOWEST_SUPPORTED_NODEJS_VERSION: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
-        
+
     - name: make binding folder
       run: mkdir lib/binding
 
