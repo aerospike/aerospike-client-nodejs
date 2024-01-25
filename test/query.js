@@ -158,7 +158,7 @@ describe('Queries', function () {
     })
   }
 
-  before(() => {
+  before(async () => {
     const generators = {
       keygen: keygen.string(helper.namespace, testSet, { prefix: 'test/query/', random: false }),
       recgen: () => samples.pop(),
