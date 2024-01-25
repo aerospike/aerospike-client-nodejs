@@ -34,7 +34,7 @@ jobs:
       with:
         node-version: '18'
         architecture: 'x64'
-    - uses: pre-commit/action@v3.0.0
+      run: npm lint
 
   build:
     runs-on: ubuntu-latest
@@ -62,7 +62,7 @@ jobs:
       run: sudo apt install build-essential;
 
     - name: Build client
-      run: ./scripts/build-c-client
+      run: ./scripts/build-c-client.sh
       env:
         CFLAGS: '-Werror'
 
@@ -150,7 +150,6 @@ jobs:
 
     - name: Run tests
       run: npm test
-      working-directory: test
 
   test-ce:
     runs-on: ubuntu-latest
