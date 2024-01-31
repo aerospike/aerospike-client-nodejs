@@ -6,6 +6,19 @@ run-name: Build bindings (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ i
 # Publishes bindings and source distribution on Github Actions if no tests are run or tests pass
 
 on:
+  push:
+  branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage"]
+    types: [
+      # Default triggers
+      opened,
+      synchronize,
+      reopened,
+      # Additional triggers
+      labeled,
+      unlabeled
+    ]
   workflow_call:
     inputs:
       # The dev tests test the artifacts against a server release
