@@ -1,4 +1,9 @@
 name: Build bindings
+run-name: Build bindings (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+
+# Builds manylinux bindings and source distribution
+# If running tests, publish results in commit status
+# Publishes bindings and source distribution on Github Actions if no tests are run or tests pass
 
 on:
   workflow_call:
