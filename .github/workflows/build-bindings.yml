@@ -7,7 +7,7 @@ run-name: Build bindings (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ i
 
 on:
   push:
-  branches: ["stage", "master"]
+    branches: ["stage", "master"]
   pull_request:
     branches: ["stage"]
     types: [
