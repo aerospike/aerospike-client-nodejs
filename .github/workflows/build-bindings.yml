@@ -53,6 +53,7 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+        
 jobs:
   manylinux:
     runs-on: ubuntu-latest
@@ -250,11 +251,12 @@ jobs:
         ref: ${{ inputs.commit_sha }}
 
     - name: Install NVM
-    - run: |
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash;
-        source ~/.zshrc;
-        nvm -v;
-        nvm i ${{ matrix.nodejs-version[1];
+      run: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        source ~/.zshrc
+        nvm -v
+        nvm install ${{ matrix.nodejs-version[1] }}
+
 
     - name: Setup symlink folders
       run: |
