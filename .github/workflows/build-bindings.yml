@@ -53,7 +53,7 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
-
+jobs:
   manylinux:
     runs-on: ubuntu-latest
     strategy:
