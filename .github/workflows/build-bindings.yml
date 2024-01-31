@@ -249,7 +249,7 @@ on:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
 
-    - name: Install NVM:
+    - name: Install NVM
     - run: |
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash;
         source ~/.zshrc;
