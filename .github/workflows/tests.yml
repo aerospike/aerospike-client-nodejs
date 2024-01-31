@@ -35,7 +35,7 @@ jobs:
     - name: lint
       run: npm run lint
 
-  build:
+  build-ubuntu:
     runs-on: ubuntu-latest
     strategy:
       matrix:
