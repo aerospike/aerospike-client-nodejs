@@ -210,7 +210,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require('aerospike')'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e "aerospike = require\(\'aerospike\'\)"" >> $GITHUB_ENV
 
     - name: Build client
       run: |
