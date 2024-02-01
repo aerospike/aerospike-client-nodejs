@@ -146,7 +146,7 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
-    - name: Test client
+    - name: Testing client
       run: |
         ${{ env.TEST_COMMAND }}
 
