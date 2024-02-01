@@ -143,6 +143,7 @@ jobs:
         ./scripts/build-c-client.sh
         npm install
         npm install .
+        npm list aerospike
       env:
         CFLAGS: '-Werror'
 
@@ -219,6 +220,7 @@ jobs:
         ./scripts/build-c-client.sh
         npm install
         npm install .
+        npm list aerospike
       env:
         CFLAGS: '-Werror'
 
@@ -327,6 +329,7 @@ jobs:
         ./scripts/build-c-client.sh
         npm install
         npm install .
+        npm list aerospike
       env:
         CFLAGS: '-Werror'
 
