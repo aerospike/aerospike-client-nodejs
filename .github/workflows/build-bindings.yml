@@ -142,6 +142,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
+        npm install .
       env:
         CFLAGS: '-Werror'
 
@@ -217,6 +218,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
+        npm install .
       env:
         CFLAGS: '-Werror'
 
@@ -324,6 +326,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
+        npm install .
       env:
         CFLAGS: '-Werror'
 
