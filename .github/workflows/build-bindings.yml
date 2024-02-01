@@ -147,9 +147,15 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
-    - name: Testing client
+    - name: foo test
+      run: |
+        npm install ..
+      working-directory: src
+
+    - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
+      working-directory: src
 
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
@@ -219,14 +225,19 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
-        npm install .
-        npm list aerospike
+        npm install ..
       env:
         CFLAGS: '-Werror'
+
+    - name: foo test
+      run: |
+        npm install .
+      working-directory: src
 
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
+      working-directory: src
 
     - name: Save macOS binding
       uses: actions/upload-artifact@v4
@@ -342,9 +353,15 @@ jobs:
       run: echo "TEST_COMMAND=node -e 'aerospike = require(\"aerospike\")'" >> $GITHUB_ENV
 
 
+    - name: foo test
+      run: |
+        npm install ..
+      working-directory: src
+
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
+      working-directory: src
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
