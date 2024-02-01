@@ -1,4 +1,4 @@
-name: Build bindings
+name: Build binding
 run-name: Build bindings (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
 
 # Builds manylinux bindings and source distribution
