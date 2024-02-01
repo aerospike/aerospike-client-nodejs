@@ -19,6 +19,23 @@ on:
       labeled,
       unlabeled
     ]
+  inputs:
+    # If we only want to check that the builds pass on an arbitrary branch
+    run_tests:
+      description: "Run integration tests"
+      required: true
+      type: boolean
+      default: true
+    use-server-rc:
+      type: boolean
+      required: true
+      default: false
+      description: 'Test against server release candidate?'
+    # If we are creating a backport and want to test an arbitrary branch against an older server version
+    server-tag:
+      required: true
+      default: 'latest'
+      description: 'Server docker image tag'
   workflow_call:
     inputs:
       # The dev tests test the artifacts against a server release
@@ -123,7 +140,7 @@ jobs:
 
     - name: Enable tests
       if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=npm test -- --h 172.17.0.2 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
@@ -207,7 +224,7 @@ jobs:
 
     - name: Enable tests
       if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=npm test -- --h 172.17.0.2 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
@@ -329,7 +346,7 @@ jobs:
 
     - name: Enable tests
       if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=npm test -- --h 172.17.0.2 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
