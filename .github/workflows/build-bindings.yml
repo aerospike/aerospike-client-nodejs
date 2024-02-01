@@ -127,7 +127,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\"aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
 
 
     - run: sudo apt update
@@ -142,19 +142,12 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
-        npm list aerospike
       env:
         CFLAGS: '-Werror'
-
-    - name: foo test
-      run: |
-        npm install ..
-      working-directory: src
 
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
-      working-directory: src
 
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
@@ -218,7 +211,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\"aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
 
     - name: Build client
       run: |
@@ -227,15 +220,9 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
-    - name: foo test
-      run: |
-        npm install ..
-      working-directory: src
-
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
-      working-directory: src
 
     - name: Save macOS binding
       uses: actions/upload-artifact@v4
@@ -346,18 +333,12 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\"aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
 
-
-    - name: foo test
-      run: |
-        npm install ..
-      working-directory: src
 
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
-      working-directory: src
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
