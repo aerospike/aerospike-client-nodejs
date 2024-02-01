@@ -127,7 +127,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
 
     - run: sudo apt update
@@ -211,7 +211,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
     - name: Build client
       run: |
@@ -333,7 +333,7 @@ jobs:
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\\lib\\aerospike\")'" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
 
     - name: Test client
