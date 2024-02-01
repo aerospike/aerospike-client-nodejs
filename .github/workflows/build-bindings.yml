@@ -142,7 +142,6 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
-        npm install .
         npm list aerospike
       env:
         CFLAGS: '-Werror'
@@ -225,13 +224,12 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
-        npm install ..
       env:
         CFLAGS: '-Werror'
 
     - name: foo test
       run: |
-        npm install .
+        npm install ..
       working-directory: src
 
     - name: Test client
@@ -339,8 +337,6 @@ jobs:
       run: |
         ./scripts/build-c-client.sh
         npm install
-        npm install .
-        npm list aerospike
       env:
         CFLAGS: '-Werror'
 
