@@ -44,12 +44,13 @@ const MAPKEYS = Aerospike.indexType.MAPKEYS
 const keygen = helper.keygen
 const metagen = helper.metagen
 const putgen = helper.putgen
+let samples
 
 describe('Queries', function () {
   const client = helper.client
-  this.timeout(40000)
+
   const testSet = 'test/query-' + Math.floor(Math.random() * 100000)
-  const samples = [
+  samples = [
     { name: 'int match', i: 5 },
     { name: 'int non-match', i: 500 },
     { name: 'int list match', li: [1, 5, 9] },
@@ -82,37 +83,7 @@ describe('Queries', function () {
     { name: 'filter', value: 1 },
     { name: 'filter', value: 2 },
     { name: 'filter', value: 3 },
-    { name: 'filter', value: 4 },
-
-    { name: 'nested int list match', li: { nested: [1, 5, 9] } },
-    { name: 'nested int list non-match', li: { nested: [500, 501, 502] } },
-    { name: 'nested int map match', mi: { nested: { a: 1, b: 5, c: 9 } } },
-    { name: 'nested int map non-match', mi: { nested: { a: 500, b: 501, c: 502 } } },
-    { name: 'nested string list match', ls: { nested: ['banana', 'blueberry'] } },
-    { name: 'nested string list non-match', ls: { nested: ['tomato', 'cuccumber'] } },
-    { name: 'nested string map match', ms: { nested: { a: 'banana', b: 'blueberry' } } },
-    { name: 'nested string map non-match', ms: { nested: { a: 'tomato', b: 'cuccumber' } } },
-    { name: 'nested string mapkeys match', mks: { nested: { banana: 1, blueberry: 2 } } },
-    { name: 'nested string mapkeys non-match', mks: { nested: { tomato: 3, cuccumber: 4 } } },
-    { name: 'nested point match', g: { nested: GeoJSON.Point(103.913, 1.308) } },
-    { name: 'nested point non-match', g: { nested: GeoJSON.Point(-122.101, 37.421) } },
-    { name: 'nested point list match', lg: { nested: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] } },
-    { name: 'nested point list non-match', lg: { nested: [GeoJSON.Point(-122.101, 37.421), GeoJSON.Point(-120.101, 39.421)] } },
-    { name: 'nested point map match', mg: { nested: { a: GeoJSON.Point(103.913, 1.308), b: GeoJSON.Point(105.913, 3.308) } } },
-    { name: 'nested point map non-match', mg: { nested: { a: GeoJSON.Point(-122.101, 37.421), b: GeoJSON.Point(-120.101, 39.421) } } },
-    { name: 'nested region match', g: { nested: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } },
-    { name: 'nested region non-match', g: { nested: GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421]) } },
-    { name: 'nested region list match', lg: { nested: [GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])] } },
-    { name: 'nested region list non-match', lg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } },
-    { name: 'nested region map match', mg: { nested: { a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } } },
-    { name: 'nested region map non-match', mg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } },
-    { name: 'nested aggregate', nested: { value: 10 } },
-    { name: 'nested aggregate', nested: { value: 20 } },
-    { name: 'nested aggregate', nested: { value: 30 } },
-    { name: 'nested aggregate', nested: { doubleNested: { value: 10 } } },
-    { name: 'nested aggregate', nested: { doubleNested: { value: 20 } } },
-    { name: 'nested aggregate', nested: { doubleNested: { value: 30 } } }
-
+    { name: 'filter', value: 4 }
   ]
 
   const indexes = [
@@ -126,19 +97,8 @@ describe('Queries', function () {
     ['qidxStrMapKeys', 'mks', STRING, MAPKEYS],
     ['qidxGeo', 'g', GEO2DSPHERE],
     ['qidxGeoList', 'lg', GEO2DSPHERE, LIST],
-    ['qidxGeoMap', 'mg', GEO2DSPHERE, MAPVALUES],
-    // CDT context indexes
-    ['qidxNameNested', 'name', STRING, MAPKEYS, new Context().addMapKey('nested')],
-    ['qidxIntListNested', 'li', NUMERIC, LIST, new Context().addMapKey('nested')],
-    ['qidxIntMapNested', 'mi', NUMERIC, MAPVALUES, new Context().addMapKey('nested')],
-    ['qidxStrListNested', 'ls', STRING, LIST, new Context().addMapKey('nested')],
-    ['qidxStrMapNested', 'ms', STRING, MAPVALUES, new Context().addMapKey('nested')],
-    ['qidxStrMapKeysNested', 'mks', STRING, MAPKEYS, new Context().addMapKey('nested')],
-    ['qidxGeoListNested', 'lg', GEO2DSPHERE, LIST, new Context().addMapKey('nested')],
-    ['qidxGeoMapNested', 'mg', GEO2DSPHERE, MAPVALUES, new Context().addMapKey('nested')],
+    ['qidxGeoMap', 'mg', GEO2DSPHERE, MAPVALUES]
 
-    ['qidxAggregateMapNested', 'nested', STRING, MAPKEYS],
-    ['qidxAggregateMapDoubleNested', 'nested', STRING, MAPKEYS, new Context().addMapKey('doubleNested')]
   ]
 
   let keys = []
@@ -191,12 +151,53 @@ describe('Queries', function () {
       indexes.push(['qidxBlobMapNested', 'mblob', BLOB, MAPVALUES, new Context().addMapKey('nested')])
       indexes.push(['qidxBlobMapKeysNested', 'mkblob', BLOB, MAPKEYS, new Context().addMapKey('nested')])
     }
+
+    if (helper.cluster.isVersionInRange('>= 6.1.0')) {
+      samples.push({ name: 'nested int list match', li: { nested: [1, 5, 9] } })
+      samples.push({ name: 'nested int list non-match', li: { nested: [500, 501, 502] } })
+      samples.push({ name: 'nested int map match', mi: { nested: { a: 1, b: 5, c: 9 } } })
+      samples.push({ name: 'nested int map non-match', mi: { nested: { a: 500, b: 501, c: 502 } } })
+      samples.push({ name: 'nested string list match', ls: { nested: ['banana', 'blueberry'] } })
+      samples.push({ name: 'nested string list non-match', ls: { nested: ['tomato', 'cuccumber'] } })
+      samples.push({ name: 'nested string map match', ms: { nested: { a: 'banana', b: 'blueberry' } } })
+      samples.push({ name: 'nested string map non-match', ms: { nested: { a: 'tomato', b: 'cuccumber' } } })
+      samples.push({ name: 'nested string mapkeys match', mks: { nested: { banana: 1, blueberry: 2 } } })
+      samples.push({ name: 'nested string mapkeys non-match', mks: { nested: { tomato: 3, cuccumber: 4 } } })
+      samples.push({ name: 'nested point match', g: { nested: GeoJSON.Point(103.913, 1.308) } })
+      samples.push({ name: 'nested point non-match', g: { nested: GeoJSON.Point(-122.101, 37.421) } })
+      samples.push({ name: 'nested point list match', lg: { nested: [GeoJSON.Point(103.913, 1.308), GeoJSON.Point(105.913, 3.308)] } })
+      samples.push({ name: 'nested point list non-match', lg: { nested: [GeoJSON.Point(-122.101, 37.421), GeoJSON.Point(-120.101, 39.421)] } })
+      samples.push({ name: 'nested point map match', mg: { nested: { a: GeoJSON.Point(103.913, 1.308), b: GeoJSON.Point(105.913, 3.308) } } })
+      samples.push({ name: 'nested point map non-match', mg: { nested: { a: GeoJSON.Point(-122.101, 37.421), b: GeoJSON.Point(-120.101, 39.421) } } })
+      samples.push({ name: 'nested region match', g: { nested: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } })
+      samples.push({ name: 'nested region non-match', g: { nested: GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421]) } })
+      samples.push({ name: 'nested region list match', lg: { nested: [GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308])] } })
+      samples.push({ name: 'nested region list non-match', lg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } })
+      samples.push({ name: 'nested region map match', mg: { nested: { a: GeoJSON.Polygon([102.913, 0.308], [102.913, 2.308], [104.913, 2.308], [104.913, 0.308], [102.913, 0.308]) } } })
+      samples.push({ name: 'nested region map non-match', mg: { nested: [GeoJSON.Polygon([-121.101, 36.421], [-121.101, 38.421], [-123.101, 38.421], [-123.101, 36.421], [-121.101, 36.421])] } })
+      samples.push({ name: 'nested aggregate', nested: { value: 10 } })
+      samples.push({ name: 'nested aggregate', nested: { value: 20 } })
+      samples.push({ name: 'nested aggregate', nested: { value: 30 } })
+      samples.push({ name: 'nested aggregate', nested: { doubleNested: { value: 10 } } })
+      samples.push({ name: 'nested aggregate', nested: { doubleNested: { value: 20 } } })
+      samples.push({ name: 'nested aggregate', nested: { doubleNested: { value: 30 } } })
+
+      indexes.push(['qidxNameNested', 'name', STRING, MAPKEYS, new Context().addMapKey('nested')])
+      indexes.push(['qidxIntListNested', 'li', NUMERIC, LIST, new Context().addMapKey('nested')])
+      indexes.push(['qidxIntMapNested', 'mi', NUMERIC, MAPVALUES, new Context().addMapKey('nested')])
+      indexes.push(['qidxStrListNested', 'ls', STRING, LIST, new Context().addMapKey('nested')])
+      indexes.push(['qidxStrMapNested', 'ms', STRING, MAPVALUES, new Context().addMapKey('nested')])
+      indexes.push(['qidxStrMapKeysNested', 'mks', STRING, MAPKEYS, new Context().addMapKey('nested')])
+      indexes.push(['qidxGeoListNested', 'lg', GEO2DSPHERE, LIST, new Context().addMapKey('nested')])
+      indexes.push(['qidxGeoMapNested', 'mg', GEO2DSPHERE, MAPVALUES, new Context().addMapKey('nested')])
+      indexes.push(['qidxAggregateMapNested', 'nested', STRING, MAPKEYS])
+      indexes.push(['qidxAggregateMapDoubleNested', 'nested', STRING, MAPKEYS, new Context().addMapKey('doubleNested')])
+    }
+
     const numberOfSamples = samples.length
-    console.log("SPOT 1")
     return Promise.all([
       putgen.put(numberOfSamples, generators)
-        .then((records) => { keys = records.map((rec) => rec.key)
-                             console.log("SPOT 2") })
+        .then((records) => { keys = records.map((rec) => rec.key) })
         .then(() => Promise.all(indexes.map(idx =>
           helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], idx[4])))),
       helper.udf.register('udf.lua')
@@ -267,7 +268,7 @@ describe('Queries', function () {
       stream.on('error', error => { throw error })
       stream.on('data', record => results.push(record.bins))
       stream.on('end', () => {
-        expect(results.length).to.be.above(60)
+        expect(results.length).to.be.above(samples.length)
         done()
       })
     })
@@ -286,7 +287,7 @@ describe('Queries', function () {
         recordTotal += recordsReceived
         if (recordsReceived !== maxRecs) {
           expect(query.hasNextPage()).to.equal(false)
-          expect(recordTotal).to.be.above(60)
+          expect(recordTotal).to.be.above(samples.length)
           break
         }
         recordsReceived = 0
@@ -309,19 +310,22 @@ describe('Queries', function () {
       })
     })
 
-    it('should apply a stream UDF to the nested context', function (done) {
-      const args = {
-        filters: [filter.contains('name', 'value', MAPKEYS, new Context().addMapKey('nested'))]
-      }
-      const query = client.query(helper.namespace, testSet, args)
-      query.setUdf('udf', 'even')
-      const stream = query.foreach()
-      const results = []
-      stream.on('error', error => { throw error })
-      stream.on('data', record => results.push(record.bins))
-      stream.on('end', () => {
-        expect(results.sort()).to.eql([])
-        done()
+    describe('index with cdt context', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
+      it('should apply a stream UDF to the nested context', function (done) {
+        const args = {
+          filters: [filter.contains('name', 'value', MAPKEYS, new Context().addMapKey('nested'))]
+        }
+        const query = client.query(helper.namespace, testSet, args)
+        query.setUdf('udf', 'even')
+        const stream = query.foreach()
+        const results = []
+        stream.on('error', error => { throw error })
+        stream.on('data', record => results.push(record.bins))
+        stream.on('end', () => {
+          expect(results.sort()).to.eql([])
+          done()
+        })
       })
     })
 
@@ -416,29 +420,31 @@ describe('Queries', function () {
           recordsReceived = 0
         }
       })
-
-      it('Paginates correctly using query.results() on an index with a cdt context', async function () {
-        let recordTotal = 0
-        let recordsReceived = 0
-        let pageTotal = 0
-        const lastPage = 1
-        const maxRecs = 5
-        const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))] })
-        let results = []
-        while (1) {
-          results = await query.results()
-          recordsReceived += results.length
-          results = []
-          pageTotal += 1
-          recordTotal += recordsReceived
-          if (recordsReceived !== maxRecs) {
-            expect(query.hasNextPage()).to.equal(false)
-            expect(pageTotal).to.equal(lastPage)
-            expect(recordTotal).to.equal(3)
-            break
+      describe('index with cdt context', function () {
+        helper.skipUnlessVersion('>= 6.1.0', this)
+        it('Paginates correctly using query.results() on an index with a cdt context', async function () {
+          let recordTotal = 0
+          let recordsReceived = 0
+          let pageTotal = 0
+          const lastPage = 1
+          const maxRecs = 5
+          const query = client.query(helper.namespace, testSet, { paginate: true, maxRecords: maxRecs, filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))] })
+          let results = []
+          while (1) {
+            results = await query.results()
+            recordsReceived += results.length
+            results = []
+            pageTotal += 1
+            recordTotal += recordsReceived
+            if (recordsReceived !== maxRecs) {
+              expect(query.hasNextPage()).to.equal(false)
+              expect(pageTotal).to.equal(lastPage)
+              expect(recordTotal).to.equal(3)
+              break
+            }
+            recordsReceived = 0
           }
-          recordsReceived = 0
-        }
+        })
       })
 
       it('Throw error when query.UDF is set and query.paginate is true', async function () {
@@ -636,9 +642,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'int list match', done)
         })
 
-        it('should match integers in a list within a range in a nested context', function (done) {
-          const args = { filters: [filter.range('li', 3, 7, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested int list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match integers in a list within a range in a nested context', function (done) {
+            const args = { filters: [filter.range('li', 3, 7, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested int list match', done)
+          })
         })
 
         it('should match integers in a map within a range', function (done) {
@@ -646,9 +655,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'int map match', done)
         })
 
-        it('should match integers in a map within a range in a nested context', function (done) {
-          const args = { filters: [filter.range('mi', 3, 7, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested int map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match integers in a map within a range in a nested context', function (done) {
+            const args = { filters: [filter.range('mi', 3, 7, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested int map match', done)
+          })
         })
       })
 
@@ -658,9 +670,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'int list match', done)
         })
 
-        it('should match lists containing an integer in a nested context', function (done) {
-          const args = { filters: [filter.contains('li', 5, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested int list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match lists containing an integer in a nested context', function (done) {
+            const args = { filters: [filter.contains('li', 5, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested int list match', done)
+          })
         })
 
         it('should match maps containing an integer value', function (done) {
@@ -668,9 +683,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'int map match', done)
         })
 
-        it('should match maps containing an integer value in a nested context', function (done) {
-          const args = { filters: [filter.contains('mi', 5, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested int map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match maps containing an integer value in a nested context', function (done) {
+            const args = { filters: [filter.contains('mi', 5, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested int map match', done)
+          })
         })
 
         it('should match lists containing a string', function (done) {
@@ -678,9 +696,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'string list match', done)
         })
 
-        it('should match lists containing a string in a nested context', function (done) {
-          const args = { filters: [filter.contains('ls', 'banana', LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested string list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match lists containing a string in a nested context', function (done) {
+            const args = { filters: [filter.contains('ls', 'banana', LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested string list match', done)
+          })
         })
 
         it('should match maps containing a string value', function (done) {
@@ -688,9 +709,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'string map match', done)
         })
 
-        it('should match maps containing a string value in a nested context', function (done) {
-          const args = { filters: [filter.contains('ms', 'banana', MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested string map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match maps containing a string value in a nested context', function (done) {
+            const args = { filters: [filter.contains('ms', 'banana', MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested string map match', done)
+          })
         })
 
         it('should match maps containing a string key', function (done) {
@@ -698,10 +722,14 @@ describe('Queries', function () {
           verifyQueryResults(args, 'string mapkeys match', done)
         })
 
-        it('should match maps containing a string key in a nested context', function (done) {
-          const args = { filters: [filter.contains('mks', 'banana', MAPKEYS, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested string mapkeys match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match maps containing a string key in a nested context', function (done) {
+            const args = { filters: [filter.contains('mks', 'banana', MAPKEYS, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested string mapkeys match', done)
+          })
         })
+
         context('Uses blob Secondary indexes', function () {
           helper.skipUnlessVersion('>= 7.0.0', this)
           it('should match lists containing a blob', function (done) {
@@ -753,10 +781,13 @@ describe('Queries', function () {
           verifyQueryResults(args, 'point list match', done)
         })
 
-        it('should match locations in a list within a GeoJSON region in a nested context', function (done) {
-          const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          const args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match locations in a list within a GeoJSON region in a nested context', function (done) {
+            const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
+            const args = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested point list match', done)
+          })
         })
 
         it('should match locations in a map within a GeoJSON region', function (done) {
@@ -764,11 +795,13 @@ describe('Queries', function () {
           const args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
           verifyQueryResults(args, 'point map match', done)
         })
-
-        it('should match locations in a map within a GeoJSON region in a nested context', function (done) {
-          const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          const args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match locations in a map within a GeoJSON region in a nested context', function (done) {
+            const region = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
+            const args = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested point map match', done)
+          })
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
@@ -789,9 +822,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'point list match', done)
         })
 
-        it('should match locations in a list within a radius from another location in a nested context', function (done) {
-          const args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match locations in a list within a radius from another location in a nested context', function (done) {
+            const args = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested point list match', done)
+          })
         })
 
         it('should match locations in a map within a radius from another location', function (done) {
@@ -799,9 +835,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'point map match', done)
         })
 
-        it('should match locations in a map within a radius from another location in a nested context', function (done) {
-          const args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match locations in a map within a radius from another location in a nested context', function (done) {
+            const args = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested point map match', done)
+          })
         })
       })
 
@@ -818,10 +857,13 @@ describe('Queries', function () {
           verifyQueryResults(args, 'region list match', done)
         })
 
-        it('should match regions in a list that contain a GeoJSON point in a nested context', function (done) {
-          const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          const args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match regions in a list that contain a GeoJSON point in a nested context', function (done) {
+            const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+            const args = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested region list match', done)
+          })
         })
 
         it('should match regions in a map that contain a GeoJSON point', function (done) {
@@ -830,10 +872,13 @@ describe('Queries', function () {
           verifyQueryResults(args, 'region map match', done)
         })
 
-        it('should match regions in a map that contain a GeoJSON point in a nested context', function (done) {
-          const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          const args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match regions in a map that contain a GeoJSON point in a nested context', function (done) {
+            const point = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
+            const args = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested region map match', done)
+          })
         })
 
         it('accepts a plain object as GeoJSON', function (done) {
@@ -854,9 +899,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'region list match', done)
         })
 
-        it('should match regions in a list that contain a lng/lat coordinate pair in a nested context', function (done) {
-          const args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region list match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match regions in a list that contain a lng/lat coordinate pair in a nested context', function (done) {
+            const args = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested region list match', done)
+          })
         })
 
         it('should match regions in a map that contain a lng/lat coordinate pair', function (done) {
@@ -864,9 +912,12 @@ describe('Queries', function () {
           verifyQueryResults(args, 'region map match', done)
         })
 
-        it('should match regions in a map that contain a lng/lat coordinate pair in a nested context', function (done) {
-          const args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region map match', done)
+        describe('index with cdt context', function () {
+          helper.skipUnlessVersion('>= 6.1.0', this)
+          it('should match regions in a map that contain a lng/lat coordinate pair in a nested context', function (done) {
+            const args = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested region map match', done)
+          })
         })
       })
     })
@@ -915,28 +966,33 @@ describe('Queries', function () {
         done()
       })
     })
-
-    it('should apply a user defined function and aggregate the results from a map', function (done) {
-      const args = {
-        filters: [filter.contains('nested', 'value', MAPKEYS)]
-      }
-      const query = client.query(helper.namespace, testSet, args)
-      query.apply('udf', 'count', function (error, result) {
-        if (error) throw error
-        expect(result).to.equal(3)
-        done()
+    describe('index with cdt context', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
+      it('should apply a user defined function and aggregate the results from a map', function (done) {
+        const args = {
+          filters: [filter.contains('nested', 'value', MAPKEYS)]
+        }
+        const query = client.query(helper.namespace, testSet, args)
+        query.apply('udf', 'count', function (error, result) {
+          if (error) throw error
+          expect(result).to.equal(3)
+          done()
+        })
       })
     })
 
-    it('should apply a user defined function and aggregate the results from a nested map', function (done) {
-      const args = {
-        filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
-      }
-      const query = client.query(helper.namespace, testSet, args)
-      query.apply('udf', 'count', function (error, result) {
-        if (error) throw error
-        expect(result).to.equal(3)
-        done()
+    describe('index with cdt context', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
+      it('should apply a user defined function and aggregate the results from a nested map', function (done) {
+        const args = {
+          filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
+        }
+        const query = client.query(helper.namespace, testSet, args)
+        query.apply('udf', 'count', function (error, result) {
+          if (error) throw error
+          expect(result).to.equal(3)
+          done()
+        })
       })
     })
 
@@ -987,15 +1043,18 @@ describe('Queries', function () {
           expect(job).to.be.instanceof(Job)
         })
     })
-    it('returns a Promise that resolves to a Job with a filter containing a CDT context', function () {
-      const args = {
-        filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
-      }
-      const query = client.query(helper.namespace, testSet, args)
-      return query.background('udf', 'noop')
-        .then(job => {
-          expect(job).to.be.instanceof(Job)
-        })
+    describe('index with cdt context', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
+      it('returns a Promise that resolves to a Job with a filter containing a CDT context', function () {
+        const args = {
+          filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
+        }
+        const query = client.query(helper.namespace, testSet, args)
+        return query.background('udf', 'noop')
+          .then(job => {
+            expect(job).to.be.instanceof(Job)
+          })
+      })
     })
   })
 

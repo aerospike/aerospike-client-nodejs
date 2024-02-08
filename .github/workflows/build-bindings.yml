@@ -9,7 +9,7 @@ on:
   push:
     branches: ["stage", "master"]
   pull_request:
-    branches: ["stage"]
+    branches: ["stage", "master"]
     types: [
       # Default triggers
       opened,
@@ -86,15 +86,15 @@ on:
 
 jobs:
   manylinux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         # nodejs versions to build bindings on
         nodejs: [
-          "v108",
-          "v115",
-          "v120"
+          ["v108", 18],
+          ["v115", 20],
+          ["v120", 21]
         ]
         platform: [
           "x86_64",
@@ -102,22 +102,31 @@ jobs:
         ]
 
     steps:
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
-        context: "Build bindings (${{ matrix.nodejs }}-manylinux_${{ matrix.platform }})"
+        context: "Build bindings (${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }})"
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
 
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs[1] }}
+        architecture: 'x64'
+
+    - name: print
+      run: uname -m 
+
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
       with:
-        platforms: arm64
+        platforms: all
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
@@ -146,21 +155,35 @@ jobs:
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
+    - uses: uraimo/run-on-arch-action@v2
+      name: Build client arm
+      if: ${{ matrix.platform == 'aarch64' }}
+      id: runcmd
+      with:
+        arch: aarch64
+        distro: ubuntu22.04
 
-    - run: sudo apt update
-    - name: Install build dependencies (C Client dependency packages)
-      run: sudo apt install g++ libssl-dev zlib1g-dev;
-    - name: Install build dependencies (make)
-      run: sudo apt-get install -y make;
-    - name: Install build dependencies (make)
-      run: sudo apt install build-essential;
+        # Set an output parameter `uname` for use in subsequent steps
+        run: |
+          apt update
+          apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl
+          ./scripts/build-c-client.sh
+          wget https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;
+          source ~/.bashrc;
+          nvm i 20
+          npm install
 
-    - name: Build client
+    - name: Build client x64
+      if: ${{ matrix.platform != 'aarch64' }}
       run: |
+        sudo apt update
+        sudo apt install g++ libssl-dev zlib1g-dev;
+        sudo apt-get install -y make;
+        sudo apt install build-essential;
         ./scripts/build-c-client.sh
         npm install
       env:
-        CFLAGS: '-Werror'
+        CFLAGS: '-Werror' 
 
     - name: Test client
       run: |
@@ -169,7 +192,7 @@ jobs:
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.nodejs }}-manylinux_${{ matrix.platform }}.build}
+        name: ${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }}.build
         path: ./lib/binding/node-*-linux-*/
 
     - name: Set final commit status
@@ -178,7 +201,7 @@ jobs:
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
-        context: "Build bindings (${{ matrix.nodejs }}-manylinux_${{ matrix.platform }})"
+        context: "Build bindings (${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }})"
 
   macOS-x86:
     strategy:
@@ -189,7 +212,7 @@ jobs:
           "v115",
           "v120"
         ]
-    runs-on: macos-12-large
+    runs-on: macos-latest
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -255,124 +278,254 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build bindings (${{ matrix.nodejs }}-macosx_x86_64)"
 
-  macOS-m1:
-    runs-on: [
-      self-hosted,
-      macOS,
-      ARM64
-    ]
-    strategy:
-      matrix:
-        nodejs-version: [
-          ["v108", "18"],
-          ["v115", "20"],
-          ["v120", "21"],
-        ]
-      fail-fast: false
-    steps:
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      with:
-        sha: ${{ github.sha }}
-        context: "Build bindings (${{ matrix.nodejs-version[1] }}-macosx_arm64)"
+#  macOS-m1:
+#    runs-on: [
+#      self-hosted,
+#      macOS,
+#      ARM64
+#    ]
+#    strategy:
+#      matrix:
+#        nodejs-version: [
+#          ["v108", "18"],
+#          ["v115", "20"],
+#          ["v120", "21"],
+#        ]
+#      fail-fast: false
+#    steps:
+#    - name: Show job status for commit
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      with:
+#        sha: ${{ github.sha }}
+#        context: "Build bindings (${{ matrix.nodejs-version[1] }}-macosx_arm64)"
+#
+#    - uses: actions/checkout@v4
+#      with:
+#        submodules: recursive
+#        ref: ${{ inputs.commit_sha }}
+#
+#    - name: Install NVM
+#      run: |
+#        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+#        source ~/.zshrc
+#        nvm -v
+#        nvm install ${{ matrix.nodejs-version[1] }}
+#
+#
+#    - name: Setup symlink folders
+#      run: |
+#        sudo rm -rf /usr/local/opt/openssl;
+#        sudo rm -rf /usr/local/opt/libuv;
+#        sudo mkdir -p /usr/local/opt;
+#        sudo chown -R $(whoami) /usr/local/opt
+#
+#    - name: Install brew packages
+#      run: |
+#        brew install openssl@3.2.1
+#        brew install libuv@1.47.0
+#
+#    - name: Set environment  for building
+#      run: |
+#        echo "export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
+#        export LDFLAGS="-L/usr/local/opt/openssl/lib"
+#        export CPPFLAGS="-I/usr/local/opt/openssl/include"
+#        export EXT_CFLAGS="-I/usr/local/opt/openssl/include"" >> ~/.zshrc;
+#        source ~/.zshrc;
+#
+#    - name: Setup symlink folders
+#      run: |
+#        sudo ln -s /usr/local/Cellar/libuv/1.47.0/ /usr/local/opt/libuv;
+#        sudo ln -s /usr/local/Cellar/openssl@3/3.2.1/ /usr/local/opt/openssl;
+#
+#    # Self-hosted runner only
+#    # Need to be able to save Docker Hub credentials to keychain
+#    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#      if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#
+#    - if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#    - name: Use server rc
+#      if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#      run: echo IMAGE_NAME="${{ vars.SERVER_RC_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
+#
+#    - name: Use server release
+#      if: ${{ inputs.run_tests && !inputs.use-server-rc }}
+#      run: echo IMAGE_NAME="${{ vars.SERVER_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
+#
+#    - name: Run server
+#      if: ${{ inputs.run_tests }}
+#      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+#
+#    - name: Build client
+#      run: |
+#        ./scripts/build-c-client.sh
+#        npm install
+#      env:
+#        CFLAGS: '-Werror'
+#
+#    - name: Enable tests
+#      if: ${{ inputs.run_tests }}
+#      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+#
+#    - name: Disable tests (only run basic import test)
+#      if: ${{ !inputs.run_tests }}
+#      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
+#
+#
+#    - name: Test client
+#      run: |
+#        ${{ env.TEST_COMMAND }}
+#
+#    - name: Save macOS wheel
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ${{ matrix.nodejs-version[0] }}-macosx_arm64.build
+#        path: ./lib/binding/*/
+#
+#    - name: Stop server
+#      if: ${{ always() && inputs.run_tests }}
+#      run: |
+#        docker container stop aerospike
+#        docker container prune -f
+#
+#    - name: Set final commit status
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: always()
+#      with:
+#        sha: ${{ github.sha }}
+#        status: ${{ job.status }}
+#        context: "Build bindings (${{ matrix.nodejs-version[0] }}-macosx_arm64)"
 
-    - uses: actions/checkout@v4
+  test-npm-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
       with:
         submodules: recursive
-        ref: ${{ inputs.commit_sha }}
 
-    - name: Install NVM
-      run: |
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        source ~/.zshrc
-        nvm -v
-        nvm install ${{ matrix.nodejs-version[1] }}
+    - uses: ./.github/workflows/combine-bindings/
 
-
-    - name: Setup symlink folders
-      run: |
-        sudo rm -rf /usr/local/opt/openssl;
-        sudo rm -rf /usr/local/opt/libuv;
-        sudo mkdir -p /usr/local/opt;
-        sudo chown -R $(whoami) /usr/local/opt
-
-    - name: Install brew packages
-      run: |
-        brew install openssl@3.2.1
-        brew install libuv@1.47.0
-
-    - name: Set environment  for building
-      run: |
-        echo "export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
-        export LDFLAGS="-L/usr/local/opt/openssl/lib"
-        export CPPFLAGS="-I/usr/local/opt/openssl/include"
-        export EXT_CFLAGS="-I/usr/local/opt/openssl/include"" >> ~/.zshrc;
-        source ~/.zshrc;
-
-    - name: Setup symlink folders
-      run: |
-        sudo ln -s /usr/local/Cellar/libuv/1.47.0/ /usr/local/opt/libuv;
-        sudo ln -s /usr/local/Cellar/openssl@3/3.2.1/ /usr/local/opt/openssl;
-
-    # Self-hosted runner only
-    # Need to be able to save Docker Hub credentials to keychain
-    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-      if: ${{ inputs.run_tests && inputs.use-server-rc }}
-
-    - if: ${{ inputs.run_tests && inputs.use-server-rc }}
-      uses: docker/login-action@v3
+    - uses: actions/setup-node@v4
       with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
 
-    - name: Use server rc
-      if: ${{ inputs.run_tests && inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_RC_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Use server release
-      if: ${{ inputs.run_tests && !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Run server
-      if: ${{ inputs.run_tests }}
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
-
-    - name: Build client
+    - name: Modify the package.json
       run: |
-        ./scripts/build-c-client.sh
-        npm install
-      env:
-        CFLAGS: '-Werror'
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
-    - name: Enable tests
-      if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
-
-    - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
-
-
-    - name: Test client
+    - name: Run tests
       run: |
-        ${{ env.TEST_COMMAND }}
+        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        cd testDir
+        npm install ..
 
-    - name: Save macOS wheel
-      uses: actions/upload-artifact@v4
+  test-yarn-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
       with:
-        name: ${{ matrix.nodejs-version[0] }}-macosx_arm64.build
-        path: ./lib/binding/*/
+        submodules: recursive
 
-    - name: Stop server
-      if: ${{ always() && inputs.run_tests }}
-      run: |
-        docker container stop aerospike
-        docker container prune -f
+    - uses: ./.github/workflows/combine-bindings/
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+    - uses: actions/setup-node@v4
       with:
-        sha: ${{ github.sha }}
-        status: ${{ job.status }}
-        context: "Build bindings (${{ matrix.nodejs-version[0] }}-macosx_arm64)"
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        cd testDir
+        yarn install ..
+
+  test-pnpm-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        cd testDir
+        pnpm install ..
+
+  test-bun-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        cd testDir
+        bun install ..
+
+  test-bun-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        cd testDir
+        bun install ..

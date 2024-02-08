@@ -297,7 +297,6 @@ describe('client.operate() - CDT Map operations', function () {
     })
 
     it('adds each item from the Map class to the map and returns the size of the map', function () {
-      console.log(maps.putItems('map', new Map([['e', 150], ['d', 100], ['c', 99]])))
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.putItems('map', new Map([['e', 150], ['d', 100], ['c', 99]]))))
@@ -1554,7 +1553,8 @@ describe('client.operate() - CDT Map operations', function () {
         .then(assertResultEql({ map: ['a', 1, 'b', 2] }))
         .then(cleanup())
     })
-    context('Need Server 6.1+', function () {
+
+    context('returnType.EXISTS', function () {
       helper.skipUnlessVersion('>= 6.1.0', this)
       it('returns true or false for a single key read', function () {
         return initState()
@@ -1565,7 +1565,7 @@ describe('client.operate() - CDT Map operations', function () {
           .then(cleanup())
       })
 
-      it('returns true if any values exisst', function () {
+      it('returns true if any values exist', function () {
         return initState()
           .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
           .then(orderByKey('map'))
@@ -1575,7 +1575,7 @@ describe('client.operate() - CDT Map operations', function () {
       })
     })
 
-    context('Need Server 6.3+', function () {
+    context('returnType.ORDERED_MAP', function () {
       helper.skipUnlessVersion('>= 6.3.0', this)
       it('returns key/value for a single read', function () {
         return initState()
@@ -1594,7 +1594,10 @@ describe('client.operate() - CDT Map operations', function () {
           .then(assertResultEql({ map: { a: 1, b: 2 } }))
           .then(cleanup())
       })
+    })
 
+    context('returnType.UNORDERED_MAP', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       it('returns key/value for a single read', function () {
         return initState()
           .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
