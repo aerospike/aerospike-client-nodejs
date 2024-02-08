@@ -504,32 +504,6 @@ jobs:
         cd testDir
         bun install ..
 
-  test-bun-install:
-    runs-on: ubuntu-latest
-    needs: [manylinux, macOS-x86]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: ./.github/workflows/combine-bindings/
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
-        architecture: 'x64'
-
-    - name: Modify the package.json
-      run: |
-        npm install -g json
-        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-
-    - name: Run tests
-      run: |
-        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
-        cd testDir
-        bun install ..
-
   test-typescript-install:
     runs-on: ubuntu-latest
     needs: [manylinux, macOS-x86]
