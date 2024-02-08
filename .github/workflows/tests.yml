@@ -397,7 +397,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         architecture: 'x64'
 
-   - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v4
       with:
         name: binding-${{ matrix.node-version }}
 
@@ -405,10 +405,9 @@ jobs:
       run: mkdir lib/binding
 
     - name: Install client
-      #fix the convention here
       run: |
         cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
-        
+
     - name: Modify the package.json
       run: |
         mkdir my-aerospike-project
@@ -419,9 +418,3 @@ jobs:
         cp ../examples/typescript.ts
         npx tsc index.ts
         node index.js
-
-    - name: Run tests
-      run: |
-        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
-        cd testDir
-        bun install ..
