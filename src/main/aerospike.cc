@@ -67,6 +67,7 @@ NAN_METHOD(release_as_event_loop)
 {
 	Nan::HandleScope();
 	as_event_close_loops();
+	as_event_destroy_loops();
 }
 
 NAN_METHOD(ref_as_event_loop)
