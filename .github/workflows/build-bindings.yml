@@ -208,9 +208,9 @@ jobs:
       fail-fast: false
       matrix:
         nodejs: [
-          "v108",
-          "v115",
-          "v120"
+          ["v108", 18],
+          ["v115", 20],
+          ["v120", 21]
         ]
     runs-on: macos-latest
     steps:
@@ -218,12 +218,17 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
-        context: "Build bindings (${{ matrix.nodejs }}-macosx_x86_64)"
+        context: "Build bindings (${{ matrix.nodejs[0] }}-macosx_x86_64)"
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs[1] }}
+        architecture: 'x64'
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -267,7 +272,7 @@ jobs:
     - name: Save macOS binding
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.nodejs }}-macosx_x86_64.build
+        name: ${{ matrix.nodejs[0] }}-macosx_x86_64.build
         path: ./lib/binding/*/
 
     - name: Set final commit status
@@ -276,7 +281,7 @@ jobs:
       with:
         status: ${{ job.status }}
         sha: ${{ github.sha }}
-        context: "Build bindings (${{ matrix.nodejs }}-macosx_x86_64)"
+        context: "Build bindings (${{ matrix.nodejs[0] }}-macosx_x86_64)"
 
 #  macOS-m1:
 #    runs-on: [
