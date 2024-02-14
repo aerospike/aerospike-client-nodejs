@@ -245,7 +245,7 @@ jobs:
 
     - name: Start Docker Engine
       if: ${{ inputs.run_tests }}
-      run: colima star
+      run: colima start
 
     - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       uses: docker/login-action@v3
