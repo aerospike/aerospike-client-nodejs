@@ -31,5 +31,6 @@ Local<Object> ttl_enum_values()
 	set(obj, "NAMESPACE_DEFAULT", TTL_NAMESPACE_DEFAULT);
 	set(obj, "NEVER_EXPIRE", TTL_NEVER_EXPIRE);
 	set(obj, "DONT_UPDATE", TTL_DONT_UPDATE);
+	set(obj, "CLIENT_DEFAULT", TTL_CLIENT_DEFAULT);
 	return scope.Escape(obj);
 }

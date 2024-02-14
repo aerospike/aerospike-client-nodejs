@@ -32,6 +32,7 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const putgen = helper.putgen
 const valgen = helper.valgen
+const options = require('./util/options')
 
 const Key = Aerospike.Key
 
@@ -39,7 +40,7 @@ describe('client.batchWrite()', function () {
   const client = helper.client
 
   before(function () {
-    const nrecords = 17
+    const nrecords = 20
     const generators = {
       keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_write/', random: false }),
       recgen: recgen.record({
@@ -506,6 +507,61 @@ describe('client.batchWrite()', function () {
         })
         .then((results) => {
           expect(results[0].status).to.equal(status.OK)
+        })
+    })
+  })
+
+  context('with BatchParentPolicy', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('returns list and map bins as byte buffers', async function () {
+      const batch = [{
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/18'),
+        readAllBins: true
+      }]
+
+      const config = {
+        hosts: options.host + ':' + options.port,
+        policies: {
+          batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
+        }
+      }
+
+      const dummyClient = await Aerospike.connect(config)
+      const results = await dummyClient.batchWrite(batch)
+      const bins = results[0].record.bins
+      expect(bins.i).to.be.a('number')
+      expect(bins.s).to.be.a('string')
+      expect(bins.l).to.be.instanceof(Buffer)
+      expect(bins.m).to.be.instanceof(Buffer)
+      await dummyClient.close()
+    })
+  })
+
+  context('with BatchWritePolicy ttl', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('writes value with correct ttl', async function () {
+      const batch = [{
+        type: batchType.BATCH_WRITE,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/19'),
+        ops: [
+          op.write('example', 35),
+          op.write('blob', [4, 14, 28])
+        ],
+        policy: new Aerospike.BatchWritePolicy({
+          exists: Aerospike.policy.exists.REPLACE,
+          ttl: 1367
+        })
+      }]
+      await client.batchWrite(batch)
+      return client.get(new Key(helper.namespace, helper.set, 'test/batch_write/19'))
+        .then(results => {
+          const bins = results.bins
+          expect(bins.example).to.be.a('number')
+          expect(bins.blob).to.be.a('array')
+          expect(results.ttl).to.equal(1367)
         })
     })
   })

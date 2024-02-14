@@ -257,6 +257,26 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 			}
 		}
 
+		policy_val = Nan::Get(policies_obj, Nan::New("batchWrite").ToLocalChecked())
+						 .ToLocalChecked();
+		if (policy_val->IsObject()) {
+			if ((rc = batchwrite_policy_from_jsobject(&policies->batch_write,
+												policy_val.As<Object>(),
+												log)) != AS_NODE_PARAM_OK) {
+				goto Cleanup;
+			}
+		}
+
+		policy_val = Nan::Get(policies_obj, Nan::New("batchParentWrite").ToLocalChecked())
+						 .ToLocalChecked();
+		if (policy_val->IsObject()) {
+			if ((rc = batchpolicy_from_jsobject(&policies->batch_parent_write,
+												policy_val.As<Object>(),
+												log)) != AS_NODE_PARAM_OK) {
+				goto Cleanup;
+			}
+		}
+
 		policy_val = Nan::Get(policies_obj, Nan::New("info").ToLocalChecked())
 						 .ToLocalChecked();
 		if (policy_val->IsObject()) {
