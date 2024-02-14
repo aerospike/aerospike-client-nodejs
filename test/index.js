@@ -210,8 +210,8 @@ context('secondary indexes', function () {
   })
 
   describe('Client#indexRemove()', async function () {
-    beforeEach(() => {
-      helper.index.create(testIndex.name, helper.set, testIndex.bin,
+    beforeEach(async () => {
+      await helper.index.create(testIndex.name, helper.set, testIndex.bin,
         Aerospike.indexDataType.STRING, Aerospike.indexType.DEFAULT)
     })
 
@@ -240,8 +240,8 @@ context('secondary indexes', function () {
       }
     })
 
-    it('should return a Promise if called without callback function', function () {
-      return client.indexRemove(helper.namespace, testIndex.name)
+    it('should return a Promise if called without callback function', async function () {
+      return await client.indexRemove(helper.namespace, testIndex.name)
     })
   })
 })

@@ -1167,6 +1167,7 @@ describe('client.operate() - CDT List operations', function () {
     })
 
     context('returnType=EXISTS', function () {
+      helper.skipUnlessVersion('>= 6.1.0', this)
       it('fetches all items with the specified values and returns the indexes', function () {
         return initState()
           .then(createRecord({ list: [1, 2, 3, 1, 2, 3] }))

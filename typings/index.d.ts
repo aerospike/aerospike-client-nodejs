@@ -285,11 +285,6 @@ declare module 'commands/batch_command' {
   export = _exports;
 
 }
-declare module 'commands/command' {
-  const _exports: Class;
-  export = _exports;
-
-}
 declare module 'commands/connect_command' {
   function _exports(asCommand: any): {
       new (client: any, callback: any): {
@@ -564,7 +559,7 @@ declare module 'commands/query_background_command' {
       };
   };
   export = _exports;
-  import Job = require(".job");
+  import Job = require("job");
 
 }
 declare module 'commands/read_record_command' {
@@ -972,20 +967,18 @@ declare module 'exp' {
       describe: (bin: any) => any;
       mayContain: (bin: any, list: any) => any;
   };
-  export const expReadFlags {
-      const DEFAULT: 0;
-      const EVAL_NO_FAIL: 16;
+  export const expReadFlags: {
+      DEFAULT: 0;
+      EVAL_NO_FAIL: 16;
   }
-  export type expReadFlags = number;
-  export const expWriteFlags {
-      const DEFAULT: 0;
-      const CREATE_ONLY: 1;
-      const UPDATE_ONLY: 2;
-      const ALLOW_DELETE: 4;
-      const POLICY_NO_FAIL: 8;
-      const EVAL_NO_FAIL: 16;
+  export const expWriteFlags: {
+      DEFAULT: 0;
+      CREATE_ONLY: 1;
+      UPDATE_ONLY: 2;
+      ALLOW_DELETE: 4;
+      POLICY_NO_FAIL: 8;
+      EVAL_NO_FAIL: 16;
   }
-  export type expWriteFlags = number;
   function _val(value: any): {
       [x: number]: any;
       op: any;
@@ -1104,8 +1097,8 @@ declare module 'exp_maps' {
 
 }
 declare module 'exp_operations' {
-  export function read(bin: string, exp: AerospikeExp, flags: expReadFlags): Operation;
-  export function write(bin: string, exp: AerospikeExp, flags: expWriteFlags): Operation;
+  export function read(bin: string, exp: AerospikeExp, flags: number): Operation;
+  export function write(bin: string, exp: AerospikeExp, flags: number): Operation;
   export class ExpOperation {
       protected constructor();
       op: any;
@@ -1851,6 +1844,9 @@ type QueryaggregationResultCallback = () => any;
 type AerospikeExp = object;
 type ApplyPolicy = object;
 type BatchPolicy = object;
+type BatchApplyPolicy = object;
+type BatchRemovePolicy = object;
+type BatchWritePolicy = object;
 type InfoPolicy = object;
 type OperatePolicy = object;
 type ReadPolicy = object;
@@ -1860,10 +1856,14 @@ type QueryPolicy = object;
 type WritePolicy = object;
 type BitwisePolicy = object;
 type MapPolicy = object;
+type ListPolicy = object;
 type CommandQueuePolicy = object;
 type Policies = {
     apply: ApplyPolicy;
     batch: BatchPolicy;
+    batchApply: BatchApplyPolicy;
+    batchRemove: BatchRemovePolicy;
+    batchWrite: BatchWritePolicy;
     info: InfoPolicy;
     operate: OperatePolicy;
     read: ReadPolicy;
