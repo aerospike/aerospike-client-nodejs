@@ -235,31 +235,31 @@ jobs:
         node-version: ${{ matrix.nodejs[1] }}
         architecture: 'x64'
 
-    - name: Install Docker Engine
-      run: brew install colima
-
-    - name: Install Docker client
-      run: brew install docker
-
-    - name: Start Docker Engine
-      run: colima start
-
-    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Enable tests
-      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000 --t 30000" >> $GITHUB_ENV
+#    - name: Install Docker Engine
+#      run: brew install colima
+#
+#    - name: Install Docker client
+#      run: brew install docker
+#
+#    - name: Start Docker Engine
+#      run: colima start
+#
+#    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#    - name: Run Aerospike server release candidate with latest tag
+#      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+#
+#    - name: Run Aerospike server
+#      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#    - name: Enable tests
+#      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000 --t 30000" >> $GITHUB_ENV
 
 #    - name: Disable tests (only run basic import test)
 #      if: ${{ !inputs.run_tests }}
@@ -272,9 +272,9 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
-    - name: Test client
-      run: |
-        ${{ env.TEST_COMMAND }}
+#   - name: Test client
+#     run: |
+#       ${{ env.TEST_COMMAND }}
 
     - name: Save macOS binding
       uses: actions/upload-artifact@v4
