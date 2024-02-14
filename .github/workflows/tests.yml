@@ -403,6 +403,20 @@ jobs:
       run: |
         cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
 
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      
     - name: Modify the package.json
       run: |
         mkdir my-aerospike-project
