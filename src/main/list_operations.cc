@@ -1032,6 +1032,29 @@ bool add_list_increment_op(as_operations *ops, const char *bin,
 	return true;
 }
 
+bool add_list_create_op(as_operations *ops, const char *bin,
+						   as_cdt_ctx *context, Local<Object> op, LogInfo *log)
+{
+	as_list_order order;
+	if (get_uint32_property((uint32_t*)&order, op, "order", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	bool pad;
+	if (get_bool_property(&pad, op, "pad", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	bool persist_index;
+	if (get_bool_property(&persist_index, op, "persistIndex", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	as_v8_debug(log, "order=%i, pad=%s, persist_index=%s", order, pad ? "true" : "false", persist_index ? "true" : "false");
+	as_operations_list_create_all(ops, bin, context, order, pad, persist_index);
+	return true;
+}
+
 bool add_list_size_op(as_operations *ops, const char *bin, as_cdt_ctx *context,
 					  Local<Object> obj, LogInfo *log)
 {
@@ -1084,7 +1107,8 @@ const ops_table_entry ops_table[] = {
 	{"LIST_GET_BY_RANK", add_list_get_by_rank_op},
 	{"LIST_GET_BY_RANK_RANGE", add_list_get_by_rank_range_op},
 	{"LIST_INCREMENT", add_list_increment_op},
-	{"LIST_SIZE", add_list_size_op}};
+	{"LIST_SIZE", add_list_size_op},
+	{"LIST_CREATE", add_list_create_op}};
 
 int add_list_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 				LogInfo *log)

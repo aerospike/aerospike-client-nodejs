@@ -841,6 +841,69 @@ describe('client.operate() - CDT List operations', function () {
     })
   })
 
+  describe('lists.create', function () {
+    it('creates a new list', function () {
+      return initState()
+        .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+        .then(operate(lists.create('emptyList', lists.order.ORDERED)))
+        .then(assertRecordEql({ list: [1, 2, 3, 4, 5], emptyList: [] }))
+        .then(cleanup)
+    })
+
+    it('creates a new list with persist index true', function () {
+      return initState()
+        .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+        .then(operate(lists.create('emptyList', lists.order.ORDERED, false, true)))
+        .then(assertRecordEql({ list: [1, 2, 3, 4, 5], emptyList: [] }))
+        .then(cleanup)
+    })
+
+
+    it('creates a new list with persist index true and pad true', function () {
+      return initState()
+        .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+        .then(operate(lists.create('emptyList', lists.order.ORDERED, true, true)))
+        .then(assertRecordEql({ list: [1, 2, 3, 4, 5], emptyList: [] }))
+        .then(cleanup)
+    })
+
+    it('creates a new list with pad true', function () {
+      return initState()
+        .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+        .then(operate(lists.create('emptyList', lists.order.ORDERED, true, false)))
+        .then(assertRecordEql({ list: [1, 2, 3, 4, 5], emptyList: [] }))
+        .then(cleanup)
+    })
+
+    context('with nested list context', function () {
+      helper.skipUnlessVersion('>= 4.6.0', this)
+
+      it('creates a new list within a map', function () {
+        return initState()
+          .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
+          .then(operate(lists.create('map', lists.order.ORDERED).withContext(ctx => ctx.addMapKeyCreate('nested'))))
+          .then(assertRecordEql({ map: { c: 1, b: 2, a: 3, nested: []} }))
+          .then(cleanup)
+      })
+
+      it('creates a new list within a list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.create('list', lists.order.UNORDERED, true, false).withContext(ctx => ctx.addListIndex(10))))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5, null, null, null, null, null, []] }))
+          .then(cleanup)
+      })
+
+      it('creates a new list within a list', function () {
+        return initState()
+          .then(createRecord({ list: [1, 2, 3, 4, 5] }))
+          .then(operate(lists.create('list', lists.order.UNORDERED, true, true).withContext(ctx => ctx.addListIndex(10))))
+          .then(assertRecordEql({ list: [1, 2, 3, 4, 5, null, null, null, null, null, []] }))
+          .then(cleanup)
+      })
+    })
+  })
+
   describe('lists.set', function () {
     it('sets the item at the specified index', function () {
       return initState()

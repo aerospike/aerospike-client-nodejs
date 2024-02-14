@@ -450,6 +450,11 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->ttl, NULL, obj,
+										 "ttl", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
 		AS_NODE_PARAM_OK) {
