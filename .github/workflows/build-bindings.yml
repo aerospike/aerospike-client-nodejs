@@ -450,7 +450,8 @@ jobs:
       run: |
         mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
         cd testDir
-        yarn install ..
+        npm install --global yarn
+        yarn add ..
 
   test-pnpm-install:
     runs-on: ubuntu-latest
@@ -476,6 +477,8 @@ jobs:
       run: |
         mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
         cd testDir
+        apt install wget
+        wget -qO- https://get.pnpm.io/install.sh | sh -
         pnpm install ..
 
   test-bun-install:
@@ -502,6 +505,7 @@ jobs:
       run: |
         mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
         cd testDir
+        npm install -g bun 
         bun install ..
 
   test-typescript-install:
