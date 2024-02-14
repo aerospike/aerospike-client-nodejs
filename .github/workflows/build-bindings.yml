@@ -128,12 +128,13 @@ jobs:
       with:
         platforms: all
 
-    - uses: ./.github/actions/run-ee-server
+    - name: Run ee server
+      uses: ./aerospike-client-python/.github/actions/run-ee-server/
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -239,12 +240,13 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: colima start
 
-    - uses: ./.github/actions/run-ee-server
+    - name: Run ee server
+      uses: ./aerospike-client-python/.github/actions/run-ee-server/
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
 
     - name: Enable tests
       run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV

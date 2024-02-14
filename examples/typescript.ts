@@ -1,12 +1,11 @@
 import * as Aerospike from 'aerospike';
 
 (async function () {
-  let client: Aerospike.Client | undefined;
-
+  let client = null;
   try {
-    client = await Aerospike.connect();
+    let client = await Aerospike.connect();
     const key = new Aerospike.Key('test', 'test', 'abcd');
-    const bins: Record<string, any> = {
+    const bins = {
       name: 'Norma',
       age: 31
     };
@@ -19,8 +18,6 @@ import * as Aerospike from 'aerospike';
     console.error('Error:', error);
     process.exit(1);
   } finally {
-    if (client) {
-      await client.close();
-    }
+    if (client) client.close();
   }
 })();
