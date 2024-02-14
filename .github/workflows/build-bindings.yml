@@ -236,15 +236,12 @@ jobs:
         architecture: 'x64'
 
     - name: Install Docker Engine
-      if: ${{ inputs.run_tests }}
       run: brew install colima
 
     - name: Install Docker client
-      if: ${{ inputs.run_tests }}
       run: brew install docker
 
     - name: Start Docker Engine
-      if: ${{ inputs.run_tests }}
       run: colima start
 
     - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
