@@ -526,7 +526,7 @@ jobs:
         npm init -y
         npm install typescript ts-node --save-dev
         npm install aerospike
-        cp ../examples/typescript.ts
+        cp ../examples/typescript.ts index.ts
         npx tsc index.ts
         node index.js
 
