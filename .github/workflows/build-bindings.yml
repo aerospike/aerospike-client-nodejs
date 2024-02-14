@@ -463,7 +463,7 @@ jobs:
         mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
         cd testDir
         npm install --global yarn
-        yarn add ..
+        yarn add file:..
 
   test-pnpm-install:
     runs-on: ubuntu-latest
@@ -487,9 +487,9 @@ jobs:
 
     - name: Run tests
       run: |
-        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        mkdir -p testDir 
         cd testDir
-        apt install wget
+        sudo apt install wget
         wget -qO- https://get.pnpm.io/install.sh | sh -
         pnpm install ..
 
@@ -515,10 +515,11 @@ jobs:
 
     - name: Run tests
       run: |
-        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
+        npm install -g bun
+        bun link       
+        mkdir -p testDir 
         cd testDir
-        npm install -g bun 
-        bun install ..
+        bun link aerospike
 
   test-typescript-install:
     runs-on: ubuntu-latest
@@ -537,6 +538,11 @@ jobs:
 
     - name: Modify the package.json
       run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+        
+    - name: Run tests
+      run: |
         mkdir my-aerospike-project
         cd my-aerospike-project
         npm init -y
@@ -545,11 +551,5 @@ jobs:
         cp ../examples/typescript.ts index.ts
         npx tsc index.ts
         node index.js
-
-    - name: Run tests
-      run: |
-        mkdir -p testDir lib/binding/openssl@3/ lib/binding/openssl@1/
-        cd testDir
-        bun install ..
 
 
