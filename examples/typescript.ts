@@ -3,7 +3,7 @@ import * as Aerospike from 'aerospike';
 (async function () {
   let client = null;
   try {
-    let client = await Aerospike.connect();
+    client = await Aerospike.connect();
     const key = new Aerospike.Key('test', 'test', 'abcd');
     const bins = {
       name: 'Norma',
