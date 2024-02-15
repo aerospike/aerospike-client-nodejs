@@ -34,7 +34,6 @@ const metagen = helper.metagen
 const recgen = helper.recgen
 const putgen = helper.putgen
 const valgen = helper.valgen
-const options = require('./util/options')
 
 const Key = Aerospike.Key
 
