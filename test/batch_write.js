@@ -513,7 +513,7 @@ describe('client.batchWrite()', function () {
     })
   })
 
-  context('with BatchParentPolicy', function () {
+  context('with BatchParentWritePolicy', function () {
     helper.skipUnlessVersion('>= 6.0.0', this)
     this.timeout(10000)
     it('returns list and map bins as byte buffers', async function () {
@@ -523,8 +523,10 @@ describe('client.batchWrite()', function () {
         readAllBins: true
       }]
 
+      console.log(options.host + ':' + options.port)
+      console.log(helper.config.hosts)
       const config = {
-        hosts: options.host + ':' + options.port,
+        hosts: helper.config.hosts,
         policies: {
           batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
         }
