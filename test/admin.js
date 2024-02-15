@@ -20,7 +20,6 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const options = require('./util/options')
 
 function getRandomInt (max) {
   return Math.floor(Math.random() * max)
@@ -479,7 +478,7 @@ context('admin commands', async function () {
         user: username2,
         password: 'password250'
       }
-      
+
       const dummyClient = await Aerospike.connect(config)
       return dummyClient.close()
     })
