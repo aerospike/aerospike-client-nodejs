@@ -490,9 +490,9 @@ jobs:
       run: |
         mkdir -p testDir 
         cd testDir
-        sudo apt install wget
-        wget -qO- https://get.pnpm.io/install.sh | sh -
-        export SHELL=/bin/sh
+        npm install --global pnpm 
+        SHELL=bash pnpm setup 
+        source /root/.bashrc
         pnpm install ..
 
   test-bun-install:
@@ -538,6 +538,21 @@ jobs:
         node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
         architecture: 'x64'
 
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      
     - name: Modify the package.json
       run: |
         npm install -g json
@@ -553,5 +568,6 @@ jobs:
         cp ../examples/typescript.ts index.ts
         npx tsc index.ts
         node index.js
+
 
 
