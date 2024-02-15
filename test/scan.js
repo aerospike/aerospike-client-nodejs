@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, describe, it, before, after, context */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Scan = require('../lib/scan')
@@ -70,9 +71,9 @@ context('Scans', function () {
       expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal(helper.namespace)
       expect(scan.set).to.equal('demo')
-      expect(scan.concurrent).to.be.true()
+      expect(scan.concurrent).to.be.true
       expect(scan.selected).to.eql(['a', 'b', 'c'])
-      expect(scan.nobins).to.be.false()
+      expect(scan.nobins).to.be.false
     })
 
     it('creates a scan without specifying the set', function () {
@@ -80,7 +81,7 @@ context('Scans', function () {
       const scan = client.scan(namespace, { select: ['i'] })
       expect(scan).to.be.instanceof(Scan)
       expect(scan.ns).to.equal(helper.namespace)
-      expect(scan.set).to.be.null()
+      expect(scan.set).to.be.null
       expect(scan.selected).to.eql(['i'])
     })
   })
@@ -232,7 +233,7 @@ context('Scans', function () {
       const stream = scan.foreach()
       stream.on('data', record => {
         expect(record.key).to.be.instanceof(Key)
-        expect(record.key.key).to.not.be.empty()
+        expect(record.key.key).to.not.be.empty
         stream.abort()
       })
       stream.on('end', done)
@@ -249,7 +250,7 @@ context('Scans', function () {
         },
         (error) => { throw error },
         () => {
-          expect(dataHandlerCalled).to.be.true()
+          expect(dataHandlerCalled).to.be.true
           done()
         })
     })
@@ -283,9 +284,9 @@ context('Scans', function () {
         const scan = client.scan(helper.namespace, testSet, { nobins: true })
         const stream = scan.foreach()
         stream.on('data', record => {
-          expect(record.bins).to.be.empty()
-          expect(record.gen).to.be.ok()
-          expect(record.ttl).to.be.ok()
+          expect(record.bins).to.be.empty
+          expect(record.gen).to.be.ok
+          expect(record.ttl).to.be.ok
           stream.abort()
         })
         stream.on('end', done)

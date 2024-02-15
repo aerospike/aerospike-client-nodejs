@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Query = require('../lib/query')
@@ -223,7 +224,7 @@ describe('Queries', function () {
       expect(query.ns).to.equal(helper.namespace)
       expect(query.set).to.equal('demo')
       expect(query.selected).to.eql(['a', 'b', 'c'])
-      expect(query.nobins).to.be.false()
+      expect(query.nobins).to.be.false
       expect(query.filters).to.be.instanceof(Array)
       expect(query.filters.length).to.equal(1)
     })
@@ -233,7 +234,7 @@ describe('Queries', function () {
       const query = client.query(namespace, { select: ['i'] })
       expect(query).to.be.instanceof(Query)
       expect(query.ns).to.equal(helper.namespace)
-      expect(query.set).to.be.null()
+      expect(query.set).to.be.null
       expect(query.selected).to.eql(['i'])
     })
   })
@@ -552,9 +553,9 @@ describe('Queries', function () {
           stream.abort()
         })
         stream.on('end', () => {
-          expect(received.bins).to.be.empty()
-          expect(received.gen).to.be.ok()
-          expect(received.ttl).to.be.ok()
+          expect(received.bins).to.be.empty
+          expect(received.gen).to.be.ok
+          expect(received.ttl).to.be.ok
           done()
         })
       })
@@ -571,9 +572,9 @@ describe('Queries', function () {
           stream.abort()
         })
         stream.on('end', () => {
-          expect(received.bins).to.be.empty()
-          expect(received.gen).to.be.ok()
-          expect(received.ttl).to.be.ok()
+          expect(received.bins).to.be.empty
+          expect(received.gen).to.be.ok
+          expect(received.ttl).to.be.ok
           done()
         })
       })
@@ -602,7 +603,7 @@ describe('Queries', function () {
         },
         (error) => { throw error },
         () => {
-          expect(dataHandlerCalled).to.be.true()
+          expect(dataHandlerCalled).to.be.true
           done()
         })
     })

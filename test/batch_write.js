@@ -18,6 +18,8 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
+
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 // const util = require('util')
@@ -90,7 +92,7 @@ describe('client.batchWrite()', function () {
           result => result.inDoubt === true)
         const notFound = results.filter(
           result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
-        expect(err).not.to.be.ok()
+        expect(err).not.to.be.ok
         expect(results.length).to.equal(5)
         expect(found.length).to.equal(3 - inDoubt.length)
         expect(notFound.length).to.equal(2)
@@ -133,15 +135,15 @@ describe('client.batchWrite()', function () {
       ]
 
       client.batchWrite(batchWriteRecords, function (err, results) {
-        expect(err).to.be.null()
+        expect(err).to.be.null
         expect(results.length).to.equal(2)
-        expect(results[1].record.bins).to.be.empty()
+        expect(results[1].record.bins).to.be.empty
         client.batchWrite(batchReadRecords, function (err, results) {
-          expect(err).not.to.be.ok()
+          expect(err).not.to.be.ok
           expect(results.length).to.equal(3)
           expect(results[0].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
           expect(results[1].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
-          expect(results[2].record.bins).to.be.empty()
+          expect(results[2].record.bins).to.be.empty
           // results.forEach(function (result) {
           //   console.log(util.inspect(result, true, 10, true))
           // })
@@ -217,7 +219,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.OK)
           done()
         })
@@ -276,7 +278,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_EXISTS)
           done()
         })
@@ -356,7 +358,7 @@ describe('client.batchWrite()', function () {
       client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/12'), function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
           done()
         })
@@ -415,7 +417,7 @@ describe('client.batchWrite()', function () {
       client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/14'), function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
           done()
         })
@@ -474,7 +476,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.OK)
           done()
         })

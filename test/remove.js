@@ -35,7 +35,7 @@ describe('client.remove()', function () {
     return client.put(key, { str: 'abcde' })
       .then(() => client.remove(key))
       .then(() => client.exists(key))
-      .then(result => expect(result).to.be.false())
+      .then(result => expect(result).to.be.false)
   })
 
   it('returns an error when trying to remove a non-existing key', function () {
@@ -59,7 +59,7 @@ describe('client.remove()', function () {
           return client.remove(key, policy)
         })
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be.false())
+        .then(result => expect(result).to.be.false)
     })
 
     it('should not remove the record if the generation does not match', function () {
@@ -76,7 +76,7 @@ describe('client.remove()', function () {
               expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_GENERATION))
         })
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be.false())
+        .then(result => expect(result).to.be.false)
     })
   })
 })

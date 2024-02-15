@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Double = Aerospike.Double
@@ -83,7 +84,7 @@ context('Operations', function () {
             expect(new GeoJSON(record.bins.geo).toJSON()).to.eql(
               { type: 'Point', coordinates: [123.456, 1.308] }
             )
-            expect(record.bins.blob.equals(Buffer.from('bar'))).to.be.ok()
+            expect(record.bins.blob.equals(Buffer.from('bar'))).to.be.ok
             expect(record.bins.list).to.eql([2, 3, 4])
             expect(record.bins.map).to.eql({ d: 4, e: 5, f: 6 })
             expect(record.bins.boolean).to.eql(true)
@@ -275,7 +276,7 @@ context('Operations', function () {
               .then(() => 'error expected')
               .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
               .then(() => client.exists(notExistentKey))
-              .then(exists => expect(exists).to.be.false())
+              .then(exists => expect(exists).to.be.false)
           })
         })
       })

@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, describe, it */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -57,7 +58,7 @@ describe('client.batchGet()', function () {
     const kgen = keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_get/fail/', random: false })
     const keys = keygen.range(kgen, numberOfRecords)
     client.batchGet(keys, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(numberOfRecords)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)

@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -62,7 +63,7 @@ describe('client.batchRemove()', function () {
       ]
 
       client.batchRemove(batchRecords, function (err, results) {
-        expect(err).not.to.be.ok()
+        expect(err).not.to.be.ok
         expect(results.length).to.equal(5)
         results.forEach(function (result) {
           expect(result.status).to.equal(Aerospike.status.OK)

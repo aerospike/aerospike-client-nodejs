@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -858,7 +859,6 @@ describe('client.operate() - CDT List operations', function () {
         .then(cleanup)
     })
 
-
     it('creates a new list with persist index true and pad true', function () {
       return initState()
         .then(createRecord({ list: [1, 2, 3, 4, 5] }))
@@ -882,7 +882,7 @@ describe('client.operate() - CDT List operations', function () {
         return initState()
           .then(createRecord({ map: { c: 1, b: 2, a: 3 } }))
           .then(operate(lists.create('map', lists.order.ORDERED).withContext(ctx => ctx.addMapKeyCreate('nested'))))
-          .then(assertRecordEql({ map: { c: 1, b: 2, a: 3, nested: []} }))
+          .then(assertRecordEql({ map: { c: 1, b: 2, a: 3, nested: [] } }))
           .then(cleanup)
       })
 

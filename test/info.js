@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, describe, it, context, before */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
@@ -104,7 +105,7 @@ context('Info commands', function () {
   describe('Client#infoAny()', function () {
     it('executes the info command on a single cluster node', function (done) {
       client.infoAny('status', function (err, result) {
-        expect(err).to.not.be.ok()
+        expect(err).to.not.be.ok
         expect(result).to.equal('status\tok\n')
         done()
       })
@@ -121,10 +122,10 @@ context('Info commands', function () {
   describe('client.infoAll()', function () {
     it('executes the info command on all cluster nodes an returns a list of results', function (done) {
       client.infoAll('status', function (err, results) {
-        expect(err).to.not.be.ok()
-        expect(Array.isArray(results)).to.be.true()
+        expect(err).to.not.be.ok
+        expect(Array.isArray(results)).to.be.true
         results.forEach(function (result) {
-          expect(result.host).to.be.ok()
+          expect(result.host).to.be.ok
           expect(result.info).to.equal('status\tok\n')
         })
         done()
@@ -134,15 +135,15 @@ context('Info commands', function () {
     it('does not require an info command', function () {
       return client.infoAll()
         .then(results =>
-          expect(Array.isArray(results)).to.be.true())
+          expect(Array.isArray(results)).to.be.true)
     })
 
     it('returns a Promise that resolves to the result of the info query', function () {
       return client.infoAll('status')
         .then(results => {
-          expect(Array.isArray(results)).to.be.true()
+          expect(Array.isArray(results)).to.be.true
           results.forEach(result => {
-            expect(result.host).to.be.ok()
+            expect(result.host).to.be.ok
             expect(result.info).to.equal('status\tok\n')
           })
         })

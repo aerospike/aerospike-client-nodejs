@@ -17,7 +17,7 @@
 'use strict'
 
 /* global expect, it, context */
-
+/* eslint-disable no-unused-expressions */
 const helper = require('./test_helper')
 
 const keygen = helper.keygen.string(helper.namespace, helper.set, { prefix: 'test/enterprise/' })
@@ -60,7 +60,7 @@ context('Enterprise server features', function () {
 
       await client.put(key, record)
       await client.remove(key, policy)
-      expect(await client.exists(key)).to.be.false()
+      expect(await client.exists(key)).to.be.false
     })
   })
 })

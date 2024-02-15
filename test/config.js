@@ -17,6 +17,7 @@
 'use strict'
 
 /* global beforeEach, afterEach, expect, describe, it */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Config = require('../lib/config')
@@ -153,7 +154,7 @@ describe('Config #noserver', function () {
       expect(config).to.not.have.property('password')
       expect(config).to.not.have.property('sharedMemory')
       expect(config).to.not.have.property('rackId')
-      expect(config.policies).to.be.empty()
+      expect(config.policies).to.be.empty
     })
 
     it('throws a TypeError if invalid policy values are passed', function () {
