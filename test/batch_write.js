@@ -532,7 +532,6 @@ describe('client.batchWrite()', function () {
         }
       }
 
-
       const dummyClient = await Aerospike.connect(config)
       const results = await dummyClient.batchWrite(batch)
       const bins = results[0].record.bins
