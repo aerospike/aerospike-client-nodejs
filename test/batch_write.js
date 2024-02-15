@@ -523,8 +523,6 @@ describe('client.batchWrite()', function () {
         readAllBins: true
       }]
 
-      console.log(options.host + ':' + options.port)
-      console.log(helper.config.hosts)
       const config = {
         hosts: helper.config.hosts,
         policies: {
