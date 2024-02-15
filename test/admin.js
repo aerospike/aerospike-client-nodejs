@@ -440,7 +440,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_ROLE)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
 
@@ -452,7 +452,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_ROLE)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
   })
@@ -494,7 +494,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_USER)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
     it('With policy', async function () {
@@ -505,7 +505,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_USER)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
   })

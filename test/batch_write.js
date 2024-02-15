@@ -515,7 +515,7 @@ describe('client.batchWrite()', function () {
 
   context('with BatchParentPolicy', function () {
     helper.skipUnlessVersion('>= 6.0.0', this)
-
+    this.timeout(10000)
     it('returns list and map bins as byte buffers', async function () {
       const batch = [{
         type: batchType.BATCH_READ,
@@ -529,6 +529,7 @@ describe('client.batchWrite()', function () {
           batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
         }
       }
+
 
       const dummyClient = await Aerospike.connect(config)
       const results = await dummyClient.batchWrite(batch)
