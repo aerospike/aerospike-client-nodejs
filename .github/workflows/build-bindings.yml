@@ -492,7 +492,7 @@ jobs:
         cd testDir
         npm install --global pnpm 
         SHELL=bash pnpm setup 
-        source /root/.bashrc
+        sudo source /home/runner/.bashrc
         pnpm install ..
 
   test-bun-install:
@@ -552,7 +552,7 @@ jobs:
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-      
+
     - name: Modify the package.json
       run: |
         npm install -g json
