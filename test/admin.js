@@ -479,8 +479,7 @@ context('admin commands', async function () {
         user: username2,
         password: 'password250'
       }
-      console.log(options.host + ':' + options.port)
-      console.log(helper.config.hosts)
+      
       const dummyClient = await Aerospike.connect(config)
       return dummyClient.close()
     })
