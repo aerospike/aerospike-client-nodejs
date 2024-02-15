@@ -311,7 +311,7 @@ jobs:
       run: sleep 5
  
     - name: Run tests
-      run: npm run test -- --h localhost --U superuser --P superuser --t 40000
+      run: npm run test -- --h localhost --U admin --P admin --t 40000 test/admin.js
 
   test-valgrind:
     runs-on: ubuntu-latest
