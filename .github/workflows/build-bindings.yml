@@ -492,7 +492,7 @@ jobs:
         cd testDir
         npm install --global pnpm 
         SHELL=bash pnpm setup 
-        sudo source /home/runner/.bashrc
+        source /home/runner/.bashrc
         pnpm install ..
 
   test-bun-install:
