@@ -34,7 +34,7 @@ function wait (ms) {
 }
 
 context('admin commands', async function () {
-  if (helper.config.user !== 'admin') {
+  if (helper.config.user !== 'superuser') {
     return
   }
   const client = helper.client
@@ -462,7 +462,7 @@ context('admin commands', async function () {
       client.changePassword(username1, 'password350', null)
       await wait(waitMs + 30000)
       const config = {
-        hosts: options.host + ':' + options.port,
+        hosts: helper.config.hosts,
         user: username1,
         password: 'password350'
       }
@@ -475,7 +475,7 @@ context('admin commands', async function () {
       await wait(waitMs + 3000)
 
       const config = {
-        hosts: options.host + ':' + options.port,
+        hosts: helper.config.hosts,
         user: username2,
         password: 'password250'
       }
