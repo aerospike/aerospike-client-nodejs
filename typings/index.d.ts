@@ -881,7 +881,7 @@ declare module 'exp' {
       increment: (bin: any, value: any, idx: any, policy?: any, ctx?: any) => any;
       set: (bin: any, value: any, idx: any, policy?: any, ctx?: any) => any;
       clear: (bin: any, ctx?: any) => any;
-      create: (bin: any, order?: number, persistIndex?: pad, persistIndex?: boolean, ctx?: any) => any;
+      create: (bin: any, order?: number, pad?: boolean, persistIndex?: boolean, ctx?: any) => any;
       sort: (bin: any, order: number, ctx?: any) => any;
       removeByValue: (bin: any, value: any, ctx?: any, returnType?: any) => any;
       removeByValueList: (bin: any, values: any, ctx?: any, returnType?: any) => any;
