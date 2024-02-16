@@ -18,6 +18,8 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
+
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
 // const util = require('util')
@@ -39,7 +41,7 @@ describe('client.batchWrite()', function () {
   const client = helper.client
 
   before(function () {
-    const nrecords = 17
+    const nrecords = 20
     const generators = {
       keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_write/', random: false }),
       recgen: recgen.record({
@@ -89,7 +91,7 @@ describe('client.batchWrite()', function () {
           result => result.inDoubt === true)
         const notFound = results.filter(
           result => result.status === Aerospike.status.ERR_RECORD_NOT_FOUND)
-        expect(err).not.to.be.ok()
+        expect(err).not.to.be.ok
         expect(results.length).to.equal(5)
         expect(found.length).to.equal(3 - inDoubt.length)
         expect(notFound.length).to.equal(2)
@@ -132,15 +134,15 @@ describe('client.batchWrite()', function () {
       ]
 
       client.batchWrite(batchWriteRecords, function (err, results) {
-        expect(err).to.be.null()
+        expect(err).to.be.null
         expect(results.length).to.equal(2)
-        expect(results[1].record.bins).to.be.empty()
+        expect(results[1].record.bins).to.be.empty
         client.batchWrite(batchReadRecords, function (err, results) {
-          expect(err).not.to.be.ok()
+          expect(err).not.to.be.ok
           expect(results.length).to.equal(3)
           expect(results[0].record.bins).to.have.all.keys('i', 's', 'l', 'm', 'str2', 'geo', 'blob', 'string')
           expect(results[1].status).to.equal(Aerospike.status.ERR_RECORD_NOT_FOUND)
-          expect(results[2].record.bins).to.be.empty()
+          expect(results[2].record.bins).to.be.empty
           // results.forEach(function (result) {
           //   console.log(util.inspect(result, true, 10, true))
           // })
@@ -216,7 +218,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.OK)
           done()
         })
@@ -275,7 +277,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_EXISTS)
           done()
         })
@@ -355,7 +357,7 @@ describe('client.batchWrite()', function () {
       client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/12'), function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
           done()
         })
@@ -414,7 +416,7 @@ describe('client.batchWrite()', function () {
       client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/14'), function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
           done()
         })
@@ -473,7 +475,7 @@ describe('client.batchWrite()', function () {
       client.batchWrite(batchRecords, function (error, results) {
         if (error) throw error
         client.batchWrite(batchRecords, function (error, results) {
-          expect(error).not.to.be.ok()
+          expect(error).not.to.be.ok
           expect(results[0].status).to.equal(status.OK)
           done()
         })
@@ -506,6 +508,61 @@ describe('client.batchWrite()', function () {
         })
         .then((results) => {
           expect(results[0].status).to.equal(status.OK)
+        })
+    })
+  })
+
+  context('with BatchParentWritePolicy', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+    this.timeout(10000)
+    it('returns list and map bins as byte buffers', async function () {
+      const batch = [{
+        type: batchType.BATCH_READ,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/18'),
+        readAllBins: true
+      }]
+
+      const config = {
+        hosts: helper.config.hosts,
+        policies: {
+          batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
+        }
+      }
+
+      const dummyClient = await Aerospike.connect(config)
+      const results = await dummyClient.batchWrite(batch)
+      const bins = results[0].record.bins
+      expect(bins.i).to.be.a('number')
+      expect(bins.s).to.be.a('string')
+      expect(bins.l).to.be.instanceof(Buffer)
+      expect(bins.m).to.be.instanceof(Buffer)
+      await dummyClient.close()
+    })
+  })
+
+  context('with BatchWritePolicy ttl', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
+
+    it('writes value with correct ttl', async function () {
+      const batch = [{
+        type: batchType.BATCH_WRITE,
+        key: new Key(helper.namespace, helper.set, 'test/batch_write/19'),
+        ops: [
+          op.write('example', 35),
+          op.write('blob', [4, 14, 28])
+        ],
+        policy: new Aerospike.BatchWritePolicy({
+          exists: Aerospike.policy.exists.REPLACE,
+          ttl: 1367
+        })
+      }]
+      await client.batchWrite(batch)
+      return client.get(new Key(helper.namespace, helper.set, 'test/batch_write/19'))
+        .then(results => {
+          const bins = results.bins
+          expect(bins.example).to.be.a('number')
+          expect(bins.blob).to.be.a('array')
+          expect(results.ttl).to.equal(1367)
         })
     })
   })

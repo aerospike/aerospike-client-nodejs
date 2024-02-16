@@ -720,7 +720,6 @@ describe('Aerospike.exp_operations', function () {
         ]
         let result = await client.operate(key, ops, {})
         result = await client.get(key)
-        console.log(result)
         expect(result.bins).to.eql({ tags: { a: 'blue', c: 'yellow' } })
       })
 
@@ -738,7 +737,6 @@ describe('Aerospike.exp_operations', function () {
         ]
         let result = await client.operate(key, ops, {})
         result = await client.get(key)
-        console.log(result)
         expect(result.bins).to.eql({ tags: { a: 'blue', nested: { d: 'orange', f: 'white', g: 'black' } } })
       })
     })

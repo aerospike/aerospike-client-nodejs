@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, describe, context, it */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Key = Aerospike.Key
@@ -52,11 +53,11 @@ describe('Key #noserver', function () {
 
     context('set name', function () {
       it('allows null set name', function () {
-        expect(new Key('ns', null, 'key')).to.be.ok()
+        expect(new Key('ns', null, 'key')).to.be.ok
       })
 
       it('allows undefined set name', function () {
-        expect(new Key('ns', undefined, 'key')).to.be.ok()
+        expect(new Key('ns', undefined, 'key')).to.be.ok
       })
 
       it('rejects empty set name', function () {
@@ -76,25 +77,25 @@ describe('Key #noserver', function () {
       const dummyDigest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
 
       it('allows string user key', function () {
-        expect(new Key('ns', 'set', 'abc')).to.be.ok()
+        expect(new Key('ns', 'set', 'abc')).to.be.ok
       })
 
       it('allows string user key of arbitrary length', function () {
-        expect(new Key('ns', 'set', 'abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789')).to.be.ok()
+        expect(new Key('ns', 'set', 'abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789')).to.be.ok
       })
 
       it('allows integer user key', function () {
-        expect(new Key('ns', 'set', 1234)).to.be.ok()
-        expect(new Key('ns', 'set', -1234)).to.be.ok()
+        expect(new Key('ns', 'set', 1234)).to.be.ok
+        expect(new Key('ns', 'set', -1234)).to.be.ok
       })
 
       context('BigInt keys', function () {
         helper.skipUnless(this, bigint.bigIntSupported, 'BigInt not supported in this Node.js version')
 
         it('allows BigInt user key', function () {
-          expect(new Key('ns', 'set', BigInt(42))).to.be.ok()
-          expect(new Key('ns', 'set', BigInt(2) ** BigInt(63) - BigInt(1))).to.be.ok()
-          expect(new Key('ns', 'set', BigInt(-2) ** BigInt(63))).to.be.ok()
+          expect(new Key('ns', 'set', BigInt(42))).to.be.ok
+          expect(new Key('ns', 'set', BigInt(2) ** BigInt(63) - BigInt(1))).to.be.ok
+          expect(new Key('ns', 'set', BigInt(-2) ** BigInt(63))).to.be.ok
         })
 
         it('rejects BigInt user keys outside valid range', function () {
@@ -105,15 +106,15 @@ describe('Key #noserver', function () {
 
       it('allows byte array user key', function () {
         const buf = Buffer.from([0x62, 0x75, 0x66, 0x66, 0x65, 0x72])
-        expect(new Key('ns', 'set', buf)).to.be.ok()
+        expect(new Key('ns', 'set', buf)).to.be.ok
       })
 
       it('allows undefined user key', function () {
-        expect(new Key('ns', 'set', undefined, dummyDigest)).to.be.ok()
+        expect(new Key('ns', 'set', undefined, dummyDigest)).to.be.ok
       })
 
       it('allows null user key', function () {
-        expect(new Key('ns', 'set', null, dummyDigest)).to.be.ok()
+        expect(new Key('ns', 'set', null, dummyDigest)).to.be.ok
       })
 
       it('rejects empty string user key', function () {
@@ -140,7 +141,7 @@ describe('Key #noserver', function () {
     context('digest', function () {
       it('allows creating a new key with just the namespace and digest', function () {
         const digest = Buffer.from([0x15, 0xc7, 0x49, 0xfd, 0x01, 0x54, 0x43, 0x8b, 0xa9, 0xd9, 0x5d, 0x0c, 0x6e, 0x27, 0x0f, 0x1a, 0x76, 0xfc, 0x31, 0x15])
-        expect(new Key('ns', null, null, digest)).to.be.ok()
+        expect(new Key('ns', null, null, digest)).to.be.ok
       })
 
       it('rejects a digest that is not a buffer', function () {
@@ -157,78 +158,78 @@ describe('Key #noserver', function () {
     it('matches two keys with identical ns, set and user key', function () {
       const key1 = new Key('ns1', 'set1', 'key1')
       const key2 = new Key('ns1', 'set1', 'key1')
-      expect(key1.equals(key2)).to.be.true()
-      expect(key2.equals(key1)).to.be.true()
+      expect(key1.equals(key2)).to.be.true
+      expect(key2.equals(key1)).to.be.true
     })
 
     it('matches two keys with identical ns, set, user key and digest', function () {
       const key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
       const key2 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
-      expect(key1.equals(key2)).to.be.true()
-      expect(key2.equals(key1)).to.be.true()
+      expect(key1.equals(key2)).to.be.true
+      expect(key2.equals(key1)).to.be.true
     })
 
     it('matches two keys with identical ns, set and digest', function () {
       const key1 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
       const key2 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
-      expect(key1.equals(key2)).to.be.true()
-      expect(key2.equals(key1)).to.be.true()
+      expect(key1.equals(key2)).to.be.true
+      expect(key2.equals(key1)).to.be.true
     })
 
     it('a key with digest to another key with identical ns, set and user key but without digest', function () {
       const key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
       const key2 = new Key('ns1', 'set1', 'key1')
-      expect(key1.equals(key2)).to.be.true()
-      expect(key2.equals(key1)).to.be.true()
+      expect(key1.equals(key2)).to.be.true
+      expect(key2.equals(key1)).to.be.true
     })
 
     it('matches two keys with identical ns, empty set and user key', function () {
       const key1 = new Key('ns1', null, 'key1')
       const key2 = new Key('ns1', null, 'key1')
-      expect(key1.equals(key2)).to.be.true()
-      expect(key2.equals(key1)).to.be.true()
+      expect(key1.equals(key2)).to.be.true
+      expect(key2.equals(key1)).to.be.true
     })
 
     it('does not match two keys with different ns', function () {
       const key1 = new Key('ns1', 'set1', 'key1')
       const key2 = new Key('ns2', 'set1', 'key1')
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
 
     it('does not match two keys with different set', function () {
       const key1 = new Key('ns1', 'set1', 'key1')
       const key2 = new Key('ns1', 'set2', 'key1')
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
 
     it('does not match a key with set and a key without set', function () {
       const key1 = new Key('ns1', 'set1', 'key1')
       const key2 = new Key('ns1', null, 'key1')
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
 
     it('does not match two keys with different user keys', function () {
       const key1 = new Key('ns1', 'set1', 'key1')
       const key2 = new Key('ns1', 'set1', 'key2')
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
 
     it('does not match a key with user key and a key without user key', function () {
       const key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
       const key2 = new Key('ns1', 'set1', null, Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
 
     it('does not match two keys with different digests', function () {
       const key1 = new Key('ns1', 'set1', 'key1', Buffer.from('a1b2c3d4e5f6g7h8i9j0'))
       const key2 = new Key('ns1', 'set1', 'key1', Buffer.from('0j9i8h7g6f5e4d3c2b1a'))
-      expect(key1.equals(key2)).to.be.false()
-      expect(key2.equals(key1)).to.be.false()
+      expect(key1.equals(key2)).to.be.false
+      expect(key2.equals(key1)).to.be.false
     })
   })
 })
@@ -239,7 +240,7 @@ context('Plain Object Keys (for backward compatibility)', function () {
   it('accepts plain objects as user keys', function (done) {
     const key = { ns: helper.namespace, set: helper.set, key: 1234 }
     client.put(key, { foo: 'bar' }, function (err) {
-      expect(err).to.not.be.ok()
+      expect(err).to.not.be.ok
       done()
     })
   })

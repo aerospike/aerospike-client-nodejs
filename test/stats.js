@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const helper = require('./test_helper')
 const client = helper.client
@@ -32,14 +33,14 @@ describe('Client#stats', function () {
 
   it('returns command queue stats', function () {
     const stats = client.stats()
-    expect(stats.commands).to.not.be.empty()
+    expect(stats.commands).to.not.be.empty
     expect(stats.commands.inFlight).to.be.at.least(0)
     expect(stats.commands.queued).to.be.at.least(0)
   })
 
   it('returns cluster node stats', function () {
     const stats = client.stats()
-    expect(stats.nodes).to.be.an('array').that.is.not.empty()
+    expect(stats.nodes).to.be.an('array').that.is.not.empty
 
     const node = stats.nodes.pop()
     expect(node.name).to.be.a('string').of.length(15)

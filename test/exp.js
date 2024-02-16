@@ -96,6 +96,7 @@ describe('Aerospike.exp', function () {
     })
 
     describe('eq on map bin', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       it('evaluates to true if a map bin matches a value', async function () {
         const key = await createRecord({ map: { c: 1, b: 2, a: 3 } })
         await orderByKey(key, 'map')
@@ -112,6 +113,7 @@ describe('Aerospike.exp', function () {
     })
 
     describe('eq on list bin', function () {
+      helper.skipUnlessVersion('>= 6.3.0', this)
       it('evaluates to true if a list bin matches a value', async function () {
         const key = await createRecord({ list: [4, 2, 0] })
         await orderByKey(key, 'map')

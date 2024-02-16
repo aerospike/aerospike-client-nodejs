@@ -17,6 +17,7 @@
 'use strict'
 
 /* global context, expect, describe, it */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const Client = Aerospike.Client
@@ -40,7 +41,7 @@ describe('Client', function () {
       let async = false
       client.connect(error => {
         if (error) throw error
-        expect(async).to.be.true()
+        expect(async).to.be.true
         client.close(false)
         done()
       })
@@ -68,7 +69,7 @@ describe('Client', function () {
     it('should be possible to call close multiple times', function (done) {
       const client = new Client(helper.config)
       client.connect(error => {
-        expect(error).to.be.null()
+        expect(error).to.be.null
         client.close(false)
         client.close(false)
         done()
@@ -99,13 +100,13 @@ describe('Client', function () {
     context('without tender health check', function () {
       it('returns false if the client is not connected', function () {
         const client = new Client(helper.config)
-        expect(client.isConnected(false)).to.be.false()
+        expect(client.isConnected(false)).to.be.false
       })
 
       it('returns true if the client is connected', function (done) {
         const client = new Client(helper.config)
         client.connect(function () {
-          expect(client.isConnected(false)).to.be.true()
+          expect(client.isConnected(false)).to.be.true
           client.close(false)
           done()
         })
@@ -115,7 +116,7 @@ describe('Client', function () {
         const client = new Client(helper.config)
         client.connect(function () {
           client.close(false)
-          expect(client.isConnected(false)).to.be.false()
+          expect(client.isConnected(false)).to.be.false
           done()
         })
       })
@@ -128,8 +129,8 @@ describe('Client', function () {
         client.connect(function () {
           let tenderHealthCheck = false
           client.as_client.isConnected = function () { tenderHealthCheck = true; return false }
-          expect(client.isConnected(true)).to.be.false()
-          expect(tenderHealthCheck).to.be.true()
+          expect(client.isConnected(true)).to.be.false
+          expect(tenderHealthCheck).to.be.true
           client.as_client.isConnected = orig
           client.close(false)
           done()

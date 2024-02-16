@@ -436,12 +436,22 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->ttl,
+										   NULL, obj, "ttl", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->gen, NULL, obj,
 										   "gen", log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->exists, NULL,
 										   obj, "exists", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->ttl, NULL, obj,
+										 "ttl", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}

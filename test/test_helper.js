@@ -24,9 +24,7 @@ const path = require('path')
 const runInNewProcessFn = require('./util/run_in_new_process')
 
 const chai = require('chai')
-const dirtyChai = require('dirty-chai')
 const expect = chai.expect
-chai.use(dirtyChai)
 global.expect = expect
 
 exports.options = options

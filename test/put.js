@@ -577,7 +577,7 @@ describe('client.put()', function () {
         return client.put(key, { i: 49 }, {}, policy)
           .catch(error => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
           .then(() => client.exists(key))
-          .then(exists => expect(exists).to.be.false())
+          .then(exists => expect(exists).to.be.false)
       })
     })
 

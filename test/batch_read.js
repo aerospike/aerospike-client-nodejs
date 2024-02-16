@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
@@ -58,7 +59,7 @@ describe('client.batchRead()', function () {
     ]
 
     client.batchRead(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(5)
       const found = results.filter(
         result => result.status === Aerospike.status.OK)
@@ -78,11 +79,11 @@ describe('client.batchRead()', function () {
     ]
 
     client.batchRead(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
-        expect(result.record.bins).to.be.empty()
+        expect(result.record.bins).to.be.empty
       })
       done()
     })
@@ -96,13 +97,13 @@ describe('client.batchRead()', function () {
     ]
 
     client.batchRead(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
         expect(result.record.bins).to.have.all.keys('i')
-        expect(result.record.gen).to.be.ok()
-        expect(result.record.ttl).to.be.ok()
+        expect(result.record.gen).to.be.ok
+        expect(result.record.ttl).to.be.ok
       })
       done()
     })
@@ -116,13 +117,13 @@ describe('client.batchRead()', function () {
     ]
 
     client.batchRead(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
         expect(result.status).to.equal(Aerospike.status.OK)
         expect(result.record.bins).to.have.keys('i', 's', 'l', 'm')
-        expect(result.record.gen).to.be.ok()
-        expect(result.record.ttl).to.be.ok()
+        expect(result.record.gen).to.be.ok
+        expect(result.record.ttl).to.be.ok
       })
       done()
     })
@@ -136,7 +137,7 @@ describe('client.batchRead()', function () {
     ]
 
     client.batchRead(batchRecords, function (err, results) {
-      expect(err).not.to.be.ok()
+      expect(err).not.to.be.ok
       expect(results.length).to.equal(3)
       results.forEach(function (result) {
         const record = result.record
@@ -148,7 +149,7 @@ describe('client.batchRead()', function () {
             expect(record.bins).to.have.all.keys('i')
             break
           case 'test/batch_read/5':
-            expect(record.bins).to.be.empty()
+            expect(record.bins).to.be.empty
             break
           default:
             throw new Error('unpexected record key')

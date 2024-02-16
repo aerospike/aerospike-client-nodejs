@@ -204,6 +204,7 @@ int batch_write_record_from_jsobject(as_batch_records *batch_records,
 		Local<Array> ops = maybeOps.As<Array>();
 		as_v8_debug(log, "Adding operations to batch write record");
 		record->ops = as_operations_new(ops->Length());
+		record->ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
 		if (operations_from_jsarray(record->ops, ops, (LogInfo *)log) !=
 			AS_NODE_PARAM_OK) {
 			as_v8_error(

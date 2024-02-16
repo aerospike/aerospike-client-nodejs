@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, beforeEach, afterEach, describe, it */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const AerospikeError = require('../lib/error')
@@ -45,7 +46,7 @@ describe('IndexJob', function () {
         if (err) throw err
 
         job.waitUntilDone(10, function (err) {
-          expect(err).to.not.be.ok()
+          expect(err).to.not.be.ok
           done()
         })
       })
@@ -68,7 +69,7 @@ describe('IndexJob', function () {
     it('should return false if the index does not exist', function () {
       const job = new IndexJob(client, helper.namespace, 'thisIndexDoesNotExist')
       return job.checkStatus()
-        .then(status => expect(status).to.be.false())
+        .then(status => expect(status).to.be.false)
     })
 
     it('should return an error if one of the cluster nodes cannot be queried', function () {

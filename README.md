@@ -188,6 +188,10 @@ To install library prerequisites using `apt`:
 sudo apt install g++ libssl libssl-dev zlib1g-dev
 ```
 
+### Windows
+
+See our [Windows README.md](https://github.com/aerospike/aerospike-client-nodejs/blob/master/README_WINDOWS.md) for details on how to build and install on windows.
+
 ### macOS
 
 Before starting with the Aerospike Nodejs Client, verify that you have the following prerequisites:

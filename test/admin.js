@@ -20,7 +20,6 @@
 
 const Aerospike = require('../lib/aerospike')
 const helper = require('./test_helper')
-const options = require('./util/options')
 
 function getRandomInt (max) {
   return Math.floor(Math.random() * max)
@@ -440,7 +439,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_ROLE)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
 
@@ -452,7 +451,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_ROLE)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
   })
@@ -460,24 +459,28 @@ context('admin commands', async function () {
   describe('Client#changePassword()', function () {
     it('Changes password for user', async function () {
       client.changePassword(username1, 'password350', null)
+      await wait(waitMs + 30000)
       const config = {
-        hosts: options.host + ':' + options.port,
+        hosts: helper.config.hosts,
         user: username1,
         password: 'password350'
       }
       const dummyClient = await Aerospike.connect(config)
-      dummyClient.close()
+      return dummyClient.close()
     })
 
     it('With policy', async function () {
       client.changePassword(username2, 'password250', policy)
+      await wait(waitMs + 3000)
+
       const config = {
-        hosts: options.host + ':' + options.port,
+        hosts: helper.config.hosts,
         user: username2,
         password: 'password250'
       }
+
       const dummyClient = await Aerospike.connect(config)
-      dummyClient.close()
+      return dummyClient.close()
     })
   })
 
@@ -490,7 +493,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_USER)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
     it('With policy', async function () {
@@ -501,7 +504,7 @@ context('admin commands', async function () {
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error) {
-        expect(error).to.exist().and.have.property('code', Aerospike.status.INVALID_USER)
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
   })

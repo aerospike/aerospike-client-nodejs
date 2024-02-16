@@ -18,6 +18,7 @@
 
 /* eslint-env mocha */
 /* global expect */
+/* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
 const BasePolicy = require('../lib/policies/base_policy')
@@ -37,7 +38,7 @@ context('Client Policies #noserver', function () {
         expect(subject.socketTimeout).to.equal(200)
         expect(subject.totalTimeout).to.equal(0)
         expect(subject.maxRetries).to.equal(2)
-        expect(subject.compress).to.be.true()
+        expect(subject.compress).to.be.true
       })
     })
   })
@@ -61,7 +62,7 @@ context('Client Policies #noserver', function () {
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.commitLevel).to.equal(2)
         expect(subject.ttl).to.equal(3600)
-        expect(subject.durableDelete).to.be.true()
+        expect(subject.durableDelete).to.be.true
       })
     })
   })
@@ -89,7 +90,7 @@ context('Client Policies #noserver', function () {
         expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
         expect(subject.exists).to.equal(Aerospike.policy.exists.CREATE)
         expect(subject.commitLevel).to.equal(2)
-        expect(subject.durableDelete).to.be.true()
+        expect(subject.durableDelete).to.be.true
       })
     })
   })
@@ -136,8 +137,8 @@ context('Client Policies #noserver', function () {
         expect(subject.maxRetries).to.equal(1)
         expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
         expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
-        expect(subject.allowInline).to.be.false()
-        expect(subject.sendSetName).to.be.true()
+        expect(subject.allowInline).to.be.false
+        expect(subject.sendSetName).to.be.true
       })
     })
   })
@@ -152,8 +153,8 @@ context('Client Policies #noserver', function () {
         })
 
         expect(subject.timeout).to.equal(1000)
-        expect(subject.sendAsIs).to.be.true()
-        expect(subject.checkBounds).to.be.false()
+        expect(subject.sendAsIs).to.be.true
+        expect(subject.checkBounds).to.be.false
       })
     })
   })
@@ -179,7 +180,7 @@ context('Client Policies #noserver', function () {
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
         expect(subject.commitLevel).to.equal(2)
-        expect(subject.durableDelete).to.be.true()
+        expect(subject.durableDelete).to.be.true
       })
     })
   })
@@ -208,7 +209,7 @@ context('Client Policies #noserver', function () {
         expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
         expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
         expect(subject.commitLevel).to.equal(2)
-        expect(subject.durableDelete).to.be.true()
+        expect(subject.durableDelete).to.be.true
       })
     })
   })
@@ -227,7 +228,7 @@ context('Client Policies #noserver', function () {
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.totalTimeout).to.equal(2000)
         expect(subject.maxRetries).to.equal(1)
-        expect(subject.durableDelete).to.be.true()
+        expect(subject.durableDelete).to.be.true
         expect(subject.recordsPerSecond).to.equal(100)
       })
     })

@@ -1,0 +1,573 @@
+name: Build binding
+run-name: Build bindings (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+
+# Builds manylinux bindings and source distribution
+# If running tests, publish results in commit status
+# Publishes bindings and source distribution on Github Actions if no tests are run or tests pass
+
+on:
+  push:
+    branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage", "master"]
+    types: [
+      # Default triggers
+      opened,
+      synchronize,
+      reopened,
+      # Additional triggers
+      labeled,
+      unlabeled
+    ]
+    inputs:
+      # If we only want to check that the builds pass on an arbitrary branch
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        type: boolean
+        default: true
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate?'
+      # If we are creating a backport and want to test an arbitrary branch against an older server version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+  workflow_call:
+    inputs:
+      # The dev tests test the artifacts against a server release
+      # The stage tests and release workflow only need to build the artifacts
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        type: boolean
+        default: true
+      commit_sha:
+        type: string
+        required: false
+      # Calling workflow doesn't actually use these 2 options
+      # But we need to set default values for workflow calls
+      use-server-rc:
+        required: false
+        default: true
+        type: boolean
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: false
+      DOCKER_HUB_BOT_PW:
+        required: false
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: false
+  workflow_dispatch:
+    inputs:
+      # If we only want to check that the builds pass on an arbitrary branch
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        type: boolean
+        default: true
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate?'
+      # If we are creating a backport and want to test an arbitrary branch against an older server version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+
+jobs:
+  manylinux:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # nodejs versions to build bindings on
+        nodejs: [
+          ["v108", 18],
+          ["v115", 20],
+          ["v120", 21]
+        ]
+        platform: [
+          "x86_64",
+          #"aarch64"
+        ]
+
+    steps:
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      with:
+        sha: ${{ github.sha }}
+        context: "Build bindings (${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }})"
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs[1] }}
+        architecture: 'x64'
+
+    - name: print
+      run: uname -m 
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform == 'aarch64' }}
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: all
+
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+#    - name: Set config.conf to use Docker IP address of Aerospike server
+#      # config.conf should be copied into the cibuildwheel Docker container
+#      run: |
+#        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+#        # Install crudini
+#        pip install crudini -c ../.github/workflows/requirements.txt
+#        sed -i "s/127.0.0.1:3000//" config.conf
+#        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+#      working-directory: test
+
+    - name: Enable tests
+      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+
+#    - name: Disable tests (only run basic import test)
+#      if: ${{ !inputs.run_tests }}
+#      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
+
+    - uses: uraimo/run-on-arch-action@v2
+      name: Build client arm
+      if: ${{ matrix.platform == 'aarch64' }}
+      id: runcmd
+      with:
+        arch: aarch64
+        distro: ubuntu22.04
+
+        # Set an output parameter `uname` for use in subsequent steps
+        run: |
+          apt update
+          apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl
+          ./scripts/build-c-client.sh
+          wget https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;
+          source ~/.bashrc;
+          nvm i 20
+          npm install
+
+    - name: Build client x64
+      if: ${{ matrix.platform != 'aarch64' }}
+      run: |
+        sudo apt update
+        sudo apt install g++ libssl-dev zlib1g-dev;
+        sudo apt-get install -y make;
+        sudo apt install build-essential;
+        ./scripts/build-c-client.sh
+        npm install
+      env:
+        CFLAGS: '-Werror' 
+
+    - name: Test client
+      run: |
+        ${{ env.TEST_COMMAND }}
+
+    - name: Send binding to test jobs
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }}.build
+        path: ./lib/binding/node-*-linux-*/
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: always()
+      with:
+        sha: ${{ github.sha }}
+        status: ${{ job.status }}
+        context: "Build bindings (${{ matrix.nodejs[0] }}-manylinux_${{ matrix.platform }})"
+
+  macOS-x86:
+    strategy:
+      fail-fast: false
+      matrix:
+        nodejs: [
+          ["v108", 18],
+          ["v115", 20],
+          ["v120", 21]
+        ]
+    runs-on: macos-latest
+    steps:
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      with:
+        sha: ${{ github.sha }}
+        context: "Build bindings (${{ matrix.nodejs[0] }}-macosx_x86_64)"
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs[1] }}
+        architecture: 'x64'
+
+#    - name: Install Docker Engine
+#      run: brew install colima
+#
+#    - name: Install Docker client
+#      run: brew install docker
+#
+#    - name: Start Docker Engine
+#      run: colima start
+#
+#    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#    - name: Run Aerospike server release candidate with latest tag
+#      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+#
+#    - name: Run Aerospike server
+#      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#    - name: Enable tests
+#      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000 --t 30000" >> $GITHUB_ENV
+
+#    - name: Disable tests (only run basic import test)
+#      if: ${{ !inputs.run_tests }}
+#      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
+
+    - name: Build client
+      run: |
+        ./scripts/build-c-client.sh
+        npm install
+      env:
+        CFLAGS: '-Werror'
+
+#   - name: Test client
+#     run: |
+#       ${{ env.TEST_COMMAND }}
+
+    - name: Save macOS binding
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.nodejs[0] }}-macosx_x86_64.build
+        path: ./lib/binding/*/
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: always()
+      with:
+        status: ${{ job.status }}
+        sha: ${{ github.sha }}
+        context: "Build bindings (${{ matrix.nodejs[0] }}-macosx_x86_64)"
+
+#  macOS-m1:
+#    runs-on: [
+#      self-hosted,
+#      macOS,
+#      ARM64
+#    ]
+#    strategy:
+#      matrix:
+#        nodejs-version: [
+#          ["v108", "18"],
+#          ["v115", "20"],
+#          ["v120", "21"],
+#        ]
+#      fail-fast: false
+#    steps:
+#    - name: Show job status for commit
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      with:
+#        sha: ${{ github.sha }}
+#        context: "Build bindings (${{ matrix.nodejs-version[1] }}-macosx_arm64)"
+#
+#    - uses: actions/checkout@v4
+#      with:
+#        submodules: recursive
+#        ref: ${{ inputs.commit_sha }}
+#
+#    - name: Install NVM
+#      run: |
+#        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+#        source ~/.zshrc
+#        nvm -v
+#        nvm install ${{ matrix.nodejs-version[1] }}
+#
+#
+#    - name: Setup symlink folders
+#      run: |
+#        sudo rm -rf /usr/local/opt/openssl;
+#        sudo rm -rf /usr/local/opt/libuv;
+#        sudo mkdir -p /usr/local/opt;
+#        sudo chown -R $(whoami) /usr/local/opt
+#
+#    - name: Install brew packages
+#      run: |
+#        brew install openssl@3.2.1
+#        brew install libuv@1.47.0
+#
+#    - name: Set environment  for building
+#      run: |
+#        echo "export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
+#        export LDFLAGS="-L/usr/local/opt/openssl/lib"
+#        export CPPFLAGS="-I/usr/local/opt/openssl/include"
+#        export EXT_CFLAGS="-I/usr/local/opt/openssl/include"" >> ~/.zshrc;
+#        source ~/.zshrc;
+#
+#    - name: Setup symlink folders
+#      run: |
+#        sudo ln -s /usr/local/Cellar/libuv/1.47.0/ /usr/local/opt/libuv;
+#        sudo ln -s /usr/local/Cellar/openssl@3/3.2.1/ /usr/local/opt/openssl;
+#
+#    # Self-hosted runner only
+#    # Need to be able to save Docker Hub credentials to keychain
+#    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#      if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#
+#    - if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#    - name: Use server rc
+#      if: ${{ inputs.run_tests && inputs.use-server-rc }}
+#      run: echo IMAGE_NAME="${{ vars.SERVER_RC_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
+#
+#    - name: Use server release
+#      if: ${{ inputs.run_tests && !inputs.use-server-rc }}
+#      run: echo IMAGE_NAME="${{ vars.SERVER_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
+#
+#    - name: Run server
+#      if: ${{ inputs.run_tests }}
+#      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+#
+#    - name: Build client
+#      run: |
+#        ./scripts/build-c-client.sh
+#        npm install
+#      env:
+#        CFLAGS: '-Werror'
+#
+#    - name: Enable tests
+#      if: ${{ inputs.run_tests }}
+#      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+#
+#    - name: Disable tests (only run basic import test)
+#      if: ${{ !inputs.run_tests }}
+#      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
+#
+#
+#    - name: Test client
+#      run: |
+#        ${{ env.TEST_COMMAND }}
+#
+#    - name: Save macOS wheel
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: ${{ matrix.nodejs-version[0] }}-macosx_arm64.build
+#        path: ./lib/binding/*/
+#
+#    - name: Stop server
+#      if: ${{ always() && inputs.run_tests }}
+#      run: |
+#        docker container stop aerospike
+#        docker container prune -f
+#
+#    - name: Set final commit status
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: always()
+#      with:
+#        sha: ${{ github.sha }}
+#        status: ${{ job.status }}
+#        context: "Build bindings (${{ matrix.nodejs-version[0] }}-macosx_arm64)"
+
+  test-npm-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir
+        cd testDir
+        npm install ..
+
+  test-yarn-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir
+        yarn link 
+        cd testDir
+        npm install --global yarn
+        yarn add link:..
+
+  test-pnpm-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        mkdir -p testDir 
+        cd testDir
+        npm install --global pnpm 
+        SHELL=bash pnpm setup 
+        source /home/runner/.bashrc
+        pnpm install ..
+
+  test-bun-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+
+    - name: Run tests
+      run: |
+        npm install -g bun
+        bun link       
+        mkdir -p testDir 
+        cd testDir
+        bun link aerospike
+
+  test-typescript-install:
+    runs-on: ubuntu-latest
+    needs: [manylinux, macOS-x86]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/workflows/combine-bindings/
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Modify the package.json
+      run: |
+        npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+        
+    - name: Run tests
+      run: |
+        mkdir my-aerospike-project
+        cd my-aerospike-project
+        npm init -y
+        npm install typescript ts-node --save-dev
+        npm install ..
+        cp ../examples/typescript.ts index.ts
+        npx tsc index.ts
+        node index.js
+
+
+

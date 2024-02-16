@@ -3,37 +3,44 @@
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/1pwlt87blqrmgyis/branch/master?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/aerospike/aerospike-client-nodejs/
 
-The Aerospike Node.js client port to Windows is a community supported project
-and suitable for application prototyping and development.
-
 <a name="Prerequisites"></a>
 ## Prerequisites
 
-* Windows 7 or later
-* Node.js v10.x (LTS) or later
+Visual Studio is used to manage the Aerospike Node.js Client on Windows. Many components can be installed using the Visual Studio installer.  Neccessary components include:
 
-The package includes a native add-on. To compile the add-on, Microsoft's Visual
-C++ Build Tools 2015 are required, which you can download from the
-[Visual Studio website](https://visualstudio.microsoft.com/vs/older-downloads/).
-The required components are:
+* C++ core features
+* MSVC (v143 recommended)
+* Windows SDK (11 recommended)
 
-* Windows 8.1 SDK
-* Visual C++ 2015 (v140) Toolset for Desktop
+Powershell 7 is required to build the project.  DO NOT use Windows Powershell; it will cause your install to fail.
 
-![Windows 8.1 SDK](./docs/assets/windows-8-1-sdk.png)
-![VC++ 2015.3 v14.00 (v140) toolset for desktop](./docs/assets/vc-2015-3-v140.png)
+Python 3.11 or below is also required to build the project.
+
+When building the project, make sure the full path of the project directory does not have any spaces. C:\Users\Administrator\Documents\Visual Studio 2022\aerospike will fail to build.
+The error given will be `error MSB1008: Only one project can be specified`.
 
 <a name="aerospike-c-client-sdk"></a>
 ## Aerospike C Client SDK
 
 The Aerospike Node.js client depends on the Aerospike C client. During
 installation, a copy of the C client SDK is downloaded and compiled.
+
 Additionally, a set of pre-built, third-party libraries are downloaded and
 installed via the
 [`aerospike-client-c-dependencies`](https://www.nuget.org/packages/aerospike-client-c-dependencies)
-nuget package. Please refer to the [Aerospike C client
+nuget package. These dependencies are required to build the project on Windows. To download these dependencies, use `nuget restore aerospike.sln` inside the `aerospike-client-c/vs` folder, or simply restoring the package inside the solution view of visual studio.
+
+Please refer to the [Aerospike C client
 documentation](https://github.com/aerospike/aerospike-client-c/tree/master/vs)
-for further information.
+for further information on the visual studio build steps.
+
+## Builidng the C Client dependency
+
+If you are building on a local machine, you will need to build the C Cient dependency. This can be achieved by using the build script located at `scripts\build-package.ps1`
+
+## Install the Aerospike Node.js Client
+
+If you only wish to install the Client, the `aerospike` npm package supports windows installation using [nvm-windows](https://github.com/coreybutler/nvm-windows).
 
 <a name="FAQ"></a>
 ## Frequently Asked Questions

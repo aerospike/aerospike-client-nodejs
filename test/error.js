@@ -17,6 +17,7 @@
 'use strict'
 
 /* global expect, describe, it */
+/* eslint-disable no-unused-expressions */
 
 const AerospikeError = require('../lib/error')
 const status = require('../lib/status')
@@ -107,11 +108,11 @@ describe('AerospikeError #noserver', function () {
 
     it('returns null if the status code is OK', function () {
       const error = { code: status.OK }
-      expect(AerospikeError.fromASError(error)).to.be.null()
+      expect(AerospikeError.fromASError(error)).to.be.null
     })
 
     it('returns null if no error is passed', function () {
-      expect(AerospikeError.fromASError(null)).to.be.null()
+      expect(AerospikeError.fromASError(null)).to.be.null
     })
   })
 
@@ -119,13 +120,13 @@ describe('AerospikeError #noserver', function () {
     it('returns true if the error code indicates a server error', function () {
       const error = { code: status.ERR_RECORD_NOT_FOUND }
       const subject = AerospikeError.fromASError(error)
-      expect(subject.isServerError()).to.be.true()
+      expect(subject.isServerError()).to.be.true
     })
 
     it('returns false if the error code indicates a client error', function () {
       const error = { code: status.ERR_PARAM }
       const subject = AerospikeError.fromASError(error)
-      expect(subject.isServerError()).to.be.false()
+      expect(subject.isServerError()).to.be.false
     })
   })
 
