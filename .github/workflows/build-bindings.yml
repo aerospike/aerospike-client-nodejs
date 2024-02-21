@@ -182,6 +182,7 @@ jobs:
           ls
           nvm i 20
           npm install
+          ${{ env.TEST_COMMAND }}
 
     - name: Build client x64
       if: ${{ matrix.platform != 'aarch64' }}
@@ -196,6 +197,7 @@ jobs:
         CFLAGS: '-Werror' 
 
     - name: Test client
+      if: ${{ matrix.platform != 'aarch64' }}
       run: |
         ${{ env.TEST_COMMAND }}
 
