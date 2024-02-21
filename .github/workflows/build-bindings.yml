@@ -171,7 +171,7 @@ jobs:
         # Set an output parameter `uname` for use in subsequent steps
         run: |
           apt update
-          apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl
+          apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl python3
           ./scripts/build-c-client.sh
           ls -a
           ls -a 
