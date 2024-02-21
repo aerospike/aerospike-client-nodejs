@@ -27,9 +27,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+
     - name: install standard
       run: npm install standard
 
@@ -51,16 +53,18 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-version }}
         architecture: 'x64'
+
     - name: debugging
       run: |
         echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
 
-    - run: sudo apt update
+    - name: Download most recent package information
+      run: sudo apt update
     - name: Install build dependencies (C Client dependency packages)
       run: sudo apt install g++ libssl-dev zlib1g-dev;
     - name: Install build dependencies (make)
       run: sudo apt-get install -y make;
-    - name: Install build dependencies (make)
+    - name: Install build dependencies
       run: sudo apt install build-essential;
 
     - name: Build client
@@ -70,55 +74,11 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
-    - name: list
-      run: ls lib/binding
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
       with:
         name: binding-${{ matrix.nodejs-version }}
         path: ./lib/binding/node-*-linux-x64/
-
-#  test-memray:
-#    needs: build-ubuntu
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v4
-#
-#    - uses: actions/setup-node@v4
-#      with:
-#        node-version: ${{ matrix.nodejs-version }}
-#        architecture: 'x64'
-#
-#    - uses: actions/download-artifact@v4
-#      with:
-#        name: binding-18
-#
-#    - name: make binding folder
-#      run: mkdir lib/binding
-#
-#    - name: Install client
-#      run: cp -r install node-v108-linux-x64 lib/binding/node-v108-linux-x64
-#
-#    - name: Install client
-#      run: npm install .
-#
-#    - name: Run Aerospike server
-#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-#
-#    - name: Wait for database to be ready
-#      # Should be ready after 3 seconds
-#      run: sleep 3
-#
-#    - name: Get number of tests
-#      run: echo "NUM_TESTS=$(npm run test-dry-run | grep -oP '\d+ (passing|pending)' | awk '{ sum += $1 } END { print sum }')" >> $GITHUB_ENV
-#      working-directory: test
-#
-#    - name: Run tests
-#      # Get number of tests since setting to 0 doesn't work properly
-#      # pytest-memray currently throws a ZeroDivision error due to having a bug
-#      # We ignore this for now
-#      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
-#      working-directory: test
 
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
@@ -417,13 +377,36 @@ jobs:
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
       
-    - name: Modify the package.json
-      run: |
+    - name: Make package directory
         mkdir my-aerospike-project
-        cd my-aerospike-project
+
+    - name: Initialize npm project
+      working-directory: my-aerospike-project
+      run: |
         npm init -y
+
+    - name: Install typescript as a developer dependency
+      working-directory: my-aerospike-project
+      run: |
         npm install typescript ts-node --save-dev
+
+    - name: Install aerospike as dependency in npm project
+      working-directory: my-aerospike-project
+      run: |
         npm install ..
+
+    - name: copy typescript example to npm project
+      working-directory: my-aerospike-project
+      run: |
         cp ../examples/typescript.ts index.ts
+
+
+    - name: Compile the project in typescript
+      working-directory: my-aerospike-project
+      run: |
         npx tsc index.ts
+
+    - name: Run the compile javascript test
+      working-directory: my-aerospike-project
+      run: |
         node index.js

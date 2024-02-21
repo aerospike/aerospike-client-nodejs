@@ -143,16 +143,6 @@ jobs:
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-#    - name: Set config.conf to use Docker IP address of Aerospike server
-#      # config.conf should be copied into the cibuildwheel Docker container
-#      run: |
-#        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-#        # Install crudini
-#        pip install crudini -c ../.github/workflows/requirements.txt
-#        sed -i "s/127.0.0.1:3000//" config.conf
-#        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
-#      working-directory: test
-
     - name: Enable tests
       run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
@@ -170,6 +160,7 @@ jobs:
         shell: /bin/bash
         # Set an output parameter `uname` for use in subsequent steps
         run: |
+          docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
           apt update
           apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl python3
           ./scripts/build-c-client.sh
@@ -439,10 +430,13 @@ jobs:
         npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
-    - name: Run tests
+    - name: make test directory
       run: |
-        mkdir -p testDir
-        cd testDir
+        mkdir -p testDir 
+
+    - name: Install package using npm
+      working-directory: testDir
+      run: |
         npm install ..
 
   test-yarn-install:
@@ -465,12 +459,22 @@ jobs:
         npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
-    - name: Run tests
+    - name: make test directory
       run: |
-        mkdir -p testDir
-        yarn link 
-        cd testDir
-        npm install --global yarn
+        mkdir -p testDir 
+
+    - name: run yarn link on source package
+      run: |
+        yarn link
+
+    - name: Install yarn
+      working-directory: testDir
+      run: |
+        npm install --global yarn 
+
+    - name: Install package using yarn
+      working-directory: testDir
+      run: |
         yarn add link:..
 
   test-pnpm-install:
@@ -493,13 +497,27 @@ jobs:
         npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
-    - name: Run tests
+    - name: make test directory
       run: |
         mkdir -p testDir 
-        cd testDir
+
+    - name: Install pnpm
+      working-directory: testDir
+      run: |
         npm install --global pnpm 
+
+    - name: Set shell enviornment variable  
+      working-directory: testDir
+      run: |
         SHELL=bash pnpm setup 
+
+    - name: Refresh bashrc
+      run: |
         source /home/runner/.bashrc
+
+    - name: Install package using pnpm
+      working-directory: testDir
+      run: |
         pnpm install ..
 
   test-bun-install:
@@ -522,35 +540,59 @@ jobs:
         npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
-    - name: Run tests
+    - name: Install bun
       run: |
         npm install -g bun
-        bun link       
+
+    - name: run bun link on source package
+      run: |
+        bun link
+
+    - name: make test directory
+      run: |
         mkdir -p testDir 
-        cd testDir
+
+    - name: run bun link on source package
+      working-directory: testDir
+      run: |
         bun link aerospike
 
   test-typescript-install:
     runs-on: ubuntu-latest
     needs: [manylinux, macOS-x86]
+    strategy:
+      matrix:
+        node-version: [
+          "20",
+        ]
+      fail-fast: false
+
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - uses: ./.github/workflows/combine-bindings/
-
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        node-version: ${{ matrix.node-version }}
         architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ matrix.node-version }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: Install client
+      run: |
+        cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
 
     - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
 
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -564,17 +606,37 @@ jobs:
       run: |
         npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-        
-    - name: Run tests
-      run: |
+
+    - name: Make package directory
         mkdir my-aerospike-project
-        cd my-aerospike-project
+
+    - name: Initialize npm project
+      working-directory: my-aerospike-project
+      run: |
         npm init -y
+
+    - name: Install typescript as a developer dependency
+      working-directory: my-aerospike-project
+      run: |
         npm install typescript ts-node --save-dev
+
+    - name: Install aerospike as dependency in npm project
+      working-directory: my-aerospike-project
+      run: |
         npm install ..
+
+    - name: copy typescript example to npm project
+      working-directory: my-aerospike-project
+      run: |
         cp ../examples/typescript.ts index.ts
+
+
+    - name: Compile the project in typescript
+      working-directory: my-aerospike-project
+      run: |
         npx tsc index.ts
+
+    - name: Run the compile javascript test
+      working-directory: my-aerospike-project
+      run: |
         node index.js
-
-
-
