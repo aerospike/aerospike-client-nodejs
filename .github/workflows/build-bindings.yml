@@ -167,7 +167,6 @@ jobs:
       with:
         arch: aarch64
         distro: ubuntu22.04
-        shell: bash
         # Set an output parameter `uname` for use in subsequent steps
         run: |
           apt update
