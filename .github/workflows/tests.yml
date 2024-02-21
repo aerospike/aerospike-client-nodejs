@@ -378,6 +378,7 @@ jobs:
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
       
     - name: Make package directory
+      run: |
         mkdir my-aerospike-project
 
     - name: Initialize npm project

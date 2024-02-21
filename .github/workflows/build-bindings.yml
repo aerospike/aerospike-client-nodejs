@@ -608,6 +608,7 @@ jobs:
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
     - name: Make package directory
+      run: |
         mkdir my-aerospike-project
 
     - name: Initialize npm project
