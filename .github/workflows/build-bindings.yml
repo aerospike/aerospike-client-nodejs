@@ -98,7 +98,7 @@ jobs:
         ]
         platform: [
           "x86_64",
-          #"aarch64"
+          "aarch64"
         ]
 
     steps:
