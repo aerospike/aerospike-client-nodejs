@@ -173,8 +173,9 @@ jobs:
           apt update
           apt install -y g++ libssl-dev zlib1g-dev make build-essential libuv1-dev wget curl
           ./scripts/build-c-client.sh
+          ls -a
+          ls -a 
           wget https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;
-          source ~/.bashrc;
           nvm i 20
           npm install
 
