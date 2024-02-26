@@ -356,11 +356,6 @@ jobs:
         export EXT_CFLAGS="-I/usr/local/opt/openssl/include"" >> ~/.zshrc;
         source ~/.zshrc;
 
-    - name: Setup symlink folders
-      run: |
-        sudo ln -s /opt/homebrew/opt/libuv/ /usr/local/opt/libuv;
-        sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
-
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
