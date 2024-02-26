@@ -349,7 +349,7 @@ jobs:
         brew install openssl@3.2.1
         brew install libuv@1.47.0
 
-    - name: Set environment  for building
+    - name: Set environment for building
       run: |
         echo "export PATH="/usr/local/bin/:/usr/local/opt/openssl/bin:$PATH"
         export LDFLAGS="-L/usr/local/opt/openssl/lib"
