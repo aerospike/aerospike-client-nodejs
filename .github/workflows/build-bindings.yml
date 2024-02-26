@@ -392,12 +392,11 @@ jobs:
         CFLAGS: '-Werror'
 
     - name: Enable tests
-      if: ${{ inputs.run_tests }}
       run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
-    - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
+#    - name: Disable tests (only run basic import test)
+#      if: ${{ !inputs.run_tests }}
+#      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
 
     - name: Test client
