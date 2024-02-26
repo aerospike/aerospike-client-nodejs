@@ -343,8 +343,10 @@ jobs:
 
     - name: Install brew packages
       run: |
-        brew install openssl@3.0
-        brew install libuv
+        brew install libuv;        
+        sudo ln -s /opt/homebrew/opt/libuv/ /usr/local/opt/libuv;
+        brew install openssl;
+        sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
 
     - name: Set environment for building
       run: |
