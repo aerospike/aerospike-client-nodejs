@@ -344,7 +344,7 @@ jobs:
     - name: Install brew packages
       run: |
         brew install openssl@3.0
-        brew install libuv@1.47.0
+        brew install libuv
 
     - name: Set environment for building
       run: |
@@ -356,7 +356,7 @@ jobs:
 
     - name: Setup symlink folders
       run: |
-        sudo ln -s /usr/local/Cellar/libuv/1.47.0/ /usr/local/opt/libuv;
+        sudo ln -s /usr/local/Cellar/libuv/1.48.0/ /usr/local/opt/libuv;
         sudo ln -s /usr/local/Cellar/openssl@3/3.0.13/ /usr/local/opt/openssl;
 
     # Self-hosted runner only
