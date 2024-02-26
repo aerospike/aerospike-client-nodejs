@@ -356,8 +356,8 @@ jobs:
 
     - name: Setup symlink folders
       run: |
-        sudo ln -s /usr/local/Cellar/libuv/ /usr/local/opt/libuv;
-        sudo ln -s /usr/local/Cellar/openssl@3/ /usr/local/opt/openssl;
+        sudo ln -s /opt/homebrew/opt/libuv/ /usr/local/opt/libuv;
+        sudo ln -s /opt/homebrew/opt/openssl@3/ /usr/local/opt/openssl;
 
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
