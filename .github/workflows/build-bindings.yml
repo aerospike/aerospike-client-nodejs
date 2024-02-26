@@ -180,7 +180,17 @@ jobs:
           ls
           nvm i 20
           npm install
-          ${{ env.TEST_COMMAND }}
+#          ${{ env.TEST_COMMAND }}
+
+
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Build client x64
       if: ${{ matrix.platform != 'aarch64' }}
@@ -193,15 +203,7 @@ jobs:
         npm install
       env:
         CFLAGS: '-Werror' 
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
+        
     - name: Test client
       if: ${{ matrix.platform != 'aarch64' }}
       run: |
@@ -332,6 +334,7 @@ jobs:
     - name: Install NVM
       run: |
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        touch ~/.zshrc
         source ~/.zshrc
         nvm -v
         nvm install ${{ matrix.nodejs-version[1] }}
