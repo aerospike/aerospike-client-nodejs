@@ -41,6 +41,7 @@ v8::Local<v8::Object> retry_policy_values();
 v8::Local<v8::Object> status();
 v8::Local<v8::Object> ttl_enum_values();
 v8::Local<v8::Object> batchTypes();
+v8::Local<v8::Object> queryDuration();
 v8::Local<v8::Object> privilegeCode();
 v8::Local<v8::Object> expReadFlags();
 v8::Local<v8::Object> expWriteFlags();
