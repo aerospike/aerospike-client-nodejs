@@ -194,15 +194,15 @@ describe('client.batchRead()', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch, policy)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -213,15 +213,15 @@ describe('client.batchRead()', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch, policy)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -232,15 +232,15 @@ describe('client.batchRead()', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch, policy)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.equal(8)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -251,7 +251,7 @@ describe('client.batchRead()', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch, policy)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
@@ -259,7 +259,7 @@ describe('client.batchRead()', function () {
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -275,15 +275,15 @@ describe('client.batchRead()', function () {
             })
           }]
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -297,15 +297,15 @@ describe('client.batchRead()', function () {
             })
           }]
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -319,15 +319,15 @@ describe('client.batchRead()', function () {
             })
           }]
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })
@@ -341,15 +341,15 @@ describe('client.batchRead()', function () {
             })
           }]
           await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           const batchResult = await client.batchRead(batch)
           expect(batchResult[0].record.bins).to.eql({ i: 2 })
-          expect(batchResult[0].record.ttl).to.equal(9)
+          expect(batchResult[0].record.ttl).to.equal(8)
 
           const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         })

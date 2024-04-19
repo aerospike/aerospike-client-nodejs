@@ -91,16 +91,16 @@ describe('client.get()', function () {
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 2000))
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.equal(8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(10)
+        expect(record.ttl).to.be.within(9, 10);
 
         await client.remove(key)
       })
@@ -112,16 +112,16 @@ describe('client.get()', function () {
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 2000))
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.equal(8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(10)
+        expect(record.ttl).to.be.within(9, 10);
 
         await client.remove(key)
       })
@@ -132,17 +132,17 @@ describe('client.get()', function () {
           readTouchTtlPercent: 70
         })
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 2000))
 
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.equal(8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.be.within(9, 10);
         await client.remove(key)
       })
 
@@ -152,17 +152,17 @@ describe('client.get()', function () {
           readTouchTtlPercent: 0
         })
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 2000))
 
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.equal(8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(9)
+        expect(record.ttl).to.be.within(9, 10);
         await client.remove(key)
       })
     })

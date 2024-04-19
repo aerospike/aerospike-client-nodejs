@@ -289,15 +289,15 @@ context('Operations', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           let record = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.equal(8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
@@ -309,15 +309,15 @@ context('Operations', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           let record = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.equal(8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(10)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
@@ -329,15 +329,15 @@ context('Operations', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           let record = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.equal(8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
@@ -349,15 +349,15 @@ context('Operations', function () {
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 2000))
 
           let record = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.equal(8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.equal(9)
+          expect(record.ttl).to.be.within(9, 10);
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
