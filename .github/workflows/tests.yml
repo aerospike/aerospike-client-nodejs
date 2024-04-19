@@ -257,7 +257,7 @@ jobs:
 
     - name: Run lowest supported server
       run: |
-        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.0")).name' -r | head -n 1)
+        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.1")).name' -r | head -n 1)
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
 
     - name: Wait for database to be ready
@@ -305,7 +305,8 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
- 
+      working-directory: aerospike-client-python
+
  
     - name: Wait for server to start
       run: sleep 5
@@ -344,7 +345,10 @@ jobs:
       run: npm install mocha
 
     - name: install valgrind
-      run: sudo apt install valgrind
+      run: 
+        sudo apt-get update
+        sudo apt update
+        sudo apt install valgrind
 
     - name: Install client
       #fix the convention here
