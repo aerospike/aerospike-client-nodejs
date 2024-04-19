@@ -189,7 +189,9 @@ describe('client.batchRead()', function () {
       }]
       this.timeout(4000)
 
-      context('BatchReadPolicy policy', function () {
+      context('BatchPolicy policy', function () {
+        helper.skipUnlessVersion('>= 7.1.0', this)
+
         it('100% touches record', async function () {
           const policy = new Aerospike.BatchReadPolicy({
             readTouchTtlPercent: 100

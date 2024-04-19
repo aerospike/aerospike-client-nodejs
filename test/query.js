@@ -275,6 +275,7 @@ describe('Queries', function () {
     })
 
     it('Should run a regular primary index query with expectedDuration=LONG', function (done) {
+      helper.skipUnlessVersion('>= 7.1.0', this)
       const query = client.query(helper.namespace, testSet)
 
       const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG })
@@ -288,6 +289,7 @@ describe('Queries', function () {
     })
 
     it('Should run a regular primary index query with expectedDuration=SHORT', function (done) {
+      helper.skipUnlessVersion('>= 7.1.0', this)
       const query = client.query(helper.namespace, testSet)
       const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.SHORT })
       const results = []
@@ -300,6 +302,7 @@ describe('Queries', function () {
     })
 
     it('Should run a regular primary index query with expectedDuration=LONG_RELAX_AP', function (done) {
+      helper.skipUnlessVersion('>= 7.1.0', this)
       const query = client.query(helper.namespace, testSet)
       const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG_RELAX_AP })
       const results = []

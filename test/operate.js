@@ -282,6 +282,8 @@ context('Operations', function () {
       })
 
       context('readTouchTtlPercent policy', function () {
+        helper.skipUnlessVersion('>= 7.1.0', this)
+
         this.timeout(4000)
         it('100% touches record', async function () {
           const ops = [op.read('i')]
