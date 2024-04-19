@@ -274,6 +274,43 @@ describe('Queries', function () {
       })
     })
 
+    it('Should run a regular primary index query with expectedDuration=LONG', function (done) {
+      const query = client.query(helper.namespace, testSet)
+
+      const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG })
+      const results = []
+      stream.on('error', error => { throw error })
+      stream.on('data', record => results.push(record.bins))
+      stream.on('end', () => {
+        expect(results.length).to.be.above(samples.length)
+        done()
+      })
+    })
+
+    it('Should run a regular primary index query with expectedDuration=SHORT', function (done) {
+      const query = client.query(helper.namespace, testSet)
+      const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.SHORT })
+      const results = []
+      stream.on('error', error => { throw error })
+      stream.on('data', record => results.push(record.bins))
+      stream.on('end', () => {
+        expect(results.length).to.be.above(samples.length)
+        done()
+      })
+    })
+
+    it('Should run a regular primary index query with expectedDuration=LONG_RELAX_AP', function (done) {
+      const query = client.query(helper.namespace, testSet)
+      const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG_RELAX_AP })
+      const results = []
+      stream.on('error', error => { throw error })
+      stream.on('data', record => results.push(record.bins))
+      stream.on('end', () => {
+        expect(results.length).to.be.above(samples.length)
+        done()
+      })
+    })
+
     it('Should run a paginated primary index query', async function () {
       let recordTotal = 0
       let recordsReceived = 0
