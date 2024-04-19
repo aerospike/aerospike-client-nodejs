@@ -299,6 +299,11 @@ jobs:
     - name: Download aerospike-client-python repository
       run: git clone https://github.com/aerospike/aerospike-client-python.git
 
+    - name: debugging
+      run: |
+        ls;
+        ls .github;
+        
     - name: Run ee server
       uses: .github/actions/run-ee-server/
       with:

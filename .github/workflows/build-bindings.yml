@@ -429,14 +429,14 @@ jobs:
 
     - name: Modify the package.json
       run: |
-        npm install -g json
+        sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
     - name: Run tests
       run: |
         mkdir -p testDir
         cd testDir
-        npm install ..
+        sudo npm install ..
 
   test-yarn-install:
     runs-on: ubuntu-latest
