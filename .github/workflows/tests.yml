@@ -344,10 +344,10 @@ jobs:
       run: npm install mocha
 
     - name: install valgrind
-      run: 
-        sudo apt-get update
-        sudo apt update
-        sudo apt install valgrind
+      run: |
+        sudo apt-get update;
+        sudo apt update;
+        sudo apt install valgrind;
 
     - name: Install client
       #fix the convention here
