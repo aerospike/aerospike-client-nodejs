@@ -300,7 +300,7 @@ jobs:
       run: git clone https://github.com/aerospike/aerospike-client-python.git
 
     - name: Run ee server
-      uses: ./aerospike-client-python/.github/actions/run-ee-server/
+      uses: .github/actions/run-ee-server/
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
