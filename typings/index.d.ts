@@ -1504,6 +1504,7 @@ declare module 'policies/query_policy' {
       deserialize: boolean;
       failOnClusterChange: boolean;
       infoTimeout: number;
+      expectedDuration: number;
   }
   import BasePolicy = require("policies/base_policy");
 
