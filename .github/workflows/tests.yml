@@ -305,12 +305,6 @@ jobs:
         ls .github;
         docker ps;
 
-    - name: Run ee server
-      uses: .github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
  
     - name: Wait for server to start
