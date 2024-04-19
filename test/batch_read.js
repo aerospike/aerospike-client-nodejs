@@ -270,6 +270,7 @@ describe('client.batchRead()', function () {
       })
 
       context('BatchReadPolicy policy', function () {
+        helper.skipUnlessVersion('>= 7.1.0', this)
         it('100% touches record', async function () {
           batch = [{
             key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
