@@ -352,13 +352,11 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	printf("read_touch_ttl_percent: %d\n\n", policy->read_touch_ttl_percent);
 	if ((rc = get_optional_int_property((int *)&policy->read_touch_ttl_percent,
 										   NULL, obj, "readTouchTtlPercent", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	printf("read_touch_ttl_percent: %d\n\n", policy->read_touch_ttl_percent);
 	if ((rc = get_optional_bool_property(&policy->concurrent, NULL, obj,
 										 "concurrent", log)) !=
 		AS_NODE_PARAM_OK) {

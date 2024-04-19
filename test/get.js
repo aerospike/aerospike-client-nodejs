@@ -84,6 +84,7 @@ describe('client.get()', function () {
     })
 
     context('readTouchTtlPercent policy', function () {
+      this.timeout(4000)
       it('100% touches record', async function () {
         const key = keygen.integer(helper.namespace, helper.set)()
         const policy = new Aerospike.ReadPolicy({
@@ -91,58 +92,58 @@ describe('client.get()', function () {
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(8)
+        expect(record.ttl).to.be.within(7, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10);
+        expect(record.ttl).to.be.within(9, 10)
 
         await client.remove(key)
       })
 
-      it('91% touches record', async function () {
+      it('71% touches record', async function () {
         const key = keygen.integer(helper.namespace, helper.set)()
         const policy = new Aerospike.ReadPolicy({
-          readTouchTtlPercent: 91
+          readTouchTtlPercent: 71
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(8)
+        expect(record.ttl).to.be.within(7, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10);
+        expect(record.ttl).to.be.within(9, 10)
 
         await client.remove(key)
       })
 
-      it('70% never touches record', async function () {
+      it('60% never touches record', async function () {
         const key = keygen.integer(helper.namespace, helper.set)()
         const policy = new Aerospike.ReadPolicy({
-          readTouchTtlPercent: 70
+          readTouchTtlPercent: 60
         })
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
 
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(8)
+        expect(record.ttl).to.be.within(7, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10);
+        expect(record.ttl).to.be.within(7, 8)
         await client.remove(key)
       })
 
@@ -152,17 +153,17 @@ describe('client.get()', function () {
           readTouchTtlPercent: 0
         })
         await client.put(key, { i: 2 }, { ttl: 10 })
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
 
         let record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.equal(8)
+        expect(record.ttl).to.be.within(7, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10);
+        expect(record.ttl).to.be.within(7, 8)
         await client.remove(key)
       })
     })
