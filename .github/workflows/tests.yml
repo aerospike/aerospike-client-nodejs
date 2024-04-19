@@ -303,6 +303,7 @@ jobs:
       run: |
         ls;
         ls .github;
+        docker ps;
 
     - name: Run ee server
       uses: .github/actions/run-ee-server
