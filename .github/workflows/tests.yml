@@ -305,7 +305,6 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-      working-directory: aerospike-client-python
 
  
     - name: Wait for server to start
