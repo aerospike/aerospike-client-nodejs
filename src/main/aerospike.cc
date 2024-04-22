@@ -156,6 +156,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("ttl", ttl_enum_values());
 	export("auth", auth_mode_enum_values());
 	export("batchTypes", batchTypes());
+	export("queryDuration", queryDuration());
 	export("privilegeCode", privilegeCode());
 	export("expReadFlags", expReadFlags());
 	export("expWriteFlags", expWriteFlags());

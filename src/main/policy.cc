@@ -130,6 +130,11 @@ int readpolicy_from_jsobject(as_policy_read *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_int_property((int *)&policy->read_touch_ttl_percent,
+										   NULL, obj, "readTouchTtlPercent", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->deserialize, NULL, obj,
 										 "deserialize", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -249,6 +254,11 @@ int operatepolicy_from_jsobject(as_policy_operate *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_int_property((int *)&policy->read_touch_ttl_percent,
+										   NULL, obj, "readTouchTtlPercent", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->commit_level,
 										   NULL, obj, "commitLevel", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -342,6 +352,11 @@ int batchpolicy_from_jsobject(as_policy_batch *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_int_property((int *)&policy->read_touch_ttl_percent,
+										   NULL, obj, "readTouchTtlPercent", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->concurrent, NULL, obj,
 										 "concurrent", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -405,7 +420,11 @@ int batchread_policy_from_jsobject(as_policy_batch_read *policy,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-
+	if ((rc = get_optional_int_property((int *)&policy->read_touch_ttl_percent,
+										   NULL, obj, "readTouchTtlPercent", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	return rc;
 }
 
@@ -578,6 +597,11 @@ int querypolicy_from_jsobject(as_policy_query *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_bool_property(&policy->short_query, NULL, obj,
 										 "shortQuery", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property((uint32_t *)&policy->expected_duration, NULL, obj,
+										 "expectedDuration", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
