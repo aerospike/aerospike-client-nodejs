@@ -82,6 +82,93 @@ describe('client.get()', function () {
           })
       })
     })
+
+    context('readTouchTtlPercent policy', function () {
+      helper.skipUnlessVersion('>= 7.1.0', this)
+
+      this.timeout(4000)
+      it('100% touches record', async function () {
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.ReadPolicy({
+          readTouchTtlPercent: 100
+        })
+
+        await client.put(key, { i: 2 }, { ttl: 10 })
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        let record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+
+        record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(9, 10)
+
+        await client.remove(key)
+      })
+
+      it('71% touches record', async function () {
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.ReadPolicy({
+          readTouchTtlPercent: 71
+        })
+
+        await client.put(key, { i: 2 }, { ttl: 10 })
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        let record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+
+        record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(9, 10)
+
+        await client.remove(key)
+      })
+
+      it('60% never touches record', async function () {
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.ReadPolicy({
+          readTouchTtlPercent: 60
+        })
+        await client.put(key, { i: 2 }, { ttl: 10 })
+        await new Promise(resolve => setTimeout(resolve, 3000))
+
+        let record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+
+        record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+        await client.remove(key)
+      })
+
+      it('0% never touches record', async function () {
+        const key = keygen.integer(helper.namespace, helper.set)()
+        const policy = new Aerospike.ReadPolicy({
+          readTouchTtlPercent: 0
+        })
+        await client.put(key, { i: 2 }, { ttl: 10 })
+        await new Promise(resolve => setTimeout(resolve, 3000))
+
+        let record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+
+        record = await client.get(key, policy)
+
+        expect(record.bins).to.eql({ i: 2 })
+        expect(record.ttl).to.be.within(7, 8)
+        await client.remove(key)
+      })
+    })
   })
 
   it('should return the TTL for a never expiring record as Aerospike.ttl.NEVER_EXPIRE', function (done) {

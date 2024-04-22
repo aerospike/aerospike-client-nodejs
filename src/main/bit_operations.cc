@@ -254,7 +254,7 @@ bool add_bit_rshift_op(as_operations *ops, char *bin, as_bit_policy *policy,
 
 typedef bool (*AsBitMath)(as_operations *ops, const char *bin, as_cdt_ctx *ctx,
 						  as_bit_policy *policy, int bit_offset,
-						  uint32_t bit_size, int64_t value, bool sign,
+						  uint32_t bit_size, uint64_t value, bool sign,
 						  as_bit_overflow_action action);
 
 bool add_bit_math_op(as_operations *ops, AsBitMath math_op, char *bin,

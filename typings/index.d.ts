@@ -1504,6 +1504,7 @@ declare module 'policies/query_policy' {
       deserialize: boolean;
       failOnClusterChange: boolean;
       infoTimeout: number;
+      expectedDuration: number;
   }
   import BasePolicy = require("policies/base_policy");
 
@@ -1652,6 +1653,11 @@ declare module 'query' {
   }
   import RecordStream = require("record_stream");
 
+}
+declare module 'query_duration' {
+  export const LONG: any;
+  export const SHORT: any;
+  export const LONG_RELAX_AP: any;
 }
 declare module 'record' {
   export = Record;

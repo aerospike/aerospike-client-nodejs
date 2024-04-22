@@ -181,6 +181,185 @@ describe('client.batchRead()', function () {
           })
       })
     })
+
+    context('readTouchTtlPercent policy', function () {
+      let batch = [{
+        key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
+        readAllBins: true
+      }]
+      this.timeout(4000)
+
+      context('BatchPolicy policy', function () {
+        helper.skipUnlessVersion('>= 7.1.0', this)
+
+        it('100% touches record', async function () {
+          const policy = new Aerospike.BatchReadPolicy({
+            readTouchTtlPercent: 100
+          })
+
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch, policy)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(9, 10)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('71% touches record', async function () {
+          const policy = new Aerospike.BatchReadPolicy({
+            readTouchTtlPercent: 71
+          })
+
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch, policy)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(9, 10)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('60% doesnt touch record', async function () {
+          const policy = new Aerospike.BatchReadPolicy({
+            readTouchTtlPercent: 60
+          })
+
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch, policy)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(7, 8)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('0% doesnt touch record', async function () {
+          const policy = new Aerospike.BatchReadPolicy({
+            readTouchTtlPercent: 0
+          })
+
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch, policy)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(7, 8)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+      })
+
+      context('BatchReadPolicy policy', function () {
+        helper.skipUnlessVersion('>= 7.1.0', this)
+        it('100% touches record', async function () {
+          batch = [{
+            key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
+            readAllBins: true,
+            policy: new Aerospike.BatchPolicy({
+              readTouchTtlPercent: 100
+            })
+          }]
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(9, 10)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('71% touches record', async function () {
+          batch = [{
+            key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
+            readAllBins: true,
+            policy: new Aerospike.BatchPolicy({
+              readTouchTtlPercent: 71
+            })
+          }]
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(9, 10)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('60% doesnt touch record', async function () {
+          batch = [{
+            key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
+            readAllBins: true,
+            policy: new Aerospike.BatchPolicy({
+              readTouchTtlPercent: 60
+            })
+          }]
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(7, 8)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+
+        it('0% doesnt touch record', async function () {
+          batch = [{
+            key: new Aerospike.Key('test', 'demo', 'batchReadTtl1'),
+            readAllBins: true,
+            policy: new Aerospike.BatchPolicy({
+              readTouchTtlPercent: 0
+            })
+          }]
+          await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl1'), { i: 2 }, { ttl: 10 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
+
+          const batchResult = await client.batchRead(batch)
+          expect(batchResult[0].record.bins).to.eql({ i: 2 })
+          expect(batchResult[0].record.ttl).to.be.within(7, 8)
+
+          const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+          expect(record.bins).to.eql({ i: 2 })
+          expect(record.ttl).to.be.within(7, 8)
+
+          await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
+        })
+      })
+    })
   })
 
   it('returns a Promise that resolves to the batch results', function () {
