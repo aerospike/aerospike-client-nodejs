@@ -78,8 +78,11 @@ const config = {
 
 const key = new Aerospike.Key('test', 'demo', 'demo')
 
-Aerospike.connect(config)
-  .then(client => {
+;(async function () {
+  let client
+  try {
+    client = await Aerospike.connect(config)
+
     const bins = {
       i: 123,
       s: 'hello',
@@ -97,39 +100,32 @@ Aerospike.connect(config)
       totalTimeout : 0
     })
 
-    return client.put(key, bins, meta, policy)
-      .then(() => {
-        const ops = [
-          Aerospike.operations.incr('i', 1),
-          Aerospike.operations.read('i'),
-          Aerospike.lists.append('l', 'z'),
-          Aerospike.maps.removeByKey('m', 'bar')
-        ]
 
-        return client.operate(key, ops)
-      })
-      .then(result => {
-        console.log(result.bins) // => { i: 124, l: 4, m: null }
+    await client.put(key, bins, meta, policy)
+    const ops = [
+      Aerospike.operations.incr('i', 1),
+      Aerospike.operations.read('i'),
+      Aerospike.lists.append('l', 'z'),
+      Aerospike.maps.removeByKey('m', 'bar')
+    ]
 
-        return client.get(key)
-      })
-      .then(record => {
-        console.log(record.bins) // => { i: 124,
-                                 //      s: 'hello',
-                                 //      b: <Buffer 77 6f 72 6c 64>,
-                                 //      d: 3.1415,
-                                 //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
-                                 //      l: [ 1, 'a', { x: 'y' }, 'z' ],
-                                 //      m: { foo: 4 } }
-      })
-      .then(() => client.close())
-  })
-  .catch(error => {
-    console.error('Error: %s [%i]', error.message, error.code)
-    if (error.client) {
-      error.client.close()
-    }
-  })
+    await client.operate(key, ops)
+    let record = await client.get(key) 
+
+    console.log(record.bins) // => { i: 124,
+                             //      s: 'hello',
+                             //      b: <Buffer 77 6f 72 6c 64>,
+                             //      d: 3.1415,
+                             //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
+                             //      l: [ 1, 'a', { x: 'y' }, 'z' ],
+                             //      m: { foo: 4 } }
+  } catch (error) {
+    console.error('Error:', error)
+    process.exit(1)
+  } finally {
+    if (client) client.close()
+  }
+})()
 ```
 ## Prerequisites
 

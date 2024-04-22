@@ -1,6 +1,34 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [5.12.0]
+* The new features require Aerospike Server version 7.1 or newer.
+
+* **New Features**
+  * [CLIENT-2882] - Added the queryDuration enumeration to the policy module. The following values are supported:
+    * Aerospike.policy.queryDuration.LONG
+    * Aerospike.policy.queryDuration.SHORT
+    * Aerospike.policy.queryDuration.LONG_RELAX_AP
+  * [CLIENT-2882] - Added expectedDuration member to QueryPolicy. Use the queryDuration enumeration when setting expectedDuration.
+  * [CLIENT-2889] - Added support for readTouchTtlPercent for the following policies:
+    * ReadPolicy
+    * OperatePolicy
+    * BatchPolicy
+    * BatchReadPolicy
+
+## [5.11.0]
+
+* **New Features**
+  * [CLIENT-2770] - Added support for persistent list indexes.
+  * [CLIENT-2774] - Added 'ttl' property to 'batchWrite' policy.
+  * [CLIENT-2793] - Added support for the batchParentWrite policy in the client config policy.
+  * [CLIENT-2795] - Added the 'create' method for the 'aerospike/list' module.
+* **Bug Fixes**
+  * [CLIENT-2773] - Added missing error codes to status.js.
+  * [CLIENT-2794] - Fixed typescript compiler errors.
+  * [CLIENT-2781] - Batch repeat flag is no longer set on batch writes when the 'sendKey' policy is true.
+
 ## [5.10.0]
 
 * **New Features**
