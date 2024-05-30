@@ -81,7 +81,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 	}
 
 	Local<String> node_name = info[1].As<String>();
-	strncpy(cmd->node_name, *Nan::Utf8String(node_name), AS_NODE_NAME_SIZE);
+	snprintf(cmd->node_name, AS_NODE_NAME_SIZE, "%s", *Nan::Utf8String(node_name));
 
 	if (info[2]->IsObject()) {
 		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
