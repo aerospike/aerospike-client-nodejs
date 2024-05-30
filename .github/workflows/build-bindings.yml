@@ -219,7 +219,7 @@ jobs:
           ["v120", 21],
           ["v127", 22]
         ]
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -266,11 +266,6 @@ jobs:
 #    - name: Disable tests (only run basic import test)
 #      if: ${{ !inputs.run_tests }}
 #      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
-
-
-    - name: debug
-      run: |
-        uname -m
 
     - name: Build client
       run: |
