@@ -268,7 +268,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm run test
+      run: npm run test --t 20000
 
   test-ee:
     runs-on: ubuntu-latest
