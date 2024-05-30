@@ -35,6 +35,8 @@ LIBUV_URL=http://dist.libuv.org/dist/v1.45.0/${LIBUV_TAR}
 LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 LIBUV_BUILD=0
 build_arch=$(uname -m)
+echo "Detected build architecture: ${build_arch}"
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-${build_arch}
@@ -60,6 +62,8 @@ else
     printf "Unsupported OS version:" "$OSTYPE"
     exit 1
 fi
+
+echo "AEROSPIKE_LIBRARY set to: ${AEROSPIKE_LIBRARY}"
 
 configure_nvm() {
   if [ -f ~/.nvm/nvm.sh ]; then

@@ -267,6 +267,11 @@ jobs:
 #      if: ${{ !inputs.run_tests }}
 #      run: echo "TEST_COMMAND=node -e 'aerospike = require(\".\/lib\/aerospike\")'" >> $GITHUB_ENV
 
+
+    - name: debug
+      run: |
+        uname -m
+
     - name: Build client
       run: |
         ./scripts/build-c-client.sh
