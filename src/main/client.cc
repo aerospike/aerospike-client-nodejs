@@ -221,12 +221,16 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 
 NAN_METHOD(AerospikeClient::SetLogLevel)
 {
-	AerospikeClient *client =
-		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
-	if (info[0]->IsObject()) {
-		log_from_jsobject(client->log, info[0].As<Object>());
-	}
-	info.GetReturnValue().Set(info.Holder());
+    AerospikeClient *client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
+    
+    if (info.Length() > 0 && info[0]->IsObject()) {
+        v8::Local<v8::Object> logObject = info[0].As<v8::Object>();
+        log_from_jsobject(client->log, logObject);
+    } else {
+        return Nan::ThrowTypeError("Expected an object as the first argument");
+    }
+    
+    info.GetReturnValue().Set(info.Holder());
 }
 
 /**
