@@ -436,7 +436,8 @@ jobs:
       run: |
         pwd
         node ./scripts/prebuiltBinding.js
-
+        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding/node-v108-linux-x64/
+        echo "finish"
     - name: Run tests
       run: |
         mkdir -p testDir
