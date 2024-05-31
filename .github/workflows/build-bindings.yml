@@ -175,7 +175,7 @@ jobs:
           ./scripts/build-c-client.sh
           wget https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;
           source ~/.bashrc;
-          nvm i 20
+          nvm i 22
           npm install
 
     - name: Build client x64
@@ -445,7 +445,7 @@ jobs:
         ls lib/binding/glibc@2.39
         ls lib/binding/glibc@2.35
         ls lib/binding/glibc@2.31
-        
+
     - name: Run tests
       run: |
         mkdir -p testDir
