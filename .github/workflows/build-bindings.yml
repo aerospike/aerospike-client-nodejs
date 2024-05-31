@@ -431,6 +431,8 @@ jobs:
       run: |
         sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+        ls 
+        ls lib/binding
 
     - name: Run tests
       run: |
@@ -457,6 +459,8 @@ jobs:
       run: |
         sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+        ls 
+        ls lib/binding
 
     - name: Run tests
       run: |
@@ -514,7 +518,9 @@ jobs:
       run: |
         sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-
+        ls 
+        ls lib/binding
+        
     - name: Run tests
       run: |
         npm install -g bun
