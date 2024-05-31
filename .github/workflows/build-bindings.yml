@@ -434,23 +434,14 @@ jobs:
 
     - name: Modify the package.json
       run: |
-        ls 
-        ls lib/binding
-        ls lib/binding/glibc@2.39
-        ls lib/binding/glibc@2.35
-        ls lib/binding/glibc@2.31
+        pwd
         node ./scripts/prebuiltBinding.js
-        ls 
-        ls lib/binding
-        ls lib/binding/glibc@2.39
-        ls lib/binding/glibc@2.35
-        ls lib/binding/glibc@2.31
 
     - name: Run tests
       run: |
         mkdir -p testDir
         cd testDir
-
+        pwd
         sudo npm install ..
 
   test-yarn-install:
