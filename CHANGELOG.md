@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [5.12.1]
 
+* **Breaking Changes**
+  * [CLIENT-2984] - Dropped support for Node.js 21.
+
 * **New Features**
-  * [CLIENT-2976] - Added support for Ubuntu 24.04
-  * [CLIENT-2977] - Added support for Node.js 22
+  * [CLIENT-2976] - Added support for Ubuntu 24.04.
+  * [CLIENT-2977] - Added support for Node.js 22.
 * **Bug Fixes**
   * [CLIENT-2975] - Fixed issue with TLS pending buffer calculation in as_uv_tls_try_send_pending().
 
