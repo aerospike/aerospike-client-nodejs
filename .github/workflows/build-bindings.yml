@@ -433,6 +433,9 @@ jobs:
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
         ls 
         ls lib/binding
+        ls lib/binding/glibc@2.39
+        ls lib/binding/glibc@2.35
+        ls lib/binding/glibc@2.31
 
     - name: Run tests
       run: |
@@ -520,7 +523,7 @@ jobs:
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
         ls 
         ls lib/binding
-        
+
     - name: Run tests
       run: |
         npm install -g bun
