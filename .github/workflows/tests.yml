@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        nodejs-version: ["18", "20", "21", "22"]
+        nodejs-version: ["18", "20", "22"]
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -170,7 +170,6 @@ jobs:
         node-version: [
           "18",
           "20",
-          "21",
           "22"
         ]
       fail-fast: false
