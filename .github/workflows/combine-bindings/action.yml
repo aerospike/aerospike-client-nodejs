@@ -63,10 +63,9 @@ runs:
         mkdir -p lib/binding/glibc@2.39/node-v108-linux-arm64 lib/binding/glibc@2.39/node-v115-linux-arm64 lib/binding/glibc@2.39/node-v127-linux-arm64
         mkdir -p lib/binding/glibc@2.35/node-v108-linux-arm64 lib/binding/glibc@2.35/node-v115-linux-arm64 lib/binding/glibc@2.35/node-v127-linux-arm64
         mkdir -p lib/binding/glibc@2.31/node-v108-linux-arm64 lib/binding/glibc@2.31/node-v115-linux-arm64 lib/binding/glibc@2.31/node-v127-linux-arm64
-        mkdir -p lib/binding/glibc@2.39/node-v108-linux-x64 lib/binding/glibc@1/node-2.39-linux-x64 lib/binding/glibc@1/node-2.39-linux-x64        
-        mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@1/node-2.35-linux-x64 lib/binding/glibc@1/node-2.35-linux-x64        
-        mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@1/node-2.31-linux-x64 lib/binding/glibc@1/node-2.31-linux-x64  
-
+        mkdir -p lib/binding/glibc@2.39/node-v108-linux-x64 lib/binding/glibc@2.39/node-v115-linux-x64 lib/binding/glibc@2.39/node-v127-linux-x64        
+        mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64        
+        mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64        
         cp -r node-v108-linux-x64 lib/binding/glibc@2.35/node-v108-linux-x64
         cp -r node-v115-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64
         cp -r node-v127-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64
