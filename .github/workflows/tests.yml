@@ -202,8 +202,6 @@ jobs:
           cp -r node-v108-linux-x64 lib/binding/node-v108-linux-x64
         elif [ "${{ matrix.node-version }}" = "20" ]; then
           cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
-        elif [ "${{ matrix.node-version }}" = "21" ]; then
-          cp -r node-v120-linux-x64 lib/binding/node-v120-linux-x64
         elif [ "${{ matrix.node-version }}" = "22" ]; then
           cp -r node-v127-linux-x64 lib/binding/node-v127-linux-x64
         fi
