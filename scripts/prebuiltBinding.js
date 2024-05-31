@@ -52,10 +52,9 @@ const rm = util.promisify(fs.rm)
 
     let glibc
     if (version < 2.39) {
-      if(version < 2.35){
+      if (version < 2.35) {
         glibc = '2.31'
-      }
-      else{
+      } else {
         glibc = '2.35'
       }
     } else {
