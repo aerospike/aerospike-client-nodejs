@@ -11,6 +11,7 @@ const rm = util.promisify(fs.rm)
   const arch = await os.arch()
 
   if (platform === 'darwin') {
+    console.log("Darwin binaries")
     rm('lib/binding/node-v127-win32-x64', { recursive: true, force: true })
     rm('lib/binding/node-v115-win32-x64', { recursive: true, force: true })
     rm('lib/binding/node-v108-win32-x64', { recursive: true, force: true })
@@ -26,6 +27,7 @@ const rm = util.promisify(fs.rm)
     await rm('lib/binding/glibc@3', { recursive: true, force: true })
     await rm('lib/binding/glibc@1', { recursive: true, force: true })
   } else if (platform === 'win32') {
+    console.log("Windows binaries")
     rm('lib/binding/node-v127-darwin-arm64', { recursive: true, force: true })
     rm('lib/binding/node-v115-darwin-arm64', { recursive: true, force: true })
     rm('lib/binding/node-v108-darwin-arm64', { recursive: true, force: true })
@@ -35,6 +37,7 @@ const rm = util.promisify(fs.rm)
     await rm('lib/binding/glibc@3', { recursive: true, force: true })
     await rm('lib/binding/glibc@1', { recursive: true, force: true })
   } else {
+    console.log("Linux binaries")
     rm('lib/binding/node-v127-win32-x64', { recursive: true, force: true })
     rm('lib/binding/node-v115-win32-x64', { recursive: true, force: true })
     rm('lib/binding/node-v108-win32-x64', { recursive: true, force: true })
@@ -60,7 +63,8 @@ const rm = util.promisify(fs.rm)
     } else {
       glibc = '2.39'
     }
-
+    console.log("GLIBC version: " + glibc)
+    console.log("ARCH: " + arch)
     if (arch === 'x64') {
       await rename('lib/binding/glibc@' + glibc + '/node-v127-linux-x64', 'lib/binding/node-v127-linux-x64')
       await rename('lib/binding/glibc@' + glibc + '/node-v115-linux-x64', 'lib/binding/node-v115-linux-x64')
