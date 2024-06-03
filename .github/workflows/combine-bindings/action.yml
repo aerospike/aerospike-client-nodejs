@@ -72,7 +72,6 @@ runs:
         cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
         cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
         cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
-
 #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
 #        cp -r node-v115-linux-arm64 lib/binding/node-v115-linux-arm64
 #        cp -r node-v127-linux-arm64 lib/binding/node-v127-linux-arm64
