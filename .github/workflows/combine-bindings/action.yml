@@ -75,7 +75,7 @@ runs:
         cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
         echo "space"
         ls lib/binding/glibc@2.35
-        ls ib/binding/glibc@2.35/node-v127-linux-x64
+        ls lib/binding/glibc@2.35/node-v127-linux-x64
 
 #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
 #        cp -r node-v115-linux-arm64 lib/binding/node-v115-linux-arm64
