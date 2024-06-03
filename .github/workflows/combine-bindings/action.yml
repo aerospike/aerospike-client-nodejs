@@ -67,14 +67,15 @@ runs:
         mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64        
         mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64
         ls node-v108-linux-x64
-        cp -r node-v108-linux-x64 lib/binding/glibc@2.35/node-v108-linux-x64
-        cp -r node-v115-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64
-        cp -r node-v127-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64
+        cp -r node-v108-linux-x64 lib/binding/glibc@2.35/
+        cp -r node-v115-linux-x64 lib/binding/glibc@2.35/
+        cp -r node-v127-linux-x64 lib/binding/glibc@2.35/
         cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
         cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
         cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
         echo "space"
         ls lib/binding/glibc@2.35
+        echo "space"
         ls lib/binding/glibc@2.35/node-v127-linux-x64
 
 #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
