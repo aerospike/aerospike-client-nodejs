@@ -166,7 +166,7 @@ jobs:
       id: runcmd
       with:
         arch: aarch64
-        distro: ubuntu22.04
+        distro: ubuntu-22.04
 
         # Set an output parameter `uname` for use in subsequent steps
         run: |
@@ -193,6 +193,8 @@ jobs:
     - name: Test client
       run: |
         ${{ env.TEST_COMMAND }}
+
+    - name: 
 
     - name: Send binding to test jobs
       uses: actions/upload-artifact@v4
@@ -413,7 +415,7 @@ jobs:
 #        context: "Build bindings (${{ matrix.nodejs-version[0] }}-macosx_arm64)"
 
   test-npm-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -435,9 +437,13 @@ jobs:
     - name: Modify the package.json
       run: |
         pwd
+        echo "finish"
+        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding
+        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding/glibc@2.39/node-v108-linux-x64/
         node ./scripts/prebuiltBinding.js
         ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding/node-v108-linux-x64/
         echo "finish"
+        
     - name: Run tests
       run: |
         mkdir -p testDir
@@ -446,7 +452,7 @@ jobs:
         sudo npm install ..
 
   test-yarn-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -479,7 +485,7 @@ jobs:
         yarn add link:..
 
   test-pnpm-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -541,7 +547,7 @@ jobs:
         bun link aerospike
 
   test-typescript-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
