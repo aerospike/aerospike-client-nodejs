@@ -26,11 +26,11 @@ runs:
 
 #    - uses: actions/download-artifact@v4
 #      with:
-#        name: v120-macosx_aarch64.build
+#        name: v127-macosx_aarch64.build
 
     - uses: actions/download-artifact@v4
       with:
-        name: v120-macosx_x86_64.build
+        name: v127-macosx_x86_64.build
 
     - uses: actions/download-artifact@v4
       with:
@@ -50,32 +50,31 @@ runs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: v120-manylinux_x86_64.build
+        name: v127-manylinux_x86_64.build
 
 #    - uses: actions/download-artifact@v4
 #      with:
-#        name: v120-manylinux_aarch64.build
+#        name: v127-manylinux_aarch64.build
 
     - name: Install client
       shell: bash
       run: |
-        mkdir -p lib/binding/node-v108-darwin-arm64 lib/binding/node-v115-darwin-arm64 lib/binding/node-v120-darwin-arm64
-        mkdir -p lib/binding/openssl@3/node-v108-linux-arm64 lib/binding/openssl@3/node-v115-linux-arm64 lib/binding/openssl@3/node-v120-linux-arm64
-        mkdir -p lib/binding/openssl@1/node-v108-linux-arm64 lib/binding/openssl@1/node-v115-linux-arm64 lib/binding/openssl@1/node-v120-linux-arm64
-        mkdir -p lib/binding/openssl@1/node-v108-linux-x64 lib/binding/openssl@1/node-v115-linux-x64 lib/binding/openssl@1/node-v120-linux-x64        
-        cp -r node-v108-linux-x64 lib/binding/openssl@3/node-v108-linux-x64
-        cp -r node-v115-linux-x64 lib/binding/openssl@3/node-v115-linux-x64
-        cp -r node-v120-linux-x64 lib/binding/openssl@3/node-v120-linux-x64
+        mkdir -p lib/binding/node-v108-darwin-arm64 lib/binding/node-v115-darwin-arm64 lib/binding/node-v127-darwin-arm64
+        mkdir -p lib/binding/glibc@2.39/node-v108-linux-arm64 lib/binding/glibc@2.39/node-v115-linux-arm64 lib/binding/glibc@2.39/node-v127-linux-arm64
+        mkdir -p lib/binding/glibc@2.35/node-v108-linux-arm64 lib/binding/glibc@2.35/node-v115-linux-arm64 lib/binding/glibc@2.35/node-v127-linux-arm64
+        mkdir -p lib/binding/glibc@2.31/node-v108-linux-arm64 lib/binding/glibc@2.31/node-v115-linux-arm64 lib/binding/glibc@2.31/node-v127-linux-arm64
+        mkdir -p lib/binding/glibc@2.39/node-v108-linux-x64 lib/binding/glibc@2.39/node-v115-linux-x64 lib/binding/glibc@2.39/node-v127-linux-x64        
+        mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64        
+        mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64
+        cp -r node-v108-linux-x64 lib/binding/glibc@2.35/
+        cp -r node-v115-linux-x64 lib/binding/glibc@2.35/
+        cp -r node-v127-linux-x64 lib/binding/glibc@2.35/
         cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
         cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
-        cp -r node-v120-darwin-x64 lib/binding/node-v120-darwin-x64
-
+        cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
 #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
 #        cp -r node-v115-linux-arm64 lib/binding/node-v115-linux-arm64
-#        cp -r node-v120-linux-arm64 lib/binding/node-v120-linux-arm64
+#        cp -r node-v127-linux-arm64 lib/binding/node-v127-linux-arm64
 #        cp -r node-v108-darwin-arm64 lib/binding/node-v108-darwin-arm64
 #        cp -r node-v115-darwin-arm64 lib/binding/node-v115-darwin-arm64
-#        cp -r node-v120-darwin-arm64 lib/binding/node-v120-darwin-arm64
-
-
-
+#        cp -r node-v127-darwin-arm64 lib/binding/node-v127-darwin-arm64
