@@ -434,13 +434,8 @@ jobs:
 
     - name: Modify the package.json
       run: |
-        pwd
-        echo "finish"
-        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding
-        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding/glibc@2.39/node-v108-linux-x64/
-        node ./scripts/prebuiltBinding.js
-        ls /home/runner/work/aerospike-client-nodejs/aerospike-client-nodejs/lib/binding/node-v108-linux-x64/
-        echo "finish"
+        sudo npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
         
     - name: Run tests
       run: |
@@ -468,11 +463,6 @@ jobs:
       run: |
         sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-        ls 
-        ls lib/binding
-        ls lib/binding/glibc@2.39
-        ls lib/binding/glibc@2.35
-        ls lib/binding/glibc@2.31
 
     - name: Run tests
       run: |
@@ -530,11 +520,6 @@ jobs:
       run: |
         sudo npm install -g json
         json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-        ls 
-        ls lib/binding
-        ls lib/binding/glibc@2.39
-        ls lib/binding/glibc@2.35
-        ls lib/binding/glibc@2.31
 
     - name: Run tests
       run: |
