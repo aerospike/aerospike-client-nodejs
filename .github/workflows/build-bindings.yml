@@ -94,7 +94,7 @@ jobs:
         nodejs: [
           ["v108", 18],
           ["v115", 20],
-          ["v120", 21]
+          ["v127", 22]
         ]
         platform: [
           "x86_64",
@@ -166,7 +166,7 @@ jobs:
       id: runcmd
       with:
         arch: aarch64
-        distro: ubuntu22.04
+        distro: ubuntu-22.04
 
         # Set an output parameter `uname` for use in subsequent steps
         run: |
@@ -175,7 +175,7 @@ jobs:
           ./scripts/build-c-client.sh
           wget https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;
           source ~/.bashrc;
-          nvm i 20
+          nvm i 22
           npm install
 
     - name: Build client x64
@@ -215,9 +215,9 @@ jobs:
         nodejs: [
           ["v108", 18],
           ["v115", 20],
-          ["v120", 21]
+          ["v127", 22]
         ]
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -301,7 +301,7 @@ jobs:
 #        nodejs-version: [
 #          ["v108", "18"],
 #          ["v115", "20"],
-#          ["v120", "21"],
+#          ["v127", 22]
 #        ]
 #      fail-fast: false
 #    steps:
@@ -413,7 +413,7 @@ jobs:
 #        context: "Build bindings (${{ matrix.nodejs-version[0] }}-macosx_arm64)"
 
   test-npm-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -430,16 +430,22 @@ jobs:
     - name: Modify the package.json
       run: |
         sudo npm install -g json
-        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
+
+    - name: Modify the package.json
+      run: |
+        sudo npm install -g json
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+        
     - name: Run tests
       run: |
         mkdir -p testDir
         cd testDir
+        pwd
         sudo npm install ..
 
   test-yarn-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -467,7 +473,7 @@ jobs:
         yarn add link:..
 
   test-pnpm-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2
@@ -524,7 +530,7 @@ jobs:
         bun link aerospike
 
   test-typescript-install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [manylinux, macOS-x86]
     steps:
     - uses: actions/checkout@v2

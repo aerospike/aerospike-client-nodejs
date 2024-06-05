@@ -35,6 +35,7 @@ LIBUV_URL=http://dist.libuv.org/dist/v1.45.0/${LIBUV_TAR}
 LIBUV_ABS_DIR=${CWD}/${LIBUV_DIR}
 LIBUV_BUILD=0
 build_arch=$(uname -m)
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac OSX
   AEROSPIKE_LIB_HOME=${AEROSPIKE_C_HOME}/target/Darwin-${build_arch}

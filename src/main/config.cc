@@ -360,8 +360,7 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 			goto Cleanup;
 		}
 		else if (defined) {
-			strncpy(config->lua.user_path, user_path, ((strlen(user_path) + 1) < AS_CONFIG_PATH_MAX_SIZE) ?
-			(strlen(user_path) + 1) : AS_CONFIG_PATH_MAX_SIZE);
+			snprintf(config->lua.user_path, AS_CONFIG_PATH_MAX_SIZE, "%s", user_path);
 		}
 		else {
 			as_v8_debug(log, "Using default Lua user path: %s",

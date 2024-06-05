@@ -224,9 +224,9 @@ NAN_METHOD(AerospikeClient::SetLogLevel)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.Holder());
 	if (info[0]->IsObject()) {
-		log_from_jsobject(client->log, info[0].As<Object>());
+		log_from_jsobject(client->log, info[0].As<v8::Object>());
 	}
-	info.GetReturnValue().Set(info.Holder());
+    info.GetReturnValue().Set(Nan::New<v8::Value>(info.Holder()));
 }
 
 /**
