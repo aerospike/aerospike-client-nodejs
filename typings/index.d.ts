@@ -193,7 +193,7 @@ declare module 'client' {
           bins?: string[];
           readAllBins?: boolean;
           ops?: any[];
-      }, policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
+      }[], policy?: BatchPolicy, callback?: batchRecordsCallback | undefined): Promise<any> | null;
       batchWrite(records: {
           type: number;
           key: Key;
