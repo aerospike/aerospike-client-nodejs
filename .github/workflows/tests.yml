@@ -160,7 +160,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm run test
+      run: npm run ts-test
 
   test-ce:
     runs-on: ubuntu-latest
@@ -224,7 +224,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm run test
+      run: npm run ts-test
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
@@ -265,7 +265,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: npm run test -- --t 20000
+      run: npm run ts-test -- --t 20000
 
   test-ee:
     runs-on: ubuntu-latest
@@ -317,7 +317,7 @@ jobs:
       run: sleep 5
  
     - name: Run tests
-      run: npm run test -- --h localhost --U admin --P admin --t 40000 test/admin.js
+      run: npm run ts-test -- --h localhost --U admin --P admin --t 40000 test/admin.js
 
   test-valgrind:
     runs-on: ubuntu-latest

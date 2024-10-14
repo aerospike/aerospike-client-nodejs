@@ -10,3 +10,6 @@ npm-debug.log
 test.log
 aerospike-*.tgz
 scripts/build-c-client.sh-output.txt
+libuv*
+docs*
+ts-test/dist
