@@ -19,10 +19,10 @@
 /* eslint-env mocha */
 /* global expect */
 
+require('./test_helper')
 const Command = require('../lib/commands/command')
 
 describe('Command', function () {
-  /*
   context('Extend Command', function () {
     class TestCommand extends Command('testCmd') {
       foo () { return 'bar' }

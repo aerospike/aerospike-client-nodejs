@@ -19,14 +19,10 @@
 /* global expect, describe, it, context, before */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { } from 'aerospike';
-
-import { expect } from 'chai'; 
-import * as helper from './test_helper';
-
-const info = Aerospike.info
-
-const utils = Aerospike.utils
+const Aerospike = require('../lib/aerospike')
+const info = require('../lib/info')
+const helper = require('./test_helper')
+const utils = require('../lib/utils')
 
 const AerospikeError = Aerospike.AerospikeError
 
@@ -37,8 +33,8 @@ context('Info commands', function () {
     helper.skipIf(this, () => !!helper.config.password && helper.cluster.isVersionInRange('>= 5.5'),
       'client#info does not support authenticated connections on server 5.5 or later')
 
-    let node: any = null
-    let host: any = null
+    let node = null
+    let host = null
 
     before(() => {
       node = helper.cluster.randomNode()
@@ -46,7 +42,7 @@ context('Info commands', function () {
     })
 
     it('sends status query to a specific cluster node', function (done) {
-      client.info('status', host, (error: any, response: any) => {
+      client.info('status', host, (error, response) => {
         if (error) throw error
         expect(response).to.equal('status\tok\n')
         done()
@@ -54,7 +50,7 @@ context('Info commands', function () {
     })
 
     it('accepts a string with the host address', function (done) {
-      client.info('status', node.address, (error: any, response: any) => {
+      client.info('status', node.address, (error, response) => {
         if (error) throw error
         expect(response).to.equal('status\tok\n')
         done()
@@ -62,7 +58,7 @@ context('Info commands', function () {
     })
 
     it('fetches all info if no request is passed', function (done) {
-      client.info(null, host, (error: any, response: any) => {
+      client.info(null, host, (error, response) => {
         if (error) throw error
         expect(response).to.contain('\nversion\t')
         expect(response).to.contain('\nedition\t')
@@ -71,7 +67,7 @@ context('Info commands', function () {
     })
 
     it('should return a client error if the client is not connected', function (done) {
-      Aerospike.client(helper.config).info('status', host, (error: any) => {
+      Aerospike.client(helper.config).info('status', host, error => {
         expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
         done()
       })
@@ -79,7 +75,7 @@ context('Info commands', function () {
   })
 
   describe('Client#infoNode()', function () {
-    let node: any = null
+    let node = null
 
     before(() => {
       node = helper.cluster.randomNode()
@@ -99,7 +95,7 @@ context('Info commands', function () {
     })
 
     it('should return a client error if the client is not connected', function (done) {
-      Aerospike.client(helper.config).infoNode('status', node, (error: any) => {
+      Aerospike.client(helper.config).infoNode('status', node, error => {
         expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
         done()
       })
@@ -108,7 +104,7 @@ context('Info commands', function () {
 
   describe('Client#infoAny()', function () {
     it('executes the info command on a single cluster node', function (done) {
-      client.infoAny('status', function (err: any, result: any) {
+      client.infoAny('status', function (err, result) {
         expect(err).to.not.be.ok
         expect(result).to.equal('status\tok\n')
         done()
@@ -125,10 +121,10 @@ context('Info commands', function () {
 
   describe('client.infoAll()', function () {
     it('executes the info command on all cluster nodes an returns a list of results', function (done) {
-      client.infoAll('status', function (err: any, results: any) {
+      client.infoAll('status', function (err, results) {
         expect(err).to.not.be.ok
         expect(Array.isArray(results)).to.be.true
-        results.forEach(function (result: any) {
+        results.forEach(function (result) {
           expect(result.host).to.be.ok
           expect(result.info).to.equal('status\tok\n')
         })

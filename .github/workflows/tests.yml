@@ -159,6 +159,9 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Setup for TS
+      run: npm i --save-dev @types/mocha
+
     - name: Run tests
       run: npm run ts-test
 
@@ -223,6 +226,9 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Setup for TS
+      run: npm i --save-dev @types/mocha
+
     - name: Run tests
       run: npm run ts-test
 
@@ -264,6 +270,9 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Setup for TS
+      run: npm i --save-dev @types/mocha
+      f
     - name: Run tests
       run: npm run ts-test -- --t 20000
 
@@ -316,6 +325,9 @@ jobs:
     - name: Wait for server to start
       run: sleep 5
  
+    - name: Setup for TS
+      run: npm i --save-dev @types/mocha
+
     - name: Run tests
       run: npm run ts-test -- --h localhost --U admin --P admin --t 40000 test/admin.js
 
