@@ -272,7 +272,7 @@ jobs:
 
     - name: Setup for TS
       run: npm i --save-dev @types/mocha
-      f
+
     - name: Run tests
       run: npm run ts-test -- --t 20000
 
