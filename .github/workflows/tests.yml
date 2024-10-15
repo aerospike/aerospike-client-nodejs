@@ -164,7 +164,7 @@ jobs:
         npm i --save-dev @types/mocha
         npm i --save-dev @types/yargs
         npm i --save-dev @types/semver
-        npm i --save-dev @types/chai`
+        npm i --save-dev @types/chai
 
     - name: Run tests
       run: npm run ts-test
@@ -235,7 +235,7 @@ jobs:
         npm i --save-dev @types/mocha
         npm i --save-dev @types/yargs
         npm i --save-dev @types/semver
-        npm i --save-dev @types/chai`
+        npm i --save-dev @types/chai
 
     - name: Run tests
       run: npm run ts-test
@@ -283,7 +283,7 @@ jobs:
         npm i --save-dev @types/mocha
         npm i --save-dev @types/yargs
         npm i --save-dev @types/semver
-        npm i --save-dev @types/chai`
+        npm i --save-dev @types/chai
 
     - name: Run tests
       run: npm run ts-test -- --t 20000
@@ -342,7 +342,7 @@ jobs:
         npm i --save-dev @types/mocha
         npm i --save-dev @types/yargs
         npm i --save-dev @types/semver
-        npm i --save-dev @types/chai`
+        npm i --save-dev @types/chai
 
     - name: Run tests
       run: npm run ts-test -- --h localhost --U admin --P admin --t 40000 test/admin.js
