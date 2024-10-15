@@ -160,8 +160,8 @@ jobs:
       run: sleep 3
 
     - name: Compile Typescript
-    - working-directory: ts-test
-    - run: tsc
+      run: tsc
+      working-directory: ts-test
  
     - name: Setup for Typescript
       run: |
@@ -235,8 +235,8 @@ jobs:
       run: sleep 3
 
     - name: Compile Typescript
-    - working-directory: ts-test
-    - run: tsc
+      run: tsc
+      working-directory: ts-test
  
     - name: Setup for Typescript
       run: |
@@ -287,8 +287,8 @@ jobs:
       run: sleep 3
 
     - name: Compile Typescript
-    - working-directory: ts-test
-    - run: tsc
+      run: tsc
+      working-directory: ts-test
  
     - name: Setup for Typescript
       run: |
@@ -353,8 +353,8 @@ jobs:
 
  
     - name: Compile Typescript
-    - working-directory: ts-test
-    - run: tsc
+      run: tsc
+      working-directory: ts-test
  
     - name: Setup for Typescript
       run: |
