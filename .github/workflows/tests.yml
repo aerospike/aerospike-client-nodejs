@@ -165,10 +165,10 @@ jobs:
  
     - name: Setup for Typescript
       run: |
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/yargs
-        npm i --save-dev @types/semver
-        npm i --save-dev @types/chai
+        npm i --save-dev @types/mocha;
+        npm i --save-dev @types/yargs;
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/chai;
       working-directory: ts-test
 
     - name: Run tests
@@ -241,10 +241,10 @@ jobs:
  
     - name: Setup for Typescript
       run: |
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/yargs
-        npm i --save-dev @types/semver
-        npm i --save-dev @types/chai
+        npm i --save-dev @types/mocha;
+        npm i --save-dev @types/yargs;
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/chai;
       working-directory: ts-test
 
     - name: Run tests
@@ -294,10 +294,10 @@ jobs:
  
     - name: Setup for Typescript
       run: |
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/yargs
-        npm i --save-dev @types/semver
-        npm i --save-dev @types/chai
+        npm i --save-dev @types/mocha;
+        npm i --save-dev @types/yargs;
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/chai;
       working-directory: ts-test
 
     - name: Run tests
@@ -361,10 +361,10 @@ jobs:
  
     - name: Setup for Typescript
       run: |
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/yargs
-        npm i --save-dev @types/semver
-        npm i --save-dev @types/chai
+        npm i --save-dev @types/mocha;
+        npm i --save-dev @types/yargs;
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/chai;
       working-directory: ts-test
 
     - name: Run tests
