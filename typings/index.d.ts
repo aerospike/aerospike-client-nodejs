@@ -13325,87 +13325,326 @@ export namespace exp {
      * @return {AerospikeExp} geojson bin
      */
     export const binGeo: _binTypeExp;
-/**
- * Create expression that returns a bin as a list. Returns 'unknown' if the bin
- * is not an list.
- *
- * @function
- * @param {string} binName Bin name.
- * @return {AerospikeExp} list bin
- */
+    /**
+     * Create expression that returns a bin as a list. Returns 'unknown' if the bin
+     * is not an list.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} list bin
+     */
     export const binList: _binTypeExp;
-/**
- * Create expression that returns a bin as a map. Returns 'unknown' if the bin
- * is not an map.
- *
- * @function
- * @param {string} binName Bin name.
- * @return {AerospikeExp} map bin
- */
+    /**
+     * Create expression that returns a bin as a map. Returns 'unknown' if the bin
+     * is not an map.
+     *
+     * @function
+     * @param binName Bin name.
+     * @return {AerospikeExp} map bin
+     */
     export const binMap: _binTypeExp;
-/**
- * Create expression that returns a bin as a HyperLogLog (hll). Returns
- * 'unknown' if the bin is not a HyperLogLog (hll).
- *
- * @function
- * @param {string} binName Bin name.
- * @return {AerospikeExp} hll bin
- */
+    /**
+     * Create expression that returns a bin as a HyperLogLog (hll). Returns
+     * 'unknown' if the bin is not a HyperLogLog (hll).
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} hll bin
+     */
     export const binHll: _binTypeExp;
-/**
- * Create expression that returns the type of a bin as a integer.
- * @param __bin_name            Bin name.
- * @return (integer value) returns the bin_type as an as_bytes_type.
- * @ingroup expression
- */
-    export const binType: _binTypeExp;
-/**
- * Create expression that returns if bin of specified name exists.
- *
- * @param binName Bin name.
- * @return `True` if the bin exists, false otherwise.
- */
-    export const binExists: _binTypeExp;
-/**
- * Create expression that returns record set name string. This expression usually
- * evaluates quickly because record meta data is cached in memory.
- *
- * @function
- * @return string value Name of the set this record belongs to.
- */
+    /**
+     * Create expression that returns the type of a bin as a integer.
+     * @param __bin_name            Bin name.
+     * @returns returns the bin_type as an as_bytes_type.
 
+     */
+    export const binType: _binTypeExp;
+    /**
+     * Create expression that returns if bin of specified name exists.
+     *
+     * @param binName Bin name.
+     * @returns `True` if the bin exists, false otherwise.
+     */
+    export const binExists: _binTypeExp;
+    /**
+     * Create expression that returns record set name string. This expression usually
+     * evaluates quickly because record meta data is cached in memory.
+     *
+     * @function
+     * @returns Name of the set this record belongs to.
+     */
     export const setName: _metaExp;
+    /**
+     * Create expression that returns record size on disk. If server storage-engine is
+     * memory, then zero is returned. This expression usually evaluates quickly
+     * because record meta data is cached in memory.
+     * Requires server version between 5.3.0 inclusive and 7.0 exclusive.
+     * Use {@link #recordSize} for server version 7.0+.
+     *
+     * @function
+     * @return {AerospikeExp} integer value Uncompressed storage size of the record.
+     */
     export const deviceSize: _metaExp;
+    /**
+     * Create expression that returns record last update time expressed as 64 bit
+     * integer nanoseconds since 1970-01-01 epoch.
+     *
+     * @function
+     * @return {AerospikeExp} integer value When the record was last updated.
+     */
     export const lastUpdate: _metaExp;
+    /**
+     * Create expression that returns milliseconds since the record was last updated.
+     * This expression usually evaluates quickly because record meta data is cached
+     * in memory.
+     *
+     * @function
+     * @return {AerospikeExp} integer value Number of milliseconds since last updated.
+     */
     export const sinceUpdate: _metaExp;
+    /**
+     * Create expression that returns record expiration time expressed as 64 bit
+     * integer nanoseconds since 1970-01-01 epoch.
+     *
+     * @function
+     * @return integer value Expiration time in nanoseconds since 1970-01-01.
+     */
     export const voidTime: _metaExp;
+    /**
+     * Create expression that returns record expiration time (time to live) in integer
+     * seconds.
+     *
+     * @function
+     * @return {AerospikeExp} integer value Number of seconds till the record will expire,
+     *                         returns -1 if the record never expires.
+     */
     export const ttl: _metaExp;
+    /**
+     * Create expression that returns if record has been deleted and is still in
+     * tombstone state. This expression usually evaluates quickly because record
+     * meta data is cached in memory.
+     *
+     * @function
+     * @return {AerospikeExp} - value True if the record is a tombstone, false otherwise.
+     */
     export const isTombstone: _metaExp;
+    /**
+     * Create expression that returns record size in memory when either the
+     * storage-engine is memory or data-in-memory is true, otherwise returns 0.
+     * This expression usually evaluates quickly because record meta data is cached
+     * in memory.
+     * Requires server version between 5.3.0 inclusive and 7.0 exclusive.
+     * Use {@link #recordSize} for server version 7.0+.
+     *
+     * @function
+     * @return {AerospikeExp} integer value memory size of the record.
+     */
     export const memorySize: _metaExp;
+    /**
+     * Create expression that returns the record size. This expression usually evaluates
+     * quickly because record meta data is cached in memory.
+     * Requires server version 7.0+. This expression replaces {@link #deviceSize} and
+     * {@link #memorySize} since those older expressions are equivalent on server version 7.0+.
+     *
+     * @function
+     * @return {AerospikeExp} integer value size of the record in Megabytes.
+     */
     export const recordSize: _metaExp;
+    /**
+     * Create expression that returns record digest modulo as integer.
+     *
+     * @function
+     * @param {number} mod Divisor used to divide the digest to get a remainder.
+     * @return {AerospikeExp} integer value Value in range 0 and mod (exclusive)..
+     */
     export const digestModulo: _metaExp;
 
     export const eq: _cmpExp;
+    /**
+     * Create equals (==) expression.
+     *
+     * @function
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {AerospikeExp} - boolean value
+     */
     export const ne: _cmpExp;
+    /**
+     * Create not equal (!=) expression.
+     *
+     * @function
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {AerospikeExp} - boolean value
+     */
     export const gt: _cmpExp;
+/**
+ * Create a greater than or equals (>=) expression.
+ *
+ * @function
+ * @param {number} left left expression in comparison.
+ * @param {number} right right expression in comparison.
+ * @return {AerospikeExp} - boolean value
+ */
     export const ge: _cmpExp;
+/**
+ * Create a less than (<) expression.
+ *
+ * @function
+ * @param {number} left left expression in comparison.
+ * @param {number} right right expression in comparison.
+ * @return {AerospikeExp} - boolean value
+ */
     export const lt: _cmpExp;
+/**
+ * Create a less than or equals (<=) expression.
+ *
+ * @function
+ * @param {number} left left expression in comparison.
+ * @param {number} right right expression in comparison.
+ * @return {AerospikeExp} - boolean value
+ */
+
     export const le: _cmpExp;
+/**
+ * Create expression that performs a regex match on a string bin or value
+ * expression.
+ *
+ * @function
+ * @param {number} options POSIX regex flags defined in regex.h.
+ * @param {string} regex POSIX regex string.
+ * @param {AerospikeExp} cmpStr String expression to compare against.
+ * @return {AerospikeExp} - boolean value
+ */
     export const cmpRegex: (options: regex, regex: string, cmpStr: AerospikeExp) => AerospikeExp;
+/**
+ * Create a point within region or region contains point expression.
+ *
+ * @function
+ * @param {number} left left expression in comparison.
+ * @param {number} right right expression in comparison.
+ * @return {AerospikeExp} - boolean value
+ */
     export const cmpGeo: _cmpExp;
-
+/**
+ * Create "not" (!) operator expression.
+ *
+ * @function
+ * @param {AerospikeExp} expr Boolean expression to negate.
+ * @return {AerospikeExp} - boolean value
+ */
     export const not: (expr: AerospikeExp) => AerospikeExp;
-    export const and: _VAExp;
-    export const or: _VAExp;
-    export const exclusive: _VAExp;
 
+/**
+ * Create "and" (&&) operator that applies to a variable number of expressions.
+ *
+ * @function
+ * @param {AerospikeExp} ... Variable number of boolean expressions.
+ * @return {AerospikeExp} - boolean value
+ */
+    export const and: _VAExp;
+/**
+ * Create "or" (||) operator that applies to a variable number of expressions.
+ *
+ * @function
+ * @param {AerospikeExp} ... Variable number of boolean expressions.
+ * @return {AerospikeExp} - boolean value
+ */
+    export const or: _VAExp;
+/**
+ * Create expression that returns true if only one of the expressions are true.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {AerospikeExp} ... Variable number of boolean expressions.
+ * @return {AerospikeExp} - boolean value
+ */
+    export const exclusive: _VAExp;
+/**
+ * Create "add" (+) operator that applies to a variable number of expressions.
+ * Return the sum of all arguments.
+ * All arguments must be the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number[]} ... Variable number of integer or float expressions.
+ * @return {AerospikeExp} integer or float value
+ */
     export const add: _VAExp;
+/**
+ * Create "subtract" (-) operator that applies to a variable number of expressions.
+ * If only one argument is provided, return the negation of that argument.
+ * Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
+ * argument. All arguments must resolve to the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number[]} ... Variable number of integer or float expressions.
+ * @return {AerospikeExp} integer or float value
+ */
     export const sub: _VAExp;
+/**
+ * Create "multiply" (*) operator that applies to a variable number of expressions.
+ * Return the product of all arguments. If only one argument is supplied, return
+ * that argument. All arguments must resolve to the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number[]} ... Variable number of integer or float expressions.
+ * @return {AerospikeExp} integer or float value
+ */
     export const mul: _VAExp;
+/**
+ * Create "divide" (/) operator that applies to a variable number of expressions.
+ * If there is only one argument, returns the reciprocal for that argument.
+ * Otherwise, return the first argument divided by the product of the rest.
+ * All arguments must resolve to the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number[]} ... Variable number of integer or float expressions.
+ * @return {AerospikeExp} integer or float value
+ */
     export const div: _VAExp;
+/**
+ * Create "pow" operator that raises a "base" to the "exponent" power.
+ * All arguments must resolve to floats.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number} base Base value.
+ * @param {number} exponent Exponent value.
+ * @return {AerospikeExp} float value
+ */
     export const pow: _VAExp;
+/**
+ * Create "log" operator for logarithm of "num" with base "base".
+ * All arguments must resolve to floats.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {number} num Number.
+ * @param {number}base Base value.
+ * @return {AerospikeExp} float value
+ */
     export const log: _VAExp;
+/**
+ * Create "modulo" (%) operator that determines the remainder of "numerator"
+ * divided by "denominator". All arguments must resolve to integers.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @return {AerospikeExp} integer value
+ */
     export const mod: _VAExp;
+/**
+ * Create operator that returns absolute value of a number.
+ * All arguments must resolve to integer or float.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @return {AerospikeExp} number value
+ */
     export const abs: _VAExp;
     export const floor: _VAExp;
     export const ceil: _VAExp;
