@@ -159,24 +159,27 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Compile Typescript
-      run: tsc
-      working-directory: ts-test
- 
-    #- name: Setup for Typescript
-    #  run: |
-    #    npm i --save-dev @types/mocha;
-    #    npm i --save-dev @types/yargs;
-    #    npm i --save-dev @types/semver;
-    #    npm i --save-dev @types/chai;
-    #  working-directory: ts-test
+#    - name: Compile Typescript
+#      run: tsc
+#      working-directory: ts-test
+# 
+#    - name: Setup for Typescript
+#      run: |
+#        npm i --save-dev @types/mocha;
+#        npm i --save-dev @types/yargs;
+#        npm i --save-dev @types/semver;
+#        npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
+#      working-directory: ts-test
 
     - name: Run tests
       run: |
+        tsc
         npm i --save-dev @types/mocha;
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
-        npm i --save-dev @types/chai;      
+        npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
         npm run ts-test
 
   test-ce:
@@ -250,6 +253,7 @@ jobs:
 #        npm i --save-dev @types/yargs;
 #        npm i --save-dev @types/semver;
 #        npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
 #      working-directory: ts-test
 
     - name: Run tests
@@ -259,6 +263,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
         npm run ts-test
 
   test-lowest-supported-server:
@@ -309,6 +314,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
       working-directory: ts-test
 
     - name: Run tests
@@ -376,6 +382,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
+        npm i --save-dev @types/aerospike;
       working-directory: ts-test
 
     - name: Run tests

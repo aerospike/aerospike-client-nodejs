@@ -12976,7 +12976,7 @@ export namespace maps {
 }
 
 export namespace exp {
-        export namespace bit {
+    export namespace bit {
         export const reSize: (bin: AerospikeExp, flags: bitwise.resizeFlags, byteSize: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
         export const insert: (bin: AerospikeExp, value: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
         export const remove: (bin: AerospikeExp, byteSize: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13144,35 +13144,235 @@ export namespace exp {
     type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
 
     // Scalar expressions
+    /**
+     * Create boolean value.
+     *
+     * @function
+     * @param {boolean} value boolean value.
+     */
     export const bool: _valueExp<boolean>;
+    /**
+     * Create 64 bit signed integer value.
+     *
+     * @function
+     * @param {number} number value integer value.
+     * @return {AerospikeExp}
+     */
     export const int: _valueExp<number>;
+    /**
+     * Create 64 bit unsigned integer value.
+     *
+     * @function
+     * @param {number} number value unsigned integer value.
+     * @return {AerospikeExp}
+     */
     export const uint: _valueExp<number>;
+    /**
+     * Create 64 bit floating point value.
+     *
+     * @function
+     * @param {number} value floating point value.
+     * @return {AerospikeExp}
+    */
     export const float: _valueExp<number>;
+    /**
+     * Create string value.
+     *
+     * @function
+     * @param {string} value string value.
+     * @return {AerospikeExp}
+     */
     export const str: _valueExp<string>;
+    /**
+     * Create byte array value.
+     * *
+     * @function
+     * @param {string[]} value byte array value.
+     * @param {number} size number of bytes.
+     * @return {AerospikeExp}
+     */
     export const bytes: (value: string[] | Buffer, size?: number) => AerospikeExp;
+    /**
+     * Create geojson value.
+     *
+     * @function
+     * @param {Object} value geojson value.
+     * @return {AerospikeExp}
+     */
     export const geo: _valueExp<GeoJSON>;
+    /**
+     * Create list value.
+     *
+     * @function
+     * @param {array} value list value
+     * @return {AerospikeExp}
+     */
     export const list: _valueExp<AerospikeBinValue[]>;
+    /**
+     * Create map value.
+     *
+     * @function
+     * @param {array} value map value
+     * @return {AerospikeExp}
+     */
     export const map: _valueExp<Record<string, AerospikeBinValue>>;
+    /**
+     * Create 'nil' value.
+     *
+     * @function
+     * @return {AerospikeExp}
+     */
     export const nil: _nilExp;
+    /**
+     * Create 'inf' value.
+     *
+     * @function
+     */
     export const inf: _infExp;
+    /**
+     * Create 'wildcard' value.
+     *
+     * @function
+     */
     export const wildcard: _wildcardExp;
-
+    /**
+     * Create expression that returns the key as an integer. Returns 'unknown' if
+     * the key is not an integer.
+     *
+     * @function
+     * @param integer value Integer value of the key if the key is an integer.
+    */
     export const keyInt: _keyTypeExp;
+    /**
+     * Create expression that returns the key as an string. Returns 'unknown' if
+     * the key is not a string.
+     *
+     * @function
+     * @param {string} string value String value of the key if the key is a string.
+     * @return
+     */
     export const keyStr: _keyTypeExp;
+    /**
+     * Create expression that returns the key as an blob. Returns 'unknown' if
+     * the key is not an blob.
+     *
+     * @function
+     * @param {Object} blob Blob value of the key if the key is a blob.
+     * @return {AerospikeExp}
+     */
     export const keyBlob: _keyTypeExp;
+    /**
+     * Create expression that returns if the primary key is stored in the record meta
+     * data as a boolean expression. This would occur when "policy write key" is
+     * SEND on record write.
+     *
+     * @function
+     * @param {boolean} - value True if the record has a stored key, false otherwise.
+     * @return {AerospikeExp}
+     */
     export const keyExist: _keyTypeExp;
-
+    /**
+     * Create expression that returns a bin as a boolean value. Returns 'unknown'
+     * if the bin is not a boolean.
+     *
+     * @function
+     * @param {string }binName Bin name.
+     * @return {AerospikeExp} boolean bin
+     */
     export const binBool: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a signed integer. Returns 'unknown'
+     * if the bin is not an integer.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} integer bin
+     */
     export const binInt: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a float. Returns 'unknown' if the bin
+     * is not an float.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} float bin
+     */
     export const binFloat: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a string. Returns 'unknown' if the
+     * bin is not an string.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} string bin
+     */
     export const binStr: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a blob. Returns 'unknown' if the bin
+     * is not an blob.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} blob bin
+     */
     export const binBlob: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a geojson. Returns 'unknown' if the
+     * bin is not geojson.
+     *
+     * @function
+     * @param {string} binName Bin name.
+     * @return {AerospikeExp} geojson bin
+     */
     export const binGeo: _binTypeExp;
+/**
+ * Create expression that returns a bin as a list. Returns 'unknown' if the bin
+ * is not an list.
+ *
+ * @function
+ * @param {string} binName Bin name.
+ * @return {AerospikeExp} list bin
+ */
     export const binList: _binTypeExp;
+/**
+ * Create expression that returns a bin as a map. Returns 'unknown' if the bin
+ * is not an map.
+ *
+ * @function
+ * @param {string} binName Bin name.
+ * @return {AerospikeExp} map bin
+ */
     export const binMap: _binTypeExp;
+/**
+ * Create expression that returns a bin as a HyperLogLog (hll). Returns
+ * 'unknown' if the bin is not a HyperLogLog (hll).
+ *
+ * @function
+ * @param {string} binName Bin name.
+ * @return {AerospikeExp} hll bin
+ */
     export const binHll: _binTypeExp;
+/**
+ * Create expression that returns the type of a bin as a integer.
+ * @param __bin_name            Bin name.
+ * @return (integer value) returns the bin_type as an as_bytes_type.
+ * @ingroup expression
+ */
     export const binType: _binTypeExp;
+/**
+ * Create expression that returns if bin of specified name exists.
+ *
+ * @param binName Bin name.
+ * @return `True` if the bin exists, false otherwise.
+ */
     export const binExists: _binTypeExp;
+/**
+ * Create expression that returns record set name string. This expression usually
+ * evaluates quickly because record meta data is cached in memory.
+ *
+ * @function
+ * @return string value Name of the set this record belongs to.
+ */
 
     export const setName: _metaExp;
     export const deviceSize: _metaExp;
