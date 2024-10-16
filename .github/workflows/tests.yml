@@ -169,7 +169,7 @@ jobs:
 #        npm i --save-dev @types/yargs;
 #        npm i --save-dev @types/semver;
 #        npm i --save-dev @types/chai;
-#        npm i --save-dev @types/aerospike;
+#        npm install aerospike
 #      working-directory: ts-test
 
     - name: Run tests
@@ -179,7 +179,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm i --save-dev @types/aerospike;
+        npm install aerospike
         npm run ts-test
 
   test-ce:
@@ -253,7 +253,7 @@ jobs:
 #        npm i --save-dev @types/yargs;
 #        npm i --save-dev @types/semver;
 #        npm i --save-dev @types/chai;
-#        npm i --save-dev @types/aerospike;
+#        npm install aerospike
 #      working-directory: ts-test
 
     - name: Run tests
@@ -263,7 +263,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm i --save-dev @types/aerospike;
+        npm install aerospike
         npm run ts-test
 
   test-lowest-supported-server:
@@ -314,7 +314,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm i --save-dev @types/aerospike;
+        npm install aerospike
       working-directory: ts-test
 
     - name: Run tests
@@ -382,7 +382,7 @@ jobs:
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm i --save-dev @types/aerospike;
+        npm install aerospike
       working-directory: ts-test
 
     - name: Run tests
