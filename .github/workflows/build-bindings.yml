@@ -142,7 +142,7 @@ jobs:
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: |
-        npm i -g @types/mocha @types/yargs @types/semver @types/chai
+        npm i @types/mocha @types/yargs @types/semver @types/chai
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
 
@@ -190,7 +190,7 @@ jobs:
         sudo apt-get install -y make;
         sudo apt install build-essential;
         ./scripts/build-c-client.sh
-        npm install -g
+        npm install
       env:
         CFLAGS: '-Werror' 
 

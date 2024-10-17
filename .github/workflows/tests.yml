@@ -237,8 +237,8 @@ jobs:
 
     - name: Run tests
       run: |
-        npm i -g @types/mocha @types/yargs @types/semver @types/chai
-        npm install -g;
+        npm i @types/mocha @types/yargs @types/semver @types/chai
+        npm install;
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server aerospike:ce-7.2.0.1_1
         sleep 10
         npm run ts-test -- --h 127.0.0.1 --port 3000;
