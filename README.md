@@ -9,7 +9,7 @@
 [downloads-image]: https://img.shields.io/npm/dm/aerospike.svg
 [downloads-url]: http://npm-stat.com/charts.html?package=aerospike
 
-The Aerospike Node.js client is a Node.js add-on module, written using V8.
+The Aerospike Node.js client is a Node.js add-on module, written using V8. 
 
 The client is compatible with Node.js 22, (Upcoming LTS), Node.js 20 (LTS),and 18 (LTS).
 It supports the following operating systems:
