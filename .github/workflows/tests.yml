@@ -107,7 +107,7 @@ jobs:
 #
 #    - name: Wait for database to be ready
 #      # Should be ready after 3 seconds
-#      run: sleep 3
+#      run: sleep 15
 #
 #    - name: Get number of tests
 #      run: echo "NUM_TESTS=$(npm run test-dry-run | grep -oP '\d+ (passing|pending)' | awk '{ sum += $1 } END { print sum }')" >> $GITHUB_ENV
@@ -153,11 +153,11 @@ jobs:
       run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
 
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
-      run: sleep 3
+      run: sleep 15
 
     - name: Run tests
       run: |
@@ -169,7 +169,7 @@ jobs:
         npm install ..;
         tsc;
         cd ..;
-        npm run ts-test;
+        npm run ts-test ;
 
   test-ce:
     runs-on: ubuntu-latest
@@ -226,11 +226,12 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
-      run: sleep 3
+      run: sleep 15
 
     - name: Run tests
       run: |
@@ -281,7 +282,7 @@ jobs:
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
-      run: sleep 3
+      run: sleep 15
 
 
  
@@ -417,11 +418,12 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
-      run: sleep 3
+      run: sleep 15
 
     - name: Run tests
       run: npm run valgrind -- --t 40000
@@ -469,7 +471,8 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+
       
     - name: Modify the package.json
       run: |
