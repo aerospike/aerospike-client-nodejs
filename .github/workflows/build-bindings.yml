@@ -141,7 +141,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v .:.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
 
 
 #    - name: Set config.conf to use Docker IP address of Aerospike server
@@ -558,7 +558,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v .:./.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v .:.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
 
 
     - name: Wait for database to be ready
