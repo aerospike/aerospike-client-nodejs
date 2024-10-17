@@ -313,7 +313,7 @@ The API docs also contain a few basic tutorials:
 * [Handling asynchronous database operations using Callbacks, Promises or `async`/`await`](https://www.aerospike.com/apidocs/nodejs/tutorial-callbacks_promises_async_await.html)
 
 A variety of additional example applications are provided in the
-[`examples`](examples) directory of this repository.
+[`examples`](https://github.com/aerospike/aerospike-client-nodejs/tree/master/examples) directory of this repository.
 
 Access backward incompatible API changes by a release at:
 https://developer.aerospike.com/client/nodejs/usage/incompatible.
