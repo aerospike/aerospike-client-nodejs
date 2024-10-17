@@ -228,6 +228,7 @@ jobs:
         cd ts-test;
         npm install typescript --save-dev;
         npx tsc;
+        cd ..;
         npm run ts-test
 
   test-lowest-supported-server:
