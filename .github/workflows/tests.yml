@@ -231,22 +231,17 @@ jobs:
 
 
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 15
+#    - name: Wait for database to be ready
+#      # Should be ready after 3 seconds
+#      run: sleep 15
 
     - name: Run tests
       run: |
+        npm i -g @types/mocha @types/yargs @types/semver @types/chai
+        npm install -g;
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server aerospike:ce-7.2.0.1_1
-        cd ts-test;
-        npm i --save-dev @types/mocha;
-        npm i --save-dev @types/yargs;
-        npm i --save-dev @types/semver;
-        npm i --save-dev @types/chai;
-        npm install ..;
-        tsc;
-        cd ..;
-        npm run ts-test -- --h 0.0.0.0 --port 3000;
+        sleep 10
+        npm run ts-test -- --h 127.0.0.1 --port 3000;
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
