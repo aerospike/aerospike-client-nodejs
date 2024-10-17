@@ -141,7 +141,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./github/assets/aerospike.conf
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
 #    - name: Set config.conf to use Docker IP address of Aerospike server
 #      # config.conf should be copied into the cibuildwheel Docker container
@@ -154,7 +154,7 @@ jobs:
 #      working-directory: test
 
     - name: Enable tests
-      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=npm ts-test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
 #    - name: Disable tests (only run basic import test)
 #      if: ${{ !inputs.run_tests }}
@@ -256,7 +256,7 @@ jobs:
 #
 #    - name: Run Aerospike server
 #      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./github/assets/aerospike.conf
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 #
 #    - name: Enable tests
 #      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000 --t 30000" >> $GITHUB_ENV
@@ -557,7 +557,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./github/assets/aerospike.conf
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Modify the package.json
       run: |
