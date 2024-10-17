@@ -156,7 +156,7 @@ jobs:
 #      working-directory: test
 
     - name: Enable tests
-      run: echo "TEST_COMMAND=npm ts-test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=npm run ts-test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
 #    - name: Disable tests (only run basic import test)
 #      if: ${{ !inputs.run_tests }}
