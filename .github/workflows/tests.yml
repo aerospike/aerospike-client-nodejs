@@ -170,7 +170,7 @@ jobs:
         npm install ..;
         tsc;
         cd ..;
-        npm run run ts-test -- --h 127.0.0.1 --port 3000 ;
+        npm run run ts-test -- --h 0.0.0.0 --port 3000 ;
 
   test-ce:
     runs-on: ubuntu-latest
@@ -246,7 +246,7 @@ jobs:
         npm install ..;
         tsc;
         cd ..;
-        npm run ts-test -- --h 127.0.0.1 --port 3000;
+        npm run ts-test -- --h 0.0.0.0 --port 3000;
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
@@ -301,7 +301,7 @@ jobs:
       working-directory: ts-test
 
     - name: Run tests
-      run: npm run  ts-test -- --h 127.0.0.1 --port 3000 --t 20000
+      run: npm run  ts-test -- --h 0.0.0.0 --port 3000 --t 20000
 
   test-ee:
     runs-on: ubuntu-latest
@@ -365,7 +365,7 @@ jobs:
       working-directory: ts-test
 
     - name: Run tests
-      run: npm run  ts-test -- --h 127.0.0.1 --port 3000 --U admin --P admin --t 40000 test/admin.js
+      run: npm run  ts-test -- --h 0.0.0.0 --port 3000 --U admin --P admin --t 40000 test/admin.js
 
   test-valgrind:
     runs-on: ubuntu-latest
