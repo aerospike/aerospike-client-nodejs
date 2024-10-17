@@ -161,13 +161,14 @@ jobs:
 
     - name: Run tests
       run: |
-        
+        cd ts-test;
         npm i --save-dev @types/mocha;
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm install aerospike;
+        npm install ..;
         tsc;
+        cd ..;
         npm run ts-test;
 
   test-ce:
@@ -234,12 +235,14 @@ jobs:
     - name: Run tests
       run: |
         
+        cd ts-test;
         npm i --save-dev @types/mocha;
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm install aerospike;
+        npm install ..;
         tsc;
+        cd ..;
         npm run ts-test;
 
   test-lowest-supported-server:
@@ -284,12 +287,14 @@ jobs:
  
     - name: Setup for Typescript
       run: |
+        cd ts-test;
         npm i --save-dev @types/mocha;
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm install aerospike;
+        npm install ..;
         tsc;
+        cd ..;
       working-directory: ts-test
 
     - name: Run tests
@@ -346,12 +351,14 @@ jobs:
  
     - name: Setup for Typescript
       run: |
+        cd ts-test;
         npm i --save-dev @types/mocha;
         npm i --save-dev @types/yargs;
         npm i --save-dev @types/semver;
         npm i --save-dev @types/chai;
-        npm install aerospike;
+        npm install ..;
         tsc;
+        cd ..;
       working-directory: ts-test
 
     - name: Run tests

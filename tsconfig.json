@@ -27,5 +27,8 @@
     "isolatedModules": false,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "paths": {
+      "*": ["typings/*"]
+    }
   }
 }
