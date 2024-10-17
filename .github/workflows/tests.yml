@@ -153,7 +153,8 @@ jobs:
       run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
 
     - name: Run Aerospike server
-      run: docker run -d -v $(pwd):.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/aerospike/aerospike.conf
+
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
@@ -226,7 +227,8 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v $(pwd):.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/aerospike/aerospike.conf
+
 
 
     - name: Wait for database to be ready
@@ -418,7 +420,8 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v $(pwd):.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/aerospike/aerospike.conf
+
 
 
     - name: Wait for database to be ready
@@ -471,7 +474,8 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v $(pwd):.github/assets/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file ./aerospike.conf
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/aerospike/aerospike.conf
+
 
       
     - name: Modify the package.json
