@@ -142,10 +142,8 @@ jobs:
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: |
-        npm i @types/mocha @types/yargs @types/semver @types/chai
-        run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
-
-
+        npm i @types/mocha @types/yargs @types/semver @types/chai;
+        docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
 
 #    - name: Set config.conf to use Docker IP address of Aerospike server
 #      # config.conf should be copied into the cibuildwheel Docker container
