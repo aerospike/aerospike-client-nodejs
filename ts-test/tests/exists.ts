@@ -103,7 +103,7 @@ describe('client.existsWithMetadata()', function () {
     it('returns an Aerospike Record with Metatdata if the record exists and no meta or ttl is set', function () {
       const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/6' })()
 
-      return client.put(key, { str: 'abcde' })
+      return client.put(key, { str: 'abcde' }, {ttl: -1})
         .then(() => client.existsWithMetadata(key))
         .then(result => {
           expect(result.key).to.eql(key)

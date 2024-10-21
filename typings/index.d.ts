@@ -5,12 +5,33 @@ import { EventEmitter, Stream } from "stream";
  * Codes representing each of the various scalar operation types.
  */
 export enum ScalarOperations {
+    /**
+     * Write operation code.
+     */
     WRITE,
+    /**
+     * Read operation code.
+     */
     READ,
+    /**
+     * Increment operation code.
+     */
     INCR,
+    /**
+     * Prepend operation code.
+     */
     PREPEND,
+    /**
+     * Append operation code.
+     */
     APPEND,
+    /**
+     * Touch operation code.
+     */
     TOUCH,
+    /**
+     * Delete operation code.
+     */
     DELETE
 }
 
@@ -7478,7 +7499,7 @@ export function client(config?: ConfigOptions): Client;
  *
  * @return A Promise resolving to the connected client.
  * 
- * @example <caption>Connection can be established using the {@link module:aerospike|aerospike} module.</caption>
+ * @example <caption>Connection can be established using the aerospike namespace.</caption>
  *
  * const Aerospike = require('aerospike')
  *
@@ -8923,14 +8944,37 @@ export interface ModLua {
     userPath?: string;
 }
 
+/**
+ * Aerospike Node information.
+ */
 export interface Node {
+    /**
+     * Name of the Aerospike Node.
+     */
     name: string;
+    /**
+     * Address of the Aeropsike Node.
+     */
     address: string;
 }
 
+/**
+ * Aerospike Node Stats.
+ */
 export interface NodeStats {
+    /**
+     * name of the Aerospike Node.
+     */
     name: string;
+    /**
+     * Connections stats for Synchronous Connections on this Node..
+     * 
+     * @remarks The Aerospike Node.js does not use synchronous connections.
+     */
     syncConnections: ConnectionStats;
+    /**
+     * Connection stats for Asynchronous Connections on this Node.
+     */
     asyncConnections: ConnectionStats;
 }
 
@@ -9489,8 +9533,17 @@ export interface SharedMemory {
     takeoverThresholdSeconds?: number;
 }
 
+/**
+ * Aerospike statistics, including Node and event loop statistics.
+ */
 export interface Stats {
+    /**
+     * Statistics relating to the event loop.
+     */
     commands: EventLoopStats;
+    /**
+     * Statistics relating to individual Node usage.
+     */
     nodes: NodeStats[];
 }
 
@@ -10002,28 +10055,106 @@ export enum ttl {
 
 export namespace admin {
 
+    /**
+     * @class Privilege
+     *
+     * @summary Aerospike User Privileges. Inclues a permission code, namespace, and set.
+     *
+     */
     export class Privilege {
+        /**
+         * Constructs a new Privilege instance.
+         */
         constructor(code: privilegeCode, options?: PrivilegeOptions);
+        /**
+         * Permission code used to define the type of permission granted for a user's role.
+         * 
+         */
         code: privilegeCode;
+        /**
+         * Namespace in which the Privilege will apply.
+         */
         namespace: string;
+        /**
+         * Set in which the Privilege will apply
+         */
         set: string;
     }
 
+    /**
+     *
+     * @summary Aerospike Database Role.  Includes quota, whitelisting, and privilege configurations. 
+     *
+     */
     export class Role {
+        /**
+         * Constructs a new User instance.
+         */
         constructor(options: RoleOptions);
+        /**
+         * Name of the Role.
+         */
         name: string;
+        /**
+         * Allowed number of read transactions per second.
+         */
         readQuota: number;
+        /**
+         * Allowed number of write transactions per second.
+         */
         writeQuota: number;
+        /**
+         * list of allowable IP addresses or null. IP addresses can contain wildcards (ie. 10.1.2.0/24).
+         */
         whitelist: number[];
+        /**
+         * List of privileges granted to the role. For more info on Privileges: see {@link Privilege | here.}
+         */
         privileges: Privilege[];
     }
 
+    /**
+     * Contains user roles and other user related information
+     *
+     */
     export class User {
+        /**
+         * Constructs a new User instance.
+         */
         constructor(options: UserOptions);
+        /**
+         * Number of currently open connections.
+         */
         connsInUse: number;
+        /**
+         * Name of the User.
+         */
         name: string;
+        /**
+         * List of read statistics. List may be null. Current statistics by offset are:
+         * 
+         * 0: read quota in records per second
+         * 1: single record read transaction rate (TPS)
+         * 2: read scan/query record per second rate (RPS)
+         * 3: number of limitless read scans/queries
+         * 
+         * Future server releases may add additional statistics.
+         */
         readInfo: number[];
+        /**
+         * List of write statistics. List may be null. Current statistics by offset are:
+         * 
+         * 0: write quota in records per second
+         * 1: single record write transaction rate (TPS)
+         * 2: write scan/query record per second rate (RPS)
+         * 3: number of limitless write scans/queries
+         * 
+         * Future server releases may add additional statistics.
+         */
         writeInfo: number[];
+        /**
+         * List of assigned roles.
+         */
         roles: string[];
     }        
 }
@@ -10108,13 +10239,43 @@ export namespace bitwise {
          */
         WRAP = 4
     }
-    
+    /**
+     * bitwise~BitwiseOperation
+     *
+     * Use the methods in the {@link bitwise | bitwise}
+     * module to create bitwise operations for use with the {@link Client#operate}
+     * command.
+     */
     export class BitwiseOperation extends operations.Operation {
+        /**
+         * Applies a {@link BitwisePolicy} to the operation.
+         *
+         * @param policy - Policy to apply to the operation.
+         */
         withPolicy(policy: policy.BitwisePolicy): BitwiseOperation;
     }
 
+    /**
+     *
+     * Bitwise operation variant that can overflow/underflow.
+     *
+     * @see bitwise.add
+     * @see bitwise.subtract
+     */
     export class OverflowableBitwiseOp extends BitwiseOperation {
+        /**
+         * Specifies the action to take when the operation overflows/underflows.
+         *
+         * @param action - {@link bitwise.overflow | overflow
+         * action} to apply to the operation.
+         */
         public overflowAction: bitwise.overflow;
+        /**
+         * Sets the action to take when the operation overflows/underflows.
+         *
+         * @param action - {@link bitwise.overflow | overflow
+         * action} to apply to the operation.
+         */
         public onOverflow(action: bitwise.overflow): OverflowableBitwiseOp;
     }
 
@@ -12976,159 +13137,1250 @@ export namespace maps {
 }
 
 export namespace exp {
+    /**
+     *
+     * The {@link exp/bit|aerospike/exp/bit} module defines functions
+     * for expressions on the Blob datatype.
+     */
     export namespace bit {
+        /**
+         * Create an expression that performs bit resize operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param flags - bit resize flags value.
+         * @param byteSize - Number of bytes the resulting blob should occupy.
+         * @param policy - bit policy value.
+         * 
+         * @return blob - bin byteSize bytes.
+         */
         export const reSize: (bin: AerospikeExp, flags: bitwise.resizeFlags, byteSize: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit insert operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Blob expression containing the bytes to insert.
+         * @param byteOffset - Byte index of where to insert the value.
+         * @param policy - bit policy value.
+         * 
+         * @return blob - bin resulting blob containing the inserted bytes.
+         */
         export const insert: (bin: AerospikeExp, value: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit remove operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param byteSize - Number of bytes to remove.
+         * @param byteOffset - Byte index of where to remove from.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes removed.
+         */
         export const remove: (bin: AerospikeExp, byteSize: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit set operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Blob expression containing bytes to write.
+         * @param bitSize - Number of bytes to overwrite.
+         * @param bitOffset - Bit index of where to start writing.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes overwritten.
+         */
         export const set: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit or operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Blob expression containing bytes to write.
+         * @param bitSize - Number of bytes to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const or: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit xor operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Blob expression containing bytes to write.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const xor: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit and operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Blob expression containing bytes to write.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */       
         export const and: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit not operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const not: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs an bit lshift operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param shift - Number of bits to shift by.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const lShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit rshift operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param shift - Number of bits to shift by.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const rShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit add operation.
+         * Note: integers are stored big-endian.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param action - bit overflow action value.
+         * @param value - Integer expression for value to add.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const add: (bin: AerospikeExp, action: bitwise.overflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit add operation.
+         * Note: integers are stored big-endian.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param action - bit overflow action value.
+         * @param value - Integer expression for value to subtract.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const subtract: (bin: AerospikeExp, action: bitwise.overflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit add operation.
+         * Note: integers are stored big-endian.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Integer expression for value to set.
+         * @param bitSize - Number of bits to be operated on.
+         * @param bitOffset - Bit index of where to start operation.
+         * @param policy - bit policy value.
+         * 
+         * @return blob bin resulting blob with the bytes operated on.
+         */
         export const setInt: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs bit get operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param bitSize - Number of bits to read from the blob bin.
+         * @param bitOffset - The bit index of where to start reading from.
+         * 
+         * @return blob bin bit_size bits rounded up to the nearest byte size.
+         */
         export const get: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs bit count operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param bitSize - Number of bits to read from the blob bin.
+         * @param bitOffset - The bit index of where to start reading from.
+         * 
+         * @return integer value number of bits set to 1 in the bit_size region.
+         */
         export const count: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs bit lscan operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Boolean expression, true searches for 1, false for 0.
+         * @param bitSize - Number of bits to read from the blob bin.
+         * @param bitOffset - The bit index of where to start reading from.
+         * 
+         * @return integer value Index of the left most bit starting from __offset set to value.
+         */
         export const lScan: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs bit rscan operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param value - Boolean expression, true searches for 1, false for 0.
+         * @param bitSize - Number of bits to read from the blob bin.
+         * @param bitOffset - The bit index of where to start reading from.
+         * @return integer value Index of the right most bit starting from __offset set to value.
+         */
         export const rScan: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs bit get_int operation.
+         *
+         * @param bin - A blob bin expression to apply this function to.
+         * @param sign - Boolean value, true for signed, false for unsigned.
+         * @param bitSize - Number of bits to read from the blob bin.
+         * @param bitOffset - The bit index of where to start reading from.
+         * @return integer value Index of the left most bit starting from offset set to value.
+         */
         export const getInt: (bin: AerospikeExp, sign: boolean, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
     }
-
+    /**
+     * aerospike/exp/hll
+     *
+     * The {@link exp/hll|aerospike/exp/hll} module defines functions
+     * for expressions on the HyperLogLog datatype.
+     */
     export namespace hll {
+        /**
+         * Create expression that creates a new HLL or resets an existing HLL with minhash bits.
+         *
+         * @param {Object} policy hll policy value.
+         * @param {number} indexBitCount Number of index bits. Must be between 4 and 16 inclusive.
+         * @param {number} mhBitCount Number of min hash bits. Must be between 4 and 51 inclusive.
+         * @param {AerospikeExp} bin  A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin Returns the resulting hll bin.
+         */
         export const initMH: (bin: AerospikeExp, mhBitCount: number, indexBitCount: number, policy?: policy.HLLPolicy) => AerospikeExp;
+        /**
+         * Create expression that creates a new HLL or resets an existing HLL.
+         *
+         * @param {Object} policy hll policy value.
+         * @param {number} indexBitCount Number of index bits. Must be between 4 and 16 inclusive.
+         * @param {AerospikeExp} bin  A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin Returns the resulting hll bin.
+         */
         export const init: (bin: AerospikeExp, indexBitCount: number, policy?: policy.HLLPolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll addMh.
+         *
+         * @param {Object} policy hll policy value.
+         * @param {AerospikeExp} list A list expression of elements to add to the HLL.
+         * @param {number} indexBitCount Number of index bits. Must be between 4 and 16 inclusive.
+         * @param {number} mhBitCount Number of min hash bits. Must be between 4 and 51 inclusive.
+         * @param {AerospikeExp} bin  A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin Returns the resulting hll bin after adding elements from list.
+         */
         export const addMH: (bin: AerospikeExp, mhBitCount: number, indexBitCount: number, list: AerospikeExp, policy?: policy.HLLPolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll add.
+         *
+         * @param {Object} policy hll policy value.
+         * @param {AerospikeExp} list A list expression of elements to add to the HLL.
+         * @param {number} indexBitCount Number of index bits. Must be between 4 and 16 inclusive.
+         * @param {AerospikeExp} bin  A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin Returns the resulting hll bin after adding elements from list.
+         */
         export const add: (bin: AerospikeExp, indexBitCount: number, list: AerospikeExp, policy?: policy.HLLPolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll update.
+         *
+         * @param {Object} policy hll policy value.
+         * @param {AerospikeExp} list A list expression of elements to add to the HLL.
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin Returns the resulting hll bin after adding elements from list.
+         */
         export const update: (bin: AerospikeExp, list: AerospikeExp, policy?: policy.HLLPolicy) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll get count.
+         *
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} integer bin The estimated number of unique elements in an HLL.
+         */
         export const getCount: (bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll get union.
+         *
+         * @param {AerospikeExp} list A list expression of HLLs to union with.
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} hll bin HLL bin representing the set union.
+         */
         export const getUnion: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll get union count.
+         *
+         * @param {AerospikeExp} list A list expression of HLLs to union with.
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} integer bin Estimated number of elements in the set union.
+         */
         export const getUnionCount: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll get inersect count.
+         *
+         * @param {AerospikeExp} list A list expression of HLLs to intersect with.
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} integer bin Estimated number of elements in the set intersection.
+         */
         export const getIntersectCount: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll get similarity.
+         *
+         * @param {AerospikeExp} list A list expression of HLLs to calculate similarity with..
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return (float bin) Estimated similarity between 0.0 and 1.0.
+         */
         export const getSimilarity: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that performs operations hll describe.
+         *
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} list bin A list containing the index_bit_count and minhash bit count.
+         */
         export const describe: (bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Create an expression that checks if the HLL bin contains all keys in
+         *  list..
+         *
+         * @param {AerospikeExp} list A list expression of keys to check if the HLL may contain them.
+         * @param {AerospikeExp} bin A bin expression to apply this function to.
+         * @return {AerospikeExp} integer bin 1 bin contains all of list, 0 otherwise.
+         */  
         export const mayContain: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
     }
 
     namespace listsExp {
+        /**
+         * Create expression that returns list size.
+         *
+         * @param {AerospikeExp} bin List bin or list value expression.
+         * @param {Object} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (integer expression)
+         */
         export const size: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that selects list items identified by value and returns selected
+ * data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {Object} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValue: (bin: AerospikeExp, value: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects list items identified by value and returns selected
+ * data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {Object} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */        
         export const getByValueRange: (bin: AerospikeExp, begin: AerospikeExp, end: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects list items identified by values and returns selected
+ * data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Values list expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */        
         export const getByValueList: (bin: AerospikeExp, value: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects list items nearest to value and greater by relative rank
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} value Values list expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */        
         export const getByRelRankRangeToEnd: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that selects list items nearest to value and greater by relative rank with a
+ * count limit and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Values list expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */       
         export const getByRelRankRange: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that selects list item identified by index
+ * and returns selected data specified by returnType.
+ *
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} valueType expression value type.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (valueType expression)
+ */       
         export const getByIndex: (bin: AerospikeExp, index: AerospikeExp, valueType: type, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+    /**
+ * Create expression that selects list items starting at specified index to the end of list
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */      
         export const getByIndexRangeToEnd: (bin: AerospikeExp, index: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that selects "count" list items starting at specified index
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */       
         export const getByIndexRange: (bin: AerospikeExp, index: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects list item identified by rank
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} valueType expression value type.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (valueType expression)
+ */        
         export const getByRank: (bin: AerospikeExp, rank: AerospikeExp, valueType: type, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects list items starting at specified rank to the last ranked item
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */        
         export const getByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that selects "count" list items starting at specified rank
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */       
         export const getByRankRange: (bin: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that appends value to end of list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */       
         export const append: (bin: AerospikeExp, value: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that appends list items to end of list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value List items expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const appendItems: (bin: AerospikeExp, value: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that inserts value to specified index of list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const insert: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that inserts each input list item starting at specified index of list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value List items expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */       
         export const insertItems: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that increments list[index] by value.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const increment: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that sets item value at specified index in list.
+ *
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {Object} policy Optional list write policy.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const set: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that removes all items in list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const clear: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that sorts list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {number} order Sort order flags.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const sort: (bin: AerospikeExp, order: lists.sortFlags, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that removes list items identified by value.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const removeByValue: (bin: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that removes list items identified by values.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} values Values list expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const removeByValueList: (bin: AerospikeExp, values: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that removes list items identified by value range
+ * (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+ * If end is infinity, the range is greater than equal to begin.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} end End value expression.
+ * @param {AerospikeExp} begin Begin value expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const removeByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+ * Create expression that removes list items nearest to value and greater by relative rank.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */
         export const removeByRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that removes list items nearest to value and greater by relative rank with a
+ * count limit.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */       
         export const removeByRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+  
+  /**
+ * Create expression that removes list item identified by index.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */      
         export const removeByIndex: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that removes list items starting at specified index to the end of list.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const removeByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+   /**
+ * Create expression that removes "count" list items starting at specified index.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */       
         export const removeByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that removes list item identified by rank.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const removeByRank: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that removes list items starting at specified rank to the last ranked item.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const removeByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that removes "count" list items starting at specified rank.
+ *
+ * @param {AerospikeExp} bin List bin or list value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (list expression)
+ */        
         export const removeByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
     }
 
+    /**
+     * @module aerospike/exp/maps
+     *
+     * @description The {@link exp/maps|aerospike/exp/maps} module defines functions
+     * for expressions on the Map datatype.
+     */
     namespace mapsExp {
+        /**
+         * Create expression that writes key/val item to map bin.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} value Value expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {Object} policy Optional map write policy.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (map expression)
+         */
         export const put: (bin: AerospikeExp, value: AerospikeExp, key: AerospikeExp, policy?: policy.MapPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Create expression that writes each map item to map bin.
+         *
+         * @param {AerospikeExp} bin Target map bin or map value expression.
+         * @param {AerospikeExp} map Source map expression.
+         * @param {Object} policy Optional map write policy.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (map expression)
+         */
         export const putItems: (bin: AerospikeExp, map: AerospikeExp, policy?: policy.MapPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Create expression that increments values by incr for all items identified by key.
+         * Valid only for numbers.
+         *
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} value Increment value number expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {Object} policy Optional map write policy.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         *
+         *
+         * @return {AerospikeExp} (map expression)
+         */
         export const increment: (bin: AerospikeExp, value: AerospikeExp, key: AerospikeExp, policy?: policy.MapPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Create expression that removes all items in map.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (map expression)
+         */
         export const clear: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Create expression that removes map item identified by key.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByKey: (bin: AerospikeExp, key: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items identified by keys.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} keys List expression of keys to remove.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         *
+         */
         export const removeByKeyList: (bin: AerospikeExp, keys: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items identified by key range
+         * (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+         * If end is infinity, the range is greater than equal to begin.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} end End value expression.
+         * @param {AerospikeExp} begin Begin value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByKeyRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items nearest to key and greater by index.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} idx Index integer expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByKeyRelIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items nearest to key and greater by index with a count limit.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} count Count integer expression.
+         * @param {AerospikeExp} idx Index integer expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByKeyRelIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items identified by value.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} value Value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByValue: (bin: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items identified by values.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} values Values list expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByValueList: (bin: AerospikeExp, values: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+
+        /**
+         * Create expression that removes map items identified by value range
+         * (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+         * If end is infinity, the range is greater than equal to begin.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} end End value expression.
+         * @param {AerospikeExp} begin Begin value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items nearest to value and greater by relative rank.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} value Value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByValueRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items nearest to value and greater by relative rank with a
+         * count limit.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} count Count integer expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} value Value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByValueRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map item identified by index.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} idx Index integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByIndex: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items starting at specified index to the end of map.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} idx Index integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes "count" map items starting at specified index.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} count Count integer expression.
+         * @param {AerospikeExp} idx Index integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map item identified by rank.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByRank: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes map items starting at specified rank to the last ranked item.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that removes "count" map items starting at specified rank.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} count Count integer expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @param {AerospikeExp} returnType Optional Return type. Valid values are returnType.NONE or returnType.INVERTED.
+         * @return {AerospikeExp} (map expression)
+         */
         export const removeByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null, returnType?: maps.returnType) => AerospikeExp;
+        /**
+         * Create expression that returns map size.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (integer expression)
+         */
         export const size: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+         * Create expression that selects map item identified by key
+         * and returns selected data specified by returnType.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} key Key expression.
+         * @param {AerospikeExp} valueType expression value type.
+         * @param {AerospikeExp} returnType Return type.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (expression)
+         */
         export const getByKey: (bin: AerospikeExp, key: AerospikeExp, valueType: type, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+         * Create expression that selects map items identified by key range
+         * (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+         * If end is infinity, the range is greater than equal to begin.
+         * Expression returns selected data specified by returnType.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} end End key expression.
+         * @param {AerospikeExp} begin Begin key expression.
+         * @param {AerospikeExp} returnType Return type.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (expression)
+         */
         export const getByKeyRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+         * Create expression that selects map items identified by keys
+         * and returns selected data specified by returnType.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} keys Keys list expression.
+         * @param {AerospikeExp} returnType Return type.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (expression)
+         */
         export const getByKeyList: (bin: AerospikeExp, keys: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items nearest to key and greater by index
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} key Key expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByKeyRelIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items nearest to key and greater by index with a count limit.
+ * Expression returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} key Key expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByKeyRelIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, key: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items identified by value
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValue: (bin: AerospikeExp, value: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items identified by value range
+ * (begin inclusive, end exclusive). If begin is nil, the range is less than end.
+ * If end is infinity, the range is greater than equal to begin.
+ * Expression returns selected data specified by returnType.
+ *
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} end End value expression.
+ * @param {AerospikeExp} begin Begin value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValueRange: (bin: AerospikeExp, end: AerospikeExp, begin: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+
+  /**
+ * Create expression that selects map items identified by values
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} values Values list expression.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValueList: (bin: AerospikeExp, values: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items nearest to value and greater by relative rank.
+ * Expression returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValueRelRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items nearest to value and greater by relative rank with a
+ * count limit. Expression returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} value Value expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByValueRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map item identified by index
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} valueType expression value type.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByIndex: (bin: AerospikeExp, idx: AerospikeExp, valueType: type, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map items starting at specified index to the end of map
+ * and returns selected data specified by returnType.
+ *
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects "count" map items starting at specified index
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} count Count integer expression.
+ * @param {AerospikeExp} idx Index integer expression.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+  /**
+ * Create expression that selects map item identified by rank
+ * and returns selected data specified by returnType.
+ *
+ * @param {AerospikeExp} bin Map bin or map value expression.
+ * @param {AerospikeExp} rank Rank integer expression.
+ * @param {AerospikeExp} valueType expression value type.
+ * @param {AerospikeExp} returnType Return type.
+ * @param {AerospikeExp} ctx Optional context path for nested CDT.
+ * @return {AerospikeExp} (expression)
+ */
         export const getByRank: (bin: AerospikeExp, rank: AerospikeExp, valueType: type, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+         * Create expression that selects map items starting at specified rank to the last ranked item
+         * and returns selected data specified by returnType.
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} returnType Return type.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (expression)
+         */
         export const getByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
+          /**
+         * Create expression that selects "count" map items starting at specified rank
+         * and returns selected data specified by returnType.
+         *
+         *
+         * @param {AerospikeExp} bin Map bin or map value expression.
+         * @param {AerospikeExp} count Count integer expression.
+         * @param {AerospikeExp} rank Rank integer expression.
+         * @param {AerospikeExp} returnType Return type.
+         * @param {AerospikeExp} ctx Optional context path for nested CDT.
+         * @return {AerospikeExp} (expression)
+         */
         export const getByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, returnType: maps.returnType, ctx?: cdt.Context | null) => AerospikeExp;
     }
 
     namespace operationsExp {
-        // exp_operations.js
+        /**
+         * For interal use only.
+         */
         enum ExpOperations {
             WRITE = 1280,
             READ
         }
-        export class ExpOperation extends operations.Operation {
+        /**
+         * class for all expression operations executed with the {@link
+         * Client#operate} command.
+         *
+         * Operations can be created using the methods with the following modules:
+         * * {@link exp} - General expression on all types.
+         */
+        export protected class ExpOperation extends operations.Operation {
+            /**
+             * Aerospike Expression to be evaluated by this operation.
+             */
             public exp: AerospikeExp;
+            /**
+             * @param Expression read flags or write flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} or {@link exp.expWriteFlags} for more information.
+
+             */
             public flags: number;
             constructor(op: ExpOperations, bin: string, exp: AerospikeExp, flags: number, props?: Record<string, AerospikeBinValue>);
         }
+        /**
+         * @summary Read the value of the bin.
+         *
+         * @param {string} bin - The name of the bin.
+         * @param {AerospikeExp} exp - The expression to evaluate
+         * @param flags - Expression read flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} for more information.
+         * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
+         */
         export const read: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        /**
+         * @summary Update the value of the bin.
+         *
+         * @param {string} bin - The name of the bin.
+         * @param {AerospikeExp} exp - The expression to evaluate
+         * @param flags - Expression write flags. <code>flags</code> must be an integer. See {@link exp.expWriteFlags} for more information.
+         * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
+         */
         export const write: (bin: string, value: AerospikeExp, flags?: number) => ExpOperation;
     }
+    
     export {mapsExp as maps, listsExp as lists, operationsExp as operations}
-
+    
+    /**
+     * @readonly
+     * @remarks Expression read bit flags. Use BITWISE OR to combine flags.
+     */
     export enum expReadFlags {
+      /**
+       * Default.
+       */
         DEFAULT,
+      /**
+       * Ignore failures caused by the expression resolving to unknown or a non-bin type.
+       */
         EVAL_NO_FAIL = 16
     }
 
+    /**
+     * @readonly
+     * @remarks Expression write bit flags. Use BITWISE OR to combine flags.
+     */
     export enum expWriteFlags {
         DEFAULT,
+        /**
+         * If bin does not exist, a new bin will be created.
+         */
         CREATE_ONLY,
+        /**
+         * If bin exists, the bin will be overwritten.
+         * @const {number}
+         */
         UPDATE_ONLY,
+        /**
+         * If expression results in nil value, then delete the bin.
+         * @const {number}
+         */
         ALLOW_DELETE = 4,
+        /**
+         *  Do not raise error if operation is denied.
+         * @const {number}
+         */
         POLICY_NO_FAIL = 8,
+        /**
+         * Ignore failures caused by the expression resolving to unknown or a non-bin type.
+         * @const {number}
+         */
         EVAL_NO_FAIL = 16
     }
 
+    /**
+     * The {@link exp|exp} module provides functions to
+     * create expressions for use in key operations via the {@link
+     * Client#operate} command.
+     * 
+     * For more information on Aerospike datatypes, See {@link https://aerospike.com/docs/server/guide/data-types/overview | here.}
+     * @summary {@link exp|aerospike/exp} module
+     */
     export enum type {
+        /**
+         * Null value data type.
+         */
         NIL,
         // BOOL - no boolean type in src/main/enums/exp_enum.cc#L127
+        /**
+         * Integer data type.
+         */
         INT = 2,
+        /**
+         * String data type.
+         */
         STR,
+        /**
+         * List Collection data type. For more info on Collection datatypes, see {@link https://aerospike.com/docs/server/guide/data-types/cdt | here.}
+         */
         LIST,
+        /**
+         * Map Collection data type. For more info on Collection datatypes, see {@link https://aerospike.com/docs/server/guide/data-types/cdt | here.}
+         */
         MAP,
+        /**
+         * Bytes data type. For more info on Bytes/Blob datatypes, see {@link For more info on Collection datatypes, see {@link https://aerospike.com/docs/server/guide/data-types/blob | here.}}
+         */
         BLOB,
+        /**
+         * Float data type. Corresponds to Aerospike Double data type. For more info on Double/Float, see {@link https://aerospike.com/docs/server/guide/data-types/scalar-data-types}
+         */
         FLOAT,
+        /**
+         * {@link GeoJSON} data type. For more info on the GeoJSON aerospike type, see {@link https://aerospike.com/docs/server/guide/data-types/geospatial | here.}
+         */
         GEOJSON,
+        /**
+         * {@link hll} data type.  For more info on the HyperLogLog aerospike type, see {@link https://aerospike.com/docs/server/guide/data-types/hll | here.}
+         */
         HLL,
-
+        /**
+         * Automatically matches to the data type of the targeted data.
+         */
         AUTO,
+        /**
+         * Error data type.
+         */
         ERROR
     }
 
@@ -13434,7 +14686,7 @@ export namespace exp {
      * This expression usually evaluates quickly because record meta data is cached
      * in memory.
      * Requires server version between 5.3.0 inclusive and 7.0 exclusive.
-     * Use {@link #recordSize} for server version 7.0+.
+     * Use {@link recordSize} for server version 7.0+.
      *
      * @function
      * @return {AerospikeExp} integer value memory size of the record.
@@ -13444,7 +14696,7 @@ export namespace exp {
      * Create expression that returns the record size. This expression usually evaluates
      * quickly because record meta data is cached in memory.
      * Requires server version 7.0+. This expression replaces {@link #deviceSize} and
-     * {@link #memorySize} since those older expressions are equivalent on server version 7.0+.
+     * {@link memorySize} since those older expressions are equivalent on server version 7.0+.
      *
      * @function
      * @return {AerospikeExp} integer value size of the record in Megabytes.
@@ -13646,46 +14898,358 @@ export namespace exp {
  * @return {AerospikeExp} number value
  */
     export const abs: _VAExp;
+/**
+ * Create expression that rounds a floating point number down to the closest integer value.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param num Floating point value to round down.
+ * @return float-value
+ */
     export const floor: _VAExp;
+/**
+ * Create expression that rounds a floating point number up to the closest integer value.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param num Floating point value to round up.
+ * @return integer-value
+ */
     export const ceil: _VAExp;
+/**
+ * Create expression that converts a float to an integer.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param  num Integer to convert to a float
+ * @return  float value
+ */
     export const toInt: _VAExp;
+/**
+ * Create expression that converts an integer to a float.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param num - Integer to convert to a float
+ * @return float value
+ */
     export const toFloat: _VAExp;
+/**
+ * Create integer "and" (&) operator that is applied to two or more integers.
+ * All arguments must resolve to integers.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - Variable number of integer expressions. Compatible with spread operator.
+ * @return integer value
+ */
     export const intAnd: _VAExp;
+/**
+ * Create integer "or" (|) operator that is applied to two or more integers.
+ * All arguments must resolve to integers.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - Variable number of integer expressions. Compatible with spread operator.
+ * @return integer value
+ */
     export const intOr: _VAExp;
+/**
+ * Create integer "xor" (^) operator that is applied to two or more integers.
+ * All arguments must resolve to integers.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - Variable number of integer expressions. Compatible with spread operator.
+ * @return integer value
+ */
     export const intXor: _VAExp;
+/**
+ * Create integer "not" (~) operator.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - Integer expression.
+ * @return integer value
+ */
     export const intNot: _VAExp;
+/**
+ * Create integer "left shift" (<<) operator.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param value - Integer expression.
+ * @param shift - Number of bits to shift by.
+ * @return integer value
+ */
     export const intLshift: _VAExp;
+/**
+ * Create integer "logical right shift" (>>>) operator.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param value Integer expression.
+ * @param shift Number of bits to shift by.
+ * @return integer value
+ */
     export const intRshift: _VAExp;
+/**
+ * Create integer "arithmetic right shift" (>>) operator.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param value - Integer expression.
+ * @param  shift -  Number of bits to shift by.
+ * @return integer value
+ */
     export const intArshift: _VAExp;
+/**
+ * Create expression that returns count of integer bits that are set to 1.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - {@link AerospikeExp} integer
+ * @return integer value
+ */
     export const intCount: _VAExp;
+/**
+ * Create expression that scans integer bits from left (most significant bit) to
+ * right (least significant bit), looking for a search bit value. When the
+ * search value is found, the index of that bit (where the most significant bit is
+ * index 0) is returned. If "search" is true, the scan will search for the bit
+ * value 1. If "search" is false it will search for bit value 0.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - {@link AerospikeExp} integer
+ * @return integer value
+ */
     export const intLscan: _VAExp;
+/**
+ * Create expression that scans integer bits from right (least significant bit) to
+ * left (most significant bit), looking for a search bit value. When the
+ * search value is found, the index of that bit (where the most significant bit is
+ * index 0) is returned. If "search" is true, the scan will search for the bit
+ * value 1. If "search" is false it will search for bit value 0.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - {@link AerospikeExp} integer
+ * @return integer value
+ */
     export const intRscan: _VAExp;
+/**
+ * Create expression that returns the minimum value in a variable number of expressions.
+ * All arguments must be the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param  expr - Variable number of integer or float expressions. Compatible with spread operator.
+ * @return {AerospikeExp} integer or float value
+ */
     export const min: _VAExp;
+/**
+ * Create expression that returns the maximum value in a variable number of expressions.
+ * All arguments must be the same type (integer or float).
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - Variable number of integer or float expressions.
+ * @return {AerospikeExp} integer or float value
+ */
     export const max: _VAExp;
+/**
+ * Conditionally select an expression from a variable number of expression pairs
+ * followed by default expression action. Requires server version 5.6.0+.
+ *
+ * @function
+ * @param expr - spread of expressions.
+ * @return  first action expression where bool expression is true or action-default.
+ */
     export const cond: _VAExp;
+/**
+ * Define variables and expressions in scope.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param {AerospikeExp} ... Variable number of expression def followed by a scoped
+ *  expression.
+ * @return {AerospikeExp} result of scoped expression.
+ */
     const letValue: _VAExp; // Your implementation
     export { letValue as let }; // Export as `let`
-
+/**
+ * Assign variable to an expression that can be accessed later.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param varName - Variable name.
+ * @param  expr - The variable is set to the result of expr.
+ * @return A variable name expression pair.
+ */
     export const def: (varName: string, expr: AerospikeExp) => AerospikeExp;
+/**
+ * Retrieve expression value from a variable.
+ * Requires server version 5.6.0+.
+ *
+ * @function
+ * @param varName - Variable name.
+ * @return value stored in variable.
+ */
     export const _var: (varName: string) => AerospikeExp;
 }
-
+/**
+ * @remarks This module provides functions to easily define operations to
+ * be performed on a record via the {@link Client#operate} command.
+ *
+ * @see {@link Client#operate}
+ *
+ * @example
+ *
+ * const Aerospike = require('aerospike')
+ * const op = Aerospike.operations
+ * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+ * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+ * var config = {
+ *   hosts: '192.168.33.10:3000',
+ *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+ *   policies: {
+ *     operate : new Aerospike.OperatePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *   }
+ * }
+ * var ops = [
+ *   op.append('a', 'xyz'),
+ *   op.incr('b', 10),
+ *   op.read('b')
+ * ]
+ *
+ * Aerospike.connect(config, (error, client) => {
+ *   if (error) throw error
+ *   client.put(key, { a: 'abc', b: 42 }, (error) => {
+ *     if (error) throw error
+ *     client.operate(key, ops, (error, record) => {
+ *       if (error) throw error
+ *       console.log(record.bins) // => { b: 52 }
+ *       client.close()
+ *     })
+ *   })
+ * })
+ */
 export namespace operations {
-
+    /**
+     * operations~Operation
+     * @protected
+     * Base class for all operations executed with the {@link
+     * Client#operate} command.
+     *
+     * Operations can be created using the methods in one of the following modules:
+     * * {@link operations} - General operations on all types.
+     * * {@link lists} - Operations on CDT List values.
+     * * {@link maps} - Operations on CDT Map values.
+     * * {@link bitwise} - Operations on Bytes values.
+     *
+     */
     export class Operation {
+        /**
+         * Code which determines the operations to be performed on the bins of a record.
+         */
         public op: ScalarOperations;
+        /**
+         * The bin the operation will be performed on.
+         */
         public bin: string;
+        /**
+         * Value used in the operation.
+         */
         public value?: AerospikeBinValue;
+        /**
+         * The time-to-live (expiration) of the record in seconds.
+         *
+         * There are also special values that can be set in the record ttl:
+         * <ul>
+         * <li> {@link ttl.NAMESPACE_DEFAULT}: Use the server default ttl from the namespace.</li>
+         * <li>{@link ttl.NEVER_EXPIRE}: Do not expire the record.</li>
+         * <li> {@link ttl.DONT_UPDATE}: Keep the existing record ttl when the record is updated.</li>
+         * <li> {@link ttl.CLIENT_DEFAULT}: Use the default client ttl in as_policy_operate.</li>
+         * </ul>
+         */
         public ttl?: number;
      }
-
+    /**
+     * Read the value of the bin.
+     *
+     * @param bin - The name of the bin.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
+     */
     export function read(bin: string): Operation;
+    /**
+     * @summary Update the value of the bin.
+     *
+     * @param bin - The name of the bin.
+     * @param value - The value to set the bin to.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
+     */
     export function write(bin: string, value: AerospikeBinValue): Operation;
+/**
+ * Increment the value of the bin by the given value.
+ *
+ * @remarks The bin must contain either an Integer or a Double, and the
+ * value must be of the same type.
+ *
+ * @param bin - The name of the bin.
+ * @param value - The <code>number</code>|{@link Double} value to increment the bin by.
+ * @returns Operation that can be passed to the {@link Client#operate} command.
+ */
     export function add(bin: string, value: number | Double): Operation;
+/**
+ * Alias for the {@link operations.add} operation.
+ */
     export function incr(bin: string, value: number | Double): Operation;
+/**
+ * Append the value to the bin.
+ *
+ * @remarks The bin must contain either String or a Byte Array, and the
+ * value must be of the same type.
+ *
+ * @param bin - The name of the bin.
+ * @param value - The value to append to the bin.
+ * @returns Operation that can be passed to the {@link Client#operate} command.
+ */
     export function append(bin: string, value: string | Buffer): Operation;
+/**
+ * Prepend the value to the bin.
+ *
+ * @remarks The bin must contain either String or a Byte Array, and the
+ * value must be of the same type.
+ *
+ * @param bin - The name of the bin.
+ * @param value - The value to prepend to the bin.
+ * @returns Operation that can be passed to the {@link Client#operate} command.
+ */
     export function prepend(bin: string, value: string | Buffer): Operation;
+/**
+ * Update the TTL (time-to-live) for a record.
+ *
+ * @remarks If the optional `ttl` parameter is not specified, the server
+ * will reset the record's TTL value to the default TTL value for the
+ * namespace.
+ *
+ * @param ttl - The new relative TTL to set for the record, when it is touched. Default is {@link ttl.NAMESPACE_DEFAULT}
+ * @returns Operation that can be passed to the {@link Client#operate} command.
+ *
+ * @see {@link ttl} for "special" TTL values.
+ */
     export function touch(ttl: number): Operation;
+/**
+ * @summary Deletes the record.
+ *
+ * @remarks Returns true on success. Otherwise an error occurred.
+ *
+ * @returns Operation that can be passed to the {@link Client#operate} command.
+ *
+ * @since v3.14.0
+ */
     function deleteOp(): Operation;
     export {deleteOp as delete}
 
@@ -13717,7 +15281,9 @@ export namespace operations {
  * })
  */
 export namespace filter {
-
+    /**
+     * For internal use only.
+     */
     enum Predicates {
         EQUAL,
         RANGE
