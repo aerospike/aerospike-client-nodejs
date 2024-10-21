@@ -1,5 +1,5 @@
 {
-  "include": ["lib/*", "lib/commands/*", "lib/policies/*", "typings/index.d.ts"],
+  "include": ["typings/index.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     "strict": true,
