@@ -52,7 +52,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/index.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
+    "valgrind": "valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i ts-test",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
