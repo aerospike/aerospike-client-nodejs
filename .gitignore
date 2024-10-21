@@ -13,3 +13,4 @@ scripts/build-c-client.sh-output.txt
 libuv*
 docs*
 ts-test/dist
+scripts/build-c-client.sh-cclient-output.log
