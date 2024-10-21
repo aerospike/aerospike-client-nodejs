@@ -217,7 +217,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v .github/assets:/opt/aerospike/etc --name aerospike -p 3000-3002:3000-3002 --config-file /opt/aerospike/etc/aerospike.conf aerospike/aerospike-server:7.1
+      run: docker run -d -v .github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
