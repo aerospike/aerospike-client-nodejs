@@ -14,3 +14,4 @@ libuv*
 docs*
 ts-test/dist
 scripts/build-c-client.sh-cclient-output.log
+tsconfig.tsbuildinfos
