@@ -217,7 +217,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/aerospike/aerospike.conf
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
@@ -332,8 +332,8 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run ts-test ts-test -- --h localhost --U admin --P admin --t 40000 tests/admin.js
-
+        npm run ts-test tests/admin.js -- --h localhost --U admin --P admin --t 40000
+test-ee
   test-valgrind:
     runs-on: ubuntu-latest
     needs: build-ubuntu
@@ -387,7 +387,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server 
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
