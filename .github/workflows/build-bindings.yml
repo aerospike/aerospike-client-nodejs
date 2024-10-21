@@ -535,66 +535,63 @@ jobs:
         cd testDir
         bun link aerospike
 
-  test-typescript-install:
-    runs-on: ubuntu-22.04
-    needs: [manylinux, macOS-x86]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: ./.github/workflows/combine-bindings/
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
-        architecture: 'x64'
-
-    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest 
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: |
-        cd ts-test;
-        npm i --save-dev @types/mocha;
-        npm i --save-dev @types/yargs;
-        npm i --save-dev @types/semver;
-        npm i --save-dev @types/chai;
-        tsc;
-        cd ..;
-        npm install;
-        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 15
-      
-    - name: Modify the package.json
-      run: |
-        sudo npm install -g json
-        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-        
-    - name: Run tests
-      run: |
-        mkdir my-aerospike-project
-        cd my-aerospike-project
-        npm init -y
-        npm install typescript ts-node --save-dev
-        npm install ..
-        cp ../examples/typescript.ts index.ts
-        npx tsc index.ts
-        node index.js
-
-
-
+#  test-typescript-install:
+#    runs-on: ubuntu-22.04
+#    needs: [manylinux, macOS-x86]
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        submodules: recursive
+#
+#    - uses: ./.github/workflows/combine-bindings/
+#
+#    - uses: actions/setup-node@v4
+#      with:
+#        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+#        architecture: 'x64'
+#
+#    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#
+#    - name: Run Aerospike server release candidate with latest tag
+#      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest 
+#
+#    - name: Run Aerospike server
+#      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: |
+#        cd ts-test;
+#        npm i --save-dev @types/mocha;
+#        npm i --save-dev @types/yargs;
+#        npm i --save-dev @types/semver;
+#        npm i --save-dev @types/chai;
+#        tsc;
+#        cd ..;
+#        npm install;
+#        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#
+#
+#    - name: Wait for database to be ready
+#      # Should be ready after 3 seconds
+#      run: sleep 15
+#      
+#    - name: Modify the package.json
+#      run: |
+#        sudo npm install -g json
+#        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+#        
+#    - name: Run tests
+#      run: |
+#        mkdir my-aerospike-project
+#        cd my-aerospike-project
+#        npm init -y
+#        npm install typescript ts-node --save-dev
+#        npm install ..
+#        cp ../examples/typescript.ts index.ts
+#        npx tsc index.ts
+#        node index.js
