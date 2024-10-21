@@ -42,7 +42,7 @@
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
     "test": "mocha test",
-    "ts-test": "rm -rf ts-test/dist; cd ts-test; tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist",
+    "ts-test": "rm -rf ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",
