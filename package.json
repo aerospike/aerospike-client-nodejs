@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "5.13.0",
+  "version": "5.13.1",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -106,6 +106,7 @@
     "scripts/",
     "src/",
     "test/",
+    "ts-test/",
     "typings/"
   ]
 }

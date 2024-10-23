@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.13.1]
+
+* **New Features**
+  * [CLIENT-3127] - Added client.ExistsWithMetadata.
+  * [CLIENT-3153] - Added support for Node.js 23.
+
+* **Bug Fixes**
+  * [CLIENT-3107] - Map read and List read operations no longer throw a type error when using EXISTS, ORDERED_MAP, or UNORDERED_MAP return types.
+  * [CLIENT-3145] - Fixed issue with BatchResult not returning inDoubt status to the user.
+  
+* **Improvements**
+  * [CLIENT-3061] - Revamped typescript support by improving description file with tighter definitions and documentation.
+    * [CLIENT-3149] - Fixed import conflicts with third party packages in typescript description file.
+    * [CLIENT-3149] - Improved typescript description file compilation.
+  * [CLIENT-3151] - Converted API documentation to TypeDoc documentation.
+
 ## [5.12.1]
 
 * **Breaking Changes**
