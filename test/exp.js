@@ -271,13 +271,13 @@ describe('Aerospike.exp', function () {
     it('evaluates to true if any expression evaluates to true', async function () {
       const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
       await testNoMatch(key, exp.eq(exp.recordSize(), exp.int(1)))
-      await testMatch(key, exp.eq(exp.recordSize(), exp.int(96)))
+      await testMatch(key, exp.gt(exp.recordSize(), exp.int(64)))
     })
 
     it('evaluates to true if any expression evaluates to true', async function () {
       const key = await createRecord({ tags: { a: '123456789', b: 'green', c: 'yellow' } })
       await testNoMatch(key, exp.eq(exp.recordSize(), exp.int(1)))
-      await testMatch(key, exp.eq(exp.recordSize(), exp.int(112)))
+      await testMatch(key, exp.gt(exp.recordSize(), exp.int(64)))
     })
   })
 

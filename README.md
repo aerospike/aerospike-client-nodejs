@@ -1,4 +1,4 @@
-# Aerospike Node.js Client [![travis][travis-image]][travis-url] [![codecov][codecov-image]][codecov-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
+# Aerospike Node.js Client [![codecov][codecov-image]][codecov-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
 
 [travis-image]: https://travis-ci.org/aerospike/aerospike-client-nodejs.svg?branch=master
 [travis-url]: https://travis-ci.org/aerospike/aerospike-client-nodejs
@@ -11,7 +11,7 @@
 
 The Aerospike Node.js client is a Node.js add-on module, written using V8.
 
-The client is compatible with Node.js 22, (Upcoming LTS), Node.js 20 (LTS),and 18 (LTS).
+The client is compatible with Node.js 23, Node.js 22, (LTS), Node.js 20 (LTS),and 18 (LTS).
 It supports the following operating systems:
 - RHEL 8/9
 - Debian 11
@@ -313,7 +313,7 @@ The API docs also contain a few basic tutorials:
 * [Handling asynchronous database operations using Callbacks, Promises or `async`/`await`](https://www.aerospike.com/apidocs/nodejs/tutorial-callbacks_promises_async_await.html)
 
 A variety of additional example applications are provided in the
-[`examples`](examples) directory of this repository.
+[`examples`](https://github.com/aerospike/aerospike-client-nodejs/tree/master/examples) directory of this repository.
 
 Access backward incompatible API changes by a release at:
 https://developer.aerospike.com/client/nodejs/usage/incompatible.

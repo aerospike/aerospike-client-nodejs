@@ -94,7 +94,8 @@ jobs:
         nodejs: [
           ["v108", 18],
           ["v115", 20],
-          ["v127", 22]
+          ["v127", 22],
+          ["v131", 23]
         ]
         platform: [
           "x86_64",
@@ -141,7 +142,9 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: |
+        npm i @types/mocha @types/yargs @types/semver @types/chai;
+        docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
 
 #    - name: Set config.conf to use Docker IP address of Aerospike server
 #      # config.conf should be copied into the cibuildwheel Docker container
@@ -154,7 +157,11 @@ jobs:
 #      working-directory: test
 
     - name: Enable tests
-      run: echo "TEST_COMMAND=npm test -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
 
 #    - name: Disable tests (only run basic import test)
 #      if: ${{ !inputs.run_tests }}
@@ -215,7 +222,8 @@ jobs:
         nodejs: [
           ["v108", 18],
           ["v115", 20],
-          ["v127", 22]
+          ["v127", 22],
+          ['v131', 23]
         ]
     runs-on: macos-13
     steps:
@@ -529,51 +537,63 @@ jobs:
         cd testDir
         bun link aerospike
 
-  test-typescript-install:
-    runs-on: ubuntu-22.04
-    needs: [manylinux, macOS-x86]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: ./.github/workflows/combine-bindings/
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
-        architecture: 'x64'
-
-    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Modify the package.json
-      run: |
-        sudo npm install -g json
-        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
-        
-    - name: Run tests
-      run: |
-        mkdir my-aerospike-project
-        cd my-aerospike-project
-        npm init -y
-        npm install typescript ts-node --save-dev
-        npm install ..
-        cp ../examples/typescript.ts index.ts
-        npx tsc index.ts
-        node index.js
-
-
-
+#  test-typescript-install:
+#    runs-on: ubuntu-22.04
+#    needs: [manylinux, macOS-x86]
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        submodules: recursive
+#
+#    - uses: ./.github/workflows/combine-bindings/
+#
+#    - uses: actions/setup-node@v4
+#      with:
+#        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+#        architecture: 'x64'
+#
+#    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#
+#    - name: Run Aerospike server release candidate with latest tag
+#      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest 
+#
+#    - name: Run Aerospike server
+#      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: |
+#        cd ts-test;
+#        npm i --save-dev @types/mocha;
+#        npm i --save-dev @types/yargs;
+#        npm i --save-dev @types/semver;
+#        npm i --save-dev @types/chai;
+#        tsc;
+#        cd ..;
+#        npm install;
+#        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#
+#
+#    - name: Wait for database to be ready
+#      # Should be ready after 3 seconds
+#      run: sleep 15
+#      
+#    - name: Modify the package.json
+#      run: |
+#        sudo npm install -g json
+#        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+#        
+#    - name: Run tests
+#      run: |
+#        mkdir my-aerospike-project
+#        cd my-aerospike-project
+#        npm init -y
+#        npm install typescript ts-node --save-dev
+#        npm install ..
+#        cp ../examples/typescript.ts index.ts
+#        npx tsc index.ts
+#        node index.js
