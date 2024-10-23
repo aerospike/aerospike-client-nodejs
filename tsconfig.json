@@ -1,13 +1,13 @@
 {
-  "include": ["lib/*", "lib/commands/*", "lib/policies/*"], 
+  "include": ["typings/index.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2019",
+    "target": "es5",
     "lib": [
-      "es2020",
+      "es5",
       "dom"
     ],
     "allowJs": true,
@@ -27,5 +27,8 @@
     "isolatedModules": false,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "paths": {
+      "*": ["typings/*"]
+    }
   }
 }
