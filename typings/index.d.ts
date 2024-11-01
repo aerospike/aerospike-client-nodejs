@@ -14247,7 +14247,7 @@ export namespace exp {
          * Operations can be created using the methods with the following modules:
          * * {@link exp} - General expression on all types.
          */
-        export protected class ExpOperation extends operations.Operation {
+        export class ExpOperation extends operations.Operation {
             /**
              * Aerospike Expression to be evaluated by this operation.
              */

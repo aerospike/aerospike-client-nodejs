@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "5.13.1",
+  "version": "5.13.2",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -93,7 +93,8 @@
       "apidocs",
       "tmp-*.js",
       "/*.js",
-      "libuv-v*"
+      "libuv-v*",
+      "ts-test/dist"
     ]
   },
   "files": [
@@ -101,12 +102,15 @@
     "aerospike-client-c.sha256",
     "binding.gyp",
     "benchmarks/",
+    "CHANGELOG.md",
     "examples/",
     "lib/",
+    "LICENSE",
     "scripts/",
     "src/",
     "test/",
     "ts-test/",
+    "tsconfig.json",
     "typings/"
   ]
 }
