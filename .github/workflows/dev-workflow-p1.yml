@@ -10,7 +10,7 @@ on:
       - review_requested
     branches:
       - 'dev*'
-      - 'dev-CICD'
+      - '2024-Pipeline-Improvement'
     paths-ignore:
       - 'docs/**'
       - 'aerospike-stubs/**'
