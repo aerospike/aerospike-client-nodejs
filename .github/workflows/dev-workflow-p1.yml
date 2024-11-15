@@ -7,9 +7,11 @@ name: Dev workflow (part 1)
 on:
   pull_request:
     types:
+      - opened
       - review_requested
     branches:
       - 'dev*'
+      - '2024-Pipeline-Improvement'
     paths-ignore:
       - 'docs/**'
       - 'aerospike-stubs/**'

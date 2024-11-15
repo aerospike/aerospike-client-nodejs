@@ -307,7 +307,7 @@ jobs:
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.BUILD_IDENTIFIER }}.build
+          name: ${{ env.BUILD_IDENTIFIER }}.node
 
       - name: Convert Python tag to Python version
         # Don't use sed because we want this command to work on both mac and windows
