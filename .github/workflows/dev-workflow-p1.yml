@@ -10,6 +10,7 @@ on:
       - review_requested
     branches:
       - 'dev*'
+      - 'dev-CICD'
     paths-ignore:
       - 'docs/**'
       - 'aerospike-stubs/**'
