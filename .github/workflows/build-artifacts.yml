@@ -1,0 +1,105 @@
+name: Build artifacts
+run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+
+# Builds manylinux wheels and source distribution
+# Optionally run tests on manylinux wheels
+# Then upload artifacts to Github
+
+on:
+  workflow_dispatch:
+    inputs:
+      # There may be a case where we want to test these build debug flags on all platforms that support them
+      unoptimized:
+        description: 'macOS or Linux: Apply -O0 flag?'
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        description: 'macOS: Build wheels for debugging?'
+        type: boolean
+        required: false
+        default: false
+      run_tests:
+        description: "Run integration tests with the wheels after building them"
+        required: true
+        type: boolean
+        default: false
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate? (e.g to test new server features)'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag (e.g to test a client backport version)'
+
+  workflow_call:
+    inputs:
+      # The "dev" tests test the artifacts against a server
+      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
+      run_tests:
+        required: false
+        type: boolean
+        default: false
+      # workflow_call hack
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+      # This input is only used in workflow_call events
+      sha-to-build-and-test:
+        description: A calling workflow may want to run this workflow on a different ref than the calling workflow's ref
+        type: string
+        # Make it required to make things simple
+        required: true
+      # A calling workflow doesn't actually set values to the inputs below
+      # But that workflow needs to have default values for these inputs
+      unoptimized:
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
+      use-server-rc:
+        required: false
+        default: false
+        type: boolean
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
+
+jobs:
+  build-bindings:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_arm64",
+          "win_amd64"
+        ]
+      fail-fast: false
+    uses: ./.github/workflows/build-bindings.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      # Can't use env context here, so just copy from build-sdist env var
+      sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+      unoptimized: ${{ inputs.unoptimized }}
+      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
+      run_tests: ${{ inputs.run_tests }}
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
+    secrets: inherit
