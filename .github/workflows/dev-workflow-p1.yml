@@ -7,6 +7,7 @@ name: Dev workflow (part 1)
 on:
   pull_request:
     types:
+      - opened
       - review_requested
     branches:
       - 'dev*'
