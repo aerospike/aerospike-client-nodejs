@@ -35,5 +35,5 @@ runs:
     run: |
       pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt";
       crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000;
-    working-directory: test
+    working-directory: .github/workflows
     shell: bash
