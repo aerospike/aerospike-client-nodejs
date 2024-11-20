@@ -1,5 +1,7 @@
 name: 'Run EE Server'
-description: 'Run EE server'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+# NOTE: do not share this server container with others
+# since it's using the default admin / admin credentials
 inputs:
   # All inputs in composite actions are strings
   use-server-rc:
@@ -18,7 +20,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-
   - name: Install crudini to manipulate config.conf
     # This will only work on the Github hosted runners.
     run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
@@ -36,21 +37,11 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
       crudini --existing=param --set config.conf enterprise-edition user superuser
       crudini --existing=param --set config.conf enterprise-edition password superuser
-    working-directory:  .github/workflows
+    working-directory: .github/workflows
     shell: bash
 
   - name: Create config folder to store configs in
     run: mkdir configs
-    shell: bash
-
-  - name: Use release server
-    if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Use release candidate server
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
     shell: bash
 
   - name: Log into Docker Hub to get server RC
@@ -58,26 +49,33 @@ runs:
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - name: Get default aerospike.conf from Docker server EE container
-    run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
+  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - name: Enable security features using aerospike.conf
-    # Security stanza
-    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
-    working-directory: ./configs
+  - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
     shell: bash
 
-  - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
+  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+    uses: docker/setup-buildx-action@v3
+
+  - name: Build and push
+    uses: docker/build-push-action@v6
+    with:
+      # Don't want to use default Git context or else it will clone the whole Python client repo again
+      context: .github/workflows
+      build-args: |
+        image=${{ env.IMAGE_NAME }}
+      tags: ${{ env.SECURITY_IMAGE_NAME }}
+      # setup-buildx-action configures Docker to use the docker-container build driver
+      # This driver doesn't publish an image locally by default
+      # so we have to manually enable it
+      load: true
+
+  - run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
-    shell: bash
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    with:
+      container-name: aerospike
+      is-security-enabled: true
