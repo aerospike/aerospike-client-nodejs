@@ -146,15 +146,15 @@ jobs:
         npm i @types/mocha @types/yargs @types/semver @types/chai;
         docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
 
-#    - name: Set config.conf to use Docker IP address of Aerospike server
-#      # config.conf should be copied into the cibuildwheel Docker container
-#      run: |
-#        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-#        # Install crudini
-#        pip install crudini -c ../.github/workflows/requirements.txt
-#        sed -i "s/127.0.0.1:3000//" config.conf
-#        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
-#      working-directory: test
+    - name: Set config.conf to use Docker IP address of Aerospike server
+      # config.conf should be copied into the cibuildwheel Docker container
+      run: |
+        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+        # Install crudini
+        pip install crudini -c ../.github/workflows/requirements.txt
+        sed -i "s/127.0.0.1:3000//" config.conf
+        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+      working-directory: test
 
     - name: Enable tests
       run: echo "TEST_COMMAND=cd ts-test;
