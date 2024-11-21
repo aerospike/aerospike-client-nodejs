@@ -184,7 +184,7 @@ jobs:
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
