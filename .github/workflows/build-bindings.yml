@@ -182,18 +182,18 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    #- name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+    #  uses: ./.github/actions/run-ee-server-for-ext-container
+    #  with:
+    #    use-server-rc: ${{ inputs.use-server-rc }}
+    #    server-tag: ${{ inputs.server-tag }}
+    #    docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+    #    docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
+    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
