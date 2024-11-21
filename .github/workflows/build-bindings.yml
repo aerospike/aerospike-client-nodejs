@@ -238,6 +238,7 @@ jobs:
       if: ${{ inputs.run_tests}}
       run: |
         docker ps;
+        docker logs aerospike;
         cd ts-test;
         npm install typescript --save-dev;
         npx tsc;
