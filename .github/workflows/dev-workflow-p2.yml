@@ -2,6 +2,8 @@ name: Dev workflow (part 2)
 
 on:
   pull_request_target:
+    types:
+      - synchronize
     branches:
     - 'dev*'
     types:
