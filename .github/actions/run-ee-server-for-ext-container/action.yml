@@ -31,14 +31,10 @@ runs:
     run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
     shell: bash
 
-  - name: print IP address  
-    run: cat $GITHUB_OUTPUT
-    shell: bash
-
-
   - name: Configure tests to connect to that Docker container
     run: |
       pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt";
       crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000;
+      cat config.conf
     working-directory: .github/workflows
     shell: bash
