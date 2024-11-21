@@ -244,7 +244,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test dist/ -- --h 172.17.0.2 --port 3000;
+        npm run test dist/ -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
     #- name: Build wheel
