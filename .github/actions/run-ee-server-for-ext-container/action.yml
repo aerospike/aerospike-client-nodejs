@@ -31,7 +31,7 @@ runs:
     run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
     shell: bash
 
-    name: Get IP address of Docker container hosting server
+  - name: Get IP address of Docker container hosting server
     run: echo $GITHUB_OUTPUT
     shell: bash
 
