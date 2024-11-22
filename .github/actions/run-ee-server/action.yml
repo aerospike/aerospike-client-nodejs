@@ -60,8 +60,8 @@ runs:
 
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
-
-  - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
+    
+  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
