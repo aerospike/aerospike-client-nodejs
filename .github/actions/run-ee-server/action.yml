@@ -6,15 +6,20 @@ inputs:
   # All inputs in composite actions are strings
   use-server-rc:
     required: true
-    default: false
+    description: Deploy server release candidate?
+    default: 'false'
   server-tag:
     required: true
+    description: Specify Docker tag
+
     default: 'latest'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
+    description: Required for using release candidates
     required: false
   docker-hub-password:
+    description: Required for using release candidates
     required: false
 
 runs:
@@ -35,14 +40,17 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --existing=param --set config.conf enterprise-edition user superuser
-      crudini --existing=param --set config.conf enterprise-edition password superuser
     working-directory: .github/workflows
     shell: bash
 
-  - name: Create config folder to store configs in
-    run: mkdir configs
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
+
+  - name: Set credentials in config file
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+    working-directory: test
 
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
@@ -63,19 +71,36 @@ runs:
     uses: docker/build-push-action@v6
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
-      context: .github/workflows
+      context: .github/workflows/docker-build-context
       build-args: |
-        image=${{ env.IMAGE_NAME }}
-      tags: ${{ env.SECURITY_IMAGE_NAME }}
+        server_image=${{ env.IMAGE_NAME }}
+      tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
 
-  - run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.SECURITY_IMAGE_NAME }}
+  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
+
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: aerospike
-      is-security-enabled: true
+      container-name: ${{ env.SERVER_CONTAINER_NAME }}
+      is-strong-consistency-enabled: true
+
+  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
+    shell: bash
+
+  # All the partitions are assumed to be dead when reusing a roster file
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+    shell: bash
+
+  # Apply changes
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+    shell: bash
+
+  # For debugging
+  - run: docker logs aerospike
+    shell: bash
