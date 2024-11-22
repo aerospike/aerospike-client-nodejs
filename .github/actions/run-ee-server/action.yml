@@ -50,7 +50,7 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-    working-directory: test
+    working-directory: .github/workflows
     shell: bash
 
   - name: Log into Docker Hub to get server RC
