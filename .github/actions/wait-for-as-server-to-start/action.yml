@@ -6,10 +6,10 @@ inputs:
   is-security-enabled:
     required: false
     default: 'false'
- is-strong-consistency-enabled:
+  is-strong-consistency-enabled:
     required: false
     default: 'false'
-    
+
 runs:
   using: "composite"
   steps:
