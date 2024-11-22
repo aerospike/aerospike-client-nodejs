@@ -51,6 +51,7 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
     working-directory: test
+    shell: bash
 
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
@@ -84,6 +85,7 @@ runs:
     shell: bash
 
   - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
+    shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
