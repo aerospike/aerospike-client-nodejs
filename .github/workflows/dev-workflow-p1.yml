@@ -9,6 +9,7 @@ on:
     types:
       - opened
       - review_requested
+      - synchronize
     branches:
       - 'dev*'
       - 'dev-CICD'

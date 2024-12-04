@@ -532,7 +532,10 @@ describe('client.batchWrite()', function () {
         hosts: helper.config.hosts,
         policies: {
           batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
-        }
+        },
+        user: helper.config.user,
+        password: helper.config.password
+
       }
 
       const dummyClient = await Aerospike.connect(config)
