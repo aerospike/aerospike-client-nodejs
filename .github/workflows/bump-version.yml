@@ -57,6 +57,10 @@ jobs:
       id: get-current-version
       run: echo current_version=$(node -e "console.log(require('./package.json').version);") >> $GITHUB_OUTPUT
 
+    - name: Print current version
+      run: echo "Current version is: ${{ steps.get-current-version.outputs.current_version }}"
+
+
   get-new-version:
     runs-on: ubuntu-22.04
     needs: get-current-version
@@ -74,6 +78,11 @@ jobs:
     - name: Get new version
       id: get-new-version
       run: echo new_version=$(node bump-dev-num.js) >> $GITHUB_OUTPUT
+      working-directory: .github/workflows
+
+    - name: Print new version
+      run: echo "New version is: ${{ steps.get-current-version.outputs.new_version }}"
+
 
   update-version-in-repo:
     needs: get-new-version
