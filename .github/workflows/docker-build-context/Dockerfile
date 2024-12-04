@@ -25,6 +25,7 @@ COPY security.smd .
 # Enable strong consistency
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s/\(namespace.*{\)/\1\n\tdefault-ttl 2592000/" $AEROSPIKE_CONF_TEMPLATE_PATH
 ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
 

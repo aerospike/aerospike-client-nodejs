@@ -9,5 +9,5 @@ runs:
   using: "composite"
   steps:
   - name: Update VERSION metadata
-    run: echo ${{ inputs.new_version }} > VERSION
+    run: npm version ${{ inputs.new_version }} --no-git-tag-version
     shell: bash
