@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.13.2]
+* **Bug Fixes**
+  * [CLIENT-3155] - Fixed typescript compilation by removing the protected modifier from the ExpOperation class.
+
 ## [5.13.1]
 
 * **New Features**
