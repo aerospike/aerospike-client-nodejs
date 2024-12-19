@@ -31,6 +31,9 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT API Tests', function () {
+  helper.skipUnlessVersion('>= 8.0.0', this)
+  helper.skipUnlessEnterprise(this)  
+
   const client: Cli = helper.client
 
   it('should initialize a transaction', async function () {

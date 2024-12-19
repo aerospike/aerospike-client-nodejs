@@ -31,9 +31,8 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT functionality tests', function () {
-  helper.skipUnlessVersion('>= 8.0.0', this)
-  helper.skipUnlessEnterprise(this)
 
+  helper.skipUnlessVersion('< 8.0.0', this)
   const client: Cli = helper.client
 
   const key1: K = keygen.string(helper.namespace, helper.set, { prefix: 'test/mrt/1' })()
@@ -57,13 +56,7 @@ describe('MRT functionality tests', function () {
 
     await client.put(key2, record1, meta)
     await client.put(key3, record1, meta)
-
     await client.put(key4, record1, meta)
-    await client.put(key5, record1, meta)
-
-    await client.put(key6, record1, meta)
-
-    await client.put(key7, record1, meta)
 
   })
 
@@ -81,95 +74,27 @@ describe('MRT functionality tests', function () {
     expect(get_result.bins).to.eql(record2)
 
     let result: number = await client.commit(mrt)
-    expect(result).to.eql(Aerospike.commitStatus.OK)
+    expect(result).to.eql(Aerospike.commitStatus.ROLL_FORWARD_ABANDONED)
+
   })
 
-  it('should fail due to timeout: code MRT_EXPIRED', async function () {
-    this.timeout(6000)
+  it('Should execute a simple multi-record transaction abort', async function () {
+  
     let mrt: any = new Aerospike.Transaction()
 
-    mrt.setTimeout(1)
-
-    const policy: WritePolicyOptions = {
+    let policy: any = {
         txn: mrt
-    }
+    };
 
     await client.put(key2, record2, meta, policy)
-    await new Promise(r => setTimeout(r, 3000));
-    try{
-      await client.put(key3, record2, meta, policy)
-    }
-    catch (error: any) {
-      expect(error.code).to.eql(Aerospike.status.MRT_EXPIRED)
+    //await client.put(key3, record2, meta, policy)
+    //await client.put(key4, record2, meta, policy)
 
-      let result: number = await client.abort(mrt)
-      expect(result).to.eql(Aerospike.abortStatus.OK)
-
-      return
-    }
-
-    assert.fail('An MRT_EXPIRED error should have been thrown')
-  })
-
-  it('should abort the MRT and revert changes', async function () {
-    let mrt: any = new Aerospike.Transaction()
-
-    const policy: WritePolicyOptions = {
-        txn: mrt
-    }
-
-    await client.put(key4, record2, meta, policy)
-
-    const policyRead: ReadPolicyOptions = {
-        txn: mrt
-    }
-
-    let get_result: AerospikeRecord = await client.get(key4, policy)
+    let get_result: AerospikeRecord = await client.get(key1, policy)
     expect(get_result.bins).to.eql(record2)
 
-    await client.put(key5, record2, meta, policy)
-
     let result: number = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.commitStatus.OK)
-
-    get_result = await client.get(key4)
-    expect(get_result.bins).to.eql(record1)
-
-    get_result = await client.get(key5)
-    expect(get_result.bins).to.eql(record1)
-
-  })
-
-  it('should fail to commit after aborting', async function () {
-    let mrt: any = new Aerospike.Transaction()
-
-    const policy: WritePolicyOptions = {
-        txn: mrt
-    }
-
-    await client.put(key6, record1, meta, policy)
-
-    let result: number = await client.abort(mrt)
-
-    result = await client.commit(mrt)
-
-    expect(result).to.eql(Aerospike.commitStatus.ALREADY_ABORTED)
-  })
-
-  it('should fail to abort after committing', async function () {
-    let mrt: any = new Aerospike.Transaction()
-
-    const policy: WritePolicyOptions = {
-        txn: mrt
-    }
-
-    await client.put(key7, record1, meta, policy)
-
-    let result: number = await client.commit(mrt)
-
-    result = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.abortStatus.ALREADY_COMMITTED)
-
+    expect(result).to.eql(Aerospike.abortStatus.ROLL_BACK_ABANDONED)
   })
 
 })
