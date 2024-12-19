@@ -31,8 +31,8 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT functionality tests', function () {
-
-  helper.skipUnlessVersion('< 8.0.0', this)
+  helper.skipUnlessVersionAndCommunity('< 8.0.0', this)
+  
   const client: Cli = helper.client
 
   const key1: K = keygen.string(helper.namespace, helper.set, { prefix: 'test/mrt/1' })()
@@ -87,8 +87,8 @@ describe('MRT functionality tests', function () {
     };
 
     await client.put(key2, record2, meta, policy)
-    //await client.put(key3, record2, meta, policy)
-    //await client.put(key4, record2, meta, policy)
+    await client.put(key3, record2, meta, policy)
+    await client.put(key4, record2, meta, policy)
 
     let get_result: AerospikeRecord = await client.get(key2, policy)
     expect(get_result.bins).to.eql(record2)
