@@ -232,7 +232,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test dist/
+        npm run test
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
@@ -278,7 +278,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test dist/ -- --t 20000
+        npm run test -- --t 20000
 
   test-ee:
     runs-on: ubuntu-latest
@@ -335,7 +335,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test dist/admin.js -- --h localhost --U admin --P admin --t 40000
+        npm run test -- --h localhost --U superuser --P superuser --t 40000
 
   test-valgrind:
     runs-on: ubuntu-latest

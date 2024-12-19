@@ -90,7 +90,7 @@ describe('MRT functionality tests', function () {
     //await client.put(key3, record2, meta, policy)
     //await client.put(key4, record2, meta, policy)
 
-    let get_result: AerospikeRecord = await client.get(key1, policy)
+    let get_result: AerospikeRecord = await client.get(key2, policy)
     expect(get_result.bins).to.eql(record2)
 
     let result: number = await client.abort(mrt)
