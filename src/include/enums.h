@@ -45,4 +45,7 @@ v8::Local<v8::Object> queryDuration();
 v8::Local<v8::Object> privilegeCode();
 v8::Local<v8::Object> expReadFlags();
 v8::Local<v8::Object> expWriteFlags();
-
+v8::Local<v8::Object> abortStatus();
+v8::Local<v8::Object> commitStatus();
+v8::Local<v8::Object> txnState();
+v8::Local<v8::Object> txnCapacity();

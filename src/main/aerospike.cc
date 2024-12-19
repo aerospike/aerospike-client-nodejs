@@ -28,6 +28,9 @@ extern "C" {
 #include <aerospike/as_async_proto.h>
 }
 
+#include "transaction.h"
+
+
 #define export(__name, __value)                                                \
 	Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
 
@@ -116,6 +119,13 @@ NAN_METHOD(client)
 	info.GetReturnValue().Set(AerospikeClient::NewInstance(config));
 }
 
+NAN_METHOD(transaction)
+{
+	Nan::HandleScope();
+
+	Local<Object> capacity_obj = info[0].As<Object>();
+	info.GetReturnValue().Set(Transaction::NewInstance(capacity_obj));
+}
 /**
  *  aerospike object.
  */
@@ -124,8 +134,9 @@ NAN_MODULE_INIT(Aerospike)
 	Nan::HandleScope scope;
 
 	AerospikeClient::Init();
-
+	Transaction::Init();
 	NAN_EXPORT(target, client);
+	NAN_EXPORT(target, transaction);
 	NAN_EXPORT(target, get_cluster_count);
 	NAN_EXPORT(target, register_as_event_loop);
 	NAN_EXPORT(target, release_as_event_loop);
@@ -160,6 +171,11 @@ NAN_MODULE_INIT(Aerospike)
 	export("privilegeCode", privilegeCode());
 	export("expReadFlags", expReadFlags());
 	export("expWriteFlags", expWriteFlags());
+	export("abortStatus", abortStatus());
+	export("commitStatus", commitStatus());
+	export("txnState", txnState());
+	export("txnCapacity", txnCapacity());
+
 }
 
 NODE_MODULE(aerospike, Aerospike);

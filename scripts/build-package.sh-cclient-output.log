@@ -1,0 +1,8 @@
+project/modules.mk:16: ***************************************************************
+project/modules.mk:17: *
+project/modules.mk:18: *  COMMON is '/home/dpelini/Documents/MRT/aerospike-client-nodejs/aerospike-client-c/modules/common'
+project/modules.mk:19: *  COMMON doesn't contain 'Makefile'. 
+project/modules.mk:20: *  COMMON should be set to a valid path. 
+project/modules.mk:21: *
+project/modules.mk:22: ***************************************************************
+project/modules.mk:23: *** .  Stop.

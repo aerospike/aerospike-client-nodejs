@@ -221,6 +221,14 @@ exports.skipUnlessVersion = function (versionRange, ctx) {
   skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
 }
 
+exports.skipUnlessVersionAndEnterprise = function (versionRange, ctx) {
+  skipUnless(ctx, () => {this.cluster.isVersionInRange(versionRange) && this.cluster.isEnterprise() }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+}
+
+exports.skipUnlessVersionAndCommunity = function (versionRange, ctx) {
+  skipUnless(ctx, () => {this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise()) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+}
+
 exports.skipUnlessSupportsTtl = function (ctx) {
   skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
 }
