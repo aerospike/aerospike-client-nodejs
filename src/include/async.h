@@ -20,6 +20,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_event.h>
+#include <aerospike/aerospike_txn.h>
 }
 
 #include <nan.h>
@@ -62,3 +63,9 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 
 bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
                          as_event_loop *event_loop);
+
+void async_abort_listener(as_error* err, as_abort_status status, void* udata, struct as_event_loop* event_loop);
+
+void async_commit_listener(as_error* err, as_commit_status status, void* udata, struct as_event_loop* event_loop);
+
+void async_mrt_listener(as_error* err, uint32_t status, void* udata);
