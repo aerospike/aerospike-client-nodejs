@@ -30,9 +30,9 @@ const recgen: any = helper.recgen
 
 const status: typeof statusModule = Aerospike.status
 
-describe('MRT functionality tests', function () {
+describe('MRT backward compatible tests', function () {
   helper.skipUnlessVersionAndCommunity('< 8.0.0', this)
-  
+
   const client: Cli = helper.client
 
   const key1: K = keygen.string(helper.namespace, helper.set, { prefix: 'test/mrt/1' })()
@@ -77,7 +77,7 @@ describe('MRT functionality tests', function () {
     expect(result).to.eql(Aerospike.commitStatus.ROLL_FORWARD_ABANDONED)
 
   })
-
+  
   it('Should execute a simple multi-record transaction abort', async function () {
   
     let mrt: any = new Aerospike.Transaction()
