@@ -1924,7 +1924,7 @@ export namespace policy {
         /**
          * Multi-record command identifier. See {@link Transaction} for more information.
          * 
-         * @default null (no transaction) {@link policy.txn}
+         * @default null (no transaction)
          */
         public txn?: Transaction;
 
@@ -8389,7 +8389,7 @@ export interface BasePolicyOptions {
     /**
      * Multi-record command identifier. See {@link Transaction} for more information.
      * 
-     * @default null (no transaction) {@link policy.txn}
+     * @default null (no transaction)
      */
     txn?: Transaction;
 
