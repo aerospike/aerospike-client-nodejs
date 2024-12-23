@@ -1,0 +1,48 @@
+[
+   [
+      162276881999406,
+      14
+   ],
+   {
+      "key": "admin|P",
+      "value": "$2a$10$7EqJtq98hPqEX7fNZaFWoO1mVO/4MLpGzsqojz6E9Gef6iXDjXdDa",
+      "generation": 1,
+      "timestamp": 0
+   },
+   {
+      "key": "admin|R|user-admin",
+      "value": "",
+      "generation": 1,
+      "timestamp": 0
+   },
+   {
+      "key": "superuser|P",
+      "value": "$2a$10$7EqJtq98hPqEX7fNZaFWoOZX0o4mZCBUwvzt/iecIcG4JaDOC41zK",
+      "generation": 3,
+      "timestamp": 458774922440
+   },
+   {
+      "key": "superuser|R|read-write-udf",
+      "value": "",
+      "generation": 3,
+      "timestamp": 458774922441
+   },
+   {
+      "key": "superuser|R|sys-admin",
+      "value": "",
+      "generation": 3,
+      "timestamp": 458774922442
+   },
+   {
+      "key": "superuser|R|user-admin",
+      "value": "",
+      "generation": 3,
+      "timestamp": 458774922442
+   },
+   {
+      "key": "superuser|R|data-admin",
+      "value": null,
+      "generation": 2,
+      "timestamp": 458774718056
+   }
+]

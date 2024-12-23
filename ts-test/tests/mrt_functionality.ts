@@ -33,6 +33,7 @@ const status: typeof statusModule = Aerospike.status
 describe('MRT functionality tests', function () {
   helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
 
+
   const client: Cli = helper.client
 
   const key1: K = keygen.string(helper.namespace, helper.set, { prefix: 'test/mrt/1' })()
