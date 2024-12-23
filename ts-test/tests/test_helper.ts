@@ -243,11 +243,11 @@ Aerospike.setDefaultLogging(config.log ?? {})
 
 
   export function skipUnlessVersionAndEnterprise (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {return this.cluster.isVersionInRange(versionRange) && this.cluster.isEnterprise() }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    skipUnless(ctx, () => {return (this.cluster.isVersionInRange(versionRange) && (this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessVersionAndCommunity (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {return this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise()) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    skipUnless(ctx, () => {return (this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessSupportsTtl(this: any, ctx: Suite) {
