@@ -20,35 +20,34 @@ const shared = require('./shared')
 
 shared.runner()
 
-async function mrt_commit (client, argv) {
+async function mrtCommit (client, argv) {
+  // const record1 = { abc: 123 }
+  const record2 = { def: 456 }
 
-  let record1 = {abc: 123}
-  let record2 = {def: 456}
-
-  let mrt = new Aerospike.Transaction()
+  const mrt = new Aerospike.Transaction()
 
   const policy = {
-      txn: mrt
+    txn: mrt
   }
-  let key_list = []
-  for (var i = 0; i < argv.keys.length; i++) {
-    key_list.push(new Aerospike.Key(argv.namespace, argv.set, argv.keys[i]))
+  const keyList = []
+  for (let i = 0; i < argv.keys.length; i++) {
+    keyList.push(new Aerospike.Key(argv.namespace, argv.set, argv.keys[i]))
   }
-  for (var i = 0; i < argv.keys.length; i++) {
-    await client.put(key_list[i], policy)
-    await client.get(key_list[i], policy)
+  for (let i = 0; i < argv.keys.length; i++) {
+    await client.put(keyList[i], record2, policy)
+    await client.get(keyList[i], policy)
   }
 
-  console.log(key_list)
+  console.log(keyList)
 
-  console.log("committing multi-record transaction with %d operations.", key_list.length*2)
+  console.log('committing multi-record transaction with %d operations.', keyList.length * 2)
   await client.commit(mrt)
-  console.info("multi-record transaction has been committed.")
+  console.info('multi-record transaction has been committed.')
 }
 
-exports.command = 'mrt_commit <keys..>'
+exports.command = 'mrtCommit <keys..>'
 exports.describe = 'Commit a multi-record transaction'
-exports.handler = shared.run(mrt_commit)
+exports.handler = shared.run(mrtCommit)
 exports.builder = {
   keys: {
     desc: 'Provide keys for the records in the multi-record transaction',

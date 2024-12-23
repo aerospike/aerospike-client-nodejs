@@ -20,35 +20,35 @@ const shared = require('./shared')
 
 shared.runner()
 
-async function mrt_abort (client, argv) {
+async function mrtAbort (client, argv) {
+  // sconst record1 = { abc: 123 }
+  const record2 = { def: 456 }
 
-  let record1 = {abc: 123}
-  let record2 = {def: 456}
-
-  let mrt = new Aerospike.Transaction()
+  const mrt = new Aerospike.Transaction()
 
   const policy = {
-      txn: mrt
+    txn: mrt
   }
-  let key_list = []
-  for (var i = 0; i < argv.keys.length; i++) {
-    key_list.push(new Aerospike.Key(argv.namespace, argv.set, argv.keys[i]))
-  }
-  for (var i = 0; i < argv.keys.length; i++) {
-    await client.put(key_list[i], policy)
-    await client.get(key_list[i], policy)
+  const keyList = []
+  for (let i = 0; i < argv.keys.length; i++) {
+    keyList.push(new Aerospike.Key(argv.namespace, argv.set, argv.keys[i]))
   }
 
-  console.log(key_list)
+  for (let i = 0; i < keyList.length; i++) {
+    await client.put(keyList[i], record2, policy)
+    await client.get(keyList[i], policy)
+  }
 
-  console.log("aborting multi-record transaction with %d operations.", key_list.length*2)
+  console.log(keyList)
+
+  console.log('aborting multi-record transaction with %d operations.', keyList.length * 2)
   await client.abort(mrt)
-  console.info("multi-record transaction has been aborted.")
+  console.info('multi-record transaction has been aborted.')
 }
 
-exports.command = 'mrt_abort <keys..>'
+exports.command = 'mrtAbort <keys..>'
 exports.describe = 'Abort a multi-record transaction'
-exports.handler = shared.run(mrt_abort)
+exports.handler = shared.run(mrtAbort)
 exports.builder = {
   keys: {
     desc: 'Provide keys for the records in the multi-record transaction',
