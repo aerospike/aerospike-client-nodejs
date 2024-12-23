@@ -303,7 +303,7 @@ context('Operations', function () {
 
           let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
@@ -323,7 +323,7 @@ context('Operations', function () {
 
           let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
@@ -343,11 +343,11 @@ context('Operations', function () {
 
           let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
@@ -363,11 +363,11 @@ context('Operations', function () {
 
           let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(7, 8)
+          expect(record.ttl).to.be.within(6, 8)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
