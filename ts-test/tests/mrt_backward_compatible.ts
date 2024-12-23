@@ -76,7 +76,7 @@ describe('MRT backward compatible tests', function () {
     expect(get_result.bins).to.eql(record2)
 
     let result: number = await client.commit(mrt)
-    expect(result).to.eql(Aerospike.commitStatus.ROLL_FORWARD_ABANDONED)
+    expect(result).to.eql(Aerospike.Transaction.commitStatus.ROLL_FORWARD_ABANDONED)
 
   })
   
@@ -94,7 +94,7 @@ describe('MRT backward compatible tests', function () {
     expect(get_result.bins).to.eql(record2)
 
     let result: number = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.abortStatus.ROLL_BACK_ABANDONED)
+    expect(result).to.eql(Aerospike.Transaction.abortStatus.ROLL_BACK_ABANDONED)
   })
 
 })

@@ -48,6 +48,8 @@ export type AerospikeBins = {
     [key: string]: AerospikeBinValue
 };
 
+export const _transactionPool: any;
+
 /**
  * Represents a complete Aerospike bin value.  Bin values can included nested lists and maps.
  */
@@ -72,10 +74,6 @@ export type GeoJSONType = {
  */
 export type NumberArray = number | NumberArray[];
 
-/**
- * For internal use only.
- */
-export var _transactionPool = any;
 
 /**
  * Callback used to return results in synchronous Aerospike database operations
@@ -426,42 +424,112 @@ export class Transaction {
     /**
      * Transaction state enumeration
      */
-    static state = {
+    static state: {
         /**
          * Transaction is still open.
          */
-        OPEN,
+        OPEN: 0,
         /**
          * Transaction was verified.
          */
 
-        VERIFIED,
+        VERIFIED: 1,
         /**
          * Transaction was commited.
          */
-        COMMITTED,
+        COMMITTED: 2,
 
         /**
          * Transaction was aborted.
          */
-        ABORTED,
-    }
+        ABORTED: 3
+    };
 
 
     /**
      * Default multi-record transaction capacity values.
      */
-    static capacity  = {
+    static capacity: {
         /**
          * Contains the default reeadDefault for aerospike.Transaction
          */
-        READ_DEFAULT,
+        READ_DEFAULT: 128,
         /**
          * Contains the default writeCapacity for aerospike.Transaction
          */
 
-        WRITE_DEFAULT,
-    }
+        WRITE_DEFAULT: 128,
+    };
+
+    /**
+     * Multi-record transaction abort status code.
+     */
+    static abortStatus: {
+        /**
+         * Abort succeeded.
+         */
+        OK: 0,
+
+        /**
+         * Transaction has already been committed.
+         */
+        ALREADY_COMMITTED: 1,
+        /**
+         * Transaction has already been aborted.
+         */
+        ALREADY_ABORTED: 2,
+        /**
+         * Client roll back abandoned. Server will eventually abort the transaction.
+         */
+        ROLL_BACK_ABANDONED: 3,
+
+        /**
+         * Transaction has been rolled back, but client transaction close was abandoned.
+         * Server will eventually close the transaction.
+         */
+        CLOSE_ABANDONED: 4
+    };
+
+
+    /**
+     * Multi-record transaction commit status code.
+     */
+    static commitStatus: {
+        /**
+         * Commit succeeded.
+         */
+        OK: 0,
+
+        /**
+         * Transaction has already been committed.
+         */
+        ALREADY_COMMITTED: 1,
+        /**
+         * Transaction has already been aborted.
+         */
+        ALREADY_ABORTED: 2,
+        /**
+         * Transaction verify failed. Transaction will be aborted.
+         */
+        VERIFY_FAILED: 3,
+
+        /**
+         * Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
+         * If the error is in doubt (usually timeout), the commit is in doubt.
+         */
+        MARK_ROLL_FORWARD_ABANDONED: 4,
+
+        /**
+         * Client roll forward abandoned. Server will eventually commit the transaction.
+         */
+        ROLL_FORWARD_ABANDONED: 5,
+
+        /**
+         * Transaction has been rolled forward, but client transaction close was abandoned.
+         * Server will eventually close the transaction.
+         */
+        CLOSE_ABANDONED: 6
+    };
 
     private prepareToClose(): void;
     private close(): void;
@@ -504,7 +572,7 @@ export class Transaction {
      *
      *     // In order to properly manage the memory at this point, do one of two things before the process exits:
      * 
-     *     // 1: call destroyAll() to destroy all outstanding trnasactions from this process.
+     *     // 1: call destroyAll() to destroy all outstanding transactions from this process.
      *     mrt1.destroyAll()
      * 
      *     // 2: reopen and close the final connected client with destroyTransactions
@@ -725,76 +793,6 @@ export class Transaction {
      *
      */  
     public setTimeout(timeout: number): void;
-}
-
-/**
- * Multi-record transaction abort status code.
- */
-export enum abortStatus {
-    /**
-     * Abort succeeded.
-     */
-    OK,
-
-    /**
-     * Transaction has already been committed.
-     */
-    ALREADY_COMMITTED,
-    /**
-     * Transaction has already been aborted.
-     */
-    ALREADY_ABORTED,
-    /**
-     * Client roll back abandoned. Server will eventually abort the transaction.
-     */
-    ROLL_BACK_ABANDONED,
-
-    /**
-     * Transaction has been rolled back, but client transaction close was abandoned.
-     * Server will eventually close the transaction.
-     */
-    CLOSE_ABANDONED
-}
-
-
-/**
- * Multi-record transaction commit status code.
- */
-export enum commitStatus {
-    /**
-     * Commit succeeded.
-     */
-    OK,
-
-    /**
-     * Transaction has already been committed.
-     */
-    ALREADY_COMMITTED,
-    /**
-     * Transaction has already been aborted.
-     */
-    ALREADY_ABORTED,
-    /**
-     * Transaction verify failed. Transaction will be aborted.
-     */
-    VERIFY_FAILED,
-
-    /**
-     * Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
-     * If the error is in doubt (usually timeout), the commit is in doubt.
-     */
-    MARK_ROLL_FORWARD_ABANDONED,
-
-    /**
-     * Client roll forward abandoned. Server will eventually commit the transaction.
-     */
-    ROLL_FORWARD_ABANDONED,
-
-    /**
-     * Transaction has been rolled forward, but client transaction close was abandoned.
-     * Server will eventually close the transaction.
-     */
-    CLOSE_ABANDONED
 }
 
 
@@ -4500,7 +4498,7 @@ export class Client extends EventEmitter {
      * @returns A Promise that resolves to the value returned by abort.
      *
      */
-    public abort(transaction: Transaction): Promise<abortStatus>;
+    public abort(transaction: Transaction): Promise< typeof Transaction.abortStatus[keyof typeof Transaction.abortStatus]>;
     /**
      *
      * @param transaction - {@link Transaction} instance.
@@ -4561,10 +4559,10 @@ export class Client extends EventEmitter {
      *
      * @param transaction - {@link Transaction} instance.
      *
-     * @returns A Promise that resolves to the value returned by commit.
+     * @returns A Promise that resolves to the {@link Transaction.commitStatus} returned by commit.
      *
      */
-    public commit(transaction: Transaction): Promise<abortStatus>;
+    public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
 
     /**
      * Checks the existance of a record in the database cluster.

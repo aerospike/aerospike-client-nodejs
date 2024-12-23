@@ -81,7 +81,7 @@ describe('MRT functionality tests', function () {
     expect(get_result.bins).to.eql(record2)
 
     let result: number = await client.commit(mrt)
-    expect(result).to.eql(Aerospike.commitStatus.OK)
+    expect(result).to.eql(Aerospike.Transaction.commitStatus.OK)
   })
 
   it('should fail due to timeout: code MRT_EXPIRED', async function () {
@@ -103,7 +103,7 @@ describe('MRT functionality tests', function () {
       expect(error.code).to.eql(Aerospike.status.MRT_EXPIRED)
 
       let result: number = await client.abort(mrt)
-      expect(result).to.eql(Aerospike.abortStatus.OK)
+      expect(result).to.eql(Aerospike.Transaction.abortStatus.OK)
 
       return
     }
@@ -130,7 +130,7 @@ describe('MRT functionality tests', function () {
     await client.put(key5, record2, meta, policy)
 
     let result: number = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.commitStatus.OK)
+    expect(result).to.eql(Aerospike.Transaction.commitStatus.OK)
 
     get_result = await client.get(key4)
     expect(get_result.bins).to.eql(record1)
@@ -153,7 +153,7 @@ describe('MRT functionality tests', function () {
 
     result = await client.commit(mrt)
 
-    expect(result).to.eql(Aerospike.commitStatus.ALREADY_ABORTED)
+    expect(result).to.eql(Aerospike.Transaction.commitStatus.ALREADY_ABORTED)
   })
 
   it('should fail to abort after committing', async function () {
@@ -168,7 +168,7 @@ describe('MRT functionality tests', function () {
     let result: number = await client.commit(mrt)
 
     result = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.abortStatus.ALREADY_COMMITTED)
+    expect(result).to.eql(Aerospike.Transaction.abortStatus.ALREADY_COMMITTED)
 
   })
 
