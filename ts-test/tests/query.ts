@@ -308,7 +308,7 @@ describe('Queries', function () {
         const query: Query = client.query(helper.namespace, testSet)
         const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG_RELAX_AP })
         const results: AerospikeBins[] = []
-        stream.on('error', (error: ASError) => { throw error })
+        stream.on('error', (error: ASError) => { expect(error.message).to.eql('Request protocol invalid, or invalid protocol field.') })
         stream.on('data', (record: AerospikeRecord) => results.push(record.bins))
         stream.on('end', () => {
           expect(results.length).to.be.above(samples.length)
