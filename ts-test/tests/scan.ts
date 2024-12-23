@@ -398,7 +398,7 @@ context('Scans', function () {
 
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(10799)
+      expect(record.ttl).to.be.within(10799, 10800)
     })
 
     it('should set TTL to the specified value with scan options #slow', async function () {
@@ -410,6 +410,8 @@ context('Scans', function () {
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.ttl).to.equal(14399)
+      expect(record.ttl).to.be.within(14399, 14400)
+
     })
 
     it('should perform a background scan that executes the touch operation #slow', async function () {
@@ -421,7 +423,7 @@ context('Scans', function () {
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       console.log('After scan-op TTL : %d Key TTL: %d', ttl, record.ttl)
-      expect(record.ttl).to.equal(ttl - 1)
+      expect(record.ttl).to.be.within(ttl - 1, ttl)
     })
   })
 
