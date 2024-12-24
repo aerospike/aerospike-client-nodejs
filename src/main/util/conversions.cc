@@ -54,6 +54,7 @@ extern "C" {
 #include "log.h"
 #include "enums.h"
 #include "string.h"
+#include "transaction.h"
 
 using namespace node;
 using namespace v8;
@@ -61,6 +62,7 @@ using namespace v8;
 const char *DoubleType = "Double";
 const char *GeoJSONType = "GeoJSON";
 const char *BinType = "Bin";
+const char *TransactionType = "Transaction";
 
 const int64_t MIN_SAFE_INTEGER = -1 * (std::pow(2, 53) - 1);
 const int64_t MAX_SAFE_INTEGER = std::pow(2, 53) - 1;
@@ -335,6 +337,42 @@ int get_optional_bool_property(bool *boolp, bool *defined, Local<Object> obj,
 	else {
 		as_v8_error(log, "Type error: %s property should be boolean", prop);
 		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+
+
+int get_optional_transaction_property(as_txn **txn, bool *defined,
+								Local<Object> obj, char const *prop,
+								const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> js_wrapper_value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+
+	if (js_wrapper_value->IsObject()) {
+		Local<Value> value =
+			Nan::Get(js_wrapper_value.As<Object>(), Nan::New("transaction").ToLocalChecked()).ToLocalChecked();
+		if (is_transaction_value(value)) {
+			if (defined != NULL)
+				(*defined) = true;
+			Transaction *transaction = Nan::ObjectWrap::Unwrap<Transaction>(value.As<Object>());
+
+			(*txn) = transaction->txn;
+
+			as_v8_detail(log, "%s => (transaction) %d", prop, (*txn)->id);
+		}
+		else if (value->IsUndefined() || value->IsNull()) {
+			if (defined != NULL)
+				(*defined) = false;
+
+			as_v8_detail(log, "%s => undefined", prop);
+		}
+		else {
+			as_v8_error(log, "Type error: %s property should be a Transaction type", prop);
+			return AS_NODE_PARAM_ERR;
+		}
 	}
 	return AS_NODE_PARAM_OK;
 }
@@ -1037,6 +1075,11 @@ double double_value(Local<Value> value)
 bool is_geojson_value(Local<Value> value)
 {
 	return instanceof (value, GeoJSONType);
+}
+
+bool is_transaction_value(Local<Value> value)
+{
+	return instanceof (value, TransactionType);
 }
 
 bool is_bin_value(Local<Value> value)
