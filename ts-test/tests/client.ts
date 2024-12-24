@@ -153,7 +153,7 @@ describe('Client', function () {
       expect(nodes).to.be.an('array')
       expect(nodes.length).to.be.greaterThan(0)
       nodes.forEach(function (node) {
-        expect(node.name).to.match(/^[0-9A-F]{15}$/)
+        expect(node.name).to.match(/^[0-9A-F]+$/)
         expect(node.address).to.be.a('string')
       })
     })

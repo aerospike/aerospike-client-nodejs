@@ -1,0 +1,4 @@
+parver==0.5
+crudini==0.9.4
+delocate==0.10.4
+mypy==1.10.0

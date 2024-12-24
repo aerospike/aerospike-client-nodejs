@@ -241,6 +241,23 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
   }
 
+
+  export function skipUnlessVersionAndEnterprise (this: any, versionRange: any, ctx: Suite) {
+    skipUnless(ctx, () => {
+      console.log(this.cluster.isVersionInRange(versionRange))
+      console.log((!this.cluster.isEnterprise()))
+      return (this.cluster.isVersionInRange(versionRange) && (this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+  }
+
+  export function skipUnlessVersionAndCommunity (this: any, versionRange: any, ctx: Suite) {
+    skipUnless(ctx, () => {
+      console.log(this.cluster.isVersionInRange(versionRange))
+      console.log((!this.cluster.isEnterprise()))
+      return (this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise())) 
+
+    }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+  }
+
   export function skipUnlessSupportsTtl(this: any, ctx: Suite) {
     skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
   }
