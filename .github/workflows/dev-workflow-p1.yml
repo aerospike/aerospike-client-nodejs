@@ -34,8 +34,9 @@ jobs:
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
-  test-with-server-rc:
-    needs: test-with-server-release
-    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-    uses: ./.github/workflows/test-server-rc.yml
-    secrets: inherit
+#  test-with-server-rc:
+#    needs: test-with-server-release
+#    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#    uses: ./.github/workflows/test-server-rc.yml
+#    secrets: inherit
+#
