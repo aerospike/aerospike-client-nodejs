@@ -25,7 +25,7 @@ jobs:
         ]
         platform: [
           ["x86_64", "ubuntu-22.04"],
-          ["aarch64", "aerospike_arm_runners_2"]
+          #["aarch64", "aerospike_arm_runners_2"]
         ]
     runs-on: ${{ matrix.platform[1] }}
     steps:

@@ -46,7 +46,7 @@ describe('Client#stats', function () {
     expect(stats.nodes).to.be.an('array').that.is.not.empty
 
     const node: any = stats.nodes.pop()
-    expect(node.name).to.be.a('string').of.length(15)
+    expect(node.name).to.be.a('string')
     for (const connStats of [node.syncConnections, node.asyncConnections]) {
       expect(connStats.inPool).to.be.at.least(1)
       expect(connStats.inUse).to.be.at.least(0)

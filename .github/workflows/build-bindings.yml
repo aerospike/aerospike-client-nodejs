@@ -34,10 +34,10 @@ on:
         required: true
         options:
         - manylinux_x86_64
-        - manylinux_aarch64
+        #- manylinux_aarch64
         - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
+        #- macosx_arm64
+        #- win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       unoptimized:
@@ -65,6 +65,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:
@@ -106,6 +110,10 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
@@ -184,7 +192,7 @@ jobs:
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
@@ -212,14 +220,14 @@ jobs:
     #  run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
     #  shell: bash
 
-    - name: Otherwise, enable integration tests
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
-      run: echo "TEST_COMMAND=cd ts-test;
-        npm install typescript --save-dev;
-        npx tsc;
-        cd ..;
-        npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
-      shell: bash
+    #- name: Otherwise, enable integration tests
+    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+    #  run: echo "TEST_COMMAND=cd ts-test;
+    #    npm install typescript --save-dev;
+    #    npx tsc;
+    #    cd ..;
+    #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
+    #  shell: bash
 
     - name: Set unoptimize flag
       if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
@@ -233,6 +241,29 @@ jobs:
       run: |
         ./scripts/build-c-client.sh;
         npm install;
+
+
+    - name: Run tests
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
+      run: |
+        docker ps;
+        docker logs aerospike;
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+
+    - name: Run tests
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
+      run: |
+        docker ps;
+        docker logs aerospike;
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
     # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
     #- name: Build wheel
@@ -334,7 +365,7 @@ jobs:
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
           crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: test
+        working-directory: ./github/workflows
 
       # FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
       - run: |
@@ -347,7 +378,7 @@ jobs:
       - run: npx tsc
         shell: bash
 
-      - run: npm run test dist/ -- --h 127.0.0.1 --port 3000
+      - run: npm run test dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000
         shell: bash
 
       - name: Show job status for commit
