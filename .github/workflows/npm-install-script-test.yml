@@ -15,17 +15,6 @@ jobs:
       - name: Create multiple directories
         run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31
 
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
-      - name: Download wheels from GitHub
-        uses: actions/download-artifact@v4
-        with:
-          name: v108-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/
-
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
@@ -33,35 +22,11 @@ jobs:
           name: v108-macosx_x86_64.node
           path: ./lib/binding
 
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
-      - name: Download wheels from GitHub
-        uses: actions/download-artifact@v4
-        with:
-          name: v115-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/
-
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
           name: v115-macosx_x86_64.node
           path: ./lib/binding
-
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
-      - name: Download wheels from GitHub
-        uses: actions/download-artifact@v4
-        with:
-          name: v127-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/
-
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
@@ -69,24 +34,40 @@ jobs:
           name: v127-macosx_x86_64.node
           path: ./lib/binding
 
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
-      - name: Download wheels from GitHub
-        uses: actions/download-artifact@v4
-        with:
-          name: v131-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/
-
-      - name: List available artifacts
-        run: ls ./lib/binding || echo "No artifacts found in binding"
-
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
           name: v131-macosx_x86_64.node
           path: ./lib/binding
 
+
+      - name: List available artifacts
+        run: ls ./lib/binding || echo "No artifacts found in binding"
+
+
+      - name: Download wheels from GitHub
+        uses: actions/download-artifact@v4
+        with:
+          name: v108-manylinux_x86_64.node
+          path: ./lib/binding/glibc@2.35/
+
+      - name: Download wheels from GitHub
+        uses: actions/download-artifact@v4
+        with:
+          name: v115-manylinux_x86_64.node
+          path: ./lib/binding/glibc@2.35/
+
+      - name: Download wheels from GitHub
+        uses: actions/download-artifact@v4
+        with:
+          name: v127-manylinux_x86_64.node
+          path: ./lib/binding/glibc@2.35/
+
+      - name: Download wheels from GitHub
+        uses: actions/download-artifact@v4
+        with:
+          name: v131-manylinux_x86_64.node
+          path: ./lib/binding/glibc@2.35/
 
       - name: List available artifacts
         run: ls ./lib/binding || echo "No artifacts found in binding"
