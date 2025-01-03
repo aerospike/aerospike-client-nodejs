@@ -56,10 +56,10 @@ jobs:
     - name: Get current version
       id: get-current-version
       run: |
-        echo "current_version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+        echo "current_version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
 
     - name: Print current version
-      run: echo "Current version is= ${{ steps.get-current-version.outputs.current_version }}"
+      run: echo "Current version is ${{ steps.get-current-version.outputs.current_version }}"
 
 
 
