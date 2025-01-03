@@ -25,6 +25,11 @@ jobs:
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
+  test-npm-install:
+    needs: rebuild-artifacts-with-new-dev-num
+    name: Test npm install command for npm package
+    uses: ./.github/workflows/npm-install-script-test.yml
+
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
 #    needs: [
