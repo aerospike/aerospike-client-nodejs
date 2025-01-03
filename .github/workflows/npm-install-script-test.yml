@@ -2,10 +2,6 @@ name: npm install script test
 
 on:
   workflow_call: # This allows this workflow to be reused by others.
-    inputs:
-      build_identifier:
-        required: true
-        type: string
 
 jobs:
   npm-install-script-test:
