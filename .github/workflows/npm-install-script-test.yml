@@ -69,6 +69,9 @@ jobs:
           name: v131-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/
 
+      - name: Sleep to wait for downloads
+        run: sleep 30
+
       - name: List available artifacts
         run: ls ./lib/binding || echo "No artifacts found in binding"
 
