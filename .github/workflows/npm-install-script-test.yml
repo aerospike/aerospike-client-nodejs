@@ -18,49 +18,49 @@ jobs:
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v108-manylinux_x86_64
+          name: v108-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v108-macosx_x86_64
+          name: v108-macosx_x86_64.node
           path: ./lib/binding
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v115-manylinux_x86_64
+          name: v115-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v115-macosx_x86_64
+          name: v115-macosx_x86_64.node
           path: ./lib/binding
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v127-manylinux_x86_64
+          name: v127-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v127-macosx_x86_64
+          name: v127-macosx_x86_64.node
           path: ./lib/binding
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v131-manylinux_x86_64
+          name: v131-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/
 
       - name: Download wheels from GitHub
         uses: actions/download-artifact@v4
         with:
-          name: v131-macosx_x86_64
+          name: v131-macosx_x86_64.node
           path: ./lib/binding
 
 
