@@ -33,6 +33,7 @@ extern "C" {
 #include <aerospike/as_map_operations.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_admin.h>
+#include <aerospike/as_txn.h>
 }
 
 #include "client.h"
@@ -55,7 +56,10 @@ bool instanceof (v8::Local<v8::Value> value, const char *type);
 bool is_double_value(v8::Local<v8::Value> value);
 double double_value(v8::Local<v8::Value> value);
 
+bool is_transaction_value(v8::Local<v8::Value> value);
+
 bool is_geojson_value(v8::Local<v8::Value> value);
+
 char *geojson_as_string(v8::Local<v8::Value> value);
 
 // Utility functions to extract property values from V8 v8::Object instances
@@ -85,6 +89,9 @@ int get_optional_asval_property(as_val **value, bool *defined,
 int get_optional_bool_property(bool *boolp, bool *defined,
 							   v8::Local<v8::Object> obj, char const *prop,
 							   const LogInfo *log);
+int get_optional_transaction_property(as_txn **txn, bool *defined,
+								v8::Local<v8::Object> obj, char const *prop,
+								const LogInfo *log);
 int get_optional_bytes_property(uint8_t **bytes, int *size, bool *defined,
 								v8::Local<v8::Object> obj, char const *prop,
 								const LogInfo *log);

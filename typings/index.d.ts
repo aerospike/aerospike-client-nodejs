@@ -41,13 +41,14 @@ export enum ScalarOperations {
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
-
 /**
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
     [key: string]: AerospikeBinValue
 };
+
+export const _transactionPool: any;
 
 /**
  * Represents a complete Aerospike bin value.  Bin values can included nested lists and maps.
@@ -282,6 +283,7 @@ export type TypedCallback<T> = (error?: AerospikeError, result?: T) => void;
  * })
  */
 export class AerospikeRecord {
+
    /**
      * Unique record identifier.
      *
@@ -313,6 +315,488 @@ export class AerospikeRecord {
      */
     constructor(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata);
 }
+
+/**
+ * Multi-record transaction (MRT) class. Each command in the MRT must use the same namespace.
+ *
+ * note: By default, open transactions are destroyed when the final client in a process is closed.
+ * If you need your transaction to persist after the last client has been closed, provide `false` for the
+ * destroy Transactions argument in {@link Client#close}.  For more information on memory management, see {@link Transaction.destroyAll}.
+ *
+ * @example <caption>Commit a simple transaction.</caption>
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+ * var config = {
+ *   hosts: '192.168.33.10:3000',
+ *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+ *   policies: {
+ *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *    }
+ * }
+ *
+ * let bins = {
+ *   int: 123,
+ *   double: 3.1415,
+ *   string: 'xyz',
+ *   bytes: Buffer.from('hello world!'),
+ *   list: [1, 2, 3],
+ *   map: {num: 123, str: 'abc', list: ['a', 'b', 'c']}
+ * }
+ * let meta = {
+ *   ttl: 386400 // 1 day
+ * }
+ * let key = new Aerospike.Key('test', 'demo', 'myKey')
+ *
+ * let policy = {
+ *   txn: mrt
+ * };
+ * ;(async () => {
+ *    let client = await Aerospike.connect(config)
+
+ *    let mrt = new Aerospike.Transaction()
+ *
+
+ *
+ *    await client.put(key, bins, meta, policy)
+ *
+ *    let get_result = await client.get(key1, policy)
+ *
+ *    let result = await client.commit(mrt)
+ *    await client.close()
+ * })();
+ *
+ * @example <caption>Abort a transaction.</caption>
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+ * var config = {
+ *   hosts: '192.168.33.10:3000',
+ *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+ *   policies: {
+ *     read : new Aerospike.ReadPolicy({socketTimeout : 0, totalTimeout : 0}),
+ *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *    }
+ * }
+ *
+ * let key1 = new Aerospike.Key('test', 'demo', 'myKey')
+ * let key2 = new Aerospike.Key('test', 'demo', 'myKey')
+ * 
+ * let record1 = {abc: 123}
+ * let record2 = {def: 456}
+ * 
+ * ;(async () => {
+ *   let client = await Aerospike.connect(config)
+ *   
+ *   const policy = {
+ *        txn: mrt
+ *    }
+ *
+ *    await client.put(key4, record2, meta, policy)
+ *
+ *    const policyRead = {
+ *        txn: mrt
+ *    }
+ *
+ *    let get_result = await client.get(key1, policy) // Will reflect the new value recently put.
+ *
+ *    await client.put(key2, record2, meta, policy)
+ *
+ *    let result = await client.abort(mrt)
+ *
+ *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
+ *
+ *    get_result = await client.get(key5) // Will reset to the value present before transaction started.
+ * 
+ *    await client.close()
+ * })();
+ *
+ * @since v6.0.0
+ */
+export class Transaction {
+    /**
+     * Construct a new Aerospike Transaction instance.
+     */
+    public constructor(reads_capacity?: number, writes_capacity?: number);
+
+    /**
+     * Transaction state enumeration
+     */
+    static state: {
+        /**
+         * Transaction is still open.
+         */
+        OPEN: 0,
+        /**
+         * Transaction was verified.
+         */
+
+        VERIFIED: 1,
+        /**
+         * Transaction was commited.
+         */
+        COMMITTED: 2,
+
+        /**
+         * Transaction was aborted.
+         */
+        ABORTED: 3
+    };
+
+
+    /**
+     * Default multi-record transaction capacity values.
+     */
+    static capacity: {
+        /**
+         * Contains the default reeadDefault for aerospike.Transaction
+         */
+        READ_DEFAULT: 128,
+        /**
+         * Contains the default writeCapacity for aerospike.Transaction
+         */
+
+        WRITE_DEFAULT: 128,
+    };
+
+    /**
+     * Multi-record transaction abort status code.
+     */
+    static abortStatus: {
+        /**
+         * Abort succeeded.
+         */
+        OK: 0,
+
+        /**
+         * Transaction has already been committed.
+         */
+        ALREADY_COMMITTED: 1,
+        /**
+         * Transaction has already been aborted.
+         */
+        ALREADY_ABORTED: 2,
+        /**
+         * Client roll back abandoned. Server will eventually abort the transaction.
+         */
+        ROLL_BACK_ABANDONED: 3,
+
+        /**
+         * Transaction has been rolled back, but client transaction close was abandoned.
+         * Server will eventually close the transaction.
+         */
+        CLOSE_ABANDONED: 4
+    };
+
+
+    /**
+     * Multi-record transaction commit status code.
+     */
+    static commitStatus: {
+        /**
+         * Commit succeeded.
+         */
+        OK: 0,
+
+        /**
+         * Transaction has already been committed.
+         */
+        ALREADY_COMMITTED: 1,
+        /**
+         * Transaction has already been aborted.
+         */
+        ALREADY_ABORTED: 2,
+        /**
+         * Transaction verify failed. Transaction will be aborted.
+         */
+        VERIFY_FAILED: 3,
+
+        /**
+         * Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
+         * If the error is in doubt (usually timeout), the commit is in doubt.
+         */
+        MARK_ROLL_FORWARD_ABANDONED: 4,
+
+        /**
+         * Client roll forward abandoned. Server will eventually commit the transaction.
+         */
+        ROLL_FORWARD_ABANDONED: 5,
+
+        /**
+         * Transaction has been rolled forward, but client transaction close was abandoned.
+         * Server will eventually close the transaction.
+         */
+        CLOSE_ABANDONED: 6
+    };
+
+    private prepareToClose(): void;
+    private close(): void;
+    /**
+     * Destroys all open transactions
+     *
+     * @remarks
+     * 
+     * 
+     * 
+     * Use of this API is only necessary when the client is closed with
+     * the destroyTransactions parameter set is set to false.
+     * See example below for usage details.
+     * 
+     * To avoid using this API, close the final connected client in the process
+     * with destroyTransactions set to true (default is true), and the transaction will be destroyed automatically.
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     let mrt1 = new Aerospike.Transaction()
+     *     let client = await Aerospike.connect(config)
+     *     client.close(false, true) // `destroyTransactions is true`, mrt1 is no longer usable.
+     * 
+     *     let mrt2 = new Aerospike.Transaction()
+     *     client = await Aerospike.connect(config)
+     *     client.close(false, true) // `destroyTransactions is false`, mrt2 can still be used.
+     *
+     *     // In order to properly manage the memory at this point, do one of two things before the process exits:
+     * 
+     *     // 1: call destroyAll() to destroy all outstanding transactions from this process.
+     *     mrt1.destroyAll()
+     * 
+     *     // 2: reopen and close the final connected client with destroyTransactions
+     *     // client = await Aerospike.connect(config)
+     *     // client.close() // Default will destory the transactions
+     *     
+     * })();
+     * 
+     * @since v6.0.0
+     */
+    public destroyAll(): void;
+    /**
+     * Get ID for this transaction
+     *
+     * @returns  MRT ID
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let id = mrt.getId() 
+     * })();
+     * 
+     * @since v6.0.0
+     */
+    public getId(): number;
+
+    /**
+     * Get inDoubt status for this transaction.
+     *
+     * @returns MRT inDoubt status
+     * 
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let inDoubt = mrt.getInDoubt() 
+     * })();
+     * 
+     * @since v6.0.0
+     */
+    public getInDoubt(): boolean;
+    /**
+     *
+     * Gets the expected number of record reads in the MRT. Minimum value is 16.
+     *
+     * @returns number of records reads in the MRT.
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let readsCapacity = mrt.getReadsCapacity() 
+     *     console.log(readsCapacity) // 128
+     * })();
+     *
+     * @since v6.0.0
+     */  
+    public getReadsCapacity(): number;
+    /**
+     *
+     * Gets the current state of the MRT.
+     *
+     * @returns MRT timeout in seconds
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let state = mrt.getState()
+     *     
+     * })();
+     *
+     */  
+    public getState(): number;
+    /**
+     *
+     * Gets the current MRT timeout value.
+     *
+     * @returns MRT timeout in seconds
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let timeout = mrt.getTimeout() 
+     * })();
+     *
+     * @since v6.0.0
+     */  
+    public getTimeout(): number;
+    /**
+     *
+     * Gets the expected number of record reads in the MRT. Minimum value is 16.
+     *
+     * @returns number of records reads in the MRT.
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     let writesCapacity = mrt.getWritesCapacity() 
+     *     console.log(writesCapacity) // 128
+     * })();
+     *
+     * @since v6.0.0
+     */  
+    public getWritesCapacity(): number;
+    /**
+     *
+     * Set MRT timeout in seconds. The timer starts when the MRT monitor record is created. This occurs when the first command in the MRT is executed. 
+     * 
+     * If the timeout is reached before a commit or abort is called, the server will expire and rollback the MRT.
+     * 
+     * If the MRT timeout is zero, the server configuration mrt-duration is used. The default mrt-duration is 10 seconds.
+     *
+     * @param timeout - MRT timeout in seconds
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Key = Aerospike.Key
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *   }
+     * }
+     *
+     * ;(async () => {
+     *     // Establishes a connection to the server
+     *     let mrt = new Aerospike.Transaction()
+     *     mrt.setTimeout(5) // Set timeout for 5 seconds!
+     *     
+     *     console.log(mrt.getTimeout()) // 5
+     * })();
+     *
+     */  
+    public setTimeout(timeout: number): void;
+}
+
+
+
 
 /**
  * In the Aerospike database, each record (similar to a row in a relational database) stores
@@ -1436,11 +1920,17 @@ export namespace policy {
          */
         public totalTimeout?: number;
         /**
+         * Multi-record command identifier. See {@link Transaction} for more information.
+         * 
+         * @default null (no transaction)
+         */
+        public txn?: Transaction;
+
+        /**
          * Initializes a new BasePolicy from the provided policy values.
          *
          * @param props - BasePolicy values
          */
-
         constructor(props?: BasePolicyOptions);
     }
 
@@ -3945,6 +4435,136 @@ export class Client extends EventEmitter {
      */
     public apply(key: KeyOptions, udfArgs: UDF, policy: policy.ApplyPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
+     *
+     * @param transaction - {@link Transaction} instance.
+     * @param callback - This function will be called with the
+     * result returned by the abort function call.
+     *
+     *
+     * @since v6.0.0
+     *
+     *
+     * @example <caption>Abort a transaction.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     read : new Aerospike.ReadPolicy({socketTimeout : 0, totalTimeout : 0}),
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     *
+     * let key1 = new Aerospike.Key('test', 'demo', 'myKey')
+     * let key2 = new Aerospike.Key('test', 'demo', 'myKey')
+     * 
+     * let record1 = {abc: 123}
+     * let record2 = {def: 456}
+     * 
+     * ;(async () => {
+     *   let client = await Aerospike.connect(config)
+     *   
+     *   const policy = {
+     *        txn: mrt
+     *    }
+     *
+     *    await client.put(key4, record2, meta, policy)
+     *
+     *    const policyRead = {
+     *        txn: mrt
+     *    }
+     *
+     *    let get_result = await client.get(key1, policy) // Will reflect the new value recently put.
+     *
+     *    await client.put(key2, record2, meta, policy)
+     *
+     *    let result = await client.abort(mrt)
+     *
+     *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
+     *
+     *    get_result = await client.get(key5) // Will reset to the value present before transaction started.
+     * 
+     *    await client.close()
+     * })();
+     */
+    public abort(transaction: Transaction, callback: Function): void;
+    /**
+     *
+     * @param transaction - {@link Transaction} instance.
+     *
+     * @returns A Promise that resolves to the value returned by abort.
+     *
+     */
+    public abort(transaction: Transaction): Promise< typeof Transaction.abortStatus[keyof typeof Transaction.abortStatus]>;
+    /**
+     *
+     * @param transaction - {@link Transaction} instance.
+     * @param callback - This function will be called with the
+     * result returned by the commit function call.
+     *
+     *
+     * @since v6.0.0
+     *
+     *
+     * @example <caption>Commit a simple transaction.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     *
+     * let bins = {
+     *   int: 123,
+     *   double: 3.1415,
+     *   string: 'xyz',
+     *   bytes: Buffer.from('hello world!'),
+     *   list: [1, 2, 3],
+     *   map: {num: 123, str: 'abc', list: ['a', 'b', 'c']}
+     * }
+     * let meta = {
+     *   ttl: 386400 // 1 day
+     * }
+     * let key1 = new Aerospike.Key('test', 'demo', 'myKey1')
+     * let key2 = new Aerospike.Key('test', 'demo', 'myKey2')
+     * 
+     * let policy = {
+     *   txn: mrt
+     * };
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+
+     *    let mrt = new Aerospike.Transaction()
+     *
+
+     *
+     *    await client.put(key1, bins, meta, policy)
+     *    await client.put(key2, bins, meta, policy)
+     *    let get_result = await client.get(key1, policy)
+     *
+     *    let result = await client.commit(mrt)
+     *    await client.close()
+     * })();
+     */
+    public commit(transaction: Transaction, callback: Function): void;
+    /**
+     *
+     * @param transaction - {@link Transaction} instance.
+     *
+     * @returns A Promise that resolves to the {@link Transaction.commitStatus} returned by commit.
+     *
+     */
+    public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
+
+    /**
      * Checks the existance of a record in the database cluster.
      *
      * @param key - The key of the record to check for existance.
@@ -4873,6 +5493,7 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public select(key: KeyOptions, bins: string[], policy: policy.ReadPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+
     /**
      * Removes records in specified namespace/set efficiently.
      *
@@ -7763,6 +8384,12 @@ export interface BasePolicyOptions {
      * @default 1000
      */
     totalTimeout?: number;
+    /**
+     * Multi-record command identifier. See {@link Transaction} for more information.
+     * 
+     * @default null (no transaction)
+     */
+    txn?: Transaction;
 
 }
 
@@ -9842,7 +10469,15 @@ export enum batchType {
     /**
      * Indicates that a {@link Record} instance is used in a batch for removal operations.
      */
-    BATCH_REMOVE
+    BATCH_REMOVE,
+    /**
+     * Indicates that a {@link Record} instance is used in a batch for transaction verfication operations.
+     */
+    BATCH_TXN_VERIFY,
+    /**
+     * Indicates that a {@link Record} instance is used in a batch for transaction rolling operations.
+     */
+    BATCH_TXN_ROLL
 }
 
 /**
@@ -15452,6 +16087,14 @@ export namespace filter {
 
 declare namespace statusNamespace {
     /**
+     * Multi-record transaction failed.
+     */
+    export const AEROSPIKE_TXN_FAILED = -17;
+    /**
+     * Multi-record transaction failed.
+     */
+    export const TXN_FAILED = -17;
+    /**
      * One or more keys failed in a batch.
      */
     export const AEROSPIKE_BATCH_FAILED = -16;
@@ -15832,6 +16475,14 @@ declare namespace statusNamespace {
      */
     export const LOST_CONFLICT = 28;
     /**
+     * Write can't complete until XDR finishes shipping.
+     */
+    export const AEROSPIKE_XDR_KEY_BUSY = 32;
+    /**
+     * Write can't complete until XDR finishes shipping.
+    */
+    export const XDR_KEY_BUSY = 32;
+    /**
      * There are no more records left for query.
      */
     export const AEROSPIKE_QUERY_END = 50;
@@ -16031,6 +16682,56 @@ x     */
      * Generic UDF error.
      */
     export const ERR_UDF = 100;
+    /**
+     * MRT record blocked by a different transaction.
+     */
+    export const AEROSPIKE_MRT_BLOCKED = 120;
+    /**
+     * MRT record blocked by a different transaction.
+     */
+    export const MRT_BLOCKED = 120;
+    /**
+     * MRT read version mismatch identified during commit.
+     * Some other command changed the record outside of the transaction.
+     */
+    export const AEROSPIKE_MRT_VERSION_MISMATCH = 121;
+    /**
+     * MRT read version mismatch identified during commit.
+     * Some other command changed the record outside of the transaction.
+     */
+    export const MRT_VERSION_MISMATCH = 121;
+    /**
+     * MRT deadline reached without a successful commit or abort.
+     */
+    export const AEROSPIKE_MRT_EXPIRED = 122;
+    /**
+     * MRT deadline reached without a successful commit or abort.
+     */
+    export const MRT_EXPIRED = 122;
+    /**
+     * MRT write command limit (4096) exceeded.
+     */
+    export const AEROSPIKE_MRT_TOO_MANY_WRITES = 123;
+    /**
+     * MRT write command limit (4096) exceeded.
+     */
+    export const MRT_TOO_MANY_WRITES = 123;
+    /**
+     * MRT was already committed.
+     */
+    export const AEROSPIKE_MRT_COMMITTED = 124;
+    /**
+     * MRT was already committed.
+     */
+    export const MRT_COMMITTED = 124;
+    /**
+     * MRT was already aborted.
+     */
+    export const AEROSPIKE_MRT_ABORTED = 125;
+    /**
+     * MRT was already aborted.
+     */
+    export const MRT_ABORTED = 125;
     /**
      * Batch functionality has been disabled.
      */
