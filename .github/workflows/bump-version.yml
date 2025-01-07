@@ -84,7 +84,8 @@ jobs:
       working-directory: .github/workflows
 
     - name: Print new version
-      run: echo "New version is: ${{ steps.get-new-version.outputs.new_version }}"
+      run: |
+        echo "New version is ${{ steps.get-new-version.outputs.new_version }}"
 
 
   update-version-in-repo:
