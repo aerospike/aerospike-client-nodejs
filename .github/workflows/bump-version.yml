@@ -85,7 +85,7 @@ jobs:
 
     - name: Print new version
       run: |
-        echo "New version is ${{ steps.get-new-version.outputs.new_version }}"
+        echo "New version is ${{ steps.get-new-version.outputs.new_version }}" >> $GITHUB_OUTPUT
 
 
   update-version-in-repo:
