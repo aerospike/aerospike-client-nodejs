@@ -13,7 +13,7 @@ jobs:
 
 
       - name: Create multiple directories
-        run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31
+        run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
 
 
 
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v108-macosx_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/node-v108-darwin-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v115-macosx_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/node-v115-darwin-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -42,17 +42,17 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v127-macosx_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/node-v127-darwin-arm64/
 
       - uses: actions/download-artifact@v4
         with:
           name: v131-macosx_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/node-v131-darwin-arm64/
 
       - uses: actions/download-artifact@v4
         with:
           name: v108-manylinux_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/glibc@2.31/node-v108-linux-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v115-manylinux_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/glibc@2.31/node-v115-linux-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -70,7 +70,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v127-manylinux_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/glibc@2.31/node-v127-linux-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: v131-manylinux_x86_64.node
-          path: ./lib/binding/
+          path: ./lib/binding/glibc@2.31/node-v131-linux-arm64/
 
   #    - uses: actions/download-artifact@v4
   #      with:
@@ -91,19 +91,19 @@ jobs:
           ls .;
           echo "BINDING FOLDER:";
           ls ./lib/binding;
-          echo "BINDING FOLDER:";
-          mkdir -p lib/binding/node-v108-darwin-arm64 lib/binding/node-v115-darwin-arm64 lib/binding/node-v127-darwin-arm64 lib/binding/node-v131-darwin-arm64
-          mkdir -p lib/binding/glibc@2.35/node-v108-linux-arm64 lib/binding/glibc@2.35/node-v115-linux-arm64 lib/binding/glibc@2.35/node-v127-linux-arm64 lib/binding/glibc@2.31/node-v131-linux-arm64
-          mkdir -p lib/binding/glibc@2.31/node-v108-linux-arm64 lib/binding/glibc@2.31/node-v115-linux-arm64 lib/binding/glibc@2.31/node-v127-linux-arm64 lib/binding/glibc@2.35/node-v131-linux-arm64
-          mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64 lib/binding/glibc@2.35/node-v131-linux-x64
-          mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64 lib/binding/glibc@2.31/node-v131-linux-x64
-          cp -r node-v108-linux-x64 lib/binding/glibc@2.35/
-          cp -r node-v115-linux-x64 lib/binding/glibc@2.35/
-          cp -r node-v127-linux-x64 lib/binding/glibc@2.35/
-          cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
-          cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
-          cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
-          cp -r node-v131-darwin-x64 lib/binding/node-v131-darwin-x64
+  #        echo "BINDING FOLDER:";
+  #        mkdir -p lib/binding/node-v108-darwin-arm64 lib/binding/node-v115-darwin-arm64 lib/binding/node-v127-darwin-arm64 lib/binding/node-v131-darwin-arm64
+  #        mkdir -p lib/binding/glibc@2.35/node-v108-linux-arm64 lib/binding/glibc@2.35/node-v115-linux-arm64 lib/binding/glibc@2.35/node-v127-linux-arm64 lib/binding/glibc@2.31/node-v131-linux-arm64
+  #        mkdir -p lib/binding/glibc@2.31/node-v108-linux-arm64 lib/binding/glibc@2.31/node-v115-linux-arm64 lib/binding/glibc@2.31/node-v127-linux-arm64 lib/binding/glibc@2.35/node-v131-linux-arm64
+  #        mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64 lib/binding/glibc@2.35/node-v131-linux-x64
+  #        mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64 lib/binding/glibc@2.31/node-v131-linux-x64
+  #        cp -r node-v108-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v115-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v127-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
+  #        cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
+  #        cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
+  #        cp -r node-v131-darwin-x64 lib/binding/node-v131-darwin-x64
   #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
   #        cp -r node-v115-linux-arm64 lib/binding/node-v115-linux-arm64
   #        cp -r node-v127-linux-arm64 lib/binding/node-v127-linux-arm64
