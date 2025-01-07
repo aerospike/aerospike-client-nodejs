@@ -286,14 +286,14 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
-        path: ./lib/binding/node-${{ fromJSON(inputs.nodejs-tags) }}-linux-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag }}-linux-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Upload wheels to GitHub Linux
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       with:
-        path: ./lib/binding/node-${{ fromJSON(inputs.nodejs-tags) }}-darwin-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag }}-darwin-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
