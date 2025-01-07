@@ -80,7 +80,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '["v108", "v115", "v127", "v131"]'
+        default: '[["v108", 18], ["v115, 20"], ["v127", 22], ["v131", 23]'
       platform-tag:
         type: string
         required: true
@@ -160,7 +160,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag }}-${{ inputs.platform-tag }}"
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
     steps:
     - name: Create status check message
@@ -180,6 +180,10 @@ jobs:
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
+
+    - uses: actions/setup-node@v5
+      with:
+        nodejs-version: ${{ matrix.nodejs-tags[1] }}
 
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -291,14 +295,14 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag }}-linux-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Upload wheels to GitHub Mac
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag }}-darwin-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
@@ -319,7 +323,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag }}-${{ inputs.platform-tag }}"
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
       - name: Create status check message
         run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -356,7 +360,7 @@ jobs:
         # Don't use sed because we want this command to work on both mac and windows
         # The command used in GNU sed is different than in macOS sed
         run: |
-          NODEJS_TAG=${{ matrix.nodejs-tag }}
+          NODEJS_TAG=${{ matrix.nodejs-tag[0] }}
           NODEJS_VERSION="${NODEJS_TAG/cp/}"
           echo NODEJS_VERSION="${NODEJS_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
