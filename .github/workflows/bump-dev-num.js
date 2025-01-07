@@ -1,25 +1,38 @@
 const semver = require('semver')
 
 const versionString = process.argv[2]
+const promote = process.argv[3]
+
 const version = semver.parse(versionString)
 
 if (!version) {
   console.error('Invalid version string')
   process.exit(1)
 }
-
+console.log(version)
 if (version.prerelease.includes('dev')) {
   // Increment the dev release number
-  version.inc('prerelease', 'dev')
+  if(promote){
+    version.prerelease = ['rc', 1]; // Transition to rc with the first RC number
+  }
+  else {
+    version.inc('prerelease', 'dev')
+
+  }
 } else if (version.prerelease.includes('rc')) {
   // Increment the RC number
-  version.inc('prerelease', 'rc')
-  version.prerelease[1] = 1 // Ensure dev number starts at 1
+  if(promote){
+    version.prerelease = []
+    version.inc('patch') // Bump to next minor version
+
+  }
+  else {
+    version.inc('prerelease', 'rc')
+
+  }
 } else {
-  // Assume this is a release version
-  version.inc('minor') // Bump to next minor version
-  version.prerelease = ['rc', 1] // Start RC numbers from 1
-  version.format() // Apply changes
+  // Create the first dev pre-release
+  version.prerelease = ['dev', 1]; // Transition to rc with the first RC number
 }
 
-console.log(version.version)
+console.log(version.format())
