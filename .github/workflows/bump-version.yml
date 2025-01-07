@@ -81,7 +81,7 @@ jobs:
       id: get-new-version
       run: |
         echo new_version=$(node bump-dev-num.js ${{ needs.get-current-version.outputs.current_version }} false) >> $GITHUB_OUTPUT
-        echo "new_version=${{new_version}}"
+        echo "new_version=${{ steps.get-new-version.outputs.new_version }}"
       working-directory: .github/workflows
 
     #- name: Print new version
