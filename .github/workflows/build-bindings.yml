@@ -80,7 +80,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", 18], ["v115, 20"], ["v127", 22], ["v131", 23]'
+        default: '[["v108", 18], ["v115", 20], ["v127", 22], ["v131", 23]'
       platform-tag:
         type: string
         required: true
