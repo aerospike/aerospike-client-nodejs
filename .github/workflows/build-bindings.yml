@@ -282,11 +282,18 @@ jobs:
     #    CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
     #    CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 #
-    - name: Upload wheels to GitHub
+    - name: Upload wheels to GitHub Mac
       uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
-        path: ./lib/binding/*/
+        path: ./lib/binding/node-${{ fromJSON(inputs.nodejs-tags) }}-linux-x64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Linux
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      with:
+        path: ./lib/binding/node-${{ fromJSON(inputs.nodejs-tags) }}-darwin-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
