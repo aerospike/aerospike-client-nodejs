@@ -9,7 +9,7 @@ if (!version) {
   console.error('Invalid version string')
   process.exit(1)
 }
-console.log(version)
+
 if (version.prerelease.includes('dev')) {
   // Increment the dev release number
   if(promote){
