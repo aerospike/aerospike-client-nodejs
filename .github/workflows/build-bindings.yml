@@ -284,7 +284,6 @@ jobs:
 #
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         ls ./lib/binding;
 
