@@ -104,15 +104,6 @@ Aerospike.setDefaultLogging(config.log ?? {})
               }
           }
       };
-      return this.client.createIndex(index)
-        .then((job: IndexJob) => job.wait(10))
-        .catch((error: any) => {
-          if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
-            // ignore - index already exists
-          } else {
-            return Promise.reject(error);
-          }
-        });
     }
 
     remove(indexName: string) {
