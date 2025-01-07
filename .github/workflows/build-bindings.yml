@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["v108", "v115", "v127", "v131"]'
+        default: '[["v108", 18], ["v115", 20], ["v127", 22], ["v131", 23]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
