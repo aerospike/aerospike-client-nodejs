@@ -183,7 +183,7 @@ jobs:
 
     - uses: actions/setup-node@v4
       with:
-        nodejs-version: ${{ matrix.nodejs-tags[1] }}
+        node-version: ${{ matrix.nodejs-tags[1] }}
 
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -367,7 +367,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          nodejs-version: ${{ env.NODEJS_VERSION }}
+          node-version: ${{ env.NODEJS_VERSION }}
 
       - name: Install wheel
         run: |
