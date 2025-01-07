@@ -94,7 +94,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
       for (let attempt = 0; attempt < retries; attempt++) {
           try {
               const job: any = this.client.createIndex(index);
-              return job.IndexJob(10);
+              return job.wait(10);
           } catch (error: any) {
               if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
                   return;
