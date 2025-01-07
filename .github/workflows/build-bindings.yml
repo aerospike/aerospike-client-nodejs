@@ -181,7 +181,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v5
+    - uses: actions/setup-node@v4
       with:
         nodejs-version: ${{ matrix.nodejs-tags[1] }}
 
@@ -365,7 +365,7 @@ jobs:
           echo NODEJS_VERSION="${NODEJS_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v4
         with:
           nodejs-version: ${{ env.NODEJS_VERSION }}
 
