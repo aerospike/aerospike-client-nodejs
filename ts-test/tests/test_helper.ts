@@ -90,15 +90,21 @@ Aerospike.setDefaultLogging(config.log ?? {})
         datatype: dataType,
         context
       };
-      return this.client.createIndex(index)
-        .then((job: IndexJob) => job.wait(10))
-        .catch((error: any) => {
-          if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
-            // ignore - index already exists
-          } else {
-            return Promise.reject(error);
+      const retries = 3;
+      for (let attempt = 0; attempt < retries; attempt++) {
+          try {
+              const job: any = await this.client.createIndex(index);
+              await job.wait(10);
+              return;
+          } catch (error) {
+              if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
+                  return;
+              }
+              if (attempt === retries - 1) {
+                  return Promise.reject(error);
+              }
           }
-        });
+      };
     }
 
     remove(indexName: string) {
