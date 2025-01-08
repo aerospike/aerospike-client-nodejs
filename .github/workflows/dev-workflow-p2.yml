@@ -2,10 +2,11 @@ name: Dev workflow (part 2)
 
 on:
   pull_request:
-    types:
-      - synchronize
     branches:
     - 'dev*'
+    types:
+      -closed
+  workflow_dispatch:
 
 jobs:
   bump-dev-number:
