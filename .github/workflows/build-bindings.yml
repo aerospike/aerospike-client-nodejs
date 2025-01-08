@@ -36,8 +36,8 @@ on:
         - manylinux_x86_64
         #- manylinux_aarch64
         - macosx_x86_64
-        #- macosx_arm64
-        #- win_amd64
+        - macosx_arm64
+        - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       unoptimized:
@@ -291,18 +291,32 @@ jobs:
       run: |
         ls ./lib/binding;
 
-    - name: Upload wheels to GitHub Linux
+    - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
-    - name: Upload wheels to GitHub Mac
+    - name: Upload wheels to GitHub Mac x86
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       with:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Mac Arm
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      with:
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Windows
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      with:
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
