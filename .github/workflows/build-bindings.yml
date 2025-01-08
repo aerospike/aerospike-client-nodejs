@@ -383,6 +383,60 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
+      - name: Install nvm
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          source ~/.zshrc
+          source ~/.bashrc
+          nvm -v
+        shell: bash
+
+      - name: Install Node.js 20
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          nvm i 20
+        shell: bash
+
+      - name: Prepare /usr/local/opt directory
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          sudo rm -rf /usr/local/opt
+          sudo mkdir -p /usr/local/opt
+          sudo chown -R $(whoami) /usr/local/opt
+        shell: bash
+
+      - name: Install libuv
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          brew install libuv
+          sudo ln -s /opt/homebrew/opt/libuv/1.45.0/ /usr/local/opt/libuv
+        shell: bash
+
+      - name: Configure OpenSSL
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          rm -rf /usr/local/opt/openssl
+          sudo ln -s /opt/homebrew/opt/openssl@3.4/ /usr/local/opt/openssl
+        shell: bash
+
+      - name: Update PATH and environment variables
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          echo "export PATH=\"/usr/local/bin/:/usr/local/opt/openssl/bin:\$PATH\"" >> ~/.zshrc
+          echo "export LDFLAGS=\"-L/usr/local/opt/openssl/lib\"" >> ~/.zshrc
+          echo "export CPPFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zshrc
+          echo "export EXT_CFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zshrc
+        shell: bash
+
+      - name: Source updated environment variables
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          source ~/.zshrc
+        shell: bash
+
+
+
       - name: Install wheel
         run: |
           ./scripts/build-c-client.sh
