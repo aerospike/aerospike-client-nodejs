@@ -392,11 +392,11 @@ jobs:
           nvm -v
         shell: bash
 
-      - name: Install Node.js 20
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          nvm i 20
-        shell: bash
+      #- name: Install Node.js 20
+      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      #  run: |
+      #    nvm i 20
+      #  shell: bash
 
       - name: Prepare /usr/local/opt directory
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
