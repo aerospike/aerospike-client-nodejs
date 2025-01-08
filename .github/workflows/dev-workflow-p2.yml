@@ -1,11 +1,11 @@
 name: Dev workflow (part 2)
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
-    - 'dev*'
+      - 'dev*'
     types:
-      -closed
+      - closed
   workflow_dispatch:
 
 jobs:
