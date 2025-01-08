@@ -387,8 +387,8 @@ jobs:
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-          touch ~/.zshrc
-          source ~/.zshrc
+          touch ~/.zprofile
+          source ~/.zprofile
           nvm -v
         shell: bash
 
@@ -432,7 +432,7 @@ jobs:
       - name: Source updated environment variables
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          source ~/.zshrc
+          source ~/.zprofile
         shell: bash
 
 
