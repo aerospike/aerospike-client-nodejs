@@ -6,7 +6,11 @@ on:
       - 'dev*'
     types:
       - closed
+    paths-ignore:
+      - 'package.json'
   workflow_dispatch:
+    paths-ignore:
+      - 'package.json'
 
 jobs:
   bump-dev-number:
