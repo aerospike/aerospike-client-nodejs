@@ -387,8 +387,8 @@ jobs:
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          touch ~/.zshrc
           source ~/.zshrc
-          source ~/.bashrc
           nvm -v
         shell: bash
 
