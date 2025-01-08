@@ -33,11 +33,11 @@ on:
         type: choice
         required: true
         options:
-        - manylinux_x86_64
+        #- manylinux_x86_64
         #- manylinux_aarch64
-        - macosx_x86_64
+        #- macosx_x86_64
         - macosx_arm64
-        - win_amd64
+        #- win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       unoptimized:
@@ -386,7 +386,7 @@ jobs:
       - name: Install nvm
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
           touch ~/.zprofile
           source ~/.zprofile
           nvm -v
@@ -423,10 +423,10 @@ jobs:
       - name: Update PATH and environment variables
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          echo "export PATH=\"/usr/local/bin/:/usr/local/opt/openssl/bin:\$PATH\"" >> ~/.zshrc
-          echo "export LDFLAGS=\"-L/usr/local/opt/openssl/lib\"" >> ~/.zshrc
-          echo "export CPPFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zshrc
-          echo "export EXT_CFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zshrc
+          echo "export PATH=\"/usr/local/bin/:/usr/local/opt/openssl/bin:\$PATH\"" >> ~/.zprofile
+          echo "export LDFLAGS=\"-L/usr/local/opt/openssl/lib\"" >> ~/.zprofile
+          echo "export CPPFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zprofile
+          echo "export EXT_CFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zprofile
         shell: bash
 
       - name: Source updated environment variables
