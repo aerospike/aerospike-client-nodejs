@@ -267,7 +267,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} #slow -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
     # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
     #- name: Build wheel
@@ -381,7 +381,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODEJS_VERSION }}
+          node-version: ${{ matrix.nodejs-tag[1] }}
 
       - name: Install wheel
         run: |

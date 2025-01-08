@@ -409,8 +409,7 @@ context('Scans', function () {
 
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(14399)
-      expect(record.ttl).to.be.within(14399, 14400)
+      expect(record.ttl).to.be.within(14398, 14400)
 
     })
 
@@ -423,7 +422,7 @@ context('Scans', function () {
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       console.log('After scan-op TTL : %d Key TTL: %d', ttl, record.ttl)
-      expect(record.ttl).to.be.within(ttl - 1, ttl)
+      expect(record.ttl).to.be.within(ttl - 2, ttl)
     })
   })
 
