@@ -1,7 +1,7 @@
 name: Dev workflow (part 2)
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - 'dev*'
     types:
