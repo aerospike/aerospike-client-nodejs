@@ -36,7 +36,7 @@ on:
         #- manylinux_x86_64
         #- manylinux_aarch64
         #- macosx_x86_64
-        - macosx_arm64
+        #- macosx_arm64
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
@@ -464,7 +464,7 @@ jobs:
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
           crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: .\github\workflows
+        working-directory: github\workflows
 
       # FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
       - run: |
