@@ -21,7 +21,6 @@ jobs:
 #    secrets: inherit
 
   release-package:
-    needs: rebuild-artifacts-with-new-dev-num
     name: release npm package
     uses: ./.github/workflows/release-package.yml
 
