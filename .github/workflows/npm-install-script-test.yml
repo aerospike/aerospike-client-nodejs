@@ -67,7 +67,6 @@ jobs:
           name: v115-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.31/node-v115-linux-x64/
 
-
       - uses: actions/download-artifact@v4
         with:
           name: v127-manylinux_x86_64.node
