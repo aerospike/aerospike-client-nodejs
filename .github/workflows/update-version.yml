@@ -41,6 +41,7 @@ jobs:
     outputs:
       bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:
+      
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
