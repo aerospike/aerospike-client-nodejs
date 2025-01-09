@@ -1,6 +1,7 @@
 name: Release workflow
 
 on:
+  workflow_call:
   workflow_dispatch:
     paths-ignore:
       - 'package.json'

@@ -12,13 +12,18 @@ on:
     paths-ignore:
       - 'package.json'
 
-jobs:
-  bump-dev-number:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'bump-dev-num'
-    secrets: inherit
+#jobs:
+#  bump-dev-number:
+#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/bump-version.yml
+#    with:
+#      change: 'bump-dev-num'
+#    secrets: inherit
+
+  release-package:
+    needs: rebuild-artifacts-with-new-dev-num
+    name: release npm package
+    uses: ./.github/workflows/release-package.yml
 
 #  rebuild-artifacts-with-new-dev-num:
 #    needs: bump-dev-number
