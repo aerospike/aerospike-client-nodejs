@@ -23,6 +23,7 @@ jobs:
   release-package:
     name: release npm package
     uses: ./.github/workflows/release-package.yml
+    secrets: inherit
 
 #  rebuild-artifacts-with-new-dev-num:
 #    needs: bump-dev-number
