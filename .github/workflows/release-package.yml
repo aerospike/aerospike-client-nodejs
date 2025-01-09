@@ -20,7 +20,7 @@ jobs:
     with:
       # On pull_request_target, the bump version commit will be ignored
       # So we must pass it manually to the workflow
-      run-tests: false
+      run_tests: false
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
