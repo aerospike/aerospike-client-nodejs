@@ -522,7 +522,7 @@ jobs:
           npm install ..;
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
-          npm i --save-dev @types/chai;
+          npm i --save-dev @types/mocha;
           npx tsc;
           rm -rf dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
@@ -537,7 +537,7 @@ jobs:
           npm install ..;
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
-          npm i --save-dev @types/chai;
+          npm i --save-dev @types/mocha;
           npx tsc;
           rm -r -Force dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
