@@ -386,7 +386,16 @@ jobs:
 
       - name: Download wheel
         uses: actions/download-artifact@v4
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
+          name: ${{ env.BUILD_IDENTIFIER }}.node
+
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        with:
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/aerospike.node
           name: ${{ env.BUILD_IDENTIFIER }}.node
 
       - name: Convert Python tag to Python version
@@ -492,8 +501,18 @@ jobs:
       #  working-directory: ts-test
       #  shell: bash
 
-      - run: rm -r -f ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000
-        shell: bash
+      - name: Run tests
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm uninstall tsc;
+          npm install -D typescript;
+          npm install ..;
+          npm i --save-dev @types/jest;
+          npx tsc;
+          cd ..;
+          rm -r -f ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
