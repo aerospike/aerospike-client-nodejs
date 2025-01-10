@@ -513,6 +513,7 @@ jobs:
       #  shell: bash
 
       - name: Run tests
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
           docker ps;
           docker logs aerospike;
@@ -521,8 +522,24 @@ jobs:
           npm install ..;
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
+          npm i --save-dev @types/chai;
           npx tsc;
-          rm -r -f dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
+          rm -rf dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
+          cd ..;
+
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm uninstall tsc;
+          npm install ..;
+          npm i --save-dev @types/chai;
+          npm i --save-dev @types/jest;
+          npm i --save-dev @types/chai;
+          npx tsc;
+          rm -r -Force dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
 
       - name: Show job status for commit
