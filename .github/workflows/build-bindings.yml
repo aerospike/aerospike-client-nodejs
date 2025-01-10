@@ -507,8 +507,8 @@ jobs:
           docker logs aerospike;
           cd ts-test;
           npm uninstall tsc;
-          npm install -D typescript;
           npm install ..;
+          npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
           npx tsc;
           cd ..;
