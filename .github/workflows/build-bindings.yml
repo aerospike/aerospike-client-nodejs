@@ -336,7 +336,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
