@@ -513,7 +513,7 @@ jobs:
       #  shell: bash
 
       - name: Identify binaries
-        run: ls lib\binding
+        run: ls ./lib/binding
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
