@@ -206,7 +206,7 @@ jobs:
 
     - name: Remove aerospike docker image
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker rm -f $(docker ps -aq)
+      run: docker ps -aq | grep -q . && docker rm -f $(docker ps -aq)
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
