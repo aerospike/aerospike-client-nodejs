@@ -29,7 +29,6 @@ runs:
   - name: Install crudini to manipulate config.conf
     # This will only work on the Github hosted runners.
     run: |
-      python3 -m pip install --user pipx
       pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
     working-directory: .github/workflows
     shell: bash
