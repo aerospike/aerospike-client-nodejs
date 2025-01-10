@@ -469,6 +469,7 @@ jobs:
 
       # FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
       - run: |
+          npm install typescript --save-dev
           npx tsc;
         working-directory: ts-test
         shell: bash
