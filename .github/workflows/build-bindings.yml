@@ -511,14 +511,14 @@ jobs:
       #  working-directory: ts-test
       #  shell: bash
 
-      - name: Identify binaries
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          ls ./lib/binding/node-v108-darwin-arm64
-          ls ./lib/binding/node-v108-darwin-arm64/aerospike.node
-          mkdir -p build;
-          mkdir -p build/Release;
-          cp -r ./lib/binding/node-v108-darwin-arm64 build/Release
+      #- name: Identify binaries
+      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      #  run: |
+      #    ls ./lib/binding/node-v108-darwin-arm64
+      #    ls ./lib/binding/node-v108-darwin-arm64/aerospike.node
+      #    mkdir -p build;
+      #    mkdir -p build/Release;
+      #    cp -r ./lib/binding/node-v108-darwin-arm64 build/Release
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
