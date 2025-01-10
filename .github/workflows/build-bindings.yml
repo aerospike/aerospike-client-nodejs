@@ -477,12 +477,12 @@ jobs:
           crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: .github\workflows
 
-      # FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
-      - run: |
-          npm install typescript --save-dev
-          npx tsc;
-        working-directory: ts-test
-        shell: bash
+      ## FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
+      #- run: |
+      #    npm install typescript --save-dev
+      #    npx tsc;
+      #  working-directory: ts-test
+      #  shell: bash
 
       - run: npm run test dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000
         shell: bash
