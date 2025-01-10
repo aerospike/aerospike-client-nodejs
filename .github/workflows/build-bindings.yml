@@ -398,14 +398,14 @@ jobs:
         uses: actions/download-artifact@v4
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
           name: ${{ env.BUILD_IDENTIFIER }}.node
 
       - name: Download wheel
         uses: actions/download-artifact@v4
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         with:
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/aerospike.node
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
           name: ${{ env.BUILD_IDENTIFIER }}.node
 
       - name: Convert Python tag to Python version
