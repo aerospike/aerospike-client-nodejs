@@ -1,35 +1,58 @@
 name: 'Run EE Server'
-description: 'Run EE server'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+# NOTE: do not share this server container with others
+# since it's using the default admin / admin credentials
 inputs:
   # All inputs in composite actions are strings
   use-server-rc:
     required: true
-    default: false
+    description: Deploy server release candidate?
+    default: 'false'
   server-tag:
     required: true
+    description: Specify Docker tag
+
     default: 'latest'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
+    description: Required for using release candidates
     required: false
   docker-hub-password:
+    description: Required for using release candidates
     required: false
 
 runs:
   using: "composite"
   steps:
-  - name: Create config folder to store configs in
-    run: mkdir configs
+
+  - name: Install crudini to manipulate config.conf
+    # This will only work on the Github hosted runners.
+    run: |
+      pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
     shell: bash
 
-  - name: Use release server
-    if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: .github/workflows
     shell: bash
 
-  - name: Use release candidate server
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
+  - name: Use enterprise edition instead of community edition in config.conf
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition hosts ''
+      crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
+    working-directory: .github/workflows
+    shell: bash
+
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+    shell: bash
+
+  - name: Set credentials in config file
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+    working-directory: .github/workflows
     shell: bash
 
   - name: Log into Docker Hub to get server RC
@@ -37,26 +60,51 @@ runs:
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - name: Get default aerospike.conf from Docker server EE container
-    run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
+  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+    shell: bash
+    
+  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
     shell: bash
 
-  - name: Enable security features using aerospike.conf
-    # Security stanza
-    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
-    working-directory: ./configs
+  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
+  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+    uses: docker/setup-buildx-action@v3
+
+  - name: Build and push
+    uses: docker/build-push-action@v6
+    with:
+      # Don't want to use default Git context or else it will clone the whole Python client repo again
+      context: .github/workflows/docker-build-context
+      build-args: |
+        server_image=${{ env.IMAGE_NAME }}
+      tags: ${{ env.NEW_IMAGE_NAME }}
+      # setup-buildx-action configures Docker to use the docker-container build driver
+      # This driver doesn't publish an image locally by default
+      # so we have to manually enable it
+      load: true
+
+  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    with:
+      container-name: ${{ env.SERVER_CONTAINER_NAME }}
+      is-strong-consistency-enabled: true
+
+  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
+    shell: bash
+
+  # All the partitions are assumed to be dead when reusing a roster file
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+    shell: bash
+
+  # Apply changes
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+    shell: bash
+
+  # For debugging
+  - run: docker logs aerospike
     shell: bash

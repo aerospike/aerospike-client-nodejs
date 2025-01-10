@@ -90,15 +90,22 @@ Aerospike.setDefaultLogging(config.log ?? {})
         datatype: dataType,
         context
       };
-      return this.client.createIndex(index)
-        .then((job: IndexJob) => job.wait(10))
+      const retries = 3;
+      for (let attempt = 0; attempt < retries; attempt++) {
+        const job: any = this.client.createIndex(index)
+        .then((job: IndexJob) => {
+          job.wait(10)
+          return
+        })
         .catch((error: any) => {
           if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
-            // ignore - index already exists
-          } else {
+            return;
+          }
+          if (attempt === retries - 1) {
             return Promise.reject(error);
           }
-        });
+        })
+      };  
     }
 
     remove(indexName: string) {
@@ -239,6 +246,23 @@ Aerospike.setDefaultLogging(config.log ?? {})
 
   export function skipUnlessVersion(this: any, versionRange: any, ctx: Suite) {
     skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+  }
+
+
+  export function skipUnlessVersionAndEnterprise (this: any, versionRange: any, ctx: Suite) {
+    skipUnless(ctx, () => {
+      console.log(this.cluster.isVersionInRange(versionRange))
+      console.log((!this.cluster.isEnterprise()))
+      return (this.cluster.isVersionInRange(versionRange) && (this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+  }
+
+  export function skipUnlessVersionAndCommunity (this: any, versionRange: any, ctx: Suite) {
+    skipUnless(ctx, () => {
+      console.log(this.cluster.isVersionInRange(versionRange))
+      console.log((!this.cluster.isEnterprise()))
+      return (this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise())) 
+
+    }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessSupportsTtl(this: any, ctx: Suite) {

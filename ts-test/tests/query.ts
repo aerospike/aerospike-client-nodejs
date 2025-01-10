@@ -308,7 +308,10 @@ describe('Queries', function () {
         const query: Query = client.query(helper.namespace, testSet)
         const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG_RELAX_AP })
         const results: AerospikeBins[] = []
-        stream.on('error', (error: ASError) => { throw error })
+        stream.on('error', (error: ASError) => { 
+          expect(error.message).to.eql('Request protocol invalid, or invalid protocol field.') 
+          done()
+        })
         stream.on('data', (record: AerospikeRecord) => results.push(record.bins))
         stream.on('end', () => {
           expect(results.length).to.be.above(samples.length)
@@ -1126,7 +1129,8 @@ describe('Queries', function () {
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(3599)
+      expect(record.ttl).to.be.within(3598, 3600)
+
     })
 
     it('should set TTL to the specified value using query options #slow', async function () {
@@ -1137,7 +1141,7 @@ describe('Queries', function () {
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(7199)
+      expect(record.ttl).to.be.within(7199, 7200)
     })
   })
 

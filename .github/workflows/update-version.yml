@@ -41,6 +41,7 @@ jobs:
     outputs:
       bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:
+      
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
@@ -57,7 +58,8 @@ jobs:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ inputs.new_version }}
-        branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+        branch: 2024-Pipeline-Improvement
+        #branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
 
     - name: Output bump commit hash for next jobs to use
       id: get-bump-commit-sha

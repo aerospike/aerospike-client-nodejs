@@ -20,6 +20,7 @@
 
 #include "async.h"
 #include "command.h"
+#include "transaction.h"
 #include "client.h"
 #include "conversions.h"
 #include "log.h"
@@ -29,6 +30,7 @@
 extern "C" {
 #include <aerospike/as_error.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_txn.h>
 }
 
 using namespace v8;
@@ -280,3 +282,29 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 	return continue_scan;
 }
 
+void async_abort_listener(as_error* err, as_abort_status status, void* udata, struct as_event_loop* event_loop)
+{
+	async_mrt_listener(err, (uint32_t)status, udata);
+}
+
+void async_commit_listener(as_error* err, as_commit_status status, void* udata, struct as_event_loop* event_loop)
+{
+	async_mrt_listener(err, (uint32_t)status, udata);
+}
+
+void async_mrt_listener(as_error* err, uint32_t status, void* udata)
+{
+	Nan::HandleScope scope;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
+
+	if (err) {
+		cmd->ErrorCallback(err);
+	}
+	else {
+		Local<Value> argv[] = {Nan::Null(),
+							   Nan::New((uint32_t)status)};
+		cmd->Callback(2, argv);
+	}
+
+	delete cmd;
+}

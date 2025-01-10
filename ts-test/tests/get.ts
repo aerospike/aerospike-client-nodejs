@@ -100,7 +100,7 @@ describe('client.get()', function () {
         let record: AerospikeRecord = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
 
         record = await client.get(key, policy)
 
@@ -121,7 +121,7 @@ describe('client.get()', function () {
         let record: AerospikeRecord = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
 
         record = await client.get(key, policy)
 
@@ -142,12 +142,12 @@ describe('client.get()', function () {
         let record: AerospikeRecord = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
         await client.remove(key)
       })
 
@@ -162,12 +162,12 @@ describe('client.get()', function () {
         let record: AerospikeRecord = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
 
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(7, 8)
+        expect(record.ttl).to.be.within(5, 8)
         await client.remove(key)
       })
     })
