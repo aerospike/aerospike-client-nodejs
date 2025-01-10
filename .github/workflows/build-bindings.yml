@@ -540,7 +540,7 @@ jobs:
           ls ./lib/binding/node-v108-darwin-arm64/;
           ls ./lib/binding/node-v108-darwin-arm64/aerospike.node;
           pwd;
-          npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
 
       - name: Run tests
@@ -559,7 +559,7 @@ jobs:
           ls lib\binding\node-v108-win32-x64\aerospike.node;
           npx tsc;
           cp tests\udf.lua dist\udf.lua ;
-          mocha dist -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+          mocha dist -- --h localhost--port 3000 --U superuser --P superuser;
           cd ..; 
 
 
