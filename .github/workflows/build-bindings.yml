@@ -258,7 +258,7 @@ jobs:
 
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64') }}
       run: |
         docker ps;
         docker logs aerospike;
