@@ -204,6 +204,10 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - name: Remove aerospike docker image
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
+      run: docker rm -f $(docker ps -aq)
+
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -319,6 +323,7 @@ jobs:
       with:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/*
         name: ${{ env.BUILD_IDENTIFIER }}.node
+
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0

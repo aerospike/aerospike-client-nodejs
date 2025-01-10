@@ -34,7 +34,6 @@ runs:
 
   - name: Configure tests to connect to that Docker container
     run: |
-      python3 -m pip install --user pipx
       pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt";
       crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000;
       cat config.conf
