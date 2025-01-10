@@ -484,7 +484,8 @@ jobs:
       #  working-directory: ts-test
       #  shell: bash
 
-      - run: npm run test dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000
+      - run: rm -rf ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/${npm_config_testfile:-} dist/ --h --port 3000
+      - run: rm -rf ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/-- --h ${env:DOCKER_HOST_IP} --port 3000
         shell: bash
 
       - name: Show job status for commit
