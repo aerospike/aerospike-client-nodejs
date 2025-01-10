@@ -370,12 +370,23 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
       - name: Remove aerospike docker image
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
           if docker ps -aq | grep -q .; then
             docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
           else
             echo "No containers to remove."
           fi
+
+      - name: Remove aerospike docker image
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          if (docker ps -aq) {
+              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
+          }
+          else {
+              Write-Host "No containers to remove."
+          }
 
       - uses: ./.github/actions/run-ee-server
         with:
