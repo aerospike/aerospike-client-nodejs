@@ -326,9 +326,8 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/*
+        path: ./build/Release/*
         name: ${{ env.BUILD_IDENTIFIER }}.node
-
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -513,6 +512,7 @@ jobs:
       #  shell: bash
 
       - name: Identify binaries
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: ls ./lib/binding/node-v108-darwin-arm64
 
       - name: Run tests
