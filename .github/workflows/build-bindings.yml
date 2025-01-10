@@ -522,7 +522,7 @@ jobs:
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
           npx tsc;
-          rm -r -f ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
+          rm -r -f dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
 
       - name: Show job status for commit
