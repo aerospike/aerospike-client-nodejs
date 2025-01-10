@@ -523,9 +523,11 @@ jobs:
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
           npm i --save-dev @types/mocha;
+          npm install mocha;
           npx tsc;
-          rm -rf dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
+          npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -538,6 +540,7 @@ jobs:
           npm i --save-dev @types/chai;
           npm i --save-dev @types/jest;
           npm i --save-dev @types/mocha;
+          npm install mocha
           npx tsc;
           rm -r -Force dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
