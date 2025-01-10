@@ -438,9 +438,15 @@ jobs:
     - name: Install client
       #fix the convention here
       run: |
+        cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
+
+    - name: Install client
+      #fix the convention here
+      run: |
         npx tsc;
         npx tsc typings/index.d.ts;
         cd ts-test;
+        npm install ..
         npx tsc;
 
     - name: Wait for database to be ready
