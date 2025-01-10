@@ -31,17 +31,9 @@ runs:
     run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
     shell: bash
 
-  - uses: actions/setup-python@v4
-    with:
-      python-version: 3.11
-
-  - name: Pipx install
-    run: python -m pip install --user pipx
-    working-directory: .github/workflows
-    shell: bash
-
   - name: Configure tests to connect to that Docker container
     run: |
+      python3 -m pip install --user pipx
       pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt";
       crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000;
       cat config.conf

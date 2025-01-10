@@ -469,7 +469,7 @@ jobs:
 
       # FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
       - run: |
-          tsc;
+          npx tsc;
         working-directory: ts-test
         shell: bash
 
