@@ -530,6 +530,8 @@ jobs:
           npx tsc;
           cd ..;
           npm install;
+          ls ./lib/binding/;
+          ls ./lib/binding/node-v108-darwin-arm64/;
           npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
 
@@ -546,7 +548,7 @@ jobs:
           npm i --save-dev @types/mocha;
           npm install mocha;
           npx tsc;
-          rm -r -Force dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
+          rm -r -Force dist; npx tsc ; cp tests/udf.lua dist/udf.lua ; npx mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..;
 
       - name: Show job status for commit
