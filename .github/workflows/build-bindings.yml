@@ -513,7 +513,9 @@ jobs:
 
       - name: Identify binaries
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: ls ./lib/binding/node-v108-darwin-arm64
+        run: |
+          ls ./lib/binding/node-v108-darwin-arm64
+          cp -r ./lib/binding/node-v108-darwin-arm64/ build/Release/
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -551,8 +553,9 @@ jobs:
           npm i --save-dev @types/mocha;
           npm install mocha;
           npx tsc;
+          cp tests\udf.lua dist\udf.lua ;
+          mocha dist -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
           cd ..;
-          npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
 
       - name: Show job status for commit
