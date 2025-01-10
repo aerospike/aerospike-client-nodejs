@@ -559,7 +559,7 @@ jobs:
           npm install mocha;
           npx tsc;
           cp tests\udf.lua dist\udf.lua ;
-          mocha dist -- --h localhost --port 3000 --U superuser --P superuser;
+          npx mocha dist -- --h localhost --port 3000 --U superuser --P superuser;
           cd ..; 
 
 
