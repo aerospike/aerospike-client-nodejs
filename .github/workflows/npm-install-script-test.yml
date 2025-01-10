@@ -161,6 +161,9 @@ jobs:
       - name: Set version
         run: npm version 6.0.1.dev1 --no-git-tag-version
 
+      - name: Change install command for release
+        run: node ./scripts/change-install-command.js
+
       - name: verdaccio server run
         run: |
           docker run -it — rm — name verdaccio -p 4873:4873 verdaccio/verdaccio
