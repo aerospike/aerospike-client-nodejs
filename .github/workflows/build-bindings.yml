@@ -258,7 +258,7 @@ jobs:
 
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
+      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
         docker ps;
         docker logs aerospike;
@@ -516,9 +516,9 @@ jobs:
         run: |
           ls ./lib/binding/node-v108-darwin-arm64
           ls ./lib/binding/node-v108-darwin-arm64/aerospike.node
-          cp -r ./lib/binding/node-v108-darwin-arm64/ build/Release/
           mkdir -p build;
           mkdir -p build/Release;
+          cp -r ./lib/binding/node-v108-darwin-arm64 build/Release
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
