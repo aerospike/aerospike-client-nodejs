@@ -529,6 +529,7 @@ jobs:
           npm install mocha;
           npx tsc;
           cd ..;
+          npm install;
           npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
 
