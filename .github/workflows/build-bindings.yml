@@ -369,6 +369,14 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
+      - name: Remove aerospike docker image
+        run: |
+          if docker ps -aq | grep -q .; then
+            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+          else
+            echo "No containers to remove."
+          fi
+
       - uses: ./.github/actions/run-ee-server
         with:
           use-server-rc: ${{ inputs.use-server-rc }}
@@ -484,8 +492,7 @@ jobs:
       #  working-directory: ts-test
       #  shell: bash
 
-      - run: rm -rf ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/${npm_config_testfile:-} dist/ --h --port 3000
-      - run: rm -rf ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/-- --h ${env:DOCKER_HOST_IP} --port 3000
+      - run: rm -r -f ts-test/dist; cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/ -- --h ${env:DOCKER_HOST_IP} --port 3000
         shell: bash
 
       - name: Show job status for commit
