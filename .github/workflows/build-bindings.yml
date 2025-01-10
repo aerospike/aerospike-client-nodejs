@@ -266,6 +266,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
+        npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Run tests
@@ -277,6 +278,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
+        npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
     # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
@@ -297,9 +299,6 @@ jobs:
     #    CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 #
 
-    - name: Run tests
-      run: |
-        ls ./lib/binding;
 
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
@@ -537,6 +536,7 @@ jobs:
           cd ..;
           npm install;
           pwd;
+          npx tsc;
           npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
 
@@ -553,9 +553,10 @@ jobs:
           npm i --save-dev @types/mocha;
           npm install mocha;
           npx tsc;
-          cp tests\udf.lua dist\udf.lua ;
+          cp tests\udf.lua dist\udf.lua;
           npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
           cd ..; 
+          npx tsc;
 
 
       - name: Show job status for commit
