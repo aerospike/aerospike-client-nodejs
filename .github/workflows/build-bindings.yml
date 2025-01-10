@@ -536,9 +536,6 @@ jobs:
           npx tsc;
           cd ..;
           npm install;
-          ls ./lib/binding/;
-          ls ./lib/binding/node-v108-darwin-arm64/;
-          ls ./lib/binding/node-v108-darwin-arm64/aerospike.node;
           pwd;
           npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
@@ -548,8 +545,6 @@ jobs:
         run: |
           docker ps;
           docker logs aerospike;
-          ls lib\binding\node-v108-win32-x64;
-          ls lib\binding\node-v108-win32-x64\aerospike.node;
           cd ts-test;
           npm uninstall tsc;
           npm install ..;
