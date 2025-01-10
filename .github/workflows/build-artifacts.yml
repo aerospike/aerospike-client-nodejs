@@ -88,7 +88,7 @@ jobs:
           "manylinux_x86_64",
           "manylinux_aarch64",
           "macosx_x86_64",
-          #"macosx_arm64",
+          "macosx_arm64",
           "win_amd64"
         ]
       fail-fast: false

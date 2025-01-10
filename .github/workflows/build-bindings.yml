@@ -36,7 +36,7 @@ on:
         - manylinux_x86_64
         - manylinux_aarch64
         - macosx_x86_64
-        #- macosx_arm64
+        - macosx_arm64
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
@@ -317,7 +317,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/*
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
