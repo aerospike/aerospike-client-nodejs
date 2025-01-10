@@ -550,7 +550,6 @@ jobs:
           npm i --save-dev @types/jest;
           npm i --save-dev @types/mocha;
           npm install mocha;
-          rm -r -Force dist;
           npx tsc;
           cd ..;
           npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
