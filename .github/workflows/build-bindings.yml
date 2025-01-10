@@ -548,6 +548,8 @@ jobs:
         run: |
           docker ps;
           docker logs aerospike;
+          ls lib\binding\node-v108-win32-x64;
+          ls lib\binding\node-v108-win32-x64\aerospike.node;
           cd ts-test;
           npm uninstall tsc;
           npm install ..;
@@ -555,11 +557,9 @@ jobs:
           npm i --save-dev @types/jest;
           npm i --save-dev @types/mocha;
           npm install mocha;
-          ls lib\binding\node-v108-win32-x64;
-          ls lib\binding\node-v108-win32-x64\aerospike.node;
           npx tsc;
           cp tests\udf.lua dist\udf.lua ;
-          mocha dist -- --h localhost--port 3000 --U superuser --P superuser;
+          mocha dist -- --h localhost --port 3000 --U superuser --P superuser;
           cd ..; 
 
 
