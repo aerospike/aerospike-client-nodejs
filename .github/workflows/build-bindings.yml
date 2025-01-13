@@ -34,9 +34,10 @@ on:
         required: true
         options:
         - manylinux_x86_64
-        - manylinux_aarch64
-        - macosx_x86_64
-        - win_amd64
+        #- manylinux_aarch64
+        #- macosx_x86_64
+        #- macosx_arm64
+        #- win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       unoptimized:
