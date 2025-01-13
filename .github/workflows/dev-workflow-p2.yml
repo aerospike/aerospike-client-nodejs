@@ -42,10 +42,10 @@ jobs:
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
-    #needs: [
+    needs: [
     #  bump-dev-number,
-    #  rebuild-artifacts-with-new-dev-num
-    #]
+      rebuild-artifacts-with-new-dev-num
+    ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
