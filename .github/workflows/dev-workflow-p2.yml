@@ -26,7 +26,7 @@ jobs:
 #    secrets: inherit
 
   rebuild-artifacts-with-new-dev-num:
-    needs: bump-dev-number
+    #needs: bump-dev-number
     name: Rebuild artifacts with new dev number
     uses: ./.github/workflows/build-artifacts.yml
     with:
