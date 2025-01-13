@@ -45,8 +45,8 @@ jobs:
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --build-name nodejs-client --build-number $NEW_VERSION "artifacts/*" ${{ vars.JFROG_REPO_NAME }}/aerospike/$NEW_VERSION/
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: 6.0.3-dev.1
 
-    - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.version }}
+    #- name: Publish build info
+    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
+    #  run: jf rt build-publish nodejs-client ${{ inputs.version }}
