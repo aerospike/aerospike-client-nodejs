@@ -13,17 +13,17 @@ on:
       - 'package.json'
 
 jobs:
-#  bump-dev-number:
-#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-#    uses: ./.github/workflows/bump-version.yml
-#    with:
-#      change: 'bump-dev-num'
-#    secrets: inherit
-
-  release-package:
-    name: release npm package
-    uses: ./.github/workflows/release-package.yml
+  bump-dev-number:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'bump-dev-num'
     secrets: inherit
+
+#  release-package:
+#    name: release npm package
+#    uses: ./.github/workflows/release-package.yml
+#    secrets: inherit
 
 #  rebuild-artifacts-with-new-dev-num:
 #    needs: bump-dev-number
