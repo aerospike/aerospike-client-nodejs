@@ -10,9 +10,6 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-    secrets:
-      JFROG_PLATFORM_URL:
-        required: true
       oidc-provider:
         description: ""
         required: false
@@ -21,6 +18,9 @@ on:
         description: ""
         required: false
         default: aerospike/clients
+    secrets:
+      JFROG_PLATFORM_URL:
+        required: true
 
 jobs:
   upload-to-jfrog:
@@ -41,7 +41,7 @@ jobs:
       with:
         oidc-provider-name: ${{ inputs.oidc-provider }}
         oidc-audience: ${{ inputs.oidc-audience }}
-        
+
     #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
     #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
     #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
