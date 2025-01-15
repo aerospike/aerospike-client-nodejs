@@ -24,9 +24,9 @@ on:
       #  description: ""
       #  required: false
       #  default: aerospike/clients
-    secrets:
-      JFROG_PLATFORM_URL:
-        required: true
+    #secrets:
+    #  JFROG_PLATFORM_URL:
+    #    required: true
 
 jobs:
   upload-to-jfrog:
