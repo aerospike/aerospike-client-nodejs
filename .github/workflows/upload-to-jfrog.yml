@@ -11,10 +11,12 @@ on:
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
       oidc-provider:
+        type: string
         description: ""
         required: false
         default: gh-aerospike-clients
       oidc-audience:
+        type: string
         description: ""
         required: false
         default: aerospike/clients
