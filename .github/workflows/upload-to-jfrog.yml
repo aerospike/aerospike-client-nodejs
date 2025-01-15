@@ -48,7 +48,6 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-
     #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
     #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
     #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
