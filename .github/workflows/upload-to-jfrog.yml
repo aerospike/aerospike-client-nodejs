@@ -43,10 +43,10 @@ jobs:
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@9fe0f98bd45b19e6e931d457f4e98f8f84461fb5
       env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_URL: https://aerospike.jfrog.io
       with:
-          oidc-provider-name: gh-aerospike-clients
-          oidc-audience: aerospike/clients
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
     #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
     #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
