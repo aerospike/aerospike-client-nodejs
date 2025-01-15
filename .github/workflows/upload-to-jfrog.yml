@@ -13,8 +13,14 @@ on:
     secrets:
       JFROG_PLATFORM_URL:
         required: true
-      JFROG_ACCESS_TOKEN:
-        required: true
+      oidc-provider:
+        description: ""
+        required: false
+        default: gh-aerospike-clients
+      oidc-audience:
+        description: ""
+        required: false
+        default: aerospike/clients
 
 jobs:
   upload-to-jfrog:
@@ -32,8 +38,10 @@ jobs:
       uses: jfrog/setup-jfrog-cli@v4
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
+      with:
+        oidc-provider-name: ${{ inputs.oidc-provider }}
+        oidc-audience: ${{ inputs.oidc-audience }}
+        
     #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
     #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
     #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
