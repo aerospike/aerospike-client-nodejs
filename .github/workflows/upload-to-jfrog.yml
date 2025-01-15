@@ -1,5 +1,9 @@
 name: Upload to JFrog
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  
 on:
   workflow_call:
     inputs:
