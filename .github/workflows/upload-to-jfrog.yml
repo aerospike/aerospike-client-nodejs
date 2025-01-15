@@ -54,7 +54,7 @@ jobs:
     #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
     #  working-directory: artifacts
 
-    - name: WHOAMI
+    - name: WHOAMI REALLY
       run: jf config show
 
     - name: Upload passing builds to JFrog Nodejs repo
