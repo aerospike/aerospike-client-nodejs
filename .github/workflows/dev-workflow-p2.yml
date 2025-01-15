@@ -49,7 +49,7 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
-    secrets: inherit
+    #secrets: inherit
 
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:
