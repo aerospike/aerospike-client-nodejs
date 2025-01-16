@@ -22,7 +22,7 @@
 
 import Aerospike, { AerospikeError, Client, Key as K, BatchResult} from 'aerospike';
 import * as helper from './test_helper';
-import { expect } from 'chai';
+import { expect, assert} from 'chai';
 // const util = require('util')
 
 const keygen = helper.keygen
