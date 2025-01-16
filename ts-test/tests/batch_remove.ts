@@ -85,7 +85,7 @@ describe('client.batchRemove()', function () {
         new Key(helper.namespace, helper.set, 'test/batch_remove/0')
       ]
       try {
-        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.IGNORE, generation: 10 })
+        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.EQ, generation: 10 }))
         // Will fail if code makes it here
         assert.fail('An error should have been caught')
       } catch (error: any) {
