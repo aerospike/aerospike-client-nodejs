@@ -158,6 +158,7 @@ describe('MRT functionality tests', function () {
     }
     catch (error: any) {
       expect(error.code).to.eql(Aerospike.status.TXN_ALREADY_ABORTED)
+      return
     }
 
     assert.fail('An ALREADY_ABORTED error should have been thrown')
@@ -180,6 +181,7 @@ describe('MRT functionality tests', function () {
     }
     catch (error: any) {
       expect(error.code).to.eql(Aerospike.status.TXN_ALREADY_COMMITTED)
+      return
     }
 
     assert.fail('An ALREADY_COMMITTED error should have been thrown')
