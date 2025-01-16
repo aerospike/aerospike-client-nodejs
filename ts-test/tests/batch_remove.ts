@@ -85,11 +85,10 @@ describe('client.batchRemove()', function () {
         new Key(helper.namespace, helper.set, 'test/batch_remove/0')
       ]
       try {
-        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.EQ, generation: 10 }))
+        await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.IGNORE, generation: 10 })
         // Will fail if code makes it here
-        expect(1).to.eql(2)
+        assert.fail('An error should have been caught')
       } catch (error: any) {
-        // code will fail with undefined if expect(1).to.eql(2) executes
         expect(error.code).to.eql(-16)
         const results: BatchResult[] = await client.batchRemove(batchRecords)
         expect(results.length).to.equal(5)

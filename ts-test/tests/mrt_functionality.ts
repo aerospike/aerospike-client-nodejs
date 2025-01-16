@@ -151,7 +151,6 @@ describe('MRT functionality tests', function () {
 
     let result: number = await client.abort(mrt)
 
-    result = await client.commit(mrt)
 
     try{
       await client.commit(mrt)
@@ -175,7 +174,6 @@ describe('MRT functionality tests', function () {
 
     let result: number = await client.commit(mrt)
 
-    result = await client.abort(mrt)
     try{
       await client.abort(mrt)
     }

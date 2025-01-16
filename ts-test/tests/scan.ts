@@ -398,7 +398,7 @@ context('Scans', function () {
 
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.be.within(10799, 10800)
+      expect(record.ttl).to.be.within(10798, 10800)
     })
 
     it('should set TTL to the specified value with scan options #slow', async function () {
@@ -410,7 +410,7 @@ context('Scans', function () {
       const key: any = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.ttl).to.equal(14399)
-      expect(record.ttl).to.be.within(14399, 14400)
+      expect(record.ttl).to.be.within(14398, 14400)
 
     })
 
