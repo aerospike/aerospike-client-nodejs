@@ -471,23 +471,20 @@ export class Transaction {
         OK: 0,
 
         /**
-         * Transaction has already been committed.
-         */
-        ALREADY_COMMITTED: 1,
-        /**
          * Transaction has already been aborted.
          */
-        ALREADY_ABORTED: 2,
+        ALREADY_ABORTED: 1,
+
         /**
          * Client roll back abandoned. Server will eventually abort the transaction.
          */
-        ROLL_BACK_ABANDONED: 3,
+        ROLL_BACK_ABANDONED: 2,
 
         /**
          * Transaction has been rolled back, but client transaction close was abandoned.
          * Server will eventually close the transaction.
          */
-        CLOSE_ABANDONED: 4
+        CLOSE_ABANDONED: 3
     };
 
 
@@ -504,31 +501,28 @@ export class Transaction {
          * Transaction has already been committed.
          */
         ALREADY_COMMITTED: 1,
-        /**
-         * Transaction has already been aborted.
-         */
-        ALREADY_ABORTED: 2,
+
         /**
          * Transaction verify failed. Transaction will be aborted.
          */
-        VERIFY_FAILED: 3,
+        VERIFY_FAILED: 2,
 
         /**
          * Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
          * If the error is in doubt (usually timeout), the commit is in doubt.
          */
-        MARK_ROLL_FORWARD_ABANDONED: 4,
+        MARK_ROLL_FORWARD_ABANDONED: 3,
 
         /**
          * Client roll forward abandoned. Server will eventually commit the transaction.
          */
-        ROLL_FORWARD_ABANDONED: 5,
+        ROLL_FORWARD_ABANDONED: 4,
 
         /**
          * Transaction has been rolled forward, but client transaction close was abandoned.
          * Server will eventually close the transaction.
          */
-        CLOSE_ABANDONED: 6
+        CLOSE_ABANDONED: 5
     };
 
     private prepareToClose(): void;
@@ -767,6 +761,8 @@ export class Transaction {
      * 
      * If the MRT timeout is zero, the server configuration mrt-duration is used. The default mrt-duration is 10 seconds.
      *
+     * Default Client transaction timeout is 0.
+     * 
      * @param timeout - MRT timeout in seconds
      *
      * @example
@@ -16087,6 +16083,22 @@ export namespace filter {
 
 declare namespace statusNamespace {
     /**
+     * Multi-record transaction commit called, but the transaction was already aborted.
+     */
+    export const AEROSPIKE_TXN_ALREADY_ABORTED = -19;
+    /**
+     * Multi-record transaction commit called, but the transaction was already aborted.
+     */
+    export const TXN_ALREADY_ABORTED = -19;
+    /**
+     * Multi-record transaction abort called, but the transaction was already committed.
+     */
+    export const AEROSPIKE_TXN_ALREADY_COMMITTED = -18;
+    /**
+     * Multi-record transaction abort called, but the transaction was already committed.
+     */
+    export const TXN_ALREADY_COMMITTED = -18;
+    /**
      * Multi-record transaction failed.
      */
     export const AEROSPIKE_TXN_FAILED = -17;
@@ -16732,6 +16744,22 @@ x     */
      * MRT was already aborted.
      */
     export const MRT_ABORTED = 125;
+    /**
+     * This record has been locked by a previous update in this transaction.
+     */
+    export const AEROSPIKE_MRT_ALREADY_LOCKED = 126;
+    /**
+     * This record has been locked by a previous update in this transaction.
+     */
+    export const MRT_ALREADY_LOCKED = 126;
+    /**
+     * This transaction has already started. Writing to the same transaction with independent threads is unsafe.
+     */
+    export const AEROSPIKE_MRT_MONITOR_EXISTS = 127;
+    /**
+     * This transaction has already started. Writing to the same transaction with independent threads is unsafe.
+     */
+    export const MRT_MONITOR_EXISTS = 127;
     /**
      * Batch functionality has been disabled.
      */

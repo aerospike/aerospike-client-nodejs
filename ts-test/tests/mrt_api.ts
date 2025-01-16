@@ -99,6 +99,44 @@ describe('MRT API Tests', function () {
     })
   })
 
+  context('transaction.abortStatus', function () {
+    it('OK', async function () {
+      expect(Aerospike.Transaction.abortStatus.OK).to.equal(0)
+    })
+    it('ALREADY_ABORTED', async function () {
+      expect(Aerospike.Transaction.abortStatus.ALREADY_ABORTED).to.equal(0)
+    })
+    it('ROLL_BACK_ABANDONED', async function () {
+      expect(Aerospike.Transaction.abortStatus.ROLL_BACK_ABANDONED).to.equal(0)
+    })
+    it('CLOSE_ABANDONED', async function () {
+      expect(Aerospike.Transaction.abortStatus.CLOSE_ABANDONED).to.equal(0)
+    })
+
+  })
+  
+   context('transaction.commitStatus', function () {
+    it('OK', async function () {
+      expect(Aerospike.Transaction.commitStatus.OK).to.equal(0)
+    })
+    it('ALREADY_COMMITTED', async function () {
+      expect(Aerospike.Transaction.commitStatus.ALREADY_COMMITTED).to.equal(0)
+    })
+    it('VERIFY_FAILED', async function () {
+      expect(Aerospike.Transaction.commitStatus.VERIFY_FAILED).to.equal(0)
+    })
+    it('MARK_ROLL_FORWARD_ABANDONED', async function () {
+      expect(Aerospike.Transaction.commitStatus.MARK_ROLL_FORWARD_ABANDONED).to.equal(0)
+    })
+    it('ROLL_FORWARD_ABANDONED', async function () {
+      expect(Aerospike.Transaction.commitStatus.ROLL_FORWARD_ABANDONED).to.equal(0)
+    })
+    it('CLOSE_ABANDONED', async function () {
+      expect(Aerospike.Transaction.commitStatus.CLOSE_ABANDONED).to.equal(0)
+    })
+
+  })
+
   it('should fail with readsCapacity error string', function () {
     expect(() => new Aerospike.Transaction("256" as any, 256)).to.throw('Must specify a number for readsCapacity');
 

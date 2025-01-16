@@ -103,7 +103,7 @@ describe('AerospikeError #noserver', function () {
         message: '127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND'
       }
       const subject = (ASError as any).fromASError(error)
-      expect(subject.message).to.equal('127.0.0.1:3000 Record does not exist in database. May be returned by read, or write with policy Aerospike.policy.exists.UPDATE')
+      expect(subject.message).to.equal('127.0.0.1:3000 Record does not exist in database. May be returned by read, or write with policy Aerospike.policy.exists.UPDATE.')
     })
 
     it('returns an AerospikeError instance unmodified', function () {
