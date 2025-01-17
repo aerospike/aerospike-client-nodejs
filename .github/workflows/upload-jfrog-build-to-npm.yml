@@ -53,7 +53,7 @@ jobs:
     - name: npm rc
       run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
       env:
-        NPMRC: ${{ secrets.NPMRC_OFF }}
+        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
     #- name: npm login
     #  run: |
@@ -72,6 +72,7 @@ jobs:
 
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        NPMRC: ${{ secrets.NPMRC }}
 
     
     - name: npm login
