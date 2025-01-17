@@ -52,10 +52,10 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: npm rc
-      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+    #- name: npm rc
+    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
     #- name: npm login
     #  run: |
