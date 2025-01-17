@@ -1,0 +1,37 @@
+name: Publish JFrog build to PyPI
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
+      #use-test-pypi:
+      #  type: boolean
+      #  description: 'DEBUG: upload to test.pypi.org?'
+      #  required: true
+      #  default: false
+
+jobs:
+  publish-jfrog-build-to-npm:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    #- name: Download JFrog build
+    #  run: jf rt dl --build python-client/6.0.3-dev.1 ${{ vars.JFROG_REPO_NAME }}
+    - name: npm install from JFrog
+      run: |
+        jf npm install --build-name=nodejs-client --build-number=6.0.3-dev.2
+        ls .
+
+    #- run: npm ci
+    #- run: npm publish --provenance --access public
+    #  env:
+    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

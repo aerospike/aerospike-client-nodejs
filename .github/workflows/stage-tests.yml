@@ -93,7 +93,6 @@ jobs:
         wheel_os: manylinux
         wheel_cpu_arch: ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM == 'linux/amd64' && 'x86_64' || 'aarch64' }}
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - uses: ./.github/actions/run-ee-server
@@ -179,7 +178,6 @@ jobs:
         wheel_os: macosx
         wheel_cpu_arch: x86_64
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - uses: actions/setup-python@v4
