@@ -64,16 +64,15 @@ jobs:
         NEW_VERSION: 6.0.3-dev.7
         PACKAGE_MANAGER: npm
 
-    #- name: build pack
-    #  run: |
-    #    cat package.json
-    #    npm version 6.0.3-dev.7 --no-git-tag-version
+    - name: build pack
+      run: |
+        ls downloaded-artifacts
+        npm version 6.0.3-dev.7 --no-git-tag-version
+        npm install;
 
-    #    npm install;
-
-    #- name: modify install script
-    #  run: |
-    #    json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+    - name: modify install script
+      run: |
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
 
 #    - name: npm rc

@@ -39,7 +39,7 @@ jobs:
     needs: rebuild-artifacts-with-new-dev-num
     name: Test npm install command for npm package
     uses: ./.github/workflows/npm-install-script-test.yml
-  secrets: inherit
+    secrets: inherit
 
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
