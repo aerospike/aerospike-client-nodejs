@@ -54,6 +54,7 @@ jobs:
 
     - name: npm get publish
       run: |
+        cat package.json
         npm version 6.0.3-dev.4 --no-git-tag-version
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
