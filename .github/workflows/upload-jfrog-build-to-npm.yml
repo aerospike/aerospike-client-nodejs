@@ -82,7 +82,8 @@ jobs:
     - name: npm get registry
       run: |
         npm get registry
-        
+        npm -v
+
     - name: npm publish
       run: |
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
