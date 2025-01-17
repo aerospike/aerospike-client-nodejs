@@ -64,14 +64,21 @@ jobs:
         cat package.json
         npm version 6.0.3-dev.4 --no-git-tag-version
         ./scripts/build-c-client.sh;
-
+        npm install;
 
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
 
+    - name: npm get registry
+      run: |
+        npm get registry
+    
+    - name: npm login
+      run: |
+        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
+
     - name: npm publish
       run: |
-        npm install;
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
 
