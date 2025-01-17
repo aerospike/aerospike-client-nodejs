@@ -40,9 +40,9 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: npm rc
-      run: echo $FEATURE_FILE | base64 --decode > ~/features.conf  
+      run: echo $NPMRC | base64 --decode > ~/.npmrc  
       env:
-        FEATURE_FILE: ${{ secrets.NPMRC }}
+        NPMRC: ${{ secrets.NPMRC }}
 
     - name: npm login
       run: npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
