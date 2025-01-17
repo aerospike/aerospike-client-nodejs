@@ -28,7 +28,7 @@ on:
         required: true
       NPMRC_OFF:
         required: true
-      NODE_AUTH_TOKEN:
+      NPM_TOKEN:
         required: true
 
 jobs:
