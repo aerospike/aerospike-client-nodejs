@@ -61,7 +61,7 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.11
+        NEW_VERSION: 6.0.3-dev.12
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -70,10 +70,11 @@ jobs:
 
     - name: change verison
       run: |
-        npm version 6.0.3-dev.11 --no-git-tag-version
+        npm version 6.0.3-dev.12 --no-git-tag-version
 
     - name: install package
       run: |
+        ./scripts/build-c-client.sh;
         npm install;
 
     - name: modify install script

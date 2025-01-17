@@ -164,7 +164,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.11 --no-git-tag-version
+        run: npm version 6.0.3-dev.12 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -197,7 +197,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm install aerospike@6.0.3-dev.11
+          npm install aerospike@6.0.3-dev.12
 
       - name: List available artifacts
         run: |
