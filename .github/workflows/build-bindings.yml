@@ -256,7 +256,6 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64') }}
       run: |
