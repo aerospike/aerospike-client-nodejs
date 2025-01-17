@@ -51,9 +51,9 @@ jobs:
       env:
         NPMRC: ${{ secrets.NPMRC }}
 
-    - name: npm login
-      run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
+    #- name: npm login
+    #  run: |
+    #    npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
 
     - name: npm get registry
       run: |
