@@ -26,6 +26,8 @@ on:
       # Just make all the secrets required to make things simpler...
       NPMRC:
         required: true
+      NPMRC_OFF:
+        required: true
 
 jobs:
   publish-jfrog-build-to-npm:
@@ -70,8 +72,10 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-    - name: npm rc
-      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+    - name: npm rc 2
+      run: |
+        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
         NPMRC: ${{ secrets.NPMRC }}
 
     
