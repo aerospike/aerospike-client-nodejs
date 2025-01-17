@@ -63,7 +63,7 @@ jobs:
       run: |
         cat package.json
         npm version 6.0.3-dev.4 --no-git-tag-version
-        ./scripts/build-c-client/sh;
+        ./scripts/build-c-client.sh;
         npm install;
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
