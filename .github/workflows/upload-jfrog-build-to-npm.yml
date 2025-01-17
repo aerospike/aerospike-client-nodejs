@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@4
+      uses: jfrog/setup-jfrog-cli@v4
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
