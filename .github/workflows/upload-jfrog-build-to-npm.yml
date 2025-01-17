@@ -47,9 +47,9 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: npm rc
-      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
       env:
-        NPMRC: ${{ secrets.NPMRC }}
+        NPMRC: ${{ secrets.NPMRC_OFF }}
 
     #- name: npm login
     #  run: |
