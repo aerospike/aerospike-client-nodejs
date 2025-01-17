@@ -49,7 +49,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
-        
+
     - name: npm rc
       run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
       env:
@@ -73,14 +73,16 @@ jobs:
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
 
-    - name: npm get registry
-      run: |
-        npm get registry
     
     - name: npm login
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
 
+
+    - name: npm get registry
+      run: |
+        npm get registry
+        
     - name: npm publish
       run: |
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
