@@ -1,4 +1,9 @@
 name: Publish JFrog build to PyPI
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
 on:
   workflow_dispatch:
     inputs:
