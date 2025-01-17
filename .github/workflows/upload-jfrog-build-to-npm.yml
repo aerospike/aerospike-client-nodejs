@@ -28,8 +28,9 @@ jobs:
     #  run: jf rt dl --build python-client/6.0.3-dev.1 ${{ vars.JFROG_REPO_NAME }}
     - name: npm install from JFrog
       run: |
-        jf npm install --build-name=nodejs-client --build-number=6.0.3-dev.2
+        jf npm install --build-name=nodejs-client --build-number=6.0.3-dev.3
         ls .
+
 
     #- run: npm ci
     #- run: npm publish --provenance --access public
