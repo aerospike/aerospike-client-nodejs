@@ -65,6 +65,17 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
+    - name: npm rc 2
+      run: |
+        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC }}
+
+    - name: npm get registry
+      run: |
+        npm get registry
+        npm -v
+
     - name: npm publish
       run: |
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
