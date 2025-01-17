@@ -48,7 +48,7 @@ jobs:
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
         npm get registry
-        npm install aerospike@6.0.3.dev4
+        npm install aerospike@6.0.3-dev.4
     #- name: Download JFrog build
     #  run: jf rt dl --build python-client/6.0.3-dev.1 ${{ vars.JFROG_REPO_NAME }}
     #- name: npm install from JFrog
