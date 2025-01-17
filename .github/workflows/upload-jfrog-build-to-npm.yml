@@ -28,7 +28,7 @@ on:
         required: true
       NPMRC_OFF:
         required: true
-      NPM_TOKEN:
+      NPM_TOKEN_OFF:
         required: true
 
 jobs:
@@ -59,10 +59,10 @@ jobs:
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
 
-    - name: npm rc
-      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+    #- name: npm rc
+    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
         
     - name: build pack
       run: |
@@ -87,7 +87,7 @@ jobs:
       run: |
         npm publish
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
 
     #- name: npm rc
     #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
