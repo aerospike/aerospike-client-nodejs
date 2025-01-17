@@ -41,7 +41,7 @@ jobs:
         path: artifacts
 
     - name: print artifacts
-      run: ls .
+      run: ls artifacts
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
@@ -65,10 +65,10 @@ jobs:
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "artifacts/*" clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: 6.0.3-dev.10
+        NEW_VERSION: 6.0.3-dev.11
         PACKAGE_MANAGER: npm
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client 6.0.3-dev.10
+      run: jf rt build-publish nodejs-client 6.0.3-dev.11
 

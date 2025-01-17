@@ -58,16 +58,22 @@ jobs:
       run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
-    - name:
+    - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.10
+        NEW_VERSION: 6.0.3-dev.11
         PACKAGE_MANAGER: npm
 
-    - name: build pack
+    - name: list Artifacts
       run: |
         ls downloaded-artifacts
-        npm version 6.0.3-dev.10 --no-git-tag-version
+
+    - name: change verison
+      run: |
+        npm version 6.0.3-dev.11 --no-git-tag-version
+
+    - name: install package
+      run: |
         npm install;
 
     - name: modify install script
@@ -80,63 +86,11 @@ jobs:
 #      env:
 #        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
-
     - name: npm publish
       run: |
         npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
-
-
-
-    #- name: npm rc
-    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-    #  env:
-    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
-
-    #- name: npm login
-    #  run: |
-    #    npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
-
-#    - name: npm get registry
-#      run: |
-#        npm get registry
-#
-#    - name: build pack
-#      run: |
-#        cat package.json
-#        npm version 6.0.3-dev.4 --no-git-tag-version
-#        ./scripts/build-c-client.sh;
-#        npm install;
-#
-#    - name: npm rc 2
-#      run: |
-#        echo "$NPMRC" | base64 --decode > ~/.npmrc  
-#      env:
-#        NPMRC: ${{ secrets.NPMRC }}
-#
-#    - name: npm get registry
-#      run: |
-#        npm get registry
-#        npm -v
-#
-#    - name: npm publish
-#      run: |
-#        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
-
-
-
-    #- name: Download JFrog build
-    #  run: jf rt dl --build python-client/6.0.3-dev.1 ${{ vars.JFROG_REPO_NAME }}
-    #- name: npm install from JFrog
-    #  run: |
-    #    jf npm-config --repo-deploy --repo-resolve clients-npm-dev-local
-    #    jf npm install --build-name=nodejs-client --build-number=6.0.3-dev.4
-    #    ls .
-
 
     #- run: npm ci
     #- run: npm publish --provenance --access public
