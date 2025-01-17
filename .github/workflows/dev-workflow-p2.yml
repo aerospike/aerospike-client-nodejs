@@ -25,31 +25,31 @@ jobs:
 #    uses: ./.github/workflows/release-package.yml
 #    secrets: inherit
 
-  rebuild-artifacts-with-new-dev-num:
-    #needs: bump-dev-number
-    name: Rebuild artifacts with new dev number
-    uses: ./.github/workflows/build-artifacts.yml
-    with:
-      # On pull_request_target, the bump version commit will be ignored
-      # So we must pass it manually to the workflow
-      sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
-    secrets: inherit
+#  rebuild-artifacts-with-new-dev-num:
+#    #needs: bump-dev-number
+#    name: Rebuild artifacts with new dev number
+#    uses: ./.github/workflows/build-artifacts.yml
+#    with:
+#      # On pull_request_target, the bump version commit will be ignored
+#      # So we must pass it manually to the workflow
+#      sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
+#    secrets: inherit
 
 #  test-npm-install:
 #    needs: rebuild-artifacts-with-new-dev-num
 #    name: Test npm install command for npm package
 #    uses: ./.github/workflows/npm-install-script-test.yml
 
-  upload-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-    #  bump-dev-number,
-      rebuild-artifacts-with-new-dev-num
-    ]
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
-    #secrets: inherit
+#  upload-to-jfrog:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#    #  bump-dev-number,
+#      rebuild-artifacts-with-new-dev-num
+#    ]
+#    uses: ./.github/workflows/upload-to-jfrog.yml
+#    with:
+#      version: ${{ needs.bump-dev-number.outputs.new_version }}
+#    #secrets: inherit
 
   publish-to-npm:
     name: Upload artifacts to JFrog
