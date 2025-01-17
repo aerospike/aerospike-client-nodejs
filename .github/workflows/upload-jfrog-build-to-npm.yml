@@ -28,6 +28,8 @@ on:
         required: true
       NPMRC_OFF:
         required: true
+      NODE_AUTH_TOKEN:
+        required: true
 
 jobs:
   publish-jfrog-build-to-npm:
@@ -52,6 +54,16 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    #- name: change package name
+    #- run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
+
+    - name: npm publish
+      run: |
+        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
     #- name: npm rc
     #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
     #  env:
@@ -61,36 +73,36 @@ jobs:
     #  run: |
     #    npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
 
-    - name: npm get registry
-      run: |
-        npm get registry
+#    - name: npm get registry
+#      run: |
+#        npm get registry
+#
+#    - name: build pack
+#      run: |
+#        cat package.json
+#        npm version 6.0.3-dev.4 --no-git-tag-version
+#        ./scripts/build-c-client.sh;
+#        npm install;
+#
+#    - name: npm rc 2
+#      run: |
+#        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+#      env:
+#        NPMRC: ${{ secrets.NPMRC }}
+#
+#    - name: npm get registry
+#      run: |
+#        npm get registry
+#        npm -v
+#
+#    - name: npm publish
+#      run: |
+#        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+#
+#    - name: npm install
+#      run: |
+#        npm install aerospike@6.0.3-dev.4
 
-    - name: build pack
-      run: |
-        cat package.json
-        npm version 6.0.3-dev.4 --no-git-tag-version
-        ./scripts/build-c-client.sh;
-        npm install;
-
-    - name: npm rc 2
-      run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC: ${{ secrets.NPMRC }}
-
-    - name: npm get registry
-      run: |
-        npm get registry
-        npm -v
-
-    - name: npm publish
-      run: |
-        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
-
-
-    - name: npm install
-      run: |
-        npm install aerospike@6.0.3-dev.4
 
     #- name: Download JFrog build
     #  run: jf rt dl --build python-client/6.0.3-dev.1 ${{ vars.JFROG_REPO_NAME }}
