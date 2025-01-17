@@ -176,9 +176,9 @@ jobs:
       - name: List available artifacts
         run: ls ./lib/binding || echo "No artifacts found in binding"
 
-      #- name: change package name
-      #  run: |
-      #    sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
+      - name: change package name
+        run: |
+          sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
 
       - name: npm rc 2
         run: |

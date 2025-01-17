@@ -80,11 +80,15 @@ jobs:
 #      env:
 #        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
-#    - name: npm publish
-#      run: |
-#        npm publish
-#      env:
-#        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+
+
+    - name: npm publish
+      run: |
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
 
 
 

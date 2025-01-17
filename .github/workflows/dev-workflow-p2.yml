@@ -41,28 +41,28 @@ jobs:
     uses: ./.github/workflows/npm-install-script-test.yml
     secrets: inherit
 
-#  upload-to-jfrog:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#    #  bump-dev-number,
-#      rebuild-artifacts-with-new-dev-num
-#    ]
-#    uses: ./.github/workflows/upload-to-jfrog.yml
-#    with:
-#      version: ${{ needs.bump-dev-number.outputs.new_version }}
-#    secrets: inherit
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
 
-#  publish-to-npm:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#    #  bump-dev-number,
-#      rebuild-artifacts-with-new-dev-num,
-#      upload-to-jfrog
-#    #]
-#    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
-#    with:
-#      version: ${{ needs.bump-dev-number.outputs.new_version }}
-#    secrets: inherit
+  publish-to-npm:
+    name: Upload artifacts to JFrog
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num,
+      upload-to-jfrog
+    #]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
 
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:
