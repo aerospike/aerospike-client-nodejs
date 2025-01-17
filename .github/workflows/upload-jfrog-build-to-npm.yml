@@ -59,10 +59,6 @@ jobs:
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
 
-    #- name: npm rc
-    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-    #  env:
-    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
         
     - name: build pack
       run: |
@@ -71,11 +67,11 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-#    - name: npm rc 2
-#      run: |
-#        echo "$NPMRC" | base64 --decode > ~/.npmrc  
-#      env:
-#        NPMRC: ${{ secrets.NPMRC }}
+    - name: npm rc 2
+      run: |
+        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC }}
 
     - name: npm get registry
       run: |
@@ -83,11 +79,21 @@ jobs:
         npm -v
 
 
+#    - name: npm rc
+#      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+#      env:
+#        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+
+#    - name: npm publish
+#      run: |
+#        npm publish
+#      env:
+#        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+
     - name: npm publish
       run: |
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+
 
     #- name: npm rc
     #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
