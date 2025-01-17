@@ -58,7 +58,7 @@ jobs:
     #  bump-dev-number,
       rebuild-artifacts-with-new-dev-num,
       upload-to-jfrog
-    #]
+    ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
