@@ -12,6 +12,11 @@ on:
       #  required: true
       #  default: false
   workflow_call:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
 
 jobs:
   publish-jfrog-build-to-npm:
