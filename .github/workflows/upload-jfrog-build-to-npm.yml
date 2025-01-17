@@ -58,6 +58,13 @@ jobs:
     #- run: |
     #    sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
+    - name: build pack
+      run: |
+        cat package.json
+        npm version 6.0.3-dev.4 --no-git-tag-version
+        ./scripts/build-c-client.sh;
+        npm install;
+
     - name: npm publish
       run: |
         npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
