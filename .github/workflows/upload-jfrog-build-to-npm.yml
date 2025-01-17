@@ -54,9 +54,9 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    #- name: change package name
-    #- run: |
-    #    sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
+    - name: change package name
+    - run: |
+        sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
     - name: build pack
       run: |
@@ -65,11 +65,11 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-    - name: npm rc 2
-      run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC: ${{ secrets.NPMRC }}
+#    - name: npm rc 2
+#      run: |
+#        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+#      env:
+#        NPMRC: ${{ secrets.NPMRC }}
 
     - name: npm get registry
       run: |
@@ -78,7 +78,7 @@ jobs:
 
     - name: npm publish
       run: |
-        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+        npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
