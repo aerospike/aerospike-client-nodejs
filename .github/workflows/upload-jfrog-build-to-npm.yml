@@ -46,6 +46,10 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+        
     - name: npm rc
       run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
       env:
