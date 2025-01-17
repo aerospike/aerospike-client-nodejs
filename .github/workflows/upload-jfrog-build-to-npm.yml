@@ -58,6 +58,12 @@ jobs:
       run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
+
+    - name: npm rc
+      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+        
     - name: build pack
       run: |
         cat package.json
@@ -76,10 +82,6 @@ jobs:
         npm get registry
         npm -v
 
-    - name: npm rc
-      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
     - name: npm publish
       run: |
