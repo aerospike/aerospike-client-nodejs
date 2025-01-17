@@ -58,6 +58,7 @@ jobs:
       run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
+
     - name: npm rc
       run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
       env:
