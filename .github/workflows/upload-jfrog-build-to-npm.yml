@@ -76,7 +76,7 @@ jobs:
     
     - name: npm login
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/ --auth-type=web
+          npm login
 
 
     - name: npm get registry
