@@ -47,6 +47,8 @@ jobs:
       rebuild-artifacts-with-new-dev-num
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
     #secrets: inherit
 
   publish-to-npm:
@@ -57,6 +59,8 @@ jobs:
       upload-to-jfrog
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
     #secrets: inherit
 
 #  # We don't want the artifacts in JFrog to also exist in Github
