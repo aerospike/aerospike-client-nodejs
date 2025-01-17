@@ -1,4 +1,4 @@
-name: npm install script test
+Fname: npm install script test
 
 on:
   workflow_call: # This allows this workflow to be reused by others.
@@ -159,7 +159,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.1-dev.1 --no-git-tag-version
+        run: npm version 6.0.3-dev.5 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -167,6 +167,32 @@ jobs:
 
       - name: run install command
         run: npm install
+
+      - name: List available artifacts
+        run: ls ./lib/binding || echo "No artifacts found in binding"
+
+      - name: change package name
+        run: |
+          sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
+
+      - name: npm rc 2
+        run: |
+          echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        env:
+          NPMRC: ${{ secrets.NPMRC }}
+
+      - name: npm get registry
+        run: |
+          npm get registry
+          npm -v
+          
+      - name: npm publish
+        run: |
+          npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+
+      - name: npm install
+        run: |
+          npm install aerospike@6.0.3-dev.5
 
       #- name: verdaccio server run
       #  run: |

@@ -57,8 +57,6 @@ jobs:
     - name: change package name
       run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
-
-
         
     - name: build pack
       run: |
@@ -67,16 +65,9 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-    - name: npm rc 2
+    - name: modify install script
       run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC: ${{ secrets.NPMRC }}
-
-    - name: npm get registry
-      run: |
-        npm get registry
-        npm -v
+        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
 
 #    - name: npm rc
@@ -90,9 +81,6 @@ jobs:
 #      env:
 #        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
 
-    - name: npm publish
-      run: |
-        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
 
     #- name: npm rc
@@ -129,10 +117,7 @@ jobs:
 #    - name: npm publish
 #      run: |
 #        npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
-#
-#    - name: npm install
-#      run: |
-#        npm install aerospike@6.0.3-dev.4
+
 
 
     #- name: Download JFrog build

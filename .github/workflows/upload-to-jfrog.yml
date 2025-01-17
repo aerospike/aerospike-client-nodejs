@@ -40,6 +40,8 @@ jobs:
         merge-multiple: true
         path: artifacts
 
+    - name: print artifacts
+      run: ls .
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
       env:
