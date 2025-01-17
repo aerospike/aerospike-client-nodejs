@@ -61,13 +61,13 @@ jobs:
     - name:
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.9
+        NEW_VERSION: 6.0.3-dev.10
         PACKAGE_MANAGER: npm
 
     - name: build pack
       run: |
         ls downloaded-artifacts
-        npm version 6.0.3-dev.9 --no-git-tag-version
+        npm version 6.0.3-dev.10 --no-git-tag-version
         npm install;
 
     - name: modify install script
