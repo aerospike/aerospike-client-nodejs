@@ -55,7 +55,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: change package name
-    - run: |
+      run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
 
     - name: build pack
