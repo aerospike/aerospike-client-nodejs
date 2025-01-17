@@ -11,6 +11,7 @@ on:
       #  description: 'DEBUG: upload to test.pypi.org?'
       #  required: true
       #  default: false
+  workflow_call:
 
 jobs:
   publish-jfrog-build-to-npm:
