@@ -81,7 +81,8 @@ jobs:
     
     - name: npm login
       run: |
-          npm login
+        npm login
+        npm whoami
 
 
     - name: npm get registry
