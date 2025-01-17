@@ -198,7 +198,10 @@ jobs:
         run: |
           npm install aerospike@6.0.3-dev.6
 
-      #- name: verdaccio server run
+      - name: List available artifacts
+        run: |
+          ls ./lib/binding || echo "No artifacts found in binding"
+
       #  run: |
       #    docker run --rm -d --name verdaccio -p 4873:4873 verdaccio/verdaccio
       #    curl http://0.0.0.0:4873/

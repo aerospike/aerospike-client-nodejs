@@ -57,17 +57,23 @@ jobs:
     - name: change package name
       run: |
         sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
-        
-    - name: build pack
-      run: |
-        cat package.json
-        npm version 6.0.3-dev.4 --no-git-tag-version
-        ./scripts/build-c-client.sh;
-        npm install;
 
-    - name: modify install script
-      run: |
-        json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
+    - name:
+      run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: 6.0.3-dev.7
+        PACKAGE_MANAGER: npm
+
+    #- name: build pack
+    #  run: |
+    #    cat package.json
+    #    npm version 6.0.3-dev.7 --no-git-tag-version
+
+    #    npm install;
+
+    #- name: modify install script
+    #  run: |
+    #    json -I -f package.json -e "this.scripts.install=\"npm-run-all removeExtraBinaries build\""
 
 
 #    - name: npm rc
