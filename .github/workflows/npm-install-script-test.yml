@@ -2,7 +2,10 @@ name: npm install script test
 
 on:
   workflow_call: # This allows this workflow to be reused by others.
-
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
 jobs:
   npm-install-script-test:
     runs-on: ubuntu-latest
