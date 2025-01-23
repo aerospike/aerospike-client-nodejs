@@ -64,7 +64,7 @@ jobs:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
     secrets: inherit
 
-  verify-npm-install
+  verify-npm-install:
     name: verify npm install works correctly
     needs: [
     #  bump-dev-number,
