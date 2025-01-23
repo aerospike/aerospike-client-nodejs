@@ -99,7 +99,7 @@ jobs:
           npm -v
 
       - name: Setup config
-        run: jf npm-config --repo-deploy clients-npm-dev-local
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve clients-npm-dev-local
 
       - name: Download Artifacts
         uses: ./.github/actions/download-github-artifacts/
