@@ -2,7 +2,7 @@ name: npm install script test
 permissions:
   # This is required for requesting the OIDC token
   id-token: write
-  
+
 on:
   workflow_call: # This allows this workflow to be reused by others.
     secrets:
@@ -99,7 +99,7 @@ jobs:
           npm -v
 
       - name: Publish NPM package
-        run: jf rt npmp --repo=clients-npm-dev-local
+        run: jf rt npm-publish clients-npm-dev-local
 
       #- name: npm publish
       #  run: |
