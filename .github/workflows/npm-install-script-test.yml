@@ -108,6 +108,9 @@ jobs:
       #  run: |
       #    npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
+      - name: npmrc
+        run: cat ~/.npmrc
+
       - name: npm install
         run: |
           npm install tarolike@6.0.3-dev.19

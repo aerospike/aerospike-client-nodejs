@@ -78,11 +78,6 @@ jobs:
       run: |
         npm version 6.0.3-dev.19 --no-git-tag-version
 
-    - name: install package
-      run: |
-        ./scripts/build-c-client.sh;
-        npm install;
-
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
 
@@ -92,6 +87,9 @@ jobs:
 #      env:
 #        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
+    - name: npmrc
+      run: cat ~/.npmrc
+        
     - name: npm publish
       run: |
         npm publish
