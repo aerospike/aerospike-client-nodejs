@@ -349,7 +349,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       with:
-        path: ./build/Release/*
+        path: ./build/Release/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
