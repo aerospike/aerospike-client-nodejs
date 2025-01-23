@@ -10,19 +10,9 @@ on:
         required: false
         default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
-        description: Platform to build the client for.
-        type: choice
+        type: string
         required: true
-        options:
-        - manylinux_x86_64
-        - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
-        # Makes debugging via gh cli easier.
-        default: manylinux_x86_64
+
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
