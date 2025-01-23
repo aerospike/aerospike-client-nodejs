@@ -98,6 +98,9 @@ jobs:
           npm get registry
           npm -v
 
+      - name: Setup config
+        run: jf npm config
+
       - name: Publish NPM package
         run: jf npm publish clients-npm-dev-local
 
