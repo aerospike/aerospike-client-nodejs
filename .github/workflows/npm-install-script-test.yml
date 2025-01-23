@@ -85,7 +85,7 @@ jobs:
 
       - name: change package name
         run: |
-          sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+          sed -i 's/"name": "[^"]*"/"name": "tarolike"/' package.json
 
       - name: npm rc 2
         run: |
@@ -99,10 +99,10 @@ jobs:
           npm -v
 
       - name: Setup config
-        run: jf npm-config --repo clients-npm-dev-local
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ 
 
       - name: Publish NPM package
-        run: jf npm publish clients-npm-dev-local
+        run: jf npm publish
 
       #- name: npm publish
       #  run: |
