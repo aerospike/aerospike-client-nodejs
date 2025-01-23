@@ -71,7 +71,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.21 --no-git-tag-version
+        run: npm version 6.0.3-dev.22 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -99,7 +99,7 @@ jobs:
           npm -v
 
       - name: Setup config
-        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ 
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ -build-name nodejs-client -build-number 6.0.3-dev.22
 
       - name: Download Artifacts
         uses: ./.github/actions/download-github-artifacts/
@@ -113,9 +113,9 @@ jobs:
 
       - name: npm install
         run: |
-          jf npm install tarolike@6.0.3-dev.21
+          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.22
 
-      - name: List available artifacts
+      - name: Simple require test
         run: |
           node -e "console.log(require('aerospike').batchType)"
 
