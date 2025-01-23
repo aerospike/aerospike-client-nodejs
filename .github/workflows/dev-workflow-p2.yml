@@ -73,17 +73,8 @@ jobs:
       publish-to-npm
     ]
     uses: ./.github/workflows/verify-npm-install.yml
-    with:
-      platform-tag: [
-        "manylinux_x86_64",
-        "manylinux_aarch64",
-        "manylinux_20_x86_64",
-        "manylinux_20_aarch64",
-        "macosx_x86_64",
-        "macosx_arm64",
-        "win_amd64"
-      ]
     secrets: inherit
+
 
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:

@@ -1,0 +1,53 @@
+name: 'Donwload github artifacts'
+description: 'Download github artifacts for all supported versions'
+
+inputs:
+  nodejs-tags:
+    type: string
+    required: false
+    default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+  platform-tag:
+    type: string
+    required: true
+
+
+jobs:
+  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
+  # This uses up more billing minutes (rounded up to 1 minute for each job run),
+  # but this should be ok based on the minutes usage data for the aerospike organization
+  get-runner-os:
+    outputs:
+      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+    runs-on: ubuntu-22.04
+    steps:
+    - id: get-runner-os
+      # Single source of truth for which runner OS to use for each platform tag
+      run: |
+        declare -A hashmap
+        hashmap[manylinux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_aarch64]="22.04A"
+        hashmap[manylinux_20_x86_64]="20.04"
+        hashmap[manylinux_20_aarch64]="20.04A"
+        hashmap[macosx_x86_64]="macos-13-large"
+        hashmap[macosx_arm64]="SMA"
+        hashmap[win_amd64]="windows-2022"
+        echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
+      # Bash >= 4 supports hashmaps
+      shell: bash
+
+  verify-npm-install:
+    needs: get-runner-os
+    strategy:
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+      fail-fast: false
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.nodejs-tag[1] }}
+
+      - name: verify runs and is aligned
+        run: |
+          npm install xyzparbart;
+          node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
