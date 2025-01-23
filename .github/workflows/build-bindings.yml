@@ -321,14 +321,14 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Upload wheels to GitHub Linux 20 aarch64
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
       with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Upload wheels to GitHub Mac x86
