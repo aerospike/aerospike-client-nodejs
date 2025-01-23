@@ -18,7 +18,7 @@ jobs:
         run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
 
       - name: Download Artifacts
-        uses: ./github/actions/download-github-artifacts
+        uses: ./github/actions/download-github-artifacts/
 
       - name: Install client
         shell: bash
