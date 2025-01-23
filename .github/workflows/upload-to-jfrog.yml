@@ -69,10 +69,10 @@ jobs:
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: 6.0.3-dev.23
+        NEW_VERSION: 6.0.3-dev.24
         PACKAGE_MANAGER: npm
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client 6.0.3-dev.23
+      run: jf rt build-publish nodejs-client 6.0.3-dev.24
 

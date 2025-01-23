@@ -71,7 +71,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.22 --no-git-tag-version
+        run: npm version 6.0.3-dev.24 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -99,13 +99,13 @@ jobs:
           npm -v
 
       - name: Setup config
-        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ 
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve http://registry.npmjs.org/ 
 
       - name: Download Artifacts
         uses: ./.github/actions/download-github-artifacts/
 
       - name: Publish NPM package
-        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.22
+        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.24
 
       #- name: npm publish
       #  run: |
@@ -113,7 +113,7 @@ jobs:
 
       - name: npm install
         run: |
-          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.22
+          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.24
 
       - name: Simple require test
         run: |
