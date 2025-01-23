@@ -99,13 +99,13 @@ jobs:
           npm -v
 
       - name: Setup config
-        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ -build-name nodejs-client -build-number 6.0.3-dev.22
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ 
 
       - name: Download Artifacts
         uses: ./.github/actions/download-github-artifacts/
 
       - name: Publish NPM package
-        run: jf npm publish
+        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.22
 
       #- name: npm publish
       #  run: |
