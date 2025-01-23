@@ -63,20 +63,20 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.16
+        NEW_VERSION: 6.0.3-dev.17
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.3-dev.16/lib/binding/
+        ls downloaded-artifacts/aerospike/6.0.3-dev.17/lib/binding/
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.3-dev.16/lib/binding/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/6.0.3-dev.17/lib/binding/ lib/binding/
 
     - name: change verison
       run: |
-        npm version 6.0.3-dev.16 --no-git-tag-version
+        npm version 6.0.3-dev.17 --no-git-tag-version
 
     - name: install package
       run: |

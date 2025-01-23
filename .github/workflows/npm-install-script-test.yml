@@ -60,7 +60,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.16 --no-git-tag-version
+        run: npm version 6.0.3-dev.17 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -86,14 +86,17 @@ jobs:
         run: |
           npm get registry
           npm -v
-          
-      - name: npm publish
-        run: |
-          npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+
+      - name: Publish NPM package
+        run: jf rt npmp --repo=clients-npm-dev-local
+
+      #- name: npm publish
+      #  run: |
+      #    npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
       - name: npm install
         run: |
-          npm install aerospike@6.0.3-dev.16
+          npm install aerospike@6.0.3-dev.17
 
       - name: List available artifacts
         run: |
