@@ -1,5 +1,5 @@
 name: 'Donwload github artifacts'
-description: 'Update version in repo without committing. Repo must already be checked out'
+description: 'Download github artifacts for all supported versions'
 
 runs:
   using: "composite"
@@ -68,45 +68,45 @@ runs:
           path: ./lib/binding/glibc@2.35/node-v131-linux-x64/
 
       ## Linux ARM
-      - uses: actions/download-artifact@v4
-        with:
-          name: v108-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/node-v108-linux-arm64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v108-manylinux_x86_64.node
+      #    path: ./lib/binding/glibc@2.35/node-v108-linux-arm64/
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v115-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/node-v115-linux-arm64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v115-manylinux_x86_64.node
+      #    path: ./lib/binding/glibc@2.35/node-v115-linux-arm64/
 
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v127-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/node-v127-linux-arm64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v127-manylinux_x86_64.node
+      #    path: ./lib/binding/glibc@2.35/node-v127-linux-arm64/
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v131-manylinux_x86_64.node
-          path: ./lib/binding/glibc@2.35/node-v131-linux-arm64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v131-manylinux_x86_64.node
+      #    path: ./lib/binding/glibc@2.35/node-v131-linux-arm64/
 
       # Windows
-      - uses: actions/download-artifact@v4
-        with:
-          name: v108-manylinux_x86_64.node
-          path: ./lib/binding/node-v108-win32-x64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v108-manylinux_x86_64.node
+      #    path: ./lib/binding/node-v108-win32-x64/
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v115-manylinux_x86_64.node
-          path: ./lib/binding/node-v115-win32-x64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v115-manylinux_x86_64.node
+      #    path: ./lib/binding/node-v115-win32-x64/
 
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v127-manylinux_x86_64.node
-          path: ./lib/binding/node-v127-win32-x64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v127-manylinux_x86_64.node
+      #    path: ./lib/binding/node-v127-win32-x64/
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: v131-manylinux_x86_64.node
-          path: ./lib/binding/node-v131-win32-x64/
+      #- uses: actions/download-artifact@v4
+      #  with:
+      #    name: v131-manylinux_x86_64.node
+      #    path: ./lib/binding/node-v131-win32-x64/
