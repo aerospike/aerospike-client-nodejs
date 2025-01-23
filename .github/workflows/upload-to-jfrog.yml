@@ -33,15 +33,13 @@ jobs:
     name: Upload artifacts to JFrog
     runs-on: ubuntu-22.04
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: '*.node'
-        merge-multiple: true
-        path: artifacts
+
+    - name: Download Artifacts
+      uses: ./.github/actions/download-github-artifacts/
+
 
     - name: print artifacts
-      run: ls artifacts
+      run: ls ./lib/binding
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
