@@ -99,7 +99,7 @@ jobs:
           npm -v
 
       - name: Publish NPM package
-        run: jf rt npm publish 
+        run: jf npm publish clients-npm-dev-local
 
       #- name: npm publish
       #  run: |
