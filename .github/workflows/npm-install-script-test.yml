@@ -1,5 +1,8 @@
 name: npm install script test
-
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  
 on:
   workflow_call: # This allows this workflow to be reused by others.
     secrets:
@@ -19,6 +22,14 @@ jobs:
 
       - name: Download Artifacts
         uses: ./.github/actions/download-github-artifacts/
+
+      - name: Set up JFrog credentials
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://aerospike.jfrog.io
+        with:
+          oidc-provider-name: gh-aerospike-clients
+          oidc-audience: aerospike/clients
 
       - name: Install client
         shell: bash
@@ -60,7 +71,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.17 --no-git-tag-version
+        run: npm version 6.0.3-dev.18 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -96,7 +107,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm install aerospike@6.0.3-dev.17
+          npm install aerospike@6.0.3-dev.18
 
       - name: List available artifacts
         run: |
