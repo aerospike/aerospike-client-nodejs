@@ -26,25 +26,25 @@ runs:
           path: ./lib/binding/node-v131-darwin-x64/
 
       # MAC ARM
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v108-macosx_x86_64.node
-      #    path: ./lib/binding/node-v108-darwin-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v108-macosx_arm64.node
+          path: ./lib/binding/node-v108-darwin-arm64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v115-macosx_x86_64.node
-      #    path: ./lib/binding/node-v115-darwin-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v115-macosx_arm64.node
+          path: ./lib/binding/node-v115-darwin-arm64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v127-macosx_x86_64.node
-      #    path: ./lib/binding/node-v127-darwin-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v127-macosx_arm64.node
+          path: ./lib/binding/node-v127-darwin-arm64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v131-macosx_x86_64.node
-      #    path: ./lib/binding/node-v131-darwin-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v131-macosx_arm64.node
+          path: ./lib/binding/node-v131-darwin-arm64/
 
       # Linux X86
       - uses: actions/download-artifact@v4
@@ -67,46 +67,88 @@ runs:
           name: v131-manylinux_x86_64.node
           path: ./lib/binding/glibc@2.35/node-v131-linux-x64/
 
-      ## Linux ARM
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v108-manylinux_x86_64.node
-      #    path: ./lib/binding/glibc@2.35/node-v108-linux-arm64/
+      # Linux 20 X86
+      - uses: actions/download-artifact@v4
+        with:
+          name: v108-manylinux_20_x86_64.node
+          path: ./lib/binding/glibc@2.31/node-v108-linux-x64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v115-manylinux_x86_64.node
-      #    path: ./lib/binding/glibc@2.35/node-v115-linux-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v115-manylinux_20_x86_64.node
+          path: ./lib/binding/glibc@2.31/node-v115-linux-x64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v127-manylinux_20_x86_64.node
+          path: ./lib/binding/glibc@2.31/node-v127-linux-x64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v131-manylinux_20_x86_64.node
+          path: ./lib/binding/glibc@2.31/node-v131-linux-x64/
+
+      # Linux ARM
+      - uses: actions/download-artifact@v4
+        with:
+          name: v108-manylinux_aarch64.node
+          path: ./lib/binding/glibc@2.35/node-v108-linux-arm64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v115-manylinux_aarch64.node
+          path: ./lib/binding/glibc@2.35/node-v115-linux-arm64/
 
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v127-manylinux_x86_64.node
-      #    path: ./lib/binding/glibc@2.35/node-v127-linux-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v127-manylinux_aarch64.node
+          path: ./lib/binding/glibc@2.35/node-v127-linux-arm64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v131-manylinux_x86_64.node
-      #    path: ./lib/binding/glibc@2.35/node-v131-linux-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v131-manylinux_aarch64.node
+          path: ./lib/binding/glibc@2.35/node-v131-linux-arm64/
 
-      # Windows
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v108-manylinux_x86_64.node
-      #    path: ./lib/binding/node-v108-win32-x64/
+      # Linux 20 ARM
+      - uses: actions/download-artifact@v4
+        with:
+          name: v108-manylinux_20_aarch64.node
+          path: ./lib/binding/glibc@2.31/node-v108-linux-arm64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v115-manylinux_x86_64.node
-      #    path: ./lib/binding/node-v115-win32-x64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v115-manylinux_20_aarch64.node
+          path: ./lib/binding/glibc@2.31/node-v115-linux-arm64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v127-manylinux_20_aarch64.node
+          path: ./lib/binding/glibc@2.31/node-v127-linux-arm64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v131-manylinux_20_aarch64.node
+          path: ./lib/binding/glibc@2.31/node-v131-linux-arm64/
+
+       # Windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: v108-win_amd64.node
+          path: ./lib/binding/node-v108-win32-x64/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: v115-win_amd64.node
+          path: ./lib/binding/node-v115-win32-x64/
 
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v127-manylinux_x86_64.node
-      #    path: ./lib/binding/node-v127-win32-x64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v127-win_amd64.node
+          path: ./lib/binding/node-v127-win32-x64/
 
-      #- uses: actions/download-artifact@v4
-      #  with:
-      #    name: v131-manylinux_x86_64.node
-      #    path: ./lib/binding/node-v131-win32-x64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: v131-win_amd64.node
+          path: ./lib/binding/node-v131-win32-x64/
