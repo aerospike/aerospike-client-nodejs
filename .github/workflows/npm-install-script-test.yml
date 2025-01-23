@@ -71,7 +71,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.20 --no-git-tag-version
+        run: npm version 6.0.3-dev.21 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -101,6 +101,9 @@ jobs:
       - name: Setup config
         run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve https://registry.npmjs.org/ 
 
+      - name: Download Artifacts
+        uses: ./.github/actions/download-github-artifacts/
+
       - name: Publish NPM package
         run: jf npm publish
 
@@ -110,7 +113,7 @@ jobs:
 
       - name: npm install
         run: |
-          jf npm install tarolike@6.0.3-dev.20
+          jf npm install tarolike@6.0.3-dev.21
 
       - name: List available artifacts
         run: |
