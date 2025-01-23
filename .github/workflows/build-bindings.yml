@@ -261,7 +261,7 @@ jobs:
         npm install;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
         docker logs aerospike;
