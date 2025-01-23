@@ -63,20 +63,20 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.19
+        NEW_VERSION: 6.0.3-dev.20
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.3-dev.19/lib/binding/
+        ls downloaded-artifacts/aerospike/6.0.3-dev.20/lib/binding/
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.3-dev.19/lib/binding/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/6.0.3-dev.20/lib/binding/ lib/binding/
 
     - name: change verison
       run: |
-        npm version 6.0.3-dev.19 --no-git-tag-version
+        npm version 6.0.3-dev.20 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -87,9 +87,6 @@ jobs:
 #      env:
 #        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
-    - name: npmrc
-      run: cat ~/.npmrc
-        
     - name: npm publish
       run: |
         npm publish
