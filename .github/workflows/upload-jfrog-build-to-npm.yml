@@ -58,25 +58,25 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "test-1-2-3"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "@dpeliniaerospike/xyzparbart"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.14
+        NEW_VERSION: 6.0.3-dev.15
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.3-dev.14/lib/binding/
+        ls downloaded-artifacts/aerospike/6.0.3-dev.15/lib/binding/
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.3-dev.14/lib/binding/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/6.0.3-dev.15/lib/binding/ lib/binding/
 
     - name: change verison
       run: |
-        npm version 6.0.3-dev.14 --no-git-tag-version
+        npm version 6.0.3-dev.15 --no-git-tag-version
 
     - name: install package
       run: |

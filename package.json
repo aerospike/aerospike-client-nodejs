@@ -1,5 +1,5 @@
 {
-  "name": "test-1-2-3",
+  "name": "aerospike",
   "version": "6.0.1",
   "description": "Aerospike Client Library",
   "keywords": [
