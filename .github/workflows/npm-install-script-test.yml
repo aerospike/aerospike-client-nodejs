@@ -71,7 +71,7 @@ jobs:
           node-version: 20
 
       - name: Set version
-        run: npm version 6.0.3-dev.34 --no-git-tag-version
+        run: npm version 6.0.3-dev.35 --no-git-tag-version
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -104,7 +104,7 @@ jobs:
         uses: ./.github/actions/download-github-artifacts/
 
       - name: Publish NPM package
-        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.34
+        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.35
 
       #- name: npm publish
       #  run: |
@@ -112,7 +112,7 @@ jobs:
 
       - name: npm install
         run: |
-          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.34
+          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.35
 
       - name: Simple require test
         run: |
