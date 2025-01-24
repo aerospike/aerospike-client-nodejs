@@ -18,7 +18,12 @@ jobs:
           "macosx_arm64",
           "win_amd64"
         ]
-    uses: ./.github/workflows/run-npm-install.yml
-    with:
-      platform-tag: "${{ matrix.platform-tag }}"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run reusable workflow
+        uses: ./.github/workflows/run-npm-install.yml
+        with:
+          platform-tag: "${{ matrix.platform-tag }}"
 
