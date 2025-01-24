@@ -1,32 +1,34 @@
-name: 'NPM Install Verify'
-run-name: 'Verify NPM Install'
+name: 'Donwload github artifacts'
+description: 'Download github artifacts for all supported versions'
 
 on:
   workflow_call:
+    inputs:
+      nodejs-tags:
+        type: string
+        required: false
+        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+      platform-tag:
+        type: string
+        required: true
+
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
+  run-npm-install-and-require-test:
+    needs: get-runner-os
     strategy:
       matrix:
-        platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          "manylinux_20_x86_64",
-          "manylinux_20_aarch64",
-          "macosx_x86_64",
-          "macosx_arm64",
-          "win_amd64"
-        ]
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+      fail-fast: false
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: ls ./github/workflows
-        run: ls ./.github/workflows
-          
-      - name: Run reusable workflow
-        uses: ./.github/workflows/run-npm-install.yml
+      - uses: actions/setup-node@v4
         with:
-          platform-tag: "${{ matrix.platform-tag }}"
+          node-version: ${{ matrix.nodejs-tag[1] }}
 
+      - name: verify runs and is aligned
+        run: |
+          npm install xyzparbart;
+          node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
