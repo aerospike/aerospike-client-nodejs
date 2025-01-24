@@ -6,7 +6,6 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         platform-tag: [
@@ -18,15 +17,9 @@ jobs:
           "macosx_arm64",
           "win_amd64"
         ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    runs-on: ubuntu-latest
 
-      - name: ls ./github/workflows
-        run: ls ./.github/workflows
-        
-      - name: Run reusable workflow
-        uses: ./.github/workflows/run-npm-install.yml
-        with:
-          platform-tag: "${{ matrix.platform-tag }}"
+    uses: ./.github/workflows/run-npm-install.yml
+    with:
+      platform-tag: "${{ matrix.platform-tag }}"
 
