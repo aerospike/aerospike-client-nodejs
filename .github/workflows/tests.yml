@@ -396,10 +396,12 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: install pre-req
+      run: npm run test-prereq
+
     - name: install mocha
       run: |
         npm install mocha
-        npm run test-prereq
       working-directory: ts-test
 
     - name: Run tests
