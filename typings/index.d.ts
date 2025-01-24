@@ -76,7 +76,7 @@ export type NumberArray = number | NumberArray[];
 
 
 /**
- * Callback used to return results in synchronous Aerospike database operations
+ * Callback used to return results in synchronous Aerospike database commands
  */
 export type TypedCallback<T> = (error?: AerospikeError, result?: T) => void;
 
@@ -317,7 +317,7 @@ export class AerospikeRecord {
 }
 
 /**
- * Multi-record transaction (MRT) class. Each command in the MRT must use the same namespace.
+ * Transaction class. Each command in a transaction must use the same namespace.
  *
  * note: By default, open transactions are destroyed when the final client in a process is closed.
  * If you need your transaction to persist after the last client has been closed, provide `false` for the
@@ -350,12 +350,12 @@ export class AerospikeRecord {
  * let key = new Aerospike.Key('test', 'demo', 'myKey')
  *
  * let policy = {
- *   txn: mrt
+ *   txn: tran
  * };
  * ;(async () => {
  *    let client = await Aerospike.connect(config)
 
- *    let mrt = new Aerospike.Transaction()
+ *    let tran = new Aerospike.Transaction()
  *
 
  *
@@ -363,7 +363,7 @@ export class AerospikeRecord {
  *
  *    let get_result = await client.get(key1, policy)
  *
- *    let result = await client.commit(mrt)
+ *    let result = await client.commit(tran)
  *    await client.close()
  * })();
  *
@@ -391,20 +391,20 @@ export class AerospikeRecord {
  *   let client = await Aerospike.connect(config)
  *   
  *   const policy = {
- *        txn: mrt
+ *        txn: tran
  *    }
  *
  *    await client.put(key4, record2, meta, policy)
  *
  *    const policyRead = {
- *        txn: mrt
+ *        txn: tran
  *    }
  *
  *    let get_result = await client.get(key1, policy) // Will reflect the new value recently put.
  *
  *    await client.put(key2, record2, meta, policy)
  *
- *    let result = await client.abort(mrt)
+ *    let result = await client.abort(tran)
  *
  *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
  *
@@ -447,7 +447,7 @@ export class Transaction {
 
 
     /**
-     * Default multi-record transaction capacity values.
+     * Default Transaction capacity values.
      */
     static capacity: {
         /**
@@ -462,7 +462,7 @@ export class Transaction {
     };
 
     /**
-     * Multi-record transaction abort status code.
+     * Transaction abort status code.
      */
     static abortStatus: {
         /**
@@ -489,7 +489,7 @@ export class Transaction {
 
 
     /**
-     * Multi-record transaction commit status code.
+     * Transaction commit status code.
      */
     static commitStatus: {
         /**
@@ -532,8 +532,6 @@ export class Transaction {
      *
      * @remarks
      * 
-     * 
-     * 
      * Use of this API is only necessary when the client is closed with
      * the destroyTransactions parameter set is set to false.
      * See example below for usage details.
@@ -556,18 +554,18 @@ export class Transaction {
      * }
      *
      * ;(async () => {
-     *     let mrt1 = new Aerospike.Transaction()
+     *     let tran1 = new Aerospike.Transaction()
      *     let client = await Aerospike.connect(config)
-     *     client.close(false, true) // `destroyTransactions is true`, mrt1 is no longer usable.
+     *     client.close(false, true) // `destroyTransactions is true`, tran1 is no longer usable.
      * 
-     *     let mrt2 = new Aerospike.Transaction()
+     *     let tran2 = new Aerospike.Transaction()
      *     client = await Aerospike.connect(config)
-     *     client.close(false, true) // `destroyTransactions is false`, mrt2 can still be used.
+     *     client.close(false, true) // `destroyTransactions is false`, tran2 can still be used.
      *
      *     // In order to properly manage the memory at this point, do one of two things before the process exits:
      * 
      *     // 1: call destroyAll() to destroy all outstanding transactions from this process.
-     *     mrt1.destroyAll()
+     *     tran1.destroyAll()
      * 
      *     // 2: reopen and close the final connected client with destroyTransactions
      *     // client = await Aerospike.connect(config)
@@ -581,7 +579,7 @@ export class Transaction {
     /**
      * Get ID for this transaction
      *
-     * @returns  MRT ID
+     * @returns  Transaction ID
      *
      * @example
      *
@@ -599,8 +597,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let id = mrt.getId() 
+     *     let tran = new Aerospike.Transaction()
+     *     let id = tran.getId() 
      * })();
      * 
      * @since v6.0.0
@@ -610,7 +608,7 @@ export class Transaction {
     /**
      * Get inDoubt status for this transaction.
      *
-     * @returns MRT inDoubt status
+     * @returns Transaction inDoubt status
      * 
      * @example
      *
@@ -628,8 +626,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let inDoubt = mrt.getInDoubt() 
+     *     let tran = new Aerospike.Transaction()
+     *     let inDoubt = tran.getInDoubt() 
      * })();
      * 
      * @since v6.0.0
@@ -637,9 +635,9 @@ export class Transaction {
     public getInDoubt(): boolean;
     /**
      *
-     * Gets the expected number of record reads in the MRT. Minimum value is 16.
+     * Gets the expected number of record reads in the Transaction. Minimum value is 16.
      *
-     * @returns number of records reads in the MRT.
+     * @returns number of records reads in the Transaction.
      *
      * @example
      *
@@ -657,8 +655,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let readsCapacity = mrt.getReadsCapacity() 
+     *     let tran = new Aerospike.Transaction()
+     *     let readsCapacity = tran.getReadsCapacity() 
      *     console.log(readsCapacity) // 128
      * })();
      *
@@ -667,9 +665,9 @@ export class Transaction {
     public getReadsCapacity(): number;
     /**
      *
-     * Gets the current state of the MRT.
+     * Gets the current state of the Transaction.
      *
-     * @returns MRT timeout in seconds
+     * @returns Transaction timeout in seconds
      *
      * @example
      *
@@ -687,8 +685,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let state = mrt.getState()
+     *     let tran = new Aerospike.Transaction()
+     *     let state = tran.getState()
      *     
      * })();
      *
@@ -696,9 +694,9 @@ export class Transaction {
     public getState(): number;
     /**
      *
-     * Gets the current MRT timeout value.
+     * Gets the current Transaction timeout value.
      *
-     * @returns MRT timeout in seconds
+     * @returns Transaction timeout in seconds
      *
      * @example
      *
@@ -716,8 +714,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let timeout = mrt.getTimeout() 
+     *     let tran = new Aerospike.Transaction()
+     *     let timeout = tran.getTimeout() 
      * })();
      *
      * @since v6.0.0
@@ -725,9 +723,9 @@ export class Transaction {
     public getTimeout(): number;
     /**
      *
-     * Gets the expected number of record reads in the MRT. Minimum value is 16.
+     * Gets the expected number of record reads in the tran. Minimum value is 16.
      *
-     * @returns number of records reads in the MRT.
+     * @returns number of records reads in the tran.
      *
      * @example
      *
@@ -745,8 +743,8 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     let writesCapacity = mrt.getWritesCapacity() 
+     *     let tran = new Aerospike.Transaction()
+     *     let writesCapacity = tran.getWritesCapacity() 
      *     console.log(writesCapacity) // 128
      * })();
      *
@@ -755,15 +753,15 @@ export class Transaction {
     public getWritesCapacity(): number;
     /**
      *
-     * Set MRT timeout in seconds. The timer starts when the MRT monitor record is created. This occurs when the first command in the MRT is executed. 
+     * Set transaction timeout in seconds. The timer starts when the transaction monitor record is created. This occurs when the first command in the transaction is executed. 
      * 
-     * If the timeout is reached before a commit or abort is called, the server will expire and rollback the MRT.
+     * If the timeout is reached before a commit or abort is called, the server will expire and rollback the transaction.
      * 
-     * If the MRT timeout is zero, the server configuration mrt-duration is used. The default mrt-duration is 10 seconds.
+     * If the transaction timeout is zero, the server configuration mrt-duration is used. The default mrt-duration is 10 seconds.
      *
      * Default Client transaction timeout is 0.
      * 
-     * @param timeout - MRT timeout in seconds
+     * @param timeout - Transaction timeout in seconds
      *
      * @example
      *
@@ -781,10 +779,10 @@ export class Transaction {
      *
      * ;(async () => {
      *     // Establishes a connection to the server
-     *     let mrt = new Aerospike.Transaction()
-     *     mrt.setTimeout(5) // Set timeout for 5 seconds!
+     *     let tran = new Aerospike.Transaction()
+     *     tran.setTimeout(5) // Set timeout for 5 seconds!
      *     
-     *     console.log(mrt.getTimeout()) // 5
+     *     console.log(tran.getTimeout()) // 5
      * })();
      *
      */  
@@ -827,15 +825,16 @@ export class BatchResult {
      */
     public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: AerospikeRecord, inDoubt: boolean);
     /**
-     * Database operation status code assoicated with the batch result.
+     * Result code for this returned record. If not {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK}, the record will be null.
      */  
     status: typeof statusNamespace[keyof typeof statusNamespace];
     /**
-     * Aerospike Record result from a batch operation.
+     * Record result for the requested key. This record will only be populated when the result is
+     * {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK} or {@link statusNamespace.AEROSPIKE_ERR_UDF|AEROSPIKE_ERR_UDF}.
      */
     record: AerospikeRecord;
     /**
-     * It is possible that a write transaction completed even though the client
+     * It is possible that a write command completed even though the client
      * returned this error. This may be the case when a client error occurs
      * (like timeout) after the command was sent to the server.
      */
@@ -844,7 +843,7 @@ export class BatchResult {
 }
 
 /**
- * Aerospike Query operations perform value-based searches using
+ * Aerospike Query commands perform value-based searches using
  * secondary indexes (SI). A Query object, created by calling {@link Client#query},
  * is used to execute queries on the specified namespace and set (optional).
  * Queries can return a set of records as a {@link RecordStream} or be
@@ -856,7 +855,7 @@ export class BatchResult {
  * in the Aerospike technical documentation.
  *
  * To scan _all_ records in a database namespace or set, it is more efficient
- * to use {@link Scan operations}, which provide more fine-grained control over
+ * to use {@link Scan.operate}, which provide more fine-grained control over
  * execution priority, concurrency, etc.
  *
  * #### SI Filters
@@ -1296,9 +1295,9 @@ export class Query {
      * For aggregation queries that return a single result value instead of a
      * stream of values, you should use the {@link Query#apply} method instead.
      *
-     * @param policy - The Query Policy to use for this operation.
+     * @param policy - The Query Policy to use for this command.
      * @param dataCb - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      * @param errorCb - Callback function called when there is an error.
      * @param endCb -  Callback function called when an operation has completed.
@@ -1322,7 +1321,7 @@ export class Query {
      * of records to be queried if {@link Query.foreach} or {@link Query.results} is called.
      *
      *
-     * @param policy - The Query Policy to use for this operation.
+     * @param policy - The Query Policy to use for this command.
      *
      * @returns A promise that resolves with an Aerospike Record.
      */
@@ -1335,7 +1334,7 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Query Policy to use for this operation.
+     * @param policy - The Query Policy to use for this command.
      * 
      * @returns A promise that resolves with an Aerospike bin value.
      * 
@@ -1344,7 +1343,7 @@ export class Query {
     /**
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      * 
      */
     public apply(udfModule: string, udfFunction: string, callback: TypedCallback<AerospikeBinValue>): void;
@@ -1352,7 +1351,7 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      * 
      */
     public apply(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, callback?: TypedCallback<AerospikeBinValue>): void;
@@ -1360,8 +1359,8 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Query Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Query Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      * 
      */
     public apply(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[], policy?: policy.QueryPolicy | null, callback?: TypedCallback<AerospikeBinValue>): void;
@@ -1376,7 +1375,7 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Write Policy to use for this operation.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      *
@@ -1386,7 +1385,7 @@ export class Query {
     /**
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      */
     public background(udfModule: string, udfFunction: string, callback: TypedCallback<Job>): void;
@@ -1394,7 +1393,7 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      */
     public background(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, callback?: TypedCallback<Job>): void;
@@ -1402,8 +1401,8 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Write Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Write Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      *
      */
     public background(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, policy?: policy.WritePolicy | null, callback?: TypedCallback<Job>): void;
@@ -1411,10 +1410,10 @@ export class Query {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Write Policy to use for this operation.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      */
     public background(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, policy?: policy.WritePolicy | null, queryID?: number | null, callback?: TypedCallback<Job> | null): void;
@@ -1431,7 +1430,7 @@ export class Query {
      *
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this operation.
+     * @param policy - The Query Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      *
@@ -1456,7 +1455,7 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
      */
@@ -1464,8 +1463,8 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Query Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
      */
@@ -1473,10 +1472,10 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this operation.
+     * @param policy - The Query Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
      */
@@ -1661,14 +1660,14 @@ export class WritePolicy extends policy.WritePolicy {}
 
 /**
  * The policy module defines policies and policy values that
- * define the behavior of database operations. Most {@link Client} methods,
+ * define the behavior of database commands. Most {@link Client} methods,
  * including scans and queries, accept a policy object, that affects how the
- * database operation is executed, by specifying timeouts, transactional
- * behavior, etc. Global defaults for specific types of database operations can
+ * database command is executed, by specifying timeouts, transactional
+ * behavior, etc. Global defaults for specific types of database commands can
  * also be set through the client config, when a new {@link Client} instance is
  * created.
  *
- * Different policies apply to different types of database operations:
+ * Different policies apply to different types of database commands:
  *
  * * {@link ApplyPolicy} - Applies to {@link Client.apply}.
  * * {@link OperatePolicy} - Applies to {@link Client.operate} as well as {@link Client.append}, {@link Client.prepend} and {@link Client.add}.
@@ -1679,7 +1678,7 @@ export class WritePolicy extends policy.WritePolicy {}
  * * {@link WritePolicy} - Applies to {@link Client.put}.
  * * {@link BatchPolicy} - Applies to {@link Client.batchRead} as well as the
  *   deprecated {@link Client.batchExists}, {@link Client.batchGet}, and {@link
- *   Client.batchSelect} operations. Also used when providing batchParentWrite policy to a client configuration.
+ *   Client.batchSelect} commands. Also used when providing batchParentWrite policy to a client configuration.
  * * {@link BatchApplyPolicy} - Applies to {@link Client.batchApply}.
  * * {@link BatchReadPolicy} - Applies to {@link Client.batchRead}.
  * * {@link BatchRemovePolicy} - Applies to {@link Client.batchRemove}.
@@ -1701,7 +1700,7 @@ export class WritePolicy extends policy.WritePolicy {}
  *   and {@link Client.setWhitelist}, .
  *
  * Base policy {@link BasePolicy} class which defines common policy
- * values that apply to all database operations
+ * values that apply to all database commands
  * (except `InfoPolicy`, `AdminPolicy`, `MapPolicy` and `ListPolicy`).
  *
  * This module also defines global values for the following policy settings:
@@ -1760,7 +1759,7 @@ export class WritePolicy extends policy.WritePolicy {}
 export namespace policy {
 
     /**
-     * A policy affecting the behavior of adminstraation operations.
+     * A policy affecting the behavior of adminstration commands.
      *
      * Please note that `AdminPolicy` does not derive from {@link BasePolicy}.
      *
@@ -1768,7 +1767,7 @@ export namespace policy {
      */
     export class AdminPolicy extends BasePolicy {
         /**
-         * Maximum time in milliseconds to wait for the operation to complete.
+         * Maximum time in milliseconds to wait for the command to complete.
          *
          * @type number
          */
@@ -1788,7 +1787,7 @@ export namespace policy {
     export class ApplyPolicy extends BasePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
-         * when writing before returning transaction succeeded.
+         * when writing before returning command succeeded.
          *
          * @see {@link policy.commitLevel} for supported policy values.
          */
@@ -1797,7 +1796,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -1848,7 +1847,7 @@ export namespace policy {
         public compress?: boolean;
         /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
-         * transaction is ignored. This can be used to eliminate a client/server roundtrip
+         * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          *
          * expression filters can only be applied to the following commands:
@@ -1866,15 +1865,15 @@ export namespace policy {
          */
         public filterExpression?: AerospikeExp;
         /**
-         * Maximum number of retries before aborting the current transaction.
+         * Maximum number of retries before aborting the current command.
          * The initial attempt is not counted as a retry.
          *
-         * If <code>maxRetries</code> is exceeded, the transaction will return
+         * If <code>maxRetries</code> is exceeded, the command will return
          * error {@link statusNamespace.ERR_TIMEOUT|ERR_TIMEOUT}.
          *
          * WARNING: Database writes that are not idempotent (such as "add")
-         * should not be retried because the write operation may be performed
-         * multiple times if the client timed out previous transaction attempts.
+         * should not be retried because the write command may be performed
+         * multiple times if the client timed out previous command attempts.
          * It is important to use a distinct write policy for non-idempotent
          * writes which sets <code>maxRetries</code> to zero.
          *
@@ -1887,7 +1886,7 @@ export namespace policy {
          * If <code>socketTimeout</code> is not zero and the socket has been idle
          * for at least <code>socketTimeout</code>, both <code>maxRetries</code>
          * and <code>totalTimeout</code> are checked. If <code>maxRetries</code>
-         * and <code>totalTimeout</code> are not exceeded, the transaction is
+         * and <code>totalTimeout</code> are not exceeded, the command is
          * retried.
          *
          * If both <code>socketTimeout</code> and <code>totalTimeout</code> are
@@ -1900,15 +1899,15 @@ export namespace policy {
          */
         public socketTimeout?: number;
         /**
-         * Total transaction timeout in milliseconds.
+         * Total command timeout in milliseconds.
          *
          * The <code>totalTimeout</code> is tracked on the client and sent to the
-         * server along with the transaction in the wire protocol. The client will
+         * server along with the command in the wire protocol. The client will
          * most likely timeout first, but the server also has the capability to
-         * timeout the transaction.
+         * timeout the command
          *
          * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-         * is reached before the transaction completes, the transaction will return
+         * is reached before the command completes, the command will return
          * error {@link statusNamespace.ERR_TIMEOUT|ERR_TIMEOUT}.
          * If <code>totalTimeout</code> is zero, there will be no total time limit.
          *
@@ -1916,7 +1915,7 @@ export namespace policy {
          */
         public totalTimeout?: number;
         /**
-         * Multi-record command identifier. See {@link Transaction} for more information.
+         * Transaction identifier. See {@link Transaction} for more information.
          * 
          * @default null (no transaction)
          */
@@ -1932,14 +1931,14 @@ export namespace policy {
 
 
     /**
-     * A policy affecting the behavior of batch apply operations.
+     * A policy affecting the behavior of batch apply commands.
      *
      * @since v5.0.0
      */
     export class BatchApplyPolicy {
         /**
           * Specifies the number of replicas required to be committed successfully
-          * when writing before returning transaction succeeded.
+          * when writing before returning command succeeded.
           *
           * @see {@link policy.commitLevel} for supported policy values.
           */
@@ -1948,14 +1947,14 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
         public durableDelete?: boolean;
         /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
-         * transaction is ignored. This can be used to eliminate a client/server roundtrip
+         * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
         public filterExpression?: AerospikeExp;
@@ -2007,7 +2006,7 @@ export namespace policy {
          *
          * Values:
          * false: Issue batch commands sequentially.  This mode has a performance advantage for small
-         * to medium sized batch sizes because commands can be issued in the main transaction thread.
+         * to medium sized batch sizes because commands can be issued in the main command thread.
          * This is the default.
          * true: Issue batch commands in parallel threads.  This mode has a performance
          * advantage for large batch sizes because each node can process the command immediately.
@@ -2100,7 +2099,7 @@ export namespace policy {
     export class BatchReadPolicy {
         /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
-         * transaction is ignored. This can be used to eliminate a client/server roundtrip
+         * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
         public filterExpression?: AerospikeExp;
@@ -2142,7 +2141,7 @@ export namespace policy {
     export class BatchRemovePolicy {
         /**
           * Specifies the number of replicas required to be committed successfully
-          * when writing before returning transaction succeeded.
+          * when writing before returning command succeeded.
           *
           * @see {@link policy.commitLevel} for supported policy values.
           */
@@ -2151,14 +2150,14 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
         public durableDelete?: boolean;
         /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
-         * transaction is ignored. This can be used to eliminate a client/server roundtrip
+         * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          *
          */
@@ -2189,14 +2188,14 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of batch write operations.
+     * A policy affecting the behavior of batch write commands.
      *
      * @since v5.0.0
      */
     export class BatchWritePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
-         * when writing before returning transaction succeeded.
+         * when writing before returning command succeeded.
          *
          * @see {@link policy.commitLevel} for supported policy values.
          */
@@ -2205,7 +2204,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -2218,7 +2217,7 @@ export namespace policy {
         public exists?: policy.exists;
         /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
-         * transaction is ignored. This can be used to eliminate a client/server roundtrip
+         * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
         public filterExpression?: AerospikeExp;
@@ -2247,7 +2246,7 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of {@link bitwise|bitwise} operations.
+     * A policy affecting the behavior of {@link bitwise|bitwise} commands.
      *
      * @since v3.13.0
      */
@@ -2364,7 +2363,7 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of {@link hll|HLL} operations.
+     * A policy affecting the behavior of {@link hll|HLL} commands.
      *
      * @since v3.16.0
      */
@@ -2385,7 +2384,7 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of info operations.
+     * A policy affecting the behavior of info commands.
      *
      * Please note that `InfoPolicy` does not derive from {@link BasePolicy} and that
      * info commands do not support automatic retry.
@@ -2402,7 +2401,7 @@ export namespace policy {
          */
         public sendAsIs?: boolean;
         /**
-         * Maximum time in milliseconds to wait for the operation to complete.
+         * Maximum time in milliseconds to wait for the command to complete.
          */
         public timeout?: number
         /**
@@ -2492,14 +2491,14 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of operate operations.
+     * A policy affecting the behavior of operations.
      *
      * @since v3.0.0
      */
     export class OperatePolicy extends BasePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
-         * when writing before returning transaction succeeded.
+         * when writing before returning command succeeded.
          *
          * @see {@link policy.commitLevel} for supported policy values.
          */
@@ -2516,7 +2515,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -2582,7 +2581,7 @@ export namespace policy {
 
 
     /**
-     * A policy affecting the behavior of query operations.
+     * A policy affecting the behavior of query commands.
      *
      * @since v3.0.0
      */
@@ -2625,21 +2624,21 @@ export namespace policy {
          */
         public infoTimeout?: number;
         /**
-         * Specifies the replica to be consulted for the query operation.
+         * Specifies the replica to be consulted for the query command.
          *
          * @see {@link policy.replica} for supported policy values.
          */
         public replica?: policy.replica;
         /**
-         * Total transaction timeout in milliseconds.
+         * Total command timeout in milliseconds.
          *
          * The <code>totalTimeout</code> is tracked on the client and sent to the
-         * server along with the transaction in the wire protocol. The client will
+         * server along with the command in the wire protocol. The client will
          * most likely timeout first, but the server also has the capability to
-         * timeout the transaction.
+         * timeout the command
          *
          * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-         * is reached before the transaction completes, the transaction will return
+         * is reached before the command completes, the command will return
          * error {@link status.ERR_TIMEOUT | ERR_TIMEOUT}.
          * If <code>totalTimeout</code> is zero, there will be no total time limit.
          *
@@ -2656,7 +2655,7 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of read operations.
+     * A policy affecting the behavior of read commands.
      *
      * @since v3.0.0
      */
@@ -2709,7 +2708,7 @@ export namespace policy {
          */
         public readTouchTtlPercent?: number;
         /**
-         * Specifies the replica to be consulted for the read operation.
+         * Specifies the replica to be consulted for the read command.
          *
          * @type number
          * @see {@link policy.replica} for supported policy values.
@@ -2725,14 +2724,14 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of remove operations.
+     * A policy affecting the behavior of remove commands.
      *
      * @since v3.0.0
      */
     export class RemovePolicy extends BasePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
-         * when writing before returning transaction succeeded.
+         * when writing before returning command succeeded.
          *
          * @see {@link policy.commitLevel} for supported policy values.
          */
@@ -2741,7 +2740,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -2771,7 +2770,7 @@ export namespace policy {
     }
 
     /**
-     * A policy affecting the behavior of scan operations.
+     * A policy affecting the behavior of scan commands.
      *
      * @since v3.0.0
      */
@@ -2780,7 +2779,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -2810,21 +2809,21 @@ export namespace policy {
          */
         public recordsPerSecond?: number;
         /**
-         * Specifies the replica to be consulted for the scan operation.
+         * Specifies the replica to be consulted for the scan command.
          *
          * @see {@link policy.replica} for supported policy values.
          */
         public replica?: policy.replica;
         /**
-         * Total transaction timeout in milliseconds.
+         * Total command timeout in milliseconds.
          *
          * The <code>totalTimeout</code> is tracked on the client and sent to the
-         * server along with the transaction in the wire protocol. The client will
+         * server along with the command in the wire protocol. The client will
          * most likely timeout first, but the server also has the capability to
-         * timeout the transaction.
+         * timeout the command
          *
          * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-         * is reached before the transaction completes, the transaction will return
+         * is reached before the command completes, the command will return
          * error {@link status.ERR_TIMEOUT | ERR_TIMEOUT}.
          * If <code>totalTimeout</code> is zero, there will be no total time limit.
          *
@@ -2842,14 +2841,14 @@ export namespace policy {
 
 
     /**
-     * A policy affecting the behavior of write operations.
+     * A policy affecting the behavior of write commands.
      *
      * @since v3.0.0
      */
     export class WritePolicy extends BasePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
-         * when writing before returning transaction succeeded.
+         * when writing before returning command succeeded.
          *
          * @see {@link policy.commitLevel} for supported policy values.
          */
@@ -2864,7 +2863,7 @@ export namespace policy {
          * Specifies whether a {@link
          * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
          * should be written in place of a record that gets deleted as a result of
-         * this operation.
+         * this command.
          *
          * @default <code>false</code> (do not tombstone deleted records)
          */
@@ -2903,7 +2902,7 @@ export namespace policy {
 
     /**
      * Specifies the number of replicas required to be successfully committed
-     * before returning success in a write operation to provide the desired
+     * before returning success in a write command to provide the desired
      * consistency guarantee.
      */
     export enum commitLevel {
@@ -2949,7 +2948,7 @@ export namespace policy {
      * @remarks To use the <code>EQ</code> or <code>GT</code> generation policy
      * (see below), the generation value to use for the comparison needs to be
      * specified in the metadata parameter (<code>meta</code>) of the {@link
-     * Client#put} operation.
+     * Client#put} command.
      *
      *
      * @example <caption>Update record, only if generation matches</caption>
@@ -2969,7 +2968,7 @@ export namespace policy {
      *
      *   const record = await client.get(key)
      *   const gen = record.gen // Current generation of the record. (1 for new record.)
-     *   // Perform some operation using record. Some other process might update the
+     *   // Perform some command using record. Some other process might update the
      *   // record in the meantime, which would change the generation value.
      *   if (Math.random() < 0.1) await client.put(key, { foo: 'fox' })
      *
@@ -3022,7 +3021,7 @@ export namespace policy {
          * the server. This policy causes a write operation to store the key. Once the
          * key is stored, the server will keep it - there is no need to use this policy
          * on subsequent updates of the record. If this policy is used on read or
-         * delete operations, or on subsequent updates of a record with a stored key,
+         * delete commands, or on subsequent updates of a record with a stored key,
          * the key sent will be compared with the key stored on the server. A mismatch
          * will cause <code>ERR_RECORD_KEY_MISMATCH</code> to be returned.
          */
@@ -3159,7 +3158,7 @@ export namespace policy {
 
 /**
  * The Aerospike Node.js client enables you to build an application in Node.js or Typescript with an Aerospike cluster as its database.
- * The client manages the connections to the cluster and handles the transactions performed against it.
+ * The client manages the connections to the cluster and handles the commands performed against it.
  */
 export class Client extends EventEmitter {
     /**
@@ -3254,10 +3253,10 @@ export class Client extends EventEmitter {
      *
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param batchApplyPolicy - UDF policy configuration parameters.
      *
-     * @returns A Promise that resolves to the results of the batch operation.
+     * @returns A Promise that resolves to the results of the batched command.
      *
      *
      *
@@ -3328,26 +3327,26 @@ export class Client extends EventEmitter {
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
      * @param callback - The function to call when
-     * the operation completes. Includes the results of the batch operation.
+     * the command completes. Includes the results of the batched command.
      *
      */
     public batchApply(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      *
      */
     public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param batchApplyPolicy - UDF policy configuration parameters.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      *
      */
     public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult[]>): void;
@@ -3356,9 +3355,9 @@ export class Client extends EventEmitter {
      * Checks the existence of a batch of records from the database cluster.
      *
      * @param keys - An array of Keys used to locate the records in the cluster.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      *
-     * @returns A Promise that resolves to the results of the batch operation.
+     * @returns A Promise that resolves to the results of the batched command.
      *
      * @deprecated since v2.0 - use {@link Client#batchRead} instead.
      *
@@ -3417,14 +3416,14 @@ export class Client extends EventEmitter {
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchExists(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */    
     public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
 
@@ -3438,9 +3437,9 @@ export class Client extends EventEmitter {
      * the batch. This method requires server >= 3.6.0.
      *
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      *
-     * @returns {?Promise} - A Promise that resolves to the results of the batch operation.
+     * @returns {?Promise} - A Promise that resolves to the results of the batched command.
      *
      * @since v2.0
      *
@@ -3511,14 +3510,14 @@ export class Client extends EventEmitter {
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchRead(records: BatchReadRecord[], callback?: TypedCallback<BatchResult[]>): void;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */       
     public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
     /**
@@ -3526,9 +3525,9 @@ export class Client extends EventEmitter {
      * Reads a batch of records from the database cluster.
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      *
-     * @returns {?Promise} - A Promise that resolves to the results of the batch operation.
+     * @returns {?Promise} - A Promise that resolves to the results of the batched command.
      *
      * @deprecated since v2.0 - use {@link Client#batchRead} instead.
      *
@@ -3587,15 +3586,15 @@ export class Client extends EventEmitter {
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchGet(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchGet(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult[]>): void;
     /**
@@ -3607,10 +3606,10 @@ export class Client extends EventEmitter {
      * This method requires server >= 6.0.0.
      *
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param batchRemovePolicy Remove policy configuration parameters.
      *
-     * @returns A Promise that resolves to the results of the batch operation.
+     * @returns A Promise that resolves to the results of the batched command.
      *
      * @since v5.0.0
      *
@@ -3667,22 +3666,22 @@ export class Client extends EventEmitter {
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchRemove(keys: KeyOptions[], callback?: TypedCallback<BatchResult[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
-     * @param batchPolicy - The Batch Policy to use for this operation.
+     * @param batchPolicy - The Batch Policy to use for this command.
      * @param batchRemovePolicy Remove policy configuration parameters.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
     
@@ -3692,10 +3691,10 @@ export class Client extends EventEmitter {
      *
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      *
      * @returns {?Promise} - If no callback function is passed, the function
-     * returns a Promise that resolves to the results of the batch operation.
+     * returns a Promise that resolves to the results of the batched command.
      *
      * @deprecated since v2.0 - use {@link Client#batchRead} instead.
      *
@@ -3757,15 +3756,15 @@ export class Client extends EventEmitter {
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchSelect(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
-     * @param policy - The Batch Policy to use for this operation.
+     * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
-     * the operation completes, with the results of the batch operation.
+     * the command completes, with the results of the batched command.
      */
     public batchSelect(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord[]>): void;
     /**
@@ -3775,7 +3774,7 @@ export class Client extends EventEmitter {
     * This method requires server >= 6.0.0.
     *
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
-    * @param policy - The Batch Policy to use for this operation.
+    * @param policy - The Batch Policy to use for this command.
     *
     * @since v6.0.0
     * 
@@ -3887,13 +3886,13 @@ export class Client extends EventEmitter {
     public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
-    * @param callback - The function to call when the operation completes, Includes the results of the batch operation.
+    * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
     public batchWrite(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult[]>): void;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
-    * @param policy - The Batch Policy to use for this operation.
-    * @param callback - The function to call when the operation completes, Includes the results of the batch operation.
+    * @param policy - The Batch Policy to use for this command.
+    * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
     public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
     /**
@@ -4031,7 +4030,7 @@ export class Client extends EventEmitter {
      *   // Put record with bin containing the serialized record
      *   await client.put(contextKey, {context: serializedContext})
      *
-     *   // Get context when needed for operation
+     *   // Get context when needed for command
      *   let contextRecord = await client.get(contextKey)
      *
      *   // Deserialize CDT Context
@@ -4056,7 +4055,7 @@ export class Client extends EventEmitter {
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
      *
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      *
@@ -4090,13 +4089,13 @@ export class Client extends EventEmitter {
     public createBlobIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
     /**
      * @param options - Options for creating the index.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public createBlobIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
     /**
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
@@ -4139,7 +4138,7 @@ export class Client extends EventEmitter {
      * will be returned.
      *
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A Promise that will resolve to an {@link IndexJob} instance.
      *
@@ -4196,13 +4195,13 @@ export class Client extends EventEmitter {
     public createIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
     /**
      * @param options - Options for creating the index.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public createIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
     /**
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      */
     public createIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
@@ -4212,7 +4211,7 @@ export class Client extends EventEmitter {
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
      *
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      *
@@ -4247,15 +4246,15 @@ export class Client extends EventEmitter {
     public createIntegerIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
     /**
      * @param options - Options for creating the index.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      */
     public createIntegerIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
     /**
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      */
@@ -4267,7 +4266,7 @@ export class Client extends EventEmitter {
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
      *
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      *
@@ -4302,13 +4301,13 @@ export class Client extends EventEmitter {
     public createStringIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
     /**
      * @param options - Options for creating the index.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public createStringIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
     /**
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      */
     public createStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
@@ -4318,7 +4317,7 @@ export class Client extends EventEmitter {
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
      *
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
      *
@@ -4352,13 +4351,13 @@ export class Client extends EventEmitter {
     public createGeo2DSphereIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
     /**
      * @param options - Options for creating the index.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public createGeo2DSphereIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
     /**
      * @param options - Options for creating the index.
-     * @param policy - The Info Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      */
     public createGeo2DSphereIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
@@ -4376,7 +4375,7 @@ export class Client extends EventEmitter {
      *
      * @param key - The key, used to locate the record in the cluster.
      * @param udfArgs - Parameters used to specify which UDF function to execute.
-     * @param policy - The Apply Policy to use for this operation.
+     * @param policy - The Apply Policy to use for this command.
      *
      * @returns {?Promise} A Promise that resolves to the value returned by the UDF.
      *
@@ -4425,7 +4424,7 @@ export class Client extends EventEmitter {
     /**
      * @param key - The key, used to locate the record in the cluster.
      * @param udfArgs - Parameters used to specify which UDF function to execute.
-     * @param policy - The Apply Policy to use for this operation.
+     * @param policy - The Apply Policy to use for this command.
      * @param callback - This function will be called with the
      * result returned by the Record UDF function call.
      */
@@ -4464,20 +4463,20 @@ export class Client extends EventEmitter {
      *   let client = await Aerospike.connect(config)
      *   
      *   const policy = {
-     *        txn: mrt
+     *        txn: tran
      *    }
      *
      *    await client.put(key4, record2, meta, policy)
      *
      *    const policyRead = {
-     *        txn: mrt
+     *        txn: tran
      *    }
      *
      *    let get_result = await client.get(key1, policy) // Will reflect the new value recently put.
      *
      *    await client.put(key2, record2, meta, policy)
      *
-     *    let result = await client.abort(mrt)
+     *    let result = await client.abort(tran)
      *
      *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
      *
@@ -4533,12 +4532,12 @@ export class Client extends EventEmitter {
      * let key2 = new Aerospike.Key('test', 'demo', 'myKey2')
      * 
      * let policy = {
-     *   txn: mrt
+     *   txn: tran
      * };
      * ;(async () => {
      *    let client = await Aerospike.connect(config)
 
-     *    let mrt = new Aerospike.Transaction()
+     *    let tran = new Aerospike.Transaction()
      *
 
      *
@@ -4546,7 +4545,7 @@ export class Client extends EventEmitter {
      *    await client.put(key2, bins, meta, policy)
      *    let get_result = await client.get(key1, policy)
      *
-     *    let result = await client.commit(mrt)
+     *    let result = await client.commit(tran)
      *    await client.close()
      * })();
      */
@@ -4564,7 +4563,7 @@ export class Client extends EventEmitter {
      * Checks the existance of a record in the database cluster.
      *
      * @param key - The key of the record to check for existance.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * 
      * @returns {?Promise} A Promise that resolves to <code>true</code> if the record exists or
      * <code>false</code> otherwise.
@@ -4599,15 +4598,15 @@ export class Client extends EventEmitter {
     /**
      * @param key - The key of the record to check for existance.
      * @param callback - The function to call when the
-     * operation completes; the passed value is <code>true</code> if the record
+     * command completes; the passed value is <code>true</code> if the record
      * exists or <code>false</code> otherwise.
      */   
     public exists(key: KeyOptions, callback: TypedCallback<boolean>): void;
     /**
      * @param key - The key of the record to check for existance.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes; the passed value is <code>true</code> if the record
+     * command completes; the passed value is <code>true</code> if the record
      * exists or <code>false</code> otherwise.
      */   
     public exists(key: KeyOptions, policy: policy.ReadPolicy | null, callback: TypedCallback<boolean>): void;
@@ -4615,7 +4614,7 @@ export class Client extends EventEmitter {
      * Checks the existance of a record in the database cluster.
      *
      * @param key - The key of the record to check for existance.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * 
      * @returns A Promise that resolves to an {@link AerospikeRecord} containing no bins and a {@link RecordMetadata} object.
      * If the metadata contains data, the record exists. If the metadata contains null values, then the record does not exist.
@@ -4650,15 +4649,15 @@ export class Client extends EventEmitter {
     /**
      * @param key - The key of the record to check for existance.
      * @param callback - The function to call when the
-     * operation completes; An {@link AerospikeRecord} will be passed to the callback, containing no bins and a {@link RecordMetadata} object.
+     * command completes; An {@link AerospikeRecord} will be passed to the callback, containing no bins and a {@link RecordMetadata} object.
      * If the metadata contains data, the record exists. If the metadata contains null values, then the record does not exist.
      */
     public existsWithMetadata(key: KeyOptions, callback: TypedCallback<AerospikeRecord>): void;
     /**
      * @param key - The key of the record to check for existance.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes; An {@link AerospikeRecord} will be passed to the callback, containing no bins and a {@link RecordMetadata} object.
+     * command completes; An {@link AerospikeRecord} will be passed to the callback, containing no bins and a {@link RecordMetadata} object.
      * If the metadata contains data, the record exists. If the metadata contains null values, then the record does not exist.
      */
     public existsWithMetadata(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
@@ -4666,7 +4665,7 @@ export class Client extends EventEmitter {
      * Using the key provided, reads a record from the database cluster.
      *
      * @param key - The key used to locate the record in the cluster.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to a {@link Record}.
      *
@@ -4696,15 +4695,15 @@ export class Client extends EventEmitter {
     /**
      * @param key - The key used to locate the record in the cluster.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public get(key: KeyOptions, callback: TypedCallback<AerospikeRecord>): void;
     /**
      * @param key - The key used to locate the record in the cluster.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public get(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
@@ -4713,9 +4712,9 @@ export class Client extends EventEmitter {
      *
      * @param namespace - The namespace on which the index was created.
      * @param index - The name of the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
-     * @returns {?Promise} A <code>Promise</code> that resolves once the operation completes.
+     * @returns {?Promise} A <code>Promise</code> that resolves once the command completes.
      *
      * @example
      *
@@ -4737,15 +4736,15 @@ export class Client extends EventEmitter {
      * @param namespace - The namespace on which the index was created.
      * @param index - The name of the index.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
     public indexRemove(namespace: string, index: string, callback: TypedCallback<void>): void;
     /**
      * @param namespace - The namespace on which the index was created.
      * @param index - The name of the index.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this k.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
     public indexRemove(namespace: string, index: string, policy: policy.InfoPolicy | null, callback: TypedCallback<void>): void;
     /**
@@ -4761,7 +4760,7 @@ export class Client extends EventEmitter {
      *
      * @param request - The info request to send.
      * @param host - See {@link Host}. The address of the cluster host to send the request to.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to an info result string.
 
@@ -4798,7 +4797,7 @@ export class Client extends EventEmitter {
     /**
      * @param request - The info request to send.
      * @param host - See {@link Host}. The address of the cluster host to send the request to.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when an info response from a cluster host is received.
      */
     public info(request: string | undefined, host: Host | string, policy: policy.InfoPolicy | null, callback: TypedCallback<string>): void;
@@ -4810,7 +4809,7 @@ export class Client extends EventEmitter {
      * returned.
      *
      * @param request - The info request to send.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to an info result string.
      * 
@@ -4853,7 +4852,7 @@ export class Client extends EventEmitter {
     public infoAny(request?: string | undefined, callback?: TypedCallback<string>): void;
     /**
      * @param request - The info request to send.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call once the node
      * returns the response to the info command; if no callback function is
      * provided, the method returns a <code>Promise<code> instead.
@@ -4869,7 +4868,7 @@ export class Client extends EventEmitter {
      * returned.
      *
      * @param request - The info request to send.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to an {@link InfoAllResponse}.
      * 
@@ -4906,7 +4905,7 @@ export class Client extends EventEmitter {
     public infoAll(request?: string | undefined, callback?: TypedCallback<InfoAllResponse[]>): void;
     /**
      * @param request - The info request to send.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call once all nodes have
      * returned a response to the info command; if no callback function is
      * provided, the method returns a <code>Promise<code> instead.
@@ -4921,7 +4920,7 @@ export class Client extends EventEmitter {
      *
      * @param request - The info request to send.
      * @param node - The node to send the request to. See {@link InfoNodeParam}.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * 
      * @returns A <code>Promise</code> that resolves to an info result string.
      * 
@@ -4962,7 +4961,7 @@ export class Client extends EventEmitter {
     /**
      * @param request - The info request to send.
      * @param node - The node to send the request to. See {@link InfoNodeParam}.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call once the node
      * returns the response to the info command; if no callback function is
      * provided, the method returns a <code>Promise<code> instead.
@@ -4993,7 +4992,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      *
      * @example
      *
@@ -5033,7 +5032,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public operate(key: KeyOptions, operations: operations.Operation[], callback: TypedCallback<AerospikeRecord>): void;
@@ -5042,7 +5041,7 @@ export class Client extends EventEmitter {
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public operate(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
@@ -5050,9 +5049,9 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public operate(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
@@ -5070,7 +5069,7 @@ export class Client extends EventEmitter {
      * either string or byte array values and the values to append must be of the
      * same type.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      *
      * @returns A Promise that resolves to the results of the opertion.
      *
@@ -5085,7 +5084,7 @@ export class Client extends EventEmitter {
      * either string or byte array values and the values to append must be of the
      * same type.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public append(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5096,7 +5095,7 @@ export class Client extends EventEmitter {
      * same type.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public append(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5106,9 +5105,9 @@ export class Client extends EventEmitter {
      * either string or byte array values and the values to append must be of the
      * same type.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public append(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5118,7 +5117,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      *
      * @returns A Promise that resolves to the results of the opertion.
      *
@@ -5130,7 +5129,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public prepend(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5138,16 +5137,16 @@ export class Client extends EventEmitter {
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public prepend(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public prepend(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5156,7 +5155,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      *
      * @returns A Promise that resolves to the results of the opertion.
      *
@@ -5170,14 +5169,14 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public add(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public add(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5185,7 +5184,7 @@ export class Client extends EventEmitter {
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      */
     public add(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
     /**
@@ -5195,7 +5194,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      * 
      * @returns A Promise that resolves to the results of the opertion.
      */
@@ -5207,7 +5206,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      * 
      */       
     public incr(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
@@ -5219,7 +5218,7 @@ export class Client extends EventEmitter {
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      * 
      */
     public incr(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
@@ -5230,9 +5229,9 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
-     * @param policy - The Operate Policy to use for this operation.
+     * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation.
+     * command completes with the results of the command.
      * 
      */
     public incr(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
@@ -5251,7 +5250,7 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
      * @param meta - Meta data.
-     * @param policy - The Write Policy to use for this operation.
+     * @param policy - The Write Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to a {@link Record}.
 
@@ -5292,22 +5291,22 @@ export class Client extends EventEmitter {
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
-     * @param callback - The function to call when the operation completes with the result of the operation.
+     * @param callback - The function to call when the command completes with the result of the command.
      */
     public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, callback: TypedCallback<Key>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
      * @param meta - Meta data.
-     * @param callback - The function to call when the operation completes with the result of the operation.
+     * @param callback - The function to call when the command completes with the result of the command.
      */
     public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, meta: RecordMetadata | null, callback: TypedCallback<Key>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
      * @param meta - Meta data.
-     * @param policy - The Write Policy to use for this operation.
-     * @param callback - The function to call when the operation completes with the result of the operation.
+     * @param policy - The Write Policy to use for this command.
+     * @param callback - The function to call when the command completes with the result of the command.
      */
     public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, meta: RecordMetadata | null, policy: policy.WritePolicy | null, callback: TypedCallback<Key>): void;
     /**
@@ -5343,7 +5342,7 @@ export class Client extends EventEmitter {
      * Removes a record with the specified key from the database cluster.
      *
      * @param key - The key of the record.
-     * @param policy - The Remove Policy to use for this operation.
+     * @param policy - The Remove Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to the {@link Key} of the removed record.
 
@@ -5383,13 +5382,13 @@ export class Client extends EventEmitter {
     public remove(key: KeyOptions, policy?: policy.RemovePolicy | null): Promise<Key>;
     /**
      * @param key - The key of the record.
-     * @param callback - The function to call when the operation completes with the results of the operation.
+     * @param callback - The function to call when the command completes with the results of the command.
      */
     public remove(key: KeyOptions, callback: TypedCallback<Key>): void;
     /**
      * @param key - The key of the record.
-     * @param policy - The Remove Policy to use for this operation.
-     * @param callback - The function to call when the operation completes with the results of the operation.
+     * @param policy - The Remove Policy to use for this command.
+     * @param callback - The function to call when the command completes with the results of the command.
      */
     public remove(key: KeyOptions, policy: policy.RemovePolicy | null, callback: TypedCallback<Key>): void;
     /**
@@ -5431,7 +5430,7 @@ export class Client extends EventEmitter {
      *
      * @param key - The key of the record.
      * @param bins - A list of bin names for the bins to be returned.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to a {@link AerospikeRecord}.
      * 
@@ -5476,16 +5475,16 @@ export class Client extends EventEmitter {
      * @param key - The key of the record.
      * @param bins - A list of bin names for the bins to be returned.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public select(key: KeyOptions, bins: string[], callback: TypedCallback<AerospikeRecord>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A list of bin names for the bins to be returned.
-     * @param policy - The Read Policy to use for this operation.
+     * @param policy - The Read Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public select(key: KeyOptions, bins: string[], policy: policy.ReadPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
@@ -5503,7 +5502,7 @@ export class Client extends EventEmitter {
      * update time. Units are in nanoseconds since unix epoch (1970-01-01). If
      * specified, the value must be before the current time. Pass in 0 to delete
      * all records in namespace/set regardless of last udpate time.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves when the truncate is complete.
      * 
@@ -5539,7 +5538,7 @@ export class Client extends EventEmitter {
      * update time. Units are in nanoseconds since unix epoch (1970-01-01). If
      * specified, the value must be before the current time. Pass in 0 to delete
      * all records in namespace/set regardless of last udpate time.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      */
     public truncate(ns: string, set: string | null, beforeNanos: number, policy: policy.InfoPolicy | null, callback: TypedCallback<void>): void;
     /**
@@ -5558,7 +5557,7 @@ export class Client extends EventEmitter {
      * @param udfType - Language of the UDF script. Lua is the default
      * and only supported scripting language for UDF modules at the moment; ref.
      * {@link language}.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @returns A Promise that resolves to a {@link Job} instance.
      * 
@@ -5586,7 +5585,7 @@ export class Client extends EventEmitter {
     public udfRegister(udfPath: string, udfType?: language | null, policy?: policy.InfoPolicy | null): Promise<Job>;
     /**
      * @param udfPath - The file path to the Lua script to load into the server.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * 
      * @returns A Promise that resolves to a {@link Job} instance.
      */
@@ -5594,7 +5593,7 @@ export class Client extends EventEmitter {
     /**
      * @param udfPath - The file path to the Lua script to load into the server.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
 
     public udfRegister(udfPath: string, callback: TypedCallback<Job>): void;
@@ -5604,14 +5603,14 @@ export class Client extends EventEmitter {
      * and only supported scripting language for UDF modules at the moment; ref.
      * {@link language}.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
     public udfRegister(udfPath: string, udfType: language | null, callback: TypedCallback<Job>): void;
     /**
      * @param udfPath - The file path to the Lua script to load into the server.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
     public udfRegister(udfPath: string, policy: policy.InfoPolicy | null, callback: TypedCallback<Job>): void;
     /**
@@ -5619,9 +5618,9 @@ export class Client extends EventEmitter {
      * @param udfType - Language of the UDF script. Lua is the default
      * and only supported scripting language for UDF modules at the moment; ref.
      * {@link language}.
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes with the result of the operation.
+     * command completes with the result of the command.
      */
     public udfRegister(udfPath: string, udfType: language | null, policy: policy.InfoPolicy | null, callback: TypedCallback<Job>): void;
     /**
@@ -5673,7 +5672,7 @@ export class Client extends EventEmitter {
      *
      * @param udfModule - The basename of the UDF module, without the
      * local pathname but including the file extension (".lua").
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @example
      *
@@ -5701,16 +5700,16 @@ export class Client extends EventEmitter {
      * @param udfModule - The basename of the UDF module, without the
      * local pathname but including the file extension (".lua").
      * @param callback - The function to call when the
-     * operation completes which the result of the operation.
+     * command completes with the result of the command.
      * 
      */
     public udfRemove(udfModule: string, callback: TypedCallback<Job>): void;
     /**
      * @param udfModule - The basename of the UDF module, without the
      * local pathname but including the file extension (".lua").
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when the
-     * operation completes which the result of the operation.
+     * command completes with the result of the command.
      * 
      */
     public udfRemove(udfModule: string, policy: policy.InfoPolicy, callback: TypedCallback<Job>): void;
@@ -6520,7 +6519,7 @@ export class Config {
     /**
      * Maximum number of asynchronous connections allowed per server node.
      *
-     * New transactions will be rejected with an {@link
+     * New commands will be rejected with an {@link
      * status.ERR_NO_MORE_CONNECTIONS | ERR_NO_MORE_CONNECTIONS}
      * error if the limit would be exceeded.
      *     *
@@ -6533,9 +6532,9 @@ export class Config {
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the transaction load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
      *
-     * If the backoff algorithm has been activated, transactions will fail with {@link
+     * If the backoff algorithm has been activated, commands will fail with {@link
      * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
      * error count has been reset.
      *
@@ -6604,28 +6603,28 @@ export class Config {
      *
      * The configuration defines default policies for the
      * application. Policies define the behavior of the client, which can be
-     * global for all uses of a single type of operation, or local to a single
-     * use of an operation.
+     * global for all uses of a single type of command, or local to a single
+     * use of an command.
      *
-     * Each database operation accepts a policy for that operation as an
+     * Each database command accepts a policy for that command as an
      * argument. This is considered a local policy, and is a single use policy.
      * This local policy supersedes any global policy defined.
      *
      * If a value of the policy is not defined, then the rule is to fallback to
-     * the global policy for that operation. If the global policy for that
-     * operation is undefined, then the global default value will be used.
+     * the global policy for that command. If the global policy for that
+     * command is undefined, then the global default value will be used.
      *
      * If you find that you have behavior that you want every use of an
-     * operation to utilize, then you can specify the default policy as
+     * command to utilize, then you can specify the default policy as
      * {@link Config#policies}.
      *
-     * For example, the {@link Client#put} operation takes a {@link
+     * For example, the {@link Client#put} command takes a {@link
      * WritePolicy} parameter. If you find yourself setting the {@link
      * WritePolicy#key} policy value for every call to {@link Client.put}, then
      * you may find it beneficial to set the global {@link WritePolicy} in
-     * {@link Config#policies}, which all operations will use.
+     * {@link Config#policies}, which all write commands will use.
      *     *
-     * @example <caption>Setting a default <code>key</code> policy for all write operations</caption>
+     * @example <caption>Setting a default <code>key</code> policy for all write commands</caption>
      *
      * const Aerospike = require('aerospike')
      *
@@ -6893,7 +6892,7 @@ export class AerospikeError extends Error {
      */
     readonly line?: number | null;
     /**
-     * It is possible that a write transaction completed even though the client
+     * It is possible that a write command completed even though the client
      * returned this error. This may be the case when a client error occurs
      * (like timeout) after the command was sent to the server.
      */
@@ -7237,7 +7236,7 @@ export class Job<T = JobInfoResponse> {
      */
     public jobID: number;
     /**
-     * Database operation associated with the Job. `query` and `scan` are the possible values`
+     * Database command associated with the Job. `query` and `scan` are the possible values`
      */
     public module: string;
     /**
@@ -7266,7 +7265,7 @@ export class Job<T = JobInfoResponse> {
      *
      * Check the progress of a background job running on the database.
      *
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      *
      * @return A Promise that resolves to the job info.
      *
@@ -7308,7 +7307,7 @@ export class Job<T = JobInfoResponse> {
      */
     public info(callback: TypedCallback<T>): void;
     /**
-     * @param policy - The Info Policy to use for this operation.
+     * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call with the job info response.
      */
     public info(policy: policy.InfoPolicy, callback: TypedCallback<JobInfoResponse>): void;
@@ -7360,8 +7359,8 @@ export class Job<T = JobInfoResponse> {
  * ###### Key Digests
  * In your application, you must specify the namespace, set and the key itself
  * to read and write records. When a key is sent to the database, the key value
- * and its set are hashed into a 160-bit digest. When a database operation
- * returns a key (e.g. Query or Scan operations) it might contain either the
+ * and its set are hashed into a 160-bit digest. When a database command
+ * returns a key (e.g. Query or Scan commands) it might contain either the
  * set and key value, or just the digest.
  *
  * @param ns - The Namespace to which the key belongs.
@@ -7430,7 +7429,7 @@ export interface RecordMetadata {
 }
 
 /**
- * Stream of database records (full or partial) returned by {@link Query} or {@link Scan} operations.
+ * Stream of database records (full or partial) returned by {@link Query} or {@link Scan} commands.
  *
  * @remarks *Note:* Record stream currently does not support Node.js'
  * <code>Stream#pause</code> and <code>Stream#resume</code> methods, i.e. it
@@ -7440,7 +7439,7 @@ export interface RecordMetadata {
  *
  * #### Aborting a Query/Scan
  *
- * A query or scan operation can be aborted by calling the {@link
+ * A query or scan command can be aborted by calling the {@link
  * RecordStream#abort} method at any time. It is no possible to continue a
  * record stream, once aborted.
  *
@@ -7495,7 +7494,7 @@ export class RecordStream extends Stream {
     public readable: true;
     public _read(): void;
     /**
-     * Aborts the query/scan operation.
+     * Aborts the query/scan command.
      *
      * Once aborted, it is not possible to resume the stream.
      *
@@ -7506,7 +7505,7 @@ export class RecordStream extends Stream {
      * @event 'data'
      * @param listener - Function executed when data is received.
      * Aerospike record incl. bins, key and meta data.
-     * Depending on the operation, all, some or no bin values will be returned.
+     * Depending on the command, all, some or no bin values will be returned.
      */    
     public on(event: 'data', listener: (record: AerospikeRecord) => void): this;
     /**
@@ -7589,7 +7588,7 @@ export interface ScanOptions {
  *
  * #### Executing Record UDFs using Background Scans
  *
- * Record UDFs perform operations on a single record such as updating records
+ * Record UDFs perform commands on a single record such as updating records
  * based on a set of parameters. Using {@link Scan#background} you can run a
  * Record UDF on the result set of a scan. Scans using Records UDFs are run
  * in the background on the server and do not return the records to the client.
@@ -7888,7 +7887,7 @@ export class Scan {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Scan Policy to use for this operation.
+     * @param policy - The Scan Policy to use for this command.
      * @param scanID - Job ID to use for the scan; will be assigned
      * randomly if zero or undefined.
      *
@@ -7899,7 +7898,7 @@ export class Scan {
      *
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public background(udfModule: string, udfFunction: string, callback: TypedCallback<Job>): void;
     /**
@@ -7907,7 +7906,7 @@ export class Scan {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */    
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], callback: TypedCallback<Job>): void;
     /**
@@ -7915,8 +7914,8 @@ export class Scan {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Scan Policy to use for this operation.
-     * @param callback - The function to call when the operation completes.
+     * @param policy - The Scan Policy to use for this command.
+     * @param callback - The function to call when the command completes.
      */    
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], policy: policy.ScanPolicy, callback: TypedCallback<Job>): void;
     /**
@@ -7924,10 +7923,10 @@ export class Scan {
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
-     * @param policy - The Scan Policy to use for this operation.
+     * @param policy - The Scan Policy to use for this command.
      * @param scanID - Job ID to use for the scan; will be assigned
      * randomly if zero or undefined.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */    
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
@@ -7942,7 +7941,7 @@ export class Scan {
      *
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Scan Policy to use for this operation.
+     * @param policy - The Scan Policy to use for this command.
      * @param scanID - Job ID to use for the scan; will be assigned
      * randomly if zero or undefined.
      *
@@ -7975,10 +7974,10 @@ export class Scan {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Scan Policy to use for this operation.
+     * @param policy - The Scan Policy to use for this command.
      * @param scanID - Job ID to use for the scan; will be assigned
      * randomly if zero or undefined.
-     * @param callback - The function to call when the operation completes.
+     * @param callback - The function to call when the command completes.
      */
     public operate(operations: operations.Operation[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
@@ -7987,9 +7986,9 @@ export class Scan {
      * iterates through each partition, it returns the current version of each
      * record to the client.
      *
-     * @param policy - The Scan Policy to use for this operation.
+     * @param policy - The Scan Policy to use for this command.
      * @param dataCb - The function to call when the
-     * operation completes with the results of the operation; if no callback
+     * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      * @param errorCb - Callback function called when there is an error.
      * @param endCb -  Callback function called when an operation has completed.
@@ -8253,7 +8252,7 @@ export function setupGlobalCommandQueue(policy: policy.CommandQueuePolicy): void
  */
 export interface AdminPolicyOptions extends BasePolicyOptions {
     /**
-     * Maximum time in milliseconds to wait for the operation to complete.
+     * Maximum time in milliseconds to wait for the command to complete.
      *
      * @type number
      */
@@ -8266,7 +8265,7 @@ export interface AdminPolicyOptions extends BasePolicyOptions {
 export interface ApplyPolicyOptions extends BasePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
-     * when writing before returning transaction succeeded.
+     * when writing before returning command succeeded.
      *
      * @see {@link policy.commitLevel} for supported policy values.
      */
@@ -8275,7 +8274,7 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -8313,7 +8312,7 @@ export interface BasePolicyOptions {
     compress?: boolean;
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
-     * transaction is ignored. This can be used to eliminate a client/server roundtrip
+     * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      *
      * expression filters can only be applied to the following commands:
@@ -8331,15 +8330,15 @@ export interface BasePolicyOptions {
      */
     filterExpression?: AerospikeExp;
     /**
-     * Maximum number of retries before aborting the current transaction.
+     * Maximum number of retries before aborting the current command.
      * The initial attempt is not counted as a retry.
      *
-     * If <code>maxRetries</code> is exceeded, the transaction will return
+     * If <code>maxRetries</code> is exceeded, the command will return
      * error {@link statusNamespace.ERR_TIMEOUT|ERR_TIMEOUT}.
      *
      * WARNING: Database writes that are not idempotent (such as "add")
-     * should not be retried because the write operation may be performed
-     * multiple times if the client timed out previous transaction attempts.
+     * should not be retried because the write command may be performed
+     * multiple times if the client timed out previous command attempts.
      * It is important to use a distinct write policy for non-idempotent
      * writes which sets <code>maxRetries</code> to zero.
      *
@@ -8352,7 +8351,7 @@ export interface BasePolicyOptions {
      * If <code>socketTimeout</code> is not zero and the socket has been idle
      * for at least <code>socketTimeout</code>, both <code>maxRetries</code>
      * and <code>totalTimeout</code> are checked. If <code>maxRetries</code>
-     * and <code>totalTimeout</code> are not exceeded, the transaction is
+     * and <code>totalTimeout</code> are not exceeded, the command is
      * retried.
      *
      * If both <code>socketTimeout</code> and <code>totalTimeout</code> are
@@ -8365,15 +8364,15 @@ export interface BasePolicyOptions {
      */
     socketTimeout?: number;
     /**
-     * Total transaction timeout in milliseconds.
+     * Total command timeout in milliseconds.
      *
      * The <code>totalTimeout</code> is tracked on the client and sent to the
-     * server along with the transaction in the wire protocol. The client will
+     * server along with the command in the wire protocol. The client will
      * most likely timeout first, but the server also has the capability to
-     * timeout the transaction.
+     * timeout the command
      *
      * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-     * is reached before the transaction completes, the transaction will return
+     * is reached before the command completes, the command will return
      * error {@link statusNamespace.ERR_TIMEOUT|ERR_TIMEOUT}.
      * If <code>totalTimeout</code> is zero, there will be no total time limit.
      *
@@ -8381,7 +8380,7 @@ export interface BasePolicyOptions {
      */
     totalTimeout?: number;
     /**
-     * Multi-record command identifier. See {@link Transaction} for more information.
+     * Transaction identifier. See {@link Transaction} for more information.
      * 
      * @default null (no transaction)
      */
@@ -8395,7 +8394,7 @@ export interface BasePolicyOptions {
 export interface BatchApplyPolicyOptions {
     /**
       * Specifies the number of replicas required to be committed successfully
-      * when writing before returning transaction succeeded.
+      * when writing before returning command succeeded.
       *
       * @see {@link policy.commitLevel} for supported policy values.
       */
@@ -8404,14 +8403,14 @@ export interface BatchApplyPolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
     durableDelete?: boolean;
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
-     * transaction is ignored. This can be used to eliminate a client/server roundtrip
+     * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
     filterExpression?: AerospikeExp;
@@ -8456,7 +8455,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
      *
      * Values:
      * false: Issue batch commands sequentially.  This mode has a performance advantage for small
-     * to medium sized batch sizes because commands can be issued in the main transaction thread.
+     * to medium sized batch sizes because commands can be issued in the main command thread.
      * This is the default.
      * true: Issue batch commands in parallel threads.  This mode has a performance
      * advantage for large batch sizes because each node can process the command immediately.
@@ -8544,7 +8543,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
 export interface BatchReadPolicyOptions {
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
-     * transaction is ignored. This can be used to eliminate a client/server roundtrip
+     * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
     filterExpression?: AerospikeExp;
@@ -8594,7 +8593,7 @@ export interface BatchReadRecord {
      */
     ops?: operations.Operation[]
     /**
-     * The Batch Policy to use for this operation.
+     * The Batch Policy to use for this command.
      */
     policy?: BatchPolicyOptions;
     /**
@@ -8613,7 +8612,7 @@ export interface BatchReadRecord {
 export interface BatchRemovePolicyOptions {
     /**
       * Specifies the number of replicas required to be committed successfully
-      * when writing before returning transaction succeeded.
+      * when writing before returning command succeeded.
       *
       * @see {@link policy.commitLevel} for supported policy values.
       */
@@ -8622,14 +8621,14 @@ export interface BatchRemovePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
     durableDelete?: boolean;
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
-     * transaction is ignored. This can be used to eliminate a client/server roundtrip
+     * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      *
      */
@@ -8658,7 +8657,7 @@ export interface BatchRemovePolicyOptions {
 export interface BatchWritePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
-     * when writing before returning transaction succeeded.
+     * when writing before returning command succeeded.
      *
      * @see {@link policy.commitLevel} for supported policy values.
      */
@@ -8667,7 +8666,7 @@ export interface BatchWritePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -8680,7 +8679,7 @@ export interface BatchWritePolicyOptions {
     exists?: policy.exists;
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
-     * transaction is ignored. This can be used to eliminate a client/server roundtrip
+     * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
     filterExpression?: AerospikeExp;
@@ -8707,7 +8706,7 @@ export interface BatchWritePolicyOptions {
  */
 export interface BatchWriteRecord {
     /**
-     * Type of Batch operation
+     * Type of batched command
      */
     type: batchType;
     /**
@@ -8731,7 +8730,7 @@ export interface BatchWriteRecord {
      */
     ops?: operations.Operation[]
     /**
-     * The Batch Policy to use for this operation.
+     * The Batch Policy to use for this command.
      */
     policy?: BatchWritePolicyOptions;
 }
@@ -8927,7 +8926,7 @@ export interface ConfigOptions {
     /**
      * Maximum number of asynchronous connections allowed per server node.
      *
-     * New transactions will be rejected with an {@link
+     * New commands will be rejected with an {@link
      * status.ERR_NO_MORE_CONNECTIONS | ERR_NO_MORE_CONNECTIONS}
      * error if the limit would be exceeded.
      *     *
@@ -8940,9 +8939,9 @@ export interface ConfigOptions {
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the transaction load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
      *
-     * If the backoff algorithm has been activated, transactions will fail with {@link
+     * If the backoff algorithm has been activated, commands will fail with {@link
      * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
      * error count has been reset.
      *
@@ -9011,28 +9010,28 @@ export interface ConfigOptions {
      *
      * The configuration defines default policies for the
      * application. Policies define the behavior of the client, which can be
-     * global for all uses of a single type of operation, or local to a single
-     * use of an operation.
+     * global for all uses of a single type of command, or local to a single
+     * use of an command.
      *
-     * Each database operation accepts a policy for that operation as an
+     * Each database command accepts a policy for that command as an
      * argument. This is considered a local policy, and is a single use policy.
      * This local policy supersedes any global policy defined.
      *
      * If a value of the policy is not defined, then the rule is to fallback to
-     * the global policy for that operation. If the global policy for that
-     * operation is undefined, then the global default value will be used.
+     * the global policy for that command. If the global policy for that
+     * command is undefined, then the global default value will be used.
      *
      * If you find that you have behavior that you want every use of an
-     * operation to utilize, then you can specify the default policy as
+     * command to utilize, then you can specify the default policy as
      * {@link Config#policies}.
      *
-     * For example, the {@link Client#put} operation takes a {@link
+     * For example, the {@link Client#put} command takes a {@link
      * WritePolicy} parameter. If you find yourself setting the {@link
      * WritePolicy#key} policy value for every call to {@link Client.put}, then
      * you may find it beneficial to set the global {@link WritePolicy} in
-     * {@link Config#policies}, which all operations will use.
-     *     *
-     * @example <caption>Setting a default <code>key</code> policy for all write operations</caption>
+     * {@link Config#policies}, which all commands will use.
+     *     
+     * @example <caption>Setting a default <code>key</code> policy for all write commands</caption>
      *
      * const Aerospike = require('aerospike')
      *
@@ -9180,29 +9179,29 @@ export interface ConfigOptions {
  *
  * @remarks The configuration defines default policies for the
  * application. Policies define the behavior of the client, which can be
- * global for all uses of a single type of operation, or local to a single
- * use of an operation.
+ * global for all uses of a single type of command, or local to a single
+ * use of an command.
  *
- * Each database operation accepts a policy for that operation as an
+ * Each database command accepts a policy for that command as an
  * argument. This is considered a local policy, and is a single use policy.
  * This local policy supersedes any global policy defined.
  *
  * If a value of the policy is not defined, then the rule is to fallback to
- * the global policy for that operation. If the global policy for that
- * operation is undefined, then the global default value will be used.
+ * the global policy for that command. If the global policy for that
+ * command is undefined, then the global default value will be used.
  *
  * If you find that you have behavior that you want every use of an
- * operation to utilize, then you can specify the default policy as
+ * command to utilize, then you can specify the default policy as
  * {@link Config#policies}.
  *
- * For example, the {@link Client#put} operation takes a {@link
+ * For example, the {@link Client#put} command takes a {@link
  * WritePolicy} parameter. If you find yourself setting the {@link
  * WritePolicy#key} policy value for every call to {@link Client.put}, then
  * you may find it beneficial to set the global {@link WritePolicy} in
- * {@link Config#policies}, which all operations will use.
+ * {@link Config#policies}, which all commands will use.
  *
  *
- * @example <caption>Setting a default <code>key</code> policy for all write operations</caption>
+ * @example <caption>Setting a default <code>key</code> policy for all write commands</caption>
  *
  * const Aerospike = require('aerospike')
  *
@@ -9285,7 +9284,7 @@ export interface ConnectionStats {
     inPool: number;
     /**
      * Connections actively being
-     * used in database transactions for this node.
+     * used in database commands for this node.
      */
     inUse: number;
     /**
@@ -9348,8 +9347,8 @@ export interface Host {
  * ###### Key Digests
  * In your application, you must specify the namespace, set and the key itself
  * to read and write records. When a key is sent to the database, the key value
- * and its set are hashed into a 160-bit digest. When a database operation
- * returns a key (e.g. Query or Scan operations) it might contain either the
+ * and its set are hashed into a 160-bit digest. When a database command
+ * returns a key (e.g. Query or Scan commands) it might contain either the
  * set and key value, or just the digest.
  *
  * @example <caption>Creating a new {@link Key} instance</caption>
@@ -9467,7 +9466,7 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
      */
     sendAsIs?: boolean;
     /**
-     * Maximum time in milliseconds to wait for the operation to complete.
+     * Maximum time in milliseconds to wait for the command to complete.
      */
     timeout?: number
 }
@@ -9607,7 +9606,7 @@ export interface NodeStats {
 export interface OperatePolicyOptions extends BasePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
-     * when writing before returning transaction succeeded.
+     * when writing before returning command succeeded.
      *
      * @see {@link policy.commitLevel} for supported policy values.
      */
@@ -9624,7 +9623,7 @@ export interface OperatePolicyOptions extends BasePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -9675,7 +9674,7 @@ export interface OperatePolicyOptions extends BasePolicyOptions {
      */
     readTouchTtlPercent?: number;
     /**
-     * Specifies the replica to be consulted for the read operation.
+     * Specifies the replica to be consulted for the read command.
      *
      * @see {@link policy.replica} for supported policy values.
      */
@@ -9911,21 +9910,21 @@ export interface QueryPolicyOptions extends BasePolicyOptions {
      */
     infoTimeout?: number;
     /**
-     * Specifies the replica to be consulted for the query operation.
+     * Specifies the replica to be consulted for the query command.
      *
      * @see {@link policy.replica} for supported policy values.
      */
     replica?: policy.replica;
     /**
-     * Total transaction timeout in milliseconds.
+     * Total command timeout in milliseconds.
      *
      * The <code>totalTimeout</code> is tracked on the client and sent to the
-     * server along with the transaction in the wire protocol. The client will
+     * server along with the command in the wire protocol. The client will
      * most likely timeout first, but the server also has the capability to
-     * timeout the transaction.
+     * timeout the command
      *
      * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-     * is reached before the transaction completes, the transaction will return
+     * is reached before the command completes, the command will return
      * error {@link status.ERR_TIMEOUT | ERR_TIMEOUT}.
      * If <code>totalTimeout</code> is zero, there will be no total time limit.
      *
@@ -9986,7 +9985,7 @@ export interface ReadPolicyOptions extends BasePolicyOptions {
      */
     readTouchTtlPercent?: number;
     /**
-     * Specifies the replica to be consulted for the read operation.
+     * Specifies the replica to be consulted for the read command.
      *
      * @type number
      * @see {@link policy.replica} for supported policy values.
@@ -9999,7 +9998,7 @@ export interface ReadPolicyOptions extends BasePolicyOptions {
 export interface RemovePolicyOptions extends BasePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
-     * when writing before returning transaction succeeded.
+     * when writing before returning command succeeded.
      *
      * @see {@link policy.commitLevel} for supported policy values.
      */
@@ -10008,7 +10007,7 @@ export interface RemovePolicyOptions extends BasePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -10065,7 +10064,7 @@ export interface ScanPolicyOptions extends BasePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -10095,21 +10094,21 @@ export interface ScanPolicyOptions extends BasePolicyOptions {
      */
     recordsPerSecond?: number;
     /**
-     * Specifies the replica to be consulted for the scan operation.
+     * Specifies the replica to be consulted for the scan command.
      *
      * @see {@link policy.replica} for supported policy values.
      */
     replica?: policy.replica;
     /**
-     * Total transaction timeout in milliseconds.
+     * Total command timeout in milliseconds.
      *
      * The <code>totalTimeout</code> is tracked on the client and sent to the
-     * server along with the transaction in the wire protocol. The client will
+     * server along with the command in the wire protocol. The client will
      * most likely timeout first, but the server also has the capability to
-     * timeout the transaction.
+     * timeout the command
      *
      * If <code>totalTimeout</code> is not zero and <code>totalTimeout</code>
-     * is reached before the transaction completes, the transaction will return
+     * is reached before the command completes, the command will return
      * error {@link status.ERR_TIMEOUT | ERR_TIMEOUT}.
      * If <code>totalTimeout</code> is zero, there will be no total time limit.
      *
@@ -10301,7 +10300,7 @@ export interface UserOptions {
      * Current statistics by offset are:
      * <ul>
      * <li>0: read quota in records per second</li>
-     * <li>1: single record read transaction rate (TPS)</li>
+     * <li>1: single record read command rate (TPS)</li>
      * <li>2: read scan/query record per second rate (RPS)</li>
      * <li>3: number of limitless read scans/queries</li>
      * </ul>
@@ -10313,7 +10312,7 @@ export interface UserOptions {
      * Current statistics by offset are:
      * <ul>
      * <li>0: write quota in records per second</li>
-     * <li>1: single record write transaction rate (TPS)</li>
+     * <li>1: single record write command rate (TPS)</li>
      * <li>2: write scan/query record per second rate (RPS)</li>
      * <li>3: number of limitless write scans/queries</li>
      * </ul>
@@ -10332,7 +10331,7 @@ export interface UserOptions {
 export interface WritePolicyOptions extends BasePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
-     * when writing before returning transaction succeeded.
+     * when writing before returning command succeeded.
      *
      * @see {@link policy.commitLevel} for supported policy values.
      */
@@ -10347,7 +10346,7 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * Specifies whether a {@link
      * http://www.aerospike.com/docs/guide/durable_deletes.html|tombstone}
      * should be written in place of a record that gets deleted as a result of
-     * this operation.
+     * this command.
      *
      * @default <code>false</code> (do not tombstone deleted records)
      */
@@ -10451,11 +10450,11 @@ export enum auth {
  */
 export enum batchType {
     /**
-     * Indicates that a {@link Record} instance is used in a batch for read operations.
+     * Indicates that a {@link Record} instance is used in a batch for read commands.
      */
     BATCH_READ,
     /**
-     * Indicates that a {@link Record} instance is used in a batch for write operations.
+     * Indicates that a {@link Record} instance is used in a batch for write commands.
      */
     BATCH_WRITE,
     /**
@@ -10463,15 +10462,15 @@ export enum batchType {
      */
     BATCH_APPLY,
     /**
-     * Indicates that a {@link Record} instance is used in a batch for removal operations.
+     * Indicates that a {@link Record} instance is used in a batch for removal commands.
      */
     BATCH_REMOVE,
     /**
-     * Indicates that a {@link Record} instance is used in a batch for transaction verfication operations.
+     * Indicates that a {@link Record} instance is used in a batch for transaction verfication commands.
      */
     BATCH_TXN_VERIFY,
     /**
-     * Indicates that a {@link Record} instance is used in a batch for transaction rolling operations.
+     * Indicates that a {@link Record} instance is used in a batch for transaction rolling commands.
      */
     BATCH_TXN_ROLL
 }
@@ -10663,7 +10662,7 @@ export enum regex {
  */
 export enum ttl {
     /**
-     * Use the default TTL value specified in {@link policy} for a given operation type.
+     * Use the default TTL value specified in {@link policy} for a given command type.
      */
     CLIENT_DEFAULT = -3,
     /**
@@ -10697,16 +10696,17 @@ export namespace admin {
          */
         constructor(code: privilegeCode, options?: PrivilegeOptions);
         /**
-         * Permission code used to define the type of permission granted for a user's role.
-         * 
+         * Privilege code used to define the permission granted for a user's role.
          */
         code: privilegeCode;
         /**
-         * Namespace in which the Privilege will apply.
+         * Namespace scope.  Apply permission to this namespace only.
+         * namespace is null, the privilege applies to all namespaces.
          */
         namespace: string;
         /**
-         * Set in which the Privilege will apply
+         * Set scope.  Apply permission to this set only.
+         * set is null, the privilege applies to all sets.
          */
         set: string;
     }
@@ -10726,19 +10726,19 @@ export namespace admin {
          */
         name: string;
         /**
-         * Allowed number of read transactions per second.
+         * Maximum reads per second limit
          */
         readQuota: number;
         /**
-         * Allowed number of write transactions per second.
+         * Maximum writes per second limit
          */
         writeQuota: number;
         /**
-         * list of allowable IP addresses or null. IP addresses can contain wildcards (ie. 10.1.2.0/24).
+         * Array of allowable IP address strings. IP addresses can contain wildcards (ie. 10.1.2.0/24).
          */
         whitelist: number[];
         /**
-         * List of privileges granted to the role. For more info on Privileges: see {@link Privilege | here.}
+         * Array of assigned privileges. For more info on Privileges: see {@link Privilege | here.}
          */
         privileges: Privilege[];
     }
@@ -10764,7 +10764,7 @@ export namespace admin {
          * List of read statistics. List may be null. Current statistics by offset are:
          * 
          * 0: read quota in records per second
-         * 1: single record read transaction rate (TPS)
+         * 1: single record read command rate (TPS)
          * 2: read scan/query record per second rate (RPS)
          * 3: number of limitless read scans/queries
          * 
@@ -10775,7 +10775,7 @@ export namespace admin {
          * List of write statistics. List may be null. Current statistics by offset are:
          * 
          * 0: write quota in records per second
-         * 1: single record write transaction rate (TPS)
+         * 1: single record write command rate (TPS)
          * 2: write scan/query record per second rate (RPS)
          * 3: number of limitless write scans/queries
          * 
@@ -10783,7 +10783,7 @@ export namespace admin {
          */
         writeInfo: number[];
         /**
-         * List of assigned roles.
+         * Array of assigned role names.
          */
         roles: string[];
     }        
@@ -15885,7 +15885,7 @@ export namespace operations {
 
 /**
  * This namespace provides functions to create secondary index (SI) filter
- * predicates for use in query operations via the {@link Client#query} command.
+ * predicates for use in query commands via the {@link Client#query} command.
  *
  * @see {@link Query}
  *
@@ -16083,27 +16083,27 @@ export namespace filter {
 
 declare namespace statusNamespace {
     /**
-     * Multi-record transaction commit called, but the transaction was already aborted.
+     * Transaction commit called, but the transaction was already aborted.
      */
     export const AEROSPIKE_TXN_ALREADY_ABORTED = -19;
     /**
-     * Multi-record transaction commit called, but the transaction was already aborted.
+     * Transaction commit called, but the transaction was already aborted.
      */
     export const TXN_ALREADY_ABORTED = -19;
     /**
-     * Multi-record transaction abort called, but the transaction was already committed.
+     * Transaction abort called, but the transaction was already committed.
      */
     export const AEROSPIKE_TXN_ALREADY_COMMITTED = -18;
     /**
-     * Multi-record transaction abort called, but the transaction was already committed.
+     * Transaction abort called, but the transaction was already committed.
      */
     export const TXN_ALREADY_COMMITTED = -18;
     /**
-     * Multi-record transaction failed.
+     * Transaction failed.
      */
     export const AEROSPIKE_TXN_FAILED = -17;
     /**
-     * Multi-record transaction failed.
+     * Transaction failed.
      */
     export const TXN_FAILED = -17;
     /**
@@ -16401,11 +16401,11 @@ declare namespace statusNamespace {
      */
     export const ERR_DEVICE_OVERLOAD = 18;
     /**
-     * Record key sent with transaction did not match key stored on server.
+     * Record key sent with command did not match key stored on server.
      */
     export const AEROSPIKE_ERR_RECORD_KEY_MISMATCH = 19;
     /**
-     * Record key sent with transaction did not match key stored on server.
+     * Record key sent with command did not match key stored on server.
      */
     export const ERR_RECORD_KEY_MISMATCH = 19;
     /**
@@ -16469,12 +16469,12 @@ declare namespace statusNamespace {
      */
     export const ERR_OP_NOT_APPLICABLE = 26;
     /**
-     * The transaction was not performed because the filter expression was
+     * The command was not performed because the filter expression was
      * false.
      */
     export const AEROSPIKE_FILTERED_OUT = 27;
     /**
-     * The transaction was not performed because the filter expression was
+     * The command was not performed because the filter expression was
      * false.
      */
     export const FILTERED_OUT = 27;
@@ -16695,53 +16695,53 @@ x     */
      */
     export const ERR_UDF = 100;
     /**
-     * MRT record blocked by a different transaction.
+     * Transaction record blocked by a different transaction.
      */
     export const AEROSPIKE_MRT_BLOCKED = 120;
     /**
-     * MRT record blocked by a different transaction.
+     * Transaction record blocked by a different transaction.
      */
     export const MRT_BLOCKED = 120;
     /**
-     * MRT read version mismatch identified during commit.
+     * Transaction read version mismatch identified during commit.
      * Some other command changed the record outside of the transaction.
      */
     export const AEROSPIKE_MRT_VERSION_MISMATCH = 121;
     /**
-     * MRT read version mismatch identified during commit.
+     * Transaction read version mismatch identified during commit.
      * Some other command changed the record outside of the transaction.
      */
     export const MRT_VERSION_MISMATCH = 121;
     /**
-     * MRT deadline reached without a successful commit or abort.
+     * Transaction deadline reached without a successful commit or abort.
      */
     export const AEROSPIKE_MRT_EXPIRED = 122;
     /**
-     * MRT deadline reached without a successful commit or abort.
+     * Transaction deadline reached without a successful commit or abort.
      */
     export const MRT_EXPIRED = 122;
     /**
-     * MRT write command limit (4096) exceeded.
+     * Transaction write command limit (4096) exceeded.
      */
     export const AEROSPIKE_MRT_TOO_MANY_WRITES = 123;
     /**
-     * MRT write command limit (4096) exceeded.
+     * Transaction write command limit (4096) exceeded.
      */
     export const MRT_TOO_MANY_WRITES = 123;
     /**
-     * MRT was already committed.
+     * Transaction was already committed.
      */
     export const AEROSPIKE_MRT_COMMITTED = 124;
     /**
-     * MRT was already committed.
+     * Transaction was already committed.
      */
     export const MRT_COMMITTED = 124;
     /**
-     * MRT was already aborted.
+     * Transaction was already aborted.
      */
     export const AEROSPIKE_MRT_ABORTED = 125;
     /**
-     * MRT was already aborted.
+     * Transaction was already aborted.
      */
     export const MRT_ABORTED = 125;
     /**
