@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install xyzparbart;
+          npm install xyzparbart --omit-dev;
           node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
