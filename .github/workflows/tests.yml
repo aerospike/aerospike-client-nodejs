@@ -405,7 +405,12 @@ jobs:
       working-directory: ts-test
 
     - name: Run tests
-      run: npm run valgrind -- --t 40000
+      run: 
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run valgrind -- --t 40000
 
 #  test-typescript:
 #    runs-on: ubuntu-latest
