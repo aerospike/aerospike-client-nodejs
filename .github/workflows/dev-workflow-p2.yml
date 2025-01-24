@@ -73,7 +73,6 @@ jobs:
     #  publish-to-npm
     #]
     uses: ./.github/workflows/verify-npm-install.yml
-    fail-fast: false
     secrets: inherit
 
 

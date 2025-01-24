@@ -13,6 +13,7 @@ on:
 jobs:
   run-npm-install-and-require-test:
     strategy:
+      fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
         os: [ubuntu-22.04, 22.04A, 20.04, 20.04A, macos-13-large, SMA, windows-2022]
