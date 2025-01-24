@@ -31,5 +31,4 @@ jobs:
           mkdir clawn;
           cd clawn;
           npm install xyzparbart --omit-dev;
-          ls node_modules/xyzparbart/lib/binding
           node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
