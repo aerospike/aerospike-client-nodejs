@@ -399,9 +399,9 @@ jobs:
     - name: install mocha
       run: |
         npm install mocha
-        npm run test-preq
+        npm run test-prereq
       working-directory: ts-test
-      
+
     - name: Run tests
       run: npm run valgrind -- --t 40000
 
