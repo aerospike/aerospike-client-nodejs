@@ -345,11 +345,21 @@ jobs:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
+
+    - name: Cleanup Artifacts
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      shell: pwsh
+      run: |
+        Remove-Item -Recurse -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\obj
+        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.pdb
+        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.ipdb
+        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.iobj
+
     - name: Upload wheels to GitHub Windows
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       with:
-        path: ./build/Release/aerospike.node
+        path: ./build/Release/*
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
