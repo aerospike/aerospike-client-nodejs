@@ -76,7 +76,6 @@ jobs:
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
 
-
       - name: run install command
         run: npm install
 
