@@ -17,8 +17,8 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
         os: [ubuntu-22.04, 22.04A, 20.04, 20.04A, macos-13-large, SMA, windows-2022]
-      runs-on: ${{ matrix.os }}
-      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    fail-fast: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
