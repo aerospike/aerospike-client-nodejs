@@ -2,7 +2,7 @@ name: 'Donwload github artifacts'
 description: 'Download github artifacts for all supported versions'
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       nodejs-tags:
         type: string
