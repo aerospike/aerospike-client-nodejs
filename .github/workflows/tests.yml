@@ -396,6 +396,12 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: install mocha
+      run: |
+        npm install mocha
+        npm run test-preq
+      working-directory: ts-test
+      
     - name: Run tests
       run: npm run valgrind -- --t 40000
 
