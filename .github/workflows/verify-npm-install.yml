@@ -19,9 +19,6 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
