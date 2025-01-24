@@ -12,7 +12,6 @@ on:
 
 jobs:
   run-npm-install-and-require-test:
-    needs: get-runner-os
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
