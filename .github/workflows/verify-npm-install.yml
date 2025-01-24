@@ -22,6 +22,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: ls ./github/workflows
+      - run: ls ./.github/workflows
       - name: Run reusable workflow
         uses: ./.github/workflows/run-npm-install.yml
         with:
