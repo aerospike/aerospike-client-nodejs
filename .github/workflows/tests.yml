@@ -402,11 +402,9 @@ jobs:
     - name: install mocha
       run: |
         npm install mocha
-        cd ts-test;
         npm install typescript --save-dev;
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
-        cd ..;
       working-directory: ts-test
 
     - name: Run tests
