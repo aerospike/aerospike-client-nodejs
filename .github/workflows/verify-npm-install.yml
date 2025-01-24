@@ -5,8 +5,7 @@ on:
   workflow_call:
 
 jobs:
-
-verify:
+  verify:
     runs-on: ubuntu-latest
     strategy:
       matrix:
