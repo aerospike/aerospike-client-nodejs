@@ -75,7 +75,6 @@ jobs:
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
-
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:
 #    needs: upload-to-jfrog
