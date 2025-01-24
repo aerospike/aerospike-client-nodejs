@@ -19,14 +19,14 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Delete workspace
+        run: rm -rf ${{ github.workspace }}/*
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
       - name: verify runs and is aligned
         run: |
-          mkdir clawn;
-          cd clawn;
           npm install xyzparbart --omit-dev;
-          ls node_modules\xyzparbart\lib\binding
           node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
