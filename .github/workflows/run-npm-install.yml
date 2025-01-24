@@ -35,7 +35,7 @@ jobs:
       # Bash >= 4 supports hashmaps
       shell: bash
 
-  verify-npm-install:
+  run-npm-install-and-require-test:
     needs: get-runner-os
     strategy:
       matrix:
@@ -43,6 +43,9 @@ jobs:
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}

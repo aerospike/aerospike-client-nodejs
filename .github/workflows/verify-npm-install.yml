@@ -18,11 +18,7 @@ jobs:
           "macosx_arm64",
           "win_amd64"
         ]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    uses: ./.github/workflows/run-npm-install.yml
+    with:
+      platform-tag: "${{ matrix.platform-tag }}"
 
-      - name: Verify npm install
-        uses: ./.github/workflows/run-npm-install.yml
-        with:
-          platform-tag: "${{ matrix.platform-tag }}"
