@@ -9,7 +9,6 @@ on:
         required: false
         default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
 
-
 jobs:
   run-npm-install-and-require-test:
     strategy:
@@ -20,6 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Delete workspace
+        if: ${{ inputs.platform-tag != 'win_amd64' }}
         run: rm -rf ${{ github.workspace }}/*
 
       - uses: actions/setup-node@v4
