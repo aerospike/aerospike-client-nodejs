@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Delete workspace
-        if: ${{ inputs.platform-tag != 'win_amd64' }}
+        if: ${{ matrix.os != 'windows-2022' }}
         run: rm -rf ${{ github.workspace }}/*
 
       - uses: actions/setup-node@v4
