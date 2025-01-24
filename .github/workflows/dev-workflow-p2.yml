@@ -67,7 +67,7 @@ jobs:
   verify-npm-install:
     name: verify npm install works correctly
     needs: [
-      bump-dev-number,
+    #  bump-dev-number,
       rebuild-artifacts-with-new-dev-num,
       upload-to-jfrog,
       publish-to-npm
