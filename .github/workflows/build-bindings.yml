@@ -350,10 +350,10 @@ jobs:
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       shell: pwsh
       run: |
-        Remove-Item -Recurse -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\obj
-        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.pdb
-        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.ipdb
-        Remove-Item -Force .\lib\binding\node-${{ matrix.nodejs-tag[0] }}-win32-x64\aerospike.iobj
+        Remove-Item -Recurse -Force .\build\release\obj
+        Remove-Item -Force .\build\release\aerospike.pdb
+        Remove-Item -Force .\build\release\aerospike.ipdb
+        Remove-Item -Force .\build\release\aerospike.iobj
 
     - name: Upload wheels to GitHub Windows
       uses: actions/upload-artifact@v4
