@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
         os: [ubuntu-22.04, 22.04A, 20.04, 20.04A, macos-13-large, SMA, windows-2022]
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -29,4 +29,5 @@ jobs:
       - name: verify runs and is aligned
         run: |
           npm install xyzparbart --omit-dev;
+          ls ./lib/binding/
           node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
