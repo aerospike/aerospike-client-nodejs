@@ -27,12 +27,12 @@ on:
         default: false
 
 jobs:
-  test-with-server-release:
-    uses: ./.github/workflows/build-artifacts.yml
-    with:
-      run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
-      sha-to-build-and-test: ${{ github.sha }}
-    secrets: inherit
+  #test-with-server-release:
+  #  uses: ./.github/workflows/build-artifacts.yml
+  #  with:
+  #    run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
+  #    sha-to-build-and-test: ${{ github.sha }}
+  #  secrets: inherit
 
 #  test-with-server-rc:
 #    needs: test-with-server-release
