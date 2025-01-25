@@ -31,7 +31,7 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT backward compatible tests', function () {
-  helper.skip(this, 'MRT\'s require version 8.0.0 or greater')
+  helper.skipUnlessVersion('< 8.0.0', this)
 
   // helper.skipUnlessVersionAndCommunity('< 8.0.0', this)
 
@@ -71,6 +71,9 @@ describe('MRT backward compatible tests', function () {
     };
 
     await client.put(key1, record2, meta, policy)
+    await client.put(key2, record2, meta, policy)
+    await client.put(key3, record2, meta, policy)
+    await client.put(key4, record2, meta, policy)
 
 	  let get_result: AerospikeRecord = await client.get(key1, policy)
     expect(get_result.bins).to.eql(record2)

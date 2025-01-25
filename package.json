@@ -41,7 +41,7 @@
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
-    "test-prereq": "cd ts-test; npm install ..; run: npm i --save-dev @types/jest; run: npm i --save-dev @types/chai; cd ..;",
+    "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
     "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
@@ -53,7 +53,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/index.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
+    "valgrind": "cd ts-test; valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
