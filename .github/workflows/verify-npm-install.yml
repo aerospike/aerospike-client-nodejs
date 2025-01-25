@@ -29,4 +29,4 @@ jobs:
       - name: verify runs and is aligned
         run: |
           npm install aerospike --omit-dev;
-          node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
+          node -e "console.log(require('aerospike').Transaction.commitStatus)";
