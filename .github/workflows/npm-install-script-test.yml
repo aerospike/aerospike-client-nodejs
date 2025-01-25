@@ -107,6 +107,7 @@ jobs:
       - name: Publish NPM package
         run: jf npm publish --build-name nodejs-client --build-number 6.0.2
 
+
       #- name: npm publish
       #  run: |
       #    npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
@@ -114,6 +115,7 @@ jobs:
       - name: npm install
         run: |
           jf npm install --build-name nodejs-client --build-number 6.0.2
+
 
       - name: Simple require test
         run: |
