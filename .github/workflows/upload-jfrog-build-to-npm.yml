@@ -1,0 +1,112 @@
+name: Publish JFrog build to PyPI
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
+      #use-test-pypi:
+      #  type: boolean
+      #  description: 'DEBUG: upload to test.pypi.org?'
+      #  required: true
+      #  default: false
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
+      NPMRC_OFF:
+        required: true
+      NPM_TOKEN_OFF:
+        required: true
+
+jobs:
+  publish-jfrog-build-to-npm:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        # We need the last tag before the ref, so we can relabel the version if needed
+        fetch-depth: 0
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: change package name
+      run: |
+        sed -i 's/"name": "[^"]*"/"name": "xyzparbart"/' package.json
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: 6.0.3-dev.36
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts/aerospike/6.0.3-dev.36/lib/binding/
+
+    - name: Move artifacts
+      run: |
+        cp -r downloaded-artifacts/aerospike/6.0.3-dev.36/lib/binding/ lib/
+
+    - name: change verison
+      run: |
+        npm version 6.0.3-dev.36 --no-git-tag-version
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+
+
+#    - name: npm rc
+#      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+#      env:
+#        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+
+    - name: npm install
+      run: npm install
+
+    - name: Move artifacts
+      run: |
+        rm -rf lib/binding
+        mkdir lib/binding
+        cp -r downloaded-artifacts/aerospike/6.0.3-dev.36/lib/binding/ lib/
+
+    - name: npm publish
+      run: |
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+
+    - name: npm install
+      run: |
+        npm install xyzparbart
+
+    #- run: npm ci
+    #- run: npm publish --provenance --access public
+    #  env:
+    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

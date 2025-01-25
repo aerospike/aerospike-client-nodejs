@@ -1,5 +1,9 @@
 name: Upload to JFrog
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
 on:
   workflow_call:
     inputs:
@@ -10,43 +14,65 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-    secrets:
-      JFROG_PLATFORM_URL:
-        required: true
-      JFROG_ACCESS_TOKEN:
-        required: true
+      #oidc-provider:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: gh-aerospike-clients
+      #oidc-audience:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: aerospike/clients
+    #secrets:
+    #  JFROG_PLATFORM_URL:
+    #    required: true
 
 jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     runs-on: ubuntu-22.04
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: '*.node'
-        merge-multiple: true
-        path: artifacts
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Create multiple directories
+      run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
+
+    - name: Download Artifacts
+      uses: ./.github/actions/download-github-artifacts/
+
+
+    - name: print artifacts
+      run: ls ./lib/binding
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v3
+      uses: jfrog/setup-jfrog-cli@v4
       env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: Upload manylinux builds from arbitrary branches to JFrog generic repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
-      run: jf rt upload "*manylinux*" ${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/
-      working-directory: artifacts
+    #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
+    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
+    #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
+    #  working-directory: artifacts
+
+    - name: WHOAMI REALLY
+      run: jf config show
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number $NEW_VERSION "artifacts/*" ${{ vars.JFROG_REPO_NAME }}/aerospike/$NEW_VERSION/
+      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: 6.0.3-dev.36
+        PACKAGE_MANAGER: npm
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.version }}
+      run: jf rt build-publish nodejs-client 6.0.3-dev.36
+

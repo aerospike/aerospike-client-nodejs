@@ -35,6 +35,8 @@ on:
         options:
         - manylinux_x86_64
         - manylinux_aarch64
+        - manylinux_20_x86_64
+        - manylinux_20_aarch64
         - macosx_x86_64
         - macosx_arm64
         - win_amd64
@@ -144,7 +146,9 @@ jobs:
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
-        hashmap[manylinux_aarch64]="SLA25"
+        hashmap[manylinux_aarch64]="22.04A"
+        hashmap[manylinux_20_x86_64]="20.04"
+        hashmap[manylinux_20_aarch64]="20.04A"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA"
         hashmap[win_amd64]="windows-2022"
@@ -205,7 +209,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && (inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -256,9 +260,8 @@ jobs:
         ./scripts/build-c-client.sh;
         npm install;
 
-
     - name: Run tests
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
         docker logs aerospike;
@@ -266,6 +269,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
+        npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Run tests
@@ -277,6 +281,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
+        npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
     # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
@@ -297,15 +302,33 @@ jobs:
     #    CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 #
 
-    - name: Run tests
-      run: |
-        ls ./lib/binding;
 
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Linux 20 x86
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
+      with:
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Linux aarch64
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      with:
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
+        name: ${{ env.BUILD_IDENTIFIER }}.node
+
+    - name: Upload wheels to GitHub Linux 20 aarch64
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
+      with:
+        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Upload wheels to GitHub Mac x86
@@ -321,6 +344,16 @@ jobs:
       with:
         path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
         name: ${{ env.BUILD_IDENTIFIER }}.node
+
+
+    - name: Cleanup Artifacts
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      shell: pwsh
+      run: |
+        Remove-Item -Recurse -Force .\build\release\obj
+        Remove-Item -Force .\build\release\aerospike.pdb
+        Remove-Item -Force .\build\release\aerospike.ipdb
+        Remove-Item -Force .\build\release\aerospike.iobj
 
     - name: Upload wheels to GitHub Windows
       uses: actions/upload-artifact@v4
@@ -537,6 +570,7 @@ jobs:
           cd ..;
           npm install;
           pwd;
+          npx tsc;
           npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
 
@@ -553,9 +587,10 @@ jobs:
           npm i --save-dev @types/mocha;
           npm install mocha;
           npx tsc;
-          cp tests\udf.lua dist\udf.lua ;
+          cp tests\udf.lua dist\udf.lua;
           npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
           cd ..; 
+          npx tsc;
 
 
       - name: Show job status for commit

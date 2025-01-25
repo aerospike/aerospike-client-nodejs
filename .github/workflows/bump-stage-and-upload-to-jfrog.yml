@@ -12,8 +12,6 @@ on:
       # Used to upload to JFrog
       JFROG_PLATFORM_URL:
         required: true
-      JFROG_ACCESS_TOKEN:
-        required: true
 
 jobs:
   ff-stage-to-dev-tag:
