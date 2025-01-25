@@ -151,9 +151,16 @@ describe('MRT functionality tests', function () {
 
     let result: number = await client.abort(mrt)
 
-    result = await client.commit(mrt)
 
-    expect(result).to.eql(Aerospike.Transaction.commitStatus.ALREADY_ABORTED)
+    try{
+      await client.commit(mrt)
+    }
+    catch (error: any) {
+      expect(error.code).to.eql(Aerospike.status.TXN_ALREADY_ABORTED)
+      return
+    }
+
+    assert.fail('An ALREADY_ABORTED error should have been thrown')
   })
 
   it('should fail to abort after committing', async function () {
@@ -167,8 +174,15 @@ describe('MRT functionality tests', function () {
 
     let result: number = await client.commit(mrt)
 
-    result = await client.abort(mrt)
-    expect(result).to.eql(Aerospike.Transaction.abortStatus.ALREADY_COMMITTED)
+    try{
+      await client.abort(mrt)
+    }
+    catch (error: any) {
+      expect(error.code).to.eql(Aerospike.status.TXN_ALREADY_COMMITTED)
+      return
+    }
+
+    assert.fail('An ALREADY_COMMITTED error should have been thrown')
 
   })
 

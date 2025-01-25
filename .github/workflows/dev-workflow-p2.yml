@@ -1,0 +1,82 @@
+name: Dev workflow (part 2)
+
+on:
+  pull_request:
+    branches:
+      - 'dev*'
+    types:
+      - synchronize
+    paths-ignore:
+      - 'package.json'
+  workflow_dispatch:
+    paths-ignore:
+      - 'package.json'
+
+jobs:
+#  bump-dev-number:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/bump-version.yml
+#    with:
+#      change: 'bump-dev-num'
+#    secrets: inherit
+
+#  release-package:
+#    name: release npm package
+#    uses: ./.github/workflows/release-package.yml
+#    secrets: inherit
+
+  rebuild-artifacts-with-new-dev-num:
+    #needs: bump-dev-number
+    name: Rebuild artifacts with new dev number
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      # On pull_request_target, the bump version commit will be ignored
+      # So we must pass it manually to the workflow
+      sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
+    secrets: inherit
+
+  #test-npm-install:
+  #  needs: rebuild-artifacts-with-new-dev-num
+  #  name: Test npm install command for npm package
+  #  uses: ./.github/workflows/npm-install-script-test.yml
+  #  secrets: inherit
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
+
+  publish-to-npm:
+    name: Upload artifacts to JFrog
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num,
+      upload-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
+
+  verify-npm-install:
+    name: verify npm install works correctly
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num,
+      upload-to-jfrog,
+      publish-to-npm
+    ]
+    uses: ./.github/workflows/verify-npm-install.yml
+    secrets: inherit
+
+#  # We don't want the artifacts in JFrog to also exist in Github
+#  delete-artifacts:
+#    needs: upload-to-jfrog
+#    uses: ./.github/workflows/delete-artifacts.yml
+#

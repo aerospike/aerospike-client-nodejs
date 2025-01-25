@@ -396,8 +396,21 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: install pre-req
+      run: npm run test-prereq
+
+    - name: install mocha
+      run: |
+        npm install mocha
+        npm install typescript --save-dev;
+        npx tsc;
+        cp tests/udf.lua dist/udf.lua;
+      working-directory: ts-test
+
     - name: Run tests
-      run: npm run valgrind -- --t 40000
+      run: 
+        npm run valgrind -- --t 40000
+
 
   test-tsc-compile:
     runs-on: ubuntu-latest
