@@ -61,7 +61,7 @@ jobs:
         sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
 
     - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
         NEW_VERSION: 6.0.2
         PACKAGE_MANAGER: npm
