@@ -1,0 +1,60 @@
+name: Dev to stage
+
+on:
+  # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
+  workflow_dispatch:
+
+jobs:
+  # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
+  compare-latest-dev-tag-and-stage:
+    outputs:
+      # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
+      latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
+      run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Get all tags
+        fetch-depth: 0
+
+    - name: Get latest dev tag
+      run: echo latest-dev-tag=$(git describe --tags --abbrev=0 origin/${{ vars.DEV_BRANCH_NAME }}) >> $GITHUB_OUTPUT
+      id: get-dev-tag
+
+    - name: Get number of files that were changed between dev and stage (with some exceptions)
+      run: echo NUM_FILES_CHANGED=$(git diff origin/${{ vars.STAGE_BRANCH_NAME }}..origin/${{ vars.DEV_BRANCH_NAME }} --name-only | grep --invert-match --count -e "^doc/" -e "^aerospike-stubs/" -e VERSION) >> $GITHUB_ENV
+      # We want this step to fail if a command failed while using pipes
+      shell: bash
+
+    - name: If any files were changed besides the exceptions, run the stage tests
+      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
+      id: run_stage_tests
+
+  run-stage-tests-on-jfrog-artifacts:
+    needs: compare-latest-dev-tag-and-stage
+    # All job outputs are unicode strings
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
+    uses: ./.github/workflows/stage-tests.yml
+    # Need to pass in JFrog secrets
+    secrets: inherit
+    with:
+      use_jfrog_builds: true
+      jfrog-build-version-to-test: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+
+  # Stage tests have passed or skipped
+  # so it is safe to update the stage branch with the changes in dev, promote the version to an RC, and rebuild and upload the RC to JFrog
+  # We store the subsequent jobs after the stage tests in a separate reusable workflow...
+  # because if stage tests were skipped, all subsequent jobs will be skipped by default too (both direct and indirect descendents)
+  # This means we have to add a manual check for each subsequent job that checks if the stage tests were skipped in order to run them
+  # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
+  bump-stage-and-upload-to-jfrog:
+    needs: [
+      run-stage-tests-on-jfrog-artifacts,
+      compare-latest-dev-tag-and-stage
+    ]
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests-on-jfrog-artifacts.result == 'success' || needs.run-stage-tests-on-jfrog-artifacts.result == 'skipped') }}
+    uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
+    with:
+      passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+    secrets: inherit

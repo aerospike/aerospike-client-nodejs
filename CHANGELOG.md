@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.0.2]
+* **New Features**
+  * [CLIENT-3243] - Added TXN_ALREADY_COMMITTED and TXN_ALREADY_ABORTED error codes.
+  * [CLIENT-3267] - Added MRT_ALREADY_LOCKED and MRT_MONITOR_EXISTS error codes.
+
+* **Bug Fixes**
+  * [CLIENT-3306] - Added the following missing error codes:
+    * ERR_MAX_RETRIES_EXCEEDED
+    * MRT_TOO_MANY_WRITES
+    * NOT_WHITELISTED
+    * QUOTA_EXCEEDED
+
+* **Improvements**
+  * [CLIENT-3244] - Removed commitStatus.ALREADY_ABORTED and abortStatus.ALREADY_COMMITTED
+  * [CLIENT-3277] - Exception is now thrown when aborting a committed transaction.
+  * [CLIENT-3277] - Exception is now thrown when committing an aborted transaciton.
+  * [CLIENT-3291] - Default client MRT timeout to zero.
+
+## [6.0.1]
+* **Bug Fixes**
+  * [CLIENT-3235] - Fixed version mismatch with the windows C++ add-on which caused the client to fail on windows.
+
+## [6.0.0]
+* **Description**
+  * The new features in this release require server version 8.0.0 or above.
+
+* **New Features**
+  * [CLIENT-3181] - Added support for multi-record transactions (MRTs). Requires server version 8.0.0 or above.
+
 ## [5.13.2]
 * **Bug Fixes**
   * [CLIENT-3155] - Fixed typescript compilation by removing the protected modifier from the ExpOperation class.

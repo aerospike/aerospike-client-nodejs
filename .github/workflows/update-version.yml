@@ -1,0 +1,66 @@
+# Takes in a new version as input
+# Changes the version in the whole repo and outputs the commit hash as output
+
+name: Update version in repo
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        type: string
+        description: Version string to set in the repo
+        required: true
+  workflow_call:
+    inputs:
+      new_version:
+        type: string
+        description: Version string to set in the repo
+        required: true
+      ref:
+        type: string
+        description: commit/branch to change version
+        required: false
+      # A hack to tell if workflow is triggered by workflow_call or not
+      # Calling workflows should not set this input
+      # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
+      # https://github.com/actions/runner/discussions/1884#discussioncomment-6377587
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+    outputs:
+      bump_sha:
+        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
+
+jobs:
+  update-version-in-repo:
+    name: Update version in repo
+    runs-on: ubuntu-22.04
+    outputs:
+      bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
+    steps:
+      
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
+
+    - name: Update version in repo
+      uses: ./.github/actions/update-version
+      with:
+        new_version: ${{ inputs.new_version }}
+
+    - name: Commit new version
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        tagging_message: ${{ inputs.new_version }}
+        branch: 2024-Pipeline-Improvement
+        #branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+
+    - name: Output bump commit hash for next jobs to use
+      id: get-bump-commit-sha
+      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT

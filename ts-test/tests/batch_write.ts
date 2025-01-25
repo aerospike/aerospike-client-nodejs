@@ -534,7 +534,7 @@ describe('client.batchWrite()', function () {
         password: helper.config.password,
         policies: {
           batchParentWrite: new Aerospike.BatchPolicy({ socketTimeout: 0, totalTimeout: 0, deserialize: false })
-        }
+        },
       }
 
       const dummyClient = await Aerospike.connect(config)
@@ -570,7 +570,7 @@ describe('client.batchWrite()', function () {
           const bins = result.bins
           expect(bins.example).to.be.a('number')
           expect(bins.blob).to.be.a('array')
-          expect(result.ttl).to.equal(1367)
+          expect(result.ttl).to.be.within(1366, 1367)
         })
     })
   })

@@ -25,9 +25,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+
   - name: Install crudini to manipulate config.conf
     # This will only work on the Github hosted runners.
-    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    run: |
+      pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
     working-directory: .github/workflows
     shell: bash
 

@@ -1,0 +1,456 @@
+name: PR pre-merge tests
+
+env:
+  LOWEST_SUPPORTED_NODEJS_VERSION: '18'
+  LOWEST_SUPPORTED_NODE_MODULE: 'v108'
+
+# Trigger test workflow whenever:
+# 1. A pull request is updated (e.g with new commits)
+# 2. Commits are pushed directly to the stage or master branch
+on:
+  push:
+    branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage", "master"]
+    types: [
+      # Default triggers
+      opened,
+      synchronize,
+      reopened,
+      # Additional triggers
+      labeled,
+      unlabeled
+    ]
+    workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: install standard
+      run: npm install standard
+
+    - name: lint
+      run: npm run lint
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        nodejs-version: ["18", "20", "22", "23"]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs-version }}
+        architecture: 'x64'
+    - name: debugging
+      run: |
+        echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
+
+    - run: sudo apt update
+    - name: Install build dependencies (C Client dependency packages)
+      run: sudo apt install g++ libssl-dev zlib1g-dev;
+    - name: Install build dependencies (make)
+      run: sudo apt-get install -y make;
+    - name: Install build dependencies (make)
+      run: sudo apt install build-essential;
+
+    - name: Build client
+      run: |
+        ./scripts/build-c-client.sh
+        npm install
+      env:
+        CFLAGS: '-Werror'
+
+    - name: list
+      run: ls lib/binding
+    - name: Send binding to test jobs
+      uses: actions/upload-artifact@v4
+      with:
+        name: binding-${{ matrix.nodejs-version }}
+        path: ./lib/binding/node-*-linux-x64/
+
+#  test-memray:
+#    needs: build-ubuntu
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v4
+#
+#    - uses: actions/setup-node@v4
+#      with:
+#        node-version: ${{ matrix.nodejs-version }}
+#        architecture: 'x64'
+#
+#    - uses: actions/download-artifact@v4
+#      with:
+#        name: binding-18
+#
+#    - name: make binding folder
+#      run: mkdir lib/binding
+#
+#    - name: Install client
+#      run: cp -r install node-v108-linux-x64 lib/binding/node-v108-linux-x64
+#
+#    - name: Install client
+#      run: npm install .
+#
+#    - name: Run Aerospike server
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#    - name: Wait for database to be ready
+#      # Should be ready after 3 seconds
+#      run: sleep 3
+#
+#    - name: Get number of tests
+#      run: echo "NUM_TESTS=$(npm run test-dry-run | grep -oP '\d+ (passing|pending)' | awk '{ sum += $1 } END { print sum }')" >> $GITHUB_ENV
+#      working-directory: test
+#
+#    - name: Run tests
+#      # Get number of tests since setting to 0 doesn't work properly
+#      # pytest-memray currently throws a ZeroDivision error due to having a bug
+#      # We ignore this for now
+#      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
+#      working-directory: test
+
+  # Run this when testing new server features on server release candidate
+  # to make sure the tests don't regress on the last server release.
+  test-ce-latest-release:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    needs: build-ubuntu
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: debugging
+      run: |
+        echo "LOWEST_SUPPORTED_NODEJS_VERSION: $LOWEST_SUPPORTED_NODEJS_VERSION"
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+      env:
+        LOWEST_SUPPORTED_NODEJS_VERSION: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+
+
+    - name: make binding folder
+      run: mkdir lib/binding
+ 
+    - name: Install client
+      run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: npm run test
+
+  test-ce:
+    runs-on: ubuntu-latest
+    needs: build-ubuntu
+    strategy:
+      matrix:
+        node-version: [
+          "18",
+          "20",
+          "22",
+          "23"
+        ]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ matrix.node-version }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: install mocha
+      run: npm install mocha
+
+    - name: Install client
+      #fix the convention here
+      run: |
+        if [ "${{ matrix.node-version }}" = "18" ]; then
+          cp -r node-v108-linux-x64 lib/binding/node-v108-linux-x64
+        elif [ "${{ matrix.node-version }}" = "20" ]; then
+          cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
+        elif [ "${{ matrix.node-version }}" = "22" ]; then
+          cp -r node-v127-linux-x64 lib/binding/node-v127-linux-x64
+        elif [ "${{ matrix.node-version }}" = "23" ]; then
+          cp -r node-v131-linux-x64 lib/binding/node-v131-linux-x64
+        fi
+
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: |
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/
+
+  test-lowest-supported-server:
+    runs-on: ubuntu-latest
+    needs: build-ubuntu
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+      env:
+        LOWEST_SUPPORTED_NODEJS_VERSION: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: install mocha
+      run: npm install mocha
+
+    - name: Install client
+      #fix the convention here
+      run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
+
+    - name: Run lowest supported server
+      run: |
+        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.1")).name' -r | head -n 1)
+        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: |
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/ -- --t 20000
+
+  test-ee:
+    runs-on: ubuntu-latest
+    needs: build-ubuntu
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+      env:
+        LOWEST_SUPPORTED_NODEJS_VERSION: ${{ env.LOWEST_SUPPORTED_NODEJS_VERSION }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: install mocha
+      run: npm install mocha
+
+    - name: Install client
+      #fix the convention here
+      run: cp -r node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64 lib/binding/node-${{ env.LOWEST_SUPPORTED_NODE_MODULE }}-linux-x64
+
+    - name: Download aerospike-client-python repository
+      run: git clone https://github.com/aerospike/aerospike-client-python.git
+
+    - name: debugging
+      run: |
+        ls;
+        ls .github;
+        docker ps;
+
+    - name: Run ee server
+      uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+ 
+    - name: Wait for server to start
+      run: sleep 5
+ 
+    - name: Run tests
+      run: |
+        cd ts-test;
+        npm install typescript --save-dev;
+        npx tsc;
+        cd ..;
+        npm run test dist/admin.js -- --h localhost --U admin --P admin --t 40000
+
+  test-valgrind:
+    runs-on: ubuntu-latest
+    needs: build-ubuntu
+    strategy:
+      matrix:
+        node-version: [
+          "20",
+        ]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ matrix.node-version }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: install mocha
+      run: npm install mocha
+
+    - name: install valgrind
+      run: |
+        sudo apt-get update;
+        sudo apt update;
+        sudo apt install valgrind;
+
+    - name: Install client
+      #fix the convention here
+      run: |
+        cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
+
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d -v $(pwd)/.github/assets/aerospike.conf:/etc/mail/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server --config-file /etc/mail/aerospike.conf
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: npm run valgrind -- --t 40000
+
+#  test-typescript:
+#    runs-on: ubuntu-latest
+#    needs: build-ubuntu
+#    strategy:
+#      matrix:
+#        node-version: [
+#          "20",
+#        ]
+#      fail-fast: false
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        submodules: recursive
+#
+#    - uses: actions/setup-node@v4
+#      with:
+#        node-version: ${{ matrix.node-version }}
+#        architecture: 'x64'
+#
+#    - uses: actions/download-artifact@v4
+#      with:
+#        name: binding-${{ matrix.node-version }}
+#
+#    - name: make binding folder
+#      run: mkdir lib/binding
+#
+#    - name: Install client
+#      run: |
+#        cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
+#
+#    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      uses: docker/login-action@v3
+#      with:
+#        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#    - name: Run Aerospike server release candidate with latest tag
+#      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+#
+#    - name: Run Aerospike server
+#      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#      
+#    - name: Modify the package.json
+#      run: |
+#        mkdir my-aerospike-project
+#        cd my-aerospike-project
+#        npm init -y
+#        npm install typescript ts-node --save-dev
+#        npm install ..
+#        cp ../examples/typescript.ts index.ts
+#        npx tsc index.ts
+#        node index.js

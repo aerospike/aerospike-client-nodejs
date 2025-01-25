@@ -31,7 +31,6 @@ Local<Object> abortStatus()
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
 	set(obj, "OK", AS_ABORT_OK);
-	set(obj, "ALREADY_COMMITTED", AS_ABORT_ALREADY_COMMITTED);
 	set(obj, "ALREADY_ABORTED", AS_ABORT_ALREADY_ABORTED);
 	set(obj, "ROLL_BACK_ABANDONED", AS_ABORT_ROLL_BACK_ABANDONED);
 	set(obj, "CLOSE_ABANDONED", AS_ABORT_CLOSE_ABANDONED);

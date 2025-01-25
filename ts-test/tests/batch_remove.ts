@@ -22,7 +22,7 @@
 
 import Aerospike, { AerospikeError, Client, Key as K, BatchResult} from 'aerospike';
 import * as helper from './test_helper';
-import { expect } from 'chai';
+import { expect, assert} from 'chai';
 // const util = require('util')
 
 const keygen = helper.keygen
@@ -87,9 +87,8 @@ describe('client.batchRemove()', function () {
       try {
         await client.batchRemove(batchRecords, null, new Aerospike.BatchRemovePolicy({ gen: Aerospike.policy.gen.EQ, generation: 10 }))
         // Will fail if code makes it here
-        expect(1).to.eql(2)
+        assert.fail('An error should have been caught')
       } catch (error: any) {
-        // code will fail with undefined if expect(1).to.eql(2) executes
         expect(error.code).to.eql(-16)
         const results: BatchResult[] = await client.batchRemove(batchRecords)
         expect(results.length).to.equal(5)

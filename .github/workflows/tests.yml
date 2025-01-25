@@ -396,8 +396,75 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: install pre-req
+      run: npm run test-prereq
+
+    - name: install mocha
+      run: |
+        npm install mocha
+        npm install typescript --save-dev;
+        npx tsc;
+        cp tests/udf.lua dist/udf.lua;
+      working-directory: ts-test
+
     - name: Run tests
-      run: npm run valgrind -- --t 40000
+      run: 
+        npm run valgrind -- --t 40000
+
+
+  test-tsc-compile:
+    runs-on: ubuntu-latest
+    needs: build-ubuntu
+    strategy:
+      matrix:
+        node-version: [
+          "20",
+        ]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: binding-${{ matrix.node-version }}
+
+    - name: make binding folder
+      run: mkdir lib/binding
+
+    - name: install mocha
+      run: npm install mocha
+
+    - name: install valgrind
+      run: |
+        sudo apt-get update;
+        sudo apt update;
+        sudo apt install valgrind;
+
+    - name: Install client
+      #fix the convention here
+      run: |
+        cp -r node-v115-linux-x64 lib/binding/node-v115-linux-x64
+
+    - name: Install client
+      #fix the convention here
+      run: |
+        npx tsc;
+        npx tsc typings/index.d.ts;
+        cd ts-test;
+        npm install ..
+        npx tsc;
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
 
 #  test-typescript:
 #    runs-on: ubuntu-latest

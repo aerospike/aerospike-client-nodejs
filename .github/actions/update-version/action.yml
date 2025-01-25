@@ -1,0 +1,13 @@
+name: 'Update version'
+description: 'Update version in repo without committing. Repo must already be checked out'
+inputs:
+  new_version:
+    description: Version string to set
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Update VERSION metadata
+    run: npm version ${{ inputs.new_version }} --no-git-tag-version
+    shell: bash

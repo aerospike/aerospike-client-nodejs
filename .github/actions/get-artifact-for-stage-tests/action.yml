@@ -1,0 +1,79 @@
+name: 'Get artifact for stage tests'
+description: 'Downloads artifact either from Github artifacts or JFrog to current working dir'
+inputs:
+  get_from_jfrog:
+    description: Boolean. If false, get artifacts from Github
+    required: true
+  jfrog_build_version:
+    description: If getting from JFrog, what build version to get the artifact from?
+    required: false
+  dist_type_to_get:
+    description: 'Type of distribution to get (possible values: sdist, wheel)'
+    required: true
+  binding_nodejs_version:
+    description: 'If getting wheel, specify Nodejs version of binding (e.g possible value: 18)'
+    required: false
+  wheel_os:
+    description: 'If getting wheel, what os is it built for? Must be inside the wheel name / cibw build identifier (possible values: macosx, manylinux)'
+    required: false
+  wheel_cpu_arch:
+    description: 'If getting wheel, what CPU arch is it built for? Must be the same in wheel name / cibw build identifier used to build wheel (e.g possible value: x86_64)'
+  # Secrets
+  JFROG_PLATFORM_URL:
+    required: false
+  # Variables
+  JFROG_REPO_NAME:
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+  - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
+    name: 'Cat 1: Get Github artifact name for source distribution'
+    run: echo "GITHUB_ARTIFACT_NAME=sdist.build" >> $GITHUB_ENV
+    shell: bash
+
+  # If getting a wheel from Github, construct artifact name containing that wheel
+  # The artifact name is the build identifier used in cibuildwheel to build that wheel
+
+  # We also need the Nodejs tag for searching a wheel in JFrog
+  - name: 'Cat 2: Get Nodejs tag for build identifier'
+    if: ${{ inputs.dist_type_to_get == 'wheel' }}
+    # example: 3.9 -> cp39
+    run: echo "NODEJS_TAG=cp$(echo ${{ inputs.binding_nodejs_version }} | tr -d '.')" >> $GITHUB_ENV
+    shell: bash
+
+  - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
+    run: echo "GITHUB_ARTIFACT_NAME=${{ env.NODEJS_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}.build" >> $GITHUB_ENV
+    shell: bash
+
+  - uses: actions/download-artifact@v4
+    if: ${{ inputs.get_from_jfrog == 'false' }}
+    with:
+      name: ${{ env.GITHUB_ARTIFACT_NAME }}
+
+  # Either way when we download from JFrog or Github,
+  # we need the file name pattern to install the artifact using pip later on
+
+  - name: 'Using JFrog: Get file name glob pattern for sdist'
+    if: ${{ inputs.dist_type_to_get == 'sdist' }}
+    run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
+    shell: bash
+
+  - name: 'Using JFrog: Get file name glob pattern for wheel'
+    if: ${{ inputs.dist_type_to_get == 'wheel' }}
+    run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.NODEJS_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
+    shell: bash
+
+  # End codepath that downloads artifacts from Github
+  # Begin codepath that downloads from JFrog
+
+  - uses: jfrog/setup-jfrog-cli@v4
+    if: ${{ inputs.get_from_jfrog == 'true' }}
+    env:
+      JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
+
+  - name: Download artifact from JFrog
+    if: ${{ inputs.get_from_jfrog == 'true' }}
+    run: jf rt dl --fail-no-op --flat --build nodejs-client/${{ inputs.jfrog_build_version }} "${{ inputs.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+    shell: bash
