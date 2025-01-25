@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install xyzparbart --omit-dev;
+          npm install aerospike --omit-dev;
           node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
