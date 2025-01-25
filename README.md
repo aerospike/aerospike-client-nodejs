@@ -188,6 +188,17 @@ To install library prerequisites using `apt`:
 sudo apt install g++ libssl libssl-dev zlib1g-dev
 ```
 
+If you are using Ubuntu 20.04, you must upgrade gcc/g++ to at least version 10:
+
+```bash
+sudo apt-get install gcc-10 g++-10
+ln -s /usr/bin/gcc-10 /usr/local/bin/gcc
+
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60
+sudo update-alternatives --config g++
+```
+
 ### Windows
 
 See our [Windows README.md](https://github.com/aerospike/aerospike-client-nodejs/blob/master/README_WINDOWS.md) for details on how to build and install on windows.

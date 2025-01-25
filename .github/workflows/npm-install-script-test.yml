@@ -1,0 +1,129 @@
+name: npm install script test
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  workflow_call: # This allows this workflow to be reused by others.
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
+jobs:
+  npm-install-script-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create multiple directories
+        run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
+
+      - name: Download Artifacts
+        uses: ./.github/actions/download-github-artifacts/
+
+      - name: Set up JFrog credentials
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://aerospike.jfrog.io
+        with:
+          oidc-provider-name: gh-aerospike-clients
+          oidc-audience: aerospike/clients
+
+      - name: Install client
+        shell: bash
+        run: |
+          ls .;
+          echo "BINDING FOLDER:";
+          ls ./lib/binding;
+          mkdir -p lib/binding/glibc@2.31/node-v108-darwin-x64 lib/binding/glibc@2.31/node-v115-darwin-x64 lib/binding/glibc@2.31/node-v127-darwin-x64 lib/binding/glibc@2.31/node-v131-darwin-x64;
+          mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64 lib/binding/glibc@2.31/node-v131-linux-x64;
+  #        echo "BINDING FOLDER:";
+  #        mkdir -p lib/binding/node-v108-darwin-arm64 lib/binding/node-v115-darwin-arm64 lib/binding/node-v127-darwin-arm64 lib/binding/node-v131-darwin-arm64
+  #        mkdir -p lib/binding/glibc@2.31/node-v108-linux-arm64 lib/binding/glibc@2.31/node-v115-linux-arm64 lib/binding/glibc@2.31/node-v127-linux-arm64 lib/binding/glibc@2.35/node-v131-linux-arm64
+  #        mkdir -p lib/binding/glibc@2.35/node-v108-linux-x64 lib/binding/glibc@2.35/node-v115-linux-x64 lib/binding/glibc@2.35/node-v127-linux-x64 lib/binding/glibc@2.35/node-v131-linux-x64
+  #        mkdir -p lib/binding/glibc@2.31/node-v108-linux-x64 lib/binding/glibc@2.31/node-v115-linux-x64 lib/binding/glibc@2.31/node-v127-linux-x64 lib/binding/glibc@2.31/node-v131-linux-x64
+  #        cp -r node-v108-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v115-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v127-linux-x64 lib/binding/glibc@2.35/
+  #        cp -r node-v108-darwin-x64 lib/binding/node-v108-darwin-x64
+  #        cp -r node-v115-darwin-x64 lib/binding/node-v115-darwin-x64
+  #        cp -r node-v127-darwin-x64 lib/binding/node-v127-darwin-x64
+  #        cp -r node-v131-darwin-x64 lib/binding/node-v131-darwin-x64
+  #        cp -r node-v108-linux-arm64 lib/binding/node-v108-linux-arm64
+  #        cp -r node-v115-linux-arm64 lib/binding/node-v115-linux-arm64
+  #        cp -r node-v127-linux-arm64 lib/binding/node-v127-linux-arm64
+  #        cp -r node-v127-linux-arm64 lib/binding/node-v131-linux-arm64
+  #        cp -r node-v108-darwin-arm64 lib/binding/node-v108-darwin-arm64
+  #        cp -r node-v115-darwin-arm64 lib/binding/node-v115-darwin-arm64
+  #        cp -r node-v127-darwin-arm64 lib/binding/node-v127-darwin-arm64
+  #        cp -r node-v127-darwin-arm64 lib/binding/node-v131-darwin-arm64
+
+      - name: List available artifacts
+        run: |
+          ls ./lib/binding || echo "No artifacts found in binding"
+          ls ./lib/binding/glibc@2.35
+
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set version
+        run: npm version 6.0.3-dev.36 --no-git-tag-version
+
+      - name: Change install command for release
+        run: node ./scripts/change-install-command.js
+
+      - name: run install command
+        run: npm install
+
+      - name: List available artifacts
+        run: ls ./lib/binding || echo "No artifacts found in binding"
+
+      - name: change package name
+        run: |
+          sed -i 's/"name": "[^"]*"/"name": "tarolike"/' package.json
+
+      - name: npm rc 2
+        run: |
+          echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        env:
+          NPMRC: ${{ secrets.NPMRC }}
+
+      - name: npm get registry
+        run: |
+          npm get registry
+          npm -v
+
+      - name: Setup config
+        run: jf npm-config --repo-deploy clients-npm-dev-local --repo-resolve clients-npm-dev-local
+
+      - name: Download Artifacts
+        uses: ./.github/actions/download-github-artifacts/
+
+      - name: Publish NPM package
+        run: jf npm publish --build-name nodejs-client --build-number 6.0.3-dev.36
+
+      #- name: npm publish
+      #  run: |
+      #    npm publish --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+
+      - name: npm install
+        run: |
+          jf npm install --build-name nodejs-client --build-number 6.0.3-dev.36
+
+      - name: Simple require test
+        run: |
+          node -e "console.log(require('aerospike').batchType)"
+
+      #  run: |
+      #    docker run --rm -d --name verdaccio -p 4873:4873 verdaccio/verdaccio
+      #    curl http://0.0.0.0:4873/
+      #    npm adduser --registry http://0.0.0.0:4873/
+      #    npm publish --registry http://0.0.0.0:4873/
+
+      #- name: List available artifacts
+      #  run: ls ./lib/binding || echo "No artifacts found in binding"

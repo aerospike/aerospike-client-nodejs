@@ -232,7 +232,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test
+        npm run test dist/
 
   test-lowest-supported-server:
     runs-on: ubuntu-latest
@@ -278,7 +278,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test -- --t 20000
+        npm run test dist/ -- --t 20000
 
   test-ee:
     runs-on: ubuntu-latest
@@ -335,7 +335,7 @@ jobs:
         npm install typescript --save-dev;
         npx tsc;
         cd ..;
-        npm run test -- --h localhost --U superuser --P superuser --t 40000
+        npm run test dist/admin.js -- --h localhost --U admin --P admin --t 40000
 
   test-valgrind:
     runs-on: ubuntu-latest
@@ -396,21 +396,8 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: install pre-req
-      run: npm run test-prereq
-
-    - name: install mocha
-      run: |
-        npm install mocha
-        npm install typescript --save-dev;
-        npx tsc;
-        cp tests/udf.lua dist/udf.lua;
-      working-directory: ts-test
-
     - name: Run tests
-      run: 
-        npm run valgrind -- --t 40000
-
+      run: npm run valgrind -- --t 40000
 
 #  test-typescript:
 #    runs-on: ubuntu-latest

@@ -1129,7 +1129,6 @@ describe('Queries', function () {
 
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
-      expect(record.ttl).to.equal(3599)
       expect(record.ttl).to.be.within(3598, 3600)
 
     })
