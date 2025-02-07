@@ -40,7 +40,7 @@ export enum ScalarOperations {
 /**
  * Represents a basic value in an Aerospike bin.
  */
-export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | BigInt | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
 /**
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
@@ -7405,7 +7405,7 @@ export class Key implements KeyOptions {
      * strings, integers or an instance of the Buffer class.
      * @param  digest - The digest value of the key.
      */
-    constructor(ns?: string | null, set?: string | null, key?: string | number | Buffer | BigInt | null, digest?: Buffer | null);
+    constructor(ns?: string | null, set?: string | null, key?: string | number | Buffer | bigint | null, digest?: Buffer | null);
     private static fromASKey(keyObj: KeyOptions): Key;
     /**
      * Compare the equality of two keys.
