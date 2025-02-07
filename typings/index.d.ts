@@ -282,7 +282,7 @@ export type TypedCallback<T> = (error?: AerospikeError, result?: T) => void;
  *   })
  * })
  */
-export class AerospikeRecord {
+export class AerospikeRecord<B extends AerospikeBins> {
 
    /**
      * Unique record identifier.
@@ -295,7 +295,7 @@ export class AerospikeRecord {
      *
      * @type {AerospikeBins}
      */
-    public bins: AerospikeBins;
+    public bins: B;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -313,7 +313,7 @@ export class AerospikeRecord {
     /**
      * Construct a new Aerospike Record instance.
      */
-    constructor(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata);
+    constructor(key: KeyOptions, bins: B, metadata?: RecordMetadata);
 }
 
 /**
@@ -383,13 +383,13 @@ export class AerospikeRecord {
  *
  * let key1 = new Aerospike.Key('test', 'demo', 'myKey')
  * let key2 = new Aerospike.Key('test', 'demo', 'myKey')
- * 
+ *
  * let record1 = {abc: 123}
  * let record2 = {def: 456}
- * 
+ *
  * ;(async () => {
  *   let client = await Aerospike.connect(config)
- *   
+ *
  *   const policy = {
  *        txn: tran
  *    }
@@ -409,7 +409,7 @@ export class AerospikeRecord {
  *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
  *
  *    get_result = await client.get(key5) // Will reset to the value present before transaction started.
- * 
+ *
  *    await client.close()
  * })();
  *
@@ -531,11 +531,11 @@ export class Transaction {
      * Destroys all open transactions
      *
      * @remarks
-     * 
+     *
      * Use of this API is only necessary when the client is closed with
      * the destroyTransactions parameter set is set to false.
      * See example below for usage details.
-     * 
+     *
      * To avoid using this API, close the final connected client in the process
      * with destroyTransactions set to true (default is true), and the transaction will be destroyed automatically.
      *
@@ -557,22 +557,22 @@ export class Transaction {
      *     let tran1 = new Aerospike.Transaction()
      *     let client = await Aerospike.connect(config)
      *     client.close(false, true) // `destroyTransactions is true`, tran1 is no longer usable.
-     * 
+     *
      *     let tran2 = new Aerospike.Transaction()
      *     client = await Aerospike.connect(config)
      *     client.close(false, true) // `destroyTransactions is false`, tran2 can still be used.
      *
      *     // In order to properly manage the memory at this point, do one of two things before the process exits:
-     * 
+     *
      *     // 1: call destroyAll() to destroy all outstanding transactions from this process.
      *     tran1.destroyAll()
-     * 
+     *
      *     // 2: reopen and close the final connected client with destroyTransactions
      *     // client = await Aerospike.connect(config)
      *     // client.close() // Default will destory the transactions
-     *     
+     *
      * })();
-     * 
+     *
      * @since v6.0.0
      */
     public destroyAll(): void;
@@ -598,9 +598,9 @@ export class Transaction {
      * ;(async () => {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
-     *     let id = tran.getId() 
+     *     let id = tran.getId()
      * })();
-     * 
+     *
      * @since v6.0.0
      */
     public getId(): number;
@@ -609,7 +609,7 @@ export class Transaction {
      * Get inDoubt status for this transaction.
      *
      * @returns Transaction inDoubt status
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -627,9 +627,9 @@ export class Transaction {
      * ;(async () => {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
-     *     let inDoubt = tran.getInDoubt() 
+     *     let inDoubt = tran.getInDoubt()
      * })();
-     * 
+     *
      * @since v6.0.0
      */
     public getInDoubt(): boolean;
@@ -656,12 +656,12 @@ export class Transaction {
      * ;(async () => {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
-     *     let readsCapacity = tran.getReadsCapacity() 
+     *     let readsCapacity = tran.getReadsCapacity()
      *     console.log(readsCapacity) // 128
      * })();
      *
      * @since v6.0.0
-     */  
+     */
     public getReadsCapacity(): number;
     /**
      *
@@ -687,10 +687,10 @@ export class Transaction {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
      *     let state = tran.getState()
-     *     
+     *
      * })();
      *
-     */  
+     */
     public getState(): number;
     /**
      *
@@ -715,11 +715,11 @@ export class Transaction {
      * ;(async () => {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
-     *     let timeout = tran.getTimeout() 
+     *     let timeout = tran.getTimeout()
      * })();
      *
      * @since v6.0.0
-     */  
+     */
     public getTimeout(): number;
     /**
      *
@@ -744,23 +744,23 @@ export class Transaction {
      * ;(async () => {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
-     *     let writesCapacity = tran.getWritesCapacity() 
+     *     let writesCapacity = tran.getWritesCapacity()
      *     console.log(writesCapacity) // 128
      * })();
      *
      * @since v6.0.0
-     */  
+     */
     public getWritesCapacity(): number;
     /**
      *
-     * Set transaction timeout in seconds. The timer starts when the transaction monitor record is created. This occurs when the first command in the transaction is executed. 
-     * 
+     * Set transaction timeout in seconds. The timer starts when the transaction monitor record is created. This occurs when the first command in the transaction is executed.
+     *
      * If the timeout is reached before a commit or abort is called, the server will expire and rollback the transaction.
-     * 
+     *
      * If the transaction timeout is zero, the server configuration mrt-duration is used. The default mrt-duration is 10 seconds.
      *
      * Default Client transaction timeout is 0.
-     * 
+     *
      * @param timeout - Transaction timeout in seconds
      *
      * @example
@@ -781,11 +781,11 @@ export class Transaction {
      *     // Establishes a connection to the server
      *     let tran = new Aerospike.Transaction()
      *     tran.setTimeout(5) // Set timeout for 5 seconds!
-     *     
+     *
      *     console.log(tran.getTimeout()) // 5
      * })();
      *
-     */  
+     */
     public setTimeout(timeout: number): void;
 }
 
@@ -819,20 +819,20 @@ export class Bin {
     value: AerospikeBinValue;
 }
 
-export class BatchResult {
+export class BatchResult<B extends AerospikeBins = AerospikeBins> {
     /**
      * Construct a new BatchResult instance.
      */
-    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: AerospikeRecord, inDoubt: boolean);
+    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: B, inDoubt: boolean);
     /**
      * Result code for this returned record. If not {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK}, the record will be null.
-     */  
+     */
     status: typeof statusNamespace[keyof typeof statusNamespace];
     /**
      * Record result for the requested key. This record will only be populated when the result is
      * {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK} or {@link statusNamespace.AEROSPIKE_ERR_UDF|AEROSPIKE_ERR_UDF}.
      */
-    record: AerospikeRecord;
+    record: B;
     /**
      * It is possible that a write command completed even though the client
      * returned this error. This may be the case when a client error occurs
@@ -960,7 +960,7 @@ export class BatchResult {
  * below.
  *
  * @see {@link Client#query} to create new instances of this class.
- * 
+ *
  * @example
  *
  * const Aerospike = require('aerospike')
@@ -1168,7 +1168,7 @@ export class Query {
     public pfEnabled?: boolean;
     /**
      * The time-to-live (expiration) of the record in seconds.
-     * 
+     *
      * There are also special values that can be set in the record TTL  For details
      *
      * Note that the TTL value will be employed ONLY on background query writes.
@@ -1181,12 +1181,12 @@ export class Query {
     public queryState?: number[];
     /**
      * Construct a Query instance.
-     * 
+     *
      * @param client - A client instance.
      * @param ns - The namescape.
      * @param set - The name of a set.
      * @param options - Query options.
-     *      * 
+     *      *
      */
     constructor(client: Client, ns: string, set: string, options?: QueryOptions | null);
     /**
@@ -1303,8 +1303,8 @@ export class Query {
      * @param endCb -  Callback function called when an operation has completed.
      *
      * @returns {@link RecordStream}
-     */    
-    public foreach(policy?: policy.QueryPolicy | null, dataCb?: (data: AerospikeRecord) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
+     */
+    public foreach<B extends AerospikeBins = AerospikeBins>(policy?: policy.QueryPolicy | null, dataCb?: (data: AerospikeRecord<B>) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
     /**
      * Executes the query and collects the results into an array. On paginated queries,
      * preparing the next page is also handled automatically.
@@ -1325,7 +1325,7 @@ export class Query {
      *
      * @returns A promise that resolves with an Aerospike Record.
      */
-    public results(policy?: policy.QueryPolicy | null): Promise<AerospikeRecord[]>;
+    public results<B extends AerospikeBins = AerospikeBins>(policy?: policy.QueryPolicy | null): Promise<AerospikeRecord<B>[]>;
     /**
      * Applies a user-defined function (UDF) to aggregate the query results.
      *
@@ -1335,16 +1335,16 @@ export class Query {
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
      * @param policy - The Query Policy to use for this command.
-     * 
+     *
      * @returns A promise that resolves with an Aerospike bin value.
-     * 
+     *
      */
     public apply(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, policy?: policy.QueryPolicy | null): Promise<AerospikeBinValue>;
     /**
      * @param udfModule - UDF module name.
      * @param udfFunction - UDF function name.
      * @param callback - The function to call when the command completes.
-     * 
+     *
      */
     public apply(udfModule: string, udfFunction: string, callback: TypedCallback<AerospikeBinValue>): void;
     /**
@@ -1352,7 +1352,7 @@ export class Query {
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
      * @param callback - The function to call when the command completes.
-     * 
+     *
      */
     public apply(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[] | null, callback?: TypedCallback<AerospikeBinValue>): void;
     /**
@@ -1361,7 +1361,7 @@ export class Query {
      * @param udfArgs - Arguments for the function.
      * @param policy - The Query Policy to use for this command.
      * @param callback - The function to call when the command completes.
-     * 
+     *
      */
     public apply(udfModule: string, udfFunction: string, udfArgs?: AerospikeBinValue[], policy?: policy.QueryPolicy | null, callback?: TypedCallback<AerospikeBinValue>): void;
     /**
@@ -1916,7 +1916,7 @@ export namespace policy {
         public totalTimeout?: number;
         /**
          * Transaction identifier. See {@link Transaction} for more information.
-         * 
+         *
          * @default null (no transaction)
          */
         public txn?: Transaction;
@@ -2012,7 +2012,7 @@ export namespace policy {
          * advantage for large batch sizes because each node can process the command immediately.
          * The downside is extra threads will need to be created (or taken from
          * a thread pool).
-         * 
+         *
          * @default <code>false</code>
          */
         public concurrent?: boolean;
@@ -2053,7 +2053,7 @@ export namespace policy {
         public readTouchTtlPercent?: number;
         /**
          * Algorithm used to determine target node.
-         * 
+         *
          * @default {@link policy.replica.MASTER}
          * @see {@link policy.replica} for supported policy values.
          */
@@ -3239,7 +3239,7 @@ export class Client extends EventEmitter {
      * @param port - Port number; defaults to {@link Config#port} or 3000.
      *
      * @since v2.6.0
-     */    
+     */
     public addSeedHost(hostname: string, port?: number): void;
     /**
      * Apply UDF (user defined function) on multiple keys.
@@ -3424,7 +3424,7 @@ export class Client extends EventEmitter {
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
-     */    
+     */
     public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
 
     /**
@@ -3505,7 +3505,7 @@ export class Client extends EventEmitter {
      *     // Close the connection to the server
      *     await client.close();
      * })();
-     */    
+     */
     public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
@@ -3518,7 +3518,7 @@ export class Client extends EventEmitter {
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
-     */       
+     */
     public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
     /**
      *
@@ -3580,7 +3580,7 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      *
-     */  
+     */
     public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
     /**
      *
@@ -3684,7 +3684,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      */
     public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
-    
+
     /**
      *
      * Reads a subset of bins for a batch of records from the database cluster.
@@ -3777,7 +3777,7 @@ export class Client extends EventEmitter {
     * @param policy - The Batch Policy to use for this command.
     *
     * @since v6.0.0
-    * 
+    *
     * @example
     *
     * const Aerospike = require('aerospike')
@@ -3975,7 +3975,7 @@ export class Client extends EventEmitter {
      * @param serializedContext - base64 serialized {link cdt.Context}
      *
      * @return Deserialized CDT Context
-     * 
+     *
      * @see {@link contextFromBase64} for a usage example.
      *
      * @since v5.6.0
@@ -4363,7 +4363,7 @@ export class Client extends EventEmitter {
     /**
      *
      * Applies a User Defined Function (UDF) on a record in the database.
-     * 
+     *
      * @remarks Use this function to apply a
      * <a href="http://www.aerospike.com/docs/guide/record_udf.html">&uArr;Record UDF</a>
      * on a single record and return the result of the UDF function call. Record
@@ -4413,14 +4413,14 @@ export class Client extends EventEmitter {
      *   })
      * })
      */
-    public apply(key: KeyOptions, udfArgs: UDF, policy?: policy.ApplyPolicy | null): Promise<AerospikeRecord>;
+    public apply<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, udfArgs: UDF, policy?: policy.ApplyPolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key, used to locate the record in the cluster.
      * @param udfArgs - Parameters used to specify which UDF function to execute.
      * @param callback - This function will be called with the
      * result returned by the Record UDF function call.
      */
-    public apply(key: KeyOptions, udfArgs: UDF, callback: TypedCallback<AerospikeRecord>): void;
+    public apply<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, udfArgs: UDF, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key, used to locate the record in the cluster.
      * @param udfArgs - Parameters used to specify which UDF function to execute.
@@ -4428,7 +4428,7 @@ export class Client extends EventEmitter {
      * @param callback - This function will be called with the
      * result returned by the Record UDF function call.
      */
-    public apply(key: KeyOptions, udfArgs: UDF, policy: policy.ApplyPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public apply<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, udfArgs: UDF, policy: policy.ApplyPolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      *
      * @param transaction - {@link Transaction} instance.
@@ -4455,13 +4455,13 @@ export class Client extends EventEmitter {
      *
      * let key1 = new Aerospike.Key('test', 'demo', 'myKey')
      * let key2 = new Aerospike.Key('test', 'demo', 'myKey')
-     * 
+     *
      * let record1 = {abc: 123}
      * let record2 = {def: 456}
-     * 
+     *
      * ;(async () => {
      *   let client = await Aerospike.connect(config)
-     *   
+     *
      *   const policy = {
      *        txn: tran
      *    }
@@ -4481,7 +4481,7 @@ export class Client extends EventEmitter {
      *    get_result = await client.get(key4) // Will reset to the value present before transaction started.
      *
      *    get_result = await client.get(key5) // Will reset to the value present before transaction started.
-     * 
+     *
      *    await client.close()
      * })();
      */
@@ -4530,7 +4530,7 @@ export class Client extends EventEmitter {
      * }
      * let key1 = new Aerospike.Key('test', 'demo', 'myKey1')
      * let key2 = new Aerospike.Key('test', 'demo', 'myKey2')
-     * 
+     *
      * let policy = {
      *   txn: tran
      * };
@@ -4564,7 +4564,7 @@ export class Client extends EventEmitter {
      *
      * @param key - The key of the record to check for existance.
      * @param policy - The Read Policy to use for this command.
-     * 
+     *
      * @returns {?Promise} A Promise that resolves to <code>true</code> if the record exists or
      * <code>false</code> otherwise.
      *
@@ -4600,7 +4600,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes; the passed value is <code>true</code> if the record
      * exists or <code>false</code> otherwise.
-     */   
+     */
     public exists(key: KeyOptions, callback: TypedCallback<boolean>): void;
     /**
      * @param key - The key of the record to check for existance.
@@ -4608,14 +4608,14 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes; the passed value is <code>true</code> if the record
      * exists or <code>false</code> otherwise.
-     */   
+     */
     public exists(key: KeyOptions, policy: policy.ReadPolicy | null, callback: TypedCallback<boolean>): void;
     /**
      * Checks the existance of a record in the database cluster.
      *
      * @param key - The key of the record to check for existance.
      * @param policy - The Read Policy to use for this command.
-     * 
+     *
      * @returns A Promise that resolves to an {@link AerospikeRecord} containing no bins and a {@link RecordMetadata} object.
      * If the metadata contains data, the record exists. If the metadata contains null values, then the record does not exist.
      *
@@ -4644,7 +4644,7 @@ export class Client extends EventEmitter {
      *   .catch(error => {
      *     console.error('Error connecting to cluster:', error)
      *   })
-     */    
+     */
     public existsWithMetadata(key: KeyOptions, policy?: policy.ReadPolicy): Promise<AerospikeRecord>;
     /**
      * @param key - The key of the record to check for existance.
@@ -4691,14 +4691,14 @@ export class Client extends EventEmitter {
      * })
      *
      */
-    public get(key: KeyOptions, policy?: policy.ReadPolicy): Promise<AerospikeRecord>;
+    public get<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, policy?: policy.ReadPolicy): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key used to locate the record in the cluster.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public get(key: KeyOptions, callback: TypedCallback<AerospikeRecord>): void;
+    public get<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key used to locate the record in the cluster.
      * @param policy - The Read Policy to use for this command.
@@ -4706,7 +4706,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public get(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
+    public get<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * Removes the specified index.
      *
@@ -4786,7 +4786,7 @@ export class Client extends EventEmitter {
      *   })
      * })
      *
-     */ 
+     */
     public info(request: string, host: Host | string, policy?: policy.InfoPolicy | null): Promise<string>;
     /**
      * @param request - The info request to send.
@@ -4812,7 +4812,7 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to an info result string.
-     * 
+     *
      * @see <a href="http://www.aerospike.com/docs/reference/info" title="Info Command Reference">&uArr;Info Command Reference</a>
      *
      * @since v2.4.0
@@ -4871,7 +4871,7 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to an {@link InfoAllResponse}.
-     * 
+     *
      * @see <a href="http://www.aerospike.com/docs/reference/info" title="Info Command Reference">&uArr;Info Command Reference</a>
      *
      * @since v2.3.0
@@ -4921,9 +4921,9 @@ export class Client extends EventEmitter {
      * @param request - The info request to send.
      * @param node - The node to send the request to. See {@link InfoNodeParam}.
      * @param policy - The Info Policy to use for this command.
-     * 
+     *
      * @returns A <code>Promise</code> that resolves to an info result string.
-     * 
+     *
      * @see <a href="http://www.aerospike.com/docs/reference/info" title="Info Command Reference">&uArr;Info Command Reference</a>
      *
      * @since v3.11.0
@@ -5027,7 +5027,7 @@ export class Client extends EventEmitter {
      * })
      *
      */
-    public operate(key: KeyOptions, operations: operations.Operation[], metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord>;
+    public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
@@ -5035,7 +5035,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public operate(key: KeyOptions, operations: operations.Operation[], callback: TypedCallback<AerospikeRecord>): void;
+    public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
@@ -5044,7 +5044,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public operate(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata, callback: TypedCallback<AerospikeRecord>): void;
+    public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
@@ -5054,7 +5054,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public operate(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * Shortcut for applying the {@link
      * operations.append} operation to one or more record bins.
@@ -5075,8 +5075,8 @@ export class Client extends EventEmitter {
      *
      * @see {@link Client#operate}
      * @see {@link operations.append}
-     */    
-    public append(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord>;
+     */
+    public append<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the
@@ -5086,7 +5086,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public append(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+    public append<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the
@@ -5097,7 +5097,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public append(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
+    public append<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the
@@ -5109,7 +5109,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public append(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public append<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      *
      * Shortcut for applying the {@link operations.prepend} operation to one or more record bins.
@@ -5124,14 +5124,14 @@ export class Client extends EventEmitter {
      * @see {@link Client#operate}
      * @see {@link operations.prepend}
      */
-    public prepend(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord>;
+    public prepend<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public prepend(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+    public prepend<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
@@ -5139,7 +5139,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public prepend(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
+    public prepend<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to prepend to the bin value.
@@ -5148,7 +5148,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public prepend(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public prepend<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * Shortcut for applying the {@link operations.add} operation to one or more record bins.
      *
@@ -5164,21 +5164,21 @@ export class Client extends EventEmitter {
      * @see {@link Client#operate}
      * @see {@link operations.incr}
      */
-    public add(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord>;
+    public add<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public add(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+    public add<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public add(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
+    public add<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
@@ -5186,7 +5186,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command.
      */
-    public add(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public add<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      *
      * Alias for {@link Client#add}.
@@ -5195,10 +5195,10 @@ export class Client extends EventEmitter {
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param metadata - Meta data.
      * @param policy - The Operate Policy to use for this command.
-     * 
+     *
      * @returns A Promise that resolves to the results of the opertion.
      */
-    public incr(key: KeyOptions, bins: AerospikeBins, metadata?: RecordMetadata, policy?: policy.OperatePolicy): Promise<AerospikeRecord>;
+    public incr<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata?: RecordMetadata, policy?: policy.OperatePolicy): Promise<AerospikeRecord<B>>;
     /**
      *
      * Alias for {@link Client#add}.
@@ -5207,9 +5207,9 @@ export class Client extends EventEmitter {
      * @param bins - The key-value mapping of bin names and the corresponding values to use to increment the bin values with.
      * @param callback - The function to call when the
      * command completes with the results of the command.
-     * 
-     */       
-    public incr(key: KeyOptions, bins: AerospikeBins, callback: TypedCallback<AerospikeRecord>): void;
+     *
+     */
+    public incr<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      *
      * Alias for {@link Client#add}.
@@ -5219,9 +5219,9 @@ export class Client extends EventEmitter {
      * @param metadata - Meta data.
      * @param callback - The function to call when the
      * command completes with the results of the command.
-     * 
+     *
      */
-    public incr(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord>): void;
+    public incr<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      *
      * Alias for {@link Client#add}.
@@ -5232,9 +5232,9 @@ export class Client extends EventEmitter {
      * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
      * command completes with the results of the command.
-     * 
+     *
      */
-    public incr(key: KeyOptions, bins: AerospikeBins, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public incr<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B, metadata: RecordMetadata | null, policy: policy.OperatePolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * Writes a record to the database cluster.
      *
@@ -5287,20 +5287,20 @@ export class Client extends EventEmitter {
      *   })
      * })
      */
-    public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, meta?: RecordMetadata | null, policy?: policy.WritePolicy | null): Promise<Key>;
+    public put<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B | Map<string, AerospikeBinValue> | Bin | AerospikeRecord<B>, meta?: RecordMetadata | null, policy?: policy.WritePolicy | null): Promise<Key>;
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
      * @param callback - The function to call when the command completes with the result of the command.
      */
-    public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, callback: TypedCallback<Key>): void;
+    public put<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B | Map<string, AerospikeBinValue> | Bin | AerospikeRecord<B>, callback: TypedCallback<Key>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
      * @param meta - Meta data.
      * @param callback - The function to call when the command completes with the result of the command.
      */
-    public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, meta: RecordMetadata | null, callback: TypedCallback<Key>): void;
+    public put<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B | Map<string, AerospikeBinValue> | Bin | AerospikeRecord<B>, meta: RecordMetadata | null, callback: TypedCallback<Key>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A record object used for specifying the fields to store.
@@ -5308,7 +5308,7 @@ export class Client extends EventEmitter {
      * @param policy - The Write Policy to use for this command.
      * @param callback - The function to call when the command completes with the result of the command.
      */
-    public put(key: KeyOptions, bins: AerospikeBins | Map<string, AerospikeBinValue> | Bin | AerospikeRecord, meta: RecordMetadata | null, policy: policy.WritePolicy | null, callback: TypedCallback<Key>): void;
+    public put<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: B | Map<string, AerospikeBinValue> | Bin | AerospikeRecord<B>, meta: RecordMetadata | null, policy: policy.WritePolicy | null, callback: TypedCallback<Key>): void;
     /**
      * Creates a new {@link Query} instance, which is used to define query
      * in the database.
@@ -5412,7 +5412,7 @@ export class Client extends EventEmitter {
      * @param options - Scan parameters. See {@link Scan} constructor for details.
      *
      * @returns A <code>Promise</code> that resolves to a {@link Query}.
-     * 
+     *
      * @since v2.0
      */
     public scan(ns: string, options?: ScanOptions): Scan;
@@ -5420,7 +5420,7 @@ export class Client extends EventEmitter {
      * @param ns - The namescape.
      * @param set - The name of a set.
      * @param options - Scan parameters. See {@link Scan} constructor for details.
-     * 
+     *
      * @returns A <code>Promise</code> that resolves to a {@link Query}.
      */
     public scan(ns: string, set?: string, options?: ScanOptions): Scan;
@@ -5433,7 +5433,7 @@ export class Client extends EventEmitter {
      * @param policy - The Read Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to a {@link AerospikeRecord}.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -5470,7 +5470,7 @@ export class Client extends EventEmitter {
      * })
      *
      */
-    public select(key: KeyOptions, bins: string[], policy?: policy.ReadPolicy | null): Promise<AerospikeRecord>;
+    public select<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: string[], policy?: policy.ReadPolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
      * @param bins - A list of bin names for the bins to be returned.
@@ -5478,7 +5478,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public select(key: KeyOptions, bins: string[], callback: TypedCallback<AerospikeRecord>): void;
+    public select<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: string[], callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
      * @param bins - A list of bin names for the bins to be returned.
@@ -5487,7 +5487,7 @@ export class Client extends EventEmitter {
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      */
-    public select(key: KeyOptions, bins: string[], policy: policy.ReadPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+    public select<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, bins: string[], policy: policy.ReadPolicy | null, callback: TypedCallback<AerospikeRecord<B>>): void;
 
     /**
      * Removes records in specified namespace/set efficiently.
@@ -5505,7 +5505,7 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves when the truncate is complete.
-     * 
+     *
      * @see https://www.aerospike.com/docs/reference/info#truncate
      */
     public truncate(ns: string, set: string | null, beforeNanos: number, policy?: policy.InfoPolicy | null): Promise<void>;
@@ -5560,7 +5560,7 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A Promise that resolves to a {@link Job} instance.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -5586,7 +5586,7 @@ export class Client extends EventEmitter {
     /**
      * @param udfPath - The file path to the Lua script to load into the server.
      * @param policy - The Info Policy to use for this command.
-     * 
+     *
      * @returns A Promise that resolves to a {@link Job} instance.
      */
     public udfRegister(udfPath: string, policy?: policy.InfoPolicy | null): Promise<Job>;
@@ -5701,7 +5701,7 @@ export class Client extends EventEmitter {
      * local pathname but including the file extension (".lua").
      * @param callback - The function to call when the
      * command completes with the result of the command.
-     * 
+     *
      */
     public udfRemove(udfModule: string, callback: TypedCallback<Job>): void;
     /**
@@ -5710,12 +5710,12 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when the
      * command completes with the result of the command.
-     * 
+     *
      */
     public udfRemove(udfModule: string, policy: policy.InfoPolicy, callback: TypedCallback<Job>): void;
     /**
      * Updates log settings for the client.
-     * 
+     *
      * @param logConfig - A {@link Log} instance containing a log level and/or a file descriptor. For more info, see {@link Log}
      */
     public updateLogging(logConfig: Log): void;
@@ -5801,7 +5801,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): void;
     /**
      * Create user defined role with optional privileges, whitelist and read/write quotas.
@@ -6104,7 +6104,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */        
+     */
     public queryRoles(policy?: policy.AdminPolicy | null): Array<admin.Role>;
     /**
      * Retrieves an {@link admin.User} from the database.
@@ -6228,7 +6228,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): void;
     /**
      * Remove roles from user's list of roles.
@@ -6270,7 +6270,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): void;
     /**
      * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
@@ -6315,7 +6315,7 @@ export class Client extends EventEmitter {
      *   }
      * })()
      *
-     */    
+     */
     public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null): void;
     /**
      * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
@@ -6359,7 +6359,7 @@ export class Client extends EventEmitter {
      *   }
      * })()
      *
-     */   
+     */
     public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null): void;
 }
 
@@ -6405,27 +6405,27 @@ export class Client extends EventEmitter {
 export class Config {
     /**
      * Authentication mode used when user/password is defined.
-     * 
+     *
      * One of the auth modes defined in {@link auth}.
      */
     public authMode?: auth;
     /**
      * Initial host connection timeout in milliseconds.
-     * 
+     *
      * The client observes this timeout when opening a connection to
      * the cluster for the first time.
-     * 
+     *
      * @default 1000
      */
     public connTimeoutMs?: number;
     /**
      * Expected Cluster Name.
-     * 
+     *
      * If not <code>null</code>, server nodes must return this
      * cluster name in order to join the client's view of the cluster. Should
      * only be set when connecting to servers that support the "cluster-name"
      * info command.
-     * 
+     *
      * @since v2.4
      */
     public clusterName?: string;
@@ -6441,7 +6441,7 @@ export class Config {
     public errorRateWindow?: number;
     /**
      * List of hosts with which the client should attempt to connect.
-     * 
+     *
      * If not specified, the client attempts to read the host list
      * from the <code>AEROSPIKE_HOSTS</code> environment variable or else falls
      * back to use a default value of "localhost".
@@ -6480,7 +6480,7 @@ export class Config {
      * ]
      * const client = await Aerospike.connect({ hosts })
      */
-    public hosts: Host[] | string;    
+    public hosts: Host[] | string;
 
     /**
      * Configuration for logging done by the client.
@@ -6511,7 +6511,7 @@ export class Config {
     public log?: Log;
     /**
      * Node login timeout in milliseconds.
-     * 
+     *
      * @type {number}
      * @default 5000
      */
@@ -6663,7 +6663,7 @@ export class Config {
     public port: number;
     /**
      * Track server rack data.
-     * 
+     *
      * This field is useful when directing read commands to the
      * server node that contains the key and exists on the same rack as the
      * client. This serves to lower cloud provider costs when nodes are
@@ -6674,30 +6674,30 @@ export class Config {
      * rack configuration must also be set to enable this functionality.
      *
      * @default false
-     * 
+     *
      * @since 3.8.0
      */
     public rackAware?: boolean;
     /**
      *  Rack where this client instance resides.
-     * 
+     *
      * {@link rackAware} config, {@link policy.replica.PREFER_RACK} replica policy, and server
      * rack configuration must also be set to enable this functionality.
      *
      * @default 0
-     * 
+     *
      * @since 3.8.0
      */
     public rackId?: number;
     /**
      * Shared memory configuration.
-     * 
+     *
      * This allows multiple client instances running in separate
      * processes on the same machine to share cluster status, including nodes and
      * data partition maps. Each shared memory segment contains state for one
      * Aerospike cluster. If there are multiple Aerospike clusters, a different
      * <code>key</code> must be defined for each cluster.
-     * 
+     *
      * @see {@link http://www.aerospike.com/docs/client/c/usage/shm.html#operational-notes|Operational Notes}
      *
      * @example <caption>Using shared memory in a clustered setup</caption>
@@ -6733,7 +6733,7 @@ export class Config {
 
     /**
      * Polling interval in milliseconds for cluster tender.
-     * 
+     *
      * @default 1000
      */
     public tenderInterval?: number;
@@ -6741,7 +6741,7 @@ export class Config {
      * Configure Transport Layer Security (TLS) parameters for secure
      * connections to the database cluster. TLS connections are not supported as
      * of Aerospike Server v3.9 and depend on a future server release.
-     * 
+     *
      * @since v2.4
      */
     public tls?: TLSInfo;
@@ -6751,17 +6751,17 @@ export class Config {
      * <code>access-address</code>.
      *
      * @default false
-     * 
+     *
      * @since v3.7.1
      */
     public useAlternateAccessAddress: boolean;
     /**
      * The user name to use when authenticating to the cluster.
-     * 
+     *
      * Leave empty for clusters running without access management.
      * (Security features are available in the Aerospike Database Enterprise
      * Edition.)
-     * 
+     *
      */
     public user?: string;
 
@@ -7017,7 +7017,7 @@ export class GeoJSON {
      *
      * @param lng - Longitude
      * @param lat - Latitude
-     * 
+     *
      * @returns a GeoJSON representation of the point
      *
      * @example
@@ -7037,7 +7037,7 @@ export class GeoJSON {
      *
      * @param coordinates - one or more coordinate pairs (lng, lat)
      * describing the polygon.
-     * 
+     *
      * @returns a GeoJSON representation of the polygon.
      *
      * @example
@@ -7082,7 +7082,7 @@ export interface SindexInfo {
 /**
  * Job class for waiting for UDF module registration/deregistration
  * to complete across an entire Aerospike cluster.
- * 
+ *
  *
  * @see {@link Client#udfRegister}
  * @see {@link Client#udfRemove}
@@ -7229,7 +7229,7 @@ export interface JobInfoResponse {
 export class Job<T = JobInfoResponse> {
     /**
      * Client instance managing the {@link Job}
-     */;
+     */
     public client: Client;
     /**
      * Identification number asssociated with the Job.
@@ -7398,7 +7398,7 @@ export class Key implements KeyOptions {
     public digest: Buffer | undefined;
     /**
      * Constructs a new Key instance.
-     * 
+     *
      * @param ns - The Namespace to which the key belongs.
      * @param set - The Set to which the key belongs.
      * @param key - The unique key value. Keys can be
@@ -7409,7 +7409,7 @@ export class Key implements KeyOptions {
     private static fromASKey(keyObj: KeyOptions): Key;
     /**
      * Compare the equality of two keys.
-     * 
+     *
      * @param other - {#Key} or {@link KeyOptions} Object for comparison.
      */
     public equals(other: KeyOptions): boolean;
@@ -7506,20 +7506,20 @@ export class RecordStream extends Stream {
      * @param listener - Function executed when data is received.
      * Aerospike record incl. bins, key and meta data.
      * Depending on the command, all, some or no bin values will be returned.
-     */    
-    public on(event: 'data', listener: (record: AerospikeRecord) => void): this;
+     */
+    public on<B extends AerospikeBins = AerospikeBins>(event: 'data', listener: (record: AerospikeRecord<B>) => void): this;
     /**
      * @event 'error'
      * @param listener - Function executed upon receipt of an error.
-     */    
+     */
     public on(event: 'error', listener: (error: AerospikeError) => void): this;
     /**
      * @event 'end'
      * @param listener - Function executed upon query end.
-     * If set to a valid serialized query, calling {@link Query.foreach} will allow the 
+     * If set to a valid serialized query, calling {@link Query.foreach} will allow the
      * next page of records to be queried while preserving the progress
      * of the previous query. If set to <code>null</code>, calling {@link Query.foreach} will begin a new query.
-     */    
+     */
     public on(event: 'end', listener: (state: number[]) => void): this;
 }
 
@@ -7693,15 +7693,15 @@ export class Scan {
        */
     public concurrent?: boolean;
     /**
-     * 
+     *
      */
     public udf?: UDF;
     /**
-     * 
+     *
      */
     public ops?: operations.Operation[];
     /**
-     * 
+     *
      */
     public ttl?: number;
     /**
@@ -7907,7 +7907,7 @@ export class Scan {
      * @param udfFunction - UDF function name.
      * @param udfArgs - Arguments for the function.
      * @param callback - The function to call when the command completes.
-     */    
+     */
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], callback: TypedCallback<Job>): void;
     /**
      *
@@ -7916,7 +7916,7 @@ export class Scan {
      * @param udfArgs - Arguments for the function.
      * @param policy - The Scan Policy to use for this command.
      * @param callback - The function to call when the command completes.
-     */    
+     */
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], policy: policy.ScanPolicy, callback: TypedCallback<Job>): void;
     /**
      *
@@ -7927,7 +7927,7 @@ export class Scan {
      * @param scanID - Job ID to use for the scan; will be assigned
      * randomly if zero or undefined.
      * @param callback - The function to call when the command completes.
-     */    
+     */
     public background(udfModule: string, udfFunction: string, udfArgs: AerospikeBinValue[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
      * Applies write operations to all matching records.
@@ -7969,7 +7969,7 @@ export class Scan {
      *   await job.waitUntilDone()
      *   client.close()
      * })
-     */    
+     */
     public operate(operations: operations.Operation[], policy?: policy.ScanPolicy, scanID?: number): Promise<Job>;
     /**
      * @param operations - List of write
@@ -7992,8 +7992,8 @@ export class Scan {
      * function is provided, the method returns a <code>Promise<code> instead.
      * @param errorCb - Callback function called when there is an error.
      * @param endCb -  Callback function called when an operation has completed.
-     */    
-    public foreach(policy?: policy.ScanPolicy | null, dataCb?: (data: AerospikeRecord) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
+     */
+    public foreach<B extends AerospikeBins = AerospikeBins>(policy?: policy.ScanPolicy | null, dataCb?: (data: AerospikeRecord<B>) => void, errorCb?: (error: Error) => void, endCb?: () => void): RecordStream;
 }
 
 /**
@@ -8042,7 +8042,7 @@ export namespace info {
      * Parses the info string returned from a cluster node into key-value pairs.
      *
      * @param info - The info string returned by the cluster node.
-     * 
+     *
      * @returns key-value pairs in an {@link Record}
      *
      * @since v2.6
@@ -8114,7 +8114,7 @@ export function client(config?: ConfigOptions): Client;
  * @param config - The configuration for the client.
  *
  * @return A Promise resolving to the connected client.
- * 
+ *
  * @example <caption>Connection can be established using the aerospike namespace.</caption>
  *
  * const Aerospike = require('aerospike')
@@ -8381,7 +8381,7 @@ export interface BasePolicyOptions {
     totalTimeout?: number;
     /**
      * Transaction identifier. See {@link Transaction} for more information.
-     * 
+     *
      * @default null (no transaction)
      */
     txn?: Transaction;
@@ -8461,7 +8461,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
      * advantage for large batch sizes because each node can process the command immediately.
      * The downside is extra threads will need to be created (or taken from
      * a thread pool).
-     * 
+     *
      * @default <code>false</code>
      */
     concurrent?: boolean;
@@ -8502,7 +8502,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
     readTouchTtlPercent?: number;
     /**
      * Algorithm used to determine target node.
-     * 
+     *
      * @default {@link policy.replica.MASTER}
      * @see {@link policy.replica} for supported policy values.
      */
@@ -8739,11 +8739,11 @@ export interface BatchWriteRecord {
 /**
  * Interface used for creating BatchSelect record objects.
  */
-export interface BatchSelectRecord {
+export interface BatchSelectRecord<B extends AerospikeBins = AerospikeBins> {
     status: typeof statusNamespace[keyof typeof statusNamespace];
     key: KeyOptions;
     meta?: RecordMetadata;
-    bins?: AerospikeBins;
+    bins?: B;
 }
 
 
@@ -8812,27 +8812,27 @@ export interface CommandQueuePolicyOptions extends BasePolicyOptions {
 export interface ConfigOptions {
     /**
      * Authentication mode used when user/password is defined.
-     * 
+     *
      * One of the auth modes defined in {@link auth}.
      */
     authMode?: auth;
     /**
      * Initial host connection timeout in milliseconds.
-     * 
+     *
      * The client observes this timeout when opening a connection to
      * the cluster for the first time.
-     * 
+     *
      * @default 1000
      */
     connTimeoutMs?: number;
     /**
      * Expected Cluster Name.
-     * 
+     *
      * If not <code>null</code>, server nodes must return this
      * cluster name in order to join the client's view of the cluster. Should
      * only be set when connecting to servers that support the "cluster-name"
      * info command.
-     * 
+     *
      * @since v2.4
      */
     clusterName?: string;
@@ -8848,7 +8848,7 @@ export interface ConfigOptions {
     errorRateWindow?: number;
     /**
      * List of hosts with which the client should attempt to connect.
-     * 
+     *
      * If not specified, the client attempts to read the host list
      * from the <code>AEROSPIKE_HOSTS</code> environment variable or else falls
      * back to use a default value of "localhost".
@@ -8887,7 +8887,7 @@ export interface ConfigOptions {
      * ]
      * const client = await Aerospike.connect({ hosts })
      */
-    hosts?: Host[] | string;    
+    hosts?: Host[] | string;
 
     /**
      * Configuration for logging done by the client.
@@ -8918,7 +8918,7 @@ export interface ConfigOptions {
     log?: Log;
     /**
      * Node login timeout in milliseconds.
-     * 
+     *
      * @type {number}
      * @default 5000
      */
@@ -9030,7 +9030,7 @@ export interface ConfigOptions {
      * WritePolicy#key} policy value for every call to {@link Client.put}, then
      * you may find it beneficial to set the global {@link WritePolicy} in
      * {@link Config#policies}, which all commands will use.
-     *     
+     *
      * @example <caption>Setting a default <code>key</code> policy for all write commands</caption>
      *
      * const Aerospike = require('aerospike')
@@ -9070,7 +9070,7 @@ export interface ConfigOptions {
     port?: number;
     /**
      * Track server rack data.
-     * 
+     *
      * This field is useful when directing read commands to the
      * server node that contains the key and exists on the same rack as the
      * client. This serves to lower cloud provider costs when nodes are
@@ -9081,30 +9081,30 @@ export interface ConfigOptions {
      * rack configuration must also be set to enable this functionality.
      *
      * @default false
-     * 
+     *
      * @since 3.8.0
      */
     rackAware?: boolean;
     /**
      *  Rack where this client instance resides.
-     * 
+     *
      * {@link rackAware} config, {@link policy.replica.PREFER_RACK} replica policy, and server
      * rack configuration must also be set to enable this functionality.
      *
      * @default 0
-     * 
+     *
      * @since 3.8.0
      */
     rackId?: number;
     /**
      * Shared memory configuration.
-     * 
+     *
      * This allows multiple client instances running in separate
      * processes on the same machine to share cluster status, including nodes and
      * data partition maps. Each shared memory segment contains state for one
      * Aerospike cluster. If there are multiple Aerospike clusters, a different
      * <code>key</code> must be defined for each cluster.
-     * 
+     *
      * @see {@link http://www.aerospike.com/docs/client/c/usage/shm.html#operational-notes|Operational Notes}
      *
      * @example <caption>Using shared memory in a clustered setup</caption>
@@ -9140,7 +9140,7 @@ export interface ConfigOptions {
 
     /**
      * Polling interval in milliseconds for cluster tender.
-     * 
+     *
      * @default 1000
      */
     tenderInterval?: number;
@@ -9148,7 +9148,7 @@ export interface ConfigOptions {
      * Configure Transport Layer Security (TLS) parameters for secure
      * connections to the database cluster. TLS connections are not supported as
      * of Aerospike Server v3.9 and depend on a future server release.
-     * 
+     *
      * @since v2.4
      */
     tls?: TLSInfo;
@@ -9158,17 +9158,17 @@ export interface ConfigOptions {
      * <code>access-address</code>.
      *
      * @default false
-     * 
+     *
      * @since v3.7.1
      */
     useAlternateAccessAddress?: boolean;
     /**
      * The user name to use when authenticating to the cluster.
-     * 
+     *
      * Leave empty for clusters running without access management.
      * (Security features are available in the Aerospike Database Enterprise
      * Edition.)
-     * 
+     *
      */
     user?: string;
 
@@ -9404,12 +9404,12 @@ export interface IndexOptions {
      * created based on the type of values stored in the bin. This option needs to
      * be specified if the bin to be indexed contains list or map values and the
      * individual entries of the list or keys/values of the map should be indexed.
-     * 
+     *
      * See {@link indexType} for accepted values.
      */
     type?: indexType;
     /**
-     * The data type of the index to be created, e.g. Numeric, String or Geo. Not necessary to specify when using APIs 
+     * The data type of the index to be created, e.g. Numeric, String or Geo. Not necessary to specify when using APIs
      * such as {@link Client#createIntegerIndex}, {@link Client#createStringIndex}, or {@link Client#createBlobIndex}.
      */
     datatype?: indexDataType;
@@ -9549,7 +9549,7 @@ export interface MapPolicyOptions extends BasePolicyOptions {
 }
 /**
  * Configuration values for the mod-lua user path.
- * 
+ *
  * If you are using user-defined functions (UDF) for processing
  * query results (i.e. aggregations), then you will find it useful to set
  * the <code>modlua</code> settings. Of particular importance is the
@@ -9590,7 +9590,7 @@ export interface NodeStats {
     name: string;
     /**
      * Connections stats for Synchronous Connections on this Node..
-     * 
+     *
      * @remarks The Aerospike Node.js does not use synchronous connections.
      */
     syncConnections: ConnectionStats;
@@ -9860,7 +9860,7 @@ export interface QueryOptions {
     paginate?: boolean;
     /**
      * The time-to-live (expiration) of the record in seconds.
-     * 
+     *
      * There are also special values that can be set in the record TTL  For details
      *
      * Note that the TTL value will be employed ONLY on background query writes.
@@ -10173,9 +10173,9 @@ export interface Stats {
  * Configure Transport Layer Security (TLS) parameters for secure
  * connections to the database cluster. TLS connections are not supported as
  * of Aerospike Server v3.9 and depend on a future server release.
- * 
+ *
  * @since v2.4
- * 
+ *
  */
 export interface TLSInfo
  {
@@ -10201,7 +10201,7 @@ export interface TLSInfo
      * the same as Apache's SSLProtocol documented at
      * https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol. If not
      * specified, the client will use "-all +TLSv1.2". If you are not sure what
-     * protocols to select this option is best left unspecified.     
+     * protocols to select this option is best left unspecified.
      */
     protocols?: string;
     /**
@@ -10380,7 +10380,7 @@ export interface WritePolicyOptions extends BasePolicyOptions {
  * Note: The Node.js client's TLS support is currently limited to Linux, and
  * therefore secure, external authentication (e.g. LDAP) is only supported on
  * Linux as well. External authentication can be used on macOS or Windows but
- * it will _not_ be secure! 
+ * it will _not_ be secure!
  *
  * @example <caption>Using external authentication mode, e.g. to use LDAP authentication</caption>
  *
@@ -10481,7 +10481,7 @@ export enum batchType {
 export enum indexDataType {
     /*
      * Values contained in the SI are strings.
-     */   
+     */
     STRING,
     /*
      * Values contained in the SI are integers.
@@ -10498,7 +10498,7 @@ export enum indexDataType {
 }
 
 /**
- * Specifies the collection datatype the secondary index should be built on. DEFAULT implies the value is not a collection datatype.z       
+ * Specifies the collection datatype the secondary index should be built on. DEFAULT implies the value is not a collection datatype.z
  */
 export enum indexType {
     /**
@@ -10636,19 +10636,19 @@ export enum privilegeCode {
  *
  */
 export enum regex {
-    /** 
+    /**
      * Use basic regular expression syntax.
      */
     BASIC,
-    /** 
-     * Use extended regular expression syntax. 
+    /**
+     * Use extended regular expression syntax.
      */
     EXTENDED,
-    /** 
+    /**
      * Ignore case when matching.
      *  */
     ICASE,
-    /** 
+    /**
      * Anchors do not match at newline characters in the string.
      */
     NEWLINE
@@ -10713,7 +10713,7 @@ export namespace admin {
 
     /**
      *
-     * Aerospike Database Role.  Includes quota, whitelisting, and privilege configurations. 
+     * Aerospike Database Role.  Includes quota, whitelisting, and privilege configurations.
      *
      */
     export class Role {
@@ -10762,23 +10762,23 @@ export namespace admin {
         name: string;
         /**
          * List of read statistics. List may be null. Current statistics by offset are:
-         * 
+         *
          * 0: read quota in records per second
          * 1: single record read command rate (TPS)
          * 2: read scan/query record per second rate (RPS)
          * 3: number of limitless read scans/queries
-         * 
+         *
          * Future server releases may add additional statistics.
          */
         readInfo: number[];
         /**
          * List of write statistics. List may be null. Current statistics by offset are:
-         * 
+         *
          * 0: write quota in records per second
          * 1: single record write command rate (TPS)
          * 2: write scan/query record per second rate (RPS)
          * 3: number of limitless write scans/queries
-         * 
+         *
          * Future server releases may add additional statistics.
          */
         writeInfo: number[];
@@ -10786,7 +10786,7 @@ export namespace admin {
          * Array of assigned role names.
          */
         roles: string[];
-    }        
+    }
 }
 /**
  * Bitwise write flags.
@@ -10911,7 +10911,7 @@ export namespace bitwise {
 
     /**
      * Create byte "resize" operation.
-     * 
+     *
      * @remarks Server resizes bitmap to byte size according to flags.
      * Server does not return a value.
      *
@@ -10923,7 +10923,7 @@ export namespace bitwise {
     export function resize(bin: string, size: number, flags?: bitwise.resizeFlags): BitwiseOperation;
     /**
      * Create byte "insert" operation.
-     * 
+     *
      * @remarks Server inserts value bytes into bitmap. Server does not return
      * a value.
      *
@@ -10946,7 +10946,7 @@ export namespace bitwise {
     export function remove(bin: string, byteOffset: number, byteSize: number): BitwiseOperation;
     /**
      * Create bit "set" operation.
-     * 
+     *
      * @remarks Server sets value on bitmap. Server does not return a value.
      *
      * @param bin - The name of the bin. The bin must contain a byte value.
@@ -10960,7 +10960,7 @@ export namespace bitwise {
     export function set(bin: string, bitOffset: number, bitSize: number, value: number | Buffer): BitwiseOperation;
     /**
      * Create bit "or" operation.
-     * 
+     *
      * @remarks Server performs bitwise "or" on value and bitmap. Server does
      * not return a value.
      *
@@ -10973,7 +10973,7 @@ export namespace bitwise {
     export function or(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
     /**
      * Create bit "exclusive or" operation.
-     * 
+     *
      * @remarks Server performs bitwise "xor" on value and bitmap. Server does
      * not return a value.
      *
@@ -10986,7 +10986,7 @@ export namespace bitwise {
     export function xor(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
     /**
      * Create bit "and" operation.
-     * 
+     *
      * @remarks Server performs bitwise "and" on value and bitmap. Server does
      * not return a value.
      *
@@ -10999,7 +10999,7 @@ export namespace bitwise {
     export function and(bin: string, bitOffset: number, bitSize: number, value: Buffer): BitwiseOperation;
     /**
      * Create bit "not" operation.
-     * 
+     *
      * @remarks Server negates bitmap. Server does not return a value.
      *
      * @param bin - The name of the bin. The bin must contain a byte value.
@@ -11105,7 +11105,7 @@ export namespace bitwise {
     export function lscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
     /**
      * Create bit "right scan" operation.
-     * 
+     *
      * @remarks Server returns integer bit offset of the last specified value
      * bit in bitmap.
      *
@@ -11303,7 +11303,7 @@ export namespace hll {
      * @param bin - The name of the bin. The bin must contain an HLL value.
      * @returns Operation that can be passed to the {@link Client#operate} command.
      */
-    export function describe(bin: string): HLLOperation;        
+    export function describe(bin: string): HLLOperation;
 }
 
 /**
@@ -11345,10 +11345,10 @@ export namespace lists {
 
     /**
      * List order.
-     * 
+     *
      * @remarks The order determines what kind of indices the Aerospike server
-     * maintains for the list.     
-     * 
+     * maintains for the list.
+     *
      */
     export enum order {
         /**
@@ -11460,7 +11460,7 @@ export namespace lists {
     export class ListOperation extends operations.Operation {
         /**
          * Set the return type for certain list operations.
-         * 
+         *
          * The return type only affects <code>getBy\*</code> and
          * <code>removeBy\*</code> list operations.
          *
@@ -11554,7 +11554,7 @@ export namespace lists {
         public withContext(contextOrFunction: cdt.Context | Function): ListOperation;
         /**
          * Inverts the selection of items for certain list operations.
-         * 
+         *
          * For <code>getBy\*</code> and <code>removeBy\*</code> list
          * operations, calling the <code>invertSelect</code> method on the
          * <code>ListOperation</code> has the effect of inverting the selection of
@@ -11650,7 +11650,7 @@ export namespace lists {
     export function create(bin: string, order?: lists.order, pad?: boolean, persistIndex?: boolean, ctx?: cdt.Context): ListOperation;
     /**
      * Sets the list order to <code>ORDERED</code> or <code>UNORDERED</code>
-     * 
+     *
      * @remarks This operation does not return any result.
      *
      * @param bin - The name of the bin. The bin must contain a List value.
@@ -11673,7 +11673,7 @@ export namespace lists {
     export function sort(bin: string, flags: lists.sortFlags): ListOperation;
     /**
      * Appends an element to the end of a list.
-     * 
+     *
      * @remarks This operation returns the element count of the list after the
      * operation.
      *
@@ -11805,7 +11805,7 @@ export namespace lists {
     export function insert(bin: string, index: number, value: AerospikeBinValue, policy?: policy.ListPolicy): ListOperation;
     /**
      * Inserts a list of elements at the specified index.
-     * 
+     *
      * @remarks This operation returns the element count of the list after the
      * operation.
      *
@@ -11937,7 +11937,7 @@ export namespace lists {
     export function popRange(bin: string, index: number, count?: number): ListOperation;
 /**
  * Removes the list element at the specified index.
- * 
+ *
  * @remarks This operation returns the number of elements removed from the
  * list.
  *
@@ -11982,7 +11982,7 @@ export namespace lists {
     export function remove(bin: string, index: number): ListOperation;
 /**
  * Removes the list elements in the specified range.
- * 
+ *
  * @remarks This operation returns the number of elements removed from the
  * list.
  *
@@ -12162,7 +12162,7 @@ export namespace lists {
     export function removeByValueRange(bin: string, begin: number | null, end: number | null, returnType?: lists.returnType): InvertibleListOp;
     /**
      * Removes list items nearest to value and greater, by relative rank.
-     * 
+     *
      * @remarks This operation returns the data specified by <code>returnType</code>.
      *
      * Examples for ordered list [0, 4, 5, 9, 11, 15]:
@@ -12866,7 +12866,7 @@ export namespace maps {
          */
         CREATE_ONLY
     }
-    
+
     /**
      * Map write flags.
      *
@@ -12904,7 +12904,7 @@ export namespace maps {
          */
         PARTIAL
     }
-    
+
     export enum returnType {
         /**
          * Do not return a result; this is the default.
@@ -13041,7 +13041,7 @@ export namespace maps {
      * @param key - Map key to write.
      * @param value - Map value to write.
      * @param policy - The map policy.
-     * 
+     *
      * @returns Operation that can be passed to the {@link Client#operate} command.
      */
     export function put(bin: string, key: string, value: AerospikeBinValue, policy?: policy.MapPolicy): MapOperation;
@@ -13780,7 +13780,7 @@ export namespace exp {
          * @param flags - bit resize flags value.
          * @param byteSize - Number of bytes the resulting blob should occupy.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob - bin byteSize bytes.
          */
         export const reSize: (bin: AerospikeExp, flags: bitwise.resizeFlags, byteSize: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13791,7 +13791,7 @@ export namespace exp {
          * @param value - Blob expression containing the bytes to insert.
          * @param byteOffset - Byte index of where to insert the value.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob - bin resulting blob containing the inserted bytes.
          */
         export const insert: (bin: AerospikeExp, value: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13802,7 +13802,7 @@ export namespace exp {
          * @param byteSize - Number of bytes to remove.
          * @param byteOffset - Byte index of where to remove from.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes removed.
          */
         export const remove: (bin: AerospikeExp, byteSize: AerospikeExp, byteOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13814,7 +13814,7 @@ export namespace exp {
          * @param bitSize - Number of bytes to overwrite.
          * @param bitOffset - Bit index of where to start writing.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes overwritten.
          */
         export const set: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13826,7 +13826,7 @@ export namespace exp {
          * @param bitSize - Number of bytes to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const or: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13838,7 +13838,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const xor: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13850,9 +13850,9 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
-         */       
+         */
         export const and: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
         /**
          * Create an expression that performs bit not operation.
@@ -13861,7 +13861,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const not: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13873,7 +13873,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const lShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13885,7 +13885,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const rShift: (bin: AerospikeExp, shift: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13899,7 +13899,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const add: (bin: AerospikeExp, action: bitwise.overflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13913,7 +13913,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const subtract: (bin: AerospikeExp, action: bitwise.overflow, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13926,7 +13926,7 @@ export namespace exp {
          * @param bitSize - Number of bits to be operated on.
          * @param bitOffset - Bit index of where to start operation.
          * @param policy - bit policy value.
-         * 
+         *
          * @return blob bin resulting blob with the bytes operated on.
          */
         export const setInt: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp, policy?: policy.BitwisePolicy) => AerospikeExp;
@@ -13936,7 +13936,7 @@ export namespace exp {
          * @param bin - A blob bin expression to apply this function to.
          * @param bitSize - Number of bits to read from the blob bin.
          * @param bitOffset - The bit index of where to start reading from.
-         * 
+         *
          * @return blob bin bit_size bits rounded up to the nearest byte size.
          */
         export const get: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
@@ -13946,7 +13946,7 @@ export namespace exp {
          * @param bin - A blob bin expression to apply this function to.
          * @param bitSize - Number of bits to read from the blob bin.
          * @param bitOffset - The bit index of where to start reading from.
-         * 
+         *
          * @return integer value number of bits set to 1 in the bit_size region.
          */
         export const count: (bin: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
@@ -13957,7 +13957,7 @@ export namespace exp {
          * @param value - Boolean expression, true searches for 1, false for 0.
          * @param bitSize - Number of bits to read from the blob bin.
          * @param bitOffset - The bit index of where to start reading from.
-         * 
+         *
          * @return integer value Index of the left most bit starting from __offset set to value.
          */
         export const lScan: (bin: AerospikeExp, value: AerospikeExp, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
@@ -13996,7 +13996,7 @@ export namespace exp {
          * @param mhBitCount - Number of min hash bits. Must be between 4 and 51 inclusive.
          * @param indexBitCount - Number of index bits. Must be between 4 and 16 inclusive.
          * @param policy - hll policy value.
-         * 
+         *
          * @return Returns the resulting hll bin.
          */
         export const initMH: (bin: AerospikeExp, mhBitCount: number, indexBitCount: number, policy?: policy.HLLPolicy) => AerospikeExp;
@@ -14092,7 +14092,7 @@ export namespace exp {
          * @param bin - A bin expression to apply this function to.
          * @param list - A list expression of keys to check if the HLL may contain them.
          * @return 1 bin contains all of list, 0 otherwise.
-         */  
+         */
         export const mayContain: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
     }
 
@@ -14126,7 +14126,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (expression)
-         */       
+         */
         export const getByValueRange: (bin: AerospikeExp, begin: AerospikeExp, end: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that selects list items identified by values and returns selected
@@ -14137,7 +14137,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */        
+         */
         export const getByValueList: (bin: AerospikeExp, value: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that selects list items nearest to value and greater by relative rank
@@ -14149,7 +14149,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */        
+         */
         export const getByRelRankRangeToEnd: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
            /**
          * Create expression that selects list items nearest to value and greater by relative rank with a
@@ -14162,7 +14162,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */       
+         */
         export const getByRelRankRange: (bin: AerospikeExp, value: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
            /**
          * Create expression that selects list item identified by index
@@ -14175,7 +14175,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (valueType expression)
-         */       
+         */
         export const getByIndex: (bin: AerospikeExp, index: AerospikeExp, valueType: type, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
             /**
          * Create expression that selects list items starting at specified index to the end of list
@@ -14186,7 +14186,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */      
+         */
         export const getByIndexRangeToEnd: (bin: AerospikeExp, index: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
            /**
          * Create expression that selects "count" list items starting at specified index
@@ -14198,7 +14198,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */       
+         */
         export const getByIndexRange: (bin: AerospikeExp, index: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that selects list item identified by rank
@@ -14210,7 +14210,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (valueType expression)
-         */        
+         */
         export const getByRank: (bin: AerospikeExp, rank: AerospikeExp, valueType: type, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that selects list items starting at specified rank to the last ranked item
@@ -14221,7 +14221,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */        
+         */
         export const getByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
    /**
          * Create expression that selects "count" list items starting at specified rank
@@ -14233,7 +14233,7 @@ export namespace exp {
          * @param returnType - Return type.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp}
-         */       
+         */
         export const getByRankRange: (bin: AerospikeExp, rank: AerospikeExp, count: AerospikeExp, returnType: lists.returnType, ctx?: cdt.Context | null) => AerospikeExp;
            /**
          * Create expression that appends value to end of list.
@@ -14243,7 +14243,7 @@ export namespace exp {
          * @param {Object} policy Optional list write policy.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */       
+         */
         export const append: (bin: AerospikeExp, value: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that appends list items to end of list.
@@ -14253,7 +14253,7 @@ export namespace exp {
          * @param policy - Optional list write policy.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const appendItems: (bin: AerospikeExp, value: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
   /**
          * Create expression that inserts value to specified index of list.
@@ -14264,7 +14264,7 @@ export namespace exp {
          * @param policy - Optional list write policy.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const insert: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
    /**
          * Create expression that inserts each input list item starting at specified index of list.
@@ -14275,7 +14275,7 @@ export namespace exp {
          * @param policy - Optional list write policy.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */       
+         */
         export const insertItems: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
   /**
          * Create expression that increments list[index] by value.
@@ -14286,7 +14286,7 @@ export namespace exp {
          * @param policy - Optional list write policy.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const increment: (bin: AerospikeExp, value: AerospikeExp, idx: AerospikeExp, policy?: policy.ListPolicy | null, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that sets item value at specified index in list.
@@ -14367,9 +14367,9 @@ export namespace exp {
          * @param value - Value expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */       
+         */
         export const removeByRelRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, value: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
-  
+
           /**
          * Create expression that removes list item identified by index.
          *
@@ -14377,7 +14377,7 @@ export namespace exp {
          * @param idx - Index integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */      
+         */
         export const removeByIndex: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that removes list items starting at specified index to the end of list.
@@ -14386,7 +14386,7 @@ export namespace exp {
          * @param idx - Index integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const removeByIndexRangeToEnd: (bin: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
            /**
          * Create expression that removes "count" list items starting at specified index.
@@ -14396,7 +14396,7 @@ export namespace exp {
          * @param idx - Index integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */       
+         */
         export const removeByIndexRange: (bin: AerospikeExp, count: AerospikeExp, idx: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that removes list item identified by rank.
@@ -14405,7 +14405,7 @@ export namespace exp {
          * @param rank - Rank integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const removeByRank: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that removes list items starting at specified rank to the last ranked item.
@@ -14414,7 +14414,7 @@ export namespace exp {
          * @param rank - Rank integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const removeByRankRangeToEnd: (bin: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that removes "count" list items starting at specified rank.
@@ -14424,7 +14424,7 @@ export namespace exp {
          * @param rank - Rank integer expression.
          * @param ctx - Optional context path for nested CDT.
          * @return {@link AerospikeExp} (list expression)
-         */        
+         */
         export const removeByRankRange: (bin: AerospikeExp, count: AerospikeExp, rank: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
     }
 
@@ -14909,9 +14909,9 @@ export namespace exp {
          */
         export const write: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
     }
-    
+
     export {mapsExp as maps, listsExp as lists, operationsExp as operations}
-    
+
     /**
      * @readonly
      * @remarks Expression read bit flags. Use BITWISE OR to combine flags.
@@ -14959,9 +14959,9 @@ export namespace exp {
      * The {@link exp|exp} module provides functions to
      * create expressions for use in key operations via the {@link
      * Client#operate} command.
-     * 
+     *
      * For more information on Aerospike datatypes, See {@link https://aerospike.com/docs/server/guide/data-types/overview | here.}
-     * 
+     *
      */
     export enum type {
         /**
@@ -15971,7 +15971,7 @@ export namespace filter {
      * @param indexType - One of {@link indexType},
      * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      *
      * @since v2.0
@@ -15992,7 +15992,7 @@ export namespace filter {
     /**
      * Geospatial filter that matches points within a given GeoJSON
      * region.
-     * 
+     *
      * Depending on the index type, the filter will match GeoJSON
      * values contained in list or map values as well (requires Aerospike server
      * version >= 3.8).
@@ -16001,7 +16001,7 @@ export namespace filter {
      * @param value - GeoJSON region value.
      * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
      * @param ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      *
      * @since v2.0
@@ -16009,7 +16009,7 @@ export namespace filter {
     export function geoWithinGeoJSONRegion(bin: string, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches regions that contain a given GeoJSON point.
-     * 
+     *
      * Depending on the index type, the filter will match GeoJSON
      * regions within list or map values as well (requires server
      * >= 3.8).
@@ -16018,7 +16018,7 @@ export namespace filter {
      * @param value - GeoJSON point value.
      * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
      * @param {Object} ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      *
      * @since v2.0
@@ -16026,7 +16026,7 @@ export namespace filter {
     export function geoContainsGeoJSONPoint(bin: string, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches points within a radius from a given point.
-     * 
+     *
      * Depending on the index type, the filter will match GeoJSON
      * values contained in list or map values as well (requires Aerospike server
      * version >= 3.8).
@@ -16037,7 +16037,7 @@ export namespace filter {
      * @param radius - Radius in meters.
      * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
      * @param ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      *
      * @since v2.0
@@ -16045,7 +16045,7 @@ export namespace filter {
     export function geoWithinRadius(bin: string, lng: number, lat: number, radius: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches regions that contain a given lng/lat coordinate.
-     * 
+     *
      * Depending on the index type, the filter will match GeoJSON
      * regions within list or map values as well (requires server
      * >= 3.8).
@@ -16055,7 +16055,7 @@ export namespace filter {
      * @param lat - Latitude of the point.
      * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
      * @param ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      *
      * @since v2.0
@@ -16063,7 +16063,7 @@ export namespace filter {
     export function geoContainsPoint(bin: string, lng: number, lat: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Integer range filter.
-     * 
+     *
      * The filter matches records with a bin value in the given
      * integer range. The filter can also be used to match for integer values
      * within the given range that are contained with a list or map by specifying
@@ -16074,7 +16074,7 @@ export namespace filter {
      * @param max - Upper end of the range (inclusive).
      * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
      * @param ctx - The {@link cdt.Context} of the index.
-     * 
+     *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      */
     export function range(bin: string, min: number, max: number, indexType?: indexType, ctx?: cdt.Context): filter.RangePredicate;
