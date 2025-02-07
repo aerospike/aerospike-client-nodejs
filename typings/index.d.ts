@@ -282,7 +282,7 @@ export type TypedCallback<T> = (error?: AerospikeError, result?: T) => void;
  *   })
  * })
  */
-export class AerospikeRecord<B extends AerospikeBins> {
+export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
 
    /**
      * Unique record identifier.
