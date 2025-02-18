@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -42,17 +42,6 @@ on:
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
-      unoptimized:
-        description: 'macOS or Linux: Apply -O0 flag?'
-        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        description: 'macOS: Build wheels for debugging?'
-        type: boolean
-        required: false
-        default: false
       run_tests:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
@@ -86,18 +75,6 @@ on:
       platform-tag:
         type: string
         required: true
-      # Only used in workflow_call event
-      sha-to-build-and-test:
-        type: string
-        required: true
-      unoptimized:
-        type: boolean
-        required: false
-        default: false
-      include-debug-info-for-macos:
-        type: boolean
-        required: false
-        default: false
       run_tests:
         type: boolean
         required: false
@@ -126,7 +103,6 @@ on:
         required: true
 
 env:
-  COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
   # Note that environment variables in Github are all strings
   # Github mac m1 and windows runners don't support Docker / nested virtualization
   # so we need to use self-hosted runners to test wheels for these platforms
@@ -247,13 +223,6 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-    - name: Set unoptimize flag
-      if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
-      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
-
-    - name: Set include dsym flag
-      if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
-      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build Binding
       run: |
@@ -283,24 +252,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
-    # NEED TO MAKE A NODEJS ACTION WHICH REPLACES THIS!!!
-    #- name: Build wheel
-    #  uses: pypa/cibuildwheel@v2.20.0
-    #  env:
-    #    CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
-    #    CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
-    #    CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
-    #    CIBW_BUILD_FRONTEND: build
-    #    CIBW_BEFORE_ALL_LINUX: >
-    #      yum install openssl-devel -y &&
-    #      yum install python-devel -y &&
-    #      yum install python-setuptools -y
-    #    # delvewheel is not enabled by default but we do need to repair the wheel
-    #    CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-    #    CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
-    #    CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
-#
 
 
     - name: Upload wheels to GitHub Linux x86
