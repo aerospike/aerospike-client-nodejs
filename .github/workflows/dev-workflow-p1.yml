@@ -40,6 +40,18 @@ jobs:
       change: 'bump-dev-num'
     secrets: inherit
 
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+    #  bump-dev-number,
+      rebuild-artifacts-with-new-dev-num
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
+
+
 #  test-with-server-rc:
 #    needs: test-with-server-release
 #    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
