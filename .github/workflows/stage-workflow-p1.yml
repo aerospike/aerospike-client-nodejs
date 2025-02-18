@@ -27,6 +27,10 @@ on:
         default: false
 
 jobs:
+  download-jfrog-artifacts:
+    uses: .github/workflows/download-jfrog-artifacts.yml
+    secrets: inherit
+
   test-with-server-release:
     uses: ./.github/workflows/test-artifacts.yml
     with:
