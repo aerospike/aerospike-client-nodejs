@@ -28,7 +28,7 @@ on:
 
 jobs:
   download-jfrog-artifacts:
-    uses: .github/workflows/download-jfrog-artifacts.yml
+    uses: .github/workflows/download-jfrog-artifacts.yml@2025-Pipeline-Improvement
     with:
       version: 6.0.2.dev1
     secrets: inherit
