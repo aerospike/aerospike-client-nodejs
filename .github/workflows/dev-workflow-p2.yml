@@ -1,18 +1,18 @@
-name: Dev workflow (part 2)
-
-on:
-  pull_request:
-    branches:
-      - 'dev*'
-    types:
-      - synchronize
-    paths-ignore:
-      - 'package.json'
-  workflow_dispatch:
-    paths-ignore:
-      - 'package.json'
-
-jobs:
+#name: Dev workflow (part 2)
+#
+#on:
+#  pull_request:
+#    branches:
+#      - 'dev*'
+#    types:
+#      - synchronize
+#    paths-ignore:
+#      - 'package.json'
+#  workflow_dispatch:
+#    paths-ignore:
+#      - 'package.json'
+#
+#jobs:
 #  bump-dev-number:
     #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
 #    uses: ./.github/workflows/bump-version.yml
