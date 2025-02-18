@@ -37,7 +37,7 @@ jobs:
     #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     uses: ./.github/workflows/bump-version.yml
     needs: [
-      rebuild-artifacts-with-new-dev-num
+      test-with-server-release
     ]
     with:
       change: 'bump-dev-num'
@@ -46,8 +46,8 @@ jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
-      bump-dev-number,
-      rebuild-artifacts-with-new-dev-num
+      test-with-server-release,
+      bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
