@@ -88,10 +88,10 @@ jobs:
         echo "${{ steps.get-new-version.outputs.new_version }}"
 
 
-#  update-version-in-repo:
-#    needs: get-new-version
-#    uses: ./.github/workflows/update-version.yml
-#    with:
-#      new_version: ${{ needs.get-new-version.outputs.new_version }}
-#      #ref: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
-#    secrets: inherit
+  update-version-in-repo:
+    needs: get-new-version
+    uses: ./.github/workflows/update-version.yml
+    with:
+      new_version: ${{ needs.get-new-version.outputs.new_version }}
+      #ref: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+    secrets: inherit
