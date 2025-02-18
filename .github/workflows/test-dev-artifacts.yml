@@ -1,4 +1,4 @@
-name: 'Build wheels'
+name: 'Test Dev Artifacts'
 run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
@@ -217,11 +217,25 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: nodejs-client-artifacts
+        path: ./downloaded-artifacts
 
-    - name: Build Binding
+    - name: list Artifacts
       run: |
-        ./scripts/build-c-client.sh;
-        npm install;
+        ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+
+    - name: Move artifacts
+      run: |
+        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+
+    - name: npm install
+      run: npm install
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -246,66 +260,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
-
-    - name: Upload wheels to GitHub Linux x86
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Linux 20 x86
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Linux aarch64
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Linux 20 aarch64
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Mac x86
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Mac Arm
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-
-    - name: Cleanup Artifacts
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      shell: pwsh
-      run: |
-        Remove-Item -Recurse -Force .\build\release\obj
-        Remove-Item -Force .\build\release\aerospike.pdb
-        Remove-Item -Force .\build\release\aerospike.ipdb
-        Remove-Item -Force .\build\release\aerospike.iobj
-
-    - name: Upload wheels to GitHub Windows
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      with:
-        path: ./build/Release/*
-        name: ${{ env.BUILD_IDENTIFIER }}.node
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -372,41 +326,31 @@ jobs:
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-      - name: Download wheel
+      - name: Download artifacts
         uses: actions/download-artifact@v4
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-          name: ${{ env.BUILD_IDENTIFIER }}.node
+          name: nodejs-client-artifacts
+          path: ./downloaded-artifacts
 
-      - name: Download wheel
-        uses: actions/download-artifact@v4
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        with:
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
-          name: ${{ env.BUILD_IDENTIFIER }}.node
-
-      - name: Convert Python tag to Python version
-        # Don't use sed because we want this command to work on both mac and windows
-        # The command used in GNU sed is different than in macOS sed
+      - name: list Artifacts
         run: |
-          NODEJS_TAG=${{ matrix.nodejs-tag[0] }}
-          NODEJS_VERSION="${NODEJS_TAG/cp/}"
-          echo NODEJS_VERSION="${NODEJS_VERSION/3/3.}" >> $GITHUB_ENV
-        shell: bash
+          ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+
+      - name: Move artifacts
+        run: |
+          cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+          
+      - name: Change install command for release
+        run: node ./scripts/change-install-command.js
+
+      - name: npm install
+        run: npm install
 
       - uses: actions/setup-node@v4
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
           path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-
-      - uses: actions/setup-node@v4
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        with:
-          node-version: ${{ matrix.nodejs-tag[1] }}
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
-
 
 #      - name: Install nvm
 #        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
