@@ -27,10 +27,17 @@ on:
         default: false
 
 jobs:
-  test-with-server-release:
-    uses: ./.github/workflows/build-artifacts.yml
+  #test-with-server-release:
+  #  uses: ./.github/workflows/build-artifacts.yml
+  #  with:
+  #    run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
+  #  secrets: inherit
+
+  bump-dev-number:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/bump-version.yml
     with:
-      run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
+      change: 'bump-dev-num'
     secrets: inherit
 
 #  test-with-server-rc:
