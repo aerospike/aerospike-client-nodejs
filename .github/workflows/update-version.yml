@@ -44,14 +44,14 @@ jobs:
       with:
         new_version: ${{ inputs.new_version }}
 
-#    - name: Commit new version
-#      uses: stefanzweifel/git-auto-commit-action@v4
-#      with:
-#        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
-#        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-#        tagging_message: ${{ inputs.new_version }}
-#        branch: 2025-Pipeline-Improvement
-#        #branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
+    - name: Commit new version
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        tagging_message: ${{ inputs.new_version }}
+        branch: 2025-Pipeline-Improvement
+        #branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
 
     - name: Output bump commit hash for next jobs to use
       id: get-bump-commit-sha
