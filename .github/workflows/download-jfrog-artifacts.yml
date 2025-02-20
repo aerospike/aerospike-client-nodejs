@@ -39,7 +39,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
