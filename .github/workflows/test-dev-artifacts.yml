@@ -217,8 +217,6 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-    - name: Debug artifacts directory
-      run: ls -lah ${{ runner.temp }}/_github_workflow/
 
     - name: Download artifacts
       uses: actions/download-artifact@v4
@@ -328,9 +326,6 @@ jobs:
           server-tag: ${{ inputs.server-tag }}
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-      - name: Debug artifacts directory
-        run: ls -lah ${{ runner.temp }}/_github_workflow/
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
