@@ -235,6 +235,8 @@ jobs:
     - name: check binding
       run:
         ls lib/binding
+        ls lib/binding/glibc@2.35
+        ls lib/binding/glibc@2.31
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
