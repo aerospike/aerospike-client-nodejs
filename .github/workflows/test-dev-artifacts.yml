@@ -228,8 +228,6 @@ jobs:
       run: |
         ls downloaded-artifacts/
 
-    - name: list Artifacts
-
     - name: Move artifacts
       run: |
         cp -r downloaded-artifacts/ lib/binding/
