@@ -35,6 +35,9 @@ jobs:
 
   test-with-server-release:
     uses: ./.github/workflows/test-artifacts.yml
+    needs: [
+      download-jfrog-artifacts
+    ]
     with:
       run_tests: true
     secrets: inherit
@@ -43,6 +46,7 @@ jobs:
     #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     uses: ./.github/workflows/bump-version.yml
     needs: [
+      download-jfrog-artifacts,
       test-with-server-release
     ]
     with:
@@ -52,6 +56,7 @@ jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
+      download-jfrog-artifacts,
       test-with-server-release,
       bump-dev-number
     ]

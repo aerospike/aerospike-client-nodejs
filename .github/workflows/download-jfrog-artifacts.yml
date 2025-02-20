@@ -33,7 +33,7 @@ on:
         required: true
 
 jobs:
-  publish-jfrog-build-to-npm:
+  prepare-artifacts:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
