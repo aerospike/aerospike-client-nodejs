@@ -223,6 +223,10 @@ jobs:
       with:
         name: nodejs-client-artifacts
         path: ./downloaded-artifacts
+      
+    - name: list Artifacts first
+      run: |
+        ls downloaded-artifacts/
 
     - name: list Artifacts
       run: |
@@ -333,9 +337,7 @@ jobs:
           name: nodejs-client-artifacts
           path: ./downloaded-artifacts
 
-      - name: list Artifacts first
-        run: |
-          ls downloaded-artifacts/
+
 
       - name: list Artifacts
         run: |
