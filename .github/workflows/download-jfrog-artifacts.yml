@@ -75,7 +75,7 @@ jobs:
 
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
+      #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       with:
         path: ./lib/binding
         name: nodejs-client-artifacts
