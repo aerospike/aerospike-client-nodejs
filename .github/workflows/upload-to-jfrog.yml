@@ -47,28 +47,28 @@ jobs:
     #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
 
     - name: Download Artifacts
-      if: ${{ inputs.stage }}
+      if: ${{ !inputs.stage }}
       uses: ./.github/actions/download-github-artifacts/
 
     - name: Download artifacts
-      if: ${{ !inputs.stage }}
+      if: ${{ inputs.stage }}
       uses: actions/download-artifact@v4
       with:
         name: nodejs-client-artifacts
         path: ./downloaded-artifacts
 
     - name: list Artifacts first
-      if: ${{ !inputs.stage }}
+      if: ${{ inputs.stage }}
       run: |
         ls downloaded-artifacts/
 
     - name: Move artifacts
-      if: ${{ !inputs.stage }}
+      if: ${{ inputs.stage }}
       run: |
         cp -r downloaded-artifacts/ lib/binding/
 
     - name: check binding
-      if: ${{ !inputs.stage }}
+      if: ${{ inputs.stage }}
       run:
         ls lib/binding;
         ls lib/binding/glibc@2.35;
