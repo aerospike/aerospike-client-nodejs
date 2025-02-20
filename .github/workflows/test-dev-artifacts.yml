@@ -217,6 +217,9 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
+    - name: Debug artifacts directory
+      run: ls -lah ${{ runner.temp }}/_github_workflow/
+
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
