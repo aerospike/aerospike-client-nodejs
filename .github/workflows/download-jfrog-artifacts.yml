@@ -22,7 +22,7 @@ on:
       version:
         type: string
         description: Build version
-        required: true
+        required: false
     secrets:
       # Just make all the secrets required to make things simpler...
       NPMRC:
