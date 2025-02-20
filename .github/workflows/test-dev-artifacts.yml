@@ -333,6 +333,10 @@ jobs:
           name: nodejs-client-artifacts
           path: ./downloaded-artifacts
 
+      - name: list Artifacts first
+        run: |
+          ls downloaded-artifacts/
+
       - name: list Artifacts
         run: |
           ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
