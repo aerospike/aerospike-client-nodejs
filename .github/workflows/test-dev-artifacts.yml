@@ -223,18 +223,20 @@ jobs:
       with:
         name: nodejs-client-artifacts
         path: ./downloaded-artifacts
-      
+
     - name: list Artifacts first
       run: |
         ls downloaded-artifacts/
 
     - name: list Artifacts
-      run: |
-        ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+        cp -r downloaded-artifacts/ lib/binding/
+
+    - name: check binding
+      run:
+        ls lib/binding
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
