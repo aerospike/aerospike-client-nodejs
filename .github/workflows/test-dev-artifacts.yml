@@ -326,6 +326,9 @@ jobs:
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+      - name: Debug artifacts directory
+        run: ls -lah ${{ runner.temp }}/_github_workflow/
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
