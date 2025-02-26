@@ -25,6 +25,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "aerospike": "file:.."
+    "aerospike": "file:..",
+    "dockerode": "^4.0.4"
   }
 }

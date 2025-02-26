@@ -22,6 +22,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/as_metrics_writer.h>
 #include <aerospike/as_job.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
@@ -107,6 +108,9 @@ int get_optional_int64_property(int64_t *intp, bool *defined,
 int get_optional_string_property(char **strp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
+int get_optional_uint64_property(uint64_t *intp, bool *defined,
+								 v8::Local<v8::Object> obj, char const *prop,
+								 const LogInfo *log);
 int get_optional_uint32_property(uint32_t *intp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
@@ -119,6 +123,9 @@ bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
 bool get_map_policy(as_map_policy *policy, v8::Local<v8::Object> obj,
 					const LogInfo *log);
+int get_optional_report_dir_property(char **report_dir, bool *defined,
+								v8::Local<v8::Object> obj, const char *prop,
+								const LogInfo *log);
 
 // Functions to convert C client structure to v8 object(map)
 v8::Local<v8::Object> error_to_jsobject(as_error *error, const LogInfo *log);
@@ -180,6 +187,17 @@ int batch_remove_record_from_jsobject(as_batch_records *batch,
 void batch_records_free(as_batch_records *records, const LogInfo *log);
 int udfargs_from_jsobject(char **filename, char **funcname, as_list **args,
 						  v8::Local<v8::Object> obj, const LogInfo *log);
+
+typedef struct {
+    uint32_t *connection;
+    uint32_t *write;
+    uint32_t *read;
+    uint32_t *batch;
+    uint32_t *query;
+} latency;
+
+void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint32_t bucket_max);
+void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint32_t bucket_max);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,

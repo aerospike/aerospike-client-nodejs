@@ -24,6 +24,7 @@
 extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_event.h>
+#include <aerospike/as_metrics_writer.h>
 }
 
 using namespace v8;
@@ -691,6 +692,47 @@ int adminpolicy_from_jsobject(as_policy_admin *policy, Local<Object> obj,
 	as_policy_admin_init(policy);
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
 										   "timeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing info policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<Object> obj,
+							 as_metrics_listeners* listeners, const LogInfo *log)
+{
+	if (obj->IsUndefined() || obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	int rc = 0;
+	as_metrics_policy_init(policy);
+
+	if(listeners != NULL){
+		policy->metrics_listeners = *listeners;
+	}
+	if ((rc = get_optional_report_dir_property((char**)&policy->report_dir, NULL, obj,
+										   "reportDir", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint64_property(&policy->report_size_limit, NULL, obj,
+										   "reportSizeLimit", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->interval, NULL, obj,
+										   "interval", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->latency_columns, NULL, obj,
+										   "latencyColumns", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->latency_shift, NULL, obj,
+										   "latencyShift", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
