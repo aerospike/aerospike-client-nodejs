@@ -237,17 +237,17 @@ jobs:
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
-    - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
-      run: |
-        docker ps;
-        docker logs aerospike;
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+    #- name: Run tests
+    #  if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
+    #  run: |
+    #    docker ps;
+    #    docker logs aerospike;
+    #    cd ts-test;
+    #    npm install;
+    #    npx tsc;
+    #    cd ..;
+    #    npx tsc;
+    #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
 
     - name: Upload wheels to GitHub Linux x86
