@@ -166,11 +166,11 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.run_tests == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.run_tests == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -179,7 +179,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && (inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') }}
+      if: ${{ inputs.run_tests == 'true' && (inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -189,7 +189,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
