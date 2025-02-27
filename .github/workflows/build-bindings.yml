@@ -37,9 +37,9 @@ on:
         - manylinux_aarch64
         - manylinux_20_x86_64
         - manylinux_20_aarch64
-        #- macosx_x86_64
-        #- macosx_arm64
-        #- win_amd64
+        - macosx_x86_64
+        - macosx_arm64
+        - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       run_tests:
@@ -180,7 +180,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ (inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') }}
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -190,7 +190,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -226,7 +226,7 @@ jobs:
         ls lib/binding;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
       run: |
         docker ps;
         docker logs aerospike;
