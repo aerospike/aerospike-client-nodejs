@@ -229,9 +229,14 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
-        npm run test-prereq;
         cd ts-test;
-        tsc;
+        npm i --save-dev @types/jest;
+        npm i --save-dev @types/chai;
+        npm i --save-dev @types/mocha
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/tmp;
+        npm install ..;
+        npx tsc;
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
@@ -241,9 +246,14 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
-        npm run test-prereq;
         cd ts-test;
-        tsc;
+        npm i --save-dev @types/jest;
+        npm i --save-dev @types/chai;
+        npm i --save-dev @types/mocha
+        npm i --save-dev @types/semver;
+        npm i --save-dev @types/tmp;
+        npm install ..;
+        npx tsc;
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
