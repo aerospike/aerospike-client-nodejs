@@ -229,6 +229,7 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
+        npm run test-prereq;
         cd ts-test;
         npm install typescript --save-dev;
         npx tsc;
@@ -241,6 +242,7 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
+        npm run test-prereq;
         cd ts-test;
         npm install typescript --save-dev;
         npx tsc;
