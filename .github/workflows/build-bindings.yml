@@ -219,26 +219,19 @@ jobs:
     #  shell: bash
 
 
-    #- name: Build Binding
-    #  run: |
-    #    ./scripts/build-c-client.sh;
-    #    npm install;
-    #    ls lib/binding;
+    - name: Build Binding
+      run: |
+        ./scripts/build-c-client.sh;
+        npm install;
+        ls lib/binding;
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ./scripts/build-c-client.sh;
-        npm install;
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm i --save-dev @types/jest;
-        npm i --save-dev @types/chai;
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/semver;
-        npm i --save-dev @types/tmp;
-        npm install ..;
+        npm install;
         npx tsc;
         cd ..;
         npx tsc;
@@ -247,17 +240,10 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
-        ./scripts/build-c-client.sh;
-        npm install;
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm i --save-dev @types/jest;
-        npm i --save-dev @types/chai;
-        npm i --save-dev @types/mocha
-        npm i --save-dev @types/semver;
-        npm i --save-dev @types/tmp;
-        npm install ..;
+        npm install;
         npx tsc;
         cd ..;
         npx tsc;
