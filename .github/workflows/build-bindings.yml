@@ -223,6 +223,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh;
         npm install;
+        ls lib/binding;
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
