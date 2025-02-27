@@ -219,15 +219,17 @@ jobs:
     #  shell: bash
 
 
-    - name: Build Binding
-      run: |
-        ./scripts/build-c-client.sh;
-        npm install;
-        ls lib/binding;
+    #- name: Build Binding
+    #  run: |
+    #    ./scripts/build-c-client.sh;
+    #    npm install;
+    #    ls lib/binding;
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
+        ./scripts/build-c-client.sh;
+        npm install;
         docker ps;
         docker logs aerospike;
         cd ts-test;
@@ -245,6 +247,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
+        ./scripts/build-c-client.sh;
+        npm install;
         docker ps;
         docker logs aerospike;
         cd ts-test;
