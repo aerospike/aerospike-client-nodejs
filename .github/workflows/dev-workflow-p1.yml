@@ -30,7 +30,7 @@ jobs:
   test-with-server-release:
     uses: ./.github/workflows/build-artifacts.yml
     with:
-      run_tests: false
+      run_tests: true
     secrets: inherit
 
   bump-dev-number:
