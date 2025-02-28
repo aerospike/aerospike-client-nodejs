@@ -52,7 +52,7 @@ class MetricsCommand : public AerospikeCommand {
 	{
 		Nan::HandleScope scope;
 		if (listeners != NULL){
-			cf_free(listeners)
+			cf_free(listeners);
 		}
 		if (policy != NULL) {
 			cf_free(policy);
@@ -77,7 +77,7 @@ class MetricsCommand : public AerospikeCommand {
 	
 	bool* client_closed;
 	bool disabled = false;
-  	as_metrics_listeners* listeners = NULL;
+  as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
 	as_node* node = NULL;
