@@ -53,6 +53,7 @@ jobs:
       change: 'bump-dev-num'
     secrets: inherit
 
+
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
