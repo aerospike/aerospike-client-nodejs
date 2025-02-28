@@ -131,7 +131,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags)[3] }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
@@ -296,7 +296,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags)[3] }}
       fail-fast: false
     runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
     env:
@@ -417,7 +417,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags)[3] }}
       fail-fast: false
     runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
     env:
@@ -541,7 +541,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags)[3] }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -801,7 +801,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags)[3] }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -911,7 +911,7 @@ jobs:
           npm install;
           npx tsc;
           cp tests\udf.lua dist\udf.lua;
-          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
+          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000;
           cd ..; 
           npx tsc;
 
@@ -925,7 +925,7 @@ jobs:
           npx tsc;
           cd ..;
           npx tsc;
-          npm run test dist/${{ inputs.test-file }} -- --h 0.0.0.0 --port 3000  --t 15000 --U superuser --P superuser;
+          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000;
 
 
       - name: Show job status for commit
