@@ -475,10 +475,10 @@ jobs:
           npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
 
-        - name: Show job status for commit
-          if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-          uses: myrotvorets/set-commit-status-action@v2.0.0
-          with:
-            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-            status: ${{ job.status }}
-            context: ${{ env.STATUS_CHECK_MESSAGE }}
+      - name: Show job status for commit
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          status: ${{ job.status }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
