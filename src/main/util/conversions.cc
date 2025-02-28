@@ -1530,11 +1530,13 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 	as_error_init(&err);
 
 	char* cluster_name = cluster->cluster_name;
-	
-	if (cluster_name == NULL) {
-		cluster_name = "";
+
+	if (cluster->cluster_name) {
+    	cluster_name = strdup(cluster->cluster_name);
+	} else {
+	    cluster_name = strdup("");  // Allocates memory for an empty string
 	}
-	/*
+		/*
 	uint32_t cpu_load, mem;
 	as_metrics_process_cpu_load_mem_usage(&err, NULL, &cpu_load, &mem);
 
