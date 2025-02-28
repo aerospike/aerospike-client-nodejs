@@ -246,6 +246,7 @@ jobs:
 
     - name: Delete leftover artifacts
       if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+      run: |
         rm -rf downloaded-artifacts/
 
     - name: check binding
@@ -352,13 +353,28 @@ jobs:
           name: nodejs-client-artifacts
           path: ./downloaded-artifacts
 
-      - name: list Artifacts
+      - name: list Artifacts first
         run: |
-          ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+          ls ./downloaded-artifacts
+          ls ./downloaded-artifacts/glibc@2.31
+          ls ./downloaded-artifacts/glibc@2.35
 
       - name: Move artifacts
         run: |
-          cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+          mkdir -p lib/binding
+          cp -r downloaded-artifacts/* lib/binding
+
+
+      - name: Delete leftover artifacts
+        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+        run: |
+          rm -rf downloaded-artifacts/
+
+      - name: check binding
+        run: |
+          ls lib/binding;
+          ls lib/binding/glibc@2.35;
+          ls lib/binding/glibc@2.31;
 
           
       - name: Change install command for release
