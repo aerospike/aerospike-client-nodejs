@@ -224,3 +224,36 @@ int setGeneration(v8::Local<v8::Object> obj, uint16_t *generation,
 				  const LogInfo *log);
 
 size_t as_strlcpy(char *d, const char *s, size_t bufsize);
+
+static inline void
+as_conn_stats_init(as_conn_stats* stats)
+{
+	stats->in_pool = 0;
+	stats->in_use = 0;
+	stats->opened = 0;
+	stats->closed = 0;
+}
+
+void
+as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool);
+
+void
+as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool)
+{
+	// Warning: cross-thread reference without a lock.
+	int tmp = as_queue_size(&pool->queue);
+
+	// Timing issues may cause values to go negative. Adjust.
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_pool += tmp;
+	tmp = pool->queue.total - tmp;
+
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_use += tmp;
+	stats->opened += pool->opened;
+	stats->closed += pool->closed;
+}

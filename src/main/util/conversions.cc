@@ -1599,6 +1599,27 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 
 }
 
+void
+as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool)
+{
+	// Warning: cross-thread reference without a lock.
+	int tmp = as_queue_size(&pool->queue);
+
+	// Timing issues may cause values to go negative. Adjust.
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_pool += tmp;
+	tmp = pool->queue.total - tmp;
+
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_use += tmp;
+	stats->opened += pool->opened;
+	stats->closed += pool->closed;
+}
+
 void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, uint32_t bucket_max) {
 	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
 
