@@ -439,6 +439,7 @@ jobs:
         cd ts-test;
         npm install;
         npx tsc;
+        cp tests/udf.lua dist/udf.lua;
         cd ..;
 
     - name: Run Valgrind
