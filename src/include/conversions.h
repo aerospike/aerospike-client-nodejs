@@ -22,6 +22,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike_stats.h>
 #include <aerospike/as_metrics_writer.h>
 #include <aerospike/as_job.h>
 #include <aerospike/as_key.h>
@@ -226,34 +227,14 @@ int setGeneration(v8::Local<v8::Object> obj, uint16_t *generation,
 size_t as_strlcpy(char *d, const char *s, size_t bufsize);
 
 static inline void
-as_conn_stats_init(as_conn_stats* stats)
+as_conn_stats_init_internal(as_conn_stats* stats)
 {
 	stats->in_pool = 0;
 	stats->in_use = 0;
 	stats->opened = 0;
 	stats->closed = 0;
-}
+};
 
 void
-as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool);
+as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool);
 
-void
-as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool)
-{
-	// Warning: cross-thread reference without a lock.
-	int tmp = as_queue_size(&pool->queue);
-
-	// Timing issues may cause values to go negative. Adjust.
-	if (tmp < 0) {
-		tmp = 0;
-	}
-	stats->in_pool += tmp;
-	tmp = pool->queue.total - tmp;
-
-	if (tmp < 0) {
-		tmp = 0;
-	}
-	stats->in_use += tmp;
-	stats->opened += pool->opened;
-	stats->closed += pool->closed;
-}

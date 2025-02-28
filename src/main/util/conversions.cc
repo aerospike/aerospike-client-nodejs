@@ -1600,7 +1600,7 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 }
 
 void
-as_conn_stats_sum(as_conn_stats* stats, as_async_conn_pool* pool)
+as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 {
 	// Warning: cross-thread reference without a lock.
 	int tmp = as_queue_size(&pool->queue);
@@ -1634,7 +1634,7 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(port));
 	//Should this just by conn in NODEJS
 	struct as_conn_stats_s async;
-	as_conn_stats_init(&async);
+	as_conn_stats_init_internal(&async);
 
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
 		// Regular async.
