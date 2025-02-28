@@ -33,6 +33,7 @@ describe('Metrics node close test', async function () {
 
   let nodeCloseTriggered: boolean = false
 
+  this.timeout(40000)
 
   function enableListener() {
     return

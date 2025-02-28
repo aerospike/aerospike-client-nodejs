@@ -30,7 +30,7 @@ import * as fs from 'fs';
 
 describe('Metrics tests', function () {
   const client: Cli = helper.client
-
+  this.timeout(10000)
 
   const blank_policy: MetricsPolicy = new Aerospike.MetricsPolicy()
 

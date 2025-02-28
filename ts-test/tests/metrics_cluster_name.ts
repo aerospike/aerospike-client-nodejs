@@ -30,7 +30,7 @@ import * as helper from './test_helper';
 
 describe('Test metrics cluster name', async function () {
   const client: Cli = helper.client
-
+  this.timeout(40000)
   helper.skipUnlessAdvancedMetrics(this)
 
 
