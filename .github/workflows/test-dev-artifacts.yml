@@ -442,7 +442,7 @@ jobs:
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
-    runs-on: ${{ fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]')) }}
+    runs-on: ${{ fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
