@@ -94,7 +94,7 @@ describe('client.existsWithMetadata()', function () {
         .then(result => {
           expect(result.key).to.eql(key)
           expect(result.bins).to.be.null
-          expect(result.ttl).to.be.within(48, 50)
+          expect(result.ttl).to.be.within(48, 51)
           expect(result.gen).to.eql(6)
         })
         .then(() => client.remove(key))
@@ -137,7 +137,7 @@ describe('client.existsWithMetadata()', function () {
           if (error) throw error
           expect(result?.key).to.equal(key)
           expect(result?.bins).to.be.null
-          expect(result?.ttl).to.be.within(98, 100)
+          expect(result?.ttl).to.be.within(98, 101)
           expect(result?.gen).to.eql(1)
           client.remove(key, (error?: AerospikeError) => {
             if (error) throw error

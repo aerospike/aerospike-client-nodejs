@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 * **Improvements**
   * [CLIENT-3244] - Removed commitStatus.ALREADY_ABORTED and abortStatus.ALREADY_COMMITTED
   * [CLIENT-3277] - Exception is now thrown when aborting a committed transaction.
-  * [CLIENT-3277] - Exception is now thrown when committing an aborted transaciton.
+  * [CLIENT-3277] - Exception is now thrown when committing an aborted transaction.
   * [CLIENT-3291] - Default client MRT timeout to zero.
 
 ## [6.0.1]
