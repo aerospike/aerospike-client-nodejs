@@ -240,6 +240,7 @@ jobs:
 
     - name: Move artifacts
       run: |
+        mkdir -p lib/binding
         cp -r downloaded-artifacts/* lib/binding
         rm -rf downloaded-artifacts/
 
