@@ -242,6 +242,10 @@ jobs:
       run: |
         mkdir -p lib/binding
         cp -r downloaded-artifacts/* lib/binding
+
+
+    - name: Delete leftover artifacts
+      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
         rm -rf downloaded-artifacts/
 
     - name: check binding
