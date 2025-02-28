@@ -436,265 +436,265 @@ jobs:
           status: ${{ job.status }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    valgrind-self-hosted:
-      needs: cibuildbinding
-      # There's a top-level env variable for this but we can't use it here, unfortunately
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-      strategy:
-        fail-fast: false
-      runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
-      env:
-        BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      steps:
-        # REUSABLE SECTION
-        - name: Create status check message
-          run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-          shell: bash
+  valgrind-self-hosted:
+    needs: cibuildbinding
+    # There's a top-level env variable for this but we can't use it here, unfortunately
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    strategy:
+      fail-fast: false
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+    steps:
+      # REUSABLE SECTION
+      - name: Create status check message
+        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+        shell: bash
 
-        - name: Show job status for commit
-          uses: myrotvorets/set-commit-status-action@v2.0.0
-          if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-          with:
-            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-            context: ${{ env.STATUS_CHECK_MESSAGE }}
+      - name: Show job status for commit
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-        - uses: actions/checkout@v4
-          with:
-            ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
-        # Need to be able to save Docker Hub credentials to keychain
-        - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-          run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+      # Need to be able to save Docker Hub credentials to keychain
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-        - name: Remove aerospike docker image
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          run: |
-            if docker ps -aq | grep -q .; then
-              docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-            else
-              echo "No containers to remove."
-            fi
+      - name: Remove aerospike docker image
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          if docker ps -aq | grep -q .; then
+            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+          else
+            echo "No containers to remove."
+          fi
 
-        - uses: ./.github/actions/run-ee-server
-          with:
-            use-server-rc: ${{ inputs.use-server-rc }}
-            server-tag: ${{ inputs.server-tag }}
-            docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-            docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      - uses: ./.github/actions/run-ee-server
+        with:
+          use-server-rc: ${{ inputs.use-server-rc }}
+          server-tag: ${{ inputs.server-tag }}
+          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-        - name: Download artifacts
-          uses: actions/download-artifact@v4
-          with:
-            name: nodejs-client-artifacts
-            path: ./downloaded-artifacts
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nodejs-client-artifacts
+          path: ./downloaded-artifacts
 
-        - name: list Artifacts first
-          run: |
-            ls ./downloaded-artifacts
-            ls ./downloaded-artifacts/glibc@2.31
-            ls ./downloaded-artifacts/glibc@2.35
+      - name: list Artifacts first
+        run: |
+          ls ./downloaded-artifacts
+          ls ./downloaded-artifacts/glibc@2.31
+          ls ./downloaded-artifacts/glibc@2.35
 
-        - name: Move artifacts
-          run: |
-            mkdir -p lib/binding
-            cp -r downloaded-artifacts/* lib/binding
-
-
-        - name: Delete leftover artifacts
-          if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-          run: |
-            rm -rf downloaded-artifacts/
-
-        - name: check binding
-          run: |
-            ls lib/binding;
-            ls lib/binding/glibc@2.35;
-            ls lib/binding/glibc@2.31;
-
-            
-        #- name: Change install command for release
-        #  run: node ./scripts/change-install-command.js
-
-        #- name: npm install
-        #  run: npm install
-
-        - uses: actions/setup-node@v4
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          with:
-            node-version: ${{ matrix.nodejs-tag[1] }}
-            path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-
-        - name: install valgrind
-          run: |
-            sudo apt-get update;
-            sudo apt update;
-            sudo apt install valgrind;
+      - name: Move artifacts
+        run: |
+          mkdir -p lib/binding
+          cp -r downloaded-artifacts/* lib/binding
 
 
-        # REUSABLE SECTION 
+      - name: Delete leftover artifacts
+        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+        run: |
+          rm -rf downloaded-artifacts/
 
-        - name: Run tests
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          run: |
-            docker ps;
-            docker logs aerospike;
-            cd ts-test;
-            npm install;
-            npx tsc;
-            cd ..;
-            npx tsc;
-            npm run valgrind -- --t 40000
+      - name: check binding
+        run: |
+          ls lib/binding;
+          ls lib/binding/glibc@2.35;
+          ls lib/binding/glibc@2.31;
 
-        - name: Show job status for commit
-          if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-          uses: myrotvorets/set-commit-status-action@v2.0.0
-          with:
-            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-            status: ${{ job.status }}
-            context: ${{ env.STATUS_CHECK_MESSAGE }}
+          
+      #- name: Change install command for release
+      #  run: node ./scripts/change-install-command.js
 
+      #- name: npm install
+      #  run: npm install
 
+      - uses: actions/setup-node@v4
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        with:
+          node-version: ${{ matrix.nodejs-tag[1] }}
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
 
-    test-ce-self-hosted:
-      needs: cibuildbinding
-      # There's a top-level env variable for this but we can't use it here, unfortunately
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-      strategy:
-        fail-fast: false
-        matrix:
-          nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-      runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
-      env:
-        BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      steps:
-
-        # REUSABLE SECTION
-        - name: Create status check message
-          run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-          shell: bash
-
-        - name: Show job status for commit
-          uses: myrotvorets/set-commit-status-action@v2.0.0
-          if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-          with:
-            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-            context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-        - uses: actions/checkout@v4
-          with:
-            ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-
-        # Need to be able to save Docker Hub credentials to keychain
-        - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-          run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-
-        - name: Remove aerospike docker image
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          run: |
-            if docker ps -aq | grep -q .; then
-              docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-            else
-              echo "No containers to remove."
-            fi
-
-        - name: Remove aerospike docker image
-          if: ${{ inputs.platform-tag == 'win_amd64' }}
-          run: |
-            if (docker ps -aq) {
-                docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
-            }
-            else {
-                Write-Host "No containers to remove."
-            }
-
-        - name: Run latest Community edition Aerospike server
-          run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-        - name: Download artifacts
-          uses: actions/download-artifact@v4
-          with:
-            name: nodejs-client-artifacts
-            path: ./downloaded-artifacts
-
-        - name: list Artifacts first
-          run: |
-            ls ./downloaded-artifacts
-            ls ./downloaded-artifacts/glibc@2.31
-            ls ./downloaded-artifacts/glibc@2.35
-
-        - name: Move artifacts
-          run: |
-            mkdir -p lib/binding
-            cp -r downloaded-artifacts/* lib/binding
+      - name: install valgrind
+        run: |
+          sudo apt-get update;
+          sudo apt update;
+          sudo apt install valgrind;
 
 
-        - name: Delete leftover artifacts
-          if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-          run: |
-            rm -rf downloaded-artifacts/
+      # REUSABLE SECTION 
 
-        - name: check binding
-          run: |
-            ls lib/binding;
-            ls lib/binding/glibc@2.35;
-            ls lib/binding/glibc@2.31;
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm install;
+          npx tsc;
+          cd ..;
+          npx tsc;
+          npm run valgrind -- --t 40000
 
-            
-        #- name: Change install command for release
-        #  run: node ./scripts/change-install-command.js
-
-        #- name: npm install
-        #  run: npm install
-
-        - uses: actions/setup-node@v4
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          with:
-            node-version: ${{ matrix.nodejs-tag[1] }}
-            path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
+      - name: Show job status for commit
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          status: ${{ job.status }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 
-        - name: Connect to Docker container on remote machine with Docker daemon
-          if: ${{ inputs.platform-tag == 'win_amd64' }}
-          # DOCKER_HOST contains the IP address of the remote machine
-          run: |
-            $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-            crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-          working-directory: .github\workflows
 
-        # REUSABLE SECTION 
+  test-ce-self-hosted:
+    needs: cibuildbinding
+    # There's a top-level env variable for this but we can't use it here, unfortunately
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+    steps:
 
-        - name: Run tests
-          if: ${{ inputs.platform-tag == 'win_amd64' }}
-          run: |
-            docker ps;
-            docker logs aerospike;
-            cd ts-test;
-            npm install;
-            npx tsc;
-            cp tests\udf.lua dist\udf.lua;
-            npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
-            cd ..; 
-            npx tsc;
+      # REUSABLE SECTION
+      - name: Create status check message
+        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+        shell: bash
 
-        - name: Run tests
-          if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-          run: |
-            docker ps;
-            docker logs aerospike;
-            cd ts-test;
-            npm install;
-            npx tsc;
-            cd ..;
-            npx tsc;
-            npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+      - name: Show job status for commit
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+
+      # Need to be able to save Docker Hub credentials to keychain
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+      - name: Remove aerospike docker image
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          if docker ps -aq | grep -q .; then
+            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+          else
+            echo "No containers to remove."
+          fi
+
+      - name: Remove aerospike docker image
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          if (docker ps -aq) {
+              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
+          }
+          else {
+              Write-Host "No containers to remove."
+          }
+
+      - name: Run latest Community edition Aerospike server
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nodejs-client-artifacts
+          path: ./downloaded-artifacts
+
+      - name: list Artifacts first
+        run: |
+          ls ./downloaded-artifacts
+          ls ./downloaded-artifacts/glibc@2.31
+          ls ./downloaded-artifacts/glibc@2.35
+
+      - name: Move artifacts
+        run: |
+          mkdir -p lib/binding
+          cp -r downloaded-artifacts/* lib/binding
 
 
-        - name: Show job status for commit
-          if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-          uses: myrotvorets/set-commit-status-action@v2.0.0
-          with:
-            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-            status: ${{ job.status }}
-            context: ${{ env.STATUS_CHECK_MESSAGE }}
+      - name: Delete leftover artifacts
+        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+        run: |
+          rm -rf downloaded-artifacts/
+
+      - name: check binding
+        run: |
+          ls lib/binding;
+          ls lib/binding/glibc@2.35;
+          ls lib/binding/glibc@2.31;
+
+          
+      #- name: Change install command for release
+      #  run: node ./scripts/change-install-command.js
+
+      #- name: npm install
+      #  run: npm install
+
+      - uses: actions/setup-node@v4
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        with:
+          node-version: ${{ matrix.nodejs-tag[1] }}
+          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
+
+
+      - name: Connect to Docker container on remote machine with Docker daemon
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        # DOCKER_HOST contains the IP address of the remote machine
+        run: |
+          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
+          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+        working-directory: .github\workflows
+
+      # REUSABLE SECTION 
+
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm install;
+          npx tsc;
+          cp tests\udf.lua dist\udf.lua;
+          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
+          cd ..; 
+          npx tsc;
+
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm install;
+          npx tsc;
+          cd ..;
+          npx tsc;
+          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+
+
+      - name: Show job status for commit
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        uses: myrotvorets/set-commit-status-action@v2.0.0
+        with:
+          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          status: ${{ job.status }}
+          context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 
