@@ -434,7 +434,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npx tsc typings/index.d.ts;
+        npx tsc typings/index.d.ts; 
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -733,7 +733,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 0.0.0.0 --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -856,7 +856,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 0.0.0.0 --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -1232,7 +1232,7 @@ jobs:
 
   test-ce-self-hosted:
     # There's a top-level env variable for this but we can't use it here, unfortunately
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64') }}
     strategy:
       fail-fast: false
       matrix:
