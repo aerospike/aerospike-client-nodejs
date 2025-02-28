@@ -439,7 +439,6 @@ jobs:
         cd ts-test;
         npm install;
         npx tsc;
-        npm install mocha;
         cd ..;
 
     - name: Move artifacts
