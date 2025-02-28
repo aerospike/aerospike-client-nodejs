@@ -733,7 +733,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -856,7 +856,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
