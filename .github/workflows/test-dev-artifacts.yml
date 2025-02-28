@@ -131,7 +131,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ [fromJSON(inputs.nodejs-tags)[3]] }}
+        nodejs-tag: ${{ format('[{0}]', fromJSON(inputs.nodejs-tags)[3]) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
@@ -296,7 +296,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ [fromJSON(inputs.nodejs-tags)[3]] }}
+        nodejs-tag: ${{ format('[{0}]', fromJSON(inputs.nodejs-tags)[3]) }}
       fail-fast: false
     runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
     env:
@@ -417,7 +417,7 @@ jobs:
     needs: get-runner-os
     strategy:
       matrix:
-        nodejs-tag: ${{ [fromJSON(inputs.nodejs-tags)[3]] }}
+        nodejs-tag: ${{ format('[{0}]', fromJSON(inputs.nodejs-tags)[3]) }}
       fail-fast: false
     runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
     env:
@@ -541,7 +541,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodejs-tag: ${{ [fromJSON(inputs.nodejs-tags)[3]] }}
+        nodejs-tag: ${{ format('[{0}]', fromJSON(inputs.nodejs-tags)[3]) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -801,7 +801,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodejs-tag: ${{ [fromJSON(inputs.nodejs-tags)[3]] }}
+        nodejs-tag: ${{ format('[{0}]', fromJSON(inputs.nodejs-tags)[3]) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
