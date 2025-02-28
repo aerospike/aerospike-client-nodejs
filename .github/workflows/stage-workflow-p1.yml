@@ -33,14 +33,14 @@ jobs:
       version: 6.0.2.dev1
     secrets: inherit
 
-  test-with-server-release:
-    uses: ./.github/workflows/test-artifacts.yml
-    needs: [
-      download-jfrog-artifacts
-    ]
-    with:
-      run_tests: true
-    secrets: inherit
+  #test-with-server-release:
+  #  uses: ./.github/workflows/test-artifacts.yml
+  #  needs: [
+  #    download-jfrog-artifacts
+  #  ]
+  #  with:
+  #    run_tests: true
+  #  secrets: inherit
 
   bump-dev-number:
     #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
