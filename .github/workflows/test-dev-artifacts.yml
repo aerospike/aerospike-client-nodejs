@@ -427,6 +427,12 @@ jobs:
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
 
+    - name: install valgrind
+      run: |
+        sudo apt-get update;
+        sudo apt update;
+        sudo apt install valgrind;
+        
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
