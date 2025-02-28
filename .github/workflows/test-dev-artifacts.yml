@@ -235,12 +235,13 @@ jobs:
     - name: list Artifacts first
       run: |
         ls ./downloaded-artifacts
-        ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+        ls ./downloaded-artifacts/glibc@2.31
+        ls ./downloaded-artifacts/glibc@2.35
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
-        rm -rf downloaded-artifacts/aerospike/6.0.2/lib/binding/
+        cp -r downloaded-artifacts/* lib/binding
+        rm -rf downloaded-artifacts/
 
     - name: check binding
       run:
