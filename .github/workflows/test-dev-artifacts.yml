@@ -167,7 +167,7 @@ jobs:
         echo "Platform tag: '${{ inputs.platform-tag }}'"
         echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
         echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: '${{ startsWith(inputs.platform-tag, 'manylinux') }}'"
+        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
         echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
 
     - name: 'Windows: Install C client deps'
@@ -199,7 +199,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      if: runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -298,7 +298,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON('[["v131", "23"]]') }}
       fail-fast: false
-    runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      runs-on: runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
@@ -419,7 +419,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON('[["v131", "23"]]') }}
       fail-fast: false
-    runs-on: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+    runs-on: runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
