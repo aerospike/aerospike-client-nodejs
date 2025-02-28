@@ -127,7 +127,7 @@ jobs:
       shell: bash
 
 
-  build-and-test-ee:
+  test-ee:
     needs: get-runner-os
     strategy:
       matrix:
@@ -141,7 +141,7 @@ jobs:
 
     # REUSABLE PART
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -306,7 +306,7 @@ jobs:
 
     # REUSABLE PART
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -427,7 +427,7 @@ jobs:
 
     # REUSABLE PART
     - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      run: echo STATUS_CHECK_MESSAGE="test-lowest-supported-server (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -536,7 +536,6 @@ jobs:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-self-hosted-ee:
-    needs: cibuildbinding
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
@@ -682,7 +681,6 @@ jobs:
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 #  valgrind-self-hosted:
-#    needs: cibuildbinding
 #    # There's a top-level env variable for this but we can't use it here, unfortunately
 #    strategy:
 #      fail-fast: false
@@ -798,7 +796,6 @@ jobs:
 
 
   test-ce-self-hosted:
-    needs: cibuildbinding
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
