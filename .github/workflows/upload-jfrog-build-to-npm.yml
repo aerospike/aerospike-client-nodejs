@@ -56,14 +56,14 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    #- name: change package name
-    #  run: |
-    #    sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+    - name: change package name
+      run: |
+        sed -i 's/"name": "[^"]*"/"name": "tedrunrunn"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.2
+        NEW_VERSION: 6.0.3-rc.1
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
