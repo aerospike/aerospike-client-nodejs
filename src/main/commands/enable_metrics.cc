@@ -20,7 +20,6 @@
 #include "conversions.h"
 #include "policy.h"
 #include "log.h"
-#include <semaphore.h>  
 
 #include <node.h>
 #include <nan.h>
