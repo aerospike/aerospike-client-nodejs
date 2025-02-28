@@ -160,6 +160,14 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    - name: print conditional values
+      run: |
+        echo "Platform tag: '${{ inputs.platform-tag }}'"
+        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
+        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
+        echo "Platform conditional: '${{ startsWith(inputs.platform-tag, 'manylinux') }}'"
+        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
+
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
@@ -179,7 +187,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ (inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') }}
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
