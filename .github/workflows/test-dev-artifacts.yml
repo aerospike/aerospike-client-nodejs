@@ -445,6 +445,7 @@ jobs:
       runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
       env:
         BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+      steps:
         # REUSABLE SECTION
         - name: Create status check message
           run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
