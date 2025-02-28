@@ -455,13 +455,14 @@ jobs:
         rm -rf downloaded-artifacts/
 
     - name: check binding
-      run:
+      run: |
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
 
 
     - name: Run Valgrind
+      run: |
         npx tsc;
         npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
