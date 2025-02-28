@@ -253,9 +253,6 @@ jobs:
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
 
-    - name: npm install
-      run: npm install
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
