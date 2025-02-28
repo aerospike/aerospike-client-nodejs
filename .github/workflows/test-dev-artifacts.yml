@@ -441,9 +441,9 @@ jobs:
         cd ts-test;
         npm install;
         npx tsc;
+        npm install mocha;
         cd ..;
         npx tsc;
-        npm install mocha;
         npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status

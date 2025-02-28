@@ -224,11 +224,14 @@ jobs:
         npm install;
         ls lib/binding;
 
-    - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
+    - name: Debug server
       run: |
         docker ps;
         docker logs aerospike;
+        
+    - name: Run tests
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
+      run: |
         cd ts-test;
         npm install;
         npx tsc;
