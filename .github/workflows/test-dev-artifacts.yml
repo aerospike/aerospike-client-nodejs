@@ -330,6 +330,7 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
+        npm install --only=dev;
         npx tsc;
         npx tsc typings/index.d.ts;
         cd ts-test;
@@ -338,10 +339,11 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
-          npx tsc;
-          npx tsc typings/index.d.ts;
-          cd ts-test;
-          npx tsc;
+        npm install --only=dev;
+        npx tsc;
+        npx tsc typings/index.d.ts;
+        cd ts-test;
+        npx tsc;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -386,6 +388,32 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    - name: print conditional values
+      run: |
+        echo "Platform tag: '${{ inputs.platform-tag }}'"
+        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
+        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
+        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
+        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
+
+    - name: 'Windows: Install C client deps'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
+
+    - name: 'macOS x86: Setup Docker using colima for testing'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
+
+    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
     - name: Remove aerospike docker image
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
       run: |
@@ -394,6 +422,16 @@ jobs:
         else
           echo "No containers to remove."
         fi
+
+    # TODO: combine this composite action and the above into one
+    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -915,6 +953,7 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
+          npm install --only=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
@@ -923,6 +962,7 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
+          npm install --only=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
