@@ -16454,7 +16454,118 @@ export namespace filter {
     export function range(bin: string, min: number, max: number, indexType?: indexType, ctx?: cdt.Context): filter.RangePredicate;
 }
 
-
+/**
+ * Database operation error codes.
+ * 
+ * @see {@link Query}
+ * 
+ * Status codes used as return values as AerospikeErro.code values.
+ * 
+ * 
+ * See the table below to match each status code with its corresponding status.
+ * 
+ * | Status                                            | Status (without prefix)                 | Status Code |
+ * |---------------------------------------------------|-----------------------------------------|-------------|
+ * | {@link AEROSPIKE_TXN_ALREADY_ABORTED}             | {@link TXN_ALREADY_ABORTED}             |    -19      |
+ * | {@link AEROSPIKE_TXN_ALREADY_COMMITTED}           | {@link TXN_ALREADY_COMMITTED}           |    -18      |
+ * | {@link AEROSPIKE_TXN_FAILED}                      | {@link TXN_FAILED}                      |    -17      |
+ * | {@link AEROSPIKE_BATCH_FAILED}                    | {@link BATCH_FAILED}                    |    -16      |
+ * | {@link AEROSPIKE_NO_RESPONSE}                     | {@link NO_RESPONSE}                     |    -15      |
+ * | {@link AEROSPIKE_MAX_ERROR_RATE}                  | {@link MAX_ERROR_RATE}                  |    -14      |
+ * | {@link AEROSPIKE_USE_NORMAL_RETRY}                | {@link USE_NORMAL_RETRY}                |    -13      |
+ * | {@link AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED}        | {@link ERR_MAX_RETRIES_EXCEEDED}        |    -12      |
+ * | {@link AEROSPIKE_ERR_ASYNC_QUEUE_FULL}            | {@link ERR_ASYNC_QUEUE_FULL}            |    -11      |
+ * | {@link AEROSPIKE_ERR_CONNECTION}                  | {@link ERR_CONNECTION}                  |    -10      |
+ * | {@link AEROSPIKE_ERR_TLS_ERROR}                   | {@link ERR_TLS_ERROR}                   |     -9      |
+ * | {@link AEROSPIKE_ERR_INVALID_NODE}                | {@link ERR_INVALID_NODE}                |     -8      |
+ * | {@link AEROSPIKE_ERR_NO_MORE_CONNECTIONS}         | {@link ERR_NO_MORE_CONNECTIONS}         |     -7      |
+ * | {@link AEROSPIKE_ERR_ASYNC_CONNECTION}            | {@link ERR_ASYNC_CONNECTION}            |     -6      |
+ * | {@link AEROSPIKE_ERR_CLIENT_ABORT}                | {@link ERR_CLIENT_ABORT}                |     -5      |
+ * | {@link AEROSPIKE_ERR_INVALID_HOST}                | {@link ERR_INVALID_HOST}                |     -4      |
+ * | {@link AEROSPIKE_NO_MORE_RECORDS}                 | {@link NO_MORE_RECORDS}                 |     -3      |
+ * | {@link AEROSPIKE_ERR_PARAM}                       | {@link ERR_PARAM}                       |     -2      |
+ * | {@link AEROSPIKE_ERR_CLIENT}                      | {@link ERR_CLIENT}                      |     -1      |
+ * | {@link AEROSPIKE_OK}                              | {@link OK}                              |      0      |
+ * | {@link AEROSPIKE_ERR_SERVER}                      | {@link ERR_SERVER}                      |      1      |
+ * | {@link AEROSPIKE_ERR_RECORD_NOT_FOUND}            | {@link ERR_RECORD_NOT_FOUND}            |      2      |
+ * | {@link AEROSPIKE_ERR_RECORD_GENERATION}           | {@link ERR_RECORD_GENERATION}           |      3      |
+ * | {@link AEROSPIKE_ERR_REQUEST_INVALID}             | {@link ERR_REQUEST_INVALID}             |      4      |
+ * | {@link AEROSPIKE_ERR_RECORD_EXISTS}               | {@link ERR_RECORD_EXISTS}               |      5      |
+ * | {@link AEROSPIKE_ERR_BIN_EXISTS}                  | {@link ERR_BIN_EXISTS}                  |      6      |
+ * | {@link AEROSPIKE_ERR_CLUSTER_CHANGE}              | {@link ERR_CLUSTER_CHANGE}              |      7      |
+ * | {@link AEROSPIKE_ERR_SERVER_FULL}                 | {@link ERR_SERVER_FULL}                 |      8      |
+ * | {@link AEROSPIKE_ERR_TIMEOUT}                     | {@link ERR_TIMEOUT}                     |      9      |
+ * | {@link AEROSPIKE_ERR_ALWAYS_FORBIDDEN}            | {@link ERR_ALWAYS_FORBIDDEN}            |     10      |
+ * | {@link AEROSPIKE_ERR_CLUSTER}                     | {@link ERR_CLUSTER}                     |     11      |
+ * | {@link AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}       | {@link ERR_BIN_INCOMPATIBLE_TYPE}       |     12      |
+ * | {@link AEROSPIKE_ERR_RECORD_TOO_BIG}              | {@link ERR_RECORD_TOO_BIG}              |     13      |
+ * | {@link AEROSPIKE_ERR_RECORD_BUSY}                 | {@link ERR_RECORD_BUSY}                 |     14      |
+ * | {@link AEROSPIKE_ERR_SCAN_ABORTED}                | {@link ERR_SCAN_ABORTED}                |     15      |
+ * | {@link AEROSPIKE_ERR_UNSUPPORTED_FEATURE}         | {@link ERR_UNSUPPORTED_FEATURE}         |     16      |
+ * | {@link AEROSPIKE_ERR_BIN_NOT_FOUND}               | {@link ERR_BIN_NOT_FOUND}               |     17      |
+ * | {@link AEROSPIKE_ERR_DEVICE_OVERLOAD}             | {@link ERR_DEVICE_OVERLOAD}             |     18      |
+ * | {@link AEROSPIKE_ERR_RECORD_KEY_MISMATCH}         | {@link ERR_RECORD_KEY_MISMATCH}         |     19      |
+ * | {@link AEROSPIKE_ERR_NAMESPACE_NOT_FOUND}         | {@link ERR_NAMESPACE_NOT_FOUND}         |     20      |
+ * | {@link AEROSPIKE_ERR_BIN_NAME}                    | {@link ERR_BIN_NAME}                    |     21      |
+ * | {@link AEROSPIKE_ERR_FAIL_FORBIDDEN}              | {@link ERR_FAIL_FORBIDDEN}              |     22      |
+ * | {@link AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND}      | {@link ERR_FAIL_ELEMENT_NOT_FOUND}      |     23      |
+ * | {@link AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS}         | {@link ERR_FAIL_ELEMENT_EXISTS}         |     24      |
+ * | {@link AEROSPIKE_ERR_ENTERPRISE_ONLY}             | {@link ERR_ENTERPRISE_ONLY}             |     25      |
+ * | {@link AEROSPIKE_ERR_OP_NOT_APPLICABLE}           | {@link ERR_OP_NOT_APPLICABLE}           |     26      |
+ * | {@link AEROSPIKE_FILTERED_OUT}                    | {@link FILTERED_OUT}                    |     27      |
+ * | {@link AEROSPIKE_LOST_CONFLICT}                   | {@link LOST_CONFLICT}                   |     28      |
+ * | {@link AEROSPIKE_XDR_KEY_BUSY}                    | {@link XDR_KEY_BUSY}                    |     32      |
+ * | {@link AEROSPIKE_QUERY_END}                       | {@link QUERY_END}                       |     50      |
+ * | {@link AEROSPIKE_SECURITY_NOT_SUPPORTED}          | {@link SECURITY_NOT_SUPPORTED}          |     51      |
+ * | {@link AEROSPIKE_SECURITY_NOT_ENABLED}            | {@link SECURITY_NOT_ENABLED}            |     52      |
+ * | {@link AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED}   | {@link SECURITY_SCHEME_NOT_SUPPORTED}   |     53      |
+ * | {@link AEROSPIKE_INVALID_COMMAND}                 | {@link INVALID_COMMAND}                 |     54      |
+ * | {@link AEROSPIKE_INVALID_FIELD}                   | {@link INVALID_FIELD}                   |     55      |
+ * | {@link AEROSPIKE_ILLEGAL_STATE}                   | {@link ILLEGAL_STATE}                   |     56      |
+ * | {@link AEROSPIKE_INVALID_USER}                    | {@link INVALID_USER}                    |     60      |
+ * | {@link AEROSPIKE_USER_ALREADY_EXISTS}             | {@link USER_ALREADY_EXISTS}             |     61      |
+ * | {@link AEROSPIKE_INVALID_PASSWORD}                | {@link INVALID_PASSWORD}                |     62      |
+ * | {@link AEROSPIKE_EXPIRED_PASSWORD}                | {@link EXPIRED_PASSWORD}                |     63      |
+ * | {@link AEROSPIKE_FORBIDDEN_PASSWORD}              | {@link FORBIDDEN_PASSWORD}              |     64      |
+ * | {@link AEROSPIKE_INVALID_CREDENTIAL}              | {@link INVALID_CREDENTIAL}              |     65      |
+ * | {@link AEROSPIKE_EXPIRED_SESSION}                 | {@link EXPIRED_SESSION}                 |     66      |
+ * | {@link AEROSPIKE_INVALID_ROLE}                    | {@link INVALID_ROLE}                    |     70      |
+ * | {@link AEROSPIKE_ROLE_ALREADY_EXISTS}             | {@link ROLE_ALREADY_EXISTS}             |     71      |
+ * | {@link AEROSPIKE_INVALID_PRIVILEGE}               | {@link INVALID_PRIVILEGE}               |     72      |
+ * | {@link AEROSPIKE_INVALID_WHITELIST}               | {@link INVALID_WHITELIST}               |     73      |
+ * | {@link AEROSPIKE_QUOTAS_NOT_ENABLED}              | {@link QUOTAS_NOT_ENABLED}              |     74      |
+ * | {@link AEROSPIKE_INVALID_QUOTA}                   | {@link INVALID_QUOTA}                   |     75      |
+ * | {@link AEROSPIKE_NOT_AUTHENTICATED}               | {@link NOT_AUTHENTICATED}               |     80      |
+ * | {@link AEROSPIKE_ROLE_VIOLATION}                  | {@link ROLE_VIOLATION}                  |     81      |
+ * | {@link AEROSPIKE_NOT_WHITELISTED}                 | {@link NOT_WHITELISTED}                 |     82      |
+ * | {@link AEROSPIKE_QUOTA_EXCEEDED}                  | {@link QUOTA_EXCEEDED}                  |     83      |
+ * | {@link AEROSPIKE_ERR_UDF}                         | {@link ERR_UDF}                         |    100      |
+ * | {@link AEROSPIKE_MRT_BLOCKED}                     | {@link MRT_BLOCKED}                     |    120      |
+ * | {@link AEROSPIKE_MRT_VERSION_MISMATCH}            | {@link MRT_VERSION_MISMATCH}            |    121      |
+ * | {@link AEROSPIKE_MRT_EXPIRED}                     | {@link MRT_EXPIRED}                     |    122      |
+ * | {@link AEROSPIKE_MRT_TOO_MANY_WRITES}             | {@link MRT_TOO_MANY_WRITES}             |    123      |
+ * | {@link AEROSPIKE_MRT_COMMITTED}                   | {@link MRT_COMMITTED}                   |    124      |
+ * | {@link AEROSPIKE_MRT_ABORTED}                     | {@link MRT_ABORTED}                     |    125      |
+ * | {@link AEROSPIKE_MRT_ALREADY_LOCKED}              | {@link MRT_ALREADY_LOCKED}              |    126      |
+ * | {@link AEROSPIKE_MRT_MONITOR_EXISTS}              | {@link MRT_MONITOR_EXISTS}              |    127      |
+ * | {@link AEROSPIKE_ERR_BATCH_DISABLED}              | {@link ERR_BATCH_DISABLED}              |    150      |
+ * | {@link AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED} | {@link ERR_BATCH_MAX_REQUESTS_EXCEEDED} |    151      |
+ * | {@link AEROSPIKE_ERR_BATCH_QUEUES_FULL}           | {@link ERR_BATCH_QUEUES_FULL}           |    152      |
+ * | {@link AEROSPIKE_ERR_GEO_INVALID_GEOJSON}         | {@link ERR_GEO_INVALID_GEOJSON}         |    160      |
+ * | {@link AEROSPIKE_ERR_INDEX_FOUND}                 | {@link ERR_INDEX_FOUND}                 |    200      |
+ * | {@link AEROSPIKE_ERR_INDEX_NOT_FOUND}             | {@link ERR_INDEX_NOT_FOUND}             |    201      |
+ * | {@link AEROSPIKE_ERR_INDEX_OOM}                   | {@link ERR_INDEX_OOM}                   |    202      |
+ * | {@link AEROSPIKE_ERR_INDEX_NOT_READABLE}          | {@link ERR_INDEX_NOT_READABLE}          |    203      |
+ * | {@link AEROSPIKE_ERR_INDEX}                       | {@link ERR_INDEX}                       |    204      |
+ * | {@link AEROSPIKE_ERR_INDEX_NAME_MAXLEN}           | {@link ERR_INDEX_NAME_MAXLEN}           |    205      |
+ * | {@link AEROSPIKE_ERR_INDEX_MAXCOUNT}              | {@link ERR_INDEX_MAXCOUNT}              |    206      |
+ * | {@link AEROSPIKE_ERR_QUERY_ABORTED}               | {@link ERR_QUERY_ABORTED}               |    210      |
+ * | {@link AEROSPIKE_ERR_QUERY_QUEUE_FULL}            | {@link ERR_QUERY_QUEUE_FULL}            |    211      |
+ * | {@link AEROSPIKE_ERR_QUERY_TIMEOUT}               | {@link ERR_QUERY_TIMEOUT}               |    212      |
+ * | {@link AEROSPIKE_ERR_QUERY}                       | {@link ERR_QUERY}                       |    213      |
+ * | {@link AEROSPIKE_ERR_UDF_NOT_FOUND}               | {@link ERR_UDF_NOT_FOUND}               |   1301      |
+ * | {@link AEROSPIKE_ERR_LUA_FILE_NOT_FOUND}          | {@link ERR_LUA_FILE_NOT_FOUND}          |   1302      |
+ */
 declare namespace statusNamespace {
     /**
      * Transaction commit called, but the transaction was already aborted.
