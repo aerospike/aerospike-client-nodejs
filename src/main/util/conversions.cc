@@ -28,6 +28,8 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike_stats.h>
+#include <aerospike/as_metrics_writer.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
@@ -37,6 +39,7 @@ extern "C" {
 #include <aerospike/as_arraylist_iterator.h>
 #include <aerospike/as_boolean.h>
 #include <aerospike/as_geojson.h>
+#include <aerospike/as_latency.h>
 #include <aerospike/as_orderedmap.h>
 #include <aerospike/as_pair.h>
 #include <aerospike/as_scan.h>
@@ -241,6 +244,30 @@ int get_optional_int32_property(int32_t *intp, bool *defined, Local<Object> obj,
 	else {
 		as_v8_error(log, "Type error: %s property should be integer (int32)",
 					prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
+int get_optional_uint64_property(uint64_t *intp, bool *defined, Local<Object> obj,
+								char const *prop, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (value->IsNumber()) {
+		if (defined != NULL)
+			(*defined) = true;
+		(*intp) = Nan::To<int64_t>(value).FromJust();
+		as_v8_detail(log, "%s => (uint64) %d", prop, *intp);
+	}
+	else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL)
+			(*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
+	}
+	else {
+		as_v8_error(log, "Type error: %s property should be integer (uint64)", prop);
 		return AS_NODE_PARAM_ERR;
 	}
 	return AS_NODE_PARAM_OK;
@@ -500,6 +527,41 @@ int get_optional_asval_property(as_val **value, bool *defined,
 	if (defined != NULL)
 		(*defined) = true;
 	return asval_from_jsvalue(value, v8value, log);
+}
+
+int get_optional_report_dir_property(char **report_dir, bool *defined,
+								Local<Object> obj, const char *prop,
+								const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> v8value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (v8value->IsUndefined() || v8value->IsNull()) {
+		if (defined != NULL)
+			(*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
+		return AS_NODE_PARAM_OK;
+	}
+	if (v8value->IsString()) {
+		*report_dir = (char *)malloc(256);
+		Local<String> v8_string_report_dir = v8value.As<String>();
+		if((v8_string_report_dir->Length() + 1) > 256){
+			as_v8_error(log, "Property error: %s report_dir must be less than 255 characters",
+					prop);
+			return AS_NODE_PARAM_ERR;
+		}
+		strncpy(*report_dir, *Nan::Utf8String(v8_string_report_dir), ((v8_string_report_dir->Length() + 1) < 256) ?
+		(v8_string_report_dir->Length() + 1) : 256);
+		as_v8_detail(log, "report dir : %s", (*report_dir));
+		if (defined != NULL)
+			(*defined) = true;
+		return AS_NODE_PARAM_OK;
+	}
+	as_v8_error(log, "Type error: %s property should be String", prop);
+	if (defined != NULL)
+		(*defined) = false;
+	return AS_NODE_PARAM_ERR;
+
 }
 
 int host_from_jsobject(Local<Object> obj, char **addr, uint16_t *port,
@@ -1458,6 +1520,206 @@ int recordmeta_from_jsobject(as_record *rec, Local<Object> obj,
 	}
 
 	return AS_NODE_PARAM_OK;
+}
+
+
+
+
+void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latency* latency, uint32_t bucket_max) {
+	as_error err;
+	as_error_init(&err);
+
+	char* cluster_name = cluster->cluster_name;
+	
+	if (cluster_name == NULL) {
+		cluster_name = "";
+	}
+	/*
+	uint32_t cpu_load, mem;
+	as_metrics_process_cpu_load_mem_usage(&err, NULL, &cpu_load, &mem);
+
+	char now_str[128];
+	timestamp_to_string(now_str, sizeof(now_str));
+
+	Nan::Set(v8_cluster, Nan::New("time").ToLocalChecked(), Nan::New(now_str).ToLocalChecked());
+
+	Nan::Set(v8_cluster, Nan::New("cpuLoad").ToLocalChecked(), Nan::New(cpu_load));
+	*/
+	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(),
+				 Nan::New(cluster_name).ToLocalChecked());
+
+	Nan::Set(v8_cluster, Nan::New("commandCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_command_count(cluster)));
+
+	Nan::Set(v8_cluster, Nan::New("invalidNodeCount").ToLocalChecked(), Nan::New(cluster->invalid_node_count));
+
+	Nan::Set(v8_cluster, Nan::New("transactionCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_tran_count(cluster)));
+
+	Nan::Set(v8_cluster, Nan::New("retryCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_retry_count(cluster)));
+
+	Nan::Set(v8_cluster, Nan::New("delayQueueTimeoutCount").ToLocalChecked(), Nan::New((double)as_cluster_get_delay_queue_timeout_count(cluster)));
+
+	Local<Object> v8_event_loop = Nan::New<Object>();
+
+	for (uint32_t i = 0; i < as_event_loop_size; i++) {
+		as_event_loop* loop = &as_event_loops[i];
+		if (i > 0) {
+			exit(1);
+		}
+		Nan::Set(v8_event_loop, Nan::New("processSize").ToLocalChecked(), Nan::New((uint32_t) as_event_loop_get_process_size(loop)));
+		Nan::Set(v8_event_loop, Nan::New("queueSize").ToLocalChecked(), Nan::New((uint32_t) as_event_loop_get_queue_size(loop)));
+
+	}
+
+	Nan::Set(v8_cluster, Nan::New("eventLoop").ToLocalChecked(), v8_event_loop);
+
+	Local<Object> v8_nodes = Nan::New<Array>();	
+	as_nodes* nodes = as_nodes_reserve(cluster);
+	if(nodes){
+		for (uint32_t i = 0; i < nodes->size; i++) {
+			as_node* node = nodes->array[i];
+			Local<Object> v8_node = Nan::New<Object>();
+			if(latency){
+				node_to_jsobject(node, v8_node, &latency[i], bucket_max);
+
+			}
+			else{
+				node_to_jsobject(node, v8_node, NULL, 0);
+			}
+			Nan::Set(v8_nodes, i, v8_node);
+		}
+	}
+	as_nodes_release(nodes);		
+
+
+	Nan::Set(v8_cluster, Nan::New("nodes").ToLocalChecked(), v8_nodes);
+
+
+
+}
+
+void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, uint32_t bucket_max) {
+	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
+
+	as_address* address = as_node_get_address(node);
+
+	struct sockaddr* addr = (struct sockaddr*)&address->addr;
+	uint32_t port = (uint32_t) as_address_port(addr);
+	char address_name[AS_IP_ADDRESS_SIZE];
+	as_address_short_name(addr, address_name, sizeof(address_name));
+
+	Nan::Set(v8_node, Nan::New("address").ToLocalChecked(), Nan::New(address_name).ToLocalChecked());
+	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(port));
+	//Should this just by conn in NODEJS
+	struct as_conn_stats_s async;
+	as_conn_stats_init(&async);
+
+	for (uint32_t i = 0; i < as_event_loop_size; i++) {
+		// Regular async.
+		as_conn_stats_sum(&async, &node->async_conn_pools[i]);
+	}
+
+	Local<Object> v8_conn_stats = Nan::New<Object>();
+	Nan::Set(v8_conn_stats, Nan::New("inUse").ToLocalChecked(), Nan::New(async.in_use));
+	Nan::Set(v8_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(async.in_pool));
+	Nan::Set(v8_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(async.opened));
+	Nan::Set(v8_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(async.closed));
+
+	Nan::Set(v8_node, Nan::New("conns").ToLocalChecked(), v8_conn_stats);
+
+	Nan::Set(v8_node, Nan::New("errorCount").ToLocalChecked(), Nan::New((uint32_t) as_node_get_error_count(node)));
+	Nan::Set(v8_node, Nan::New("timeoutCount").ToLocalChecked(), Nan::New((uint32_t) as_node_get_timeout_count(node)));
+
+	as_node_metrics* node_metrics = node->metrics;
+
+	Local<Object> v8_latency = Nan::New<Object>();
+
+	Local<Array> connection = Nan::New<Array>();
+	Local<Array> write = Nan::New<Array>();
+	Local<Array> read = Nan::New<Array>();
+	Local<Array> batch = Nan::New<Array>();
+	Local<Array> query = Nan::New<Array>();
+	uint32_t i = 0;
+
+	if(!latency){
+
+
+		as_latency_buckets* buckets = &node_metrics->latency[0];
+
+		bucket_max = buckets->latency_columns;
+
+		for (i = 0; i < bucket_max; i++) {
+			Nan::Set(connection, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
+		}
+
+		buckets = &node_metrics->latency[1];
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(write, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
+		}
+
+		buckets = &node_metrics->latency[2];
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(read, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
+		}
+
+		buckets = &node_metrics->latency[3];
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(batch, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
+		}
+
+		buckets = &node_metrics->latency[4];
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(query, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
+		}
+
+		Nan::Set(v8_latency, Nan::New("connLatency").ToLocalChecked(), connection);
+		Nan::Set(v8_latency, Nan::New("writeLatency").ToLocalChecked(), write);
+		Nan::Set(v8_latency, Nan::New("readLatency").ToLocalChecked(), read);
+		Nan::Set(v8_latency, Nan::New("batchLatency").ToLocalChecked(), batch);
+		Nan::Set(v8_latency, Nan::New("queryLatency").ToLocalChecked(), query);
+	}
+	else{
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(connection, i, Nan::New((uint32_t) latency->connection[i]));
+		}
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(write, i, Nan::New((uint32_t) latency->write[i]));
+		}
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(read, i, Nan::New((uint32_t) latency->read[i]));
+		}
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(batch, i, Nan::New((uint32_t) latency->batch[i]));
+		}
+
+		for ( i = 0; i < bucket_max; i++) {
+			Nan::Set(query, i, Nan::New((uint32_t) latency->query[i]));
+		}
+
+
+		Nan::Set(v8_latency, Nan::New("connLatency").ToLocalChecked(), connection);
+		Nan::Set(v8_latency, Nan::New("writeLatency").ToLocalChecked(), write);
+		Nan::Set(v8_latency, Nan::New("readLatency").ToLocalChecked(), read);
+		Nan::Set(v8_latency, Nan::New("batchLatency").ToLocalChecked(), batch);
+		Nan::Set(v8_latency, Nan::New("queryLatency").ToLocalChecked(), query);
+
+	}
+
+
+
+	
+
+	Nan::Set(v8_node, Nan::New("metrics").ToLocalChecked(), v8_latency);
+
+
+
 }
 
 int extract_blob_from_jsobject(uint8_t **data, int *len, Local<Object> obj,

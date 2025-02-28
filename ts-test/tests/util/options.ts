@@ -115,6 +115,10 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     auth: {
       type: 'number',
       describe: 'Specify client authentication mode'
+    },
+    testMetrics: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
     }
   });
 
@@ -163,7 +167,7 @@ options.getConfig = function (): ConfigOptions {
     modlua: {
       userPath: testDir()
     }
-  } as ConfigOptions;
+  } as any;
 
   if (options.host !== null) {
     const host = {

@@ -369,7 +369,7 @@ context('Scans', function () {
     it('returns a Promise that resolves to a Job', function () {
       const backgroundScan = client.scan(helper.namespace, testSet)
       return backgroundScan.background('udf', 'noop')
-        .then(job => {
+        .then((job: any) => {
           expect(job).to.be.instanceof(Job)
         })
     })

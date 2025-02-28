@@ -1650,6 +1650,7 @@ export class HLLPolicy extends policy.HLLPolicy {}
 export class InfoPolicy extends policy.InfoPolicy {}
 export class ListPolicy extends policy.ListPolicy {}
 export class MapPolicy extends policy.MapPolicy {}
+export class MetricsPolicy extends policy.MetricsPolicy {}
 export class OperatePolicy extends policy.OperatePolicy {}
 export class QueryPolicy extends policy.QueryPolicy {}
 export class ReadPolicy extends policy.ReadPolicy {}
@@ -2441,6 +2442,7 @@ export namespace policy {
          */
         constructor(props?: ListPolicyOptions);
     }
+
     /**
      * A policy affecting the behavior of map operations.
      *
@@ -2488,6 +2490,51 @@ export namespace policy {
          * @param props - MapPolicy values
          */
         constructor(props?: MapPolicyOptions);
+    }
+
+    /**
+     * A policy affecting the behavior of map operations.
+     *
+     * @since v3.0.0
+     */
+    export class MetricsPolicy {
+        /**
+         * Listeners that handles metrics notification events. If set to None, the default listener implementation
+         * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+         * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
+         * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+         */
+        public MetricsListeners?: MetricsListeners;
+        /**
+         * Directory path to write metrics log files for listeners that write logs.
+         */
+        public reportDir?: string;
+        /**
+         * Metrics file size soft limit in bytes for listeners that write logs. When report_size_limit is reached or exceeded,
+         * the current metrics file is closed and a new metrics file is created with a new timestamp. If report_size_limit is
+         * zero, the metrics file size is unbounded and the file will only be closed when disable_metrics() or close() is called.
+         */
+        public reportSizeLimit?: number;
+        /**
+         * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
+         * in the client config plus the time to tend all nodes.
+         */
+        public interval?: number;
+        /**
+         * Number of elapsed time range buckets in latency histograms.
+         */
+        public latencyColumns?: number;
+        /**
+         * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
+         */
+        public latencyShift?: number;
+
+        /**
+         * Initializes a new MapPolicy from the provided policy values.
+         *
+         * @param props - MapPolicy values
+         */
+        constructor(props?: MetricsPolicyOptions);
     }
 
     /**
@@ -4556,9 +4603,163 @@ export class Client extends EventEmitter {
      *
      * @returns A Promise that resolves to the {@link Transaction.commitStatus} returned by commit.
      *
+     * @example <caption>using the default metrics writer</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    client.enableMetrics()
+     * 
+     *    client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
+     *
+     * @example <caption>using custom listener callbacks.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * function enableListener() {
+     *   console.log("Metrics Enabled")
+     *   return
+     * }
+     * 
+     * function snapshotListener(cluster: Cluster) {
+     *   console.log(Cluster.clusterName)
+     *   return
+     * }
+     * 
+     * function nodeCloseListener(node: Node) {
+     *   console.log(node.conns)
+     *   return
+     * }
+     * 
+     * function disableListener(cluster: Cluster) {
+     *   console.log("Metrics Disabled")
+     *   return
+     * }
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    let listeners: MetricsListeners = new Aerospike.MetricsListeners({
+     *        enableListener,
+     *        disableListener,
+     *        nodeCloseListener,
+     *        snapshotListener
+     *      }
+     *    )
+     *
+     *
+     *    let policy: MetricsPolicy = new MetricsPolicy({
+     *        metricsListeners: listeners,
+     *        reportDir: metricsLogFolder,
+     *        reportSizeLimit: 1000,
+     *        interval: 2,
+     *        latencyColumns: 5,
+     *        latencyShift: 2
+     *      }
+     *    )
+     *    await client.enableMetrics(policy)
+     *
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    // All listeners are fired asynchronously
+     *    // If you need the enableListener or disableListener to fire immediately, yield control of the event loop.
+     *    await new Promise(r => setTimeout(r, 0));
+     *    
+     *    await client.close()
+     * })();
      */
     public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
-
+    /**
+     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @returns A Promise that resolves to void.
+     */
+    public disableMetrics(): Promise<void>;
+    /**
+     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @param callback - This function will be called with the
+     * result returned by the disableMetrics call.
+     */
+    public disableMetrics(callback: Function): void;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @returns A Promise that resolves to void.
+     *
+     * @example <caption>disabling metrics</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    await client.enableMetrics()
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
+     *
+     */
+    public enableMetrics(): Promise<void>;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param policy - {@link policy.MetricsPolicy} instance.
+     * @param callback - This function will be called with the
+     * result returned by the enableMetrics call.
+     * 
+     */
+    public enableMetrics(callback: Function): void;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param policy - {@link policy.MetricsPolicy} instance.
+     * 
+     * @returns A Promise that resolves to void.
+     *
+     */
+    public enableMetrics(policy: MetricsPolicy): Promise<void>;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param policy - {@link policy.MetricsPolicy} instance.
+     * @param callback - This function will be called with the
+     * result returned by the abort function call.
+     * 
+     */
+    public enableMetrics(policy: MetricsPolicy, callback: Function): void;
     /**
      * Checks the existance of a record in the database cluster.
      *
@@ -9547,6 +9748,43 @@ export interface MapPolicyOptions extends BasePolicyOptions {
      */
     writeMode?: maps.writeMode;
 }
+
+/**
+ * Option specification for {@link MetricsPolicy} class values.
+ */
+export interface MetricsPolicyOptions {
+    /**
+     * Listeners that handles metrics notification events. If set to None, the default listener implementation
+     * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+     * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
+     * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+     */
+    metricsListeners?: MetricsListeners;
+    /**
+     * Directory path to write metrics log files for listeners that write logs.
+     */
+    reportDir?: string;
+    /**
+     * Metrics file size soft limit in bytes for listeners that write logs. When report_size_limit is reached or exceeded,
+     * the current metrics file is closed and a new metrics file is created with a new timestamp. If report_size_limit is
+     * zero, the metrics file size is unbounded and the file will only be closed when disable_metrics() or close() is called.
+     */
+    reportSizeLimit?: number;
+    /**
+     * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
+     * in the client config plus the time to tend all nodes.
+     */
+    interval?: number;
+    /**
+     * Number of elapsed time range buckets in latency histograms.
+     */
+    latencyColumns?: number;
+    /**
+     * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
+     */
+    latencyShift?: number;
+}
+
 /**
  * Configuration values for the mod-lua user path.
  * 
@@ -9567,7 +9805,34 @@ export interface ModLua {
 }
 
 /**
- * Aerospike Node information.
+ * Cluster of server nodes.
+ */
+export interface Cluster {
+    /**
+     * Expected cluster name for all nodes. May be null.
+     */
+    clusterName: string;
+    /**
+     * Count of add node failures in the most recent cluster tend iteration.
+     */
+    invalidNodeCount: number;
+    /**
+     * Command count. The value is cumulative and not reset per metrics interval.
+     */
+    commandCount: number;
+    /**
+     * Command retry count. There can be multiple retries for a single command. The value is cumulative and not reset per metrics interval.
+     */
+    retryCount: number;
+    /**
+     * Active nodes in cluster.
+     */
+    nodes: Node[];
+
+}
+
+/**
+ * Server node representation
  */
 export interface Node {
     /**
@@ -9578,6 +9843,56 @@ export interface Node {
      * Address of the Aeropsike Node.
      */
     address: string;
+    /**
+     * Port number of the node’s address.
+     */
+    port: number;
+    /**
+     * Asynchronous connection stats on this node.
+     */
+    conns: ConnectionStats;
+    /**
+     * Port number of the node’s address.
+     */
+    errorCount: number;
+    /**
+     * Port number of the node’s address.
+     */
+    timeoutCount: number;
+    /**
+     * Node Metrics
+     */
+    metrics: NodeMetrics;
+}
+
+/**
+ * Each type of latency has a list of latency buckets.
+ * 
+ * Latency buckets counts are cumulative and not reset on each metrics snapshot interval.
+ */
+export interface NodeMetrics {
+    /**
+     * Name of the Aerospike Node.
+     */
+    connLatency: number[];
+    /**
+     * Address of the Aeropsike Node.
+     */
+    writeLatency: number[];
+    /**
+     * Port number of the node’s address.
+     */
+    readLatency: number[];
+    /**
+     * Asynchronous connection stats on this node.
+     */
+    batchLatency: number[];
+    /**
+     * Port number of the node’s address.
+     */
+    queryLatency: number[];
+
+
 }
 
 /**
@@ -10788,6 +11103,65 @@ export namespace admin {
         roles: string[];
     }        
 }
+
+export type enableListener = () => void;
+
+export type snapshotListener = (cluster: any) => void;
+
+export type nodeCloseListener = (node: any) => void;
+
+export type disableListener = (cluster: any) => void;
+
+/**
+ * Contains user roles and other user related information
+ */
+export interface MetricsListenersOptions {
+    /**
+     * Called when periodic extended metrics has been enabled for the given cluster.
+     */
+    enableListener: enableListener;
+    /**
+     * Called when a metrics snapshot has been requested for the given cluster.
+     */
+    snapshotListener: snapshotListener;
+    /**
+     * Called when a node is being dropped from the cluster.
+     */
+    nodeCloseListener: nodeCloseListener;
+    /**
+     * Called when periodic extended metrics has been disabled for the given cluster.
+     */
+    disableListener: disableListener;
+}
+
+/**
+ * Metrics listener callbacks.
+ * 
+ * All callbacks must be set.
+ */
+export class MetricsListeners {
+    /**
+     * Construct a new Aerospike MetricsListeners instance.
+     */
+    constructor(options: MetricsListenersOptions);
+    /**
+     * Called when periodic extended metrics has been enabled for the given cluster.
+     */
+    enableListener: enableListener;
+    /**
+     * Called when a metrics snapshot has been requested for the given cluster.
+     */
+    snapshotListener: snapshotListener;
+    /**
+     * Called when a node is being dropped from the cluster.
+     */
+    nodeCloseListener: nodeCloseListener;
+    /**
+     * Called when periodic extended metrics has been disabled for the given cluster.
+     */
+    disableListener: disableListener;
+
+}   
 /**
  * Bitwise write flags.
  *
