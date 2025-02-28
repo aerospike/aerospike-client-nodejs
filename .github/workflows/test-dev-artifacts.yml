@@ -334,6 +334,7 @@ jobs:
         npx tsc;
         npx tsc typings/index.d.ts;
         cd ts-test;
+        npm install;
         npx tsc;
 
     - name: Run tests
@@ -343,6 +344,7 @@ jobs:
         npx tsc;
         npx tsc typings/index.d.ts;
         cd ts-test;
+        npm install;
         npx tsc;
 
     - name: Set final commit status
@@ -942,6 +944,41 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nodejs-client-artifacts
+          path: ./downloaded-artifacts
+
+      - name: list Artifacts first
+        run: |
+          ls ./downloaded-artifacts
+          ls ./downloaded-artifacts/glibc@2.31
+          ls ./downloaded-artifacts/glibc@2.35
+
+      - name: Move artifacts
+        run: |
+          mkdir -p lib/binding
+          cp -r downloaded-artifacts/* lib/binding
+
+
+      - name: Delete leftover artifacts
+        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+        run: |
+          rm -rf downloaded-artifacts/
+
+      - name: check binding
+        run: |
+          ls lib/binding;
+          ls lib/binding/glibc@2.35;
+          ls lib/binding/glibc@2.31;
+
+      #- name: Change install command for release
+      #  run: node ./scripts/change-install-command.js
+
+      #- name: npm install
+      #  run: npm install
+
       - uses: actions/setup-node@v4
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
@@ -957,6 +994,7 @@ jobs:
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
+          npm install;
           npx tsc;
 
       - name: Run tests
@@ -966,6 +1004,7 @@ jobs:
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
+          npm install;
           npx tsc;
 
 
