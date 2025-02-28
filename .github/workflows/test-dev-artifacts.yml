@@ -526,9 +526,7 @@ jobs:
 
       - name: install valgrind
         run: |
-          sudo apt-get update;
-          sudo apt update;
-          sudo apt install valgrind;
+          brew install valgrind
 
 
       # REUSABLE SECTION 
@@ -608,7 +606,7 @@ jobs:
           }
 
       - name: Run latest Community edition Aerospike server
-        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+        run: docker run -d --network=host --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -647,7 +645,7 @@ jobs:
       #  run: npm install
 
       - uses: actions/setup-node@v4
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
           path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
