@@ -226,11 +226,12 @@ jobs:
 
     - name: list Artifacts first
       run: |
-        ls downloaded-artifacts/
+          ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
 
-    - name: Move artifacts
-      run: |
-        cp -r downloaded-artifacts/ lib/binding/
+      - name: Move artifacts
+        run: |
+          cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+
 
     - name: check binding
       run:
@@ -341,11 +342,12 @@ jobs:
 
       - name: list Artifacts
         run: |
-          ls downloaded-artifacts/lib/binding/
+          ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
 
       - name: Move artifacts
         run: |
-          cp -r downloaded-artifacts/lib/binding/ lib/
+          cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+
           
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
