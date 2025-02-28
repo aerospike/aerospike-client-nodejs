@@ -87,7 +87,7 @@ export function assertResultSatisfy(matcher: any) {
 
 export function assertRecordEql(expected: any) {
   return (state: any) => {
-    return helper.client.get(state.key).then((record) =>
+    return helper.client.get(state.key).then((record: any) =>
       expect(record.bins).to.eql(expected, 'after operation, record bins do not match expectations')
     ).then(() => state)
   }

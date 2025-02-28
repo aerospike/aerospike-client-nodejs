@@ -173,7 +173,7 @@ describe('client.batchWrite()', function () {
       })
 
       return client.batchWrite(batch, policy)
-        .then(results => {
+        .then((results: any) => {
           const bins = results[0].record.bins
           expect(bins.i).to.be.a('number')
           expect(bins.s).to.be.a('string')
@@ -253,10 +253,10 @@ describe('client.batchWrite()', function () {
       ]
 
       return client.batchWrite(batchRecords)
-        .then(results => {
+        .then((results: any) => {
           return client.batchWrite(batchRecords)
         })
-        .then(results => {
+        .then((results: any) => {
           expect(results[0].status).to.equal(status.OK)
         })
     })
@@ -333,10 +333,10 @@ describe('client.batchWrite()', function () {
 
       ]
       return client.batchWrite(batchRecords)
-        .then((results) => {
+        .then((results: any) => {
           return client.batchWrite(batchRecords)
         })
-        .then((results) => {
+        .then((results: any) => {
           expect(results[0].status).to.equal(status.ERR_RECORD_EXISTS)
         })
     })
@@ -392,10 +392,10 @@ describe('client.batchWrite()', function () {
       ]
 
       return client.remove(new Key(helper.namespace, helper.set, 'test/batch_write/13'))
-        .then((results) => {
+        .then((results: any) => {
           return client.batchWrite(batchRecords)
         })
-        .then((results) => {
+        .then((results: any) => {
           expect(results[0].status).to.equal(status.ERR_RECORD_NOT_FOUND)
         })
     })
@@ -509,10 +509,10 @@ describe('client.batchWrite()', function () {
       ]
 
       return client.batchWrite(batchRecords)
-        .then((results) => {
+        .then((results: any) => {
           return client.batchWrite(batchRecords)
         })
-        .then((results) => {
+        .then((results: any) => {
           expect(results[0].status).to.equal(status.OK)
         })
     })

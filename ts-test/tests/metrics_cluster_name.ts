@@ -26,9 +26,14 @@ import { expect, assert} from 'chai';
 const Docker = require('dockerode');
 const docker = new Docker();
 
-
+import * as helper from './test_helper';
 
 describe('Test metrics cluster name', async function () {
+  const client: Cli = helper.client
+
+  helper.skipUnlessAdvancedMetrics(this)
+
+
 
   let snapshotTriggered: boolean = false
   let disableTriggered: boolean = false

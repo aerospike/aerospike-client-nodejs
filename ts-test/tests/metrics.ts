@@ -148,7 +148,7 @@ describe('Metrics tests', function () {
         metricsListeners: listeners,
         reportDir: metricsLogFolder,
         reportSizeLimit: 1000,
-        interval: 4,
+        interval: 2,
         latencyColumns: bucketCount,
         latencyShift: 2
       }
@@ -162,24 +162,24 @@ describe('Metrics tests', function () {
     const key3 = new Aerospike.Key('test', 'demo', 'demo3')
 
     await client.put(key, {example: 1})
-    await new Promise(r => setTimeout(r, 500));
 
     await client.put(key2, {example: 1})
-    await new Promise(r => setTimeout(r, 500));
+
     await client.put(key3, {example: 1})
-    await new Promise(r => setTimeout(r, 500));
 
 
     await client.get(key)
-    await new Promise(r => setTimeout(r, 500));
+
     await client.get(key2)
-    await new Promise(r => setTimeout(r, 500));
+
     await client.get(key3)
-    await new Promise(r => setTimeout(r, 1500));
+
+    await new Promise(r => setTimeout(r, 3000));
 
     await client.disableMetrics()
 
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 1));
+
 
     expect(enableTriggered).to.eql(true)
     expect(snapshotTriggered).to.eql(true)

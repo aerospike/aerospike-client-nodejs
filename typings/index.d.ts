@@ -4603,21 +4603,130 @@ export class Client extends EventEmitter {
      *
      * @returns A Promise that resolves to the {@link Transaction.commitStatus} returned by commit.
      *
+     * @example <caption>using the default metrics writer</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    client.enableMetrics()
+     * 
+     *    client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
+     *
+     * @example <caption>using custom listener callbacks.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * function enableListener() {
+     *   console.log("Metrics Enabled")
+     *   return
+     * }
+     * 
+     * function snapshotListener(cluster: Cluster) {
+     *   console.log(Cluster.clusterName)
+     *   return
+     * }
+     * 
+     * function nodeCloseListener(node: Node) {
+     *   console.log(node.conns)
+     *   return
+     * }
+     * 
+     * function disableListener(cluster: Cluster) {
+     *   console.log("Metrics Disabled")
+     *   return
+     * }
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    let listeners: MetricsListeners = new Aerospike.MetricsListeners({
+     *        enableListener,
+     *        disableListener,
+     *        nodeCloseListener,
+     *        snapshotListener
+     *      }
+     *    )
+     *
+     *
+     *    let policy: MetricsPolicy = new MetricsPolicy({
+     *        metricsListeners: listeners,
+     *        reportDir: metricsLogFolder,
+     *        reportSizeLimit: 1000,
+     *        interval: 2,
+     *        latencyColumns: 5,
+     *        latencyShift: 2
+     *      }
+     *    )
+     *    await client.enableMetrics(policy)
+     *
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    // All listeners are fired asynchronously
+     *    // If you need the enableListener or disableListener to fire immediately, yield control of the event loop.
+     *    await new Promise(r => setTimeout(r, 0));
+     *    
+     *    await client.close()
+     * })();
      */
     public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
     /**
      * Disable extended periodic cluster and node latency metrics.
-     */
-    public disableMetrics(callback: Function): void;
-    /**
-     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @returns A Promise that resolves to void.
      */
     public disableMetrics(): Promise<void>;
+    /**
+     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @param callback - This function will be called with the
+     * result returned by the disableMetrics call.
+     */
+    public disableMetrics(callback: Function): void;
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
      * 
      * @returns A Promise that resolves to void.
+     *
+     * @example <caption>disabling metrics</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    await client.enableMetrics()
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
      *
      */
     public enableMetrics(): Promise<void>;
@@ -4627,7 +4736,7 @@ export class Client extends EventEmitter {
      * 
      * @param policy - {@link policy.MetricsPolicy} instance.
      * @param callback - This function will be called with the
-     * result returned by the abort function call.
+     * result returned by the enableMetrics call.
      * 
      */
     public enableMetrics(callback: Function): void;

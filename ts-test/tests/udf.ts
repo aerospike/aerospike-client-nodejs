@@ -96,9 +96,9 @@ context('registering/unregistering UDF modules', function () {
 
   it('returns a Promise if no callback function is passed', function () {
     return client.udfRegister(filename)
-      .then(job => job.wait(10))
+      .then((job: any) => job.wait(10))
       .then(() => client.udfRemove(module))
-      .then(job => job.wait(10))
+      .then((job: any) => job.wait(10))
   })
 
   context('error handling', function () {

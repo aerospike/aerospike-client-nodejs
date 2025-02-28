@@ -51,32 +51,37 @@ class MetricsCommand : public AerospikeCommand {
 	~MetricsCommand()
 	{
 		Nan::HandleScope scope;
+		if (listeners != NULL){
+			cf_free(listeners)
+		}
+		if (policy != NULL) {
+			cf_free(policy);
+		}
+		if (latency_buckets != NULL) {
+			for (uint32_t i = 0; i < nodes_size; ++i)
+			{
+				cf_free(latency_buckets[i].connection);
+				cf_free(latency_buckets[i].read);
+				cf_free(latency_buckets[i].write);
+				cf_free(latency_buckets[i].batch);
+				cf_free(latency_buckets[i].query);
+			}
+			cf_free(latency_buckets);
+		}
+
 		enable_callback.Reset();
 		snapshot_callback.Reset();
 		node_close_callback.Reset();
 		disable_callback.Reset();
-		if (policy != NULL) {
-			cf_free(policy);
-		}
-		if (latency) {
-			for (uint32_t i = 0; i < nodes_size; ++i)
-			{
-				cf_free(latency[i].connection);
-				cf_free(latency[i].read);
-				cf_free(latency[i].write);
-				cf_free(latency[i].batch);
-				cf_free(latency[i].query);
-			}
-			cf_free(latency);
-		}
 	}
+	
 	bool* client_closed;
 	bool disabled = false;
   	as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
 	as_node* node = NULL;
-	latency* latency = NULL;
+	latency* latency_buckets = NULL;
 	uint32_t bucket_max = 0;
 	uint32_t nodes_size = 0;
 
@@ -151,7 +156,7 @@ class MetricsCommand : public AerospikeCommand {
 static Local<Value> prepare_disable_cluster_arg(MetricsCommand* cmd) {
 		Nan::EscapableHandleScope scope;
     Local<Object> v8_cluster = Nan::New<Object>();
-    cluster_to_jsobject(cmd->cluster, v8_cluster, cmd->latency, cmd->bucket_max);
+    cluster_to_jsobject(cmd->cluster, v8_cluster, cmd->latency_buckets, cmd->bucket_max);
     return scope.Escape(v8_cluster);
 }
 
@@ -349,7 +354,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 
 	as_nodes* nodes = as_nodes_reserve(cluster);
 	cmd->nodes_size = nodes->size;
-	cmd->latency = (latency *)cf_malloc(nodes->size * sizeof(latency));
+	cmd->latency_buckets = (latency *)cf_malloc(nodes->size * sizeof(latency));
 	uint32_t i, j;
 	for (i = 0; i < nodes->size; i++) {
 
@@ -361,40 +366,40 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 
 	    cmd->bucket_max = buckets->latency_columns;
 
-	    cmd->latency[i].connection = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
-	    cmd->latency[i].write = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
-	    cmd->latency[i].read = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
-	    cmd->latency[i].batch = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
-	    cmd->latency[i].query = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
+	    cmd->latency_buckets[i].connection = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
+	    cmd->latency_buckets[i].write = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
+	    cmd->latency_buckets[i].read = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
+	    cmd->latency_buckets[i].batch = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
+	    cmd->latency_buckets[i].query = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
 
 
 
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	       cmd->latency[i].connection[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	       cmd->latency_buckets[i].connection[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
 	    buckets = &node_metrics->latency[1];
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency[i].write[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].write[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
 	    buckets = &node_metrics->latency[2];
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency[i].read[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].read[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
 	    buckets = &node_metrics->latency[3];
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency[i].batch[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].batch[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
 	    buckets = &node_metrics->latency[4];
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency[i].query[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].query[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
 	}
@@ -419,10 +424,10 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	if (info[1]->IsFunction()) {
 		if (info[2]->IsFunction() && info[3]->IsFunction() && info[4]->IsFunction()) {
 
-      cmd->enable_callback.Reset(info[1].As<Function>());
-      cmd->snapshot_callback.Reset(info[2].As<Function>());
-      cmd->node_close_callback.Reset(info[3].As<Function>());
-      cmd->disable_callback.Reset(info[4].As<Function>());
+			cmd->enable_callback.Reset(info[1].As<Function>());
+			cmd->snapshot_callback.Reset(info[2].As<Function>());
+			cmd->node_close_callback.Reset(info[3].As<Function>());
+			cmd->disable_callback.Reset(info[4].As<Function>());
 
 			cmd->listeners = (as_metrics_listeners *)cf_malloc(sizeof(as_metrics_listeners));
 

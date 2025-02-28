@@ -26,7 +26,7 @@ import { expect, assert} from 'chai';
 const Docker = require('dockerode');
 const docker = new Docker();
 
-
+import * as helper from './test_helper';
 
 
 describe('Metrics node close test', async function () {
@@ -49,7 +49,6 @@ describe('Metrics node close test', async function () {
     expect(node.address).to.be.a("string");
     expect(node.port).to.be.a("number");
     let conns: ConnectionStats = node.conns
-    console.log(node.conns)
     expect(node.conns.inUse).to.be.a("number");
     expect(node.conns.inPool).to.be.a("number");
     expect(node.conns.opened).to.be.a("number");
@@ -80,6 +79,7 @@ describe('Metrics node close test', async function () {
   function nodeCloseListener(node: any) {
     testNodeIsPopulated(node)
     nodeCloseTriggered = true
+    console.log("Node close callback was called!")
     return
   }
 
@@ -113,14 +113,14 @@ describe('Metrics node close test', async function () {
       hosts: 'localhost:3000',
     }
 
-    console.log("Waiting for client to collect all information about cluster nodes...")
+    console.log("Connecting to Aerospike")
 
 
     const dummyClient = await Aerospike.connect(config)
 
     console.log("Waiting for client to collect all information about cluster nodes...")
 
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, 15000));
 
 
     let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -141,6 +141,8 @@ describe('Metrics node close test', async function () {
 
     await dummyClient.enableMetrics(policy)
 
+    await new Promise(r => setTimeout(r, 3000));
+    
     console.log("Closing node...")
 
     await container.stop();
@@ -150,11 +152,10 @@ describe('Metrics node close test', async function () {
 
     let elapsed_secs = 0
 
-    while (elapsed_secs < 10) {
+    while (elapsed_secs < 25) {
         if(nodeCloseTriggered) {
             console.log("node_close_called is true. Passed")
             await dummyClient.disableMetrics()
-            await new Promise(r => setTimeout(r, 5000));
 
             return await dummyClient.close()
         }
@@ -164,7 +165,7 @@ describe('Metrics node close test', async function () {
     }
 
     console.log("THIS FAILED")
-    dummyClient.close()
+    await dummyClient.close()
 
     assert.fail('nodeCloseListener was not called')
 
