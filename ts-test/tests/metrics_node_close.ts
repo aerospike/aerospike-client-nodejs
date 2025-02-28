@@ -32,8 +32,8 @@ import * as helper from './test_helper';
 describe('Metrics node close test', async function () {
 
   let nodeCloseTriggered: boolean = false
-
   this.timeout(40000)
+  helper.skipUnlessAdvancedMetrics(this)
 
   function enableListener() {
     return
