@@ -70,12 +70,8 @@ jobs:
   delete-artifacts:
     needs: upload-to-jfrog
     uses: ./.github/workflows/delete-artifacts.yml
-    needs: [
-      download-jfrog-artifacts,
-      #test-with-server-release,
-      bump-dev-number,
-      upload-to-jfrog
-    ]
+    needs: [download-jfrog-artifacts, bump-dev-number, upload-to-jfrog]
+
 
 
 #  test-with-server-rc:
