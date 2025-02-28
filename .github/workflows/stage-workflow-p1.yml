@@ -1,82 +1,82 @@
-#name: Stage workflow (part 1)
-#
-## 1. When a PR review is requested, run tests on that PR
-## 2. If all of the tests pass, allow the PR to be merged into `dev`
-## 3. Whenever a PR is merged to `dev`, bump version number in `dev`
-#
-#on:
-#  pull_request:
-#    types:
-#      - opened
-#      - review_requested
-#      - synchronize
-#    branches:
-#      - 'dev*'
-#      - 'dev-CICD'
-#      - '2024-Pipeline-Improvement'
-#    paths-ignore:
-#      - 'docs/**'
-#      - 'aerospike-stubs/**'
-#
-#  # So we can test changes to the test-server-rc workflow
-#  workflow_dispatch:
-#    inputs:
-#      run_server_release_tests:
-#        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-#        type: boolean
-#        default: false
-#
-#jobs:
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
-#    with:
-#      version: 6.0.2.dev1
+name: Stage workflow (part 1)
+
+# 1. When a PR review is requested, run tests on that PR
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+
+on:
+  pull_request:
+    types:
+      - opened
+      - review_requested
+      - synchronize
+    branches:
+      - 'dev*'
+      - 'dev-CICD'
+      - '2024-Pipeline-Improvement'
+    paths-ignore:
+      - 'docs/**'
+      - 'aerospike-stubs/**'
+
+  # So we can test changes to the test-server-rc workflow
+  workflow_dispatch:
+    inputs:
+      run_server_release_tests:
+        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+        type: boolean
+        default: false
+
+jobs:
+  download-jfrog-artifacts:
+    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    with:
+      version: 6.0.2.dev1
+    secrets: inherit
+
+  test-with-server-release:
+    uses: ./.github/workflows/test-artifacts.yml
+    needs: [
+      download-jfrog-artifacts
+    ]
+    with:
+      run_tests: true
+    secrets: inherit
+
+  bump-dev-number:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/bump-version.yml
+    needs: [
+      download-jfrog-artifacts,
+      test-with-server-release
+    ]
+    with:
+      change: 'bump-dev-num'
+    secrets: inherit
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      download-jfrog-artifacts,
+      test-with-server-release,
+      bump-dev-number
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      stage: true
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit
+
+  # We don't want the artifacts in JFrog to also exist in Github
+  delete-artifacts:
+    needs: upload-to-jfrog
+    uses: ./.github/workflows/delete-artifacts.yml
+
+
+
+
+#  test-with-server-rc:
+#    needs: test-with-server-release
+#    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+#    uses: ./.github/workflows/test-server-rc.yml
 #    secrets: inherit
 #
-#  test-with-server-release:
-#    uses: ./.github/workflows/test-artifacts.yml
-#    needs: [
-#      download-jfrog-artifacts
-#    ]
-#    with:
-#      run_tests: true
-#    secrets: inherit
-#
-#  bump-dev-number:
-#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-#    uses: ./.github/workflows/bump-version.yml
-#    needs: [
-#      download-jfrog-artifacts,
-#      test-with-server-release
-#    ]
-#    with:
-#      change: 'bump-dev-num'
-#    secrets: inherit
-#
-#  upload-to-jfrog:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      download-jfrog-artifacts,
-#      test-with-server-release,
-#      bump-dev-number
-#    ]
-#    uses: ./.github/workflows/upload-to-jfrog.yml
-#    with:
-#      stage: true
-#      version: ${{ needs.bump-dev-number.outputs.new_version }}
-#    secrets: inherit
-#
-#  # We don't want the artifacts in JFrog to also exist in Github
-#  delete-artifacts:
-#    needs: upload-to-jfrog
-#    uses: ./.github/workflows/delete-artifacts.yml
-#
-#
-#
-#
-##  test-with-server-rc:
-##    needs: test-with-server-release
-##    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-##    uses: ./.github/workflows/test-server-rc.yml
-##    secrets: inherit
-##
