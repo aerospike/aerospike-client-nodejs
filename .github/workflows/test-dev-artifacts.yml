@@ -432,7 +432,7 @@ jobs:
         sudo apt-get update;
         sudo apt update;
         sudo apt install valgrind;
-        
+
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
@@ -443,6 +443,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
+        npm install mocha;
         npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status
