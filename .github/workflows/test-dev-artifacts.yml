@@ -238,11 +238,11 @@ jobs:
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
-    #- name: npm install
-    #  run: npm install
+    - name: npm install
+      run: npm install
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
