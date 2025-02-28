@@ -1638,7 +1638,7 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
 		// Regular async.
-		as_conn_stats_sum(&async, &node->async_conn_pools[i]);
+		as_conn_stats_sum_internal(&async, &node->async_conn_pools[i]);
 	}
 
 	Local<Object> v8_conn_stats = Nan::New<Object>();
