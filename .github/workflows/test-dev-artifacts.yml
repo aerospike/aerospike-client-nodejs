@@ -449,36 +449,36 @@ jobs:
       #    mkdir -p build/Release;
       #    cp -r ./lib/binding/node-v108-darwin-arm64 build/Release
 
-    - name: Run tests
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        docker ps;
-        docker logs aerospike;
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cp tests\udf.lua dist\udf.lua;
-        npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
-        cd ..; 
-        npx tsc;
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm install;
+          npx tsc;
+          cp tests\udf.lua dist\udf.lua;
+          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
+          cd ..; 
+          npx tsc;
 
-    - name: Run tests
-      if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-      run: |
-        docker ps;
-        docker logs aerospike;
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+      - name: Run tests
+        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: |
+          docker ps;
+          docker logs aerospike;
+          cd ts-test;
+          npm install;
+          npx tsc;
+          cd ..;
+          npx tsc;
+          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
 
-      - name: Show job status for commit
-        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          status: ${{ job.status }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
+        - name: Show job status for commit
+          if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+          uses: myrotvorets/set-commit-status-action@v2.0.0
+          with:
+            sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+            status: ${{ job.status }}
+            context: ${{ env.STATUS_CHECK_MESSAGE }}
