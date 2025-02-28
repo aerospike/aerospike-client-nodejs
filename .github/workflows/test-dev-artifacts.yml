@@ -442,7 +442,7 @@ jobs:
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
+    runs-on: ${{ fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]')) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -658,7 +658,7 @@ jobs:
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+        #  crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: .github\workflows
 
       # REUSABLE SECTION 
@@ -686,7 +686,7 @@ jobs:
           npx tsc;
           cd ..;
           npx tsc;
-          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+          npm run test dist/${{ inputs.test-file }} -- --h 0.0.0.0 --port 3000  --t 15000 --U superuser --P superuser;
 
 
       - name: Show job status for commit
