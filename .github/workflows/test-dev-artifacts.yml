@@ -433,16 +433,35 @@ jobs:
         sudo apt update;
         sudo apt install valgrind;
 
-    - name: Run tests
+    - name: Install pre-reqs
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        docker ps;
-        docker logs aerospike;
         cd ts-test;
         npm install;
         npx tsc;
         npm install mocha;
         cd ..;
+
+    - name: Move artifacts
+      run: |
+        rm -rf lib/binding;
+        mkdir -p lib/binding;
+        cp -r downloaded-artifacts/* lib/binding;
+
+
+    - name: Delete leftover artifacts
+      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+      run: |
+        rm -rf downloaded-artifacts/
+
+    - name: check binding
+      run:
+        ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
+
+
+    - name: Run Valgrind
         npx tsc;
         npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
