@@ -1,12 +1,19 @@
 name: Dev workflow (part 2)
 
 on:
-  workflow_dispatch:
-    inputs:
-      package-name:
-        description: 'An example input for the workflow'
-        required: true
-        default: 'default_value'
+  pull_request:
+    types:
+      - opened
+      - review_requested
+      - synchronize
+    branches:
+      - 'dev*'
+      - 'dev-CICD'
+      - '2024-Pipeline-Improvement'
+    paths-ignore:
+      - 'docs/**'
+      - 'aerospike-stubs/**'
+
 jobs:
   download-jfrog-artifacts:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
