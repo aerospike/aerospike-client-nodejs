@@ -63,7 +63,7 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.1.0-rc.5
+        NEW_VERSION: ${{ inputs.version }}
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -93,8 +93,10 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
-
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        
     - name: npm publish
       run: |
         npm publish
