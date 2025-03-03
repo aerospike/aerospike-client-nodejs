@@ -10,6 +10,10 @@ on:
       version:
         type: string
         required: false
+      stage:
+        type: boolean
+        required: false
+        default: false
       jfrog-repo-name:
         type: string
         required: false
@@ -40,9 +44,35 @@ jobs:
     - name: Create multiple directories
       run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
 
+    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
+
     - name: Download Artifacts
+      if: ${{ !inputs.stage }}
       uses: ./.github/actions/download-github-artifacts/
 
+    - name: Download artifacts
+      if: ${{ inputs.stage }}
+      uses: actions/download-artifact@v4
+      with:
+        name: nodejs-client-artifacts
+        path: ./downloaded-artifacts
+
+    - name: list Artifacts first
+      if: ${{ inputs.stage }}
+      run: |
+        ls downloaded-artifacts/
+
+    - name: Move artifacts
+      if: ${{ inputs.stage }}
+      run: |
+        cp -r downloaded-artifacts/ lib/binding/
+
+    - name: check binding
+      if: ${{ inputs.stage }}
+      run:
+        ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
     - name: print artifacts
       run: ls ./lib/binding
@@ -67,12 +97,13 @@ jobs:
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: 6.0.3-dev.37
-        PACKAGE_MANAGER: npm
+        NEW_VERSION: ${{ inputs.version }}
+
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client 6.0.3-dev.37
+      run: jf rt build-publish nodejs-client ${{ inputs.version }}
+
 

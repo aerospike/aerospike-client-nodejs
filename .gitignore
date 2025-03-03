@@ -13,5 +13,6 @@ scripts/build-c-client.sh-output.txt
 libuv*
 docs*
 ts-test/dist
+ts-test/metrics-*
 scripts/build-c-client.sh-cclient-output.log
 tsconfig.tsbuildinfos

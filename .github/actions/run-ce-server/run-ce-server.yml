@@ -1,0 +1,85 @@
+name: 'Run EE Server'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
+# NOTE: do not share this server container with others
+# since it's using the default admin / admin credentials
+inputs:
+  # All inputs in composite actions are strings
+  use-server-rc:
+    required: true
+    description: Deploy server release candidate?
+    default: 'false'
+  server-tag:
+    required: true
+    description: Specify Docker tag
+
+    default: 'latest'
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  docker-hub-username:
+    description: Required for using release candidates
+    required: false
+  docker-hub-password:
+    description: Required for using release candidates
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+
+  - name: Install crudini to manipulate config.conf
+    # This will only work on the Github hosted runners.
+    run: |
+      pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Use community edition instead of enterprise edition in config.conf
+    run: |
+      crudini --existing=param --set config.conf community-edition hosts ''
+      crudini --existing=param --set config.conf community-edition hosts 127.0.0.1:3000
+    working-directory: .github/workflows
+    shell: bash
+
+  - run: echo IMAGE_NAME=aerospike/aerospike-server${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+    shell: bash
+  
+  # FLAG THIS
+  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
+    shell: bash
+
+  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
+  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+    uses: docker/setup-buildx-action@v3
+
+  - name: Build and push
+    uses: docker/build-push-action@v6
+    with:
+      # Don't want to use default Git context or else it will clone the whole Python client repo again
+      context: .github/workflows/docker-build-context
+      build-args: |
+        server_image=${{ env.IMAGE_NAME }}
+      tags: ${{ env.NEW_IMAGE_NAME }}
+      # setup-buildx-action configures Docker to use the docker-container build driver
+      # This driver doesn't publish an image locally by default
+      # so we have to manually enable it
+      load: true
+
+  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+    shell: bash
+
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
+    shell: bash
+
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    with:
+      container-name: ${{ env.SERVER_CONTAINER_NAME }}
+      is-strong-consistency-enabled: true
+
+  # For debugging
+  - run: docker logs aerospike
+    shell: bash

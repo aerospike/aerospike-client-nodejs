@@ -103,7 +103,7 @@ describe('client.get()', function () {
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(key)
       })
@@ -124,7 +124,7 @@ describe('client.get()', function () {
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(key)
       })

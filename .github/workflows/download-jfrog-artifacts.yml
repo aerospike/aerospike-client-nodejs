@@ -1,4 +1,4 @@
-name: Publish JFrog build to PyPI
+name: Download JFrog Artifacts to Github
 
 permissions:
   # This is required for requesting the OIDC token
@@ -33,13 +33,12 @@ on:
         required: true
 
 jobs:
-  publish-jfrog-build-to-npm:
+  prepare-artifacts:
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
@@ -56,14 +55,14 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "tedrunrunn"/' package.json
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-rc.1
+        NEW_VERSION: 6.0.2
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -74,39 +73,9 @@ jobs:
       run: |
         cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
 
-    #- name: change verison
-    #  run: |
-    #   npm version 6.0.2 --no-git-tag-version
-
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
-
-#    - name: npm rc
-#      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-#      env:
-#        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
-
-    - name: npm install
-      run: npm install
-
-    - name: Move artifacts
-      run: |
-        rm -rf lib/binding
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
-
-    - name: npm publish
-      run: |
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
-
-    - name: npm install
-      run: |
-        npm install aerospike
-
-    #- run: npm ci
-    #- run: npm publish --provenance --access public
-    #  env:
-    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    - name: Upload wheels to GitHub Linux x86
+      uses: actions/upload-artifact@v4
+      #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
+      with:
+        path: ./lib/binding/*
+        name: nodejs-client-artifacts

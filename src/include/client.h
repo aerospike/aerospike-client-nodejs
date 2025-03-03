@@ -88,6 +88,8 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(ChangePassword);
 	static NAN_METHOD(Close);
 	static NAN_METHOD(Connect);
+	static NAN_METHOD(DisableMetrics);
+	static NAN_METHOD(EnableMetrics);
 	static NAN_METHOD(ExistsAsync);
 	static NAN_METHOD(GetAsync);
 	static NAN_METHOD(GetNodes);

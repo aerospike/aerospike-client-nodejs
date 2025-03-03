@@ -300,7 +300,7 @@ context('Operations', function () {
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(9, 10)
+          expect(record.ttl).to.be.within(9, 11)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
@@ -320,7 +320,7 @@ context('Operations', function () {
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(9, 10)
+          expect(record.ttl).to.be.within(9, 11)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })

@@ -8,14 +8,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "dependencies": {
+    "aerospike": "file:..",
+    "mocha": "^11.1.0",
+    "typescript": "^5.7.3",
+    "dockerode": "^4.0.4",
+    "@types/tmp": "^0.2.6"
+  },
   "devDependencies": {
     "@types/chai": "^5.0.1",
     "@types/jest": "^29.5.14",
-    "@types/mocha": "^10.0.7",
+    "@types/mocha": "^10.0.10",
     "@types/semver": "^7.5.8",
     "@types/tmp": "^0.2.6",
     "@types/yargs": "^17.0.33",
@@ -23,8 +29,5 @@
     "ts-node": "^10.9.2",
     "typedoc": "^0.26.7",
     "typescript": "^5.5.4"
-  },
-  "dependencies": {
-    "aerospike": "file:.."
   }
 }
