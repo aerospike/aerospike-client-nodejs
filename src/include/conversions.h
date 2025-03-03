@@ -22,8 +22,10 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/aerospike_stats.h>
 #include <aerospike/as_metrics_writer.h>
 #include <aerospike/as_job.h>
+#include <aerospike/as_node.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_scan.h>
@@ -224,3 +226,15 @@ int setGeneration(v8::Local<v8::Object> obj, uint16_t *generation,
 				  const LogInfo *log);
 
 size_t as_strlcpy(char *d, const char *s, size_t bufsize);
+
+static inline void
+as_conn_stats_init_internal(as_conn_stats* stats)
+{
+	stats->in_pool = 0;
+	stats->in_use = 0;
+	stats->opened = 0;
+	stats->closed = 0;
+};
+
+void
+as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool);

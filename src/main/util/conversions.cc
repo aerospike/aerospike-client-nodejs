@@ -1522,19 +1522,18 @@ int recordmeta_from_jsobject(as_record *rec, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-
-
-
 void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latency* latency, uint32_t bucket_max) {
 	as_error err;
 	as_error_init(&err);
 
 	char* cluster_name = cluster->cluster_name;
-	
-	if (cluster_name == NULL) {
-		cluster_name = "";
+
+	if (cluster->cluster_name) {
+    	cluster_name = strdup(cluster->cluster_name);
+	} else {
+	    cluster_name = strdup("");  // Allocates memory for an empty string
 	}
-	/*
+		/*
 	uint32_t cpu_load, mem;
 	as_metrics_process_cpu_load_mem_usage(&err, NULL, &cpu_load, &mem);
 
@@ -1597,6 +1596,27 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 
 }
 
+void
+as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
+{
+	// Warning: cross-thread reference without a lock.
+	int tmp = as_queue_size(&pool->queue);
+
+	// Timing issues may cause values to go negative. Adjust.
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_pool += tmp;
+	tmp = pool->queue.total - tmp;
+
+	if (tmp < 0) {
+		tmp = 0;
+	}
+	stats->in_use += tmp;
+	stats->opened += pool->opened;
+	stats->closed += pool->closed;
+}
+
 void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, uint32_t bucket_max) {
 	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
 
@@ -1611,11 +1631,11 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(port));
 	//Should this just by conn in NODEJS
 	struct as_conn_stats_s async;
-	as_conn_stats_init(&async);
+	as_conn_stats_init_internal(&async);
 
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
 		// Regular async.
-		as_conn_stats_sum(&async, &node->async_conn_pools[i]);
+		as_conn_stats_sum_internal(&async, &node->async_conn_pools[i]);
 	}
 
 	Local<Object> v8_conn_stats = Nan::New<Object>();
