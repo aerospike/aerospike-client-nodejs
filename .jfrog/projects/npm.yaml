@@ -1,0 +1,8 @@
+version: 1
+type: npm
+resolver:
+    repo: clients-npm-dev-local
+    serverId: Default-Server
+deployer:
+    repo: clients-npm-dev-local
+    serverId: Default-Server

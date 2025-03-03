@@ -1650,6 +1650,7 @@ export class HLLPolicy extends policy.HLLPolicy {}
 export class InfoPolicy extends policy.InfoPolicy {}
 export class ListPolicy extends policy.ListPolicy {}
 export class MapPolicy extends policy.MapPolicy {}
+export class MetricsPolicy extends policy.MetricsPolicy {}
 export class OperatePolicy extends policy.OperatePolicy {}
 export class QueryPolicy extends policy.QueryPolicy {}
 export class ReadPolicy extends policy.ReadPolicy {}
@@ -2441,6 +2442,7 @@ export namespace policy {
          */
         constructor(props?: ListPolicyOptions);
     }
+
     /**
      * A policy affecting the behavior of map operations.
      *
@@ -2488,6 +2490,51 @@ export namespace policy {
          * @param props - MapPolicy values
          */
         constructor(props?: MapPolicyOptions);
+    }
+
+    /**
+     * A policy affecting the behavior of map operations.
+     *
+     * @since v3.0.0
+     */
+    export class MetricsPolicy {
+        /**
+         * Listeners that handles metrics notification events. If set to None, the default listener implementation
+         * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+         * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
+         * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+         */
+        public MetricsListeners?: MetricsListeners;
+        /**
+         * Directory path to write metrics log files for listeners that write logs.
+         */
+        public reportDir?: string;
+        /**
+         * Metrics file size soft limit in bytes for listeners that write logs. When report_size_limit is reached or exceeded,
+         * the current metrics file is closed and a new metrics file is created with a new timestamp. If report_size_limit is
+         * zero, the metrics file size is unbounded and the file will only be closed when disable_metrics() or close() is called.
+         */
+        public reportSizeLimit?: number;
+        /**
+         * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
+         * in the client config plus the time to tend all nodes.
+         */
+        public interval?: number;
+        /**
+         * Number of elapsed time range buckets in latency histograms.
+         */
+        public latencyColumns?: number;
+        /**
+         * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
+         */
+        public latencyShift?: number;
+
+        /**
+         * Initializes a new MapPolicy from the provided policy values.
+         *
+         * @param props - MapPolicy values
+         */
+        constructor(props?: MetricsPolicyOptions);
     }
 
     /**
@@ -4556,9 +4603,162 @@ export class Client extends EventEmitter {
      *
      * @returns A Promise that resolves to the {@link Transaction.commitStatus} returned by commit.
      *
+     * })();
      */
     public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
-
+    /**
+     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @returns A Promise that resolves to void.
+     * 
+     * @example <caption>disabling metrics</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    await client.enableMetrics()
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
+     */
+    public disableMetrics(): Promise<void>;
+    /**
+     * Disable extended periodic cluster and node latency metrics.
+     * 
+     * @param callback - This function will be called with the
+     * result returned by the disableMetrics call.
+     */
+    public disableMetrics(callback: Function): void;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @returns A Promise that resolves to void.
+     *
+     * @example <caption>using the default metrics writer</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    client.enableMetrics()
+     * 
+     *    client.disableMetrics()
+     * 
+     *    
+     *    await client.close()
+     * })();
+     *
+     * @example <caption>using custom listener callbacks.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     * 
+     * 
+     * function enableListener() {
+     *   console.log("Metrics Enabled")
+     *   return
+     * }
+     * 
+     * function snapshotListener(cluster: Cluster) {
+     *   console.log(Cluster.clusterName)
+     *   return
+     * }
+     * 
+     * function nodeCloseListener(node: Node) {
+     *   console.log(node.conns)
+     *   return
+     * }
+     * 
+     * function disableListener(cluster: Cluster) {
+     *   console.log("Metrics Disabled")
+     *   return
+     * }
+     * 
+     * ;(async () => {
+     *    let client = await Aerospike.connect(config)
+     *
+     *    let listeners: MetricsListeners = new Aerospike.MetricsListeners({
+     *        enableListener,
+     *        disableListener,
+     *        nodeCloseListener,
+     *        snapshotListener
+     *      }
+     *    )
+     *
+     *
+     *    let policy: MetricsPolicy = new MetricsPolicy({
+     *        metricsListeners: listeners,
+     *        reportDir: metricsLogFolder,
+     *        reportSizeLimit: 1000,
+     *        interval: 2,
+     *        latencyColumns: 5,
+     *        latencyShift: 2
+     *      }
+     *    )
+     *    await client.enableMetrics(policy)
+     *
+     * 
+     *    await client.disableMetrics()
+     * 
+     *    // All listeners are fired asynchronously
+     *    // If you need the enableListener or disableListener to fire immediately, yield control of the event loop.
+     *    await new Promise(r => setTimeout(r, 0));
+     *    
+     *    await client.close()
+     */
+    public enableMetrics(): Promise<void>;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param callback - This function will be called with the
+     * result returned by the enableMetrics call.
+     * 
+     */
+    public enableMetrics(callback: Function): void;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param policy - {@link policy.MetricsPolicy} instance.
+     * 
+     * @returns A Promise that resolves to void.
+     *
+     */
+    public enableMetrics(policy: MetricsPolicy): Promise<void>;
+    /**
+     *
+     * Enable extended periodic cluster and node latency metrics.
+     * 
+     * @param policy - {@link policy.MetricsPolicy} instance.
+     * @param callback - This function will be called with the
+     * result returned by the abort function call.
+     * 
+     */
+    public enableMetrics(policy: MetricsPolicy, callback: Function): void;
     /**
      * Checks the existance of a record in the database cluster.
      *
@@ -9547,6 +9747,43 @@ export interface MapPolicyOptions extends BasePolicyOptions {
      */
     writeMode?: maps.writeMode;
 }
+
+/**
+ * Option specification for {@link MetricsPolicy} class values.
+ */
+export interface MetricsPolicyOptions {
+    /**
+     * Listeners that handles metrics notification events. If set to None, the default listener implementation
+     * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+     * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
+     * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+     */
+    metricsListeners?: MetricsListeners;
+    /**
+     * Directory path to write metrics log files for listeners that write logs.
+     */
+    reportDir?: string;
+    /**
+     * Metrics file size soft limit in bytes for listeners that write logs. When report_size_limit is reached or exceeded,
+     * the current metrics file is closed and a new metrics file is created with a new timestamp. If report_size_limit is
+     * zero, the metrics file size is unbounded and the file will only be closed when disable_metrics() or close() is called.
+     */
+    reportSizeLimit?: number;
+    /**
+     * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
+     * in the client config plus the time to tend all nodes.
+     */
+    interval?: number;
+    /**
+     * Number of elapsed time range buckets in latency histograms.
+     */
+    latencyColumns?: number;
+    /**
+     * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
+     */
+    latencyShift?: number;
+}
+
 /**
  * Configuration values for the mod-lua user path.
  * 
@@ -9567,7 +9804,34 @@ export interface ModLua {
 }
 
 /**
- * Aerospike Node information.
+ * Cluster of server nodes.
+ */
+export interface Cluster {
+    /**
+     * Expected cluster name for all nodes. May be null.
+     */
+    clusterName: string;
+    /**
+     * Count of add node failures in the most recent cluster tend iteration.
+     */
+    invalidNodeCount: number;
+    /**
+     * Command count. The value is cumulative and not reset per metrics interval.
+     */
+    commandCount: number;
+    /**
+     * Command retry count. There can be multiple retries for a single command. The value is cumulative and not reset per metrics interval.
+     */
+    retryCount: number;
+    /**
+     * Active nodes in cluster.
+     */
+    nodes: Node[];
+
+}
+
+/**
+ * Server node representation
  */
 export interface Node {
     /**
@@ -9578,6 +9842,56 @@ export interface Node {
      * Address of the Aeropsike Node.
      */
     address: string;
+    /**
+     * Port number of the node’s address.
+     */
+    port: number;
+    /**
+     * Asynchronous connection stats on this node.
+     */
+    conns: ConnectionStats;
+    /**
+     * Port number of the node’s address.
+     */
+    errorCount: number;
+    /**
+     * Port number of the node’s address.
+     */
+    timeoutCount: number;
+    /**
+     * Node Metrics
+     */
+    metrics: NodeMetrics;
+}
+
+/**
+ * Each type of latency has a list of latency buckets.
+ * 
+ * Latency buckets counts are cumulative and not reset on each metrics snapshot interval.
+ */
+export interface NodeMetrics {
+    /**
+     * Name of the Aerospike Node.
+     */
+    connLatency: number[];
+    /**
+     * Address of the Aeropsike Node.
+     */
+    writeLatency: number[];
+    /**
+     * Port number of the node’s address.
+     */
+    readLatency: number[];
+    /**
+     * Asynchronous connection stats on this node.
+     */
+    batchLatency: number[];
+    /**
+     * Port number of the node’s address.
+     */
+    queryLatency: number[];
+
+
 }
 
 /**
@@ -10788,6 +11102,65 @@ export namespace admin {
         roles: string[];
     }        
 }
+
+export type enableListener = () => void;
+
+export type snapshotListener = (cluster: any) => void;
+
+export type nodeCloseListener = (node: any) => void;
+
+export type disableListener = (cluster: any) => void;
+
+/**
+ * Contains user roles and other user related information
+ */
+export interface MetricsListenersOptions {
+    /**
+     * Called when periodic extended metrics has been enabled for the given cluster.
+     */
+    enableListener: enableListener;
+    /**
+     * Called when a metrics snapshot has been requested for the given cluster.
+     */
+    snapshotListener: snapshotListener;
+    /**
+     * Called when a node is being dropped from the cluster.
+     */
+    nodeCloseListener: nodeCloseListener;
+    /**
+     * Called when periodic extended metrics has been disabled for the given cluster.
+     */
+    disableListener: disableListener;
+}
+
+/**
+ * Metrics listener callbacks.
+ * 
+ * All callbacks must be set.
+ */
+export class MetricsListeners {
+    /**
+     * Construct a new Aerospike MetricsListeners instance.
+     */
+    constructor(options: MetricsListenersOptions);
+    /**
+     * Called when periodic extended metrics has been enabled for the given cluster.
+     */
+    enableListener: enableListener;
+    /**
+     * Called when a metrics snapshot has been requested for the given cluster.
+     */
+    snapshotListener: snapshotListener;
+    /**
+     * Called when a node is being dropped from the cluster.
+     */
+    nodeCloseListener: nodeCloseListener;
+    /**
+     * Called when periodic extended metrics has been disabled for the given cluster.
+     */
+    disableListener: disableListener;
+
+}   
 /**
  * Bitwise write flags.
  *
@@ -16080,7 +16453,117 @@ export namespace filter {
     export function range(bin: string, min: number, max: number, indexType?: indexType, ctx?: cdt.Context): filter.RangePredicate;
 }
 
-
+/**
+ * Database operation error codes.
+ * 
+ * @see {@link Query}
+ * 
+ * Status codes used as return values as AerospikeErro.code values.
+ * 
+ * See the table below to match each status code with its corresponding status.
+ * 
+ * | Status                                            | Status (without prefix)                 | Status Code |
+ * |---------------------------------------------------|-----------------------------------------|-------------|
+ * | {@link AEROSPIKE_TXN_ALREADY_ABORTED}             | {@link TXN_ALREADY_ABORTED}             |    -19      |
+ * | {@link AEROSPIKE_TXN_ALREADY_COMMITTED}           | {@link TXN_ALREADY_COMMITTED}           |    -18      |
+ * | {@link AEROSPIKE_TXN_FAILED}                      | {@link TXN_FAILED}                      |    -17      |
+ * | {@link AEROSPIKE_BATCH_FAILED}                    | {@link BATCH_FAILED}                    |    -16      |
+ * | {@link AEROSPIKE_NO_RESPONSE}                     | {@link NO_RESPONSE}                     |    -15      |
+ * | {@link AEROSPIKE_MAX_ERROR_RATE}                  | {@link MAX_ERROR_RATE}                  |    -14      |
+ * | {@link AEROSPIKE_USE_NORMAL_RETRY}                | {@link USE_NORMAL_RETRY}                |    -13      |
+ * | {@link AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED}        | {@link ERR_MAX_RETRIES_EXCEEDED}        |    -12      |
+ * | {@link AEROSPIKE_ERR_ASYNC_QUEUE_FULL}            | {@link ERR_ASYNC_QUEUE_FULL}            |    -11      |
+ * | {@link AEROSPIKE_ERR_CONNECTION}                  | {@link ERR_CONNECTION}                  |    -10      |
+ * | {@link AEROSPIKE_ERR_TLS_ERROR}                   | {@link ERR_TLS_ERROR}                   |     -9      |
+ * | {@link AEROSPIKE_ERR_INVALID_NODE}                | {@link ERR_INVALID_NODE}                |     -8      |
+ * | {@link AEROSPIKE_ERR_NO_MORE_CONNECTIONS}         | {@link ERR_NO_MORE_CONNECTIONS}         |     -7      |
+ * | {@link AEROSPIKE_ERR_ASYNC_CONNECTION}            | {@link ERR_ASYNC_CONNECTION}            |     -6      |
+ * | {@link AEROSPIKE_ERR_CLIENT_ABORT}                | {@link ERR_CLIENT_ABORT}                |     -5      |
+ * | {@link AEROSPIKE_ERR_INVALID_HOST}                | {@link ERR_INVALID_HOST}                |     -4      |
+ * | {@link AEROSPIKE_NO_MORE_RECORDS}                 | {@link NO_MORE_RECORDS}                 |     -3      |
+ * | {@link AEROSPIKE_ERR_PARAM}                       | {@link ERR_PARAM}                       |     -2      |
+ * | {@link AEROSPIKE_ERR_CLIENT}                      | {@link ERR_CLIENT}                      |     -1      |
+ * | {@link AEROSPIKE_OK}                              | {@link OK}                              |      0      |
+ * | {@link AEROSPIKE_ERR_SERVER}                      | {@link ERR_SERVER}                      |      1      |
+ * | {@link AEROSPIKE_ERR_RECORD_NOT_FOUND}            | {@link ERR_RECORD_NOT_FOUND}            |      2      |
+ * | {@link AEROSPIKE_ERR_RECORD_GENERATION}           | {@link ERR_RECORD_GENERATION}           |      3      |
+ * | {@link AEROSPIKE_ERR_REQUEST_INVALID}             | {@link ERR_REQUEST_INVALID}             |      4      |
+ * | {@link AEROSPIKE_ERR_RECORD_EXISTS}               | {@link ERR_RECORD_EXISTS}               |      5      |
+ * | {@link AEROSPIKE_ERR_BIN_EXISTS}                  | {@link ERR_BIN_EXISTS}                  |      6      |
+ * | {@link AEROSPIKE_ERR_CLUSTER_CHANGE}              | {@link ERR_CLUSTER_CHANGE}              |      7      |
+ * | {@link AEROSPIKE_ERR_SERVER_FULL}                 | {@link ERR_SERVER_FULL}                 |      8      |
+ * | {@link AEROSPIKE_ERR_TIMEOUT}                     | {@link ERR_TIMEOUT}                     |      9      |
+ * | {@link AEROSPIKE_ERR_ALWAYS_FORBIDDEN}            | {@link ERR_ALWAYS_FORBIDDEN}            |     10      |
+ * | {@link AEROSPIKE_ERR_CLUSTER}                     | {@link ERR_CLUSTER}                     |     11      |
+ * | {@link AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE}       | {@link ERR_BIN_INCOMPATIBLE_TYPE}       |     12      |
+ * | {@link AEROSPIKE_ERR_RECORD_TOO_BIG}              | {@link ERR_RECORD_TOO_BIG}              |     13      |
+ * | {@link AEROSPIKE_ERR_RECORD_BUSY}                 | {@link ERR_RECORD_BUSY}                 |     14      |
+ * | {@link AEROSPIKE_ERR_SCAN_ABORTED}                | {@link ERR_SCAN_ABORTED}                |     15      |
+ * | {@link AEROSPIKE_ERR_UNSUPPORTED_FEATURE}         | {@link ERR_UNSUPPORTED_FEATURE}         |     16      |
+ * | {@link AEROSPIKE_ERR_BIN_NOT_FOUND}               | {@link ERR_BIN_NOT_FOUND}               |     17      |
+ * | {@link AEROSPIKE_ERR_DEVICE_OVERLOAD}             | {@link ERR_DEVICE_OVERLOAD}             |     18      |
+ * | {@link AEROSPIKE_ERR_RECORD_KEY_MISMATCH}         | {@link ERR_RECORD_KEY_MISMATCH}         |     19      |
+ * | {@link AEROSPIKE_ERR_NAMESPACE_NOT_FOUND}         | {@link ERR_NAMESPACE_NOT_FOUND}         |     20      |
+ * | {@link AEROSPIKE_ERR_BIN_NAME}                    | {@link ERR_BIN_NAME}                    |     21      |
+ * | {@link AEROSPIKE_ERR_FAIL_FORBIDDEN}              | {@link ERR_FAIL_FORBIDDEN}              |     22      |
+ * | {@link AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND}      | {@link ERR_FAIL_ELEMENT_NOT_FOUND}      |     23      |
+ * | {@link AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS}         | {@link ERR_FAIL_ELEMENT_EXISTS}         |     24      |
+ * | {@link AEROSPIKE_ERR_ENTERPRISE_ONLY}             | {@link ERR_ENTERPRISE_ONLY}             |     25      |
+ * | {@link AEROSPIKE_ERR_OP_NOT_APPLICABLE}           | {@link ERR_OP_NOT_APPLICABLE}           |     26      |
+ * | {@link AEROSPIKE_FILTERED_OUT}                    | {@link FILTERED_OUT}                    |     27      |
+ * | {@link AEROSPIKE_LOST_CONFLICT}                   | {@link LOST_CONFLICT}                   |     28      |
+ * | {@link AEROSPIKE_XDR_KEY_BUSY}                    | {@link XDR_KEY_BUSY}                    |     32      |
+ * | {@link AEROSPIKE_QUERY_END}                       | {@link QUERY_END}                       |     50      |
+ * | {@link AEROSPIKE_SECURITY_NOT_SUPPORTED}          | {@link SECURITY_NOT_SUPPORTED}          |     51      |
+ * | {@link AEROSPIKE_SECURITY_NOT_ENABLED}            | {@link SECURITY_NOT_ENABLED}            |     52      |
+ * | {@link AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED}   | {@link SECURITY_SCHEME_NOT_SUPPORTED}   |     53      |
+ * | {@link AEROSPIKE_INVALID_COMMAND}                 | {@link INVALID_COMMAND}                 |     54      |
+ * | {@link AEROSPIKE_INVALID_FIELD}                   | {@link INVALID_FIELD}                   |     55      |
+ * | {@link AEROSPIKE_ILLEGAL_STATE}                   | {@link ILLEGAL_STATE}                   |     56      |
+ * | {@link AEROSPIKE_INVALID_USER}                    | {@link INVALID_USER}                    |     60      |
+ * | {@link AEROSPIKE_USER_ALREADY_EXISTS}             | {@link USER_ALREADY_EXISTS}             |     61      |
+ * | {@link AEROSPIKE_INVALID_PASSWORD}                | {@link INVALID_PASSWORD}                |     62      |
+ * | {@link AEROSPIKE_EXPIRED_PASSWORD}                | {@link EXPIRED_PASSWORD}                |     63      |
+ * | {@link AEROSPIKE_FORBIDDEN_PASSWORD}              | {@link FORBIDDEN_PASSWORD}              |     64      |
+ * | {@link AEROSPIKE_INVALID_CREDENTIAL}              | {@link INVALID_CREDENTIAL}              |     65      |
+ * | {@link AEROSPIKE_EXPIRED_SESSION}                 | {@link EXPIRED_SESSION}                 |     66      |
+ * | {@link AEROSPIKE_INVALID_ROLE}                    | {@link INVALID_ROLE}                    |     70      |
+ * | {@link AEROSPIKE_ROLE_ALREADY_EXISTS}             | {@link ROLE_ALREADY_EXISTS}             |     71      |
+ * | {@link AEROSPIKE_INVALID_PRIVILEGE}               | {@link INVALID_PRIVILEGE}               |     72      |
+ * | {@link AEROSPIKE_INVALID_WHITELIST}               | {@link INVALID_WHITELIST}               |     73      |
+ * | {@link AEROSPIKE_QUOTAS_NOT_ENABLED}              | {@link QUOTAS_NOT_ENABLED}              |     74      |
+ * | {@link AEROSPIKE_INVALID_QUOTA}                   | {@link INVALID_QUOTA}                   |     75      |
+ * | {@link AEROSPIKE_NOT_AUTHENTICATED}               | {@link NOT_AUTHENTICATED}               |     80      |
+ * | {@link AEROSPIKE_ROLE_VIOLATION}                  | {@link ROLE_VIOLATION}                  |     81      |
+ * | {@link AEROSPIKE_NOT_WHITELISTED}                 | {@link NOT_WHITELISTED}                 |     82      |
+ * | {@link AEROSPIKE_QUOTA_EXCEEDED}                  | {@link QUOTA_EXCEEDED}                  |     83      |
+ * | {@link AEROSPIKE_ERR_UDF}                         | {@link ERR_UDF}                         |    100      |
+ * | {@link AEROSPIKE_MRT_BLOCKED}                     | {@link MRT_BLOCKED}                     |    120      |
+ * | {@link AEROSPIKE_MRT_VERSION_MISMATCH}            | {@link MRT_VERSION_MISMATCH}            |    121      |
+ * | {@link AEROSPIKE_MRT_EXPIRED}                     | {@link MRT_EXPIRED}                     |    122      |
+ * | {@link AEROSPIKE_MRT_TOO_MANY_WRITES}             | {@link MRT_TOO_MANY_WRITES}             |    123      |
+ * | {@link AEROSPIKE_MRT_COMMITTED}                   | {@link MRT_COMMITTED}                   |    124      |
+ * | {@link AEROSPIKE_MRT_ABORTED}                     | {@link MRT_ABORTED}                     |    125      |
+ * | {@link AEROSPIKE_MRT_ALREADY_LOCKED}              | {@link MRT_ALREADY_LOCKED}              |    126      |
+ * | {@link AEROSPIKE_MRT_MONITOR_EXISTS}              | {@link MRT_MONITOR_EXISTS}              |    127      |
+ * | {@link AEROSPIKE_ERR_BATCH_DISABLED}              | {@link ERR_BATCH_DISABLED}              |    150      |
+ * | {@link AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED} | {@link ERR_BATCH_MAX_REQUESTS_EXCEEDED} |    151      |
+ * | {@link AEROSPIKE_ERR_BATCH_QUEUES_FULL}           | {@link ERR_BATCH_QUEUES_FULL}           |    152      |
+ * | {@link AEROSPIKE_ERR_GEO_INVALID_GEOJSON}         | {@link ERR_GEO_INVALID_GEOJSON}         |    160      |
+ * | {@link AEROSPIKE_ERR_INDEX_FOUND}                 | {@link ERR_INDEX_FOUND}                 |    200      |
+ * | {@link AEROSPIKE_ERR_INDEX_NOT_FOUND}             | {@link ERR_INDEX_NOT_FOUND}             |    201      |
+ * | {@link AEROSPIKE_ERR_INDEX_OOM}                   | {@link ERR_INDEX_OOM}                   |    202      |
+ * | {@link AEROSPIKE_ERR_INDEX_NOT_READABLE}          | {@link ERR_INDEX_NOT_READABLE}          |    203      |
+ * | {@link AEROSPIKE_ERR_INDEX}                       | {@link ERR_INDEX}                       |    204      |
+ * | {@link AEROSPIKE_ERR_INDEX_NAME_MAXLEN}           | {@link ERR_INDEX_NAME_MAXLEN}           |    205      |
+ * | {@link AEROSPIKE_ERR_INDEX_MAXCOUNT}              | {@link ERR_INDEX_MAXCOUNT}              |    206      |
+ * | {@link AEROSPIKE_ERR_QUERY_ABORTED}               | {@link ERR_QUERY_ABORTED}               |    210      |
+ * | {@link AEROSPIKE_ERR_QUERY_QUEUE_FULL}            | {@link ERR_QUERY_QUEUE_FULL}            |    211      |
+ * | {@link AEROSPIKE_ERR_QUERY_TIMEOUT}               | {@link ERR_QUERY_TIMEOUT}               |    212      |
+ * | {@link AEROSPIKE_ERR_QUERY}                       | {@link ERR_QUERY}                       |    213      |
+ * | {@link AEROSPIKE_ERR_UDF_NOT_FOUND}               | {@link ERR_UDF_NOT_FOUND}               |   1301      |
+ * | {@link AEROSPIKE_ERR_LUA_FILE_NOT_FOUND}          | {@link ERR_LUA_FILE_NOT_FOUND}          |   1302      |
+ */
 declare namespace statusNamespace {
     /**
      * Transaction commit called, but the transaction was already aborted.

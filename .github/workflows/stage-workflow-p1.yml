@@ -1,4 +1,4 @@
-#name: Dev workflow (part 1)
+#name: Stage workflow (part 1)
 #
 ## 1. When a PR review is requested, run tests on that PR
 ## 2. If all of the tests pass, allow the PR to be merged into `dev`
@@ -27,8 +27,17 @@
 #        default: false
 #
 #jobs:
+#  download-jfrog-artifacts:
+#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    with:
+#      version: 6.1.0-dev.6
+#    secrets: inherit
+#
 #  test-with-server-release:
-#    uses: ./.github/workflows/build-artifacts.yml
+#    uses: ./.github/workflows/test-artifacts.yml
+#    needs: [
+#      download-jfrog-artifacts
+#    ]
 #    with:
 #      run_tests: true
 #    secrets: inherit
@@ -37,6 +46,7 @@
 ##    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
 ##    uses: ./.github/workflows/bump-version.yml
 ##    needs: [
+##      download-jfrog-artifacts,
 ##      test-with-server-release
 ##    ]
 ##    with:
@@ -46,18 +56,22 @@
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
 #    needs: [
+#      download-jfrog-artifacts,
 #      test-with-server-release,
 #      #bump-dev-number
 #    ]
 #    uses: ./.github/workflows/upload-to-jfrog.yml
 #    with:
-#      version: 6.1.0-dev.6
+#      stage: true
+#      version: 6.1.0-rc.6
 #    secrets: inherit
 #
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:
 #    needs: upload-to-jfrog
 #    uses: ./.github/workflows/delete-artifacts.yml
+#
+#
 #
 #
 ##  test-with-server-rc:

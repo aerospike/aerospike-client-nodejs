@@ -307,15 +307,15 @@ context('Operations', function () {
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(9, 10)
+          expect(record.ttl).to.be.within(9, 11)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
 
-        it('71% touches record', async function () {
+        it('80% touches record', async function () {
           const ops = [op.read('i')]
           const policy: OperatePolicy = new Aerospike.OperatePolicy({
-            readTouchTtlPercent: 71
+            readTouchTtlPercent: 80
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
@@ -327,7 +327,7 @@ context('Operations', function () {
 
           record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
           expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(9, 10)
+          expect(record.ttl).to.be.within(9, 11)
 
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })

@@ -60,6 +60,7 @@ NAN_METHOD(AerospikeClient::New)
 	client->log->fd = g_log_info.fd;
 	client->log->level = g_log_info.level;
 
+
 	// initialize the config to default values.
 	as_config config;
 	as_config_init(&config);
@@ -121,8 +122,10 @@ NAN_METHOD(AerospikeClient::Close)
 	events_callback_close(&client->as->config);
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
+
 	free(client->as);
 	free(client->log);
+
 	client->closed = true;
 }
 
@@ -295,6 +298,8 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "close", Close);
 	Nan::SetPrototypeMethod(tpl, "connect", Connect);
 	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
+	Nan::SetPrototypeMethod(tpl, "disableMetrics", DisableMetrics);
+	Nan::SetPrototypeMethod(tpl, "enableMetrics", EnableMetrics);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
