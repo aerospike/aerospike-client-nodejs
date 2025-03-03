@@ -33,25 +33,25 @@ jobs:
       run_tests: true
     secrets: inherit
 
-  bump-dev-number:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    uses: ./.github/workflows/bump-version.yml
-    needs: [
-      test-with-server-release
-    ]
-    with:
-      change: 'bump-dev-num'
-    secrets: inherit
+#  bump-dev-number:
+#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/bump-version.yml
+#    needs: [
+#      test-with-server-release
+#    ]
+#    with:
+#      change: 'bump-dev-num'
+#    secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       test-with-server-release,
-      bump-dev-number
+      #bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
+      version: 6.1.0-dev.5
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
