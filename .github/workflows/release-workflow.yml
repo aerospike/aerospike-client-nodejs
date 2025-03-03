@@ -15,42 +15,42 @@ on:
       - 'aerospike-stubs/**'
 
 jobs:
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+  download-jfrog-artifacts:
+    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    with:
+      version: 6.1.0-rc.6
+    secrets: inherit
+
+#  bump-dev-number:
+#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/bump-version.yml
 #    with:
-#      version: 6.1.0-rc.6
+#      change: 'bump-dev-num'
 #    secrets: inherit
-#
-##  bump-dev-number:
-##    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-##    uses: ./.github/workflows/bump-version.yml
-##    with:
-##      change: 'bump-dev-num'
-##    secrets: inherit
-#
-##  upload-to-jfrog:
-##    name: Upload artifacts to JFrog
-##    needs: [
-##    #  bump-dev-number,
-##      rebuild-artifacts-with-new-dev-num
-##    ]
-##    uses: ./.github/workflows/upload-to-jfrog.yml
-##    with:
-##      version: ${{ needs.bump-dev-number.outputs.new_version }}
-##    secrets: inherit
-#
-#  publish-to-npm:
+
+#  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
 #    needs: [
-#      download-jfrog-artifacts
 #    #  bump-dev-number,
-#    #  rebuild-artifacts-with-new-dev-num,
-#    #  upload-to-jfrog
+#      rebuild-artifacts-with-new-dev-num
 #    ]
-#    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+#    uses: ./.github/workflows/upload-to-jfrog.yml
 #    with:
-#      version: 6.1.0-rc.6
+#      version: ${{ needs.bump-dev-number.outputs.new_version }}
 #    secrets: inherit
+
+  publish-to-npm:
+    name: Upload artifacts to JFrog
+    needs: [
+      download-jfrog-artifacts
+    #  bump-dev-number,
+    #  rebuild-artifacts-with-new-dev-num,
+    #  upload-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: 6.1.0-rc.6
+    secrets: inherit
 
 #  release-package:
 #    name: release npm package

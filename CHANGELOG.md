@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.1.0]
+* **New Features**
+  * [CLIENT-2700] - Added support for client metrics.
+
 ## [6.0.2]
 * **New Features**
   * [CLIENT-3243] - Added TXN_ALREADY_COMMITTED and TXN_ALREADY_ABORTED error codes.
