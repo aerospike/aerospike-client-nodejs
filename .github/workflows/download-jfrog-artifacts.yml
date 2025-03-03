@@ -62,16 +62,16 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.2
+        NEW_VERSION: 6.1.0-dev.5
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+        ls downloaded-artifacts/aerospike/6.1.0-dev.5/lib/binding/
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+        cp -r downloaded-artifacts/aerospike/6.1.0-dev.5/lib/binding/ lib/
 
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
