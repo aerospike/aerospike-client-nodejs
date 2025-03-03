@@ -68,15 +68,19 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.2/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.2/lib/binding/ lib/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
-    #- name: change verison
-    #  run: |
-    #   npm version 6.0.2 --no-git-tag-version
+    - name: change verison
+      run: |
+       npm version 6.1.0 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -96,7 +100,7 @@ jobs:
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
       env:
         NEW_VERSION: ${{ inputs.version }}
-        
+
     - name: npm publish
       run: |
         npm publish

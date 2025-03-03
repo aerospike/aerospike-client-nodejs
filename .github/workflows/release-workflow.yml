@@ -18,7 +18,7 @@ jobs:
   download-jfrog-artifacts:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
     with:
-      version: 6.1.0-rc.5
+      version: 6.1.0-rc.6
     secrets: inherit
 
 #  bump-dev-number:
@@ -49,7 +49,7 @@ jobs:
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
+      version: 6.1.0-rc.6
     secrets: inherit
 
 #  release-package:
