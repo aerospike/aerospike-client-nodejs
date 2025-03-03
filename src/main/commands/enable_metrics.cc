@@ -212,9 +212,9 @@ static void respond_enable(uv_work_t *req, int status)
 
 	as_v8_debug(log, "Executing Metrics Enable Callback");
 
-	Local<Value> argv[] = {};
+	Local<Value> argv[] = {Nan::Null()};
 
-	cmd->Enable_Callback(0, argv);
+	cmd->Enable_Callback(1, argv);
 
 	delete req;
 }
