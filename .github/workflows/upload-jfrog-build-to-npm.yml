@@ -68,15 +68,15 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.31
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts lib/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -99,7 +99,7 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts lib/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
