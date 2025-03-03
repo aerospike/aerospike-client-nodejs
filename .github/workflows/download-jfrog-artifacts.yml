@@ -67,12 +67,16 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.1.0-dev.5/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.1.0-dev.5/lib/binding/ lib/
-
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
       #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
