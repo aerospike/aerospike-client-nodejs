@@ -150,7 +150,7 @@ jobs:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - name: Delete workspace
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      if: ${{ inputs.platform-tag != 'win_amd64' }}
       run: rm -rf ${{ github.workspace }}/*
 
 
