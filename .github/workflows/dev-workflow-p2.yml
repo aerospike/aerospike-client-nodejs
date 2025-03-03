@@ -42,9 +42,10 @@ jobs:
   publish-to-npm:
     name: Upload artifacts to JFrog
     needs: [
+      download-jfrog-artifacts
     #  bump-dev-number,
     #  rebuild-artifacts-with-new-dev-num,
-      upload-to-jfrog
+    #  upload-to-jfrog
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
