@@ -59,7 +59,6 @@ describe('Test metrics cluster name', async function () {
     return
   }
 
-
   it('Test metrics cluster name retrival', async function () {
 
     console.log("Running server container...");
