@@ -76,11 +76,13 @@ class MetricsCommand : public AerospikeCommand {
 
 	bool* client_closed;
 	bool disabled = false;
+	
   	as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
 	as_node* node = NULL;
 	latency* latency_buckets = NULL;
+
 	uint32_t bucket_max = 0;
 	uint32_t nodes_size = 0;
 
