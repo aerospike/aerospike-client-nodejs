@@ -29,6 +29,8 @@ const docker = new Docker();
 import * as helper from './test_helper';
 
 describe('Test metrics cluster name', async function () {
+  helper.skipUnlessAdvancedMetrics(this)
+
   const client: Cli = helper.client
   this.timeout(40000)
 
@@ -60,8 +62,6 @@ describe('Test metrics cluster name', async function () {
 
 
   it('Test metrics cluster name retrival', async function () {
-
-    helper.skipUnlessAdvancedMetrics()
 
     console.log("Running server container...");
     const SERVER_PORT_NUMBER = 3000;

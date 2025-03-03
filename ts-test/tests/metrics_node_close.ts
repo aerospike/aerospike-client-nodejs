@@ -31,6 +31,8 @@ import * as helper from './test_helper';
 
 describe('Metrics node close test', async function () {
 
+  helper.skipUnlessAdvancedMetrics(this)
+
   let nodeCloseTriggered: boolean = false
   this.timeout(40000)
 
@@ -89,7 +91,8 @@ describe('Metrics node close test', async function () {
 
 
   it('Test the node close listener', async function () {
-    helper.skipUnlessAdvancedMetrics()
+
+
 
     console.log("Running server container...");
     const SERVER_PORT_NUMBER = 3000;
