@@ -43,7 +43,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
     #  bump-dev-number,
-      rebuild-artifacts-with-new-dev-num,
+    #  rebuild-artifacts-with-new-dev-num,
       upload-to-jfrog
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
