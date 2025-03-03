@@ -81,9 +81,9 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
-    - name: change verison
-      run: |
-       npm version 6.1.0 --no-git-tag-version
+    #- name: change verison
+    #  run: |
+    #   npm version 6.1.0 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
