@@ -149,12 +149,18 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
+    - name: Delete workspace
+      if: ${{ matrix.os != 'windows-2022' }}
+      run: rm -rf ${{ github.workspace }}/*
+
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
+
 
     - uses: actions/setup-node@v4
       with:
@@ -224,10 +230,10 @@ jobs:
         npm install;
         ls lib/binding;
 
-    - name: Debug server
-      run: |
-        docker ps;
-        docker logs aerospike;
+    #- name: Debug server
+    #  run: |
+    #    docker ps;
+    #    docker logs aerospike;
         
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
