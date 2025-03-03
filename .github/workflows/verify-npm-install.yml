@@ -29,4 +29,4 @@ jobs:
       - name: verify runs and is aligned
         run: |
           npm install xebobideo --omit-dev;
-          node -e "console.log(require('xebobideo').MetricsPolicy({}))";
+          node -e "const { MetricsPolicy } = require('xebobideo'); console.log(new MetricsPolicy({}));"
