@@ -58,12 +58,12 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "tedrunrunn"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "xebobideo"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-rc.1
+        NEW_VERSION: 6.1.0-rc.5
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -80,7 +80,6 @@ jobs:
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
-
 
 #    - name: npm rc
 #      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
@@ -104,7 +103,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install aerospike
+        npm install xebobideo
 
     #- run: npm ci
     #- run: npm publish --provenance --access public

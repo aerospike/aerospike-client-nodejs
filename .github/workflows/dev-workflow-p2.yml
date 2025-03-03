@@ -11,15 +11,15 @@
 #  download-jfrog-artifacts:
 #    uses: ./.github/workflows/download-jfrog-artifacts.yml
 #    with:
-#      version: 6.0.3-rc.1
+#      version: 6.1.0-rc.5
 #    secrets: inherit
 #
-#  bump-dev-number:
-#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-#    uses: ./.github/workflows/bump-version.yml
-#    with:
-#      change: 'bump-dev-num'
-#    secrets: inherit
+##  bump-dev-number:
+##    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+##    uses: ./.github/workflows/bump-version.yml
+##    with:
+##      change: 'bump-dev-num'
+##    secrets: inherit
 #
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog

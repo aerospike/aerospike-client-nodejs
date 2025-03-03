@@ -255,10 +255,9 @@ describe('Metrics tests', function () {
     } 
   })
 
-
   it('reportDir too long', async function () {
     let policy: any = {
-      reportDir: 257,
+      reportDir: 'a'.repeat(257)
     }
     try{
       await client.enableMetrics(policy)  

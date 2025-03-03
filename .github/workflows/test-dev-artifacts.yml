@@ -129,6 +129,7 @@ jobs:
 
   test-ee:
     needs: get-runner-os
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -457,6 +458,7 @@ jobs:
 
   test-tsc-compile:
     needs: get-runner-os
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -745,7 +747,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"

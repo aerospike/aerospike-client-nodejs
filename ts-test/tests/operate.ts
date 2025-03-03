@@ -312,10 +312,10 @@ context('Operations', function () {
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
 
-        it('71% touches record', async function () {
+        it('80% touches record', async function () {
           const ops = [op.read('i')]
           const policy: OperatePolicy = new Aerospike.OperatePolicy({
-            readTouchTtlPercent: 71
+            readTouchTtlPercent: 80
           })
 
           await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })

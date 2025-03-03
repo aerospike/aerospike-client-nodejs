@@ -212,9 +212,9 @@ describe('client.batchRead()', function () {
         await client.remove(new Aerospike.Key('test', 'demo', 'batchTtl1'))
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const policy = new Aerospike.BatchReadPolicy({
-          readTouchTtlPercent: 71
+          readTouchTtlPercent: 80
         })
 
         await client.put(new Aerospike.Key('test', 'demo', 'batchTtl2'), { i: 2 }, { ttl: 10 })
@@ -309,12 +309,12 @@ describe('client.batchRead()', function () {
         await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const batch = [{
           key: new Aerospike.Key('test', 'demo', 'batchReadTtl2'),
           readAllBins: true,
           policy: new Aerospike.BatchPolicy({
-            readTouchTtlPercent: 71
+            readTouchTtlPercent: 80
           })
         }]
         await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl2'), { i: 2 }, { ttl: 10 })

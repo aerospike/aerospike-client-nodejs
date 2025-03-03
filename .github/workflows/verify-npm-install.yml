@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install aerospike --omit-dev;
-          node -e "console.log(require('aerospike').Transaction.commitStatus)";
+          npm install xebobideo --omit-dev;
+          node -e "console.log(require('xebobideo').MetricsPolicy({}))";

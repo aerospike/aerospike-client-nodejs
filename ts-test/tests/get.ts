@@ -110,10 +110,10 @@ describe('client.get()', function () {
         await client.remove(key)
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const key: K = keygen.integer(helper.namespace, helper.set)()
         const policy: ReadPolicy = new Aerospike.ReadPolicy({
-          readTouchTtlPercent: 71
+          readTouchTtlPercent: 80
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
