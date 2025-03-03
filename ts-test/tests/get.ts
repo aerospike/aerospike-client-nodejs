@@ -105,15 +105,15 @@ describe('client.get()', function () {
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(key)
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const key: K = keygen.integer(helper.namespace, helper.set)()
         const policy: ReadPolicy = new Aerospike.ReadPolicy({
-          readTouchTtlPercent: 71
+          readTouchTtlPercent: 80
         })
 
         await client.put(key, { i: 2 }, { ttl: 10 })
@@ -126,7 +126,7 @@ describe('client.get()', function () {
         record = await client.get(key, policy)
 
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(key)
       })

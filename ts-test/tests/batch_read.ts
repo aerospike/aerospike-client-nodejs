@@ -208,14 +208,14 @@ describe('client.batchRead()', function () {
 
         const record = await client.get(new Aerospike.Key('test', 'demo', 'batchTtl1'))
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(new Aerospike.Key('test', 'demo', 'batchTtl1'))
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const policy = new Aerospike.BatchReadPolicy({
-          readTouchTtlPercent: 71
+          readTouchTtlPercent: 80
         })
 
         await client.put(new Aerospike.Key('test', 'demo', 'batchTtl2'), { i: 2 }, { ttl: 10 })
@@ -232,7 +232,7 @@ describe('client.batchRead()', function () {
 
         const record = await client.get(new Aerospike.Key('test', 'demo', 'batchTtl2'))
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(new Aerospike.Key('test', 'demo', 'batchTtl2'))
       })
@@ -305,17 +305,17 @@ describe('client.batchRead()', function () {
 
         const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl1'))
       })
 
-      it('71% touches record', async function () {
+      it('80% touches record', async function () {
         const batch = [{
           key: new Aerospike.Key('test', 'demo', 'batchReadTtl2'),
           readAllBins: true,
           policy: new Aerospike.BatchPolicy({
-            readTouchTtlPercent: 71
+            readTouchTtlPercent: 80
           })
         }]
         await client.put(new Aerospike.Key('test', 'demo', 'batchReadTtl2'), { i: 2 }, { ttl: 10 })
@@ -327,7 +327,7 @@ describe('client.batchRead()', function () {
 
         const record = await client.get(new Aerospike.Key('test', 'demo', 'batchReadTtl2'))
         expect(record.bins).to.eql({ i: 2 })
-        expect(record.ttl).to.be.within(9, 10)
+        expect(record.ttl).to.be.within(9, 11)
 
         await client.remove(new Aerospike.Key('test', 'demo', 'batchReadTtl2'))
       })

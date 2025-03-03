@@ -43,7 +43,10 @@ import * as util from './util';
 export { keygen, metagen, recgen, valgen, putgen, util };
 
 const config: Config = options.getConfig()
-const client: Client = Aerospike.client(config)
+let client: any;
+client = Aerospike.client(config)
+
+
 export {client, config}
 
 Aerospike.setDefaultLogging(config.log ?? {})
@@ -265,6 +268,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
   }
 
+  export function skipUnlessAdvancedMetrics(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
+  }
+
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => client.connect()
@@ -283,3 +290,4 @@ Aerospike.setDefaultLogging(config.log ?? {})
       done()
     })
   }
+  

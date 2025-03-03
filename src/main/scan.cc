@@ -165,7 +165,6 @@ void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
 	as_scan_set_paginate(*scan, true);
 	
 	if (!maybe_options->IsObject()) {
-		printf("returnthis");
 		return;
 	}
 	
