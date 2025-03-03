@@ -30,6 +30,7 @@ import * as helper from './test_helper';
 
 
 describe('Metrics node close test', async function () {
+  helper.skipUnlessAdvancedMetrics(this)
 
   let nodeCloseTriggered: boolean = false
 

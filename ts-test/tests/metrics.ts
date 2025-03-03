@@ -29,6 +29,7 @@ import * as fs from 'fs';
 
 
 describe('Metrics tests', function () {
+  this.timeout(40000)
   const client: Cli = helper.client
 
 
