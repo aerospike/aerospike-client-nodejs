@@ -986,6 +986,7 @@ jobs:
 #        status: ${{ job.status }}
 #        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
+
   test-self-hosted-ee:
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
