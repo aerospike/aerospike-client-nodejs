@@ -267,6 +267,24 @@ jobs:
     - name: build binding
       run: docker exec --workdir /aerospike-client-nodejs/ bookworm npm install;
 
+    - name: Run tests
+      id: test
+      run: |
+        docker exec --workdir /aerospike-client-nodejs/ts-test bookworm npm install
+        docker exec --workdir /aerospike-client-nodejs/ts-test bookworm npx tsc
+        docker exec --workdir /aerospike-client-nodejs bookworm npx tsc
+        docker exec --workdir /aerospike-client-nodejs bookworm npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
+
+    - name: Copy repo to container
+      run: docker cp bookworm:/aerospike-client-nodejs/lib/binding/. ./lib/binding/
+
+    - name: Build Binding
+      run: |
+        ls lib/binding;
+        ./scripts/build-c-client.sh;
+        npm install;
+        ls lib/binding;
+
 #    - name: Run tests
 #      id: test
 #      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pytest new_tests/
