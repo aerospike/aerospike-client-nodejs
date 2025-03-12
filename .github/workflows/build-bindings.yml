@@ -253,7 +253,7 @@ jobs:
 
     - name: Run distro container
       if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
-      run: docker run --name bookworm --platform linux/arm64 --network host --detach node:aarch64-bookworm tail -f /dev/null
+      run: docker run --name bookworm --platform linux/arm64 --network host --detach node:20-bookworm tail -f /dev/null
 
     - name: Copy repo to container
       run: docker cp . bookworm:/aerospike-client-nodejs
