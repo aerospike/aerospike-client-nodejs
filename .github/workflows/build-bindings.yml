@@ -261,12 +261,12 @@ jobs:
     - name: Make sure npm is installed
       run: docker exec bookworm node -v && docker exec bookworm npm -v
 
-#    - name: Install wheel
-#      run: docker exec --workdir /aerospike-client-python/ bookworm python${{ matrix.python-version[0] }} -m pip install *.whl
+    - name: build c client
+      run: docker exec --workdir /aerospike-client-python/ bookworm ./scripts/build-c-client.sh;
 #
-#    - name: Install test dependencies
-#      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
-#
+    - name: build binding
+      run: docker exec --workdir /aerospike-client-python/ bookworm npm install;
+
 #    - name: Run tests
 #      id: test
 #      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pytest new_tests/
