@@ -262,10 +262,10 @@ jobs:
       run: docker exec bookworm node -v && docker exec bookworm npm -v
 
     - name: build c client
-      run: docker exec --workdir /aerospike-client-python/ bookworm ./scripts/build-c-client.sh;
+      run: docker exec --workdir /aerospike-client-nodejs/ bookworm ./scripts/build-c-client.sh;
 #
     - name: build binding
-      run: docker exec --workdir /aerospike-client-python/ bookworm npm install;
+      run: docker exec --workdir /aerospike-client-nodejs/ bookworm npm install;
 
 #    - name: Run tests
 #      id: test
