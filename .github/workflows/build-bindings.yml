@@ -34,12 +34,12 @@ on:
         required: true
         options:
         - manylinux_x86_64
-        - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
+        #- manylinux_aarch64
+        #- manylinux_20_x86_64
+        #- manylinux_20_aarch64
+        #- macosx_x86_64
+        #- macosx_arm64
+        #- win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
       run_tests:
@@ -120,7 +120,7 @@ jobs:
         hashmap[manylinux_20_x86_64]="20.04"
         hashmap[manylinux_20_aarch64]="20.04A"
         hashmap[macosx_x86_64]="macos-13-large"
-        hashmap[macosx_arm64]="SMA"
+        hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
@@ -224,26 +224,53 @@ jobs:
     #  shell: bash
 
 
-    - name: Build Binding
-      run: |
-        ./scripts/build-c-client.sh;
-        npm install;
-        ls lib/binding;
+#    - name: Build Binding
+#      run: |
+#        ./scripts/build-c-client.sh;
+#        npm install;
+#        ls lib/binding;
+#
+#    #- name: Debug server
+#    #  run: |
+#    #    docker ps;
+#    #    docker logs aerospike;
+#        
+#    - name: Run tests
+#      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
+#      run: |
+#        cd ts-test;
+#        npm install;
+#        npx tsc;
+#        cd ..;
+#        npx tsc;
+#        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
-    #- name: Debug server
-    #  run: |
-    #    docker ps;
-    #    docker logs aerospike;
-        
-    - name: Run tests
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64'}}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
       if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
-      run: |
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+      run: docker run --name bookworm --platform linux/arm64 --network host --detach nodejs:aarch64-bookworm tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . bookworm:/aerospike-client-nodejs
+
+    - name: Make sure npm is installed
+      run: docker exec bookworm node -v && docker exec bookworm npm -v
+
+#    - name: Install wheel
+#      run: docker exec --workdir /aerospike-client-python/ bookworm python${{ matrix.python-version[0] }} -m pip install *.whl
+#
+#    - name: Install test dependencies
+#      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
+#
+#    - name: Run tests
+#      id: test
+#      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pytest new_tests/
+
 
     #- name: Run tests
     #  if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -333,7 +360,7 @@ jobs:
 #      fail-fast: false
 #      matrix:
 #        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-#    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+#    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
 #    steps:
