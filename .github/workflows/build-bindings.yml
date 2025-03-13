@@ -224,7 +224,7 @@ jobs:
     #  shell: bash
 
     - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
       run: 
         sudo apt install g++-10;
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
