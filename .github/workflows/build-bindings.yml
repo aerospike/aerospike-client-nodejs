@@ -294,7 +294,9 @@ jobs:
 
     - name: build binding
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
+      run: 
+        docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
+        docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
 
     - name: Run tests
       id: test
@@ -307,7 +309,11 @@ jobs:
 
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/ ./lib/binding/
+      run: 
+        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding
+        ls lib/binding
+
+
 
 #    - name: Run tests
 #      id: test
