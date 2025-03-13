@@ -59,7 +59,7 @@ jobs:
     strategy:
       matrix:
         platform-tag: [
-          #"manylinux_x86_64",
+          "manylinux_x86_64",
           #"manylinux_aarch64",
           #"manylinux_20_x86_64",
           "manylinux_20_aarch64",
