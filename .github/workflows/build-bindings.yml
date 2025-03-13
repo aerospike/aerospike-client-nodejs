@@ -310,8 +310,8 @@ jobs:
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: 
-        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding
-        ls lib/binding
+        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
+        ls lib/binding;
 
 
 
