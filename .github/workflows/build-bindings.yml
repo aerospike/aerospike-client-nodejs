@@ -270,11 +270,11 @@ jobs:
 
     - name: Make sure npm is installed
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye mkdir -p lib/binding/raw
+      run: docker exec bullseye mkdir -p /aerospike-client-nodejs/lib/binding/raw
 
     - name: Make sure npm is installed
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye ls lib/binding
+      run: docker exec bullseye ls /aerospike-client-nodejs/lib/binding
 
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
@@ -282,7 +282,8 @@ jobs:
 
     - name: print
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: ls lib/binding
+      run: ls lib/binding/
+
     - name: Make sure npm is installed
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker exec bullseye node -v && docker exec bullseye npm -v
