@@ -289,7 +289,7 @@ jobs:
         docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
 
     - name: Copy repo to container
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/. ./lib/binding/
 
 #    - name: Run tests
