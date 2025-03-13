@@ -224,7 +224,7 @@ jobs:
     #  shell: bash
 
     - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: 
         sudo apt install g++-10;
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
@@ -258,6 +258,18 @@ jobs:
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
+
+    - name: Make sure npm is installed
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: docker exec bullseye mkdir -p lib/binding/raw
+
+    - name: Make sure npm is installed
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: docker exec bullseye ls lib/binding
+
+    - name: Copy repo to container
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/ ./lib/binding/
 
     - name: Run distro container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
