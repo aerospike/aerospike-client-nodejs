@@ -117,8 +117,8 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="22.04A"
-        hashmap[manylinux_20_x86_64]="20.04"
-        hashmap[manylinux_20_aarch64]="20.04A"
+        hashmap[manylinux_20_x86_64]="ubuntu-22.04-arm"
+        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
@@ -253,30 +253,30 @@ jobs:
 
     - name: Run distro container
       if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
-      run: docker run --name bookworm --platform linux/arm64 --network host --detach node:20-bookworm tail -f /dev/null
+      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:20-bullseye tail -f /dev/null
 
     - name: Copy repo to container
-      run: docker cp . bookworm:/aerospike-client-nodejs
+      run: docker cp . bullseye:/aerospike-client-nodejs
 
     - name: Make sure npm is installed
-      run: docker exec bookworm node -v && docker exec bookworm npm -v
+      run: docker exec bullseye node -v && docker exec bullseye npm -v
 
     - name: build c client
-      run: docker exec --workdir /aerospike-client-nodejs/ bookworm ./scripts/build-c-client.sh;
+      run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
 #
     - name: build binding
-      run: docker exec --workdir /aerospike-client-nodejs/ bookworm npm install;
+      run: docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
 
     - name: Run tests
       id: test
       run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bookworm npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bookworm npx tsc
-        docker exec --workdir /aerospike-client-nodejs bookworm npx tsc
-        docker exec --workdir /aerospike-client-nodejs bookworm npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
+        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
+        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
+        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
+        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
 
     - name: Copy repo to container
-      run: docker cp bookworm:/aerospike-client-nodejs/lib/binding/. ./lib/binding/
+      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/. ./lib/binding/
 
     - name: Build Binding
       run: |
@@ -287,7 +287,7 @@ jobs:
 
 #    - name: Run tests
 #      id: test
-#      run: docker exec --workdir /aerospike-client-python/test bookworm python${{ matrix.python-version[0] }} -m pytest new_tests/
+#      run: docker exec --workdir /aerospike-client-python/test bullseye python${{ matrix.python-version[0] }} -m pytest new_tests/
 
 
     #- name: Run tests
@@ -301,7 +301,6 @@ jobs:
     #    cd ..;
     #    npx tsc;
     #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
 
     - name: Upload wheels to GitHub Linux x86
       uses: actions/upload-artifact@v4
