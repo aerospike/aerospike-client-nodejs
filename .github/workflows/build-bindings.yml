@@ -226,10 +226,10 @@ jobs:
     - name: upgrade to gcc++ 10
       if: ${{ inputs.platform-tag == 'manylinux_20_x86_64'}}
       run: 
-        sudo apt install g++-10
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60
-        sudo update-alternatives --set g++ /usr/bin/g++-10
+        sudo apt install g++-10;
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
+        sudo update-alternatives --set g++ /usr/bin/g++-10;
 
     - name: Build Binding
       if: ${{ inputs.platform-tag != 'manylinux_20_aarch64'}}
