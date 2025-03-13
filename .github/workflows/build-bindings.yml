@@ -33,7 +33,7 @@ on:
         type: choice
         required: true
         options:
-        #- manylinux_x86_64
+        - manylinux_x86_64
         #- manylinux_aarch64
         #- manylinux_20_x86_64
         - manylinux_20_aarch64
@@ -268,21 +268,21 @@ jobs:
       run: docker cp . bullseye:/aerospike-client-nodejs
 
 
-    - name: Make sure npm is installed
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye mkdir -p /aerospike-client-nodejs/lib/binding/raw
+    #- name: Make sure npm is installed
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: docker exec bullseye mkdir -p /aerospike-client-nodejs/lib/binding/raw
 
-    - name: Make sure npm is installed
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye ls /aerospike-client-nodejs/lib/binding
+    #- name: Make sure npm is installed
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: docker exec bullseye ls /aerospike-client-nodejs/lib/binding
 
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/ ./lib/binding/
+    #- name: Copy repo to container
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/ ./lib/binding/
 
-    - name: print
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: ls lib/binding/
+    #- name: print
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: ls lib/binding/
 
     - name: Make sure npm is installed
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
@@ -291,7 +291,7 @@ jobs:
     - name: build c client
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
-#
+
     - name: build binding
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
@@ -307,7 +307,7 @@ jobs:
 
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/. ./lib/binding/
+      run: docker cp bullseye:/aerospike-client-nodejs/lib/binding/ ./lib/binding/
 
 #    - name: Run tests
 #      id: test
