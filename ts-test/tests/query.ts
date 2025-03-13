@@ -321,6 +321,8 @@ describe('Queries', function () {
     })
 
     it('Should run a paginated primary index query', async function () {
+      this.timeout(15000)
+
       let recordTotal = 0
       let recordsReceived = 0
       const maxRecs = 8

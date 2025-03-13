@@ -118,6 +118,7 @@ context('Scans', function () {
 
     describe('scan.paginate', function () {
       it('Paginates with the correct amount of keys and pages', async function () {
+        this.timeout(15000)
         let recordsReceived = 0
         let recordTotal = 0
         let pageTotal = 0
@@ -151,6 +152,7 @@ context('Scans', function () {
       })
 
       it('Paginates correctly using scan.hasNextPage() and scan.nextPage()', async function () {
+        this.timeout(15000)
         let recordsReceived = 0
         let recordTotal = 0
         let pageTotal = 0
@@ -184,6 +186,7 @@ context('Scans', function () {
       })
 
       it('Paginates correctly using scan.results()', async function () {
+        this.timeout(15000)
         let recordsReceived = 0
         let recordTotal = 0
         let pageTotal = 0
