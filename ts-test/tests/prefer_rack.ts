@@ -76,7 +76,7 @@ describe('PREFER_RACK', function () {
                        cmd->replica, cmd->replica_size, &cmd->replica_index);
       printf("Node=%s\n", as_node_get_address_string(cmd->node));
       */
-      
+
       /* Expected output:
 
       Key { ns: 'test', set: 'demo', key: 0, digest: null }
@@ -90,7 +90,7 @@ describe('PREFER_RACK', function () {
       Node=172.17.0.3:3101
       
       Read Node can be any rack, but writes will prefer_rack 2
-
+      */
 
 
     }
