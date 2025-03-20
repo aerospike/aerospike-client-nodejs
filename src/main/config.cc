@@ -486,6 +486,11 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 										"rackId", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
+	if ((rc = get_optional_rack_ids_property(config, NULL, configObj,
+										"rackIds", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}	
+
 
 Cleanup:
 	if (cluster_name)
