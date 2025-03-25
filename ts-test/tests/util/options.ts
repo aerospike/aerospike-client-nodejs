@@ -119,6 +119,10 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     testMetrics: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
+    },
+    testXDR: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
     }
   });
 
