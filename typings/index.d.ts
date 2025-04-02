@@ -1814,6 +1814,13 @@ export namespace policy {
          */
         public ttl?: number;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new ApplyPolicy from the provided policy values.
          *
          * @param props - ApplyPolicy values
@@ -2809,6 +2816,13 @@ export namespace policy {
          */
         public key?: policy.key;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new RemovePolicy from the provided policy values.
          *
          * @param props - RemovePolicy values
@@ -2933,7 +2947,13 @@ export namespace policy {
          * @see {@link policy.key} for supported policy values.
          */
         public key?: policy.key;
-
+        /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
         /**
          * Initializes a new WritePolicy from the provided policy values.
          *
@@ -8490,6 +8510,13 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      *
      */
     ttl?: number;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 /**
  * Option specification for {@ link BasePolicy} class values.
@@ -10342,6 +10369,13 @@ export interface RemovePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /**
@@ -10683,6 +10717,13 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /* ENUMS */
