@@ -51,7 +51,7 @@ jobs:
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      version: 6.2.0-dev.11
+      version: 6.2.0-dev.12
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
