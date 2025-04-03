@@ -2095,7 +2095,6 @@ export namespace policy {
          * @default <code>false</code>
          */
         public sendSetName?: boolean;
-
         /**
          * Initializes a new BatchPolicy from the provided policy values.
          *
@@ -9362,7 +9361,7 @@ export interface ConfigOptions {
      */
     rackAware?: boolean;
     /**
-     *  Rack where this client instance resides.
+     * Rack where this client instance resides. If rack_ids is set, rack_id is ignored..
      * 
      * {@link rackAware} config, {@link policy.replica.PREFER_RACK} replica policy, and server
      * rack configuration must also be set to enable this functionality.
@@ -9372,6 +9371,14 @@ export interface ConfigOptions {
      * @since 3.8.0
      */
     rackId?: number;
+    /**
+     * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
+     *
+      @default null
+     * 
+     * @since 3.8.0
+     */
+    rackIds?: number[];
     /**
      * Shared memory configuration.
      * 

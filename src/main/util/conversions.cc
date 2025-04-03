@@ -151,6 +151,50 @@ int get_optional_int_property(int *intp, bool *defined, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
+int get_optional_rack_ids_property(as_config *config, bool *defined, Local<Object> obj,
+							  char const *prop, const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value =
+		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
+	if (value->IsArray()) {
+		Local<Array> rack_ids_array = value.As<Array>();
+		for (uint32_t i = 0; i < rack_ids_array->Length(); ++i)
+		{
+			Local<Value> array_value = Nan::Get(rack_ids_array, i).ToLocalChecked();
+			if(array_value->IsNumber()) {	
+				int rack_id  = Nan::To<int>(array_value).FromJust();
+				as_config_add_rack_id(config, rack_id);
+				as_v8_detail(log, "%s => added (int) %d", prop, rack_id);
+			}
+			else{
+				as_v8_error(log, "Type error: %s property array values should be integers", prop);
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		if(config->rack_ids){
+			if (defined != NULL)
+				(*defined) = true;
+		}
+		else{
+			if (defined != NULL)
+				(*defined) = false;
+			as_v8_detail(log, "%s => []", prop);	
+		}
+		
+	}
+	else if (value->IsUndefined() || value->IsNull()) {
+		if (defined != NULL)
+			(*defined) = false;
+		as_v8_detail(log, "%s => undefined", prop);
+	}
+	else {
+		as_v8_error(log, "Type error: %s property should be an array", prop);
+		return AS_NODE_PARAM_ERR;
+	}
+	return AS_NODE_PARAM_OK;
+}
+
 int get_int64_property(int64_t *intp, Local<Object> obj, char const *prop,
 					   const LogInfo *log)
 {
@@ -433,6 +477,7 @@ int get_list_property(as_list **list, Local<Object> obj, char const *prop,
 	}
 	return list_from_jsarray(list, Local<Array>::Cast(value), log);
 }
+
 
 int get_bytes_property(uint8_t **bytes, int *size, Local<Object> obj,
 					   char const *prop, const LogInfo *log)
