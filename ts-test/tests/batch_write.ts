@@ -576,9 +576,7 @@ describe('client.batchWrite()', function () {
         })
     })
   })
-
-
-
+  
   context('with BatchWritePolicy', function () {
     helper.skipUnlessVersion('>= 6.0.0', this)
 
@@ -686,6 +684,38 @@ describe('client.batchWrite()', function () {
       }
       
     })
+  })
+  
+  it('Runs BATCH_WRITE with a single batch record an a command in a transaction', async function () {
+    const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/20')
+
+    const batchRecords: BatchWriteRecord[] = [
+      {
+        type: Aerospike.batchType.BATCH_WRITE,
+        key: key,
+        ops: [Aerospike.operations.write('exampleBin', 1)],
+        policy: new Aerospike.BatchWritePolicy({
+          onLockingOnly: true,
+        })
+      },
+    ]
+
+    let mrt: any = new Aerospike.Transaction()
+
+    const policy: BatchPolicyOptions = new Aerospike.BatchPolicy({
+        txn: mrt,
+    })
+
+    try{
+      let result = await client.batchWrite(batchRecords, policy)
+      expect(result[0].status).to.eql(status.OK)
+    }
+    catch(error: any){
+      assert.fail('An error should not have been caught')
+    }
+    finally {
+      await client.abort(mrt)
+    }
   })
 
 })

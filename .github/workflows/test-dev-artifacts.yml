@@ -116,11 +116,11 @@ jobs:
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
-        hashmap[manylinux_aarch64]="22.04A"
-        hashmap[manylinux_20_x86_64]="20.04"
-        hashmap[manylinux_20_aarch64]="20.04A"
+        hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
+        hashmap[manylinux_20_x86_64]="ubuntu-20.04"
+        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
-        hashmap[macosx_arm64]="SMA"
+        hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
@@ -262,7 +262,7 @@ jobs:
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
       run: |
         docker ps;
         docker logs aerospike;
@@ -284,6 +284,62 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+
+    - name: upgrade to gcc++ 10
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      run: 
+        sudo apt install g++-10;
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
+        sudo update-alternatives --set g++ /usr/bin/g++-10;
+
+    #- name: Debug server
+    #  run: |
+    #    docker ps;
+    #    docker logs aerospike;
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
+
+    - name: Copy repo to container
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: docker cp . bullseye:/aerospike-client-nodejs
+
+    #- name: Make sure npm is installed
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: docker exec bullseye node -v && docker exec bullseye npm -v
+
+    #- name: build c client
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
+
+    #- name: build binding
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  run: 
+    #    docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
+    #    docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
+
+    - name: Run tests
+      id: test
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: |
+        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
+        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
+        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
+        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
+
+    - name: Copy repo to container
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      run: 
+        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
+        ls lib/binding;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -986,6 +1042,7 @@ jobs:
 #        status: ${{ job.status }}
 #        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
+
   test-self-hosted-ee:
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
@@ -993,7 +1050,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1138,7 +1195,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1239,7 +1296,7 @@ jobs:
 #    # There's a top-level env variable for this but we can't use it here, unfortunately
 #    strategy:
 #      fail-fast: false
-#    runs-on: ${{ fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') }}
+#    runs-on: ${{ fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
 #    steps:
@@ -1357,7 +1414,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
