@@ -47,7 +47,7 @@ NAN_METHOD(AerospikeClient::SetXDRFilter)
 	as_policy_info *p_policy = NULL;
 	as_status status;
 
-  	const char[42] fmt_str = "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
+  	const char fmt_str[42]= "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
 
 	char *request_str_p = NULL;
 	char *response_p = NULL;
