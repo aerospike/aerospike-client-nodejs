@@ -20,7 +20,7 @@
 
 import Aerospike, { status as statusModule, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, Client as Cli, RecordMetadata, AerospikeBins, AerospikeRecord, Key, WritePolicy, Bin} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
 
 const keygen: any = helper.keygen
@@ -593,6 +593,35 @@ describe('client.put()', function () {
           .catch((error: any) => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_EXISTS))
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => expect(record.bins.i).to.equal(49))
+      })
+    })
+  })
+
+  context('onLockingOnly policy', function () {
+    context('it triggers already locked', function () {
+      it('does not create a key that does not exist yet', async function () {
+        const key: any = keygen.integer(helper.namespace, helper.set)()
+
+        let mrt: any = new Aerospike.Transaction()
+
+        const policy: WritePolicy = new Aerospike.policy.WritePolicy({
+          onLockingOnly: true,
+          txn: mrt
+        })
+
+        await client.put(key, { i: 49 }, {}, policy)
+
+        try{
+          await client.put(key, { i: 49 }, {},  policy)
+          assert.fail('An error should have been caught')
+        }
+
+        catch(error: any){
+          expect(error).to.be.instanceof(AerospikeError).with.property('code', status.MRT_ALREADY_LOCKED)
+          let exists = await client.exists(key)
+          expect(exists).to.be.false
+        }
+
       })
     })
   })

@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { BasePolicy as BP, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy} from 'aerospike';
+import Aerospike, { BasePolicy as BP, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from 'aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';
@@ -55,18 +55,20 @@ context('Client Policies #noserver', function () {
           totalTimeout: 2000,
           maxRetries: 1,
           key: Aerospike.policy.key.SEND,
-          commitLevel: 2,
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
           ttl: 3600,
-          durableDelete: true
+          durableDelete: true,
+          onLockingOnly: true
         })
 
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.totalTimeout).to.equal(2000)
         expect(subject.maxRetries).to.equal(1)
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
-        expect(subject.commitLevel).to.equal(2)
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
         expect(subject.ttl).to.equal(3600)
         expect(subject.durableDelete).to.be.true
+        expect(subject.onLockingOnly).to.be.true
       })
     })
   })
@@ -82,8 +84,9 @@ context('Client Policies #noserver', function () {
           key: Aerospike.policy.key.SEND,
           gen: Aerospike.policy.gen.EQ,
           exists: Aerospike.policy.exists.CREATE,
-          commitLevel: 2,
-          durableDelete: true
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
+          durableDelete: true,
+          onLockingOnly: true
         })
 
         expect(subject.socketTimeout).to.equal(1000)
@@ -93,8 +96,9 @@ context('Client Policies #noserver', function () {
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
         expect(subject.exists).to.equal(Aerospike.policy.exists.CREATE)
-        expect(subject.commitLevel).to.equal(2)
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
         expect(subject.durableDelete).to.be.true
+        expect(subject.onLockingOnly).to.be.true
       })
     })
   })
@@ -109,7 +113,7 @@ context('Client Policies #noserver', function () {
           key: Aerospike.policy.key.SEND,
           replica: Aerospike.policy.replica.MASTER,
           readModeAP: Aerospike.policy.readModeAP.ONE,
-          readModeSC: Aerospike.policy.readModeSC.SESSION
+          readModeSC: Aerospike.policy.readModeSC.SESSION,
         })
 
         expect(subject.socketTimeout).to.equal(1000)
@@ -173,7 +177,7 @@ context('Client Policies #noserver', function () {
           generation: 1234,
           key: Aerospike.policy.key.SEND,
           gen: Aerospike.policy.gen.EQ,
-          commitLevel: 2,
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
           durableDelete: true
         })
 
@@ -183,7 +187,7 @@ context('Client Policies #noserver', function () {
         expect(subject.generation).to.equal(1234)
         expect(subject.key).to.equal(Aerospike.policy.key.SEND)
         expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
-        expect(subject.commitLevel).to.equal(2)
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
         expect(subject.durableDelete).to.be.true
       })
     })
@@ -201,7 +205,7 @@ context('Client Policies #noserver', function () {
           replica: Aerospike.policy.replica.MASTER,
           readModeAP: Aerospike.policy.readModeAP.ONE,
           readModeSC: Aerospike.policy.readModeSC.SESSION,
-          commitLevel: 2,
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
           durableDelete: true
         })
         expect(subject.socketTimeout).to.equal(1000)
@@ -212,7 +216,7 @@ context('Client Policies #noserver', function () {
         expect(subject.replica).to.equal(Aerospike.policy.replica.MASTER)
         expect(subject.readModeAP).to.equal(Aerospike.policy.readModeAP.ONE)
         expect(subject.readModeSC).to.equal(Aerospike.policy.readModeSC.SESSION)
-        expect(subject.commitLevel).to.equal(2)
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
         expect(subject.durableDelete).to.be.true
       })
     })
@@ -257,4 +261,52 @@ context('Client Policies #noserver', function () {
       })
     })
   })
+
+  describe('BatchWritePolicy', function () {
+    describe('new BatchWritePolicy', function () {
+      it('sets the policy values from a value object', function () {
+        const subject: BatchWritePolicy = new Aerospike.BatchWritePolicy({
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
+          durableDelete: true,
+          exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
+          filterExpression: exp.eq(exp.binInt('i'), exp.int(37)),
+          gen: Aerospike.policy.gen.EQ,
+          key: Aerospike.policy.key.SEND,
+          ttl: 2048,
+          onLockingOnly: true
+        })
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
+        expect(subject.durableDelete).to.equal(true)
+        expect(subject.exists).to.equal(Aerospike.policy.exists.CREATE_OR_REPLACE)
+        expect(subject.filterExpression).to.eql(exp.eq(exp.binInt('i'), exp.int(37)))
+        expect(subject.gen).to.equal(Aerospike.policy.gen.EQ)
+        expect(subject.key).to.equal(Aerospike.policy.key.SEND)
+        expect(subject.ttl).to.equal(2048)
+        expect(subject.onLockingOnly).to.be.true
+      })
+    })
+  })
+
+  describe('BatchApplyPolicy', function () {
+    describe('new BatchApplyPolicy', function () {
+      it('sets the policy values from a value object', function () {
+        const subject: BatchApplyPolicy = new Aerospike.BatchApplyPolicy({
+          commitLevel: Aerospike.policy.commitLevel.MASTER,
+          durableDelete: true,
+          filterExpression: exp.eq(exp.binInt('i'), exp.int(37)),
+          key: Aerospike.policy.key.SEND,
+          ttl: 2048,
+          onLockingOnly: true
+        })
+        expect(subject.commitLevel).to.equal(Aerospike.policy.commitLevel.MASTER)
+        expect(subject.durableDelete).to.be.true
+        expect(subject.filterExpression).to.eql(exp.eq(exp.binInt('i'), exp.int(37)))
+        expect(subject.key).to.equal(Aerospike.policy.key.SEND)
+        expect(subject.ttl).to.equal(2048)
+        expect(subject.onLockingOnly).to.be.true
+
+      })
+    })
+  })
+
 })

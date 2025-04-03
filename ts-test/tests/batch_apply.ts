@@ -20,9 +20,9 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, AerospikeRecord, BatchResult, Key as K, UDF, BatchPolicyOptions} from 'aerospike';
+import Aerospike, { Client, AerospikeRecord, BatchResult, Key as K, UDF, BatchPolicyOptions, BatchApplyPolicyOptions, WritePolicyOptions, ConfigOptions, AerospikeError, status} from 'aerospike';
 import * as helper from './test_helper';
-import { expect } from 'chai'; 
+import { expect, assert} from 'chai'; 
 
 // const util = require('util')
 
@@ -54,7 +54,9 @@ describe('client.batchApply()', function () {
     return putgen.put(nrecords, generators, {})
   })
 
-  context('with batch apply', function () {
+
+
+  context('with failure', function () {
     helper.skipUnlessVersion('>= 6.0.0', this)
 
     it('apply udf on batch of records', function (done) {
@@ -86,4 +88,53 @@ describe('client.batchApply()', function () {
       })
     })
   })
+
+  context('with BatchApplyPolicy', function () {
+    helper.skipUnlessVersion('>= 8.0.0', this)
+
+    it('onLockingOnly should fail when writing to a locked record', async function () {
+      const batchRecords: K[] = [
+        new Key(helper.namespace, helper.set, 'test/batch_apply/6'),
+        new Key(helper.namespace, helper.set, 'test/batch_apply/7'),
+      ]
+
+      let mrt: any = new Aerospike.Transaction()
+
+      // await client.remove(batchRecords[0])
+      // await client.remove(batchRecords[1])
+
+      await client.put(batchRecords[0], { foo: 'bar' }, { ttl: 1000 })
+      await client.put(batchRecords[1], { foo: 'bar' }, { ttl: 1000 })
+
+      const policyBatch: BatchPolicyOptions = new Aerospike.BatchPolicy({
+        txn: mrt,
+      })
+
+      const policyBatchApply: BatchApplyPolicyOptions = new Aerospike.BatchApplyPolicy({
+        onLockingOnly: true,
+      })
+
+      const udf: UDF = {
+        module: 'udf',
+        funcname: 'updateRecord',
+        args: ['foo', 50]
+      }
+
+      await client.batchApply(batchRecords, udf, policyBatch, policyBatchApply)
+
+      try {
+        await client.batchApply(batchRecords, udf, policyBatch, policyBatchApply)
+        assert.fail('An error should have been caught')
+      }
+      catch(error: any){
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', status.BATCH_FAILED)
+        let exists = await client.get(batchRecords[0])
+        expect(exists.bins.foo).to.eql('bar')
+      }
+      finally{
+        await client.abort(mrt)
+      }
+    })
+  })
+
 })
