@@ -9444,6 +9444,10 @@ export interface ConfigPolicies {
      */
     batchParentWrite?: policy.BatchPolicy;
     /**
+     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BatchWritePolicy}
+     */
+    batchWrite?: policy.BatchWritePolicy;
+    /**
      * Info policy. For more information, see {@link policy.InfoPolicy | InfoPolicy}
      */
     info?: policy.InfoPolicy;
@@ -9467,6 +9471,16 @@ export interface ConfigPolicies {
      * Query policy. For more information, see {@link policy.QueryPolicy | QueryPolicy}
      */
     query?: policy.QueryPolicy;
+    /**
+     * Transaction Roll policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnRoll?: policy.BatchPolicy;
+    /**
+     * Transaction Verify policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnVerify?: policy.BatchPolicy
     /**
      * Write policy. For more information, see {@link policy.WritePolicy | WritePolicy}
      */
