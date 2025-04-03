@@ -46,23 +46,9 @@
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
 #    needs: [
-#      test-with-server-release,
-#      #bump-dev-number
+#      test-with-server-release
 #    ]
-#    uses: ./.github/workflows/upload-to-jfrog.yml
 #    with:
 #      version: 6.2.0-dev.2
 #    secrets: inherit
 #
-#  # We don't want the artifacts in JFrog to also exist in Github
-#  delete-artifacts:
-#    needs: upload-to-jfrog
-#    uses: ./.github/workflows/delete-artifacts.yml
-#
-#
-##  test-with-server-rc:
-##    needs: test-with-server-release
-##    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-##    uses: ./.github/workflows/test-server-rc.yml
-##    secrets: inherit
-##

@@ -638,6 +638,27 @@ int host_from_jsobject(Local<Object> obj, char **addr, uint16_t *port,
 	return AS_NODE_PARAM_OK;
 }
 
+int datacenter_from_jsobject(Local<Value> v8_dc, char **dc,
+					   const LogInfo *log)
+{
+
+	if (v8_dc->IsString()) {
+		Local<String> v8_string_dc = v8_dc.As<String>();
+		int data_center_max_size = ((v8_string_dc->Length()) < 31) ? (v8_string_dc->Length()) : 31;
+		*dc = (char *)malloc(data_center_max_size + 1);
+		strncpy(*dc, *Nan::Utf8String(v8_string_dc), ((v8_string_dc->Length()) < data_center_max_size) ?
+		(v8_string_dc->Length()) : data_center_max_size);
+		(*dc)[data_center_max_size] = '\0';  // null-terminate
+
+		as_v8_detail(log, "data center : %s", (*dc));
+	}
+	else {
+		return AS_NODE_PARAM_ERR;
+	}
+
+	return AS_NODE_PARAM_OK;
+}
+
 int log_from_jsobject(LogInfo *log, Local<Object> obj)
 {
 	int rc = AS_NODE_PARAM_OK;

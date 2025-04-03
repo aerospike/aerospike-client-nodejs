@@ -268,6 +268,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
   }
 
+  export function skipUnlessXDR(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testXDR, 'XDR tests disabled')
+  }
+
   export function skipUnlessAdvancedMetrics(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
   }
