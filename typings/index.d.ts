@@ -1814,6 +1814,13 @@ export namespace policy {
          */
         public ttl?: number;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new ApplyPolicy from the provided policy values.
          *
          * @param props - ApplyPolicy values
@@ -2088,7 +2095,6 @@ export namespace policy {
          * @default <code>false</code>
          */
         public sendSetName?: boolean;
-
         /**
          * Initializes a new BatchPolicy from the provided policy values.
          *
@@ -2809,6 +2815,13 @@ export namespace policy {
          */
         public key?: policy.key;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new RemovePolicy from the provided policy values.
          *
          * @param props - RemovePolicy values
@@ -2933,7 +2946,13 @@ export namespace policy {
          * @see {@link policy.key} for supported policy values.
          */
         public key?: policy.key;
-
+        /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
         /**
          * Initializes a new WritePolicy from the provided policy values.
          *
@@ -5688,6 +5707,55 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      */
     public select(key: KeyOptions, bins: string[], policy: policy.ReadPolicy | null, callback: TypedCallback<AerospikeRecord>): void;
+
+    /**
+     * Set XDR filter for given datacenter name and namespace. The expression filter indicates
+     * which records XDR should ship to the datacenter.
+     *
+     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
+     * @param expression - aerospike expression
+     * @param dc - Datacenter name.
+     * @param ns - Namespace.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns A <code>Promise</code> that resolves to void.
+     * 
+     * @relates aerospike
+     */
+    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
+
+    /**
+     * Set XDR filter for given datacenter name and namespace. The expression filter indicates
+     * which records XDR should ship to the datacenter.
+     *
+     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
+     * @param expression - aerospike expression
+     * @param dc - Datacenter name.
+     * @param ns - Namespace.
+     * @param callback - The function to call when the
+     * command completes with the results of the command; if no callback
+     * function is provided, the method returns a <code>Promise<code> instead.
+     * 
+     * @relates aerospike
+     */
+    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
+
+    /**
+     * Set XDR filter for given datacenter name and namespace. The expression filter indicates
+     * which records XDR should ship to the datacenter.
+     *
+     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
+     * @param expression - aerospike expression
+     * @param dc - Datacenter name.
+     * @param ns - Namespace.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the
+     * command completes with the results of the command; if no callback
+     * function is provided, the method returns a <code>Promise<code> instead.
+     *
+     * @relates aerospike
+     */
+    public setXDRFilter(expression: AerospikeExp, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
 
     /**
      * Removes records in specified namespace/set efficiently.
@@ -8490,6 +8558,13 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      *
      */
     ttl?: number;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 /**
  * Option specification for {@ link BasePolicy} class values.
@@ -9286,7 +9361,7 @@ export interface ConfigOptions {
      */
     rackAware?: boolean;
     /**
-     *  Rack where this client instance resides.
+     * Rack where this client instance resides. If rack_ids is set, rack_id is ignored..
      * 
      * {@link rackAware} config, {@link policy.replica.PREFER_RACK} replica policy, and server
      * rack configuration must also be set to enable this functionality.
@@ -9296,6 +9371,14 @@ export interface ConfigOptions {
      * @since 3.8.0
      */
     rackId?: number;
+    /**
+     * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
+     *
+      @default null
+     * 
+     * @since 3.8.0
+     */
+    rackIds?: number[];
     /**
      * Shared memory configuration.
      * 
@@ -9444,6 +9527,10 @@ export interface ConfigPolicies {
      */
     batchParentWrite?: policy.BatchPolicy;
     /**
+     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BatchWritePolicy}
+     */
+    batchWrite?: policy.BatchWritePolicy;
+    /**
      * Info policy. For more information, see {@link policy.InfoPolicy | InfoPolicy}
      */
     info?: policy.InfoPolicy;
@@ -9467,6 +9554,16 @@ export interface ConfigPolicies {
      * Query policy. For more information, see {@link policy.QueryPolicy | QueryPolicy}
      */
     query?: policy.QueryPolicy;
+    /**
+     * Transaction Roll policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnRoll?: policy.BatchPolicy;
+    /**
+     * Transaction Verify policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnVerify?: policy.BatchPolicy
     /**
      * Write policy. For more information, see {@link policy.WritePolicy | WritePolicy}
      */
@@ -10342,6 +10439,13 @@ export interface RemovePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /**
@@ -10683,6 +10787,13 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /* ENUMS */

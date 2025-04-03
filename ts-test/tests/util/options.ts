@@ -119,6 +119,14 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     testMetrics: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
+    },
+    testPreferRack: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing. Requires two datacenter XDR configuration.'
+    },
+    testXDR: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
     }
   });
 

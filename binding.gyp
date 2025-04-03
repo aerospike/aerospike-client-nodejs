@@ -84,6 +84,7 @@
         'src/main/expressions.cc',
         'src/main/async.cc',
         'src/main/command.cc',
+        'src/main/commands/set_xdr_filter.cc',
         'src/main/commands/disable_metrics.cc',
         'src/main/commands/enable_metrics.cc',
         'src/main/commands/apply_async.cc',
