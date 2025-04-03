@@ -55,7 +55,6 @@ describe('Client#stats', function () {
     //const dummyClient = await Aerospike.connect(config)
 
     for (const connStats of [node.syncConnections, node.asyncConnections]) {
-      console.log(connStats)
       expect(connStats.inPool).to.be.at.least(0)
       expect(connStats.inUse).to.be.at.least(0)
       expect(connStats.opened).to.be.at.least(1)

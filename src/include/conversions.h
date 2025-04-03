@@ -98,6 +98,8 @@ int get_optional_transaction_property(as_txn **txn, bool *defined,
 int get_optional_bytes_property(uint8_t **bytes, int *size, bool *defined,
 								v8::Local<v8::Object> obj, char const *prop,
 								const LogInfo *log);
+int get_optional_rack_ids_property(as_config *config, bool *defined, v8::Local<v8::Object> obj,
+							  char const *prop, const LogInfo *log);
 int get_optional_int_property(int *intp, bool *defined,
 							  v8::Local<v8::Object> obj, char const *prop,
 							  const LogInfo *log);
@@ -155,6 +157,8 @@ void load_bytes(v8::Local<v8::Object> saved_object, uint8_t* bytes, uint32_t byt
 
 // Functions to convert v8 objects(maps) to C client structures
 int host_from_jsobject(v8::Local<v8::Object> obj, char **addr, uint16_t *port,
+					   const LogInfo *log);
+int datacenter_from_jsobject(v8::Local<v8::Value> v8_dc, char **dc,
 					   const LogInfo *log);
 int log_from_jsobject(LogInfo *log, v8::Local<v8::Object> obj);
 int recordbins_from_jsobject(as_record *rec, v8::Local<v8::Object> obj,
