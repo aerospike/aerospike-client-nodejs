@@ -274,7 +274,7 @@ int batch_apply_record_from_jsobject(as_batch_records *batch_records,
 	if (udf->IsObject()) {
 		if (udfargs_from_jsobject((char **)&record->module,
 								  (char **)&record->function, &record->arglist,
-								  obj, log) != AS_NODE_PARAM_OK) {
+								  udf.As<Object>(), log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "UDF args object invalid");
 			return AS_NODE_PARAM_ERR;
 		}

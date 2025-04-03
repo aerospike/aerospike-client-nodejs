@@ -60,12 +60,16 @@ describe('Config #noserver', function () {
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
           batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
+          batchParentWrite: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
+          batchWrite: new Aerospike.BatchWritePolicy({ exists: Aerospike.policy.exists.CREATE_OR_REPLACE }),
           info: new Aerospike.InfoPolicy({ timeout: 1000 }),
           operate: new Aerospike.OperatePolicy({ totalTimeout: 1000 }),
           query: new Aerospike.QueryPolicy({ totalTimeout: 1000 }),
           read: new Aerospike.ReadPolicy({ totalTimeout: 1000 }),
           remove: new Aerospike.RemovePolicy({ totalTimeout: 1000 }),
           scan: new Aerospike.ScanPolicy({ totalTimeout: 1000 }),
+          txnRoll: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
+          txnVerify: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
           write: new Aerospike.WritePolicy({ totalTimeout: 1000 })
         },
         rackAware: true,
@@ -102,6 +106,8 @@ describe('Config #noserver', function () {
       const policies: ConfigPolicies = config.policies
       expect(policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
       expect(policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(policies.batchWrite).to.be.instanceof(Aerospike.BatchWritePolicy)
+      expect(policies.batchParentWrite).to.be.instanceof(Aerospike.BatchPolicy)
       expect(policies.info).to.be.instanceof(Aerospike.InfoPolicy)
       expect(policies.operate).to.be.instanceof(Aerospike.OperatePolicy)
       expect(policies.query).to.be.instanceof(Aerospike.QueryPolicy)
@@ -109,6 +115,8 @@ describe('Config #noserver', function () {
       expect(policies.remove).to.be.instanceof(Aerospike.RemovePolicy)
       expect(policies.scan).to.be.instanceof(Aerospike.ScanPolicy)
       expect(policies.write).to.be.instanceof(Aerospike.WritePolicy)
+      expect(policies.txnRoll).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(policies.txnVerify).to.be.instanceof(Aerospike.BatchPolicy)
     })
 
     it('initializes default policies', function () {
@@ -116,12 +124,16 @@ describe('Config #noserver', function () {
         policies: {
           apply: { totalTimeout: 1000 },
           batch: { totalTimeout: 1000 },
+          batchParentWrite: { totalTimeout: 1000 },
+          batchWrite: { exists: Aerospike.policy.exists.CREATE_OR_REPLACE },
           info: { timeout: 1000 },
           operate: { totalTimeout: 1000 },
           query: { totalTimeout: 1000 },
           read: { totalTimeout: 1000 },
           remove: { totalTimeout: 1000 },
           scan: { totalTimeout: 1000 },
+          txnRoll: { totalTimeout: 1000 },
+          txnVerify: { totalTimeout: 1000 },
           write: { totalTimeout: 1000 }
         }
       }
@@ -129,12 +141,16 @@ describe('Config #noserver', function () {
 
       expect(config.policies.apply).to.be.instanceof(Aerospike.ApplyPolicy)
       expect(config.policies.batch).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(config.policies.batchWrite).to.be.instanceof(Aerospike.BatchWritePolicy)
+      expect(config.policies.batchParentWrite).to.be.instanceof(Aerospike.BatchPolicy)
       expect(config.policies.info).to.be.instanceof(Aerospike.InfoPolicy)
       expect(config.policies.operate).to.be.instanceof(Aerospike.OperatePolicy)
       expect(config.policies.query).to.be.instanceof(Aerospike.QueryPolicy)
       expect(config.policies.read).to.be.instanceof(Aerospike.ReadPolicy)
       expect(config.policies.remove).to.be.instanceof(Aerospike.RemovePolicy)
       expect(config.policies.scan).to.be.instanceof(Aerospike.ScanPolicy)
+      expect(config.policies.txnRoll).to.be.instanceof(Aerospike.BatchPolicy)
+      expect(config.policies.txnVerify).to.be.instanceof(Aerospike.BatchPolicy)
       expect(config.policies.write).to.be.instanceof(Aerospike.WritePolicy)
     })
     /*

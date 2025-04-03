@@ -1814,6 +1814,13 @@ export namespace policy {
          */
         public ttl?: number;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new ApplyPolicy from the provided policy values.
          *
          * @param props - ApplyPolicy values
@@ -2809,6 +2816,13 @@ export namespace policy {
          */
         public key?: policy.key;
         /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
+        /**
          * Initializes a new RemovePolicy from the provided policy values.
          *
          * @param props - RemovePolicy values
@@ -2933,7 +2947,13 @@ export namespace policy {
          * @see {@link policy.key} for supported policy values.
          */
         public key?: policy.key;
-
+        /**
+         * Algorithm used to determine target node.
+         * 
+         * @default {@link policy.replica.MASTER}
+         * @see {@link policy.replica} for supported policy values.
+         */
+        public replica?: policy.replica;
         /**
          * Initializes a new WritePolicy from the provided policy values.
          *
@@ -8539,6 +8559,13 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      *
      */
     ttl?: number;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 /**
  * Option specification for {@ link BasePolicy} class values.
@@ -9493,6 +9520,10 @@ export interface ConfigPolicies {
      */
     batchParentWrite?: policy.BatchPolicy;
     /**
+     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BatchWritePolicy}
+     */
+    batchWrite?: policy.BatchWritePolicy;
+    /**
      * Info policy. For more information, see {@link policy.InfoPolicy | InfoPolicy}
      */
     info?: policy.InfoPolicy;
@@ -9516,6 +9547,16 @@ export interface ConfigPolicies {
      * Query policy. For more information, see {@link policy.QueryPolicy | QueryPolicy}
      */
     query?: policy.QueryPolicy;
+    /**
+     * Transaction Roll policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnRoll?: policy.BatchPolicy;
+    /**
+     * Transaction Verify policy. Uses {@link policy.BatchPolicy | BatchPolicy}.
+     * For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     */
+    txnVerify?: policy.BatchPolicy
     /**
      * Write policy. For more information, see {@link policy.WritePolicy | WritePolicy}
      */
@@ -10391,6 +10432,13 @@ export interface RemovePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /**
@@ -10732,6 +10780,13 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Algorithm used to determine target node.
+     * 
+     * @default {@link policy.replica.MASTER}
+     * @see {@link policy.replica} for supported policy values.
+     */
+    replica?: policy.replica;
 }
 
 /* ENUMS */
