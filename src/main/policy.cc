@@ -193,6 +193,11 @@ int writepolicy_from_jsobject(as_policy_write *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail(log, "Parsing write policy: success");
 	return AS_NODE_PARAM_OK;
 }
@@ -226,6 +231,11 @@ int applypolicy_from_jsobject(as_policy_apply *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -486,6 +496,11 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	return rc;
 }
 
@@ -522,6 +537,11 @@ int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}

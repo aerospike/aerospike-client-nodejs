@@ -1814,6 +1814,15 @@ export namespace policy {
          */
         public ttl?: number;
         /**
+         * Execute the write command only if the record is not already locked by this transaction.
+         * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+         *
+         * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+         * 
+         * Default: false.
+         */
+        public onLockingOnly?: boolean;
+        /**
          * Initializes a new ApplyPolicy from the provided policy values.
          *
          * @param props - ApplyPolicy values
@@ -1970,6 +1979,15 @@ export namespace policy {
          * The time-to-live (expiration) of the record in seconds.
          */
         public ttl?: number;
+        /**
+         * Execute the write command only if the record is not already locked by this transaction.
+         * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+         *
+         * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+         * 
+         * Default: false.
+         */
+        public onLockingOnly?: boolean;
         /**
          * Initializes a new BatchApplyPolicy from the provided policy values.
          *
@@ -2193,7 +2211,7 @@ export namespace policy {
      *
      * @since v5.0.0
      */
-    export class BatchWritePolicy {
+    export class BatchWritePolicy extends BasePolicy {
         /**
          * Specifies the number of replicas required to be committed successfully
          * when writing before returning command succeeded.
@@ -2238,6 +2256,15 @@ export namespace policy {
          * The time-to-live (expiration) of the record in seconds.
          */
         public ttl?: number;
+        /**
+         * Execute the write command only if the record is not already locked by this transaction.
+         * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+         *
+         * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+         * 
+         * Default: false.
+         */
+        public onLockingOnly?: boolean;
         /**
          * Initializes a new BatchWritePolicy from the provided policy values.
          *
@@ -2809,6 +2836,15 @@ export namespace policy {
          */
         public key?: policy.key;
         /**
+         * Execute the write command only if the record is not already locked by this transaction.
+         * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+         *
+         * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+         * 
+         * Default: false.
+         */
+        public onLockingOnly?: boolean;
+        /**
          * Initializes a new RemovePolicy from the provided policy values.
          *
          * @param props - RemovePolicy values
@@ -2933,6 +2969,15 @@ export namespace policy {
          * @see {@link policy.key} for supported policy values.
          */
         public key?: policy.key;
+        /**
+         * Execute the write command only if the record is not already locked by this transaction.
+         * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+         *
+         * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+         * 
+         * Default: false.
+         */
+        public onLockingOnly?: boolean;
 
         /**
          * Initializes a new WritePolicy from the provided policy values.
@@ -8490,6 +8535,15 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      *
      */
     ttl?: number;
+    /**
+     * Execute the write command only if the record is not already locked by this transaction.
+     * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+     *
+     * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+     * 
+     * Default: false.
+     */
+    onLockingOnly?: boolean;
 }
 /**
  * Option specification for {@ link BasePolicy} class values.
@@ -8625,6 +8679,15 @@ export interface BatchApplyPolicyOptions {
      * The time-to-live (expiration) of the record in seconds.
      */
     ttl?: number;
+    /**
+     * Execute the write command only if the record is not already locked by this transaction.
+     * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+     *
+     * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+     * 
+     * Default: false.
+     */
+    onLockingOnly?: boolean;
 }
 
 
@@ -8854,7 +8917,7 @@ export interface BatchRemovePolicyOptions {
 /**
  * Option specification for {@ link AdminPolicy} class values.
  */
-export interface BatchWritePolicyOptions {
+export interface BatchWritePolicyOptions extends BasePolicyOptions {
     /**
      * Specifies the number of replicas required to be committed successfully
      * when writing before returning command succeeded.
@@ -8899,6 +8962,15 @@ export interface BatchWritePolicyOptions {
      * The time-to-live (expiration) of the record in seconds.
      */
     ttl?: number;
+    /**
+     * Execute the write command only if the record is not already locked by this transaction.
+     * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+     *
+     * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+     * 
+     * Default: false.
+     */
+    onLockingOnly?: boolean;
 }
 
 /**
@@ -9439,6 +9511,14 @@ export interface ConfigPolicies {
      * Batch policy. For more information, see {@link policy.BasePolicy | BasePolicy}
      */
     batch?: policy.BasePolicy;
+    /**
+     * Batch apply policy. For more information, see {@link policy.BatchApplyPolicy | BasePolicy}
+     */
+    batchApply?: policy.BatchApplyPolicy;
+    /**
+     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BasePolicy}
+     */
+    batchWrite?: policy.BatchWritePolicy;
     /**
      * Batch parent write policy. For more information, see {@link policy.BatchPolicy | BatchPolicy}
      */
@@ -10683,6 +10763,15 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * @see {@link policy.key} for supported policy values.
      */
     key?: policy.key;
+    /**
+     * Execute the write command only if the record is not already locked by this transaction.
+     * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
+     *
+     * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
+     * 
+     * Default: false.
+     */
+    onLockingOnly?: boolean;
 }
 
 /* ENUMS */
