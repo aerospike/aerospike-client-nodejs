@@ -129,7 +129,7 @@ jobs:
 
   test-ee:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -160,7 +160,7 @@ jobs:
         fetch-depth: 0
 
     - uses: actions/setup-node@v4
-      with:
+      with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: print conditional values
@@ -514,7 +514,7 @@ jobs:
 
   test-tsc-compile:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -803,7 +803,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1050,7 +1050,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1195,7 +1195,7 @@ jobs:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1409,12 +1409,12 @@ jobs:
 
   test-ce-self-hosted:
     # There's a top-level env variable for this but we can't use it here, unfortunately
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
