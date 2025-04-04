@@ -44,7 +44,7 @@ describe('MRT API Tests', function () {
         await client.abort(mrt)
       }
       
-      await new Promise(r => setTimeout(r, 1000));
+      // await new Promise(r => setTimeout(r, 1000));
       
       let pool: any = _transactionPool
 

@@ -33,28 +33,31 @@ describe('set_xdr_filter tests', function () {
 
   context('set_xdr_filter tests', function () { 
 
-    helper.skipUnlessXDR(this)
+    let run_xdr: any = helper.skipUnlessXDR(this)
 
     let dc: any;
     let ns: any;
 
     before(async function () {
-      let dc_request: string = "get-config:context=xdr"
-      let nodes: any = await client.getNodes()
+      if(run_xdr) {
+        let dc_request: string = "get-config:context=xdr"
+        let nodes: any = await client.getNodes()
 
-      let node_0: any = nodes[0] // node_name in python
+        let node_0: any = nodes[0] // node_name in python
 
 
-      let dc_response: any = await client.infoNode(dc_request, node_0)
+        let dc_response: any = await client.infoNode(dc_request, node_0)
 
-      dc = dc_response.split("=")[2].split(";")[0]
+        dc = dc_response.split("=")[2].split(";")[0]
 
-      let ns_request: any = `get-config:context=xdr;dc=${dc}`
-      let ns_response: any = await client.infoNode(ns_request, node_0)
+        let ns_request: any = `get-config:context=xdr;dc=${dc}`
+        let ns_response: any = await client.infoNode(ns_request, node_0)
 
-      ns = ns_response.split("namespaces=")[1]
-      
-      await new Promise(resolve => setTimeout(resolve, 1000))
+        ns = ns_response.split("namespaces=")[1]
+        
+        await new Promise(resolve => setTimeout(resolve, 1000)) 
+      }
+
       });
 
     
