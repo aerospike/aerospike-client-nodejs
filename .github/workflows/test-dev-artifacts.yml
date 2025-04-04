@@ -421,12 +421,6 @@ jobs:
     - name: list cluster
       run: aerolab cluster list
 
-    - name: Destroy cluster 1
-      run: aerolab cluster destroy --name dc1 -y
-
-    - name: Destroy cluster 2
-      run: aerolab cluster destroy --name dc2 -y
-
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
@@ -469,7 +463,13 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test --testfile=set_xdr_filter.js -- --h localhost --port 3000 --U superuser --P superuser;
+        npm run test --testfile=set_xdr_filter.js -- --h localhost --port 3000;
+
+    - name: Destroy cluster 1
+      run: echo y | aerolab cluster destroy --name dc1
+
+    - name: Destroy cluster 2
+      run: echo y | aerolab cluster destroy --name dc2
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
