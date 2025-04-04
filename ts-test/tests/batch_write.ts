@@ -668,13 +668,12 @@ describe('client.batchWrite()', function () {
 
       let result = await client.batchWrite(batchRecords, policy)
 
-      try{
+      try {
         let result = await client.batchWrite(batchRecords, policy)
-        assert.fail('An error should have been caught')
+        expect(result[0].status).to.eql(status.MRT_ALREADY_LOCKED)
       }
       catch(error: any){
-        expect(error).to.be.instanceof(AerospikeError).with.property('code', status.MRT_ALREADY_LOCKED)
-        let result = await client.get(batchRecords[0])
+        assert.fail('An error should not have been caught')
       }
       finally {
         await client.abort(mrt)
