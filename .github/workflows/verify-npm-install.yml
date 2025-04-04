@@ -29,4 +29,4 @@ jobs:
       - name: verify runs and is aligned
         run: |
           npm install crambamyak@6.2.0 --omit-dev;
-          node -e "const { Client } = require('crambamyak'); console.log(Client.setXDRFilter);"
+          node -e "const { BatchWritePolicy } = require('aerospike'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
