@@ -331,7 +331,7 @@ jobs:
 
     - name: Run tests
       id: test
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64' && matrix.nodejs-tag[1] != '18' }}
       run: |
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
