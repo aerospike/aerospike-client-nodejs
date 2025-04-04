@@ -457,7 +457,6 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
       run: |
         docker ps;
-        docker logs aerospike;
         cd ts-test;
         npm install;
         npx tsc;
