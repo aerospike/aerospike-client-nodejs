@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install crambamyamm@6.2.0 --omit-dev;
-          node -e "const { Client } = require('crambamyamm'); console.log(Client.setXDRFilter);"
+          npm install crambamyammm@6.2.0 --omit-dev;
+          node -e "const { Client } = require('crambamyammm'); console.log(Client.setXDRFilter);"
