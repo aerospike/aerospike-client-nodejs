@@ -20,9 +20,9 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions} from 'aerospike';
+import Aerospike, { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions, BatchWritePolicy, BatchPolicy, BatchPolicyOptions, Key as K} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert} from 'chai'; 
 import * as helper from './test_helper';
 
 // const util = require('util')
@@ -45,6 +45,8 @@ const {
 } = require('./util/statefulAsyncTest')
 
 describe('client.batchWrite()', function () {
+  helper.udf.register('udf.lua')
+
   const client = helper.client
 
   before(function () {
@@ -574,7 +576,116 @@ describe('client.batchWrite()', function () {
         })
     })
   })
+  
+  context('with BatchWritePolicy', function () {
+    helper.skipUnlessVersion('>= 6.0.0', this)
 
+    it('onLockingOnly should fail when writing to a locked record using BATCH_WRITE', async function () {
+      const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/21')
+      const key2: any = new Key(helper.namespace, helper.set, 'test/batch_write/22')
+
+      const batchRecords: BatchWriteRecord[] = [
+        {
+          type: Aerospike.batchType.BATCH_WRITE,
+          key: key,
+          ops: [Aerospike.operations.write('exampleBin', 1)],
+          policy: new Aerospike.BatchWritePolicy({
+            onLockingOnly: true,
+          })
+        },
+        {
+          type: batchType.BATCH_WRITE,
+          key: key2,
+          ops: [Aerospike.operations.write('exampleBin', 1)],
+          policy: new Aerospike.BatchWritePolicy({
+            onLockingOnly: true,
+          })
+        }
+      ]
+
+      let mrt: any = new Aerospike.Transaction()
+
+
+
+      const policy: BatchPolicyOptions = new Aerospike.BatchPolicy({
+          txn: mrt,
+      })
+
+      await client.batchWrite(batchRecords, policy)
+
+      try{
+        let result = await client.batchWrite(batchRecords, policy)
+        expect(result[0].status).to.eql(status.MRT_ALREADY_LOCKED)
+      }
+      catch(error: any){
+        assert.fail('An error should not have been caught')
+      }
+      finally {
+        await client.abort(mrt)
+      }
+      
+    })
+
+    it('onLockingOnly should fail when writing to a locked record using BATCH_APPLY', async function () {
+      const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/23')
+      const key2: any = new Key(helper.namespace, helper.set, 'test/batch_write/24')
+
+
+      await client.put(key, { foo: 45 }, { ttl: 1000 })
+      await client.put(key2, { foo: 45 }, { ttl: 1000 })
+
+
+      const batchRecords: any[] = [
+        { type: batchType.BATCH_APPLY,
+          key: key,
+          policy: new Aerospike.BatchApplyPolicy({
+            onLockingOnly: true,
+          }),
+          udf: {
+            module: 'udf',
+            funcname: 'updateRecord',
+            args: ['foo', 50]
+          }
+        },
+
+        { type: batchType.BATCH_APPLY,
+          key: key2,
+          policy: new Aerospike.BatchApplyPolicy({
+            onLockingOnly: true,
+          }),
+          udf: {
+            module: 'udf',
+            funcname: 'updateRecord',
+            args: ['foo', 50]
+          }
+        }
+
+
+      ]
+
+      let mrt: any = new Aerospike.Transaction()
+
+      const policy: BatchPolicyOptions = new Aerospike.BatchPolicy({
+        txn: mrt,
+        respondAllKeys: true
+      })
+      let result = await client.batchWrite(batchRecords, policy)
+
+      try{
+        let result = await client.batchWrite(batchRecords, policy)
+        assert.fail('An error should have been caught')
+      }
+      catch(error: any){
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', status.MRT_ALREADY_LOCKED)
+        let result = await client.get(batchRecords[0])
+      }
+      finally {
+        await client.abort(mrt)
+      }
+      
+    })
+  })
+  
   it('Runs BATCH_WRITE with a single batch record an a command in a transaction', async function () {
     const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/20')
 
@@ -605,7 +716,6 @@ describe('client.batchWrite()', function () {
     finally {
       await client.abort(mrt)
     }
-    
   })
 
 })
