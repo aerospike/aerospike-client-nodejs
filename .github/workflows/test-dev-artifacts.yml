@@ -412,6 +412,9 @@ jobs:
     - name: Verify installation
       run: aerolab version
 
+    - name: Configure Aerolab backend
+      run: aerolab config backend -t docker
+      
     - name: Create cluster
       run: aerolab xdr create-clusters -n dc1 -c 3 -N dc2 -C 3 -M test
 
