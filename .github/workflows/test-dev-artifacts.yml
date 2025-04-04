@@ -271,7 +271,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -333,7 +333,7 @@ jobs:
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
         docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
+        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser
 
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
