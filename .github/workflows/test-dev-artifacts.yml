@@ -462,7 +462,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test --testfile=set_xdr_filter.js -- --testXDR false --h 172.17.0.2 --port 3100;
+        npm run test --testfile=set_xdr_filter.js -- --testXDR true --h 172.17.0.2 --port 3100;
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy --name dc1
