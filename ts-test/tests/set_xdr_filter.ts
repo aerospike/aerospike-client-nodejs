@@ -30,11 +30,13 @@ const recgen: any = helper.recgen
 
 describe('set_xdr_filter tests', function () {
   const client: Cli = helper.client
+
+  helper.skipUnlessAdvancedMetrics(this)
+  
   let dc: any;
   let ns: any;
 
   before(async function () {
-    helper.skipUnlessAdvancedMetrics(this)
     let dc_request: string = "get-config:context=xdr"
     let nodes: any = await client.getNodes()
 
