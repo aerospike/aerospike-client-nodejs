@@ -46,7 +46,7 @@ on:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
         required: false
-        default: false
+        default: true
       use-server-rc:
         type: boolean
         required: true
@@ -78,7 +78,7 @@ on:
       run_tests:
         type: boolean
         required: false
-        default: false
+        default: true
       use-server-rc:
         required: false
         type: boolean
@@ -1217,12 +1217,12 @@ jobs:
 
   test-self-hosted-ee:
     # There's a top-level env variable for this but we can't use it here, unfortunately
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1362,12 +1362,13 @@ jobs:
 
   test-tsc-compile-self-hosted:
     # There's a top-level env variable for this but we can't use it here, unfortunately
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1468,12 +1469,12 @@ jobs:
 
   test-ce-self-hosted:
     # There's a top-level env variable for this but we can't use it here, unfortunately
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
