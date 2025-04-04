@@ -502,7 +502,7 @@ jobs:
     - name: Run Valgrind
       run: |
         npx tsc;
-        npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run valgrind -- --t 40000 --h localhost --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -1459,7 +1459,7 @@ jobs:
           }
 
       - name: Run latest Community edition Aerospike server
-        run: docker run -d --network=host --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
       - name: Download artifacts
         uses: actions/download-artifact@v4

@@ -9599,10 +9599,6 @@ export interface ConfigPolicies {
      */
     batchApply?: policy.BatchApplyPolicy;
     /**
-     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BasePolicy}
-     */
-    batchWrite?: policy.BatchWritePolicy;
-    /**
      * Batch parent write policy. For more information, see {@link policy.BatchPolicy | BatchPolicy}
      */
     batchParentWrite?: policy.BatchPolicy;
