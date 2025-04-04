@@ -83,7 +83,7 @@ jobs:
 
     #- name: change verison
     #  run: |
-    #   npm version 6.1.0 --no-git-tag-version
+    #   npm version 6.2.0 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -113,7 +113,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install aerospike@6.1.0
+        npm install aerospike@6.2.0
 
     #- run: npm ci
     #- run: npm publish --provenance --access public

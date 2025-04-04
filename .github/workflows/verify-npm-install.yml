@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, 22.04A, 20.04, 20.04A, macos-13-large, SMA, windows-2022]
+        os: [ubuntu-22.04, ubuntu-20.04, ubuntu-22.04-arm, macos-13-large, SMA2, windows-2022]
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install aerospike@6.1.0 --omit-dev;
-          node -e "const { MetricsPolicy } = require('aerospike'); console.log(new MetricsPolicy({}));"
+          npm install aerospike@6.2.0 --omit-dev;
+          node -e "const { BatchWritePolicy } = require('aerospike'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
