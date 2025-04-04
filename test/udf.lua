@@ -13,7 +13,7 @@ end
 function createRecord(rec, binName, binValue)
   rec[binName] = binValue
   if (aerospike:exists(rec)) then
-    status = aerospike:udpate(rec)
+    status = aerospike:update(rec)
   else
     status = aerospike:create(rec)
   end
