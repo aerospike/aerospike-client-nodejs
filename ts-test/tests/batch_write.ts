@@ -45,10 +45,7 @@ const {
 } = require('./util/statefulAsyncTest')
 
 describe('client.batchWrite()', function () {
-  helper.udf.register('udf.lua')
-
   const client = helper.client
-
   before(function () {
     const nrecords: number = 20
     const generators: any = {
@@ -62,6 +59,7 @@ describe('client.batchWrite()', function () {
       }),
       metagen: metagen.constant({ ttl: 1000 })
     }
+    helper.udf.register('udf.lua')
     return putgen.put(nrecords, generators)
   })
 

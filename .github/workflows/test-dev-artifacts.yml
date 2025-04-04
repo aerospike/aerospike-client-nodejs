@@ -438,7 +438,7 @@ jobs:
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
-        
+
     # FIND NO SERVER TESTS AND RUN THEM
     #
     #- name: If not running tests against server, only run basic import test
@@ -855,6 +855,10 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+        
     # FIND NO SERVER TESTS AND RUN THEM
     #
     #- name: If not running tests against server, only run basic import test
