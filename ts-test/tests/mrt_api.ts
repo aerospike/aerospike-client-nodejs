@@ -36,6 +36,25 @@ describe('MRT API Tests', function () {
   context('Test the MRT specific API', function () { 
     const client: Cli = helper.client
 
+    it('Reaps completed transactions', async function () {
+      let mrt: Transaction = new Aerospike.Transaction();
+
+      for (let i = 0; i < 129; i++) {
+        let mrt: Transaction = new Aerospike.Transaction()
+        await client.abort(mrt)
+      }
+      
+      await new Promise(r => setTimeout(r, 1000));
+      
+      let pool: any = _transactionPool
+
+      expect(pool.getLength()).to.be.lessThan(10);
+
+
+
+
+    })
+
     it('should initialize a transaction', async function () {
       let mrt: any = new Aerospike.Transaction()
 
@@ -207,24 +226,6 @@ describe('MRT API Tests', function () {
       }
 
       assert.fail('An error should have been caught')
-    })
-
-    it('Reaps completed transactions', async function () {
-      let mrt: Transaction = new Aerospike.Transaction();
-
-      for (let i = 0; i < 129; i++) {
-        let mrt: Transaction = new Aerospike.Transaction()
-        await client.abort(mrt)
-      }
-      await new Promise(r => setTimeout(r, 1000));
-
-      let pool: any = _transactionPool
-
-      expect(pool.getLength()).to.be.lessThan(10);
-
-
-
-
     })
 
     it('Hits the capacity limit', async function () {

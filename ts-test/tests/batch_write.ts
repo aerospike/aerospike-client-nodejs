@@ -664,7 +664,7 @@ describe('client.batchWrite()', function () {
 
       const policy: BatchPolicyOptions = new Aerospike.BatchPolicy({
         txn: mrt,
-        respondAllKeys: true
+        //respondAllKeys: true
       })
       let result = await client.batchWrite(batchRecords, policy)
 
