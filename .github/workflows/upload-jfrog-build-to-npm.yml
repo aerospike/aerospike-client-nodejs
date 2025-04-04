@@ -58,7 +58,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "crambamyammm"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "crambamyak"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -113,7 +113,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install crambamyammm@6.2.0
+        npm install crambamyak@6.2.0
 
     #- run: npm ci
     #- run: npm publish --provenance --access public
