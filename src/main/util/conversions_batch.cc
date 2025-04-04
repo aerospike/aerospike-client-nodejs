@@ -86,10 +86,6 @@ int batch_read_record_from_jsobject(as_batch_records *records,
 
 	record = as_batch_read_reserve(records);
 
-	record->type = AS_BATCH_READ;
-	record->has_write = false;
-	record->in_doubt = false;
-
 	Local<Object> key = Nan::Get(obj, Nan::New("key").ToLocalChecked())
 							.ToLocalChecked()
 							.As<Object>();
@@ -173,10 +169,6 @@ int batch_write_record_from_jsobject(as_batch_records *batch_records,
 
 	record = as_batch_write_reserve(batch_records);
 
-	record->type = AS_BATCH_WRITE;
-	record->has_write = true;
-	record->in_doubt = false;
-
 	Local<Object> key = Nan::Get(obj, Nan::New("key").ToLocalChecked())
 							.ToLocalChecked()
 							.As<Object>();
@@ -245,10 +237,6 @@ int batch_apply_record_from_jsobject(as_batch_records *batch_records,
 
 	record = as_batch_apply_reserve(batch_records);
 
-	record->type = AS_BATCH_APPLY;
-	record->has_write = false;
-	record->in_doubt = false;
-
 	Local<Object> key = Nan::Get(obj, Nan::New("key").ToLocalChecked())
 							.ToLocalChecked()
 							.As<Object>();
@@ -303,10 +291,6 @@ int batch_remove_record_from_jsobject(as_batch_records *batch_records,
 	as_batch_remove_record *record;
 
 	record = as_batch_remove_reserve(batch_records);
-
-	record->type = AS_BATCH_REMOVE;
-	record->has_write = false;
-	record->in_doubt = false;
 
 	Local<Object> key = Nan::Get(obj, Nan::New("key").ToLocalChecked())
 							.ToLocalChecked()
