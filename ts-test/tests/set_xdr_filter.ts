@@ -33,8 +33,8 @@ describe('set_xdr_filter tests', function () {
   let dc: any;
   let ns: any;
 
-  helper.skipUnlessAdvancedMetrics(this)
   before(async function () {
+    helper.skipUnlessAdvancedMetrics(this)
     let dc_request: string = "get-config:context=xdr"
     let nodes: any = await client.getNodes()
 
