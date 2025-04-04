@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install crambamyak@6.2.0 --omit-dev;
-          node -e "const { BatchWritePolicy } = require('crambamyak'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
+          npm install aerospike@6.2.0 --omit-dev;
+          node -e "const { BatchWritePolicy } = require('aerospike'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
