@@ -269,6 +269,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
   }
 
   export function skipUnlessXDR(this: any, ctx: Suite) {
+    console.log(options.testXDR)
     skipUnless(ctx, () => options.testXDR, 'XDR tests disabled')
   }
 

@@ -31,8 +31,8 @@ const recgen: any = helper.recgen
 describe('set_xdr_filter tests', function () {
   const client: Cli = helper.client
 
-  helper.skipUnlessAdvancedMetrics(this)
-  
+  helper.skipUnlessXDR(this)
+
   let dc: any;
   let ns: any;
 
@@ -59,7 +59,7 @@ describe('set_xdr_filter tests', function () {
 
   it('Add a simple XDR filter', async function () {
     let response = await client.setXDRFilter(exp.eq(exp.binInt("bin1"), exp.int(6) ), 'dc2', 'test',  undefined)
-    expect(response.trim()).to.eql((`xdr-set-filter:dc=${dc};namespace=test;exp=kwGTUQKkYmluMQY=\tok\n`).trim())
+    expect(response.trim()).to.eql((`xdr-set-filter:dc=dc2;namespace=test;exp=kwGTUQKkYmluMQY=\tok\n`).trim())
   })
 
   it('Set XDR filter with large expression', async function () {
