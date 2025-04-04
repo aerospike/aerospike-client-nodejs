@@ -882,6 +882,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{(inputs.platform-tag != 'macosx_x86_64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
