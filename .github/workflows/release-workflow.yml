@@ -94,10 +94,10 @@ jobs:
 
   verify-npm-install:
     name: verify npm install works correctly
-    needs: [
-      download-jfrog-artifacts,
-      publish-to-npm
-    ]
+    #needs: [
+    #  download-jfrog-artifacts,
+    #  publish-to-npm
+    #]
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
