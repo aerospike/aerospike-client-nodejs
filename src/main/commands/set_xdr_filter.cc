@@ -47,10 +47,10 @@ NAN_METHOD(AerospikeClient::SetXDRFilter)
 	as_policy_info *p_policy = NULL;
 	as_status status;
 
-  char *fmt_str = "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
+  	const char fmt_str[42]= "xdr-set-filter:dc=%s;namespace=%s;exp=%s";
 
-  char *request_str_p = NULL;
-  char *response_p = NULL;
+	char *request_str_p = NULL;
+	char *response_p = NULL;
 
 
 
@@ -99,7 +99,7 @@ NAN_METHOD(AerospikeClient::SetXDRFilter)
 		if (as_strlcpy(as_ns, *Nan::Utf8String(v8_ns), AS_NAMESPACE_MAX_SIZE) >
 			AS_NAMESPACE_MAX_SIZE) {
 			// Length of the message below
-			int msg_length = 36;
+			const int msg_length = 36;
 			char msg[msg_length];
 			snprintf(msg, msg_length, "Namespace exceeds max. length (%d)", AS_NAMESPACE_MAX_SIZE);
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, msg);

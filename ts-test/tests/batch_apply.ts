@@ -90,8 +90,7 @@ describe('client.batchApply()', function () {
   })
 
   context('with BatchApplyPolicy', function () {
-    helper.skipUnlessVersion('>= 8.0.0', this)
-
+    helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
     it('onLockingOnly should fail when writing to a locked record', async function () {
       const batchRecords: K[] = [
         new Key(helper.namespace, helper.set, 'test/batch_apply/6'),

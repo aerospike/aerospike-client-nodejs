@@ -5589,9 +5589,9 @@ export class Client extends EventEmitter {
      * const filter = Aerospike.filter
      *
      * var statement = {}
-     * statment.filters: [filter.equal('color', 'blue')]
+     * statement.filters: [filter.equal('color', 'blue')]
      *
-     * var query = client.query(ns, set, statment)
+     * var query = client.query(ns, set, statement)
      * var stream = query.execute()
      */
     public query(ns: string, options?: QueryOptions): Query;
@@ -5757,15 +5757,13 @@ export class Client extends EventEmitter {
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
      * which records XDR should ship to the datacenter.
      *
-     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
      * @param expression - aerospike expression
-     * @param dc - Datacenter name.
-     * @param ns - Namespace.
+     * @param dataCenter - Datacenter name.
+     * @param namespace - Namespace.
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to void.
      * 
-     * @relates aerospike
      */
     public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
 
@@ -5773,15 +5771,13 @@ export class Client extends EventEmitter {
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
      * which records XDR should ship to the datacenter.
      *
-     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
      * @param expression - aerospike expression
-     * @param dc - Datacenter name.
-     * @param ns - Namespace.
+     * @param dataCenter - Datacenter name.
+     * @param namespace - Namespace.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      * 
-     * @relates aerospike
      */
     public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
 
@@ -5789,16 +5785,14 @@ export class Client extends EventEmitter {
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
      * which records XDR should ship to the datacenter.
      *
-     * @param policy - Info policy. If <code>null<code>, then the default policy will be used.
      * @param expression - aerospike expression
-     * @param dc - Datacenter name.
-     * @param ns - Namespace.
+     * @param dataCenter - Datacenter name.
+     * @param namespace - Namespace.
      * @param policy - The Info Policy to use for this command.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
      *
-     * @relates aerospike
      */
     public setXDRFilter(expression: AerospikeExp, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
 
@@ -9599,10 +9593,6 @@ export interface ConfigPolicies {
      */
     batchApply?: policy.BatchApplyPolicy;
     /**
-     * Batch write policy. For more information, see {@link policy.BatchWritePolicy | BasePolicy}
-     */
-    batchWrite?: policy.BatchWritePolicy;
-    /**
      * Batch parent write policy. For more information, see {@link policy.BatchPolicy | BatchPolicy}
      */
     batchParentWrite?: policy.BatchPolicy;
@@ -13392,9 +13382,25 @@ export namespace lists {
 
 export namespace maps {
 
-
     /**
      * Map storage order.
+     * 
+     * 
+     * @remarks
+     * 
+     * Default map storage order has changed over time. 
+     * 
+     * Storage order has little effect on the node.js client. However, when using other Aerospike Clients, storage order can change the expected returntype and cause type mismatches.
+     * 
+     * See the compatibility matrix below to determne the default map type based on the aerospike operations and the Node.js Client version.
+     * 
+     * ## Default map ordering
+     * 
+     * |                         | {@link Client#put}                      | {@link maps} operations (ex. {@link maps.put}, {@link maps.putItems}, {@link maps.increment}, etc.) |
+     * |-------------------------|------------------------------------------------------------------|----------------------------------------------------------------------------|
+     * | Version 5.4.0 and above | {@link order.KEY_ORDERED | KEY_ORDERED} | {@link order.UNORDERED | UNORDERED}                                                                 |
+     * | Below version 5.4.0     | {@link order.UNORDERED | UNORDERED}     | {@link order.UNORDERED | UNORDERED}                                                                 |
+     *
      */
     export enum order {
         /**

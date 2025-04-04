@@ -56,9 +56,9 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    #- name: change package name
-    #  run: |
-    #    sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+    - name: change package name
+      run: |
+        sed -i 's/"name": "[^"]*"/"name": "crambamyak"/' package.json
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -83,7 +83,7 @@ jobs:
 
     #- name: change verison
     #  run: |
-    #   npm version 6.1.0 --no-git-tag-version
+    #   npm version 6.2.0 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -113,7 +113,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install aerospike@6.1.0
+        npm install crambamyak@6.2.0
 
     #- run: npm ci
     #- run: npm publish --provenance --access public

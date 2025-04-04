@@ -598,6 +598,7 @@ describe('client.put()', function () {
   })
 
   context('onLockingOnly policy', function () {
+    helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
     context('it triggers already locked', function () {
       it('does not create a key that does not exist yet', async function () {
         const key: any = keygen.integer(helper.namespace, helper.set)()

@@ -29,7 +29,7 @@ const docker = new Docker();
 import * as helper from './test_helper';
 
 describe('Test metrics cluster name', async function () {
-  const client: Cli = helper.client
+  //const client: Cli = helper.client
 
   helper.skipUnlessAdvancedMetrics(this)
 
@@ -79,6 +79,9 @@ describe('Test metrics cluster name', async function () {
     console.log("Waiting for server to initialize...")
 
     await new Promise(r => setTimeout(r, 15000));
+
+    const containers = await docker.listContainers();
+    console.log(containers);
 
     console.log("Waiting for client to collect all information about cluster nodes...")
 
