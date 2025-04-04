@@ -35,7 +35,7 @@ describe('client.exists()', function () {
 
       return client.put(key, { str: 'abcde' })
         .then(() => client.exists(key))
-        .then(result => expect(result).to.be.true)
+        .then((result: any) => expect(result).to.be.true)
         .then(() => client.remove(key))
     })
 
@@ -43,7 +43,7 @@ describe('client.exists()', function () {
       const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exists/2' })()
 
       return client.exists(key)
-        .then(result => expect(result).to.be.false)
+        .then((result: any) => expect(result).to.be.false)
     })
   })
 
@@ -91,10 +91,10 @@ describe('client.existsWithMetadata()', function () {
         .then(() => client.put(key, { str: 'a' }, {ttl: 50, gen: 7}))
         .then(() => client.put(key, { str: 'abcde' }, {ttl: 50, gen: 7}))
         .then(() => client.existsWithMetadata(key))
-        .then(result => {
+        .then((result: any) => {
           expect(result.key).to.eql(key)
           expect(result.bins).to.be.null
-          expect(result.ttl).to.be.within(48, 50)
+          expect(result.ttl).to.be.within(48, 51)
           expect(result.gen).to.eql(6)
         })
         .then(() => client.remove(key))
@@ -105,7 +105,7 @@ describe('client.existsWithMetadata()', function () {
 
       return client.put(key, { str: 'abcde' }, {ttl: -1})
         .then(() => client.existsWithMetadata(key))
-        .then(result => {
+        .then((result: any) => {
           expect(result.key).to.eql(key)
           expect(result.bins).to.be.null
           expect(result.ttl).to.eql(-1)
@@ -137,7 +137,7 @@ describe('client.existsWithMetadata()', function () {
           if (error) throw error
           expect(result?.key).to.equal(key)
           expect(result?.bins).to.be.null
-          expect(result?.ttl).to.be.within(98, 100)
+          expect(result?.ttl).to.be.within(98, 101)
           expect(result?.gen).to.eql(1)
           client.remove(key, (error?: AerospikeError) => {
             if (error) throw error

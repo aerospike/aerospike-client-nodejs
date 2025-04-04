@@ -15,14 +15,6 @@ on:
         type: string
         description: Version string to set in the repo
         required: true
-      ref:
-        type: string
-        description: commit/branch to change version
-        required: false
-      # A hack to tell if workflow is triggered by workflow_call or not
-      # Calling workflows should not set this input
-      # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
-      # https://github.com/actions/runner/discussions/1884#discussioncomment-6377587
       is_workflow_call:
         type: boolean
         default: true
@@ -58,7 +50,7 @@ jobs:
         commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ inputs.new_version }}
-        branch: 2024-Pipeline-Improvement
+        branch: metrics-2025
         #branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}
 
     - name: Output bump commit hash for next jobs to use

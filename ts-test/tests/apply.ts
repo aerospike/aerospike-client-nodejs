@@ -18,9 +18,9 @@
 
 /* global expect, describe, it, before, after */
 
-import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions } from 'aerospike';
+import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions, status} from 'aerospike';
 import * as helper from './test_helper';
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 
 const AerospikeError: typeof ASError = Aerospike.AerospikeError
 
@@ -51,6 +51,39 @@ describe('client.apply()', function () {
       if (error) throw error
       expect(result).to.equal(42)
       done()
+    })
+  })
+
+  context('with ApplyPolicy', function () {
+    helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+    it('onLockingOnly should fail when writing to a locked record', async function () {
+      let mrt: any = new Aerospike.Transaction()
+
+      const policy: ApplyPolicyOptions = new Aerospike.ApplyPolicy({
+        totalTimeout: 1500,
+        onLockingOnly: true,
+        txn: mrt
+      })
+
+      const udf: UDF = {
+        module: 'udf',
+        funcname: 'updateRecord',
+        args: ['example', 45]
+      }
+
+      await client.apply(key, udf, policy)
+      try{
+        await client.apply(key, udf, policy)
+        assert.fail('An error should have been caught')
+      }
+      catch(error: any){
+        expect(error).to.be.instanceof(AerospikeError).with.property('code', status.MRT_ALREADY_LOCKED)
+        let result = await client.get(key)
+        expect(result.bins).to.eql({foo: 'bar'})
+      }
+      finally{
+        await client.abort(mrt)
+      }
     })
   })
 

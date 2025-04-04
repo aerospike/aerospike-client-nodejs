@@ -115,6 +115,18 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     auth: {
       type: 'number',
       describe: 'Specify client authentication mode'
+    },
+    testMetrics: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
+    },
+    testPreferRack: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing. Requires two datacenter XDR configuration.'
+    },
+    testXDR: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
     }
   });
 
@@ -139,7 +151,12 @@ function testDir (): string {
   return path.resolve( __dirname , '..');
 }
 
-options.getConfig = function (): ConfigOptions {
+options.getConfig = function (): any {
+  let omitHelperClient = true;
+  if(options.testMetrics){
+    omitHelperClient = false
+  }
+  
   const defaultPolicy: BasePolicyOptions = {
     totalTimeout: options.totalTimeout,
     maxRetries: 6
@@ -163,7 +180,7 @@ options.getConfig = function (): ConfigOptions {
     modlua: {
       userPath: testDir()
     }
-  } as ConfigOptions;
+  } as any;
 
   if (options.host !== null) {
     const host = {
@@ -201,7 +218,7 @@ options.getConfig = function (): ConfigOptions {
   }
   // Disable maxErrorRate
   config.maxErrorRate = 0
-  return config
+  return {config, omitHelperClient: omitHelperClient}
 }
 
 export default options;

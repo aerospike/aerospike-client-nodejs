@@ -56,31 +56,37 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "xyzparbart"/' package.json
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
 
     - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-${{ env.PACKAGE_MANAGER }}-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: 6.0.3-dev.37
+        NEW_VERSION: ${{ inputs.version }}
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/6.0.3-dev.37/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.31
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/6.0.3-dev.37/lib/binding/ lib/
+        mkdir lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/* lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
-    - name: change verison
-      run: |
-        npm version 6.0.3-dev.37 --no-git-tag-version
+    #- name: change verison
+    #  run: |
+    #   npm version 6.2.0 --no-git-tag-version
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
-
 
 #    - name: npm rc
 #      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
@@ -94,7 +100,10 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/6.0.3-dev.37/lib/binding/ lib/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/* lib/binding
+        ls lib/binding
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: npm publish
       run: |
@@ -104,7 +113,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install xyzparbart
+        npm install aerospike@6.2.0
 
     #- run: npm ci
     #- run: npm publish --provenance --access public

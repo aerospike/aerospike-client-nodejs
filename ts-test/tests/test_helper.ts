@@ -41,9 +41,13 @@ import * as putgen from './generators/put';
 import * as util from './util';
 
 export { keygen, metagen, recgen, valgen, putgen, util };
+let testConfigs = options.getConfig()
+const config: Config = testConfigs.config
+const helper_client_exists = testConfigs.omitHelperClient
+let client: any;
+client = Aerospike.client(config)
 
-const config: Config = options.getConfig()
-const client: Client = Aerospike.client(config)
+
 export {client, config}
 
 Aerospike.setDefaultLogging(config.log ?? {})
@@ -265,21 +269,40 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => this.cluster.supportsTtl(), 'test namespace does not support record TTLs')
   }
 
+  export function skipUnlessXDR(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testXDR, 'XDR tests disabled')
+    return options.testXDR
+  }
+
+  export function skipUnlessAdvancedMetrics(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
+  }
+
+  export function skipUnlessPreferRack(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')
+  }
+
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
-    before(() => client.connect()
-      .then(() => serverInfoHelper.fetchInfo())
-      .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
-      .catch((error: any) => {
-        console.error('ERROR:', error)
-        console.error('CONFIG:', client.config)
-        throw error
-      })
-    )
+    before(() => {
+      if(helper_client_exists){
+        client.connect()
+        .then(() => serverInfoHelper.fetchInfo())
+        .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
+        .catch((error: any) => {
+          console.error('ERROR:', error)
+          console.error('CONFIG:', client.config)
+          throw error
+        })
+      }
+    })
 
     /* global after */
     after(function (done) {
-      client.close()
+      if(helper_client_exists){
+        client.close()
+      }
       done()
     })
   }
+  
