@@ -955,7 +955,6 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
-        docker logs aerospike;
         cd ts-test;
         npm install;
         npx tsc;
@@ -969,7 +968,6 @@ jobs:
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         docker ps;
-        docker logs aerospike;
         cd ts-test;
         npm install;
         npx tsc;
