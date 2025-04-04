@@ -501,6 +501,7 @@ jobs:
 
     - name: Run Valgrind
       run: |
+        docker ps;
         npx tsc;
         npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 

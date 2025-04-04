@@ -107,10 +107,10 @@ describe('MRT API Tests', function () {
       expect(Aerospike.Transaction.abortStatus.ALREADY_ABORTED).to.equal(1)
     })
     it('ROLL_BACK_ABANDONED', async function () {
-      expect(Aerospike.Transaction.abortStatus.ROLL_BACK_ABANDONED).to.equal(2)
+      expect(Aerospike.Transaction.abortStatus.ROLL_BACK_ABANDONED).to.equal(3)
     })
     it('CLOSE_ABANDONED', async function () {
-      expect(Aerospike.Transaction.abortStatus.CLOSE_ABANDONED).to.equal(3)
+      expect(Aerospike.Transaction.abortStatus.CLOSE_ABANDONED).to.equal(4)
     })
 
   })
@@ -123,16 +123,16 @@ describe('MRT API Tests', function () {
       expect(Aerospike.Transaction.commitStatus.ALREADY_COMMITTED).to.equal(1)
     })
     it('VERIFY_FAILED', async function () {
-      expect(Aerospike.Transaction.commitStatus.VERIFY_FAILED).to.equal(2)
+      expect(Aerospike.Transaction.commitStatus.VERIFY_FAILED).to.equal(3)
     })
     it('MARK_ROLL_FORWARD_ABANDONED', async function () {
-      expect(Aerospike.Transaction.commitStatus.MARK_ROLL_FORWARD_ABANDONED).to.equal(3)
+      expect(Aerospike.Transaction.commitStatus.MARK_ROLL_FORWARD_ABANDONED).to.equal(4)
     })
     it('ROLL_FORWARD_ABANDONED', async function () {
-      expect(Aerospike.Transaction.commitStatus.ROLL_FORWARD_ABANDONED).to.equal(4)
+      expect(Aerospike.Transaction.commitStatus.ROLL_FORWARD_ABANDONED).to.equal(5)
     })
     it('CLOSE_ABANDONED', async function () {
-      expect(Aerospike.Transaction.commitStatus.CLOSE_ABANDONED).to.equal(5)
+      expect(Aerospike.Transaction.commitStatus.CLOSE_ABANDONED).to.equal(6)
     })
 
   })
