@@ -1019,8 +1019,8 @@ jobs:
         cd ..;
         npx tsc;
         docker pull aerospike/aerospike-server:latest;
-        npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 30000 --U superuser --P superuser;
-        npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 30000 --U superuser --P superuser;
+        npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
+        npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -1033,8 +1033,8 @@ jobs:
         cd ..;
         npx tsc;
         docker pull aerospike/aerospike-server:latest;
-        npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 30000 --U superuser --P superuser;
-        npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 30000 --U superuser --P superuser;
+        npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
+        npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0

@@ -151,7 +151,12 @@ function testDir (): string {
   return path.resolve( __dirname , '..');
 }
 
-options.getConfig = function (): ConfigOptions {
+options.getConfig = function (): any {
+  let omitHelperClient = true;
+  if(options.testMetrics){
+    omitHelperClient = false
+  }
+  
   const defaultPolicy: BasePolicyOptions = {
     totalTimeout: options.totalTimeout,
     maxRetries: 6
@@ -213,7 +218,7 @@ options.getConfig = function (): ConfigOptions {
   }
   // Disable maxErrorRate
   config.maxErrorRate = 0
-  return config
+  return {config, omitHelperClient: omitHelperClient}
 }
 
 export default options;
