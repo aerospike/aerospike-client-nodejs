@@ -576,8 +576,7 @@ describe('client.batchWrite()', function () {
   })
   
   context('with BatchWritePolicy', function () {
-    helper.skipUnlessVersion('>= 6.0.0', this)
-
+    helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
     it('onLockingOnly should fail when writing to a locked record using BATCH_WRITE', async function () {
       const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/21')
       const key2: any = new Key(helper.namespace, helper.set, 'test/batch_write/22')

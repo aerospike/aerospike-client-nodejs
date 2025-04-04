@@ -28,12 +28,12 @@ const keygen: any = helper.keygen
 const metagen: any = helper.metagen
 const recgen: any = helper.recgen
 
-describe('MRT backward compatible tests', function () {
-  helper.skipUnlessAdvancedMetrics(this)
+describe('set_xdr_filter tests', function () {
   const client: Cli = helper.client
   let dc: any;
   let ns: any;
 
+  helper.skipUnlessAdvancedMetrics(this)
   before(async function () {
     let dc_request: string = "get-config:context=xdr"
     let nodes: any = await client.getNodes()
@@ -55,7 +55,7 @@ describe('MRT backward compatible tests', function () {
 
   
 
-  it('Should execute a simple multi-record transaction', async function () {
+  it('Add a simple XDR filter', async function () {
     let response = await client.setXDRFilter(exp.eq(exp.binInt("bin1"), exp.int(6) ), 'dc2', 'test',  undefined)
     expect(response.trim()).to.eql((`xdr-set-filter:dc=${dc};namespace=test;exp=kwGTUQKkYmluMQY=\tok\n`).trim())
   })
