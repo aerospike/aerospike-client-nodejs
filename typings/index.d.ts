@@ -5589,9 +5589,9 @@ export class Client extends EventEmitter {
      * const filter = Aerospike.filter
      *
      * var statement = {}
-     * statment.filters: [filter.equal('color', 'blue')]
+     * statement.filters: [filter.equal('color', 'blue')]
      *
-     * var query = client.query(ns, set, statment)
+     * var query = client.query(ns, set, statement)
      * var stream = query.execute()
      */
     public query(ns: string, options?: QueryOptions): Query;
