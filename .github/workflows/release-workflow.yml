@@ -15,11 +15,11 @@ on:
       - 'aerospike-stubs/**'
 
 jobs:
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
-#    with:
-#      version: 6.2.0-rc.15
-#    secrets: inherit
+  download-jfrog-artifacts:
+    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    with:
+      version: 6.2.0-rc.15
+    secrets: inherit
 
 #  bump-dev-number:
 #    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
@@ -39,18 +39,18 @@ jobs:
 #      version: ${{ needs.bump-dev-number.outputs.new_version }}
 #    secrets: inherit
 
-#  publish-to-npm:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      download-jfrog-artifacts
-#    #  bump-dev-number,
-#    #  rebuild-artifacts-with-new-dev-num,
-#    #  upload-to-jfrog
-#    ]
-#    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
-#    with:
-#      version: 6.2.0-rc.15
-#    secrets: inherit
+  publish-to-npm:
+    name: Upload artifacts to JFrog
+    needs: [
+      download-jfrog-artifacts
+    #  bump-dev-number,
+    #  rebuild-artifacts-with-new-dev-num,
+    #  upload-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: 6.2.0-rc.15
+    secrets: inherit
 
 #  release-package:
 #    name: release npm package
@@ -94,10 +94,10 @@ jobs:
 
   verify-npm-install:
     name: verify npm install works correctly
-    #needs: [
-    #  download-jfrog-artifacts,
-    #  publish-to-npm
-    #]
+    needs: [
+      download-jfrog-artifacts,
+      publish-to-npm
+    ]
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
