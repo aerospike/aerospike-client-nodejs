@@ -452,7 +452,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h 172.17.0.2 --port 3000;
+        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h 0.0.0.0 --port 3100;
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy
@@ -1018,6 +1018,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
+        docker pull aerospike/aerospike-server:latest;
         npm run test dist/metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 15000 --U superuser --P superuser;
         npm run test dist/metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
@@ -1031,6 +1032,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
+        docker pull aerospike/aerospike-server:latest;
         npm run test dist/metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 15000 --U superuser --P superuser;
         npm run test dist/metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
