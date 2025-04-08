@@ -90,10 +90,10 @@ jobs:
     - name: Get jfrog version
       id: get-jfrog-version
       run: |
-        echo "jfrog_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | sort -V | tail -n1)"
+        echo "jfrog_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
-      run: echo "Jfrog version is ${{ steps.get-jfrog-version.outputs.current_version }}"
+      run: echo "Jfrog version is ${{ steps.get-jfrog-version.outputs.jfrog_version }}"
 
 
 
