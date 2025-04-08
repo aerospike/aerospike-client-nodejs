@@ -102,6 +102,14 @@ jobs:
       run: npm install semver
       working-directory: .github/workflows
 
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
     - name: Get new version
       id: get-new-version
       run: |
