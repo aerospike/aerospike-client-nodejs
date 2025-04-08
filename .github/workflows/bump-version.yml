@@ -100,7 +100,10 @@ jobs:
 
   get-new-version:
     runs-on: ubuntu-22.04
-    needs: get-current-version
+    needs: [
+      get-current-version,
+      get-jfrog-version
+    ]
     outputs:
       new_version: ${{ steps.get-new-version.outputs.new_version }}
     steps:
