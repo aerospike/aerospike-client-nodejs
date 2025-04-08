@@ -21,13 +21,6 @@ on:
         - promote-rc-build-to-release
   workflow_call:
     inputs:
-      change:
-        # Since workflow_call doesn't support 'options' input type,
-        # we take in a string instead that must be a valid Python script name (excluding the .py part)
-        # Example: bump-dev-num for bump-dev-num.py
-        type: string
-        description: Python script name to change version
-        required: true
       ref:
         required: false
         description: Commit to bump off of

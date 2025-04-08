@@ -27,11 +27,11 @@ on:
         default: false
 
 jobs:
-#  test-with-server-release:
-#    uses: ./.github/workflows/build-artifacts.yml
-#    with:
-#      run_tests: false
-#    secrets: inherit
+  test-with-server-release:
+    uses: ./.github/workflows/build-artifacts.yml
+    with:
+      run_tests: false
+    secrets: inherit
 
   bump-dev-number:
     #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
@@ -40,19 +40,24 @@ jobs:
       change: 'bump-dev-num'
     secrets: inherit
 
-#  upload-to-jfrog:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      test-with-server-release,
-#      #bump-dev-number
-#    ]
-#    uses: ./.github/workflows/upload-to-jfrog.yml
-#    with:
-#      version: 6.2.0-dev.14
-#    secrets: inherit
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      test-with-server-release,
+      bump-dev-number
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
+
+    secrets: inherit
+
+  # We don't want the artifacts in JFrog to also exist in Github
+  delete-artifacts:
+    needs: [
+      upload-to-jfrog,
+      test-with-server-release,
+      bump-dev-number
+    ]
+    uses: ./.github/workflows/delete-artifacts.yml
 #
-#  # We don't want the artifacts in JFrog to also exist in Github
-#  delete-artifacts:
-#    needs: upload-to-jfrog
-#    uses: ./.github/workflows/delete-artifacts.yml
-##
