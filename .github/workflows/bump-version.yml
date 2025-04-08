@@ -7,7 +7,7 @@ permissions:
   # This is required for requesting the OIDC token
   id-token: write
   contents: read
-  
+
 on:
   workflow_dispatch:
     inputs:
@@ -79,6 +79,14 @@ jobs:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
 
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+        
     - name: Get jfrog version
       id: get-jfrog-version
       run: |
@@ -107,14 +115,6 @@ jobs:
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
       run: npm install semver
       working-directory: .github/workflows
-
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
 
     - name: Get new version
       id: get-new-version
