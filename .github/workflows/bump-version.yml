@@ -122,7 +122,7 @@ jobs:
     - name: Get new version
       id: get-new-version
       run: |
-        echo "new_version=$(node bump-dev-version.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-frog-version.outputs.jfrog_version }})" >> $GITHUB_OUTPUT
+        echo "new_version=$(node bump-dev-version.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-jfrog-version.outputs.jfrog_version }})" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
     - name: Print new version
