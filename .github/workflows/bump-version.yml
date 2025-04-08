@@ -2,6 +2,12 @@
 # Commits changes to bump version and outputs the new version and commit hash as output
 
 name: Bump version
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+  
 on:
   workflow_dispatch:
     inputs:
