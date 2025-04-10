@@ -55,7 +55,7 @@ jobs:
     - name: Get jfrog version
       id: get-next-dev-jfrog-version
       run: |
-        echo "dev_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v 'rc' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
+        echo "dev_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | grep -v 'rc' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
       run: echo "Jfrog version is ${{ steps.get-next-dev-jfrog-version.outputs.new_dev_version }}"
@@ -83,7 +83,7 @@ jobs:
     - name: Get jfrog version
       id: get-next-stage-jfrog-version
       run: |
-        echo "jfrog_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v 'rc' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
+        echo "jfrog_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | grep -v 'rc' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
       run: echo "Jfrog version is ${{ steps.get-next-stage-jfrog-version.outputs.jfrog_version }}"

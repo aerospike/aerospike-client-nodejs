@@ -62,7 +62,7 @@ jobs:
     - name: Get jfrog version
       id: get-jfrog-dev-version
       run: |
-        echo "dev_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
+        echo "dev_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
       run: echo "Jfrog version is ${{ steps.get-jfrog-dev-version.outputs.dev_version }}"
