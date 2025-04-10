@@ -9,11 +9,12 @@ if (!version) {
   process.exit(1)
 }
 
-if (version.prerelease[0] === 'dev'){
-  version.inc('prerelease', 'dev')
+if (version.prerelease[0] === 'rc'){
+  version.inc('prerelease', 'rc')
   console.log(version.format())
 }
 else {
-  version.prerelease = ['dev', 1];
+  version.prerelease = ['rc', 1];
   console.log(version.format())
+
 }

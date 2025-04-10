@@ -12,8 +12,6 @@ on:
       - synchronize
     branches:
       - 'dev*'
-      - 'dev-CICD'
-      - '2024-Pipeline-Improvement'
     paths-ignore:
       - 'docs/**'
       - 'aerospike-stubs/**'
@@ -34,8 +32,7 @@ jobs:
     secrets: inherit
 
   bump-dev-number:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    uses: ./.github/workflows/bump-version.yml
+    uses: ./.github/workflows/bump-dev-version.yml
     secrets: inherit
 
   upload-to-jfrog:
@@ -47,7 +44,6 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_version }}
-
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
