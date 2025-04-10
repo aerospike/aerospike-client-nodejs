@@ -50,8 +50,6 @@ jobs:
   bump-dev-number:
     uses: ./.github/workflows/bump-stage-version.yml
     secrets: inherit
-    with:
-      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
 
   upload-dev-to-jfrog:
     name: Upload artifacts to JFrog
