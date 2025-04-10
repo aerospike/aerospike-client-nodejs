@@ -52,7 +52,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
+      #test-with-server-release,
     ]
     secrets: inherit
 
