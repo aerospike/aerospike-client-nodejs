@@ -24,6 +24,7 @@ on:
         type: boolean
         default: false
 
+
 jobs:
   test-with-server-release:
     uses: ./.github/workflows/build-artifacts.yml
