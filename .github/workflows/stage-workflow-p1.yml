@@ -37,15 +37,15 @@ jobs:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
     secrets: inherit
 
-#  test-with-server-release:
-#    uses: ./.github/workflows/test-artifacts.yml
-#    needs: [
-#      get-jfrog-dev-version,
-#      download-jfrog-artifacts
-#    ]
-#    with:
-#      run_tests: true
-#    secrets: inherit
+  test-with-server-release:
+    uses: ./.github/workflows/test-artifacts.yml
+    needs: [
+      get-jfrog-dev-version,
+      download-jfrog-artifacts
+    ]
+    with:
+      run_tests: true
+    secrets: inherit
 
   bump-dev-number:
     uses: ./.github/workflows/bump-stage-version.yml
