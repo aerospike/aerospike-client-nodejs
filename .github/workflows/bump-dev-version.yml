@@ -111,7 +111,9 @@ jobs:
     - name: Get new version
       id: get-new-version
       run: |
-        echo "dev_version=$(node bump-dev-version-and-increment-number.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-jfrog-version.outputs.jfrog_version }})" >> $GITHUB_OUTPUT
+        set -e
+        dev_version=$(node bump-dev-version-and-increment-number.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-jfrog-version.outputs.jfrog_version }})
+        echo "dev_version=$dev_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
     - name: Print new version
