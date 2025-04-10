@@ -11,7 +11,7 @@ on:
       - review_requested
       - synchronize
     branches:
-      - 'stage'
+      - 'dev*'
     paths-ignore:
       - 'docs/**'
       - 'aerospike-stubs/**'
@@ -56,24 +56,26 @@ jobs:
     with:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
 
-  upload-to-jfrog:
+  upload-dev-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release
+      test-with-server-release,
+      bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
     secrets: inherit
 
-  upload-to-jfrog:
+  upload-stage-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release
+      test-with-server-release,
+      bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
@@ -86,21 +88,11 @@ jobs:
       get-jfrog-dev-version,
       download-jfrog-artifacts,
       test-with-server-release,
-      upload-to-jfrog
+      bump-dev-number,
+      upload-dev-to-jfrog,
+      upload-stage-to-jfrog
     ]
     uses: ./.github/workflows/delete-artifacts.yml
 
 
-  ff-stage-to-dev:
-    uses: ./.github/workflows/fast-forward-merge.yml
-    needs: [
-      get-jfrog-dev-version,
-      download-jfrog-artifacts,
-      test-with-server-release,
-      upload-to-jfrog,
-      delete-artifacts
-    ]
-    with:
-      ref_to_merge: origin/${{ vars.DEV_BRANCH_NAME }}
-      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
+

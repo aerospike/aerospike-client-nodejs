@@ -24,7 +24,6 @@ on:
         type: boolean
         default: false
 
-
 jobs:
   test-with-server-release:
     uses: ./.github/workflows/build-artifacts.yml
@@ -44,7 +43,7 @@ jobs:
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
+      version: ${{ needs.bump-dev-number.outputs.dev_version }}
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
