@@ -33,9 +33,7 @@ jobs:
   download-jfrog-artifacts:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
     with:
-    needs: [
-      get-jfrog-dev-version
-    ]
+    needs: get-jfrog-dev-version
     with:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
     secrets: inherit
