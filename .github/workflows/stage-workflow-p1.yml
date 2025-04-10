@@ -49,6 +49,11 @@ jobs:
 
   bump-dev-number:
     uses: ./.github/workflows/bump-stage-version.yml
+    needs: [
+      get-jfrog-dev-version,
+      download-jfrog-artifacts,
+      test-with-server-release,
+    ]
     secrets: inherit
 
   upload-dev-to-jfrog:
