@@ -35,6 +35,7 @@ jobs:
     needs: get-jfrog-dev-version
     with:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+      stage: true
     secrets: inherit
 
   test-with-server-release:
