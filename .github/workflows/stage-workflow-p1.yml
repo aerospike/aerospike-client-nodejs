@@ -26,7 +26,6 @@ on:
 
 jobs:
   get-jfrog-dev-version:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     uses: ./.github/workflows/get-jfrog-dev-version.yml
     secrets: inherit
 
@@ -52,7 +51,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      #test-with-server-release,
+      test-with-server-release,
     ]
     secrets: inherit
 
@@ -61,7 +60,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      #test-with-server-release,
+      test-with-server-release,
       bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
@@ -75,12 +74,13 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      #test-with-server-release,
+      test-with-server-release,
       bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      stage: true
     secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
@@ -88,7 +88,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      #test-with-server-release,
+      test-with-server-release,
       bump-dev-number,
       upload-dev-to-jfrog,
       upload-stage-to-jfrog
