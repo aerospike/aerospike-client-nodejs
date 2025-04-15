@@ -35,7 +35,6 @@ jobs:
     needs: get-jfrog-dev-version
     with:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-      stage: true
     secrets: inherit
 
   test-with-server-release:
@@ -68,6 +67,7 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
+      stage: true
     secrets: inherit
 
   upload-stage-to-jfrog:
