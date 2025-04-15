@@ -117,7 +117,7 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[manylinux_20_x86_64]="ubuntu-20.04"
+        hashmap[manylinux_20_x86_64]="ubuntu-22.04"
         hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
@@ -265,7 +265,7 @@ jobs:
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         docker logs aerospike;
@@ -302,36 +302,36 @@ jobs:
     #    docker logs aerospike;
 
     - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
 
     - name: Run distro container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
 
     - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker cp . bullseye:/aerospike-client-nodejs
 
     #- name: Make sure npm is installed
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
     #  run: docker exec bullseye node -v && docker exec bullseye npm -v
 
     #- name: build c client
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
     #  run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
 
     #- name: build binding
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
     #  run: 
     #    docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
     #    docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
 
     - name: Run tests
       id: test
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64' && matrix.nodejs-tag[1] != '18' }}
+      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') && matrix.nodejs-tag[1] != '18' }}
       run: |
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
         docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
@@ -339,7 +339,7 @@ jobs:
         docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser
 
     - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: 
         docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
         ls lib/binding;
@@ -444,7 +444,7 @@ jobs:
         npm install;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         cd ts-test;
@@ -566,7 +566,7 @@ jobs:
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         cd ts-test;
