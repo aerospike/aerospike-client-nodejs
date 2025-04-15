@@ -68,6 +68,16 @@
 #    ]
 #    uses: ./.github/workflows/delete-artifacts.yml
 #
+#  publish-release-notes:
+#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    with:
+#    needs: [
+#      get-jfrog-stage-version
+#    ]
+#    with:
+#      version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+#    secrets: inherit
+#
 #  ff-master-to-stage:
 #    uses: ./.github/workflows/fast-forward-merge.yml
 #    needs: [

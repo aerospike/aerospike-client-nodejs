@@ -1,0 +1,43 @@
+name: Fetch & Publish Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 5.4.0)'
+        required: true
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Fetch release note YAML via curl
+      run: |
+        curl -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+             -H "Accept: application/vnd.github.v3.raw" \
+             -o rawReleaseNote.txt \
+             -L "https://api.github.com/repos/citrusleaf/docs.aerospike.com/contents/source/data/releases/aerospike-client-nodejs/${{ inputs.version }}.yml"
+
+    - name: Run fetchReleaseNotes.js
+      run: node fetchReleaseNotes.js rawReleaseNote.txt out.md
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ inputs.version }}
+        name: "[${{ inputs.version }}]"
+        body_path: out.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
