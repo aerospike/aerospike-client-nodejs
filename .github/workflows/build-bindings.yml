@@ -254,14 +254,18 @@ jobs:
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
 
-    - name: Run distro container
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
+    - name: Run distro container arm
+      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
       run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
+
+    - name: Run distro container x64
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64'}}
+      run: docker run --name bullseye --platform linux/amd64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
 
     - name: Copy repo to container
       if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
