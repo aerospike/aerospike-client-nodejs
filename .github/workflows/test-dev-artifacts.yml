@@ -265,7 +265,7 @@ jobs:
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         docker logs aerospike;
@@ -448,7 +448,7 @@ jobs:
         npm install;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         cd ts-test;
@@ -570,7 +570,7 @@ jobs:
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         docker ps;
         cd ts-test;

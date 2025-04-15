@@ -232,7 +232,7 @@ jobs:
         sudo update-alternatives --set g++ /usr/bin/g++-10;
 
     - name: Build Binding
-      if: ${{ inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64'}}
       run: |
         ./scripts/build-c-client.sh;
         npm install;
@@ -244,7 +244,7 @@ jobs:
     #    docker logs aerospike;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (inputs.platform-tag != 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
       run: |
         cd ts-test;
         npm install;
