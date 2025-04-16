@@ -1271,12 +1271,13 @@ jobs:
               Write-Host "No containers to remove."
           }
 
-      - uses: ./.github/actions/run-ee-server
-        with:
-          use-server-rc: ${{ inputs.use-server-rc }}
-          server-tag: ${{ inputs.server-tag }}
-          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -1480,7 +1481,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
