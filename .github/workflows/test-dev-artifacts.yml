@@ -1222,6 +1222,7 @@ jobs:
   test-self-hosted-ee:
     # There's a top-level env variable for this but we can't use it here, unfortunately
     needs: get-runner-os
+    # There's a top-level env variable for this but we can't use it here, unfortunately
     strategy:
       fail-fast: false
       matrix:
