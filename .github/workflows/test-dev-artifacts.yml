@@ -1220,6 +1220,7 @@ jobs:
 
 
   test-self-hosted-ee:
+    # There's a top-level env variable for this but we can't use it here, unfortunately
     needs: get-runner-os
     strategy:
       fail-fast: false
@@ -1270,13 +1271,13 @@ jobs:
               Write-Host "No containers to remove."
           }
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+        uses: ./.github/actions/run-ee-server-for-ext-container
+        with:
+          use-server-rc: ${{ inputs.use-server-rc }}
+          server-tag: ${{ inputs.server-tag }}
+          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
