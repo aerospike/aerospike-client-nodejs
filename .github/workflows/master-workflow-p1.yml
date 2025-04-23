@@ -7,11 +7,8 @@ name: Master workflow (part 1)
 on:
   pull_request:
     types:
-      - opened
-      - review_requested
-      - synchronize
+      - merged
     branches:
-      - 'pipeline-stages'
       - 'master-test'
     paths-ignore:
       - 'docs/**'

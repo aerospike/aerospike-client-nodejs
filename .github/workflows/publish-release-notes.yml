@@ -29,7 +29,7 @@ jobs:
         curl -H "Authorization: token ${{ secrets.RELEASE_NOTE_PAT }}" \
              -H "Accept: application/vnd.github.v3.raw" \
              -o rawReleaseNote.txt \
-             -L "https://api.github.com/repos/citrusleaf/docs.aerospike.com/contents/source/data/releases/aerospike-client-nodejs/6.2.0.yml"
+             -L "https://api.github.com/repos/citrusleaf/docs.aerospike.com/contents/source/data/releases/aerospike-client-nodejs/${{ inputs.version }}.yml"
         cat rawReleaseNote.txt  
       working-directory: scripts
 
