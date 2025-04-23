@@ -1,107 +1,114 @@
-#name: Master workflow (part 1)
-#
-## 1. When a PR review is requested, run tests on that PR
-## 2. If all of the tests pass, allow the PR to be merged into `dev`
-## 3. Whenever a PR is merged to `dev`, bump version number in `dev`
-#
-#on:
-#  pull_request:
-#    types:
-#      - opened
-#      - review_requested
-#      - synchronize
-#    branches:
-#      - 'master-test'
-#    paths-ignore:
-#      - 'docs/**'
-#      - 'aerospike-stubs/**'
-#
-#  # So we can test changes to the test-server-rc workflow
-#  workflow_dispatch:
-#    inputs:
-#      run_server_release_tests:
-#        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-#        type: boolean
-#        default: false
-#
-#jobs:
-#  get-jfrog-stage-version:
-#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-#    uses: ./.github/workflows/get-jfrog-stage-version.yml
-#    secrets: inherit
-#
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
-#    with:
-#    needs: [
-#      get-jfrog-stage-version
-#    ]
-#    with:
-#      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-#    secrets: inherit
-#
-#  bump-dev-number:
-#    uses: ./.github/workflows/bump-master-version.yml
-#    secrets: inherit
-#    with:
-#      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-#
-##  upload-to-jfrog:
-##    name: Upload artifacts to JFrog
-##    needs: [
-##      get-jfrog-stage-version,
-##      download-jfrog-artifacts,
-##      test-with-server-release
-##    ]
-##    uses: ./.github/workflows/upload-to-jfrog.yml
-##    with:
-##      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
-##    secrets: inherit
-#
-#  # We don't want the artifacts in JFrog to also exist in Github
-#  delete-artifacts:
+name: Master workflow (part 1)
+
+# 1. When a PR review is requested, run tests on that PR
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+
+on:
+  pull_request:
+    types:
+      - opened
+      - review_requested
+      - synchronize
+    branches:
+      - 'master-test'
+    paths-ignore:
+      - 'docs/**'
+      - 'aerospike-stubs/**'
+
+  # So we can test changes to the test-server-rc workflow
+  workflow_dispatch:
+    inputs:
+      run_server_release_tests:
+        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+        type: boolean
+        default: false
+
+jobs:
+  get-jfrog-stage-version:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/get-jfrog-stage-version.yml
+    secrets: inherit
+
+  download-jfrog-artifacts:
+    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    with:
+    needs: [
+      get-jfrog-stage-version
+    ]
+    with:
+      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+    secrets: inherit
+
+  bump-dev-number:
+    uses: ./.github/workflows/bump-master-version.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+
+#  upload-to-jfrog:
+#    name: Upload artifacts to JFrog
 #    needs: [
 #      get-jfrog-stage-version,
 #      download-jfrog-artifacts,
-#      test-with-server-release,
-#      upload-to-jfrog
+#      test-with-server-release
 #    ]
-#    uses: ./.github/workflows/delete-artifacts.yml
-#
-#  publish-release-notes:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    uses: ./.github/workflows/upload-to-jfrog.yml
 #    with:
-#    needs: [
-#      get-jfrog-stage-version
-#    ]
-#    with:
-#      version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+#      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
 #    secrets: inherit
-#
-#  ff-master-to-stage:
-#    uses: ./.github/workflows/fast-forward-merge.yml
-#    needs: [
-#      get-jfrog-stage-version,
-#      download-jfrog-artifacts,
-#      test-with-server-release,
-#      upload-to-jfrog,
-#      delete-artifacts
-#    ]
-#    with:
-#      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
-#      base_branch: master-test
-#    secrets: inherit
-#
-#  ff-stage-to-dev:
-#    uses: ./.github/workflows/fast-forward-merge.yml
-#    needs: [
-#      get-jfrog-dev-version,
-#      download-jfrog-artifacts,
-#      test-with-server-release,
-#      upload-to-jfrog,
-#      delete-artifacts
-#    ]
-#    with:
-#      ref_to_merge: origin/${{ vars.DEV_BRANCH_NAME }}
-#      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
-#    secrets: inherit
+
+  # We don't want the artifacts in JFrog to also exist in Github
+  delete-artifacts:
+    needs: [
+      get-jfrog-stage-version,
+      download-jfrog-artifacts,
+      test-with-server-release,
+      #upload-to-jfrog
+    ]
+    uses: ./.github/workflows/delete-artifacts.yml
+
+
+  ff-master-to-stage:
+    uses: ./.github/workflows/fast-forward-merge.yml
+    needs: [
+      get-jfrog-stage-version,
+      download-jfrog-artifacts,
+      test-with-server-release,
+      upload-to-jfrog,
+      delete-artifacts
+    ]
+    with:
+      ref_to_merge: origin/stage-CICD
+      base_branch: master-test
+    secrets: inherit
+
+  ff-stage-to-dev:
+    uses: ./.github/workflows/fast-forward-merge.yml
+    needs: [
+      get-jfrog-dev-version,
+      download-jfrog-artifacts,
+      test-with-server-release,
+      upload-to-jfrog,
+      delete-artifacts,
+      ff-master-to-stage
+    ]
+    with:
+      ref_to_merge: origin/dev-CICD
+      base_branch: stage-CICD
+    secrets: inherit
+
+  publish-release-notes:
+    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    with:
+    needs: [
+      get-jfrog-stage-version,
+      download-jfrog-artifacts,
+      test-with-server-release,
+      delete-artifacts,
+      ff-master-to-stage,
+      ff-stage-to-dev
+    ]
+    with:
+      version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+    secrets: inherit

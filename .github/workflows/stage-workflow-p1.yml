@@ -1,99 +1,100 @@
-name: Stage workflow (part 1)
-
-# 1. When a PR review is requested, run tests on that PR
-# 2. If all of the tests pass, allow the PR to be merged into `dev`
-# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
-
-on:
-  pull_request:
-    types:
-      - opened
-      - review_requested
-      - synchronize
-    branches:
-      - 'dev*'
-    paths-ignore:
-      - 'docs/**'
-      - 'aerospike-stubs/**'
-
-  # So we can test changes to the test-server-rc workflow
-  workflow_dispatch:
-    inputs:
-      run_server_release_tests:
-        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-        type: boolean
-        default: false
-
-jobs:
-  get-jfrog-dev-version:
-    uses: ./.github/workflows/get-jfrog-dev-version.yml
-    secrets: inherit
-
-  download-jfrog-artifacts:
-    uses: ./.github/workflows/download-jfrog-artifacts.yml
-    needs: get-jfrog-dev-version
-    with:
-      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-    secrets: inherit
-
-  #test-with-server-release:
-  #  uses: ./.github/workflows/test-artifacts.yml
-  #  needs: [
-  #    get-jfrog-dev-version,
-  #    download-jfrog-artifacts
-  #  ]
-  #  with:
-  #    run_tests: true
-  #  secrets: inherit
-
-  bump-dev-number:
-    uses: ./.github/workflows/bump-stage-version.yml
-    needs: [
-      get-jfrog-dev-version,
-      download-jfrog-artifacts,
-      #test-with-server-release,
-    ]
-    secrets: inherit
-
-  upload-dev-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      get-jfrog-dev-version,
-      download-jfrog-artifacts,
-      #test-with-server-release,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
-      stage: true
-    secrets: inherit
-
-  upload-stage-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      get-jfrog-dev-version,
-      download-jfrog-artifacts,
-      #test-with-server-release,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
-      stage: true
-    secrets: inherit
-
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: [
-      get-jfrog-dev-version,
-      download-jfrog-artifacts,
-      #test-with-server-release,
-      bump-dev-number,
-      upload-dev-to-jfrog,
-      upload-stage-to-jfrog
-    ]
-    uses: ./.github/workflows/delete-artifacts.yml
-
-
-
+#name: Stage workflow (part 1)
+#
+## 1. When a PR review is requested, run tests on that PR
+## 2. If all of the tests pass, allow the PR to be merged into `dev`
+## 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+#
+#on:
+#  pull_request:
+#    types:
+#      - opened
+#      - review_requested
+#      - synchronize
+#    branches:
+#      - 'dev*'
+#    paths-ignore:
+#      - 'docs/**'
+#      - 'aerospike-stubs/**'
+#
+#  # So we can test changes to the test-server-rc workflow
+#  workflow_dispatch:
+#    inputs:
+#      run_server_release_tests:
+#        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+#        type: boolean
+#        default: false
+#
+#jobs:
+#  get-jfrog-dev-version:
+#    uses: ./.github/workflows/get-jfrog-dev-version.yml
+#    secrets: inherit
+#
+#  download-jfrog-artifacts:
+#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    needs: get-jfrog-dev-version
+#    with:
+#      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+#    secrets: inherit
+#
+#  test-with-server-release:
+#    uses: ./.github/workflows/test-artifacts.yml
+#    needs: [
+#      get-jfrog-dev-version,
+#      download-jfrog-artifacts
+#    ]
+#    with:
+#      run_tests: true
+#    secrets: inherit
+#
+#  bump-dev-number:
+#    uses: ./.github/workflows/bump-stage-version.yml
+#    needs: [
+#      get-jfrog-dev-version,
+#      download-jfrog-artifacts,
+#      test-with-server-release,
+#    ]
+#    secrets: inherit
+#
+#  upload-dev-to-jfrog:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#      get-jfrog-dev-version,
+#      download-jfrog-artifacts,
+#      test-with-server-release,
+#      bump-dev-number
+#    ]
+#    uses: ./.github/workflows/upload-to-jfrog.yml
+#    with:
+#      version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
+#      stage: true
+#    secrets: inherit
+#
+#  upload-stage-to-jfrog:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#      get-jfrog-dev-version,
+#      download-jfrog-artifacts,
+#      test-with-server-release,
+#      bump-dev-number
+#    ]
+#    uses: ./.github/workflows/upload-to-jfrog.yml
+#    with:
+#      version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+#      stage: true
+#    secrets: inherit
+#
+#  # We don't want the artifacts in JFrog to also exist in Github
+#  delete-artifacts:
+#    needs: [
+#      get-jfrog-dev-version,
+#      download-jfrog-artifacts,
+#      test-with-server-release,
+#      bump-dev-number,
+#      upload-dev-to-jfrog,
+#      upload-stage-to-jfrog
+#    ]
+#    uses: ./.github/workflows/delete-artifacts.yml
+#
+#
+#
+#
