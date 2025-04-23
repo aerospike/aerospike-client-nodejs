@@ -25,7 +25,7 @@ on:
         required: true
     outputs:
       new_master_version:
-        value: ${{ jobs.get-new-version.outputs.new_master_version }}
+        value: ${{ jobs.get-new-master-version.outputs.new_master_version }}
       bump_sha:
         value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
 
