@@ -61,6 +61,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       #download-jfrog-artifacts,
+      bump-dev-number,
       #upload-to-jfrog
     ]
     uses: ./.github/workflows/delete-artifacts.yml
@@ -71,6 +72,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       #download-jfrog-artifacts,
+      bump-dev-number,
       #upload-to-jfrog,
       delete-artifacts
     ]
@@ -85,6 +87,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       #download-jfrog-artifacts,
+      bump-dev-number,
       #upload-to-jfrog,
       delete-artifacts,
       ff-master-to-stage
@@ -99,6 +102,8 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       #download-jfrog-artifacts,
+      bump-dev-number,
+      #upload-to-jfrog,
       delete-artifacts,
       ff-master-to-stage,
       ff-stage-to-dev
