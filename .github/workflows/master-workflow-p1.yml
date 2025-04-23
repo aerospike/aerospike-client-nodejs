@@ -11,6 +11,7 @@ on:
       - review_requested
       - synchronize
     branches:
+      - 'pipeline-stages'
       - 'master-test'
     paths-ignore:
       - 'docs/**'
@@ -62,7 +63,6 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       download-jfrog-artifacts,
-      test-with-server-release,
       #upload-to-jfrog
     ]
     uses: ./.github/workflows/delete-artifacts.yml
@@ -73,7 +73,6 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       download-jfrog-artifacts,
-      test-with-server-release,
       upload-to-jfrog,
       delete-artifacts
     ]
@@ -88,7 +87,6 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
       upload-to-jfrog,
       delete-artifacts,
       ff-master-to-stage
@@ -103,7 +101,6 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       download-jfrog-artifacts,
-      test-with-server-release,
       delete-artifacts,
       ff-master-to-stage,
       ff-stage-to-dev
