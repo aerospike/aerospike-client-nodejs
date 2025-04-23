@@ -81,7 +81,9 @@ jobs:
     - name: Get new version
       id: get-new-version
       run: |
-        echo "new_master_version=$(node bump-master-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )" >> $GITHUB_OUTPUT
+        set -e
+        new_master_version=$( node bump-master-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
+        echo "new_master_version=$new_master_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
     - name: Print new version
