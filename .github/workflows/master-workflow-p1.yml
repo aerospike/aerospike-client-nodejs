@@ -104,5 +104,5 @@ jobs:
       ff-stage-to-dev
     ]
     with:
-      version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
     secrets: inherit
