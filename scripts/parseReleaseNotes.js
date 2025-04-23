@@ -17,15 +17,22 @@ function generateMarkdown(data) {
     const content = data[key]?.trim();
     if (!content || !/^[\s*-]/m.test(content)) continue;
 
-    const lines = content.split('\n').map(line => {
+    const lines = [];
+
+    for (const line of content.split('\n')) {
       const trimmed = line.trim();
+
       if (/^[-*]\s+/.test(trimmed)) {
-        const indent = line.startsWith('  ') || line.startsWith('\t') ? '    ' : '  ';
-        return indent + trimmed.replace(/^[-*]/, '-');
+        const msg = trimmed.replace(/^[-*]\s+/, '');
+        const indent = /^\[CLIENT-\d+\]/.test(msg) ? '  - ' : '    - ';
+        lines.push(indent + msg);
       } else {
-        return '  ' + trimmed;
+        lines.push('  ' + trimmed);
       }
-    });
+    }
+
+
+
 
     markdownLines.push(`## ${title}`, ...lines, '');
   }
