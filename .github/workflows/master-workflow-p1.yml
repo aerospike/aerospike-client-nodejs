@@ -95,7 +95,7 @@ jobs:
     secrets: inherit
 
   publish-release-notes:
-    uses: ./.github/workflows/download-jfrog-artifacts.yml
+    uses: ./.github/workflows/publish-release-notes.yml
     needs: [
       get-jfrog-stage-version,
       #download-jfrog-artifacts,
