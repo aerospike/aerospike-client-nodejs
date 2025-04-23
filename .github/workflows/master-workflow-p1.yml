@@ -99,7 +99,6 @@ jobs:
 
   publish-release-notes:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
-    with:
     needs: [
       get-jfrog-stage-version,
       download-jfrog-artifacts,
