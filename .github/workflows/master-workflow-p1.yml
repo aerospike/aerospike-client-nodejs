@@ -85,7 +85,7 @@ jobs:
   ff-stage-to-dev:
     uses: ./.github/workflows/fast-forward-merge.yml
     needs: [
-      get-jfrog-dev-version,
+      get-jfrog-stage-version,
       download-jfrog-artifacts,
       #upload-to-jfrog,
       delete-artifacts,
