@@ -265,16 +265,15 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
-
+        
     - name: check binding
       run:
         ls lib/binding;
@@ -578,13 +577,12 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -749,13 +747,12 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -877,13 +874,12 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -990,13 +986,12 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -1117,13 +1112,12 @@ jobs:
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -1482,7 +1476,7 @@ jobs:
 
       - name: Move artifacts
         run: |
-          cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts/ lib/binding/
+          cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/* lib/binding/
         env:
           NEW_VERSION: ${{ inputs.version }}
 
