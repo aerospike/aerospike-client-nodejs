@@ -7,7 +7,7 @@ permissions:
   # This is required for requesting the OIDC token
   id-token: write
   contents: read
-  
+
 on:
   workflow_dispatch:
     inputs:
@@ -260,7 +260,7 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
