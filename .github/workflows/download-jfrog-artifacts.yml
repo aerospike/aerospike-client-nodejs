@@ -62,7 +62,7 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 
