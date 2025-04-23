@@ -1,7 +1,7 @@
 name: Fetch & Publish Release Notes
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
         description: 'Release version (e.g., 5.4.0)'
