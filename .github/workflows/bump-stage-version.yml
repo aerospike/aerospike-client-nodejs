@@ -142,6 +142,7 @@ jobs:
       run: npm install semver
       working-directory: .github/workflows
 
+
     - name: Get new version
       id: get-new-version
       run: |
