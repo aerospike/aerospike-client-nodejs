@@ -60,7 +60,7 @@ jobs:
   delete-artifacts:
     needs: [
       get-jfrog-stage-version,
-      download-jfrog-artifacts,
+      #download-jfrog-artifacts,
       #upload-to-jfrog
     ]
     uses: ./.github/workflows/delete-artifacts.yml
@@ -70,7 +70,7 @@ jobs:
     uses: ./.github/workflows/fast-forward-merge.yml
     needs: [
       get-jfrog-stage-version,
-      download-jfrog-artifacts,
+      #download-jfrog-artifacts,
       #upload-to-jfrog,
       delete-artifacts
     ]
@@ -84,7 +84,7 @@ jobs:
     uses: ./.github/workflows/fast-forward-merge.yml
     needs: [
       get-jfrog-stage-version,
-      download-jfrog-artifacts,
+      #download-jfrog-artifacts,
       #upload-to-jfrog,
       delete-artifacts,
       ff-master-to-stage
@@ -98,7 +98,7 @@ jobs:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
     needs: [
       get-jfrog-stage-version,
-      download-jfrog-artifacts,
+      #download-jfrog-artifacts,
       delete-artifacts,
       ff-master-to-stage,
       ff-stage-to-dev
