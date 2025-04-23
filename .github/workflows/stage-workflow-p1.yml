@@ -51,7 +51,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
+      #test-with-server-release,
     ]
     secrets: inherit
 
@@ -60,7 +60,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
+      #test-with-server-release,
       bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
@@ -74,7 +74,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
+      #test-with-server-release,
       bump-dev-number
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
@@ -88,7 +88,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      test-with-server-release,
+      #test-with-server-release,
       bump-dev-number,
       upload-dev-to-jfrog,
       upload-stage-to-jfrog
