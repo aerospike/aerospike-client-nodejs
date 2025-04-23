@@ -31,20 +31,18 @@ jobs:
     uses: ./.github/workflows/get-jfrog-stage-version.yml
     secrets: inherit
 
-  download-jfrog-artifacts:
-    uses: ./.github/workflows/download-jfrog-artifacts.yml
-    needs: [
-      get-jfrog-stage-version
-    ]
-    with:
-      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-    secrets: inherit
+#  download-jfrog-artifacts:
+#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    needs: [
+#      get-jfrog-stage-version
+#    ]
+#    with:
+#      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+#    secrets: inherit
 
   bump-dev-number:
     uses: ./.github/workflows/bump-master-version.yml
     secrets: inherit
-    with:
-      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
 
 #  upload-to-jfrog:
 #    name: Upload artifacts to JFrog
