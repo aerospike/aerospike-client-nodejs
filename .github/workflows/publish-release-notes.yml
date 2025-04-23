@@ -42,7 +42,6 @@ jobs:
       with:
         tag_name: v${{ inputs.version }}
         name: "[${{ inputs.version }}]"
-        body_path: out.md
-      working-directory: scripts
+        body_path: scripts/out.md
       env:
         GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
