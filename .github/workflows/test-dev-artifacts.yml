@@ -3,6 +3,11 @@ run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+  
 on:
   workflow_dispatch:
     inputs:
@@ -42,6 +47,10 @@ on:
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
+      version:
+        type: string
+        description: Build version
+        required: true
       run_tests:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
@@ -74,6 +83,10 @@ on:
         default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
         type: string
+        required: true  
+      version:
+        type: string
+        description: Build version
         required: true
       run_tests:
         type: boolean
@@ -231,29 +244,31 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
@@ -537,28 +552,31 @@ jobs:
     - name: list cluster
       run: aerolab cluster list
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
@@ -700,28 +718,32 @@ jobs:
     #  shell: bash
 
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
 
     - name: check binding
       run:
@@ -819,28 +841,31 @@ jobs:
     #  shell: bash
 
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
@@ -924,28 +949,31 @@ jobs:
         echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
 
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
@@ -1043,28 +1071,31 @@ jobs:
       with:
         container-name: aerospike
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
@@ -1399,28 +1430,31 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nodejs-client-artifacts
-          path: ./downloaded-artifacts
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-      - name: list Artifacts first
-        run: |
-          ls ./downloaded-artifacts
-          ls ./downloaded-artifacts/glibc@2.31
-          ls ./downloaded-artifacts/glibc@2.35
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
 
-      - name: Move artifacts
-        run: |
-          mkdir -p lib/binding
-          cp -r downloaded-artifacts/* lib/binding
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
-
-      - name: Delete leftover artifacts
-        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-        run: |
-          rm -rf downloaded-artifacts/
+    - name: Move artifacts
+      run: |
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
       - name: check binding
         run: |

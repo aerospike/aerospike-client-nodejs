@@ -12,11 +12,6 @@ on:
         type: string
         description: Build version
         required: true
-      #use-test-pypi:
-      #  type: boolean
-      #  description: 'DEBUG: upload to test.pypi.org?'
-      #  required: true
-      #  default: false
   workflow_call:
     inputs:
       version:

@@ -1,4 +1,4 @@
-name: Stage workflow (part 1)
+name: Stage workflow
 
 # 1. When a PR review is requested, run tests on that PR
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
@@ -25,18 +25,19 @@ jobs:
     uses: ./.github/workflows/get-jfrog-dev-version.yml
     secrets: inherit
 
-  download-jfrog-artifacts:
-    uses: ./.github/workflows/download-jfrog-artifacts.yml
-    needs: get-jfrog-dev-version
-    with:
-      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-    secrets: inherit
+#  download-jfrog-artifacts:
+#    uses: ./.github/workflows/download-jfrog-artifacts.yml
+#    needs: get-jfrog-dev-version
+#    with:
+#      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+#    secrets: inherit
 
   test-with-server-release:
     uses: ./.github/workflows/test-artifacts.yml
+    with:
+      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
     needs: [
       get-jfrog-dev-version,
-      download-jfrog-artifacts
     ]
     with:
       run_tests: true
@@ -55,7 +56,6 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
-      download-jfrog-artifacts,
       test-with-server-release,
       bump-dev-number
     ]
@@ -69,7 +69,6 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
-      download-jfrog-artifacts,
       test-with-server-release,
       bump-dev-number
     ]
@@ -83,7 +82,6 @@ jobs:
   delete-artifacts:
     needs: [
       get-jfrog-dev-version,
-      download-jfrog-artifacts,
       test-with-server-release,
       bump-dev-number,
       upload-dev-to-jfrog,
