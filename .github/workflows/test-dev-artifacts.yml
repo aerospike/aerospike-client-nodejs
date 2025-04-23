@@ -1430,31 +1430,31 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+      - name: Set up JFrog credentials
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://aerospike.jfrog.io
+        with:
+          oidc-provider-name: gh-aerospike-clients
+          oidc-audience: aerospike/clients
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+      - name: Download Artifacts from Jfrog
+        run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+        env:
+          NEW_VERSION: ${{ inputs.version }}
+          PACKAGE_MANAGER: npm
 
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
+      - name: list Artifacts
+        run: |
+          ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+        env:
+          NEW_VERSION: ${{ inputs.version }}
 
-    - name: Move artifacts
-      run: |
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
+      - name: Move artifacts
+        run: |
+          cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+        env:
+          NEW_VERSION: ${{ inputs.version }}
 
       - name: check binding
         run: |
