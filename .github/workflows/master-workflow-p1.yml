@@ -73,7 +73,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       download-jfrog-artifacts,
-      upload-to-jfrog,
+      #upload-to-jfrog,
       delete-artifacts
     ]
     with:
@@ -87,7 +87,7 @@ jobs:
     needs: [
       get-jfrog-dev-version,
       download-jfrog-artifacts,
-      upload-to-jfrog,
+      #upload-to-jfrog,
       delete-artifacts,
       ff-master-to-stage
     ]
