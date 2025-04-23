@@ -32,7 +32,6 @@ jobs:
 
   download-jfrog-artifacts:
     uses: ./.github/workflows/download-jfrog-artifacts.yml
-    with:
     needs: [
       get-jfrog-stage-version
     ]
