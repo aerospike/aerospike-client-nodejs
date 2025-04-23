@@ -36,11 +36,10 @@ jobs:
     uses: ./.github/workflows/test-artifacts.yml
     with:
       version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+      run_tests: true
     needs: [
       get-jfrog-dev-version,
     ]
-    with:
-      run_tests: true
     secrets: inherit
 
   bump-dev-number:
