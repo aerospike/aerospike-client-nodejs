@@ -276,6 +276,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
@@ -587,6 +588,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
@@ -758,6 +760,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
@@ -884,6 +887,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
@@ -996,6 +1000,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
@@ -1122,6 +1127,7 @@ jobs:
 
     - name: check binding
       run:
+        ls lib/binding/node-v108-linux-x64;
         ls lib/binding;
         ls lib/binding/glibc@2.35;
         ls lib/binding/glibc@2.31;
