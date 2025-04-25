@@ -270,10 +270,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
 
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -281,9 +277,11 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
@@ -584,19 +582,17 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
       env:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
@@ -755,10 +751,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
 
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -767,9 +759,11 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: install valgrind
       run: |
@@ -884,10 +878,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
 
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -895,9 +885,11 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -998,10 +990,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
 
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -1009,9 +997,11 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1126,10 +1116,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-        cp -r lib/binding/glibc@2.35/* lib/binding
-        cp -r lib/binding/glibc@2.31/* lib/binding
-        rm -rf lib/binding/glibc@2.35
-        rm -rf lib/binding/glibc@2.31
 
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -1137,9 +1123,11 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
+        ls lib/binding/glibc@2.35;
+        ls lib/binding/glibc@2.31;
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1489,10 +1477,6 @@ jobs:
         run: |
           mkdir lib/binding
           cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-          cp -r lib/binding/glibc@2.35/* lib/binding
-          cp -r lib/binding/glibc@2.31/* lib/binding
-          rm -rf lib/binding/glibc@2.35
-          rm -rf lib/binding/glibc@2.31
 
         env:
           NEW_VERSION: ${{ inputs.version }}
