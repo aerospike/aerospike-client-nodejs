@@ -1,4 +1,4 @@
-name: Master workflow (part 1)
+name: Master workflow
 
 # 1. When a PR review is requested, run tests on that PR
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
@@ -48,7 +48,7 @@ jobs:
     secrets: inherit
 
   publish-to-npm:
-    name: Upload artifacts to JFrog
+    name: Publish to npm
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
