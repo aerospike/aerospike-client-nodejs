@@ -6,8 +6,6 @@ name: Master workflow (part 1)
 
 on:
   pull_request:
-    types:
-      - merged
     branches:
       - 'master-test'
     paths-ignore:
