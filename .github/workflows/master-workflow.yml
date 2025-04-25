@@ -28,40 +28,38 @@ jobs:
     uses: ./.github/workflows/get-jfrog-stage-version.yml
     secrets: inherit
 
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
-#    needs: [
-#      get-jfrog-stage-version
-#    ]
-#    with:
-#      version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-#    secrets: inherit
-
   bump-dev-number:
     uses: ./.github/workflows/bump-master-version.yml
     secrets: inherit
 
-#  upload-to-jfrog:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      get-jfrog-stage-version,
-#      download-jfrog-artifacts,
-#      test-with-server-release
-#    ]
-#    uses: ./.github/workflows/upload-to-jfrog.yml
-#    with:
-#      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
-#    secrets: inherit
 
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
+  upload-stage-to-jfrog:
+    name: Upload artifacts to JFrog
     needs: [
       get-jfrog-stage-version,
-      #download-jfrog-artifacts,
-      bump-dev-number,
-      #upload-to-jfrog
+      bump-dev-number
     ]
-    uses: ./.github/workflows/delete-artifacts.yml
+    uses: ./.github/workflows/reupload-to-jfrog.yml
+    with:
+      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+      new_version: 6.1.0.dev.9
+      stage: true
+    secrets: inherit
+
+
+  publish-to-npm:
+    name: Upload artifacts to JFrog
+    needs: [
+      download-jfrog-artifacts
+      bump-dev-number,
+      rebuild-artifacts-with-new-dev-num,
+      upload-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      version: 6.1.0.dev.9
+    secrets: inherit
 
 
   ff-master-to-stage:

@@ -10,10 +10,7 @@ on:
       old_version:
         type: string
         required: false
-      new_dev_version:
-        type: string
-        required: false
-      new_stage_version:
+      new_version:
         type: string
         required: false
       stage:
@@ -58,20 +55,8 @@ jobs:
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./temp/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: ${{ inputs.new_dev_version }}
+        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.new_dev_version }}
-
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./temp/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.new_stage_version }}
-
-    - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.new_stage_version }}
+      run: jf rt build-publish nodejs-client ${{ inputs.new_version }}

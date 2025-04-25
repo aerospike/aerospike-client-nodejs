@@ -60,7 +60,20 @@ jobs:
     uses: ./.github/workflows/reupload-to-jfrog.yml
     with:
       old_version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-      new_dev_version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
-      new_stage_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      new_version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
+      stage: true
+    secrets: inherit
+
+  upload-dev-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      get-jfrog-dev-version,
+      test-with-server-release,
+      bump-dev-number
+    ]
+    uses: ./.github/workflows/reupload-to-jfrog.yml
+    with:
+      old_version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+      new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
       stage: true
     secrets: inherit
