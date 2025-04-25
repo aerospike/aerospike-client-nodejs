@@ -263,8 +263,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -576,8 +574,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -746,8 +742,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -874,8 +868,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -987,8 +979,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -1114,8 +1104,6 @@ jobs:
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding
       env:
         NEW_VERSION: ${{ inputs.version }}
 
