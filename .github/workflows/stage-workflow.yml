@@ -64,17 +64,3 @@ jobs:
       new_stage_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
       stage: true
     secrets: inherit
-
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: [
-      get-jfrog-dev-version,
-      test-with-server-release,
-      bump-dev-number,
-      upload-dev-to-jfrog,
-      upload-stage-to-jfrog
-    ]
-    uses: ./.github/workflows/delete-artifacts.yml
-
-
-
