@@ -391,7 +391,7 @@ jobs:
     - name: Upload binding binaries to JFrog windows x86
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: build/Release/
