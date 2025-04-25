@@ -52,7 +52,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
-      upload-stage-to-jfrog
+      reupload-stage-to-jfrog
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
@@ -64,7 +64,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
-      upload-stage-to-jfrog,
+      reupload-stage-to-jfrog,
       publish-to-npm
     ]
     uses: ./.github/workflows/verify-npm-install.yml
@@ -75,7 +75,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
-      upload-stage-to-jfrog,
+      reupload-stage-to-jfrog,
       publish-to-npm
     ]
     with:
@@ -89,7 +89,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
-      upload-stage-to-jfrog,
+      reupload-stage-to-jfrog,
       publish-to-npm
     ]
     with:
@@ -102,7 +102,7 @@ jobs:
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
-      upload-stage-to-jfrog,
+      reupload-stage-to-jfrog,
       publish-to-npm
     ]
     with:
