@@ -18,15 +18,21 @@ on:
         default: false
 
 jobs:
-  test-with-server-release:
-    uses: ./.github/workflows/build-artifacts.yml
-    with:
-      run_tests: false
-    secrets: inherit
-
   bump-dev-number:
     uses: ./.github/workflows/bump-dev-version.yml
     secrets: inherit
+
+  test-with-server-release:
+    uses: ./.github/workflows/build-artifacts.yml
+    needs: [
+      bump-dev-number
+    ]
+    with:
+      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      run_tests: false
+    secrets: inherit
+
+
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog

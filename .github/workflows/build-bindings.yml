@@ -3,6 +3,10 @@ run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -28,6 +32,9 @@ on:
         description: Valid JSON list of Python tags to build the client for
         required: false
         default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+      version:
+        type: string
+        required: true
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -72,6 +79,9 @@ on:
         type: string
         required: false
         default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+      version:
+        type: string
+        required: true
       platform-tag:
         type: string
         required: true
@@ -313,6 +323,14 @@ jobs:
     #    npx tsc;
     #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
     - name: Upload binding binaries to JFrog Linux x86
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       run: |
@@ -321,7 +339,7 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Upload binding binaries to JFrog Linux 20 x86
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
       run: |
         jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/glibc@2.31/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-linux-x64/
       env:

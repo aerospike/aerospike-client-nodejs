@@ -9,7 +9,7 @@ on:
     inputs:
       version:
         type: string
-        required: false
+        required: true
       stage:
         type: boolean
         required: false
@@ -41,42 +41,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Create multiple directories
-      run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
-
-    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
-
-    - name: Download Artifacts
-      if: ${{ !inputs.stage }}
-      uses: ./.github/actions/download-github-artifacts/
-
-    - name: Download artifacts
-      if: ${{ inputs.stage }}
-      uses: actions/download-artifact@v4
-      with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
-
-    - name: list Artifacts first
-      if: ${{ inputs.stage }}
-      run: |
-        ls downloaded-artifacts/
-
-    - name: Move artifacts
-      if: ${{ inputs.stage }}
-      run: |
-        cp -r downloaded-artifacts/ lib/binding/
-
-    - name: check binding
-      if: ${{ inputs.stage }}
-      run:
-        ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
-
-    - name: print artifacts
-      run: ls ./lib/binding
-
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
       env:
@@ -84,23 +48,6 @@ jobs:
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
-
-    #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
-    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
-    #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
-    #  working-directory: artifacts
-
-    - name: WHOAMI REALLY
-      run: jf config show
-
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
