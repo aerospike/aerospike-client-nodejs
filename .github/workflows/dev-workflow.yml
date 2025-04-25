@@ -32,8 +32,6 @@ jobs:
       run_tests: false
     secrets: inherit
 
-
-
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
