@@ -72,9 +72,9 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/lib/binding/downloaded-artifacts
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.35
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/lib/binding/downloaded-artifacts/glibc@2.31
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
