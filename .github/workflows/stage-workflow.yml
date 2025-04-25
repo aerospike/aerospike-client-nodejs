@@ -25,22 +25,15 @@ jobs:
     uses: ./.github/workflows/get-jfrog-dev-version.yml
     secrets: inherit
 
-#  download-jfrog-artifacts:
-#    uses: ./.github/workflows/download-jfrog-artifacts.yml
-#    needs: get-jfrog-dev-version
-#    with:
-#      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-#    secrets: inherit
-
-  test-with-server-release:
-    uses: ./.github/workflows/test-artifacts.yml
-    with:
-      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-      run_tests: true
-    needs: [
-      get-jfrog-dev-version,
-    ]
-    secrets: inherit
+  #test-with-server-release:
+  #  uses: ./.github/workflows/test-artifacts.yml
+  #  with:
+  #    version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+  #    run_tests: true
+  #  needs: [
+  #    get-jfrog-dev-version,
+  #  ]
+  #  secrets: inherit
 
   bump-dev-number:
     uses: ./.github/workflows/bump-stage-version.yml
@@ -50,21 +43,7 @@ jobs:
     ]
     secrets: inherit
 
-  upload-stage-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      get-jfrog-dev-version,
-      test-with-server-release,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/reupload-to-jfrog.yml
-    with:
-      old_version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-      new_version: ${{ needs.bump-dev-number.outputs.new_dev_version }}
-      stage: true
-    secrets: inherit
-
-  upload-dev-to-jfrog:
+  reupload-stage-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,

@@ -22,7 +22,7 @@ jobs:
     uses: ./.github/workflows/bump-dev-version.yml
     secrets: inherit
 
-  test-with-server-release:
+  build-bindings:
     uses: ./.github/workflows/build-artifacts.yml
     needs: [
       bump-dev-number
@@ -42,13 +42,3 @@ jobs:
     with:
       version: ${{ needs.bump-dev-number.outputs.dev_version }}
     secrets: inherit
-
-  # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: [
-      upload-to-jfrog,
-      test-with-server-release,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/delete-artifacts.yml
-#
