@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install aerospike@6.2.0 --omit-dev;
-          node -e "const { BatchWritePolicy } = require('aerospike'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
+          npm install darkcartpale@6.2.0 --omit-dev;
+          node -e "const { BatchWritePolicy } = require('darkcartpale'); console.log(new BatchWritePolicy({onLockingOnly: true}));"
