@@ -30,8 +30,10 @@ jobs:
 
   bump-dev-number:
     uses: ./.github/workflows/bump-master-version.yml
+    needs: [
+      get-jfrog-stage-version,
+    ]
     secrets: inherit
-
 
   upload-stage-to-jfrog:
     name: Upload artifacts to JFrog
@@ -47,20 +49,17 @@ jobs:
       stage: true
     secrets: inherit
 
-
   publish-to-npm:
     name: Upload artifacts to JFrog
     needs: [
-      download-jfrog-artifacts
+      get-jfrog-stage-version,
       bump-dev-number,
-      rebuild-artifacts-with-new-dev-num,
-      upload-to-jfrog
+      upload-stage-to-jfrog
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
       version: 6.1.0.dev.9
     secrets: inherit
-
 
   ff-master-to-stage:
     uses: ./.github/workflows/fast-forward-merge.yml
