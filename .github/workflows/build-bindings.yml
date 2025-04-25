@@ -136,7 +136,6 @@ jobs:
       # Bash >= 4 supports hashmaps
       shell: bash
 
-
   cibuildbinding:
     needs: get-runner-os
     strategy:
