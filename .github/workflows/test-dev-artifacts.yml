@@ -1469,15 +1469,14 @@ jobs:
 
       - name: list Artifacts
         run: |
-          ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
-        env:
-          NEW_VERSION: ${{ inputs.version }}
+          ls downloaded-artifacts
+          ls downloaded-artifacts/aerospike
+          ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
 
       - name: Move artifacts
         run: |
           mkdir lib/binding
           cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
         env:
           NEW_VERSION: ${{ inputs.version }}
 
