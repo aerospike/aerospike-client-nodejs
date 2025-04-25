@@ -57,14 +57,11 @@ jobs:
       env:
         VERSION: ${{ inputs.old_version }}
 
-    - name: Publish build info
-      run: ls temp
-
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./aerospike/${{ env.NEW_VERSION }}/" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./aerospike/${{ env.NEW_VERSION }}/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
