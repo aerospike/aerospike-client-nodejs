@@ -43,7 +43,7 @@ jobs:
   test-with-server-release:
     uses: ./.github/workflows/test-artifacts.yml
     with:
-      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
       run_tests: true
     needs: [
       get-jfrog-dev-version,
