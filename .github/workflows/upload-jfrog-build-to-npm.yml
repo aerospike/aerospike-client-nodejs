@@ -81,7 +81,7 @@ jobs:
     - name: Move artifacts
       run: |
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/lib/binding/downloaded-artifacts/* lib/binding/
+        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
