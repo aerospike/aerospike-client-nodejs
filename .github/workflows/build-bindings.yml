@@ -136,6 +136,7 @@ jobs:
       # Bash >= 4 supports hashmaps
       shell: bash
 
+
   cibuildbinding:
     needs: get-runner-os
     strategy:
@@ -333,44 +334,50 @@ jobs:
     - name: Upload binding binaries to JFrog Linux x86
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/node-${{ matrix.nodejs-tag[0] }}-linux-x64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Upload binding binaries to JFrog Linux 20 x86
       if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/node-${{ matrix.nodejs-tag[0] }}-linux-x64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Upload binding binaries to JFrog Linux aarch64
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Upload binding binaries to JFrog Linux 20 aarch64
       if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Upload binding binaries to JFrog darwin x86
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Upload binding binaries to JFrog darwin aarch64
       if: ${{ inputs.platform-tag == 'macosx_arm64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Cleanup Artifacts
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -384,9 +391,10 @@ jobs:
     - name: Upload binding binaries to JFrog windows x86
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./build/Release/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./build/Release/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
