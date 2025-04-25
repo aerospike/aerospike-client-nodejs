@@ -44,7 +44,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download 6.2.1-dev.8 from JFrog
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download from JFrog
       run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*" "./temp" 
       env:
         VERSION: ${{ inputs.old_version }}
