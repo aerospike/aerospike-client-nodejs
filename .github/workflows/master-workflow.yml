@@ -35,7 +35,7 @@ jobs:
     ]
     secrets: inherit
 
-  upload-stage-to-jfrog:
+  reupload-stage-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-stage-version,
@@ -61,14 +61,24 @@ jobs:
       version: 6.1.0.dev.9
     secrets: inherit
 
+  verify-npm-install:
+    name: verify npm install works correctly
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+      upload-stage-to-jfrog,
+      publish-to-npm
+    ]
+    uses: ./.github/workflows/verify-npm-install.yml
+    secrets: inherit
+
   ff-master-to-stage:
     uses: ./.github/workflows/fast-forward-merge.yml
     needs: [
       get-jfrog-stage-version,
-      #download-jfrog-artifacts,
       bump-dev-number,
-      #upload-to-jfrog,
-      delete-artifacts
+      upload-stage-to-jfrog,
+      publish-to-npm
     ]
     with:
       ref_to_merge: origin/stage-CICD
@@ -80,11 +90,9 @@ jobs:
     uses: ./.github/workflows/fast-forward-merge.yml
     needs: [
       get-jfrog-stage-version,
-      #download-jfrog-artifacts,
       bump-dev-number,
-      #upload-to-jfrog,
-      delete-artifacts,
-      ff-master-to-stage
+      upload-stage-to-jfrog,
+      publish-to-npm
     ]
     with:
       ref_to_merge: origin/dev-CICD
@@ -95,12 +103,9 @@ jobs:
     uses: ./.github/workflows/publish-release-notes.yml
     needs: [
       get-jfrog-stage-version,
-      #download-jfrog-artifacts,
       bump-dev-number,
-      #upload-to-jfrog,
-      delete-artifacts,
-      ff-master-to-stage,
-      ff-stage-to-dev
+      upload-stage-to-jfrog,
+      publish-to-npm
     ]
     with:
       version: ${{ needs.bump-dev-number.outputs.new_master_version }}
