@@ -110,7 +110,7 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/lib/binding/downloaded-artifacts/* lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
         ls lib/binding
       env:
         OLD_VERSION: ${{ inputs.old_version }}
