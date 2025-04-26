@@ -32,6 +32,10 @@ on:
         required: false
         type: boolean
         default: false
+      version:
+        type: string
+        description: Build version
+        required: true
       # workflow_call hack
       is_workflow_call:
         type: boolean
@@ -75,4 +79,5 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
+      version: ${{ inputs.version }}
     secrets: inherit
