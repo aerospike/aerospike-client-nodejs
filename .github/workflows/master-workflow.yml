@@ -72,18 +72,18 @@ jobs:
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
-  ff-master-to-stage:
-    uses: ./.github/workflows/fast-forward-merge.yml
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog,
-      publish-to-npm
-    ]
-    with:
-      ref_to_merge: origin/stage-CICD
-      base_branch: master-test
-    secrets: inherit
+#  ff-master-to-stage:
+#    uses: ./.github/workflows/fast-forward-merge.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    with:
+#      ref_to_merge: origin/stage-CICD
+#      base_branch: master-test
+#    secrets: inherit
 
 
   ff-stage-to-dev:
@@ -95,8 +95,8 @@ jobs:
       publish-to-npm
     ]
     with:
-      ref_to_merge: origin/dev-CICD
-      base_branch: stage-CICD
+      ref_to_merge: origin/dev
+      base_branch: stage
     secrets: inherit
 
   publish-release-notes:

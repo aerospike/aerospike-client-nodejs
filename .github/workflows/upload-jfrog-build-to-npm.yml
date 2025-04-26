@@ -87,7 +87,7 @@ jobs:
 
     - name: change verison
       run: |
-       npm version 6.0.4 --no-git-tag-version
+       npm version 6.0.5 --no-git-tag-version
 
     #- name: change verison
     #  run: |
@@ -123,7 +123,7 @@ jobs:
 
     - name: npm install
       run: |
-        npm install darkcartpale@6.2.0
+        npm install darkcartpale@6.0.5
 
     #- run: npm ci
     #- run: npm publish --provenance --access public
