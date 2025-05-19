@@ -35,8 +35,8 @@ jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
-      test-with-server-release,
-      bump-dev-number
+      bump-dev-number,
+      build-bindings
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
