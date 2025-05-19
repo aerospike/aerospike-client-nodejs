@@ -7,9 +7,6 @@ permissions:
 on:
   workflow_call:
     inputs:
-      old_version:
-        type: string
-        required: false
       new_version:
         type: string
         required: false
