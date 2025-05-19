@@ -54,20 +54,6 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-    - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
-      env:
-        VERSION: ${{ inputs.old_version }}
-
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./aerospike/${{ env.OLD_VERSION }}/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
-        NEW_VERSION: ${{ inputs.new_version }}
-
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
       run: jf rt build-publish nodejs-client ${{ inputs.new_version }}
@@ -89,12 +75,6 @@ jobs:
       run: jf release-bundle-create --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
       working-directory: .github/workflows
 
-    - name: Promote release bundle to STAGE stage
-      if: ${{ inputs.stage }}
-      run: jf release-bundle-promote --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} STAGE
-      working-directory: .github/workflows
-
-    - name: Promote release bundle to PROD stage
-      if: ${{ !inputs.stage }}
-      run: jf release-bundle-promote --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} PROD
+    - name: Promote release bundle to DEV stage
+      run: jf release-bundle-promote --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
       working-directory: .github/workflows
