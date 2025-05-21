@@ -77,7 +77,7 @@ jobs:
 
     # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
     - name: Create file spec for release bundle
-      run: cat releasebundle-filespec.json | jq '.files[0].build = "${{ inputs.new_version }}/${{ github.run_number }}"' | sponge releasebundle-filespec.json
+      run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ inputs.new_version }}"' | sponge releasebundle-filespec.json
       working-directory: .github/workflows
       shell: bash
 
