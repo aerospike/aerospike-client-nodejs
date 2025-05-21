@@ -1,8 +1,8 @@
 {
   "files": [
     {
-      "pattern": "clients-npm-dev-local/aerospike/*",
-      "project": "clients"
+      "includeDeps": "false",
+      "project": "clients",
     }
   ]
 }
