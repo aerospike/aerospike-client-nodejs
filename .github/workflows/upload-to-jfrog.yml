@@ -78,13 +78,13 @@ jobs:
       shell: bash
 
 
-    #- name: Create release bundle from JFrog build
-    #  # Not the same name as in proxy/pom.xml
-    #  # But that name doesn't specify the language,
-    #  # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
-    #  # Signing key only signs release bundle and not the artifacts associated with it
-    #  run: jf release-bundle-create --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
-    #  working-directory: .github/workflows
+    - name: Create release bundle from JFrog build
+      # Not the same name as in proxy/pom.xml
+      # But that name doesn't specify the language,
+      # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
+      # Signing key only signs release bundle and not the artifacts associated with it
+      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
+      working-directory: .github/workflows
 
     - name: Promote release bundle to DEV stage
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
