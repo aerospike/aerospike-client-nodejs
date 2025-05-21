@@ -64,13 +64,9 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
-    - name: Publish build collect info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt bce nodejs-client ${{ inputs.new_version }}
-
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.new_version }}
+      run: jf rt build-publish nodejs-client ${{ inputs.new_version }} --dry-run
 
     # Required to run sponge
     - run: sudo apt install -y moreutils
