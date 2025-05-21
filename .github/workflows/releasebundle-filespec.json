@@ -2,7 +2,7 @@
   "files": [
     {
       "includeDeps": "false",
-      "project": "clients",
+      "project": "clients"
     }
   ]
 }
