@@ -40,5 +40,5 @@ jobs:
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      new_version: 6.2.1-dev.14
+      new_version: 6.2.1-dev.4
     secrets: inherit
