@@ -240,6 +240,7 @@ context('Scans', function () {
       stream.on('data', record => {
         expect(record.key).to.be.instanceof(Key)
         expect(record.key.key).to.not.be.empty
+        console.log(record.key.key)
         stream.abort()
       })
       stream.on('end', done)

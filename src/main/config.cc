@@ -40,6 +40,9 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	char *password = NULL;
 	char *user_path = NULL;
 
+	Local<Value> v8_config_provider =
+		Nan::Get(configObj, Nan::New("configProvider").ToLocalChecked())
+			.ToLocalChecked();
 	Local<Value> v8_hosts =
 		Nan::Get(configObj, Nan::New("hosts").ToLocalChecked())
 			.ToLocalChecked();
@@ -54,6 +57,22 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	Local<Value> v8_sharedMemory =
 		Nan::Get(configObj, Nan::New("sharedMemory").ToLocalChecked())
 			.ToLocalChecked();
+
+
+	if (v8_config_provider->IsObject()) {
+		Local<Object> config_provider = v8_config_provider.As<Object>();
+
+		if ((rc = get_optional_string_property(&config->config_provider.path, &defined, config_provider,
+											   "path", log)) !=
+			AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+		else if ((rc = get_optional_uint32_property(&config->config_provider.interval, &defined, config_provider,
+										   	   "interval", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+	}
+
 
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj,
 										   "clusterName", log)) !=

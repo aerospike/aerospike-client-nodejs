@@ -2561,6 +2561,8 @@ export namespace policy {
          * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
          */
         public latencyShift?: number;
+        public appId?: string;
+        public labels?: { [key: string]: string };
 
         /**
          * Initializes a new MapPolicy from the provided policy values.
@@ -9949,6 +9951,9 @@ export interface MetricsPolicyOptions {
      * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
      */
     latencyShift?: number;
+
+    appId?: string;
+    labels?: { [key: string]: string };
 }
 
 /**

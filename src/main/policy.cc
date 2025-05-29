@@ -728,9 +728,57 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 	int rc = 0;
 	as_metrics_policy_init(policy);
 
+	bool defined = false;
+
+	char* app_id = NULL;
+	//as_metrics_policy_add_label
+	//as_metrics_policy_set_app_id
+
 	if(listeners != NULL){
 		policy->metrics_listeners = *listeners;
 	}
+
+
+	if ((rc = get_optional_string_property(&app_id, &defined, obj, 
+										   "appId", log)) !=
+		AS_NODE_PARAM_OK) {
+		if(app_id){
+			cf_free(app_id);
+		}
+		return rc;
+	}
+	else if (defined){
+		as_metrics_policy_set_app_id(policy, app_id);
+		cf_free(app_id);
+
+	}
+
+
+	Local<Value> v8_labels = Nan::Get(obj, Nan::New("labels").ToLocalChecked()).ToLocalChecked();
+
+	if (v8_labels->IsObject()) {
+		Local<Object> labels = Local<Array>::Cast(v8_labels);
+		const Local<Array> props =
+			Nan::GetOwnPropertyNames(labels).ToLocalChecked();
+
+		for (uint32_t i = 0; i < props->Length(); i++) {
+
+			const Local<Value> name = Nan::Get(props, i).ToLocalChecked();
+			const Local<Value> value = Nan::Get(labels, name).ToLocalChecked();
+
+			if(name->IsString() && value->IsString()){
+				as_metrics_policy_add_label(policy, *Nan::Utf8String(name.As<String>()), *Nan::Utf8String(value.As<String>()));
+			}
+			//else{
+			//	return AS_NODE_PARAM_ERR;
+			//}
+
+		}
+	}
+	//else if (((!v8_labels->IsNull()) && (!v8_labels->IsUndefined()))) {
+	//	return AS_NODE_PARAM_ERR;
+	//}
+
 	if ((rc = get_optional_report_dir_property((char**)&policy->report_dir, NULL, obj,
 										   "reportDir", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -746,12 +794,12 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->latency_columns, NULL, obj,
+	if ((rc = get_optional_uint8_property(&policy->latency_columns, NULL, obj,
 										   "latencyColumns", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if ((rc = get_optional_uint32_property(&policy->latency_shift, NULL, obj,
+	if ((rc = get_optional_uint8_property(&policy->latency_shift, NULL, obj,
 										   "latencyShift", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
