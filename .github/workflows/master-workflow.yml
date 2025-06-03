@@ -50,11 +50,11 @@ jobs:
 
   publish-to-npm:
     name: Publish to npm
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog
-    ]
+    #needs: [
+    #  get-jfrog-stage-version,
+    #  bump-dev-number,
+    #  reupload-stage-to-jfrog
+    #]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
       #old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
