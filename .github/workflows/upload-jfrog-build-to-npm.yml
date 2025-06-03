@@ -71,14 +71,14 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls clients-npm-dev-local/aerospike/${{ env.VERSION }}/*
+        ls aerospike/${{ env.OLD_VERSION }}/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
     - name: Move artifacts
       run: |
         mkdir lib/binding
-        cp -r clients-npm-dev-local/aerospike/${{ env.VERSION }}/lib/binding/* lib/binding/
+        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
@@ -107,7 +107,7 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
+        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
         ls lib/binding
       env:
         OLD_VERSION: ${{ inputs.old_version }}
