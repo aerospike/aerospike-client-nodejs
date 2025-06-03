@@ -64,24 +64,21 @@ jobs:
     #  run: |
     #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
+    - name: Download from JFrog
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
-        PACKAGE_MANAGER: npm
+        VERSION: ${{ inputs.old_version }}
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
+        ls clients-npm-dev-local/aerospike/${{ env.VERSION }}/*
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
     - name: Move artifacts
       run: |
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
+        cp -r clients-npm-dev-local/aerospike/${{ env.VERSION }}/lib/binding/* lib/binding/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
