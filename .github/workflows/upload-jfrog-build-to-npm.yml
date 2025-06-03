@@ -124,7 +124,7 @@ jobs:
 
     - name: npm pack
       run: |
-        npm pack aerospike@6.2.1-dev.4
+        npm pack aerospike
 
     - name: Sign nuget package
       uses: sslcom/esigner-codesign@develop
@@ -134,7 +134,7 @@ jobs:
           password: ${{ secrets.ES_PASSWORD }}
           totp_secret: ${{ secrets.ES_TOTP_SECRET }}
           credential_id: ${{ secrets.ES_CREDENTIAL_ID }}
-          file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.1-dev.4.tgz
+          file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.0-dev.4.tgz
           output_path: ${GITHUB_WORKSPACE}/artifacts
 
     - name: Move artifacts
