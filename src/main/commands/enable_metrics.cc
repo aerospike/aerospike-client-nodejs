@@ -30,6 +30,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_config.h>
+#include <aerospike/as_status.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 }
@@ -504,18 +505,19 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 			cmd->labels = as_vector_create(sizeof(as_metrics_label), 8);
 		}
 	}
-	for (uint32_t i = 0; i < cmd->policy->labels->size; ++i)
-	{
-		as_metrics_label* label = (as_metrics_label *) as_vector_get(cmd->policy->labels, i);
+	if(cmd->policy && cmd->policy->labels){
+		for (uint32_t i = 0; i < cmd->policy->labels->size; ++i)
+		{
+			as_metrics_label* label = (as_metrics_label *) as_vector_get(cmd->policy->labels, i);
 
-		as_metrics_label* label_copy = (as_metrics_label *) cf_malloc(sizeof(as_metrics_label));
+			as_metrics_label* label_copy = (as_metrics_label *) cf_malloc(sizeof(as_metrics_label));
 
-		label_copy->name = (char *) cf_strdup(label->name);
-		label_copy->value = (char *) cf_strdup(label->value);
+			label_copy->name = (char *) cf_strdup(label->name);
+			label_copy->value = (char *) cf_strdup(label->value);
 
-		as_vector_append(cmd->labels, label_copy);
+			as_vector_append(cmd->labels, label_copy);
+		}
 	}
-
 	return cmd;
 }
 
@@ -539,9 +541,15 @@ static void respond(uv_work_t *req, int status)
 	Nan::HandleScope scope;
 
 	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
+  if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
+    as_v8_warn(log, cmd->err.message);
+    as_error_reset(&cmd->err);
+  }
 
-	Local<Value> argv[] = {Nan::Null(), Nan::Null()};
+  Local<Value> argv[] = {Nan::Null(), Nan::Null()};
+
 	if (!(cmd->IsError())){
 		cmd->Callback(2, argv);
 	}

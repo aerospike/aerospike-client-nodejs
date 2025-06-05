@@ -380,7 +380,7 @@ int get_optional_uint8_property(uint8_t *intp, bool *defined,
 		if (defined != NULL)
 			(*defined) = true;
 		(*intp) = Nan::To<uint32_t>(value).FromJust();
-		as_v8_detail(log, "%s => (uint16_t) %d", prop, *intp);
+		as_v8_detail(log, "%s => (uint8_t) %d", prop, *intp);
 	}
 	else if (value->IsUndefined() || value->IsNull()) {
 		if (defined != NULL)

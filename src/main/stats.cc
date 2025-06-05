@@ -114,7 +114,6 @@ static Local<Object> build_node_stats(as_node_stats *node)
 			 Nan::New(&node->timeout_count));
 	Nan::Set(stats, Nan::New("keyBusyCount").ToLocalChecked(),
 			 Nan::New(&node->key_busy_count));
-	//(*intp) = Nan::To<int64_t>(value).FromJust();
 	return stats;
 }
 

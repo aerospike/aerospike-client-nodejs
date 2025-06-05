@@ -24,6 +24,8 @@ const commands = [
   'append',
   'apply',
   'batch',
+  'connect',
+  'dynamicConfig',
   'exists',
   'geospatialMonteCarlo',
   'get',

@@ -731,8 +731,6 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 	bool defined = false;
 
 	char* app_id = NULL;
-	//as_metrics_policy_add_label
-	//as_metrics_policy_set_app_id
 
 	if(listeners != NULL){
 		policy->metrics_listeners = *listeners;
@@ -740,8 +738,7 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 
 
 	if ((rc = get_optional_string_property(&app_id, &defined, obj, 
-										   "appId", log)) !=
-		AS_NODE_PARAM_OK) {
+										   "appId", log)) != AS_NODE_PARAM_OK) {
 		if(app_id){
 			cf_free(app_id);
 		}
@@ -769,15 +766,17 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 			if(name->IsString() && value->IsString()){
 				as_metrics_policy_add_label(policy, *Nan::Utf8String(name.As<String>()), *Nan::Utf8String(value.As<String>()));
 			}
-			//else{
-			//	return AS_NODE_PARAM_ERR;
-			//}
+			else{
+				as_v8_error(log, "labels must be an object with string key pairs.");
+				return AS_NODE_PARAM_ERR;
+			}
 
 		}
 	}
-	//else if (((!v8_labels->IsNull()) && (!v8_labels->IsUndefined()))) {
-	//	return AS_NODE_PARAM_ERR;
-	//}
+	else if (((!v8_labels->IsNull()) && (!v8_labels->IsUndefined()))) {
+		as_v8_error(log, "labels must be an object with string key pairs.");
+		return AS_NODE_PARAM_ERR;
+	}
 
 	if ((rc = get_optional_report_dir_property((char**)&policy->report_dir, NULL, obj,
 										   "reportDir", log)) !=

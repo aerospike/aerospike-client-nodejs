@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client as Cli, Node, NodeMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
+import Aerospike, { Client as Cli, Node, NamespaceMetricsf, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
@@ -73,7 +73,7 @@ describe('Metrics tests', function () {
   function disable_throw_exc( Cluster: any ){
     throw new Error(`disable threw an error`)
   }
-  /*
+
   it('enable metrics', async function () {
     let retval: any = await client.enableMetrics()
 
@@ -130,7 +130,7 @@ describe('Metrics tests', function () {
       throw new Error('No metrics log files found');
     }
   })
-  */
+
   it('test setting custom listener functions', async function () {
 
     let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -213,7 +213,7 @@ describe('Metrics tests', function () {
           expect(node.conns.opened).to.be.a("number");
           expect(node.conns.closed).to.be.a("number");
 
-          // Check NodeMetrics
+          // Check NamespaceMetrics
           const metrics: any = node.metrics;
           console.log(node)
           console.log(node.metrics)
@@ -244,7 +244,6 @@ describe('Metrics tests', function () {
       }
     }
   })
-  /*
   it('enable metrics incorrect args labels', async function () {
     let policy: any = {
       labels: true,

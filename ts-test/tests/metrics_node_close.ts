@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client as Cli, Node, NodeMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
+import Aerospike, { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
 
 import { expect, assert} from 'chai'; 
 
@@ -56,8 +56,8 @@ describe('Metrics node close test', async function () {
     expect(node.conns.closed).to.be.a("number");
     expect(node.errorCount).to.be.a("number");
     expect(node.timeoutCount).to.be.a("number");
-    // Check NodeMetrics
-    const metrics: NodeMetrics = node.metrics;
+    // Check NamespaceMetrics
+    const metrics: NamepsaceMetrics = node.metrics;
 
 
 
