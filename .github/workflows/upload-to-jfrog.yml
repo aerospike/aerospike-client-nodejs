@@ -33,7 +33,7 @@ on:
     #    required: true
 
 jobs:
-  reupload-to-jfrog:
+  upload-to-jfrog:
     name: Upload artifacts to JFrog
     env:
       JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
