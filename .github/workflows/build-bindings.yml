@@ -229,6 +229,12 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
+    - name: 'Install libyaml'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      #if: ${{ inputs.platform-tag == 'macosx_x86_64' || inputs.platform-tag == 'macosx_arm64' }}
+      run: |
+        brew install libyaml
+
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;

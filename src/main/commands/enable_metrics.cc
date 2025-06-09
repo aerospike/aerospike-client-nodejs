@@ -74,7 +74,7 @@ class MetricsCommand : public AerospikeCommand {
 		if(ns_metrics){
 			for (int i = 0; i < metrics_size; ++i)
 			{
-				cf_free(ns_metrics[i]->ns);
+				cf_free((void *) ns_metrics[i]->ns);
 				cf_free(ns_metrics[i]);
 			}
 			cf_free(ns_metrics);
