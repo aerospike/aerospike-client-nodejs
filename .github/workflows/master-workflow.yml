@@ -21,58 +21,73 @@ on:
         default: false
 
 jobs:
-  get-jfrog-stage-version:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    uses: ./.github/workflows/get-jfrog-stage-version.yml
-    secrets: inherit
-
-  bump-dev-number:
-    uses: ./.github/workflows/bump-master-version.yml
-    needs: [
-      get-jfrog-stage-version,
-    ]
-    secrets: inherit
-
-  reupload-stage-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/reupload-to-jfrog.yml
-    with:
-      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-      #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
-      new_version: 6.1.0.dev.9
-      stage: true
-    secrets: inherit
+#  get-jfrog-stage-version:
+#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/get-jfrog-stage-version.yml
+#    secrets: inherit
+#
+#  bump-dev-number:
+#    uses: ./.github/workflows/bump-master-version.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#    ]
+#    secrets: inherit
+#
+#
+#  reupload-stage-to-jfrog:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number
+#    ]
+#    uses: ./.github/workflows/reupload-to-jfrog.yml
+#    with:
+#      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+#      #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+#      new_version: 6.1.0.dev.9
+#      stage: false
+#    secrets: inherit
 
   publish-to-npm:
     name: Publish to npm
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog
-    ]
+    #needs: [
+    #  get-jfrog-stage-version,
+    #  bump-dev-number,
+    #  reupload-stage-to-jfrog
+    #]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
-      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      #old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      old_version: 6.2.1-dev.4
       #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
-      new_version: 6.1.0.dev.9
+      new_version: 6.2.1-dev.4
     secrets: inherit
 
-  verify-npm-install:
-    name: verify npm install works correctly
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog,
-      publish-to-npm
-    ]
-    uses: ./.github/workflows/verify-npm-install.yml
-    secrets: inherit
-
-#  ff-master-to-stage:
+#  verify-npm-install:
+#    name: verify npm install works correctly
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    uses: ./.github/workflows/verify-npm-install.yml
+#    secrets: inherit
+#
+##  ff-master-to-stage:
+##    uses: ./.github/workflows/fast-forward-merge.yml
+##    needs: [
+##      get-jfrog-stage-version,
+##      bump-dev-number,
+##      reupload-stage-to-jfrog,
+##      publish-to-npm
+##    ]
+##    with:
+##      ref_to_merge: origin/stage-CICD
+##      base_branch: master-test
+##    secrets: inherit
+#
+#  ff-stage-to-dev:
 #    uses: ./.github/workflows/fast-forward-merge.yml
 #    needs: [
 #      get-jfrog-stage-version,
@@ -81,32 +96,18 @@ jobs:
 #      publish-to-npm
 #    ]
 #    with:
-#      ref_to_merge: origin/stage-CICD
-#      base_branch: master-test
+#      ref_to_merge: origin/dev
+#      base_branch: stage
 #    secrets: inherit
-
-
-  ff-stage-to-dev:
-    uses: ./.github/workflows/fast-forward-merge.yml
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog,
-      publish-to-npm
-    ]
-    with:
-      ref_to_merge: origin/dev
-      base_branch: stage
-    secrets: inherit
-
-  publish-release-notes:
-    uses: ./.github/workflows/publish-release-notes.yml
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      reupload-stage-to-jfrog,
-      publish-to-npm
-    ]
-    with:
-      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
-    secrets: inherit
+#
+#  publish-release-notes:
+#    uses: ./.github/workflows/publish-release-notes.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    with:
+#      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
+#    secrets: inherit

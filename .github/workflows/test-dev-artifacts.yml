@@ -32,7 +32,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -40,8 +40,6 @@ on:
         options:
         - manylinux_x86_64
         - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
         - macosx_x86_64
         - macosx_arm64
         - win_amd64
@@ -80,7 +78,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
         type: string
         required: true  
@@ -130,8 +128,6 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[manylinux_20_x86_64]="ubuntu-22.04"
-        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
@@ -175,14 +171,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
@@ -202,7 +190,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -212,7 +200,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -274,17 +262,16 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
+
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
         docker ps;
         docker logs aerospike;
@@ -307,65 +294,11 @@ jobs:
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
-    - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: 
-        sudo apt install g++-10;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
-        sudo update-alternatives --set g++ /usr/bin/g++-10;
-
     #- name: Debug server
     #  run: |
     #    docker ps;
     #    docker logs aerospike;
 
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - name: Run distro container arm
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Run distro container x64
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
-      run: docker run --name bullseye --platform linux/amd64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp . bullseye:/aerospike-client-nodejs
-
-    #- name: Make sure npm is installed
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: docker exec bullseye node -v && docker exec bullseye npm -v
-
-    #- name: build c client
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
-
-    #- name: build binding
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: 
-    #    docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
-    #    docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
-
-    - name: Run tests
-      id: test
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64') && matrix.nodejs-tag[1] != '18' }}
-      run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
-        ls lib/binding;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -413,14 +346,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: Download Aerolab zip
       run: |
         curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
@@ -467,7 +392,7 @@ jobs:
         npm install;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
         docker ps;
         cd ts-test;
@@ -523,14 +448,6 @@ jobs:
     - uses: actions/setup-node@v4
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
-
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
 
     - name: Download Aerolab zip
       run: |
@@ -588,14 +505,12 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
         cd ts-test;
@@ -655,14 +570,6 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
@@ -682,7 +589,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -692,7 +599,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -759,8 +666,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -885,8 +790,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -955,15 +858,6 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
-
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
       env:
@@ -997,8 +891,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -1077,15 +969,6 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: |
-        if docker ps -aq | grep -q .; then
-          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-        else
-          echo "No containers to remove."
-        fi
-
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
@@ -1127,8 +1010,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -1159,7 +1040,7 @@ jobs:
 #      matrix:
 #        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
 #      fail-fast: false
-#    #if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_20_x86_64' }}
+#    #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
 #    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1190,7 +1071,7 @@ jobs:
 #        node-version: ${{ matrix.nodejs-tag[1] }}
 #
 #    - name: Remove aerospike docker image
-#      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+#      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
 #      run: |
 #        if docker ps -aq | grep -q .; then
 #          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -1233,8 +1114,6 @@ jobs:
 #    - name: list Artifacts first
 #      run: |
 #        ls ./downloaded-artifacts
-#        ls ./downloaded-artifacts/glibc@2.31
-#        ls ./downloaded-artifacts/glibc@2.35
 #
 #    - name: Move artifacts
 #      run: |
@@ -1250,8 +1129,6 @@ jobs:
 #    - name: check binding
 #      run:
 #        ls lib/binding;
-#        ls lib/binding/glibc@2.35;
-#        ls lib/binding/glibc@2.31;
 #
 #    - name: Change install command for release
 #      run: node ./scripts/change-install-command.js
@@ -1346,8 +1223,6 @@ jobs:
 #      - name: list Artifacts first
 #        run: |
 #          ls ./downloaded-artifacts
-#          ls ./downloaded-artifacts/glibc@2.31
-#          ls ./downloaded-artifacts/glibc@2.35
 #
 #      - name: Move artifacts
 #        run: |
@@ -1363,8 +1238,6 @@ jobs:
 #      - name: check binding
 #        run: |
 #          ls lib/binding;
-#          ls lib/binding/glibc@2.35;
-#          ls lib/binding/glibc@2.31;
 #
 #          
 #      #- name: Change install command for release
@@ -1487,8 +1360,6 @@ jobs:
       - name: check binding
         run: |
           ls lib/binding;
-          ls lib/binding/glibc@2.35;
-          ls lib/binding/glibc@2.31;
 
       #- name: Change install command for release
       #  run: node ./scripts/change-install-command.js
@@ -1599,8 +1470,6 @@ jobs:
 #      - name: list Artifacts first
 #        run: |
 #          ls ./downloaded-artifacts
-#          ls ./downloaded-artifacts/glibc@2.31
-#          ls ./downloaded-artifacts/glibc@2.35
 #
 #      - name: Move artifacts
 #        run: |
@@ -1616,8 +1485,6 @@ jobs:
 #      - name: check binding
 #        run: |
 #          ls lib/binding;
-#          ls lib/binding/glibc@2.35;
-#          ls lib/binding/glibc@2.31;
 #
 #          
 #      #- name: Change install command for release

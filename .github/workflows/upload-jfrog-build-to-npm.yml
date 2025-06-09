@@ -60,34 +60,31 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
+    - name: Download from JFrog
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
-        PACKAGE_MANAGER: npm
+        VERSION: ${{ inputs.old_version }}
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/
+        ls aerospike/${{ env.OLD_VERSION }}/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
     - name: Move artifacts
       run: |
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
+        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
     - name: change verison
       run: |
-       npm version 6.0.5 --no-git-tag-version
+       npm version 6.2.1-dev.4 --no-git-tag-version
 
     #- name: change verison
     #  run: |
@@ -110,20 +107,41 @@ jobs:
       run: |
         rm -rf lib/binding
         mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}/* lib/binding/
+        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
         ls lib/binding
       env:
         OLD_VERSION: ${{ inputs.old_version }}
 
-    - name: npm publish
-      run: |
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+    #- name: npm publish
+    #  run: |
+    #    npm publish
+    #  env:
+    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
 
-    - name: npm install
+    #- name: npm install
+    #  run: |
+    #    npm install aerospike@6.2.1-dev.4
+
+    - name: npm pack
       run: |
-        npm install darkcartpale@6.0.5
+        npm pack aerospike
+
+    - name: Sign npm tarball
+      uses: sslcom/esigner-codesign@develop
+      with:
+          command: sign
+          username: ${{ secrets.ES_USERNAME }}
+          password: ${{ secrets.ES_PASSWORD }}
+          totp_secret: ${{ secrets.ES_TOTP_SECRET }}
+          credential_id: ${{ secrets.ES_CREDENTIAL_ID }}
+          file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.0-dev.4.tgz
+          output_path: ${GITHUB_WORKSPACE}/artifacts
+          malware_block: true
+
+    - name: Move artifacts
+      run: |
+        ls ${GITHUB_WORKSPACE}/artifacts
+
 
     #- run: npm ci
     #- run: npm publish --provenance --access public

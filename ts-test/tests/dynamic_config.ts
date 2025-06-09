@@ -47,7 +47,6 @@ describe('Test the config provider and dynamic config', function () {
 
     afterEach(async function () {
       try{
-        console.log("RESET!")
         await client.remove(key)
 
       }
@@ -124,7 +123,7 @@ describe('Test the config provider and dynamic config', function () {
             await dummyClient.remove(key)
           }
           catch(error: any){
-            console.log("remove")
+
           }
 
           let record = await dummyClient.put(key, {"a": 1})
@@ -177,7 +176,7 @@ describe('Test the config provider and dynamic config', function () {
             await dummyClient.remove(key)
           }
           catch(error: any){
-            console.log("remove")
+
           }
 
           let record = await dummyClient.put(key, {"a": 1})
@@ -233,7 +232,7 @@ describe('Test the config provider and dynamic config', function () {
             await dummyClient.remove(key)
           }
           catch(error: any){
-            console.log("remove")
+
           }
 
           let record = await dummyClient.put(key, {"a": 1})
