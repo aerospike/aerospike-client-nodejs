@@ -288,6 +288,13 @@ To clone the repository use the following command:
   git clone --recursive git@github.com:aerospike/aerospike-client-nodejs.git
 ```
 
+⚠️ **Important:** When installing from source, **do not** use the GitHub release asset (`.tar.gz` / `.zip`) files. These files do not contain the
+sub-modules required to build and use the client. Instead, **clone the repository with submodules** and use <code>-b</code> to specify the version.
+
+```sh
+git clone --recurse-submodules https://github.com/aerospike/aerospike-client-nodejs.git -b v6.2.0
+```
+
 #### Building dependancy C client
 
 Make sure to build the C client before doing npm install variants
