@@ -210,7 +210,6 @@ Before starting with the Aerospike Nodejs Client, verify that you have the follo
 - macOS 10.8 or greater.
 - Xcode 5 or greater.
 
-
 **OpenSSL Library**
 OpenSSL is needed to build the Aerospike C Client. If downloading from NPM at version 5.6.0 or later, you will not need to 
 have OpenSSL installed to use the Aerospike Nodejs Client. If you are using version 5.5.0 and below, you will need to do 
