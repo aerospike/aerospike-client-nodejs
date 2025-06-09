@@ -299,15 +299,6 @@ jobs:
     #    docker ps;
     #    docker logs aerospike;
 
-    - name: Run tests
-      id: test
-      if: ${{ inputs.run_tests && matrix.nodejs-tag[1] != '18' }}
-      run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser
-
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0

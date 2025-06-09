@@ -1,8 +1,6 @@
 const os = require('node:os')
 const fs = require('fs')
 const util = require('util')
-const exec = util.promisify(require('child_process').exec)
-const rename = util.promisify(fs.rename)
 const rm = util.promisify(fs.rm)
 
 ;(async function () {
@@ -32,7 +30,6 @@ const rm = util.promisify(fs.rm)
     await rm('lib/binding/node-v131-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-x64', { recursive: true, force: true })
-
   } else if (platform === 'win32') {
     console.log('Windows binaries')
     await rm('lib/binding/node-v131-darwin-arm64', { recursive: true, force: true })
@@ -48,7 +45,6 @@ const rm = util.promisify(fs.rm)
     await rm('lib/binding/node-v131-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-x64', { recursive: true, force: true })
-
   } else {
     console.log('Linux binaries')
     await rm('lib/binding/node-v131-win32-x64', { recursive: true, force: true })
