@@ -262,6 +262,7 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
+
     - name: check binding
       run:
         ls lib/binding;
