@@ -32,7 +32,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -78,7 +78,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       platform-tag:
         type: string
         required: true  
@@ -266,8 +266,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -516,8 +514,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -679,8 +675,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -805,8 +799,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -908,8 +900,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -1029,8 +1019,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -1135,8 +1123,6 @@ jobs:
 #    - name: list Artifacts first
 #      run: |
 #        ls ./downloaded-artifacts
-#        ls ./downloaded-artifacts/glibc@2.31
-#        ls ./downloaded-artifacts/glibc@2.35
 #
 #    - name: Move artifacts
 #      run: |
@@ -1152,8 +1138,6 @@ jobs:
 #    - name: check binding
 #      run:
 #        ls lib/binding;
-#        ls lib/binding/glibc@2.35;
-#        ls lib/binding/glibc@2.31;
 #
 #    - name: Change install command for release
 #      run: node ./scripts/change-install-command.js
@@ -1248,8 +1232,6 @@ jobs:
 #      - name: list Artifacts first
 #        run: |
 #          ls ./downloaded-artifacts
-#          ls ./downloaded-artifacts/glibc@2.31
-#          ls ./downloaded-artifacts/glibc@2.35
 #
 #      - name: Move artifacts
 #        run: |
@@ -1265,8 +1247,6 @@ jobs:
 #      - name: check binding
 #        run: |
 #          ls lib/binding;
-#          ls lib/binding/glibc@2.35;
-#          ls lib/binding/glibc@2.31;
 #
 #          
 #      #- name: Change install command for release
@@ -1389,8 +1369,6 @@ jobs:
       - name: check binding
         run: |
           ls lib/binding;
-          ls lib/binding/glibc@2.35;
-          ls lib/binding/glibc@2.31;
 
       #- name: Change install command for release
       #  run: node ./scripts/change-install-command.js
@@ -1501,8 +1479,6 @@ jobs:
 #      - name: list Artifacts first
 #        run: |
 #          ls ./downloaded-artifacts
-#          ls ./downloaded-artifacts/glibc@2.31
-#          ls ./downloaded-artifacts/glibc@2.35
 #
 #      - name: Move artifacts
 #        run: |
@@ -1518,8 +1494,6 @@ jobs:
 #      - name: check binding
 #        run: |
 #          ls lib/binding;
-#          ls lib/binding/glibc@2.35;
-#          ls lib/binding/glibc@2.31;
 #
 #          
 #      #- name: Change install command for release

@@ -29,9 +29,9 @@ on:
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       nodejs-tags:
         type: string
-        description: Valid JSON list of Python tags to build the client for
+        description: Valid JSON list of Nodejs tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       version:
         type: string
         required: true
@@ -76,7 +76,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       version:
         type: string
         required: true
@@ -274,7 +274,7 @@ jobs:
     - name: Upload binding binaries to JFrog Linux x86
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
@@ -282,7 +282,7 @@ jobs:
     - name: Upload binding binaries to JFrog Linux aarch64
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
