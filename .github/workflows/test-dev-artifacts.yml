@@ -267,9 +267,6 @@ jobs:
       run:
         ls lib/binding;
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
@@ -378,9 +375,6 @@ jobs:
 
     - name: list cluster
       run: aerolab cluster list
-
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
 
     - name: add in debug string for test
       run: |
@@ -505,9 +499,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -667,9 +658,6 @@ jobs:
       run:
         ls lib/binding;
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
     - name: install valgrind
       run: |
         sudo apt-get update;
@@ -791,9 +779,6 @@ jobs:
       run:
         ls lib/binding;
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
@@ -891,9 +876,6 @@ jobs:
     - name: check binding
       run:
         ls lib/binding;
-
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
 
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
@@ -1011,9 +993,6 @@ jobs:
       run:
         ls lib/binding;
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
@@ -1130,9 +1109,6 @@ jobs:
 #      run:
 #        ls lib/binding;
 #
-#    - name: Change install command for release
-#      run: node ./scripts/change-install-command.js
-#
 #    - name: Run tests
 #      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
 #      run: |
@@ -1239,9 +1215,6 @@ jobs:
 #        run: |
 #          ls lib/binding;
 #
-#          
-#      #- name: Change install command for release
-#      #  run: node ./scripts/change-install-command.js
 #
 #      #- name: npm install
 #      #  run: npm install
@@ -1360,9 +1333,6 @@ jobs:
       - name: check binding
         run: |
           ls lib/binding;
-
-      #- name: Change install command for release
-      #  run: node ./scripts/change-install-command.js
 
       #- name: npm install
       #  run: npm install
@@ -1485,10 +1455,6 @@ jobs:
 #      - name: check binding
 #        run: |
 #          ls lib/binding;
-#
-#          
-#      #- name: Change install command for release
-#      #  run: node ./scripts/change-install-command.js
 #
 #      #- name: npm install
 #      #  run: npm install
