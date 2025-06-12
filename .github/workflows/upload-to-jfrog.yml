@@ -7,9 +7,6 @@ permissions:
 on:
   workflow_call:
     inputs:
-      old_version:
-        type: string
-        required: false
       new_version:
         type: string
         required: false
@@ -36,7 +33,7 @@ on:
     #    required: true
 
 jobs:
-  reupload-to-jfrog:
+  upload-to-jfrog:
     name: Upload artifacts to JFrog
     env:
       JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
@@ -55,35 +52,30 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/*"
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
+        VERSION: ${{ inputs.new_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./aerospike/${{ env.OLD_VERSION }}/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./aerospike/${{ env.NEW_VERSION }}/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
         NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Publish build info
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish --project clients nodejs-client ${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
+      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
     # Required to run sponge
     - run: sudo apt install -y moreutils
 
     # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
     - name: Create file spec for release bundle
-      run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ env.NEW_VERSION }}"' | sponge releasebundle-filespec.json
+      run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ inputs.new_version }}"' | sponge releasebundle-filespec.json
       working-directory: .github/workflows
       shell: bash
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
 
 
     - name: Create release bundle from JFrog build
@@ -91,13 +83,9 @@ jobs:
       # But that name doesn't specify the language,
       # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
       # Signing key only signs release bundle and not the artifacts associated with it
-      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ env.NEW_VERSION }}
+      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
       working-directory: .github/workflows
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Promote release bundle to DEV stage
-      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ env.NEW_VERSION }} STAGE
+      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
       working-directory: .github/workflows
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}

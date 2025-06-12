@@ -29,9 +29,9 @@ on:
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       nodejs-tags:
         type: string
-        description: Valid JSON list of Python tags to build the client for
+        description: Valid JSON list of Nodejs tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       version:
         type: string
         required: true
@@ -42,8 +42,6 @@ on:
         options:
         - manylinux_x86_64
         - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
         - macosx_x86_64
         - macosx_arm64
         - win_amd64
@@ -78,7 +76,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
       version:
         type: string
         required: true
@@ -127,8 +125,6 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[manylinux_20_x86_64]="ubuntu-22.04"
-        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
@@ -233,16 +229,13 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-    - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: 
-        sudo apt install g++-10;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
-        sudo update-alternatives --set g++ /usr/bin/g++-10;
+    - name: 'Install libyaml'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      #if: ${{ inputs.platform-tag == 'macosx_x86_64' || inputs.platform-tag == 'macosx_arm64' }}
+      run: |
+        brew install libyaml
 
     - name: Build Binding
-      if: ${{ inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64'}}
       run: |
         ./scripts/build-c-client.sh;
         npm install;
@@ -254,7 +247,7 @@ jobs:
     #    docker logs aerospike;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (inputs.platform-tag != 'manylinux_20_x86_64' && inputs.platform-tag != 'manylinux_20_aarch64')}}
+      if: ${{ inputs.run_tests }}
       run: |
         cd ts-test;
         npm install;
@@ -262,53 +255,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - name: Run distro container arm
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Run distro container x64
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64'}}
-      run: docker run --name bullseye --platform linux/amd64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp . bullseye:/aerospike-client-nodejs
-
-    - name: Make sure npm is installed
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye node -v && docker exec bullseye npm -v
-
-    - name: build c client
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
-
-    - name: build binding
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
-        docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
-
-    - name: Run tests
-      id: test
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64')}}
-      run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
-        ls lib/binding;
 
 
     #- name: Run tests
@@ -334,15 +280,7 @@ jobs:
     - name: Upload binding binaries to JFrog Linux x86
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Upload binding binaries to JFrog Linux 20 x86
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
@@ -350,15 +288,7 @@ jobs:
     - name: Upload binding binaries to JFrog Linux aarch64
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.35/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Upload binding binaries to JFrog Linux 20 aarch64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/glibc@2.31/
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
