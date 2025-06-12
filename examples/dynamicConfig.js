@@ -39,6 +39,7 @@ async function dynamicConfig (client, argv) {
   }
   let cli = null
   try{
+    console.log("Connecting...")
     cli = await Aerospike.connect(config)
     console.log("Connected!")
   }
@@ -52,13 +53,14 @@ async function dynamicConfig (client, argv) {
   }
 }
 
-exports.command = 'dynamicConfig <dynamic_config_path>'
+exports.command = 'dynamicConfig'
 exports.describe = 'Dynamic Config'
 exports.handler = shared.run(dynamicConfig)
 exports.builder = {
   'dynamic_config_path': {
     alias: 'dcp',
     describe: 'Path of dynamic config',
-    type: 'string'
+    type: 'string',
+    default: './example_config/config.yml'
   }
 }

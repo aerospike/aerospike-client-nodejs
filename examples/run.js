@@ -30,6 +30,7 @@ const commands = [
   'geospatialMonteCarlo',
   'get',
   'info',
+  'metrics',
   'mrtAbort',
   'mrtCommit',
   'operate',
