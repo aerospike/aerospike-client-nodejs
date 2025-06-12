@@ -113,8 +113,13 @@ describe('Metrics tests', function () {
 
 
   it('test metrics writer', async function () {
-    let policy: MetricsPolicy = new Aerospike.MetricsPolicy({
-      interval: 1
+    let policy: MetricsPolicy = new Aerospike.MetricsPolicy({{
+        reportDir: metricsLogFolder,
+        reportSizeLimit: 1000,
+        interval: 2,
+        latencyColumns: bucketCount,
+        latencyShift: 2
+      }
     })
 
     await client.enableMetrics(policy)
