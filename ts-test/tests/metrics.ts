@@ -115,7 +115,7 @@ describe('Metrics tests', function () {
   it('test metrics writer', async function () {
     let policy: MetricsPolicy = new Aerospike.MetricsPolicy({
       reportDir: metricsLogFolder,
-      reportSizeLimit: 1000,
+      reportSizeLimit: 1000000,
       interval: 2,
       latencyColumns: 6,
       latencyShift: 2
