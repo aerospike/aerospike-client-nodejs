@@ -23,7 +23,7 @@ jobs:
 
 #  bump-dev-number:
 #    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-#    uses: ./.github/workflows/bump-version.yml
+#    uses: ./.github/workflows/bump-dev-version.yml
 #    with:
 #      change: 'bump-dev-num'
 #    secrets: inherit
@@ -92,14 +92,14 @@ jobs:
 #      version: ${{ needs.bump-dev-number.outputs.new_version }}
 #    secrets: inherit
 
-  verify-npm-install:
-    name: verify npm install works correctly
-    #needs: [
-    #  download-jfrog-artifacts,
-    #  publish-to-npm
-    #]
-    uses: ./.github/workflows/verify-npm-install.yml
-    secrets: inherit
+#  verify-npm-install:
+#    name: verify npm install works correctly
+#    #needs: [
+#    #  download-jfrog-artifacts,
+#    #  publish-to-npm
+#    #]
+#    uses: ./.github/workflows/verify-npm-install.yml
+#    secrets: inherit
 
 #  # We don't want the artifacts in JFrog to also exist in Github
 #  delete-artifacts:

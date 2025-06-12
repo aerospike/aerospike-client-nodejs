@@ -3,6 +3,10 @@ run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -25,9 +29,12 @@ on:
       # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       nodejs-tags:
         type: string
-        description: Valid JSON list of Python tags to build the client for
+        description: Valid JSON list of Nodejs tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+      version:
+        type: string
+        required: true
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -35,8 +42,6 @@ on:
         options:
         - manylinux_x86_64
         - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
         - macosx_x86_64
         - macosx_arm64
         - win_amd64
@@ -71,7 +76,10 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+      version:
+        type: string
+        required: true
       platform-tag:
         type: string
         required: true
@@ -117,8 +125,6 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[manylinux_20_x86_64]="ubuntu-20.04"
-        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
@@ -223,16 +229,13 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-    - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: 
-        sudo apt install g++-10;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
-        sudo update-alternatives --set g++ /usr/bin/g++-10;
+    - name: 'Install libyaml'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      #if: ${{ inputs.platform-tag == 'macosx_x86_64' || inputs.platform-tag == 'macosx_arm64' }}
+      run: |
+        brew install libyaml
 
     - name: Build Binding
-      if: ${{ inputs.platform-tag != 'manylinux_20_aarch64'}}
       run: |
         ./scripts/build-c-client.sh;
         npm install;
@@ -244,7 +247,7 @@ jobs:
     #    docker logs aerospike;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests }}
       run: |
         cd ts-test;
         npm install;
@@ -252,49 +255,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - name: Run distro container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp . bullseye:/aerospike-client-nodejs
-
-    - name: Make sure npm is installed
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec bullseye node -v && docker exec bullseye npm -v
-
-    - name: build c client
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
-
-    - name: build binding
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
-        docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
-
-    - name: Run tests
-      id: test
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
-        ls lib/binding;
 
 
     #- name: Run tests
@@ -309,48 +269,45 @@ jobs:
     #    npx tsc;
     #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
-    - name: Upload wheels to GitHub Linux x86
-      uses: actions/upload-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Upload binding binaries to JFrog Linux x86
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
-    - name: Upload wheels to GitHub Linux 20 x86
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Linux aarch64
-      uses: actions/upload-artifact@v4
+    - name: Upload binding binaries to JFrog Linux aarch64
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
-    - name: Upload wheels to GitHub Linux 20 aarch64
-      uses: actions/upload-artifact@v4
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
-    - name: Upload wheels to GitHub Mac x86
-      uses: actions/upload-artifact@v4
+    - name: Upload binding binaries to JFrog darwin x86
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
-    - name: Upload wheels to GitHub Mac Arm
-      uses: actions/upload-artifact@v4
+    - name: Upload binding binaries to JFrog darwin aarch64
       if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-      with:
-        path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node
-        name: ${{ env.BUILD_IDENTIFIER }}.node
-
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
 
     - name: Cleanup Artifacts
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -361,12 +318,13 @@ jobs:
         Remove-Item -Force .\build\release\aerospike.ipdb
         Remove-Item -Force .\build\release\aerospike.iobj
 
-    - name: Upload wheels to GitHub Windows
-      uses: actions/upload-artifact@v4
+    - name: Upload binding binaries to JFrog windows x86
       if: ${{ inputs.platform-tag == 'win_amd64' }}
-      with:
-        path: ./build/Release/*
-        name: ${{ env.BUILD_IDENTIFIER }}.node
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: build/Release/
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -375,235 +333,3 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-#  test-self-hosted:
-#    needs: cibuildbinding
-#    # There's a top-level env variable for this but we can't use it here, unfortunately
-#    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-#    runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64", "SMA2"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
-#    env:
-#      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-#    steps:
-#      - name: Create status check message
-#        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-#        shell: bash
-#
-#      - name: Show job status for commit
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
-#        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-#        with:
-#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-#          context: ${{ env.STATUS_CHECK_MESSAGE }}
-#
-#      - uses: actions/checkout@v4
-#        with:
-#          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-#
-#      # Need to be able to save Docker Hub credentials to keychain
-#      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-#        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-#
-#      - name: Remove aerospike docker image
-#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-#        run: |
-#          if docker ps -aq | grep -q .; then
-#            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-#          else
-#            echo "No containers to remove."
-#          fi
-#
-#      - name: Remove aerospike docker image
-#        if: ${{ inputs.platform-tag == 'win_amd64' }}
-#        run: |
-#          if (docker ps -aq) {
-#              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
-#          }
-#          else {
-#              Write-Host "No containers to remove."
-#          }
-#
-#      - uses: ./.github/actions/run-ee-server
-#        with:
-#          use-server-rc: ${{ inputs.use-server-rc }}
-#          server-tag: ${{ inputs.server-tag }}
-#          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-#          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-#
-#      - name: Download wheel
-#        uses: actions/download-artifact@v4
-#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-#        with:
-#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-#          name: ${{ env.BUILD_IDENTIFIER }}.node
-#
-#      - name: Download wheel
-#        uses: actions/download-artifact@v4
-#        if: ${{ inputs.platform-tag == 'win_amd64' }}
-#        with:
-#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
-#          name: ${{ env.BUILD_IDENTIFIER }}.node
-#
-#      - name: Convert Python tag to Python version
-#        # Don't use sed because we want this command to work on both mac and windows
-#        # The command used in GNU sed is different than in macOS sed
-#        run: |
-#          NODEJS_TAG=${{ matrix.nodejs-tag[0] }}
-#          NODEJS_VERSION="${NODEJS_TAG/cp/}"
-#          echo NODEJS_VERSION="${NODEJS_VERSION/3/3.}" >> $GITHUB_ENV
-#        shell: bash
-#
-#      - uses: actions/setup-node@v4
-#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-#        with:
-#          node-version: ${{ matrix.nodejs-tag[1] }}
-#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-#
-#      - uses: actions/setup-node@v4
-#        if: ${{ inputs.platform-tag == 'win_amd64' }}
-#        with:
-#          node-version: ${{ matrix.nodejs-tag[1] }}
-#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
-#
-#
-##      - name: Install nvm
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-##          touch ~/.zprofile
-##          source ~/.zprofile
-##          nvm -v
-##        shell: bash
-##
-##      #- name: Install Node.js 20
-##      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##      #  run: |
-##      #    nvm i 20
-##      #  shell: bash
-##
-##      - name: Prepare /usr/local/opt directory
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          sudo rm -rf /usr/local/opt
-##          sudo mkdir -p /usr/local/opt
-##          sudo chown -R $(whoami) /usr/local/opt
-##        shell: bash
-##
-##      - name: Install libuv
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          brew install libuv
-##          sudo ln -s /opt/homebrew/opt/libuv/1.45.0/ /usr/local/opt/libuv
-##        shell: bash
-##
-##      - name: Configure OpenSSL
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          rm -rf /usr/local/opt/openssl
-##          sudo ln -s /opt/homebrew/opt/openssl@3.4/ /usr/local/opt/openssl
-##        shell: bash
-##
-##      - name: Update PATH and environment variables
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          echo "export PATH=\"/usr/local/bin/:/usr/local/opt/openssl/bin:\$PATH\"" >> ~/.zprofile
-##          echo "export LDFLAGS=\"-L/usr/local/opt/openssl/lib\"" >> ~/.zprofile
-##          echo "export CPPFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zprofile
-##          echo "export EXT_CFLAGS=\"-I/usr/local/opt/openssl/include\"" >> ~/.zprofile
-##        shell: bash
-##
-##      - name: Source updated environment variables
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          source ~/.zprofile
-##        shell: bash
-#
-##      - name: Install wheel
-##        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-##        run: |
-##          ./scripts/build-c-client.sh
-##          npm install
-##        shell: bash
-#
-##      - name: Install wheel
-##        if: ${{ inputs.platform-tag == 'win_amd64' }}
-##        run: |
-##          ./scripts/build-c-client.ps1
-##          npm install
-##        shell: powershell
-#
-#      - name: Connect to Docker container on remote machine with Docker daemon
-#        if: ${{ inputs.platform-tag == 'win_amd64' }}
-#        # DOCKER_HOST contains the IP address of the remote machine
-#        run: |
-#          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-#          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-#        working-directory: .github\workflows
-#
-#      ## FIGURE OUT WHAT SETUP NEEDS TO HAPPEN
-#      #- run: |
-#      #    npm install typescript --save-dev
-#      #    npx tsc;
-#      #  working-directory: ts-test
-#      #  shell: bash
-#
-#      #- name: Identify binaries
-#      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-#      #  run: |
-#      #    ls ./lib/binding/node-v108-darwin-arm64
-#      #    ls ./lib/binding/node-v108-darwin-arm64/aerospike.node
-#      #    mkdir -p build;
-#      #    mkdir -p build/Release;
-#      #    cp -r ./lib/binding/node-v108-darwin-arm64 build/Release
-#
-#      - name: Run tests
-#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-#        run: |
-#          docker ps;
-#          docker logs aerospike;
-#          cd ts-test;
-#          npm uninstall tsc;
-#          npm install ..;
-#          npm i --save-dev @types/chai;
-#          npm i --save-dev @types/jest;
-#          npm i --save-dev @types/mocha;
-#          npm install mocha;
-#          rm -rf dist;
-#          npx tsc;
-#          cd ..;
-#          npm install;
-#          pwd;
-#          npx tsc;
-#          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
-#
-#
-#      - name: Run tests
-#        if: ${{ inputs.platform-tag == 'win_amd64' }}
-#        run: |
-#          docker ps;
-#          docker logs aerospike;
-#          cd ts-test;
-#          npm uninstall tsc;
-#          npm install ..;
-#          npm i --save-dev @types/chai;
-#          npm i --save-dev @types/jest;
-#          npm i --save-dev @types/mocha;
-#          npm install mocha;
-#          npx tsc;
-#          cp tests\udf.lua dist\udf.lua;
-#          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
-#          cd ..; 
-#          npx tsc;
-#
-#
-#      - name: Show job status for commit
-#        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
-#        with:
-#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-#          status: ${{ job.status }}
-#          context: ${{ env.STATUS_CHECK_MESSAGE }}
-#
