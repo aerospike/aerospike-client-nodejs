@@ -117,7 +117,7 @@ describe('Metrics tests', function () {
       reportDir: metricsLogFolder,
       reportSizeLimit: 1000,
       interval: 2,
-      latencyColumns: bucketCount,
+      latencyColumns: 6,
       latencyShift: 2
     })
 
