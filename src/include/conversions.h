@@ -127,7 +127,7 @@ bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
 bool get_map_policy(as_map_policy *policy, v8::Local<v8::Object> obj,
 					const LogInfo *log);
-int get_optional_report_dir_property(char **report_dir, bool *defined,
+int get_optional_report_dir_property(char **report_dir, bool *defined, int* size,
 								v8::Local<v8::Object> obj, const char *prop,
 								const LogInfo *log);
 

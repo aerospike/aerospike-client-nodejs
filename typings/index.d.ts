@@ -16466,7 +16466,7 @@ export namespace operations {
  * This namespace provides functions to create secondary index (SI) filter
  * predicates for use in query commands via the {@link Client#query} command.
  * For more info see: 
- * <a href="https://aerospike.com/docs/develop/learn/queries/secondary-index/#index-filters" title="Index Filter Documentation.">&uArr;Queries</a>
+ * <a href="https://aerospike.com/docs/develop/learn/queries/secondary-index/#index-filters" title="Index Filter Documentation.">Index Filter Documentation/a>
  *
  * @see {@link Query}
  *

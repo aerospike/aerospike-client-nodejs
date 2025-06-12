@@ -574,7 +574,7 @@ int get_optional_asval_property(as_val **value, bool *defined,
 	return asval_from_jsvalue(value, v8value, log);
 }
 
-int get_optional_report_dir_property(char **report_dir, bool *defined,
+int get_optional_report_dir_property(char **report_dir, bool *defined, int* size,
 								Local<Object> obj, const char *prop,
 								const LogInfo *log)
 {
@@ -594,8 +594,11 @@ int get_optional_report_dir_property(char **report_dir, bool *defined,
 					prop);
 			return AS_NODE_PARAM_ERR;
 		}
-		strncpy(*report_dir, *Nan::Utf8String(v8_string_report_dir), ((v8_string_report_dir->Length() + 1) < 256) ?
-		(v8_string_report_dir->Length() + 1) : 256);
+		else{
+			*size = (v8_string_report_dir->Length() + 1);
+		}
+		*report_dir = (char *)malloc(*size);
+		as_strncpy(*report_dir, *Nan::Utf8String(v8_string_report_dir), *size);
 		as_v8_detail(log, "report dir : %s", (*report_dir));
 		if (defined != NULL)
 			(*defined) = true;
