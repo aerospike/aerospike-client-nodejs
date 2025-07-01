@@ -55,7 +55,11 @@ class MetricsCommand : public AerospikeCommand {
 			cf_free(listeners);
 		}
 		if (policy != NULL) {
+			if(report_dir){
+				cf_free(report_dir);
+			}
 			as_metrics_policy_destroy(policy);
+			cf_free(policy);
 		}
 		if (latency_buckets != NULL) {
 			for (uint32_t i = 0; i < nodes_size; ++i)
@@ -88,9 +92,9 @@ class MetricsCommand : public AerospikeCommand {
 
 	bool* client_closed;
 	bool disabled = false;
+	char* report_dir = NULL;
 	
 	as_vector* labels = NULL;
-
   as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
@@ -490,7 +494,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 
 	cmd->policy = (as_metrics_policy *)cf_malloc(sizeof(as_metrics_policy));
 	if (info[0]->IsObject()) {
-		if (metricspolicy_from_jsobject_with_listeners(cmd->policy, info[0].As<Object>(), cmd->listeners, log) !=
+		if (metricspolicy_from_jsobject_with_listeners(cmd->policy, info[0].As<Object>(), cmd->listeners, &cmd->report_dir, cmd->log) !=
 			AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Metrics policy parameter invalid");

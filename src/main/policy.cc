@@ -720,7 +720,7 @@ int adminpolicy_from_jsobject(as_policy_admin *policy, Local<Object> obj,
 }
 
 int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<Object> obj,
-							 as_metrics_listeners* listeners, const LogInfo *log)
+							 as_metrics_listeners* listeners, char** report_dir, const LogInfo *log)
 {
 	if (obj->IsUndefined() || obj->IsNull()) {
 		return AS_NODE_PARAM_ERR;
@@ -735,7 +735,6 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 	if(listeners != NULL){
 		policy->metrics_listeners = *listeners;
 	}
-
 
 	if ((rc = get_optional_string_property(&app_id, &defined, obj, 
 										   "appId", log)) != AS_NODE_PARAM_OK) {
@@ -778,11 +777,18 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 		return AS_NODE_PARAM_ERR;
 	}
 
-	if ((rc = get_optional_report_dir_property((char**)&policy->report_dir, NULL, obj,
+
+	int size = 256;
+	bool defined = false;
+	if ((rc = get_optional_report_dir_property(report_dir, &defined, &size, obj,
 										   "reportDir", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	else if (defined) {
+		as_metrics_policy_set_report_dir(policy, *report_dir);
+	}
+
 	if ((rc = get_optional_uint64_property(&policy->report_size_limit, NULL, obj,
 										   "reportSizeLimit", log)) !=
 		AS_NODE_PARAM_OK) {
