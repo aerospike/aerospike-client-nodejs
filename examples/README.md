@@ -58,12 +58,14 @@ The following are the included examples:
   - put - Write a record
   - remove - Remove a record
 - **Advanced Operations**
+  - dynamicConfig - Connect with a dynamic configuration.
   - info - Get cluster state information
   - batch - Read a batch of records in a single transaction
   - query - Run a query to fetch records matching a filter, optionally
     performing aggregation using UDFs
   - scan - Run a scan on an entire namespace or set
   - sindex - Manage secondary indexes (create/remove index)
+  - Connect- Connect to aerospike
   - udf - Manage User-Defined Functions (create/remove module)
 - **Complex Examples**
   - geospatialMonteCarlo - Performs a Monte Carlo simulation to approximate PI

@@ -42,7 +42,7 @@
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
     "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
-    "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/${npm_config_testfile:-} ",
+    "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ;cp tests/{udf.lua,dyn_config.yml,dyn_config_send_key_true.yml,dyn_config_metrics_disabled.yml} dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard",

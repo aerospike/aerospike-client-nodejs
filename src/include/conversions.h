@@ -121,6 +121,9 @@ int get_optional_uint32_property(uint32_t *intp, bool *defined,
 int get_optional_uint16_property(uint16_t *intp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
+int get_optional_uint8_property(uint8_t *intp, bool *defined,
+								 v8::Local<v8::Object> obj, char const *prop,
+								 const LogInfo *log);
 int get_float_property(double *floatp, v8::Local<v8::Object> obj,
 					   char const *prop, const LogInfo *log);
 bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
@@ -202,8 +205,8 @@ typedef struct {
     uint32_t *query;
 } latency;
 
-void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint32_t bucket_max);
-void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint32_t bucket_max);
+void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
+void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,

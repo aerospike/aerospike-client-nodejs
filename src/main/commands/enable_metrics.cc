@@ -30,6 +30,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_config.h>
+#include <aerospike/as_status.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 }
@@ -57,6 +58,7 @@ class MetricsCommand : public AerospikeCommand {
 			if(report_dir){
 				cf_free(report_dir);
 			}
+			as_metrics_policy_destroy(policy);
 			cf_free(policy);
 		}
 		if (latency_buckets != NULL) {
@@ -70,7 +72,18 @@ class MetricsCommand : public AerospikeCommand {
 			}
 			cf_free(latency_buckets);
 		}
-
+		if(labels){
+			as_vector_destroy(labels);
+		}
+		if(ns_metrics){
+			for (int i = 0; i < metrics_size; ++i)
+			{
+				cf_free((void *) ns_metrics[i]->ns);
+				cf_free(ns_metrics[i]);
+			}
+			cf_free(ns_metrics);
+			
+		}
 		enable_callback.Reset();
 		snapshot_callback.Reset();
 		node_close_callback.Reset();
@@ -80,14 +93,17 @@ class MetricsCommand : public AerospikeCommand {
 	bool* client_closed;
 	bool disabled = false;
 	char* report_dir = NULL;
-
+	
+	as_vector* labels = NULL;
   as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
 	as_node* node = NULL;
+	as_ns_metrics** ns_metrics = NULL;
+	uint8_t metrics_size = 0;
 	latency* latency_buckets = NULL;
 
-	uint32_t bucket_max = 0;
+	uint8_t bucket_max = 0;
 	uint32_t nodes_size = 0;
 
 	Nan::Persistent<v8::Function> enable_callback;
@@ -161,21 +177,21 @@ class MetricsCommand : public AerospikeCommand {
 static Local<Value> prepare_disable_cluster_arg(MetricsCommand* cmd) {
 		Nan::EscapableHandleScope scope;
     Local<Object> v8_cluster = Nan::New<Object>();
-    cluster_to_jsobject(cmd->cluster, v8_cluster, cmd->latency_buckets, cmd->bucket_max);
+    cluster_to_jsobject(cmd->cluster, v8_cluster, cmd->latency_buckets, cmd->bucket_max, cmd->ns_metrics, cmd->metrics_size, cmd->labels, cmd->policy, cmd->log);
     return scope.Escape(v8_cluster);
 }
 
 static Local<Value> prepare_cluster_arg(MetricsCommand* cmd) {
 		Nan::EscapableHandleScope scope;
     Local<Object> v8_cluster = Nan::New<Object>();
-    cluster_to_jsobject(cmd->cluster, v8_cluster, NULL, 0);
+    cluster_to_jsobject(cmd->cluster, v8_cluster, NULL, 0, NULL, 0, NULL, cmd->policy, cmd->log);
     return scope.Escape(v8_cluster);
 }
 
 static Local<Value> prepare_node_arg(MetricsCommand* cmd) {
 		Nan::EscapableHandleScope scope;
 		Local<Object> v8_node = Nan::New<Object>();
-		node_to_jsobject(cmd->node, v8_node, NULL, 0);
+		node_to_jsobject(cmd->node, v8_node, NULL, 0, NULL, 0, NULL, cmd->policy, cmd->log);
     return scope.Escape(v8_node);
 }
 
@@ -360,16 +376,34 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	as_nodes* nodes = as_nodes_reserve(cluster);
 	cmd->nodes_size = nodes->size;
 	cmd->latency_buckets = (latency *)cf_malloc(nodes->size * sizeof(latency));
+
+
 	uint32_t i, j;
 	for (i = 0; i < nodes->size; i++) {
 
 		as_node* node = nodes->array[i];
 
-		as_node_metrics* node_metrics = node->metrics;
+		cmd->metrics_size = node->metrics_size;
 
-		as_latency_buckets* buckets = &node_metrics->latency[0];
+		cmd->ns_metrics = (as_ns_metrics**) cf_malloc(sizeof(as_ns_metrics*) * cmd->metrics_size);
 
-	    cmd->bucket_max = buckets->latency_columns;
+		for (uint8_t k = 0; k < cmd->metrics_size; ++k)
+		{
+			as_ns_metrics* node_metrics = node->metrics[k];
+			as_ns_metrics* ns_metrics =  (as_ns_metrics*)cf_malloc(sizeof(as_ns_metrics));
+
+			ns_metrics->ns = strdup(node_metrics->ns);
+			ns_metrics->bytes_in = node_metrics->bytes_in;
+			ns_metrics->bytes_out = node_metrics->bytes_out;
+			ns_metrics->error_count = node_metrics->error_count;
+			ns_metrics->timeout_count = node_metrics->timeout_count;
+			ns_metrics->key_busy_count = node_metrics->key_busy_count;
+
+			cmd->ns_metrics[k] = ns_metrics;
+			
+			as_latency* buckets = as_latency_reserve(node_metrics->latency[0]);
+
+	    cmd->bucket_max = buckets->size;
 
 	    cmd->latency_buckets[i].connection = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
 	    cmd->latency_buckets[i].write = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
@@ -383,30 +417,40 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	       cmd->latency_buckets[i].connection[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
-	    buckets = &node_metrics->latency[1];
-	    
+	    as_latency_release(buckets);
+
+	    buckets = as_latency_reserve(node_metrics->latency[1]);
+
 	    for (j = 0; j < cmd->bucket_max; j++) {
 	        cmd->latency_buckets[i].write[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
-	    buckets = &node_metrics->latency[2];
-	    
+	    as_latency_release(buckets);
+
+	    buckets = as_latency_reserve(node_metrics->latency[2]);
+
 	    for (j = 0; j < cmd->bucket_max; j++) {
 	        cmd->latency_buckets[i].read[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
-	    buckets = &node_metrics->latency[3];
+	    as_latency_release(buckets);
+
+	    buckets = as_latency_reserve(node_metrics->latency[3]);
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
 	        cmd->latency_buckets[i].batch[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
-	    buckets = &node_metrics->latency[4];
+	    as_latency_release(buckets);
+
+	    buckets = as_latency_reserve(node_metrics->latency[4]);
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
 	        cmd->latency_buckets[i].query[j] = (uint32_t) as_latency_get_bucket(buckets, i);
 	    }
 
+	    as_latency_release(buckets);
+	  }
 	}
 
 	as_nodes_release(nodes);
@@ -460,6 +504,24 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		as_metrics_policy_init(cmd->policy);
 	}
 
+	if (cmd->policy) {
+		if(cmd->policy->labels){
+			cmd->labels = as_vector_create(sizeof(as_metrics_label), 8);
+		}
+	}
+	if(cmd->policy && cmd->policy->labels){
+		for (uint32_t i = 0; i < cmd->policy->labels->size; ++i)
+		{
+			as_metrics_label* label = (as_metrics_label *) as_vector_get(cmd->policy->labels, i);
+
+			as_metrics_label* label_copy = (as_metrics_label *) cf_malloc(sizeof(as_metrics_label));
+
+			label_copy->name = (char *) cf_strdup(label->name);
+			label_copy->value = (char *) cf_strdup(label->value);
+
+			as_vector_append(cmd->labels, label_copy);
+		}
+	}
 	return cmd;
 }
 
@@ -483,9 +545,15 @@ static void respond(uv_work_t *req, int status)
 	Nan::HandleScope scope;
 
 	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(req->data);
+	LogInfo *log = cmd->log;
 
+  if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
+    as_v8_warn(log, cmd->err.message);
+    as_error_reset(&cmd->err);
+  }
 
-	Local<Value> argv[] = {Nan::Null(), Nan::Null()};
+  Local<Value> argv[] = {Nan::Null(), Nan::Null()};
+
 	if (!(cmd->IsError())){
 		cmd->Callback(2, argv);
 	}

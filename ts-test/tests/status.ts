@@ -30,6 +30,12 @@ describe('Aerospike.status #noserver', function () {
     expect(status.TXN_ALREADY_ABORTED).to.equal(-19)
     expect(status.getMessage(status.TXN_ALREADY_ABORTED)).to.equal('Transaction commit called, but the transaction was already aborted.')
   })
+  
+  it('AEROSPIKE_TXN_ALREADY_ABORTED', function () {
+    expect(status.AEROSPIKE_TXN_ALREADY_ABORTED).to.equal(-19)
+    expect(status.TXN_ALREADY_ABORTED).to.equal(-19)
+    expect(status.getMessage(status.TXN_ALREADY_ABORTED)).to.equal('Transaction commit called, but the transaction was already aborted.')
+  })
 
   it('AEROSPIKE_TXN_ALREADY_COMMITTED', function () {
     expect(status.AEROSPIKE_TXN_ALREADY_COMMITTED).to.equal(-18)

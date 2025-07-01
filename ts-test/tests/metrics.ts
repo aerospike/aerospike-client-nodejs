@@ -19,9 +19,9 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client as Cli, Node, NodeMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
+import Aerospike, { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
 
 import * as fs from 'fs';
@@ -135,7 +135,6 @@ describe('Metrics tests', function () {
     }
   })
 
-
   it('test setting custom listener functions', async function () {
 
     let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -155,9 +154,16 @@ describe('Metrics tests', function () {
         reportSizeLimit: 1000,
         interval: 2,
         latencyColumns: bucketCount,
-        latencyShift: 2
+        latencyShift: 2,
+        labels: {
+          "size": "large",
+          "fit": "standard"
+        },
+        appId: "Forever Soup"
       }
     )
+
+    console.log(policy)
 
     await client.enableMetrics(policy)
 
@@ -210,27 +216,63 @@ describe('Metrics tests', function () {
           expect(node.conns.inPool).to.be.a("number");
           expect(node.conns.opened).to.be.a("number");
           expect(node.conns.closed).to.be.a("number");
-          expect(node.errorCount).to.be.a("number");
-          expect(node.timeoutCount).to.be.a("number");
 
-          // Check NodeMetrics
-          const metrics: NodeMetrics = node.metrics;
-          const latencyBuckets = [
-              metrics.connLatency,
-              metrics.writeLatency,
-              metrics.readLatency,
-              metrics.batchLatency,
-              metrics.queryLatency
-          ];
+          // Check NamespaceMetrics
+          const metrics: any = node.metrics;
+          console.log(node)
+          console.log(node.metrics)
+          let latencyBuckets = []
+          for (const metrics of node.metrics){
 
-          for (const buckets of latencyBuckets) {
+            for ( const [key, buckets] of Object.entries(metrics.latency)) {
               expect(buckets).to.be.an("array").with.lengthOf(bucketCount);
-              for (const bucket of buckets) {
+              let bucketsList: any = buckets;
+              for (const bucket of bucketsList) {
                   expect(bucket).to.be.a("number");
               }
+            }
+            for ( const [name, value] of Object.entries(metrics.labels)) {
+              expect(name).to.be.a("string")
+              expect(value).to.be.a("string")
+            }
+            expect(metrics.appId).to.be.a("string")
+            expect(metrics.ns).to.be.a("string")
+            expect(metrics.bytesIn).to.be.a("number")
+            expect(metrics.bytesOut).to.be.a("number")
+            expect(metrics.errorCount).to.be.a("number")
+            expect(metrics.timeoutCount).to.be.a("number")
+            expect(metrics.keyBusy).to.be.a("number")
           }
+
+
       }
     }
+  })
+  it('enable metrics incorrect args labels', async function () {
+    let policy: any = {
+      labels: true,
+    }
+    try{
+      await client.enableMetrics(policy)  
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
+
+    }
+    catch(error: any){
+      expect(error.message).to.eql("Metrics policy parameter invalid")
+    } 
+  })
+
+  it('enable metrics incorrect args appId', async function () {
+    let policy: any = {
+      appId: true,
+    }
+    try{
+      await client.enableMetrics(policy)  
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
+    }
+    catch(error: any){
+      expect(error.message).to.eql("Metrics policy parameter invalid")
+    } 
   })
 
   it('enable metrics incorrect args latencyShift', async function () {
@@ -239,6 +281,7 @@ describe('Metrics tests', function () {
     }
     try{
       await client.enableMetrics(policy)  
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
 
     }
     catch(error: any){
@@ -252,6 +295,7 @@ describe('Metrics tests', function () {
     }
     try{
       await client.enableMetrics(policy)  
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
 
     }
     catch(error: any){
@@ -265,6 +309,7 @@ describe('Metrics tests', function () {
     }
     try{
       await client.enableMetrics(policy)  
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
 
     }
     catch(error: any){
@@ -284,16 +329,15 @@ describe('Metrics tests', function () {
     }
     try{
       await (client as any).disableMetrics(1)
+      assert.fail("AN ERROR SHOULD BE CAUGHT")
 
     }
     catch(error: any){
       expect(error.message).to.eql("this.callback.bind is not a function")
     } 
   })
-
-/*
-
-  The errors are thrown in an asynchronous context rather than as a return value. If the implementation is changed, these tests can be added
+  /*
+  //The errors are thrown in an asynchronous context rather than as a return value. If the implementation is changed, these tests can be added
 
   it('enable metric throws exception', async function () {
     let listeners: MetricsListeners = new Aerospike.MetricsListeners(

@@ -66,6 +66,12 @@ extern LogInfo g_log_info;
 						   __LINE__, __fmt, ##__VA_ARGS__);                    \
 	}
 
+#define as_v8_warn(__log, __fmt, ...)                                         \
+	if ((__log) && AS_LOG_LEVEL_WARN <= (__log)->level) {                     \
+		as_v8_log_function(__log, AS_LOG_LEVEL_WARN, __func__, __FILE__,      \
+						   __LINE__, __fmt, ##__VA_ARGS__);                    \
+	}
+
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
