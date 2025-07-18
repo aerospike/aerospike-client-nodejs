@@ -44,7 +44,9 @@ describe('Metrics tests', function () {
   this.timeout(40000)
   const client: Cli = helper.client
 
+  helper.skipUnlessAdvancedMetrics(this)
 
+  this.timeout(4000)
 
   const blank_policy: MetricsPolicy = new Aerospike.MetricsPolicy()
 
