@@ -35,9 +35,11 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('Dynamic Config tests', async function () {
-  
+
+  helper.skipUnlessDynamicConfig(this)
   this.timeout(40000)
-  //helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+
+  helper.skipUnlessDynamicConfig(this)
 
   let key: K = new Aerospike.Key(helper.namespace, helper.set, 'test/dynamic_config/1')
 

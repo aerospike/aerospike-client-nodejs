@@ -120,6 +120,10 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
     },
+    testDynamicConfig: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
+    },
     testMetricsKeyBusy: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
