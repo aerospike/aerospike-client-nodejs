@@ -278,10 +278,6 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
   }
 
-  export function skipUnlessAdvancedMetrics(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
-  }
-  
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')
   }
