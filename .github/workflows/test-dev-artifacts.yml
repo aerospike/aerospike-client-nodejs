@@ -386,11 +386,6 @@ jobs:
       run: |
         awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
 
-    - name: compile binding
-      run: |
-        ./scripts/build-c-client.sh;
-        npm install;
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
