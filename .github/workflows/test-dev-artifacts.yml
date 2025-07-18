@@ -379,8 +379,42 @@ jobs:
     - name: list cluster
       run: aerolab cluster list
 
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        mkdir lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+
+    - name: check binding
+      run:
+        ls lib/binding;
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
 
     - name: add in debug string for test
       run: |
@@ -654,7 +688,6 @@ jobs:
       run: |
         mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
       env:
         NEW_VERSION: ${{ inputs.version }}
 
