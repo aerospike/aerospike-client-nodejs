@@ -2549,8 +2549,8 @@ export namespace policy {
          */
         public reportSizeLimit?: number;
         /**
-         * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
-         * in the client config plus the time to tend all nodes.
+         * Number of cluster tend iterations between metrics notification events. One tend iteration
+         * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
          */
         public interval?: number;
         /**
@@ -2562,15 +2562,8 @@ export namespace policy {
          */
         public latencyShift?: number;
         /**
-         * Application identifier that is applied when exporting metrics. If this field is NULL,
-         * as_config.user will be used as the app_id when exporting metrics.
-         *
-         */
-        public appId?: string;
-        /**
-         * List of name/value labels that is applied when exporting metrics.
-         *
-         */
+         * Object containing name/value labels applied when exporting metrics.
+         */ 
         public labels?: { [key: string]: string };
 
         /**
@@ -6725,6 +6718,10 @@ export class Client extends EventEmitter {
  */
 export class Config {
     /**
+     * Application identifier.  May be null.
+     */
+    public appId?: string;
+    /**
      * Authentication mode used when user/password is defined.
      * 
      * One of the auth modes defined in {@link auth}.
@@ -9179,6 +9176,10 @@ export interface CommandQueuePolicyOptions extends BasePolicyOptions {
 
 export interface ConfigOptions {
     /**
+     * Application identifier.  May be null.
+     */
+    appId?: string;
+    /**
      * Authentication mode used when user/password is defined.
      * 
      * One of the auth modes defined in {@link auth}.
@@ -9709,7 +9710,20 @@ export interface ConnectionStats {
      */
     closed: number;
 }
+/**
+ * Event loop metrics.
+ */
+export interface EventLoop {
+  /**
+   * Number of tasks currently being processed by the event loop.
+   */
+  processSize: number;
 
+  /**
+   * Number of tasks waiting in the event loop queue.
+   */
+  queueSize: number;
+}
 
 export interface EventLoopStats {
     /**
@@ -9983,8 +9997,8 @@ export interface MetricsPolicyOptions {
      */
     reportSizeLimit?: number;
     /**
-     * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
-     * in the client config plus the time to tend all nodes.
+     * Number of cluster tend iterations between metrics notification events. One tend iteration
+     * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
      */
     interval?: number;
     /**
@@ -9995,12 +10009,6 @@ export interface MetricsPolicyOptions {
      * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
      */
     latencyShift?: number;
-    /**
-     * Application identifier that is applied when exporting metrics. If this field is NULL,
-     * as_config.user will be used as the app_id when exporting metrics.
-     *
-     */
-    appId?: string;
     /**
      * List of name/value labels that is applied when exporting metrics.
      *
@@ -10032,17 +10040,35 @@ export interface ModLua {
  */
 export interface Cluster {
     /**
+     * Application identifier that is applied when exporting metrics. If this field is NULL,
+     * as_config.user will be used as the app_id when exporting metrics.
+     *
+     */
+    appId?: string;
+    /**
      * Expected cluster name for all nodes. May be null.
      */
     clusterName: string;
+    /**
+     * Command count. The value is cumulative and not reset per metrics interval.
+     */
+    commandCount: number;
+    /**
+     * Delay queue timeout count. The value is cumulative and not reset per metrics interval.
+     */
+    delayQueueTimeoutCount: number;
+    /**
+     * Event loop information.
+     */
+    eventLoop: EventLoop;
     /**
      * Count of add node failures in the most recent cluster tend iteration.
      */
     invalidNodeCount: number;
     /**
-     * Command count. The value is cumulative and not reset per metrics interval.
+     * Transaction count. The value is cumulative and not reset per metrics interval.
      */
-    commandCount: number;
+    transactionCount: number;
     /**
      * Command retry count. There can be multiple retries for a single command. The value is cumulative and not reset per metrics interval.
      */
@@ -10075,9 +10101,9 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
-     * Node Metrics
+     * Namespace Metrics
      */
-    metrics: NamespaceMetrics;
+    metrics: array<NamespaceMetrics>;
 }
 
 /**
@@ -10089,15 +10115,15 @@ export interface NamespaceMetrics {
     /**
      * Namespace
      */
-    ns: number;
+    ns: string;
      /**
      * Bytes received from the server.
      */
-    bytes_in: number;
+    bytesIn: number;
     /**
      * Bytes sent from the server.
      */
-    bytes_out: number;
+    bytesOut: number;
     /**
      * Command error count since node was initialized. If the error is retryable,
      * multiple errors per command may occur.
@@ -10112,7 +10138,37 @@ export interface NamespaceMetrics {
      * Command key busy error count since node was initialized.
      */
     keyBusyCount: number;
+    /**
+     * List of name/value labels that is applied when exporting metrics.
+     */
+    labels?: { [key: string]: string };
+    /**
+      * Connection latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    connLatency: array;
+    /**
+      * Write latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    writeLatency: array;
+    /**
+      * Read latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    readLatency: array;
+    /**
+      * Batch latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    batchLatency: array;
+    /**
+      * Query latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    queryLatency: array;
 }
+
 /**
  * Aerospike Node Stats.
  */

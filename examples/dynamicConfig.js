@@ -23,31 +23,29 @@ shared.runner()
 async function dynamicConfig (client, argv) {
   const config = {
     hosts: [
-      { addr: argv.hosts, port: argv.port}
+      { addr: argv.hosts, port: argv.port }
     ],
     configProvider: {
       path: argv.dcp,
       interval: 1
     }
   }
-  if(argv.user){
+  if (argv.user) {
     config.user = argv.user
   }
 
-  if(argv.password){
+  if (argv.password) {
     config.password = argv.password
   }
   let cli = null
-  try{
-    console.log("Connecting...")
+  try {
+    console.log('Connecting...')
     cli = await Aerospike.connect(config)
-    console.log("Connected!")
-  }
-  catch(error){
-    console.log("Failed with: " + str(error))
-  }
-  finally{
-    if(client){
+    console.log('Connected!')
+  } catch (error) {
+    console.log('Failed with: ' + error)
+  } finally {
+    if (client) {
       await cli.close()
     }
   }
@@ -57,7 +55,7 @@ exports.command = 'dynamicConfig'
 exports.describe = 'Dynamic Config'
 exports.handler = shared.run(dynamicConfig)
 exports.builder = {
-  'dynamic_config_path': {
+  dynamic_config_path: {
     alias: 'dcp',
     describe: 'Path of dynamic config',
     type: 'string',

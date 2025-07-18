@@ -21,9 +21,17 @@ const shared = require('./shared')
 shared.runner()
 
 async function metrics (client, argv) {
-  let policy = {}
+  const policy = {}
   if (argv.customListeners) {
-    policy.metricsListeners = argv.customListeners
+    const listeners = new Aerospike.MetricsListeners(
+      {
+        enableListener,
+        disableListener,
+        nodeCloseListener,
+        snapshotListener
+      }
+    )
+    policy.metricsListeners = listeners
   }
   if (argv.reportDir) {
     policy.reportDir = argv.reportDir
@@ -46,11 +54,32 @@ async function metrics (client, argv) {
   if (argv.appId) {
     policy.appId = argv.appId
   }
-  console.log("Enabling Metrics with the following policy:")
+  console.log('Enabling Metrics with the following policy:')
   console.log(policy)
   await client.enableMetrics(policy)
+  await new Promise(resolve => setTimeout(resolve, 5000))
+  await client.disableMetrics()
+  await new Promise(resolve => setTimeout(resolve, 0)) // Let the event loop cycle and allows disable listener to fire.
 }
 
+function enableListener () {
+  console.log('Enable listener called.')
+}
+
+function snapshotListener (cluster) {
+  console.log('Snapshot listener called')
+  console.log(cluster)
+}
+
+function nodeCloseListener (node) {
+  console.log('Node Close listener called')
+  console.log(node)
+}
+
+function disableListener (cluster) {
+  console.log('Disabled listener called')
+  console.log(cluster)
+}
 
 exports.command = 'metrics'
 exports.describe = 'Enable Client metrics'
@@ -74,7 +103,7 @@ exports.builder = {
   interval: {
     describe: 'Number of cluster tend iterations between metrics notification events.',
     type: 'number',
-    default: 1000
+    default: 2
   },
   latencyColumns: {
     describe: 'Number of elapsed time range buckets in latency histograms.',
@@ -98,4 +127,3 @@ exports.builder = {
   }
 
 }
-
