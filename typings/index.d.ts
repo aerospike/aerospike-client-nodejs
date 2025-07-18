@@ -9660,7 +9660,7 @@ export interface ConfigPolicies {
 
 }
 
-interface ConfigProvider {
+export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
     * initialization and whenever the file changes. The policies fields in the file
@@ -9672,11 +9672,11 @@ interface ConfigProvider {
     * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
     * will take precedence over the command-level policy
     */
-    path: string;
+    path?: string;
     /**
      * Check dynamic configuration file for changes after this number of cluster tend iterations.
      */
-    interval: number;
+    interval?: number;
 }
 
 

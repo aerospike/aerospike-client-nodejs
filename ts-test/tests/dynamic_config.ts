@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool} from 'aerospike';
+import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool, ConfigProvider} from 'aerospike';
 
 const fs = require('fs');
 
@@ -634,5 +634,24 @@ describe('Dynamic Config tests', async function () {
         })
       })
     })
+  })
+  context('API and Functionality tests', async function () { 
+    let configProvider: ConfigProvider = {
+      path: 'b',
+      interval: 10000
+    }
+
+    it('compiles interval', async function () {
+      let configProvider: ConfigProvider = {
+        interval: 20000
+      }
+    })
+
+    it('compiles path', async function () {
+      let configProvider: ConfigProvider = {
+        path: 'a'
+      }
+    })
+
   })
 })
