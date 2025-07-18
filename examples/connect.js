@@ -23,26 +23,24 @@ shared.runner()
 async function connect (client, argv) {
   const config = {
     hosts: [
-      { addr: argv.hosts, port: argv.port}
+      { addr: argv.hosts, port: argv.port }
     ]
   }
-  if(argv.user){
+  if (argv.user) {
     config.user = argv.user
   }
 
-  if(argv.password){
+  if (argv.password) {
     config.password = argv.password
   }
   let cli = null
-  try{
+  try {
     cli = await Aerospike.connect(config)
-    console.log("Connected!")
-  }
-  catch(error){
-    console.log("Failed with: " + str(error))
-  }
-  finally{
-    if(client){
+    console.log('Connected!')
+  } catch (error) {
+    console.log('Failed with: ' + error)
+  } finally {
+    if (client) {
       await cli.close()
     }
   }

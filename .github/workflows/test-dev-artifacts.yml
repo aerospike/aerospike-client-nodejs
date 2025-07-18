@@ -401,6 +401,7 @@ jobs:
         cd ..;
         npx tsc;
         npm run test --testfile=prefer_rack.js -- --testPreferRack true --h 0.0.0.0 --port 3100;
+        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100;
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy

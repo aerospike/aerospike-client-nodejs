@@ -14,5 +14,9 @@ libuv*
 docs*
 ts-test/dist
 ts-test/metrics-*
+ts-test/metrics_sub_dir/metrics-*
+ts-test/node_modules/
+ts-test/metrics_sub_dir/*/*
+ts-test/features.conf
 scripts/build-c-client.sh-cclient-output.log
 tsconfig.tsbuildinfos

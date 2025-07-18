@@ -76,6 +76,7 @@ NAN_METHOD(AerospikeClient::New)
 	int result = config_from_jsobject(&config, v8Config, client->log);
 	if (result != AS_NODE_PARAM_OK) {
 		Nan::ThrowError("Invalid client configuration");
+		return;
 	}
 
 	aerospike_init(client->as, &config);
@@ -264,7 +265,9 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> config)
 	Nan::TryCatch try_catch;
 	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
 	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
+		//Nan::FatalException(try_catch);
+		Nan::ThrowError("Error instantiating Client in C++ addon");
+		return Nan::Null();
 	}
 	return scope.Escape(instance.ToLocalChecked());
 }

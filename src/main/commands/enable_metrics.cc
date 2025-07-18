@@ -61,7 +61,7 @@ class MetricsCommand : public AerospikeCommand {
 			as_metrics_policy_destroy(policy);
 			cf_free(policy);
 		}
-		if (latency_buckets != NULL) {
+		if (latency_buckets != NULL && latency_buckets_set) {
 			for (uint32_t i = 0; i < nodes_size; ++i)
 			{
 				cf_free(latency_buckets[i].connection);
@@ -102,7 +102,7 @@ class MetricsCommand : public AerospikeCommand {
 	as_ns_metrics** ns_metrics = NULL;
 	uint8_t metrics_size = 0;
 	latency* latency_buckets = NULL;
-
+	bool latency_buckets_set = false;
 	uint8_t bucket_max = 0;
 	uint32_t nodes_size = 0;
 
@@ -404,6 +404,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 			as_latency* buckets = as_latency_reserve(node_metrics->latency[0]);
 
 	    cmd->bucket_max = buckets->size;
+	    cmd->latency_buckets_set = true;
 
 	    cmd->latency_buckets[i].connection = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
 	    cmd->latency_buckets[i].write = (uint32_t *)cf_malloc(cmd->bucket_max * sizeof(uint32_t));
@@ -414,7 +415,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 
 
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	       cmd->latency_buckets[i].connection[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	       cmd->latency_buckets[i].connection[j] = (uint32_t) as_latency_get_bucket(buckets, j);
 	    }
 
 	    as_latency_release(buckets);
@@ -422,7 +423,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	    buckets = as_latency_reserve(node_metrics->latency[1]);
 
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency_buckets[i].write[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].write[j] = (uint32_t) as_latency_get_bucket(buckets, j);
 	    }
 
 	    as_latency_release(buckets);
@@ -430,7 +431,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	    buckets = as_latency_reserve(node_metrics->latency[2]);
 
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency_buckets[i].read[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].read[j] = (uint32_t) as_latency_get_bucket(buckets, j);
 	    }
 
 	    as_latency_release(buckets);
@@ -438,7 +439,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	    buckets = as_latency_reserve(node_metrics->latency[3]);
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency_buckets[i].batch[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].batch[j] = (uint32_t) as_latency_get_bucket(buckets, j);
 	    }
 
 	    as_latency_release(buckets);
@@ -446,7 +447,7 @@ as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* ud
 	    buckets = as_latency_reserve(node_metrics->latency[4]);
 	    
 	    for (j = 0; j < cmd->bucket_max; j++) {
-	        cmd->latency_buckets[i].query[j] = (uint32_t) as_latency_get_bucket(buckets, i);
+	        cmd->latency_buckets[i].query[j] = (uint32_t) as_latency_get_bucket(buckets, j);
 	    }
 
 	    as_latency_release(buckets);
@@ -470,8 +471,9 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	LogInfo *log = client->log;
 
 
-	if (info[1]->IsFunction()) {
-		if (info[2]->IsFunction() && info[3]->IsFunction() && info[4]->IsFunction()) {
+
+	if (info[1]->IsFunction() || info[2]->IsFunction() || info[3]->IsFunction() || info[4]->IsFunction()) {
+		if (info[1]->IsFunction() && info[2]->IsFunction() && info[3]->IsFunction() && info[4]->IsFunction()) {
 
 			cmd->enable_callback.Reset(info[1].As<Function>());
 			cmd->snapshot_callback.Reset(info[2].As<Function>());
