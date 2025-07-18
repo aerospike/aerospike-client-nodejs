@@ -730,23 +730,10 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 
 	bool defined = false;
 
-	char* app_id = NULL;
+	int report_dir_size = 256;
 
 	if(listeners != NULL){
 		policy->metrics_listeners = *listeners;
-	}
-
-	if ((rc = get_optional_string_property(&app_id, &defined, obj, 
-										   "appId", log)) != AS_NODE_PARAM_OK) {
-		if(app_id){
-			cf_free(app_id);
-		}
-		return rc;
-	}
-	else if (defined){
-		as_metrics_policy_set_app_id(policy, app_id);
-		cf_free(app_id);
-
 	}
 
 
@@ -778,9 +765,7 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 	}
 
 
-	int size = 256;
-	bool defined = false;
-	if ((rc = get_optional_report_dir_property(report_dir, &defined, &size, obj,
+	if ((rc = get_optional_report_dir_property(report_dir, &defined, &report_dir_size, obj,
 										   "reportDir", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;

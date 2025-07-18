@@ -5,10 +5,11 @@ metadata:
 
 static:
   client:
-    config_interval: 2
+    config_interval: 2000
 dynamic:
+  read:
+    send_key: true
   write:
     send_key: true
-static:
-  client:
-    config_interval: 1
+  query:
+    send_key: true

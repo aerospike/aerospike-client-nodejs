@@ -1636,8 +1636,16 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 
 	Nan::Set(v8_cluster, Nan::New("cpuLoad").ToLocalChecked(), Nan::New(cpu_load));
 	*/
-	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(),
-				 Nan::New(cluster_name).ToLocalChecked());
+
+	if(cluster->app_id) {
+		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::New(cluster->app_id).ToLocalChecked());
+	}
+	else{
+		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::Null());
+
+	}
+
+	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(), Nan::New(cluster_name).ToLocalChecked());
 
 	Nan::Set(v8_cluster, Nan::New("commandCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_command_count(cluster)));
 
@@ -1740,7 +1748,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 	{
 		as_ns_metrics* node_metrics = node->metrics[j];
 
-		Local<Object> v8_latency = Nan::New<Object>();
 
 		Local<Array> connection = Nan::New<Array>();
 		Local<Array> write = Nan::New<Array>();
@@ -1765,7 +1772,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			}
 
 
-			Local<String> v8_app_id = Nan::New(policy->app_id).ToLocalChecked();
 
 			Local<String> v8_ns = Nan::New(node_metrics->ns).ToLocalChecked();
 
@@ -1867,15 +1873,13 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 
 		    as_latency_release(buckets);
 
-			Nan::Set(v8_latency, Nan::New("connLatency").ToLocalChecked(), connection);
-			Nan::Set(v8_latency, Nan::New("writeLatency").ToLocalChecked(), write);
-			Nan::Set(v8_latency, Nan::New("readLatency").ToLocalChecked(), read);
-			Nan::Set(v8_latency, Nan::New("batchLatency").ToLocalChecked(), batch);
-			Nan::Set(v8_latency, Nan::New("queryLatency").ToLocalChecked(), query);
+			Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), connection);
+			Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), write);
+			Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), read);
+			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
+			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
 
-			Nan::Set(v8_ns_metrics, Nan::New("latency").ToLocalChecked(), v8_latency);
 			Nan::Set(v8_ns_metrics, Nan::New("labels").ToLocalChecked(), v8_labels);
-			Nan::Set(v8_ns_metrics, Nan::New("appId").ToLocalChecked(), v8_app_id);
 			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
@@ -1886,8 +1890,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			Nan::Set(v8_ns_metrics_array, j, v8_ns_metrics);
 		}
 		else{
-
-			Nan::Set(v8_ns_metrics, Nan::New("latency").ToLocalChecked(), v8_latency);
 
 			Local<Object> v8_labels = Nan::New<Object>();
 			if(policy->labels){
@@ -1900,7 +1902,7 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 
 				}
 			}
-			Local<String> v8_app_id = Nan::New(policy->app_id).ToLocalChecked();
+
 
 
 			as_ns_metrics* namespace_metrics = *ns_metrics;
@@ -1984,15 +1986,13 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			}
 
 
-			Nan::Set(v8_latency, Nan::New("connLatency").ToLocalChecked(), connection);
-			Nan::Set(v8_latency, Nan::New("writeLatency").ToLocalChecked(), write);
-			Nan::Set(v8_latency, Nan::New("readLatency").ToLocalChecked(), read);
-			Nan::Set(v8_latency, Nan::New("batchLatency").ToLocalChecked(), batch);
-			Nan::Set(v8_latency, Nan::New("queryLatency").ToLocalChecked(), query);
+			Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), connection);
+			Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), write);
+			Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), read);
+			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
+			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
 
-			Nan::Set(v8_ns_metrics, Nan::New("latency").ToLocalChecked(), v8_latency);
 			Nan::Set(v8_ns_metrics, Nan::New("labels").ToLocalChecked(), v8_labels);
-			Nan::Set(v8_ns_metrics, Nan::New("appId").ToLocalChecked(), v8_app_id);
 			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
