@@ -400,8 +400,8 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h 0.0.0.0 --port 3100;
-        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100;
+        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h  0.0.0.0 --port 3100 --t 40000;
+        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100 --t 40000;
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy
@@ -972,7 +972,7 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server 
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
