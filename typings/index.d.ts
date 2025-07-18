@@ -6741,15 +6741,6 @@ export class Config {
      */
     public connTimeoutMs?: number;
     /**
-     * Initial host connection timeout in milliseconds.
-     * 
-     * The client observes this timeout when opening a connection to
-     * the cluster for the first time.
-     * 
-     * @default 1000
-     */
-    public connTimeoutMs?: number;
-    /**
      * Expected Cluster Name.
      * 
      * If not <code>null</code>, server nodes must return this
@@ -10103,7 +10094,7 @@ export interface Node {
     /**
      * Namespace Metrics
      */
-    metrics: array<NamespaceMetrics>;
+    metrics: Array<NamespaceMetrics>;
 }
 
 /**
@@ -10146,27 +10137,27 @@ export interface NamespaceMetrics {
       * Connection latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
       */
-    connLatency: array;
+    connLatency: Array<number>;
     /**
       * Write latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
       */
-    writeLatency: array;
+    writeLatency: Array<number>;
     /**
       * Read latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
       */
-    readLatency: array;
+    readLatency: Array<number>;
     /**
       * Batch latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
       */
-    batchLatency: array;
+    batchLatency: Array<number>;
     /**
       * Query latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
       */
-    queryLatency: array;
+    queryLatency: Array<number>;
 }
 
 /**
