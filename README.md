@@ -44,6 +44,7 @@ dependencies of other Node.js applications or modules. The modules are installed
 the application's `node_modules` directory, and can be utilized within the program
 by requiring the module by name.
 
+
 ### npm Registry Installations
 
 To install `aerospike` as a dependency of your project, in your project directory run:
