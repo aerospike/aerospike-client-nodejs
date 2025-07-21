@@ -265,6 +265,22 @@ describe('Queries', function () {
     })
   })
 
+  describe('query.whereWithIndexName()', function () {
+    it('adds a filter predicate to the query', function () {
+      const query: Query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal('a', 9))
+      expect(query.filters.length).to.equal(1)
+    })
+  })
+
+  describe('query.whereWithExp()', function () {
+    it('adds a filter predicate to the query', function () {
+      const query: Query = client.query(helper.namespace, helper.set)
+      query.where(Aerospike.filter.equal('a', 9))
+      expect(query.filters.length).to.equal(1)
+    })
+  })
+
   describe('query.foreach() #slow', function () {
     it('Should run a regular primary index query', function (done) {
       const query: Query = client.query(helper.namespace, testSet)
@@ -763,6 +779,14 @@ describe('Queries', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match maps containing a string value in a nested context', function (done) {
             const args: QueryOptions = { filters: [filter.contains('ms', 'banana', MAPVALUES, new Context().addMapKey('nested'))] }
+            verifyQueryResults(args, 'nested string map match', done)
+          })
+
+          it('should match maps containing a string value using the index name', function (done) {
+            const args: any = { 
+              filters: [filter.contains(null as any, 'banana', MAPVALUES, new Context().addMapKey('nested'))],
+              indexName: 'nested string map match'
+            }
             verifyQueryResults(args, 'nested string map match', done)
           })
         })
