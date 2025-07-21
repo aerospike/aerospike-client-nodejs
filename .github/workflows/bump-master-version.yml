@@ -1,0 +1,91 @@
+# Takes in how to bump version as input
+# Commits changes to bump version and outputs the new version and commit hash as output
+
+name: Bump version
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        description: Commit to bump off of
+        type: string
+      # See workflow call hack in update-version.yml
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+    outputs:
+      new_master_version:
+        value: ${{ jobs.get-new-master-version.outputs.new_master_version }}
+      bump_sha:
+        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
+
+jobs:
+  get-next-master-jfrog-version:
+    name: Get most recent JFrog version string
+    runs-on: ubuntu-22.04
+    outputs:
+      master_version: ${{ steps.get-next-master-jfrog-version.outputs.master_version }}
+    steps:
+    # Checkout the branch where we want to bump the new version
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Get jfrog version
+      id: get-next-master-jfrog-version
+      run: |
+        echo "master_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
+
+    - name: Print jfrog version
+      run: echo "Jfrog version is ${{ steps.get-next-master-jfrog-version.outputs.master_version }}"
+
+  get-new-master-version:
+    runs-on: ubuntu-22.04
+    needs: [
+      get-next-master-jfrog-version
+    ]
+    outputs:
+      new_master_version: ${{ steps.get-new-version.outputs.new_master_version }}
+    steps:
+
+    # Checkout the branch where we want to bump the new version
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
+
+    - name: Install library that parses nodejs versions
+    # NEED TO CHANGE THIS TO WORK WITH NODEJS
+      run: npm install semver
+      working-directory: .github/workflows
+
+    - name: Get new version
+      id: get-new-version
+      run: |
+        set -e
+        new_master_version=$( node bump-master-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
+        echo "new_master_version=$new_master_version" >> $GITHUB_OUTPUT
+      working-directory: .github/workflows
+
+    - name: Print new version
+      run: |
+        echo "${{ steps.get-new-version.outputs.new_master_version }}"

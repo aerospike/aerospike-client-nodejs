@@ -21,6 +21,7 @@
 #include "client.h"
 #include "conversions.h"
 #include "operations.h"
+#include "expressions.h"
 #include "log.h"
 #include "query.h"
 
@@ -84,14 +85,46 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 				}				
 			}
 
-			Local<Value> bin =
+			char *bin_name = NULL;
+			char *index_name = NULL;
+			as_exp *exp = NULL;
+
+			Local<Value> v8_bin =
 				Nan::Get(filter, Nan::New("bin").ToLocalChecked())
 					.ToLocalChecked();
-			if (!bin->IsString()) {
-				as_v8_error(log, "Bin value must be string");
-				Nan::ThrowError("Bin value is not a string");
+			Local<Value> v8_index_name =
+				Nan::Get(filter, Nan::New("indexName").ToLocalChecked())
+					.ToLocalChecked();
+			Local<Value> v8_exp =
+				Nan::Get(filter, Nan::New("exp").ToLocalChecked())
+					.ToLocalChecked();
+
+
+			if (v8_bin->IsString()) {
+				bin_name = strdup(*Nan::Utf8String(v8_bin));
 			}
-			const char *bin_name = strdup(*Nan::Utf8String(bin));
+			else {
+				if (v8_index_name->IsString()) {
+					if (v8_exp->IsArray()) {
+						Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
+						if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+							Nan::ThrowError("Expressions could not be compiled");
+						}
+					}
+					index_name = strdup(*Nan::Utf8String(v8_index_name));
+				}
+				else if (v8_exp->IsArray()) {
+					Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
+					if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+						Nan::ThrowError("Expressions could not be compiled");
+					}
+				}
+				else {
+					as_v8_error(log, "Bin, Index Name, or Expression must have valid type");
+					Nan::ThrowError("Bin, Index Name, or Expression must have valid type");
+				}
+			}
+
 			as_predicate_type predicate =
 				(as_predicate_type)Nan::To<int>(
 					Nan::Get(filter, Nan::New("predicate").ToLocalChecked())
@@ -112,103 +145,172 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						"data type %d, bin name '%s'",
 						predicate, type, datatype, bin_name);
 			switch (predicate) {
-			case AS_PREDICATE_RANGE: {
-				if (datatype == AS_INDEX_NUMERIC) {
-					Local<Value> v8min =
-						Nan::Get(filter, Nan::New("min").ToLocalChecked())
-							.ToLocalChecked();
-					Local<Value> v8max =
-						Nan::Get(filter, Nan::New("max").ToLocalChecked())
-							.ToLocalChecked();
-					if (v8min->IsNumber() && v8max->IsNumber()) {
-						const int64_t min = Nan::To<int64_t>(v8min).FromJust();
-						const int64_t max = Nan::To<int64_t>(v8max).FromJust();
-						as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
-									   datatype, min, max);
-						as_v8_debug(log,
-									"Integer range predicate from %llu to %llu",
-									min, max);
+				case AS_PREDICATE_RANGE: {
+					if (datatype == AS_INDEX_NUMERIC) {
+						Local<Value> v8min =
+							Nan::Get(filter, Nan::New("min").ToLocalChecked())
+								.ToLocalChecked();
+						Local<Value> v8max =
+							Nan::Get(filter, Nan::New("max").ToLocalChecked())
+								.ToLocalChecked();
+						if (v8min->IsNumber() && v8max->IsNumber()) {
+							const int64_t min = Nan::To<int64_t>(v8min).FromJust();
+							const int64_t max = Nan::To<int64_t>(v8max).FromJust();
+							if(index_name){
+								as_query_where_with_exp(query, index_name, exp, predicate, type,
+											   datatype, min, max);
+							}
+							else if (exp) {
+								as_query_where_with_index_name(query, index_name, predicate, type,
+											   datatype, min, max);
+							}
+							else {
+								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+										   datatype, min, max);
+							}
+							as_v8_debug(log,
+										"Integer range predicate from %llu to %llu",
+										min, max);
+						}
+						else {
+							as_v8_error(log, "The min/max of the range value "
+											 "passed must both be integers.");
+							Nan::ThrowError("The min/max of the range value passed "
+											"must both be integers.");
+						}
 					}
-					else {
-						as_v8_error(log, "The min/max of the range value "
-										 "passed must both be integers.");
-						Nan::ThrowError("The min/max of the range value passed "
-										"must both be integers.");
-					}
-				}
-				else if (datatype == AS_INDEX_GEO2DSPHERE) {
-					Local<Value> value =
-						Nan::Get(filter, Nan::New("val").ToLocalChecked())
-							.ToLocalChecked();
-					if (!value->IsString()) {
-						as_v8_error(
-							log,
-							"The region value passed must be a GeoJSON string");
-						Nan::ThrowError(
-							"The region value passed is not a GeoJSON string");
-					}
-					const char *bin_val = strdup(*Nan::Utf8String(value));
-					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype,
-								   bin_val);
-					as_v8_debug(log, "Geo range predicate %s", bin_val);
-				}
-				break;
-			}
-			case AS_PREDICATE_EQUAL: {
-				if (datatype == AS_INDEX_NUMERIC) {
-					Local<Value> value =
-						Nan::Get(filter, Nan::New("val").ToLocalChecked())
-							.ToLocalChecked();
-					if (value->IsNumber()) {
-						const int64_t val = Nan::To<int64_t>(value).FromJust();
-						as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
-									   datatype, val);
-						as_v8_debug(log, "Integer equality predicate %d", val);
-					}
-					else {
-						as_v8_error(log, "querying a numeric index with equal "
-										 "predicate - value must be a number");
-						Nan::ThrowError("Querying an numeric index with equal "
-										"predicate - value is not a number");
-					}
-				}
-				else if (datatype == AS_INDEX_STRING) {
-					Local<Value> value =
-						Nan::Get(filter, Nan::New("val").ToLocalChecked())
-							.ToLocalChecked();
-					if (!value->IsString()) {
-						as_v8_error(log, "querying a string index with equal "
-										 "predicate - value must be a string");
-						Nan::ThrowError("Querying a string index with equal "
-										"predicate - value is not a string");
-					}
-					const char *bin_val = strdup(*Nan::Utf8String(value));
-					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype,
-								   bin_val);
-					as_v8_debug(log, "String equality predicate %s", bin_val);
-				}
-				else if (datatype == AS_INDEX_BLOB) {
-					Local<Value> value =
-						Nan::Get(filter, Nan::New("val").ToLocalChecked())
-							.ToLocalChecked();
-					if (!node::Buffer::HasInstance(value)) {
-						as_v8_error(
-							log,
-							"The region value passed must be a Buffer");
-						Nan::ThrowError(
-							"The region value passed is not a buffer");
-					}
-					uint8_t *bytes;
-					int size = 0;
-					get_bytes_property(&bytes, &size, filter, "val" , log);
+					else if (datatype == AS_INDEX_GEO2DSPHERE) {
+						Local<Value> value =
+							Nan::Get(filter, Nan::New("val").ToLocalChecked())
+								.ToLocalChecked();
+						if (!value->IsString()) {
+							as_v8_error(
+								log,
+								"The region value passed must be a GeoJSON string");
+							Nan::ThrowError(
+								"The region value passed is not a GeoJSON string");
+						}
+						const char *bin_val = strdup(*Nan::Utf8String(value));
 
-					as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type, datatype, bytes, size, true);
-					as_v8_debug(log, "Blob equality predicate");
+						if(index_name){
+							as_query_where_with_exp(query, index_name, exp, predicate, type,
+										   datatype, bin_val);
+						}
+						else if (exp) {
+							as_query_where_with_index_name(query, index_name, predicate, type,
+										   datatype, bin_val);
+						}
+						else {
+							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+									   	   datatype, bin_val);
+						}
+
+						as_v8_debug(log, "Geo range predicate %s", bin_val);
+					}
+					break;
 				}
-				break;
+				case AS_PREDICATE_EQUAL: {
+					if (datatype == AS_INDEX_NUMERIC) {
+						Local<Value> value =
+							Nan::Get(filter, Nan::New("val").ToLocalChecked())
+								.ToLocalChecked();
+						if (value->IsNumber()) {
+							const int64_t val = Nan::To<int64_t>(value).FromJust();
+
+							if(index_name){
+								as_query_where_with_exp(query, index_name, exp, predicate, type,
+											   datatype, val);
+							}
+							else if (exp) {
+								as_query_where_with_index_name(query, index_name, predicate, type,
+											   datatype, val);
+							}
+							else {
+								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+										   	   datatype, val);
+							}
+
+							as_v8_debug(log, "Integer equality predicate %d", val);
+						}
+						else {
+							as_v8_error(log, "querying a numeric index with equal "
+											 "predicate - value must be a number");
+							Nan::ThrowError("Querying an numeric index with equal "
+											"predicate - value is not a number");
+						}
+					}
+					else if (datatype == AS_INDEX_STRING) {
+						Local<Value> value =
+							Nan::Get(filter, Nan::New("val").ToLocalChecked())
+								.ToLocalChecked();
+						if (!value->IsString()) {
+							as_v8_error(log, "querying a string index with equal "
+											 "predicate - value must be a string");
+							Nan::ThrowError("Querying a string index with equal "
+											"predicate - value is not a string");
+						}
+						const char *bin_val = strdup(*Nan::Utf8String(value));
+
+						if(index_name){
+							as_query_where_with_exp(query, index_name, exp, predicate, type,
+										   datatype, bin_val);
+						}
+						else if (exp) {
+							as_query_where_with_index_name(query, index_name, predicate, type,
+										   datatype, bin_val);
+						}
+						else {
+							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+									   	   datatype, bin_val);
+						}
+
+						as_v8_debug(log, "String equality predicate %s", bin_val);
+					}
+					else if (datatype == AS_INDEX_BLOB) {
+						Local<Value> value =
+							Nan::Get(filter, Nan::New("val").ToLocalChecked())
+								.ToLocalChecked();
+						if (!node::Buffer::HasInstance(value)) {
+							as_v8_error(
+								log,
+								"The region value passed must be a Buffer");
+							Nan::ThrowError(
+								"The region value passed is not a buffer");
+						}
+						uint8_t *bytes;
+						int size = 0;
+						get_bytes_property(&bytes, &size, filter, "val" , log);
+
+						if(index_name){
+							as_query_where_with_exp(query, index_name, exp, predicate, type,
+										   datatype, bytes, size, true);
+						}
+						else if (exp) {
+							as_query_where_with_index_name(query, index_name, predicate, type,
+										   datatype, bytes, size, true);
+						}
+						else {
+							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+									   	   datatype, bytes, size, true);
+						}
+
+						as_v8_debug(log, "Blob equality predicate");
+					}
+					break;
+				}
 			}
+			if (bin_name)
+			{
+				free((void *) bin_name);
 			}
-			free((void *)bin_name);
+			if (index_name) {
+				free((void *) index_name);
+			}
+			if (exp) {
+				as_exp_destroy(exp);
+			}
+
+
 		}
 	}
 
