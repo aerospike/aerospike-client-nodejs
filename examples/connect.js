@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // *****************************************************************************
 // Copyright 2025 Aerospike, Inc.
 //
@@ -13,27 +14,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // *****************************************************************************
+//
+const Aerospike = require('aerospike')
+const shared = require('./shared')
 
-'use strict'
+shared.runner()
 
-class MetricsPolicy {
-  constructor (props) {
-    props = props || {}
+async function connect (client, argv) {
+  const config = {
+    hosts: [
+      { addr: argv.hosts, port: argv.port }
+    ]
+  }
+  if (argv.user) {
+    config.user = argv.user
+  }
 
-    this.metricsListeners = props.metricsListeners
-
-    this.reportDir = props.reportDir
-
-    this.reportSizeLimit = props.reportSizeLimit
-
-    this.interval = props.interval
-
-    this.latencyColumns = props.latencyColumns
-
-    this.latencyShift = props.latencyShift
-
-    this.labels = props.labels
+  if (argv.password) {
+    config.password = argv.password
+  }
+  let cli = null
+  try {
+    cli = await Aerospike.connect(config)
+    console.log('Connected!')
+  } catch (error) {
+    console.log('Failed with: ' + error)
+  } finally {
+    if (client) {
+      await cli.close()
+    }
   }
 }
 
-module.exports = MetricsPolicy
+exports.command = 'connect'
+exports.describe = 'Connect to the database'
+exports.handler = shared.run(connect)
+exports.builder = {}

@@ -1,0 +1,10 @@
+metadata:
+  app_name: configurationExample
+  generation: 2
+  version: 0.0.1
+dynamic:
+  metrics:
+    enable: false
+static:
+  client:
+    config_interval: 1000

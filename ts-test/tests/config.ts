@@ -57,6 +57,7 @@ describe('Config #noserver', function () {
         modlua: { userPath: '/user/path' },
         password: 'sekret',
         port: 3333,
+        appId: "ForeverSoup",
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
           batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
@@ -82,6 +83,7 @@ describe('Config #noserver', function () {
 
       const config: Conf = new Config(settings)
       expect(config).to.have.property('authMode')
+      expect(config).to.have.property('appId')
       expect(config).to.have.property('clusterName')
       expect(config).to.have.property('connTimeoutMs')
       expect(config).to.have.property('maxErrorRate')
