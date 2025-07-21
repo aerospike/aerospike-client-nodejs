@@ -34,7 +34,7 @@ on:
       run_tests:
         required: false
         type: boolean
-        default: false
+        default: true
       version:
         type: string
         required: true
