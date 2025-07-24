@@ -215,7 +215,6 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      console.log(idx)
       promises.push( helper.index.remove(idx[0]) )
     }
 

@@ -134,7 +134,6 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      console.log(idx)
       promises.push(helper.index.createExprIndex(idx[0], testSet, idx[1], idx[2], idx[3], idx[4]))
 
     }

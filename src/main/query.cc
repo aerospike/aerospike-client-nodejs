@@ -287,7 +287,6 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						as_v8_debug(log, "String equality predicate %s", bin_val);
 					}
 					else if (datatype == AS_INDEX_BLOB) {
-						printf("BLOBBING \n\n");
 						Local<Value> value =
 							Nan::Get(filter, Nan::New("val").ToLocalChecked())
 								.ToLocalChecked();
