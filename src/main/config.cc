@@ -490,16 +490,18 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 										   log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
-	if ((rc = get_optional_uint32_property(&config->max_error_rate,
-										   NULL, configObj, "maxErrorRate",
-										   log)) != AS_NODE_PARAM_OK) {
-		goto Cleanup;
-	}
-	if ((rc = get_optional_uint32_property(&config->error_rate_window,
-										   NULL, configObj, "errorRateWindow",
-										   log)) != AS_NODE_PARAM_OK) {
-		goto Cleanup;
-	}
+	config->max_error_rate = 0;
+	//if ((rc = get_optional_uint32_property(&config->max_error_rate,
+	//									   NULL, configObj, "maxErrorRate",
+	//									   log)) != AS_NODE_PARAM_OK) {
+	//	goto Cleanup;
+	config->error_rate_window = 0;
+
+	//if ((rc = get_optional_uint32_property(&config->error_rate_window,
+	//									   NULL, configObj, "errorRateWindow",
+	//									   log)) != AS_NODE_PARAM_OK) {
+	//	goto Cleanup;
+	//}
 	if ((rc = get_optional_uint32_property(&config->async_min_conns_per_node,
 										   NULL, configObj, "minConnsPerNode",
 										   log)) != AS_NODE_PARAM_OK) {

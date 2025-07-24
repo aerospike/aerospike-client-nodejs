@@ -27,12 +27,13 @@
 
 extern "C" {
 #include <aerospike/as_query.h>
+#include <aerospike/as_exp.h>
 }
 
 using namespace v8;
 
 void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
-				 Local<Value> maybe_options, as_cdt_ctx* context, bool* with_context, LogInfo *log)
+				 Local<Value> maybe_options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -57,12 +58,12 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 		return;
 	}
 
-	setup_options(query, maybe_options.As<Object>(), context, with_context, log);
+	setup_options(query, maybe_options.As<Object>(), context, with_context, exp, log);
 
 
 }
 
-void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, bool* with_context, LogInfo *log)
+void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
 {
 
 	Local<Value> filters_val =
@@ -87,7 +88,6 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 			char *bin_name = NULL;
 			char *index_name = NULL;
-			as_exp *exp = NULL;
 
 			Local<Value> v8_bin =
 				Nan::Get(filter, Nan::New("bin").ToLocalChecked())
@@ -100,30 +100,41 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 					.ToLocalChecked();
 
 
-			if (v8_bin->IsString()) {
+
+			if (v8_exp->IsArray()) {
+
+				if (v8_index_name->IsString()) {
+					as_v8_error(log, "Index name must not be defined if expression is defined");
+					Nan::ThrowError("Index name must not be defined if expression is defined");
+				}
+
+				if (v8_bin->IsString()) {
+					as_v8_error(log, "Bin name must not be defined if expression is defined");
+					Nan::ThrowError("Bin name must not be defined if expression is defined");
+				}
+
+				Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
+				if (compile_expression(exp_ary, exp, log) != AS_NODE_PARAM_OK) {
+					Nan::ThrowError("Expressions could not be compiled");
+				}
+
+			}
+			else if (v8_index_name->IsString()) {
+				if (v8_bin->IsString()) {
+					as_v8_error(log, "Bin name must not be defined if index name is defined");
+					Nan::ThrowError("Bin name must not be defined if index name is defined");
+				}
+				index_name = strdup(*Nan::Utf8String(v8_index_name));
+			}
+			else if (v8_bin->IsString()) {
 				bin_name = strdup(*Nan::Utf8String(v8_bin));
 			}
 			else {
-				if (v8_index_name->IsString()) {
-					if (v8_exp->IsArray()) {
-						Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
-						if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-							Nan::ThrowError("Expressions could not be compiled");
-						}
-					}
-					index_name = strdup(*Nan::Utf8String(v8_index_name));
-				}
-				else if (v8_exp->IsArray()) {
-					Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
-					if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-						Nan::ThrowError("Expressions could not be compiled");
-					}
-				}
-				else {
-					as_v8_error(log, "Bin, Index Name, or Expression must have valid type");
-					Nan::ThrowError("Bin, Index Name, or Expression must have valid type");
-				}
+				as_v8_error(log, "Bin, Index Name, or Expression must have valid type");
+				Nan::ThrowError("Bin, Index Name, or Expression must have valid type");
+				
 			}
+			
 
 			as_predicate_type predicate =
 				(as_predicate_type)Nan::To<int>(
@@ -156,17 +167,18 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						if (v8min->IsNumber() && v8max->IsNumber()) {
 							const int64_t min = Nan::To<int64_t>(v8min).FromJust();
 							const int64_t max = Nan::To<int64_t>(v8max).FromJust();
-							if(index_name){
-								as_query_where_with_exp(query, index_name, exp, predicate, type,
+							if(*exp){
+								as_query_where_with_exp(query, index_name, *exp, predicate, type,
 											   datatype, min, max);
 							}
-							else if (exp) {
+							else if (index_name) {
 								as_query_where_with_index_name(query, index_name, predicate, type,
 											   datatype, min, max);
 							}
 							else {
 								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 										   datatype, min, max);
+							
 							}
 							as_v8_debug(log,
 										"Integer range predicate from %llu to %llu",
@@ -177,6 +189,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 											 "passed must both be integers.");
 							Nan::ThrowError("The min/max of the range value passed "
 											"must both be integers.");
+							
 						}
 					}
 					else if (datatype == AS_INDEX_GEO2DSPHERE) {
@@ -189,20 +202,23 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 								"The region value passed must be a GeoJSON string");
 							Nan::ThrowError(
 								"The region value passed is not a GeoJSON string");
+
+							
 						}
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
-						if(index_name){
-							as_query_where_with_exp(query, index_name, exp, predicate, type,
+						if(*exp){
+							as_query_where_with_exp(query, index_name, *exp, predicate, type,
 										   datatype, bin_val);
 						}
-						else if (exp) {
+						else if (index_name) {
 							as_query_where_with_index_name(query, index_name, predicate, type,
 										   datatype, bin_val);
 						}
 						else {
 							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
+							
 						}
 
 						as_v8_debug(log, "Geo range predicate %s", bin_val);
@@ -217,17 +233,20 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						if (value->IsNumber()) {
 							const int64_t val = Nan::To<int64_t>(value).FromJust();
 
-							if(index_name){
-								as_query_where_with_exp(query, index_name, exp, predicate, type,
+
+							
+
+							if(*exp){
+								as_query_where_with_exp(query, index_name, *exp, predicate, type,
 											   datatype, val);
 							}
-							else if (exp) {
+							else if (index_name) {
 								as_query_where_with_index_name(query, index_name, predicate, type,
 											   datatype, val);
 							}
 							else {
 								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
-										   	   datatype, val);
+										   	   datatype, val);							
 							}
 
 							as_v8_debug(log, "Integer equality predicate %d", val);
@@ -251,22 +270,24 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						}
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
-						if(index_name){
-							as_query_where_with_exp(query, index_name, exp, predicate, type,
+						if(*exp){
+							as_query_where_with_exp(query, index_name, *exp, predicate, type,
 										   datatype, bin_val);
 						}
-						else if (exp) {
+						else if (index_name) {
 							as_query_where_with_index_name(query, index_name, predicate, type,
 										   datatype, bin_val);
 						}
 						else {
 							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
+							
 						}
 
 						as_v8_debug(log, "String equality predicate %s", bin_val);
 					}
 					else if (datatype == AS_INDEX_BLOB) {
+						printf("BLOBBING \n\n");
 						Local<Value> value =
 							Nan::Get(filter, Nan::New("val").ToLocalChecked())
 								.ToLocalChecked();
@@ -281,36 +302,33 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						int size = 0;
 						get_bytes_property(&bytes, &size, filter, "val" , log);
 
-						if(index_name){
-							as_query_where_with_exp(query, index_name, exp, predicate, type,
+						if(*exp){
+							as_query_where_with_exp(query, index_name, *exp, predicate, type,
 										   datatype, bytes, size, true);
 						}
-						else if (exp) {
+						else if (index_name) {
 							as_query_where_with_index_name(query, index_name, predicate, type,
 										   datatype, bytes, size, true);
 						}
 						else {
 							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
 									   	   datatype, bytes, size, true);
+							
 						}
 
 						as_v8_debug(log, "Blob equality predicate");
 					}
 					break;
 				}
-			}
-			if (bin_name)
-			{
-				free((void *) bin_name);
-			}
-			if (index_name) {
-				free((void *) index_name);
-			}
-			if (exp) {
-				as_exp_destroy(exp);
-			}
 
-
+				if (bin_name)
+				{
+					free((void *) bin_name);
+				}
+				if (index_name) {
+					free((void *) index_name);
+				}
+			}
 		}
 	}
 
@@ -390,7 +408,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size,
-				as_cdt_ctx* context, bool* with_context, LogInfo *log)
+				as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -422,12 +440,12 @@ void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 		return;
 	}
 
-	setup_options(*query, maybe_options.As<Object>(), context, with_context, log);
+	setup_options(*query, maybe_options.As<Object>(), context, with_context, exp, log);
 
 }
 
 
-void free_query(as_query *query, as_policy_query *policy)
+void free_query(as_query *query, as_policy_query *policy, as_exp *exp)
 {
 	if (query) {
 		as_query_destroy(query);
@@ -438,4 +456,9 @@ void free_query(as_query *query, as_policy_query *policy)
 			as_exp_destroy(policy->base.filter_exp);
 		}
 	}
+
+	if (exp) {
+		as_exp_destroy(exp);
+	}
+
 }

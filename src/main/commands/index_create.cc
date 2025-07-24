@@ -21,6 +21,7 @@
 #include "policy.h"
 #include "log.h"
 #include "operations.h"
+#include "expressions.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -45,6 +46,10 @@ class IndexCreateCommand : public AerospikeCommand {
 			free(index);
 		if (with_context)
 			as_cdt_ctx_destroy(&context);
+
+		if(exp){
+			as_exp_destroy(exp);
+		}
 	}
 
 	as_index_task task;
@@ -57,6 +62,7 @@ class IndexCreateCommand : public AerospikeCommand {
 	as_index_datatype dtype;
 	as_cdt_ctx context;
 	bool with_context;
+	as_exp *exp = NULL;
 };
 
 static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
@@ -65,7 +71,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	IndexCreateCommand *cmd =
-		new IndexCreateCommand(client, info[8].As<Function>());
+		new IndexCreateCommand(client, info[9].As<Function>());
 	LogInfo *log = client->log;
 
 	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()),
@@ -82,29 +88,38 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 							   "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 		}
 	}
-
-	if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2].As<String>()),
-				   AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
-		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
-						   "Bin name exceeds max. length (%d)",
-						   AS_BIN_NAME_MAX_LEN);
+	if (info[2]->IsString()) {
+		if (as_strlcpy(cmd->bin, *Nan::Utf8String(info[2].As<String>()),
+					   AS_BIN_NAME_MAX_LEN) > AS_BIN_NAME_MAX_LEN) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Bin name exceeds max. length (%d)",
+							   AS_BIN_NAME_MAX_LEN);
+		}
 	}
 
-	cmd->index = strdup(*Nan::Utf8String(info[3].As<String>()));
-	cmd->itype = (as_index_type)Nan::To<int>(info[4]).FromJust();
-	cmd->dtype = (as_index_datatype)Nan::To<int>(info[5]).FromJust();
+	if (info[3]->IsArray()) {
+		Local<Array> exp_ary = Local<Array>::Cast(info[3].As<Array>());
+		if (compile_expression(exp_ary, &cmd->exp, log) != AS_NODE_PARAM_OK) {
+			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
+							   "Compiling expressions failed");
+		}
+	}
 
-	if (info[6]->IsObject()) {
-		if (get_optional_cdt_context(&cmd->context, &cmd->with_context, info[6].As<Object>(), "context", log) !=
+	cmd->index = strdup(*Nan::Utf8String(info[4].As<String>()));
+	cmd->itype = (as_index_type)Nan::To<int>(info[5]).FromJust();
+	cmd->dtype = (as_index_datatype)Nan::To<int>(info[6]).FromJust();
+
+	if (info[7]->IsObject()) {
+		if (get_optional_cdt_context(&cmd->context, &cmd->with_context, info[7].As<Object>(), "context", log) !=
 			AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 								   "Context parameter is invalid");
 		}
 	}
 
-	if (info[7]->IsObject()) {
+	if (info[8]->IsObject()) {
 		cmd->policy = (as_policy_info *)cf_malloc(sizeof(as_policy_info));
-		if (infopolicy_from_jsobject(cmd->policy, info[7].As<Object>(), log) !=
+		if (infopolicy_from_jsobject(cmd->policy, info[8].As<Object>(), log) !=
 			AS_NODE_PARAM_OK) {
 			return CmdSetError(cmd, AEROSPIKE_ERR_PARAM,
 							   "Policy parameter is invalid");
@@ -128,9 +143,19 @@ static void execute(uv_work_t *req)
 				"index=%s, type=%d, datatype=%d",
 				cmd->ns, cmd->set, cmd->bin, cmd->index, cmd->itype,
 				cmd->dtype);
-	aerospike_index_create_ctx(cmd->as, &cmd->err, &cmd->task, cmd->policy,
-								   cmd->ns, cmd->set, cmd->bin, cmd->index,
-								   cmd->itype, cmd->dtype, cmd->with_context ? &cmd->context : NULL);
+
+	if(cmd->exp){
+		aerospike_index_create_exp(cmd->as, &cmd->err, &cmd->task, cmd->policy,
+							   cmd->ns, cmd->set, cmd->index,
+							   cmd->itype, cmd->dtype, cmd->exp);
+	}
+	else{
+		aerospike_index_create_ctx(cmd->as, &cmd->err, &cmd->task, cmd->policy,
+							   cmd->ns, cmd->set, cmd->bin, cmd->index,
+							   cmd->itype, cmd->dtype, cmd->with_context ? &cmd->context : NULL);
+	}
+
+
 }
 
 static void respond(uv_work_t *req, int status)
@@ -153,13 +178,14 @@ NAN_METHOD(AerospikeClient::IndexCreate)
 {
 	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
 	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
-	TYPE_CHECK_REQ(info[2], IsString, "Bin must be a string");
-	TYPE_CHECK_REQ(info[3], IsString, "Index name must be a string");
-	TYPE_CHECK_OPT(info[4], IsNumber, "Index type must be an integer");
-	TYPE_CHECK_REQ(info[5], IsNumber, "Index datatype must be an integer");
-	TYPE_CHECK_OPT(info[6], IsObject, "Context must be an object");
-	TYPE_CHECK_OPT(info[7], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[8], IsFunction, "Callback must be a function");
+	TYPE_CHECK_OPT(info[2], IsString, "Bin must be a string");
+	TYPE_CHECK_OPT(info[3], IsArray, "Exp must be an array");
+	TYPE_CHECK_OPT(info[4], IsString, "Index name must be a string");
+	TYPE_CHECK_OPT(info[5], IsNumber, "Index type must be an integer");
+	TYPE_CHECK_REQ(info[6], IsNumber, "Index datatype must be an integer");
+	TYPE_CHECK_OPT(info[7], IsObject, "Context must be an object");
+	TYPE_CHECK_OPT(info[8], IsObject, "Policy must be an object");
+	TYPE_CHECK_REQ(info[9], IsFunction, "Callback must be a function");
 
 	async_invoke(info, prepare, execute, respond);
 }

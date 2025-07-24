@@ -240,6 +240,7 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 	}
 	else if (qu->count >= qu->max_records) {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
 		uint32_t bytes_size;
 		uint8_t* bytes = NULL;
 		as_query_to_bytes(query, &bytes, &bytes_size);
@@ -249,7 +250,7 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 							   Nan::Null()};
 
 		cmd->Callback(4, argv);
-		free_query(query, NULL);
+		free_query(query, NULL, exp);
 		free(bytes);
 		delete cmd;
 		free(qu);
@@ -264,8 +265,9 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 	}
 	else {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
 		cmd->Callback(0, {});
-		free_query(query, NULL);
+		free_query(query, NULL, exp);
 		delete cmd;
 		free(qu);
 		return false;
