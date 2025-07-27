@@ -247,10 +247,6 @@ jobs:
         echo "LIB=$env:LIB;C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
         echo "PATH=C:\Program Files\OpenSSL-Win64\bin;$env:PATH" >> $env:GITHUB_ENV
 
-    - name: Install required dependencies
-      run: |
-        npm install --global windows-build-tools --vs2019
-
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
