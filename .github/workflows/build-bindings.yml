@@ -264,7 +264,7 @@ jobs:
     #  run: echo $env:NODE_PATH
     #  shell: pwsh
 
-     - name: Debug NODE_PATH
+    - name: Debug NODE_PATH
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: npm i node-pre-gyp rebuild
       shell: pwsh
