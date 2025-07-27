@@ -246,10 +246,10 @@ jobs:
         echo "INCLUDE=$env:INCLUDE;C:\Program Files\OpenSSL-Win64\include" >> $env:GITHUB_ENV
         echo "LIB=$env:LIB;C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
         echo "PATH=C:\Program Files\OpenSSL-Win64\bin;$env:PATH" >> $env:GITHUB_ENV
-        
-    - name: Set npm config for VS2022
-      run: npm config set msvs_version 2022
 
+    - name: Install required dependencies
+      run: |
+        npm install --global windows-build-tools --vs2019
 
     - name: Build Binding
       run: |
