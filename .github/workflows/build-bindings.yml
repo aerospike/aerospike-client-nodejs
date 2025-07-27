@@ -245,7 +245,7 @@ jobs:
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        npm install -g nan --save-dev
+        npm install -g nan
 
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -255,6 +255,7 @@ jobs:
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
+        export NODE_PATH=$(npm root -g)
         node-gyp configure --msvs_version=2019
 
     - name: Set environment variables for OpenSSL
