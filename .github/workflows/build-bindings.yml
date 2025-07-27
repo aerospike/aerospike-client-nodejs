@@ -252,10 +252,21 @@ jobs:
       run: |
         npm install -g node-gyp
 
+    - name: Set NODE_PATH
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        $env:NODE_PATH = npm root -g
+        echo "NODE_PATH=$env:NODE_PATH" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Debug NODE_PATH
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: echo $env:NODE_PATH
+      shell: pwsh
+        
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        export NODE_PATH=$(npm root -g)
         node-gyp configure --msvs_version=2019
 
     - name: Set environment variables for OpenSSL
