@@ -241,6 +241,7 @@ jobs:
       run: |
         choco install openssl -y
         choco install python visualstudio2022-workload-vctools -y
+        npm install -g node-gyp
         node-gyp configure --msvs_version=2019
 
     - name: Set environment variables for OpenSSL
