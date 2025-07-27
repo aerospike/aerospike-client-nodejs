@@ -239,7 +239,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
         choco install openssl -y
-        choco install python visualstudio2022-workload-vctools -y
+        choco install python visualstudio2019-workload-vctools -y
 
     - name: Remove node_modules and package-lock.json (Windows)
       shell: pwsh
