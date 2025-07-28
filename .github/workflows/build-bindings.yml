@@ -240,7 +240,6 @@ jobs:
       run: |
         choco install openssl -y
         choco install python visualstudio2019-workload-vctools -y
-        refreshenv
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh
@@ -282,12 +281,12 @@ jobs:
     #  run: |
     #    node-gyp configure --msvs_version=2019
 
-    #- name: Set environment variables for OpenSSL
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    echo "INCLUDE=$env:INCLUDE;C:\Program Files\OpenSSL-Win64\include" >> $env:GITHUB_ENV
-    #    echo "LIB=$env:LIB;C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
-    #    echo "PATH=C:\Program Files\OpenSSL-Win64\bin;$env:PATH" >> $env:GITHUB_ENV
+    - name: Set environment variables for OpenSSL
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        echo "INCLUDE=$env:INCLUDE;C:\Program Files\OpenSSL\include" >> $env:GITHUB_ENV
+        echo "LIB=$env:LIB;C:\Program Files\OpenSSL\lib" >> $env:GITHUB_ENV
+        echo "PATH=C:\Program Files\OpenSSL\bin;$env:PATH" >> $env:GITHUB_ENV
 
     - name: Build Binding
       run: |
