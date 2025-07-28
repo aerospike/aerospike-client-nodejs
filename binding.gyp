@@ -218,6 +218,8 @@
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
             '../aerospike-client-c-output/lib/pthreadVC2.lib',
+            "C:/Program Files/OpenSSL/lib/libcrypto.lib",
+            "C:/Program Files/OpenSSL/lib/libssl.lib"
           ],
           'defines': [
             'AS_USE_LIBUV',
@@ -226,6 +228,7 @@
           ],
           'include_dirs': [
             'aerospike-client-c-output/include',
+            "C:/Program Files/OpenSSL/include",
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],
