@@ -168,7 +168,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							const int64_t min = Nan::To<int64_t>(v8min).FromJust();
 							const int64_t max = Nan::To<int64_t>(v8max).FromJust();
 							if(*exp){
-								as_query_where_with_exp(query, index_name, *exp, predicate, type,
+								as_query_where_with_exp(query, *exp, predicate, type,
 											   datatype, min, max);
 							}
 							else if (index_name) {
@@ -208,7 +208,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
 						if(*exp){
-							as_query_where_with_exp(query, index_name, *exp, predicate, type,
+							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bin_val);
 						}
 						else if (index_name) {
@@ -237,7 +237,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							
 
 							if(*exp){
-								as_query_where_with_exp(query, index_name, *exp, predicate, type,
+								as_query_where_with_exp(query, *exp, predicate, type,
 											   datatype, val);
 							}
 							else if (index_name) {
@@ -271,7 +271,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
 						if(*exp){
-							as_query_where_with_exp(query, index_name, *exp, predicate, type,
+							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bin_val);
 						}
 						else if (index_name) {
@@ -302,7 +302,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						get_bytes_property(&bytes, &size, filter, "val" , log);
 
 						if(*exp){
-							as_query_where_with_exp(query, index_name, *exp, predicate, type,
+							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bytes, size, true);
 						}
 						else if (index_name) {
