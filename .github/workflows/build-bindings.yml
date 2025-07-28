@@ -243,11 +243,11 @@ jobs:
         echo "INCLUDE=$env:INCLUDE"
       shell: pwsh
 
-    - name: Install OpenSSL via Chocolatey
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        choco install openssl -y
-        choco install python visualstudio2019-workload-vctools -y
+    #- name: Install OpenSSL via Chocolatey
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    choco install openssl -y
+    #    choco install python visualstudio2019-workload-vctools -y
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh
@@ -301,6 +301,18 @@ jobs:
         echo "OPENSSL_ROOT_DIR=$env:OPENSSL_ROOT_DIR"
         echo "LIB=$env:LIB"
         echo "INCLUDE=$env:INCLUDE"
+      shell: pwsh
+
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files"
+      shell: pwsh
+
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL"
+      shell: pwsh
+
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL-Win64"
       shell: pwsh
 
     - name: Build Binding
