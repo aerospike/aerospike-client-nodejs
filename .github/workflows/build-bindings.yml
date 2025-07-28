@@ -336,33 +336,25 @@ jobs:
     #  run: Get-ChildItem "C:\Program Files\OpenSSL\lib\libcrypto.lib"
     #  shell: pwsh
 
-    - name: Install NVM for Windows
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      shell: pwsh
-      run: |
-        Invoke-WebRequest -Uri https://github.com/coreybutler/nvm-windows/releases/latest/download/nvm-setup.exe -OutFile nvm-setup.exe
-        Start-Process .\nvm-setup.exe -ArgumentList '/SILENT' -Wait
-        $env:NVM_HOME = "${env:ProgramFiles}\nvm"
-        $env:NVM_SYMLINK = "${env:ProgramFiles}\nodejs"
-        $env:Path = "$env:NVM_HOME;$env:NVM_SYMLINK;$env:Path"
-        nvm install 18.20.2
-        nvm use 18.20.2
-        node -v
-        npm -v
-
+    #- name: Install NVM for Windows
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  shell: pwsh
+    #  run: |
+    #    Invoke-WebRequest -Uri https://github.com/coreybutler/nvm-windows/releases/latest/download/nvm-setup.exe -OutFile nvm-setup.exe
+    #    Start-Process .\nvm-setup.exe -ArgumentList '/SILENT' -Wait
+    #    $env:NVM_HOME = "${env:ProgramFiles}\nvm"
+    #    $env:NVM_SYMLINK = "${env:ProgramFiles}\nodejs"
+    #    $env:Path = "$env:NVM_HOME;$env:NVM_SYMLINK;$env:Path"
+    #    nvm install 18.20.2
+    #    nvm use 18.20.2
+    #    node -v
+    #    npm -v
 
     - name: Build Binding
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
       run: |
         ./scripts/build-c-client.sh;
         npm install;
         ls lib/binding;
-
-    - name: Build Binding
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        ./scripts/build-package.ps1;
-      shell: pwsh
 
     #- name: Debug server
     #  run: |
