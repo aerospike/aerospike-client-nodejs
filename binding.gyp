@@ -55,7 +55,19 @@
                     '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
             }
-          ]
+          ],
+          'libraries': [
+            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release/libcrypto.lib",
+            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release/libssl.lib",
+          ],
+          "link_settings": {
+            "library_dirs": [
+              "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release"
+            ]
+          },
+          'include_dirs': [
+            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/include"
+          ],
         }],
       ]
     },
