@@ -235,6 +235,14 @@ jobs:
       run: |
         brew install libyaml
 
+
+    - name: Debug OpenSSL env vars
+      run: |
+        echo "OPENSSL_ROOT_DIR=$env:OPENSSL_ROOT_DIR"
+        echo "LIB=$env:LIB"
+        echo "INCLUDE=$env:INCLUDE"
+      shell: pwsh
+
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
@@ -287,6 +295,13 @@ jobs:
         echo "INCLUDE=$env:INCLUDE;C:\Program Files\OpenSSL\include" >> $env:GITHUB_ENV
         echo "LIB=$env:LIB;C:\Program Files\OpenSSL\lib" >> $env:GITHUB_ENV
         echo "PATH=C:\Program Files\OpenSSL\bin;$env:PATH" >> $env:GITHUB_ENV
+
+    - name: Debug OpenSSL env vars
+      run: |
+        echo "OPENSSL_ROOT_DIR=$env:OPENSSL_ROOT_DIR"
+        echo "LIB=$env:LIB"
+        echo "INCLUDE=$env:INCLUDE"
+      shell: pwsh
 
     - name: Build Binding
       run: |
