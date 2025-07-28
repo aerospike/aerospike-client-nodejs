@@ -330,6 +330,10 @@ jobs:
     #  run: Get-ChildItem "C:\Program Files\OpenSSL\include"
     #  shell: pwsh
 
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL\lib\libcrypto.lib"
+      shell: pwsh
+
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
