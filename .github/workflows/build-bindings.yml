@@ -247,7 +247,7 @@ jobs:
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
     #  run: |
     #    choco install openssl -y
-    #    choco install python visualstudio2019-workload-vctools -y
+    #    choco install python visualstudio2022-workload-vctools -y
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh
@@ -294,7 +294,7 @@ jobs:
     - name: Install OpenSSL via Chocolatey
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        node-gyp configure --msvs_version=2019 -- -I"C:\Program Files\OpenSSL\include" -L"C:\Program Files\OpenSSL\lib"
+        node-gyp configure --msvs_version=2022 -- -I"C:\Program Files\OpenSSL\include" -L"C:\Program Files\OpenSSL\lib"
 
     #- name: Set environment variables for OpenSSL
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
