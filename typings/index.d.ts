@@ -16908,11 +16908,11 @@ declare namespace statusNamespace {
     /**
      * There is a conflict between metrics enable/disable and dynamic configuration metrics.
      */
-    export const AEROSPIKE_METRICS_CONFLICT = -19;
+    export const AEROSPIKE_METRICS_CONFLICT = -20;
     /**
      * There is a conflict between metrics enable/disable and dynamic configuration metrics.
      */
-    export const METRICS_CONFLICT = -19;
+    export const METRICS_CONFLICT = -20;
     /**
      * Transaction commit called, but the transaction was already aborted.
      */
