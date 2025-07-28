@@ -227,6 +227,7 @@
             '_TIMESPEC_DEFINED',
           ],
           'include_dirs': [
+            "packages/openssl-native.3.0.16/build/native/lib/x64/Release",
             'aerospike-client-c-output/include',
             "C:/Program Files/OpenSSL/include",
             'src/include',
