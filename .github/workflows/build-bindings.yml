@@ -240,6 +240,7 @@ jobs:
       run: |
         choco install openssl -y
         choco install python visualstudio2019-workload-vctools -y
+        refreshenv
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh
@@ -276,10 +277,10 @@ jobs:
       run: npm i node-pre-gyp rebuild
       shell: pwsh
 
-    - name: Install OpenSSL via Chocolatey
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        node-gyp configure --msvs_version=2019
+    #- name: Install OpenSSL via Chocolatey
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    node-gyp configure --msvs_version=2019
 
     - name: Set environment variables for OpenSSL
       if: ${{ inputs.platform-tag == 'win_amd64' }}
