@@ -150,7 +150,7 @@ $OpenSSLSrcPath = "openssl-native.${OpenSSLVersion}"
 $OpenSSLArchive = "${OpenSSLSrcPath}.zip"
 $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVersion}"
 $OpenSSLArchiveHash = $FileHashes[$OpenSSLArchive]
-Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash $OpenSSLArchiveHash -createdir
+Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
 # Install C client dependencies package
 # Write-Host "Installing libyaml"
