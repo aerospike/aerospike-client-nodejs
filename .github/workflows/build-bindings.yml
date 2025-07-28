@@ -243,11 +243,11 @@ jobs:
         echo "INCLUDE=$env:INCLUDE"
       shell: pwsh
 
-    - name: Install OpenSSL via Chocolatey
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        choco install openssl -y
-        choco install python visualstudio2022-workload-vctools -y
+    #- name: Install OpenSSL via Chocolatey
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    choco install openssl -y
+    #    choco install python visualstudio2022-workload-vctools -y
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh
@@ -286,8 +286,6 @@ jobs:
         $env:LDFLAGS = "-LC:\Program Files\OpenSSL\lib"
         $env:CPPFLAGS = "-IC:\Program Files\OpenSSL\include"
         $env:EXT_CFLAGS = "-IC:\Program Files\OpenSSL\include"
-
-
 
     #- name: REBUILD NODE-PRE-GYP
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -337,6 +335,21 @@ jobs:
     #- name: List contents of C:\Program Files
     #  run: Get-ChildItem "C:\Program Files\OpenSSL\lib\libcrypto.lib"
     #  shell: pwsh
+
+    - name: Install NVM for Windows
+      if: ${{ inputs.platform-tag != 'win_amd64' }}
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri https://github.com/coreybutler/nvm-windows/releases/latest/download/nvm-setup.exe -OutFile nvm-setup.exe
+        Start-Process .\nvm-setup.exe -ArgumentList '/SILENT' -Wait
+        $env:NVM_HOME = "${env:ProgramFiles}\nvm"
+        $env:NVM_SYMLINK = "${env:ProgramFiles}\nodejs"
+        $env:Path = "$env:NVM_HOME;$env:NVM_SYMLINK;$env:Path"
+        nvm install 18.20.2
+        nvm use 18.20.2
+        node -v
+        npm -v
+
 
     - name: Build Binding
       if: ${{ inputs.platform-tag != 'win_amd64' }}
