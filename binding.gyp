@@ -217,7 +217,10 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib'          ],
+            '../aerospike-client-c-output/lib/pthreadVC2.lib',
+            'C:/Program Files/OpenSSL/lib/libcrypto.lib',
+            'C:/Program Files/OpenSSL/lib/libssl.lib'
+          ],
           "link_settings": {
             "library_dirs": [
               "C:/Program Files/OpenSSL/lib"
