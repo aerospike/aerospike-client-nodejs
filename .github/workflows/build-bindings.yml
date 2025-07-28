@@ -241,12 +241,12 @@ jobs:
         choco install openssl -y
         choco install python visualstudio2019-workload-vctools -y
 
-    - name: Remove node_modules and package-lock.json (Windows)
-      shell: pwsh
-      run: |
-        Remove-Item -Recurse -Force node_modules
-        Remove-Item -Force package-lock.json
-        npm update
+    #- name: Remove node_modules and package-lock.json (Windows)
+    #  shell: pwsh
+    #  run: |
+    #    Remove-Item -Recurse -Force node_modules
+    #    Remove-Item -Force package-lock.json
+    #    npm update
 
 
     - name: Install OpenSSL via Chocolatey
