@@ -243,11 +243,11 @@ jobs:
         echo "INCLUDE=$env:INCLUDE"
       shell: pwsh
 
-    #- name: Install OpenSSL via Chocolatey
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    choco install openssl -y
-    #    choco install python visualstudio2022-workload-vctools -y
+    - name: Install OpenSSL via Chocolatey
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        choco install openssl -y
+        choco install python visualstudio2022-workload-vctools -y
 
     #- name: Remove node_modules and package-lock.json (Windows)
     #  shell: pwsh

@@ -56,13 +56,9 @@
               ]
             }
           ],
-          'msvs_settings': {
-            'VCLinkerTool': {
-              'AdditionalLibraryDirectories': [
-                '$(SolutionDir)packages\\openssl-native.3.0.16\\build\\native\\lib\\v143\\x64\\Release'
-              ]
-            }
-          }
+          "libraries": [
+            "C:/Program Files/OpenSSL/lib"
+          ],
         }],
       ]
     },
