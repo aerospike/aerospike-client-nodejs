@@ -337,7 +337,7 @@ jobs:
     #  shell: pwsh
 
     - name: Install NVM for Windows
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
       shell: pwsh
       run: |
         Invoke-WebRequest -Uri https://github.com/coreybutler/nvm-windows/releases/latest/download/nvm-setup.exe -OutFile nvm-setup.exe
