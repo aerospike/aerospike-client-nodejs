@@ -292,10 +292,10 @@ jobs:
         npm i node-pre-gyp rebuild
       shell: pwsh
 
-    - name: Install OpenSSL via Chocolatey
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        node-gyp configure --msvs_version=2022 -- -I"C:\Program Files\OpenSSL\include" -L"C:\Program Files\OpenSSL\lib"
+    #- name: Install OpenSSL via Chocolatey
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    node-gyp configure --msvs_version=2022 -- -I"C:\Program Files\OpenSSL\include" -L"C:\Program Files\OpenSSL\lib"
 
     #- name: Set environment variables for OpenSSL
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -304,31 +304,31 @@ jobs:
     #    echo "LIB=$env:LIB;C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
     #    echo "PATH=C:\Program Files\OpenSSL-Win64\bin;$env:PATH" >> $env:GITHUB_ENV
 
-    - name: Set OpenSSL paths
-      shell: powershell
-      run: |
-        $env:LIB += ";C:\Program Files\OpenSSL\lib"
-        $env:INCLUDE += ";C:\Program Files\OpenSSL\include"
-
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files"
-      shell: pwsh
-
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files\OpenSSL"
-      shell: pwsh
-
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files\OpenSSL"
-      shell: pwsh
-
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files\OpenSSL\lib"
-      shell: pwsh
-
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files\OpenSSL\include"
-      shell: pwsh
+    #- name: Set OpenSSL paths
+    #  shell: powershell
+    #  run: |
+    #    $env:LIB += ";C:\Program Files\OpenSSL\lib"
+    #    $env:INCLUDE += ";C:\Program Files\OpenSSL\include"
+#
+    #- name: List contents of C:\Program Files
+    #  run: Get-ChildItem "C:\Program Files"
+    #  shell: pwsh
+#
+    #- name: List contents of C:\Program Files
+    #  run: Get-ChildItem "C:\Program Files\OpenSSL"
+    #  shell: pwsh
+#
+    #- name: List contents of C:\Program Files
+    #  run: Get-ChildItem "C:\Program Files\OpenSSL"
+    #  shell: pwsh
+#
+    #- name: List contents of C:\Program Files
+    #  run: Get-ChildItem "C:\Program Files\OpenSSL\lib"
+    #  shell: pwsh
+#
+    #- name: List contents of C:\Program Files
+    #  run: Get-ChildItem "C:\Program Files\OpenSSL\include"
+    #  shell: pwsh
 
     - name: Build Binding
       run: |
