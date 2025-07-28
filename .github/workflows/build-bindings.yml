@@ -310,6 +310,17 @@ jobs:
       run: Get-ChildItem "C:\Program Files\OpenSSL"
       shell: pwsh
 
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL"
+      shell: pwsh
+
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL\lib"
+      shell: pwsh
+
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL\include"
+      shell: pwsh
 
     - name: Build Binding
       run: |
