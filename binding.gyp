@@ -217,19 +217,19 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib',
-            'C:/OpenSSL/lib/libcrypto.lib',
-            'C:/OpenSSL/lib/libssl.lib',
-          ],
+            '../aerospike-client-c-output/lib/pthreadVC2.lib'          ],
+          "link_settings": {
+            "library_dirs": [
+              "C:/Program Files/OpenSSL/lib"
+            ]
+          },
           'defines': [
             'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
           ],
           'include_dirs': [
-            "packages/openssl-native.3.0.16/build/native/lib/x64/Release",
             'aerospike-client-c-output/include',
-            "C:/Program Files/OpenSSL/include",
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],
