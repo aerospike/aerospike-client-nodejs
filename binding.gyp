@@ -56,18 +56,13 @@
               ]
             }
           ],
-          'libraries': [
-            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release/libcrypto.lib",
-            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release/libssl.lib",
-          ],
-          "link_settings": {
-            "library_dirs": [
-              "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/lib/x64/Release"
-            ]
-          },
-          'include_dirs': [
-            "../aerospike-client-c/vs/packages/openssl-native.3.0.16/build/native/include"
-          ],
+          'msvs_settings': {
+            'VCLinkerTool': {
+              'AdditionalLibraryDirectories': [
+                '$(SolutionDir)packages\\openssl-native.3.0.16\\build\\native\\lib\\v143\\x64\\Release'
+              ]
+            }
+          }
         }],
       ]
     },
@@ -229,15 +224,8 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib',
-            'C:/Program Files/OpenSSL/lib/libcrypto.lib',
-            'C:/Program Files/OpenSSL/lib/libssl.lib'
+            '../aerospike-client-c-output/lib/pthreadVC2.lib'
           ],
-          "link_settings": {
-            "library_dirs": [
-              "C:/Program Files/OpenSSL/lib"
-            ]
-          },
           'defines': [
             'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
