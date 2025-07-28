@@ -218,8 +218,8 @@
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
             '../aerospike-client-c-output/lib/pthreadVC2.lib',
-            'C:/OpenSSL-Win64/lib/libcrypto.lib',
-            'C:/OpenSSL-Win64/lib/libssl.lib',
+            'C:/OpenSSL/lib/libcrypto.lib',
+            'C:/OpenSSL/lib/libssl.lib',
           ],
           'defines': [
             'AS_USE_LIBUV',

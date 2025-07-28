@@ -285,9 +285,10 @@ jobs:
         set "LIB=C:\Program Files\OpenSSL\lib;%LIB%"
         set "INCLUDE=C:\Program Files\OpenSSL\include;%INCLUDE%"
 
-    - name: Debug NODE_PATH
+    - name: REBUILD NODE-PRE-GYP
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
+        Install-Module VSSetup -Scope CurrentUser
         npm i node-pre-gyp rebuild
       shell: pwsh
 
