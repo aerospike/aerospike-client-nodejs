@@ -57,7 +57,7 @@
             }
           ],
           'libraries': [ 
-            '-lopenssl-native.3.0.16/lib',
+            'openssl-native.3.0.16/lib',
           ],
           'include_dirs': [
             'openssl-native.3.0.16/include',
