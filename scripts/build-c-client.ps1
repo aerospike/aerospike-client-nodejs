@@ -185,6 +185,7 @@ Copy-Item $CClientSrcPath\modules\common\src\include\citrusleaf\*.h $TargetPath\
 New-Item -Path $TargetPath/lib -ItemType "directory" -Force | out-null
 Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\$Configuration\*.lib $TargetPath\lib
 Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike.lib $TargetPath\lib
+Copy-Item $OpenSSLSrcPath\vs\aerospike\$Platform\$CClientConfiguration\libcrypto.lib $TargetPath\lib
 
 # Copy dlls
 New-Item -Path $Configuration -ItemType "directory" -Force | out-null
