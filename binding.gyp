@@ -57,8 +57,14 @@
             }
           ],
           'libraries': [ 
-            'openssl-native.3.0.16/lib',
+            'openssl-native.3.0.16/lib/libcrypto.lib',
+            'openssl-native.3.0.16/lib/libssl.lib'
           ],
+          'link_settings': {
+            'library_dirs': [
+              'openssl-native.3.0.16/lib'
+            ]
+          },
           'include_dirs': [
             'openssl-native.3.0.16/include',
           ],
