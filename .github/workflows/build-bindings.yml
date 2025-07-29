@@ -314,9 +314,9 @@ jobs:
     #  run: Get-ChildItem "C:\Program Files"
     #  shell: pwsh
     #
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files\OpenSSL"
-    #  shell: pwsh
+    - name: List contents of C:\Program Files
+      run: Get-ChildItem "C:\Program Files\OpenSSL"
+      shell: pwsh
     #
     #- name: List contents of C:\Program Files
     #  run: Get-ChildItem "C:\Program Files\OpenSSL"
