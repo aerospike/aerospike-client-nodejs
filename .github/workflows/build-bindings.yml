@@ -279,20 +279,18 @@ jobs:
     #  run: echo $env:NODE_PATH
     #  shell: pwsh
 
-    - name: Debug NODE_PATH
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        $env:PATH += ";C:\Program Files\OpenSSL\bin"
-        $env:LDFLAGS = "-LC:\Program Files\OpenSSL\lib"
-        $env:CPPFLAGS = "-IC:\Program Files\OpenSSL\include"
-        $env:EXT_CFLAGS = "-IC:\Program Files\OpenSSL\include"
-
     #- name: REBUILD NODE-PRE-GYP
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
     #  run: |
     #    Install-Module VSSetup -Scope CurrentUser
     #    npm i node-pre-gyp rebuild
     #  shell: pwsh
+
+    - name: Install OpenSSL via Chocolatey
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        node-gyp clean
+
 
     #- name: Install OpenSSL via Chocolatey
     #  if: ${{ inputs.platform-tag == 'win_amd64' }}
