@@ -235,118 +235,23 @@ jobs:
       run: |
         brew install libyaml
 
-
-    - name: Debug OpenSSL env vars
-      run: |
-        echo "OPENSSL_ROOT_DIR=$env:OPENSSL_ROOT_DIR"
-        echo "LIB=$env:LIB"
-        echo "INCLUDE=$env:INCLUDE"
-      shell: pwsh
-
-    #- name: Install OpenSSL via Chocolatey
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    choco install openssl -y
-    #    choco install python visualstudio2022-workload-vctools -y
-
-    #- name: Remove node_modules and package-lock.json (Windows)
-    #  shell: pwsh
-    #  run: |
-    #    Remove-Item -Recurse -Force node_modules
-    #    Remove-Item -Force package-lock.json
-    #    npm update
-
-
-    - name: Install OpenSSL via Chocolatey
+    - name: Replace AdditionalLibraryDirectories line in props file
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        npm install -g nan
+        $path = "props\nodejs.props"
+        $content = Get-Content $path -Raw
+        $pattern = '<AdditionalLibraryDirectories>.*?</AdditionalLibraryDirectories>'
+        $basePath = (Resolve-Path .).Path
+        $replacement = "<AdditionalLibraryDirectories>`$(NodejsPath);$basePath\packages\openssl-native.3.0.16\lib\win-x64\native;`%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>"
+        $updated = [System.Text.RegularExpressions.Regex]::Replace($content, $pattern, $replacement, 'Singleline')
+        Set-Content $path $updated
+      working-directory: aerospike-client-c/vs
 
-    - name: Install OpenSSL via Chocolatey
+    - name: Print modified .props file
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        npm install -g node-gyp
-
-    #- name: Set NODE_PATH
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    $env:NODE_PATH = npm root -g
-    #    echo "NODE_PATH=$env:NODE_PATH" >> $env:GITHUB_ENV
-    #  shell: pwsh
-    #
-    #- name: Debug NODE_PATH
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: echo $env:NODE_PATH
-    #  shell: pwsh
-
-    #- name: REBUILD NODE-PRE-GYP
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    Install-Module VSSetup -Scope CurrentUser
-    #    npm i node-pre-gyp rebuild
-    #  shell: pwsh
-
-    - name: Install OpenSSL via Chocolatey
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        node-gyp clean
-
-
-    #- name: Install OpenSSL via Chocolatey
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    node-gyp configure --msvs_version=2022 -- -I"C:\Program Files\OpenSSL\include" -L"C:\Program Files\OpenSSL\lib"
-
-    #- name: Set environment variables for OpenSSL
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  run: |
-    #    echo "INCLUDE=$env:INCLUDE;C:\Program Files\OpenSSL-Win64\include" >> $env:GITHUB_ENV
-    #    echo "LIB=$env:LIB;C:\Program Files\OpenSSL-Win64\lib" >> $env:GITHUB_ENV
-    #    echo "PATH=C:\Program Files\OpenSSL-Win64\bin;$env:PATH" >> $env:GITHUB_ENV
-
-    #- name: Set OpenSSL paths
-    #  shell: powershell
-    #  run: |
-    #    $env:LIB += ";C:\Program Files\OpenSSL\lib"
-    #    $env:INCLUDE += ";C:\Program Files\OpenSSL\include"
-    #
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files"
-    #  shell: pwsh
-    #
-    - name: List contents of C:\Program Files
-      run: Get-ChildItem "C:\Program Files\OpenSSL"
-      shell: pwsh
-    #
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files\OpenSSL"
-    #  shell: pwsh
-    #
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files\OpenSSL\lib"
-    #  shell: pwsh
-    #
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files\OpenSSL\include"
-    #  shell: pwsh
-
-    #- name: List contents of C:\Program Files
-    #  run: Get-ChildItem "C:\Program Files\OpenSSL\lib\libcrypto.lib"
-    #  shell: pwsh
-
-    #- name: Install NVM for Windows
-    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
-    #  shell: pwsh
-    #  run: |
-    #    Invoke-WebRequest -Uri https://github.com/coreybutler/nvm-windows/releases/latest/download/nvm-setup.exe -OutFile nvm-setup.exe
-    #    Start-Process .\nvm-setup.exe -ArgumentList '/SILENT' -Wait
-    #    $env:NVM_HOME = "${env:ProgramFiles}\nvm"
-    #    $env:NVM_SYMLINK = "${env:ProgramFiles}\nodejs"
-    #    $env:Path = "$env:NVM_HOME;$env:NVM_SYMLINK;$env:Path"
-    #    nvm install 18.20.2
-    #    nvm use 18.20.2
-    #    node -v
-    #    npm -v
+        Get-Content "props\nodejs.props"
+      working-directory: aerospike-client-c/vs
 
     - name: Build Binding
       run: |
@@ -367,7 +272,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test --testfile=query.js -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
 
     #- name: Run tests
