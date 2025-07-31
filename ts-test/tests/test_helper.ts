@@ -16,7 +16,7 @@
 
 'use strict'
 
-import Aerospike, {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse} from 'aerospike'; 
+import Aerospike, {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse, AerospikeExp} from 'aerospike'; 
 
 import options from './util/options';
 import * as semver from 'semver';
@@ -84,7 +84,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
       this.client = client;
     }
 
-    create(indexName: string, setName: string, binName: string, dataType: indexDataType, indexType: indexType, context?: cdt.Context) {
+    async create(indexName: string, setName: string, binName: string, dataType: indexDataType, indexType: indexType, context?: cdt.Context) {
       const index = {
         ns: options.namespace,
         set: setName,
@@ -93,34 +93,63 @@ Aerospike.setDefaultLogging(config.log ?? {})
         type: indexType || Aerospike.indexType.DEFAULT,
         datatype: dataType,
         context
-      };
+      }
+      await this.createIndex(index, false)
+    }
+
+    async createExprIndex(indexName: string, setName: string, exp: AerospikeExp, dataType: indexDataType, indexType: indexType, context: any) {
+      const index = {
+        ns: options.namespace,
+        set: setName,
+        exp: exp,
+        index: indexName,
+        type: indexType || Aerospike.indexType.DEFAULT,
+        datatype: dataType,
+      }
+      await this.createIndex(index, true)
+    }
+
+    async createIndex(index: any, has_exp: boolean) {
       const retries = 3;
       for (let attempt = 0; attempt < retries; attempt++) {
-        const job: any = this.client.createIndex(index)
-        .then((job: IndexJob) => {
-          job.wait(10)
+
+        try {
+          let job: IndexJob;
+          if(has_exp){
+            job = await this.client.createExprIndex(index)
+          }
+          else{
+            job = await this.client.createIndex(index)
+          }
+          await job.wait()
           return
-        })
-        .catch((error: any) => {
+        }
+        catch (error: any) {
           if (error.code === Aerospike.status.ERR_INDEX_FOUND) {
             return;
           }
           if (attempt === retries - 1) {
-            return Promise.reject(error);
+            throw new Error(`IndexHelper.createIndex function failed with the following error: ${error}`, { cause: error });
           }
-        })
-      };  
+        }
+      }
     }
 
-    remove(indexName: string) {
-      return this.client.indexRemove(options.namespace, indexName)
-        .catch((error: any) => {
-          if (error.code === Aerospike.status.ERR_INDEX_NOT_FOUND) {
-            // ignore - index does not exist
-          } else {
-            return Promise.reject(error);
-          }
-        });
+
+
+
+    async remove(indexName: string) {
+      try {
+        await this.client.indexRemove(options.namespace, indexName)
+
+      }
+      catch(error: any) {
+        if (error.code === Aerospike.status.ERR_INDEX_NOT_FOUND) {
+          // ignore - index does not exist
+        } else {
+          throw new Error('IndexHelper.remove function failed with the following error: ', { cause: error });
+        }
+      }
     }
   }
 
@@ -283,6 +312,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testDynamicConfig, 'Dynamic config tests disabled')
   }
 
+
+  export function skipUnlessMRT(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
+  }
 
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')

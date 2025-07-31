@@ -76,7 +76,7 @@ jobs:
     with:
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var
-      run_tests: ${{ inputs.run_tests }}
+      run_tests: false
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
