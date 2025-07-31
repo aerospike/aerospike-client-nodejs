@@ -238,7 +238,7 @@ jobs:
     - name: Replace AdditionalLibraryDirectories line in props file
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        $path = "props\nodejs.props"  # Update this to your .props file path
+        $path = "props\nodejs.props"
         $content = Get-Content $path -Raw
         $pattern = '<AdditionalLibraryDirectories>.*?</AdditionalLibraryDirectories>'
         $basePath = (Resolve-Path .).Path
@@ -250,8 +250,8 @@ jobs:
     - name: Print modified .props file
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
-        Get-Content "path\to\your_file.props"
-
+        Get-Content "props\nodejs.props"
+      working-directory: aerospike-client-c/vs
 
     - name: Build Binding
       run: |
