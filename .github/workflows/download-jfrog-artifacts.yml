@@ -12,11 +12,6 @@ on:
         type: string
         description: Build version
         required: true
-      #use-test-pypi:
-      #  type: boolean
-      #  description: 'DEBUG: upload to test.pypi.org?'
-      #  required: true
-      #  default: false
   workflow_call:
     inputs:
       version:
@@ -67,7 +62,7 @@ jobs:
 
     - name: list Artifacts
       run: |
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
       env:
         NEW_VERSION: ${{ inputs.version }}
 

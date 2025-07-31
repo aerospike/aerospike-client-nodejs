@@ -71,6 +71,7 @@
         'src/main/config.cc',
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',
+        'src/main/util/conversions.cc',
         'src/main/operations.cc',
         'src/main/exp_operations.cc',
         'src/main/scalar_operations.cc',
@@ -159,7 +160,6 @@
         'src/main/enums/exp_read_flags.cc',
         'src/main/enums/exp_write_flags.cc',
         'src/main/stats.cc',
-        'src/main/util/conversions.cc',
         'src/main/util/conversions_batch.cc',
         'src/main/util/log.cc',
       ],
@@ -180,7 +180,8 @@
         ['OS=="linux"',{
           'libraries': [
             '../aerospike-client-c/target/Linux-<(build_arch)/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lyaml'
           ],
           'defines': [
             'AS_USE_LIBUV'
@@ -196,7 +197,8 @@
         ['OS=="mac"',{
           'libraries': [
             '../aerospike-client-c/target/Darwin-<(build_arch)/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lyaml'
           ],
           'defines': [
             'AS_USE_LIBUV'

@@ -2549,8 +2549,8 @@ export namespace policy {
          */
         public reportSizeLimit?: number;
         /**
-         * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
-         * in the client config plus the time to tend all nodes.
+         * Number of cluster tend iterations between metrics notification events. One tend iteration
+         * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
          */
         public interval?: number;
         /**
@@ -2561,6 +2561,10 @@ export namespace policy {
          * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
          */
         public latencyShift?: number;
+        /**
+         * Object containing name/value labels applied when exporting metrics.
+         */ 
+        public labels?: { [key: string]: string };
 
         /**
          * Initializes a new MapPolicy from the provided policy values.
@@ -4779,9 +4783,12 @@ export class Client extends EventEmitter {
      *        reportSizeLimit: 1000,
      *        interval: 2,
      *        latencyColumns: 5,
-     *        latencyShift: 2
+     *        latencyShift: 2,
+     *        appId: "ecentral"
+     *        labels: {"size": "large", "fit": "regular"}
      *      }
      *    )
+     * 
      *    await client.enableMetrics(policy)
      *
      * 
@@ -6711,11 +6718,19 @@ export class Client extends EventEmitter {
  */
 export class Config {
     /**
+     * Application identifier.  May be null.
+     */
+    public appId?: string;
+    /**
      * Authentication mode used when user/password is defined.
      * 
      * One of the auth modes defined in {@link auth}.
      */
     public authMode?: auth;
+    /**
+    * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    */
+    public configProvider?: ConfigProvider;
     /**
      * Initial host connection timeout in milliseconds.
      * 
@@ -9152,6 +9167,10 @@ export interface CommandQueuePolicyOptions extends BasePolicyOptions {
 
 export interface ConfigOptions {
     /**
+     * Application identifier.  May be null.
+     */
+    appId?: string;
+    /**
      * Authentication mode used when user/password is defined.
      * 
      * One of the auth modes defined in {@link auth}.
@@ -9641,6 +9660,25 @@ export interface ConfigPolicies {
 
 }
 
+export interface ConfigProvider {
+    /**
+    * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
+    * initialization and whenever the file changes. The policies fields in the file
+    * override all command policies.
+    *
+    * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
+    * any path provided with a config provider.
+    * 
+    * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
+    * will take precedence over the command-level policy
+    */
+    path?: string;
+    /**
+     * Check dynamic configuration file for changes after this number of cluster tend iterations.
+     */
+    interval?: number;
+}
+
 
 export interface ConnectionStats {
     /**
@@ -9663,7 +9701,20 @@ export interface ConnectionStats {
      */
     closed: number;
 }
+/**
+ * Event loop metrics.
+ */
+export interface EventLoop {
+  /**
+   * Number of tasks currently being processed by the event loop.
+   */
+  processSize: number;
 
+  /**
+   * Number of tasks waiting in the event loop queue.
+   */
+  queueSize: number;
+}
 
 export interface EventLoopStats {
     /**
@@ -9937,8 +9988,8 @@ export interface MetricsPolicyOptions {
      */
     reportSizeLimit?: number;
     /**
-     * Number of cluster tend iterations between metrics notification events. One tend iteration is defined as "tend_interval"
-     * in the client config plus the time to tend all nodes.
+     * Number of cluster tend iterations between metrics notification events. One tend iteration
+     * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
      */
     interval?: number;
     /**
@@ -9949,6 +10000,11 @@ export interface MetricsPolicyOptions {
      * Power of 2 multiple between each range bucket in latency histograms starting at column 3. The bucket units are in milliseconds. The first 2 buckets are “<=1ms” and “>1ms”.
      */
     latencyShift?: number;
+    /**
+     * List of name/value labels that is applied when exporting metrics.
+     *
+     */
+    labels?: { [key: string]: string };
 }
 
 /**
@@ -9975,17 +10031,35 @@ export interface ModLua {
  */
 export interface Cluster {
     /**
+     * Application identifier that is applied when exporting metrics. If this field is NULL,
+     * as_config.user will be used as the app_id when exporting metrics.
+     *
+     */
+    appId?: string;
+    /**
      * Expected cluster name for all nodes. May be null.
      */
     clusterName: string;
+    /**
+     * Command count. The value is cumulative and not reset per metrics interval.
+     */
+    commandCount: number;
+    /**
+     * Delay queue timeout count. The value is cumulative and not reset per metrics interval.
+     */
+    delayQueueTimeoutCount: number;
+    /**
+     * Event loop information.
+     */
+    eventLoop: EventLoop;
     /**
      * Count of add node failures in the most recent cluster tend iteration.
      */
     invalidNodeCount: number;
     /**
-     * Command count. The value is cumulative and not reset per metrics interval.
+     * Transaction count. The value is cumulative and not reset per metrics interval.
      */
-    commandCount: number;
+    transactionCount: number;
     /**
      * Command retry count. There can be multiple retries for a single command. The value is cumulative and not reset per metrics interval.
      */
@@ -10018,17 +10092,9 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
-     * Port number of the node’s address.
+     * Namespace Metrics
      */
-    errorCount: number;
-    /**
-     * Port number of the node’s address.
-     */
-    timeoutCount: number;
-    /**
-     * Node Metrics
-     */
-    metrics: NodeMetrics;
+    metrics: Array<NamespaceMetrics>;
 }
 
 /**
@@ -10036,29 +10102,62 @@ export interface Node {
  * 
  * Latency buckets counts are cumulative and not reset on each metrics snapshot interval.
  */
-export interface NodeMetrics {
+export interface NamespaceMetrics {
     /**
-     * Name of the Aerospike Node.
+     * Namespace
      */
-    connLatency: number[];
+    ns: string;
+     /**
+     * Bytes received from the server.
+     */
+    bytesIn: number;
     /**
-     * Address of the Aeropsike Node.
+     * Bytes sent from the server.
      */
-    writeLatency: number[];
+    bytesOut: number;
     /**
-     * Port number of the node’s address.
+     * Command error count since node was initialized. If the error is retryable,
+     * multiple errors per command may occur.
      */
-    readLatency: number[];
+    errorCount: number;
     /**
-     * Asynchronous connection stats on this node.
+     * Command timeout count since node was initialized. If the timeout is retryable
+     * (i.e socket_timeout), multiple timeouts per command may occur.
      */
-    batchLatency: number[];
+    timeoutCount: number;
     /**
-     * Port number of the node’s address.
+     * Command key busy error count since node was initialized.
      */
-    queryLatency: number[];
-
-
+    keyBusyCount: number;
+    /**
+     * List of name/value labels that is applied when exporting metrics.
+     */
+    labels?: { [key: string]: string };
+    /**
+      * Connection latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    connLatency: Array<number>;
+    /**
+      * Write latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    writeLatency: Array<number>;
+    /**
+      * Read latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    readLatency: Array<number>;
+    /**
+      * Batch latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    batchLatency: Array<number>;
+    /**
+      * Query latency histogram for a command group.
+      * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
+      */
+    queryLatency: Array<number>;
 }
 
 /**
@@ -10079,6 +10178,24 @@ export interface NodeStats {
      * Connection stats for Asynchronous Connections on this Node.
      */
     asyncConnections: ConnectionStats;
+    /**
+     * Connection stats for Pipeline Connections on this Node.
+     */
+    pipelineConnections: ConnectionStats;
+    /**
+     * Command error count since node was initialized. If the error is retryable,
+     * multiple errors per command may occur.
+     */
+    errorCount: number;
+    /**
+     * Command timeout count since node was initialized. If the timeout is retryable
+     * (i.e socket_timeout), multiple timeouts per command may occur.
+     */
+    timeoutCount: number;
+    /**
+     * Command key busy error count since node was initialized.
+     */
+    keyBusyCount: number;
 }
 
 /**
@@ -16465,6 +16582,8 @@ export namespace operations {
 /**
  * This namespace provides functions to create secondary index (SI) filter
  * predicates for use in query commands via the {@link Client#query} command.
+ * For more info see: 
+ * <a href="https://aerospike.com/docs/develop/learn/queries/secondary-index/#index-filters" title="Index Filter Documentation.">Index Filter Documentation/a>
  *
  * @see {@link Query}
  *
@@ -16670,6 +16789,7 @@ export namespace filter {
  * 
  * | Status                                            | Status (without prefix)                 | Status Code |
  * |---------------------------------------------------|-----------------------------------------|-------------|
+ * | {@link AEROSPIKE_METRICS_CONFLICT}                | {@link METRICS_CONFLICT}                |    -20      |
  * | {@link AEROSPIKE_TXN_ALREADY_ABORTED}             | {@link TXN_ALREADY_ABORTED}             |    -19      |
  * | {@link AEROSPIKE_TXN_ALREADY_COMMITTED}           | {@link TXN_ALREADY_COMMITTED}           |    -18      |
  * | {@link AEROSPIKE_TXN_FAILED}                      | {@link TXN_FAILED}                      |    -17      |
@@ -16771,6 +16891,14 @@ export namespace filter {
  * | {@link AEROSPIKE_ERR_LUA_FILE_NOT_FOUND}          | {@link ERR_LUA_FILE_NOT_FOUND}          |   1302      |
  */
 declare namespace statusNamespace {
+    /**
+     * There is a conflict between metrics enable/disable and dynamic configuration metrics.
+     */
+    export const AEROSPIKE_METRICS_CONFLICT = -19;
+    /**
+     * There is a conflict between metrics enable/disable and dynamic configuration metrics.
+     */
+    export const METRICS_CONFLICT = -19;
     /**
      * Transaction commit called, but the transaction was already aborted.
      */

@@ -18,7 +18,6 @@ jobs:
       matrix:
         # Python versions to build wheels on
         nodejs: [
-          ["18", "v108"],
           ["20", "v115"],
           ["22", "v127"],
           ["23", "v131"],
@@ -65,7 +64,6 @@ jobs:
       fail-fast: false
       matrix:
         nodejs: [
-          ["18", "v108"],
           ["20", "v115"],
           ["22", "v127"],
           ["23", "v131"],
@@ -111,7 +109,6 @@ jobs:
     strategy:
       matrix:
         python-version: [
-          ["18", "v108"],
           ["20", "v115"],
           ["22", "v127"],
           ["23", "v131"],

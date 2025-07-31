@@ -37,7 +37,6 @@ describe('MRT API Tests', function () {
     const client: Cli = helper.client
 
     it('Reaps completed transactions', async function () {
-      let mrt: Transaction = new Aerospike.Transaction();
 
       for (let i = 0; i < 129; i++) {
         let mrt: Transaction = new Aerospike.Transaction()
