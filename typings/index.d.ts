@@ -6043,7 +6043,8 @@ export class Client extends EventEmitter {
     /**
      * Client#changePassword
      *
-     * Change a user's password.
+     * Change user's password by user.  Clear-text password will be hashed using bcrypt before
+     * sending to server.
      *
      * @param user - User name for the password change.
      * @param password - User password in clear-text format.
@@ -6066,8 +6067,8 @@ export class Client extends EventEmitter {
      *           write : new Aerospike.WritePolicy({socketTimeout : 1, totalTimeout : 1}),
      *         },
      *         // Must have security enabled in server configuration before user and password configurations can be used.
-     *         user: 'admin',
-     *         password: 'admin'
+     *         user: 'common_user',
+     *         password: 'example_password'
      *     })
      *
      *     // User must be created before password is changed. See {@link Client#createUser} for an example.
@@ -6080,7 +6081,9 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public changePassword(user: string, password: string, policy?: policy.AdminPolicy | null): void;
+    public changePassword(user: string, password: string, policy?: policy.AdminPolicy | null): Promise<void>;
+    public changePassword(user: string, password: string, policy: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+
     /**
      * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
      *
@@ -6123,7 +6126,52 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */    
-    public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): void;
+    public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
+    public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
+     *
+     * @param user - User name for the new user.
+     * @param password - User password in clear-text format.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param policy - Optional {@link policy.AdminPolicy}.
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * function wait (ms) {
+     *     return new Promise(resolve => setTimeout(resolve, ms))
+     * }
+     *
+     * ;(async function () {
+     *   let client
+     *   try {
+     *     client = await Aerospike.connect({
+     *         hosts: '192.168.33.10:3000',
+     *         policies: {
+     *           write : new Aerospike.WritePolicy({socketTimeout : 1, totalTimeout : 1}),
+     *         },
+     *         // Must have security enabled in server configuration before user and password configurations can be used.
+     *         user: 'admin',
+     *         password: 'admin'
+     *     })
+     *
+     *     client.createPKIUser("khob", "MightyMice55!", ["Engineer"])
+     *     // Must wait a short length of time of the user to be fully created.
+     *     await wait(5)
+     *     const user = await client.queryUser("khob", null)
+     *     console.log(user)
+     *   } catch (error) {
+     *     console.error('Error:', error)
+     *     process.exit(1)
+     *   } finally {
+     *     if (client) client.close()
+     *   }
+     * })()
+     */    
+    public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
+    public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
     /**
      * Create user defined role with optional privileges, whitelist and read/write quotas.
      * Quotas require server security configuration "enable-quotas" to be set to true.
@@ -6169,7 +6217,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null  ): void;
+    public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null): Promise<void>;
+    public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null, callback: TypedCallback<void>): void;
     /**
      * Drop user defined role.
      *
@@ -6212,7 +6261,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public dropRole(roleName: string, policy?: policy.AdminPolicy | null): void;
+    public dropRole(roleName: string, policy?: policy.AdminPolicy | null): Promise<void>;
+    public dropRole(roleName: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
     /**
      *
      * Remove a User from cluster
@@ -6256,7 +6306,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public dropUser(user: string, policy?: policy.AdminPolicy | null): void;
+    public dropUser(user: string, policy?: policy.AdminPolicy | null): Promise<void>;
+    public dropUser(user: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
     /**
      * Grant privileges to an user defined role.
      *
@@ -6299,7 +6350,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): void;
+    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): Promise<void>;
+    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
     /**
      *
      * Drop user defined role.
@@ -6344,7 +6396,8 @@ export class Client extends EventEmitter {
      * })()
      *
      */
-    public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): void;
+    public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): Promise<void>;
+    public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
     /**
      *
      * Retrieves an {@link admin.Role} from the database.
@@ -6386,7 +6439,9 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public queryRole(roleName: string, policy?: policy.AdminPolicy | null): admin.Role;
+    public queryRole(roleName: string, policy?: policy.AdminPolicy | null): Promise<admin.Role>;
+
+    public queryRole(roleName: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<admin.Role>): void;
     /**
      *
      * Retrieve all roles and role information from the database.
@@ -6426,7 +6481,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */        
-    public queryRoles(policy?: policy.AdminPolicy | null): Array<admin.Role>;
+    public queryRoles(policy?: policy.AdminPolicy | null): Promise<Array<admin.Role>>;
+    public queryRoles(policy?: policy.AdminPolicy | null, callback: TypedCallback<Array<admin.Role>>): void;
     /**
      * Retrieves an {@link admin.User} from the database.
      *
@@ -6467,7 +6523,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public queryUser(user: string, policy?: policy.AdminPolicy | null): admin.User;
+    public queryUser(user: string, policy?: policy.AdminPolicy | null): Promise<admin.User>;
+    public queryUser(user: string, policy: policy.AdminPolicy | null, callback: TypedCallback<Admin.User>): void;
     /**
      *
      * Retrieves All user and user information from the database.
@@ -6507,7 +6564,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */
-    public queryUsers(policy?: policy.AdminPolicy | null): Array<admin.User>;
+    public queryUsers(policy?: policy.AdminPolicy | null): Promise<Array<admin.User>>;
+    public queryUsers(policy: policy.AdminPolicy | null, callback: TypedCallback<Array<admin.User>>): void;
     /**
      *
      * Revoke privileges from an user defined role.
@@ -6550,7 +6608,8 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */    
-    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): void;
+    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): Promise<void>;
+    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
     /**
      * Remove roles from user's list of roles.
      *
@@ -6592,7 +6651,51 @@ export class Client extends EventEmitter {
      *   }
      * })()
      */    
-    public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): void;
+    public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): Promise<void>;
+    public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * Client#setPassword
+     *
+     * Set user's password by user administrator.  Clear-text password will be hashed using bcrypt
+     * before sending to server.
+     *
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param policy - Optional {@link AdminPolicy}.
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * function wait (ms) {
+     *     return new Promise(resolve => setTimeout(resolve, ms))
+     * }
+     *
+     * ;(async function () {
+     *   let client
+     *   try {
+     *     client = await Aerospike.connect({
+     *         hosts: '192.168.33.10:3000',
+     *         policies: {
+     *           write : new Aerospike.WritePolicy({socketTimeout : 1, totalTimeout : 1}),
+     *         },
+     *         // Must have security enabled in server configuration before user and password configurations can be used.
+     *         user: 'admin',
+     *         password: 'admin'
+     *     })
+     *
+     *     // User must be created before password is changed. See {@link Client#createUser} for an example.
+     *     client.setPassword("khob", "TryTiger7!", ["Engineer"])
+     *   } catch (error) {
+     *     console.error('Error:', error)
+     *     process.exit(1)
+     *   } finally {
+     *     if (client) client.close()
+     *   }
+     * })()
+     */
+    public setPassword(user: string, password: string, policy?: policy.AdminPolicy | null): Promise<void>;
+    public setPassword(user: string, password: string, policy: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
     /**
      * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
      * Quotas require server security configuration "enable-quotas" to be set to true.
@@ -6637,7 +6740,8 @@ export class Client extends EventEmitter {
      * })()
      *
      */    
-    public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null): void;
+    public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null): Promise<void>;
+    public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
     /**
      * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
      *
@@ -6681,7 +6785,8 @@ export class Client extends EventEmitter {
      * })()
      *
      */   
-    public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null): void;
+    public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
+    public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
 }
 
 /**

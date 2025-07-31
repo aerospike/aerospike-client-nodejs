@@ -128,6 +128,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(ScanPages);
 	static NAN_METHOD(SelectAsync);
 	static NAN_METHOD(SetLogLevel);
+	static NAN_METHOD(SetPassword);
 	static NAN_METHOD(SetupEventCb);
 	static NAN_METHOD(SetXDRFilter);
 	static NAN_METHOD(TransactionAbort);
@@ -136,6 +137,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(UDFRemove);
 	static NAN_METHOD(UDFScan);
 	static NAN_METHOD(UserCreate);
+	static NAN_METHOD(UserCreatePKI);
 	static NAN_METHOD(UserDrop);
 	static NAN_METHOD(IndexCreate);
 	static NAN_METHOD(IndexRemove);

@@ -1415,15 +1415,17 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 
 	return AEROSPIKE_OK;
 }
-int string_from_jsarray(char*** roles, int roles_size, Local<Array> role_array, const LogInfo *log) {
-	*roles =  new char*[roles_size];
-	for(int i = 0; i < roles_size; i++){
-		Local<Value> role = Nan::Get(role_array, i).ToLocalChecked();
-		if(role->IsString()){
-			(*roles)[i] = strdup(*Nan::Utf8String(role.As<String>()));
+int string_from_jsarray(char*** strings, int* strings_size, Local<Array> string_array, const LogInfo *log) {
+	*strings =  new char*[*strings_size];
+	int size = *strings_size;
+	for(int i = 0; i < size; i++) {
+		Local<Value> string = Nan::Get(string_array, i).ToLocalChecked();
+		if(string->IsString()){
+			(*strings)[i] = strdup(*Nan::Utf8String(string.As<String>()));
 		}
 		else{
-			as_v8_error(log, "Failed to parse roles from jsarray");
+			*strings_size = i;
+			as_v8_error(log, "Failed to parse strings from jsarray");
 			return AS_NODE_PARAM_ERR;
 
 		}
@@ -1433,9 +1435,11 @@ int string_from_jsarray(char*** roles, int roles_size, Local<Array> role_array, 
 	return AS_NODE_PARAM_OK;
 }
 
-int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Local<Array> privilege_array, const LogInfo *log) {
-	*privileges =  new as_privilege*[privileges_size];
-	for(int i = 0; i < privileges_size; i++){
+int privileges_from_jsarray(as_privilege*** privileges, int* privileges_size, Local<Array> privilege_array, const LogInfo *log) {
+	*privileges =  new as_privilege*[*privileges_size];
+
+	int size = *privileges_size;
+	for(int i = 0; i < size; i++){
 		Local<Value> maybe_privilege = Nan::Get(privilege_array, i).ToLocalChecked();
 		if(maybe_privilege->IsObject()){
 			Local<Object> privilege = maybe_privilege.As<Object>();	
@@ -1446,7 +1450,9 @@ int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Loc
 				priv->code = (as_privilege_code) Nan::To<uint32_t>(code).FromJust();
 			}
 			else{
-				as_v8_error(log, "Failed to parse roles from jsarray");
+
+				*privileges_size = i + 1;
+				as_v8_error(log, "Failed to parse privileges from jsarray");
 				return AS_NODE_PARAM_ERR;
 			}
 
@@ -1469,6 +1475,7 @@ int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Loc
 			if (set->IsString()) {
 				if (as_strlcpy(as_set, *Nan::Utf8String(set), AS_SET_MAX_SIZE) >
 					AS_SET_MAX_SIZE) {
+					*privileges_size = i + 1;
 					as_v8_error(log, "Set exceeds max. length (%d)", AS_SET_MAX_SIZE);
 					return AS_NODE_PARAM_ERR;
 					// TODO: Return param error
@@ -1479,7 +1486,8 @@ int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, Loc
 			(*privileges)[i] = priv;
 		}
 		else{
-			as_v8_error(log, "Failed to parse roles from jsarray");
+			*privileges_size = i;
+			as_v8_error(log, "Failed to parse privileges from jsarray");
 			return AS_NODE_PARAM_ERR;
 
 		}

@@ -64,14 +64,16 @@ NAN_METHOD(AerospikeClient::RoleDrop)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+
+	as_v8_debug(log, "Droping quota for role=%s", role);
 	status = aerospike_drop_role(client->as, &cmd->err, &policy, role);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:

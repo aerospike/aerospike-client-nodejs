@@ -228,8 +228,11 @@ options.getConfig = function (): any {
   if (options.auth) {
     config.authMode = options.auth
   }
-  // Disable maxErrorRate
-  config.maxErrorRate = 0
+  // Create a very large error threshold to disable circut breaker
+  // Ratio must be 50/1 at most
+  config.maxErrorRate = 100000
+  config.errorRateWindow = 10000
+
   return {config, omitHelperClient: omitHelperClient}
 }
 
