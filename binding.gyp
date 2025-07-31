@@ -55,6 +55,12 @@
                     '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
             }
+          ],
+          "libraries": [
+            "C:/Program Files/OpenSSL/lib/libcrypto.lib"
+          ],
+          "include_dirs": [
+            "C:/Program Files/OpenSSL/include"
           ]
         }],
       ]
@@ -219,7 +225,7 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib',
+            '../aerospike-client-c-output/lib/pthreadVC2.lib'
           ],
           'defines': [
             'AS_USE_LIBUV',

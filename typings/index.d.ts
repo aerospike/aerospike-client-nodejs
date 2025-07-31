@@ -4213,6 +4213,13 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the command completes.
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+
+    public createExprIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    public createExprIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+
+
+    public createExprIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+
     /**
      *
      * Creates a secondary index (SI).
@@ -9909,7 +9916,12 @@ export interface IndexOptions {
     /**
      * The name of the bin which values are to be indexed.
      */
-    bin: string;
+    bin?: string;
+    /**
+     * The name of the index which values are to be indexed.
+     */
+    indexName?: string;
+    exp?: AerospikeExp;
     /**
      * The namespace on which the index is to be created.
      */
@@ -16733,9 +16745,11 @@ export namespace filter {
             props?: Record<string, AerospikeBinValue>
         );
         public predicate: Predicates;
-        public bin: string;
+        public bin?: string;
         public datatype: indexDataType;
         public type: indexType;
+        public indexName?: string;
+        public exp?: AerospikeExp;
     }
 
     /**
@@ -16999,11 +17013,11 @@ declare namespace statusNamespace {
     /**
      * There is a conflict between metrics enable/disable and dynamic configuration metrics.
      */
-    export const AEROSPIKE_METRICS_CONFLICT = -19;
+    export const AEROSPIKE_METRICS_CONFLICT = -20;
     /**
      * There is a conflict between metrics enable/disable and dynamic configuration metrics.
      */
-    export const METRICS_CONFLICT = -19;
+    export const METRICS_CONFLICT = -20;
     /**
      * Transaction commit called, but the transaction was already aborted.
      */
