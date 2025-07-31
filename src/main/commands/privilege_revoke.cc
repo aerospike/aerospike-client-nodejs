@@ -62,9 +62,9 @@ NAN_METHOD(AerospikeClient::PrivilegeRevoke)
 		Local<Array> privilege_array = info[1].As<Array>();
 		privileges_size = privilege_array->Length();
 		if(privileges_size != 0){
-			if (privileges_from_jsarray(&privileges, privileges_size, privilege_array, log) !=
+			if (privileges_from_jsarray(&privileges, &privileges_size, privilege_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Privileges array invalid");
 				goto Cleanup;
 			}
 		}
@@ -78,7 +78,7 @@ NAN_METHOD(AerospikeClient::PrivilegeRevoke)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Revoking privileges for role role=%s", role);
 	status = aerospike_revoke_privileges(client->as, &cmd->err, &policy, role,
 					   privileges, privileges_size);
 
@@ -94,11 +94,10 @@ Cleanup:
 	if(role){
 		free(role);
 	}
-	for(int i = 0; i < privileges_size; i++) {
-		delete privileges[i];
-	}
 	if(privileges){
+		for(int i = 0; i < privileges_size; i++) {
+			delete privileges[i];
+		}
 		delete [] privileges;
 	}
-
 }

@@ -32,57 +32,80 @@ extern "C" {
 
 using namespace v8;
 
-NAN_METHOD(AerospikeClient::QueryRole)
+NAN_METHOD(AerospikeClient::SetPassword)
 {
-	TYPE_CHECK_REQ(info[0], IsString, "Role must be a string");
-	TYPE_CHECK_OPT(info[1], IsObject, "Policy must be an object");
-	TYPE_CHECK_REQ(info[2], IsFunction, "Callback must be a function");
+	TYPE_CHECK_REQ(info[0], IsString, "User name must be a string");
+	TYPE_CHECK_REQ(info[1], IsString, "Password must be a string");
+	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
+	TYPE_CHECK_OPT(info[3], IsString, "Current user must be a string");
+	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand *cmd = new AsyncCommand("QueryRole", client, info[2].As<Function>());
+	AsyncCommand *cmd = new AsyncCommand("SetPassword", client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
-	char* role_name = NULL;
-	as_role* role = NULL;
+	char *user_name = NULL;
+	char *password = NULL;
+	char *current_user = NULL;
 	as_status status;
-	
+
 	if(info[0]->IsString()){
-		role_name = strdup(*Nan::Utf8String(info[0].As<String>()));
+		user_name = strdup(*Nan::Utf8String(info[0].As<String>()));
 	}
 	else{
-		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "role must be a vaild string");
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "user must be a vaild string");
 		goto Cleanup;
 	}
 
-	if (info[1]->IsObject()) {
-		if (adminpolicy_from_jsobject(&policy, info[1].As<Object>(), log) !=
+	if(info[1]->IsString()){
+		password = strdup(*Nan::Utf8String(info[1].As<String>()));
+	}
+	else{
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "password must be a vaild string");
+		goto Cleanup;
+	}
+
+	if (info[2]->IsObject()) {
+		if (adminpolicy_from_jsobject(&policy, info[2].As<Object>(), log) !=
 			AS_NODE_PARAM_OK) {
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
 	}
 
-	as_v8_debug(log, "Querying for role=%s", role);
-	status = aerospike_query_role(client->as, &cmd->err, &policy, role_name, &role);
+	if(info[3]->IsString()){
+		current_user = strdup(*Nan::Utf8String(info[3].As<String>()));
+	}
+	else{
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "user must be a vaild string");
+		goto Cleanup;
+	}
+	
+
+	status = aerospike_set_password(client->as, &cmd->err, &policy, user_name,
+				   password);
+	
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		Local<Value> argv[] = { Nan::Null(), Nan::Get(as_roles_to_jsobject(&role, 1, log), 0).ToLocalChecked()};
-		cmd->Callback(2, argv);
+		cmd->Callback(0, {});
 	}
 
 Cleanup:
 	delete cmd;
-	if(role_name){
-		free(role_name);
+	if(user_name){
+		free(user_name);
 	}
-	if(role){
-		as_role_destroy(role);
+	if(password){
+		free(password);		
 	}
-
+	if(current_user){
+		free(current_user);		
+	}
 
 }
+

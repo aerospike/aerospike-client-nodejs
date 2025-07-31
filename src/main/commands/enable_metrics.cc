@@ -468,7 +468,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	MetricsCommand *cmd =
 		new MetricsCommand(client, info[5].As<Function>());
-	LogInfo *log = client->log;
+	// LogInfo *log = client->log;
 
 
 

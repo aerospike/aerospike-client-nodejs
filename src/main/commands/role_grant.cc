@@ -63,9 +63,9 @@ NAN_METHOD(AerospikeClient::RoleGrant)
 		Local<Array> role_array = info[1].As<Array>();
 		roles_size = role_array->Length();
 		if(roles_size != 0){
-			if (string_from_jsarray(&roles, roles_size, role_array, log) !=
+			if (string_from_jsarray(&roles, &roles_size, role_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Roles object invalid");
 				goto Cleanup;
 			}
 		}
@@ -79,7 +79,8 @@ NAN_METHOD(AerospikeClient::RoleGrant)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+
+	as_v8_debug(log, "Granting roles to user=%s", user_name);
 	status = aerospike_grant_roles(client->as, &cmd->err, &policy, user_name, const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
@@ -91,10 +92,10 @@ NAN_METHOD(AerospikeClient::RoleGrant)
 
 Cleanup:
 	delete cmd;
-	for(int i = 0; i < roles_size; i++) {
-		free(roles[i]);
-	}
 	if(roles){
+		for(int i = 0; i < roles_size; i++) {
+			free(roles[i]);
+		}
 		free(roles);
 	}
 	if(user_name){

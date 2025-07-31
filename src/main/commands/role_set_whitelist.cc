@@ -62,9 +62,9 @@ NAN_METHOD(AerospikeClient::RoleSetWhitelist)
 		Local<Array> whitelist_array = info[1].As<Array>();
 		whitelist_size = whitelist_array->Length();
 		if(whitelist_size != 0){
-			if (string_from_jsarray(&whitelist, whitelist_size, whitelist_array, log) !=
+			if (string_from_jsarray(&whitelist, &whitelist_size, whitelist_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Whitelist array invalid");
 				goto Cleanup;
 			}
 		}
@@ -78,7 +78,8 @@ NAN_METHOD(AerospikeClient::RoleSetWhitelist)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Setting whitelist for role=%s", role);
+
 	status = aerospike_set_whitelist(client->as, &cmd->err, &policy, role, const_cast<const char**>(whitelist), whitelist_size);
 
 	if (status != AEROSPIKE_OK) {
@@ -93,10 +94,10 @@ Cleanup:
 	if(role){
 		free(role);
 	}
-	for(int i = 0; i < whitelist_size; i++) {
-		free(whitelist[i]);
-	}
 	if(whitelist){
+		for(int i = 0; i < whitelist_size; i++) {
+			free(whitelist[i]);
+		}
 		free(whitelist);
 	}
 

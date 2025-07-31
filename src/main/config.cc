@@ -491,7 +491,7 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->max_error_rate,
-										   NULL, configObj, "maxErrorRate",
+										   &defined, configObj, "maxErrorRate",
 										   log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}

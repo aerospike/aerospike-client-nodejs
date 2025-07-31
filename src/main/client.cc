@@ -65,6 +65,7 @@ NAN_METHOD(AerospikeClient::New)
 	as_config config;
 	as_config_init(&config);
 
+
 	Local<Object> v8Config = info[0].As<Object>();
 
 	Local<Value> v8LogInfo =
@@ -340,6 +341,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "scanPages", ScanPages);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
+	Nan::SetPrototypeMethod(tpl, "setPassword", SetPassword);
 	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);
 	Nan::SetPrototypeMethod(tpl, "setXDRFilter", SetXDRFilter);
 	Nan::SetPrototypeMethod(tpl, "transactionAbort", TransactionAbort);
@@ -349,6 +351,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);
 	Nan::SetPrototypeMethod(tpl, "updateLogging", SetLogLevel);
 	Nan::SetPrototypeMethod(tpl, "userCreate", UserCreate);
+	Nan::SetPrototypeMethod(tpl, "userCreatePKI", UserCreatePKI);
 	Nan::SetPrototypeMethod(tpl, "userDrop", UserDrop);
 
 	constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());

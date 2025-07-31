@@ -278,11 +278,13 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
   }
 
-
   export function skipUnlessDynamicConfig(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testDynamicConfig, 'Dynamic config tests disabled')
   }
 
+  export function skipUnlessMRT(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
+  }
 
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')
@@ -308,11 +310,11 @@ Aerospike.setDefaultLogging(config.log ?? {})
     })
 
     /* global after */
-    after(function (done) {
+    after(async function () {
+
       if(helper_client_exists){
-        client.close()
+        await client.close()
       }
-      done()
     })
   }
   

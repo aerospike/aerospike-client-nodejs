@@ -35,8 +35,8 @@ using namespace v8;
 NAN_METHOD(AerospikeClient::RoleSetQuotas)
 {
 	TYPE_CHECK_REQ(info[0], IsString, "Role must be a string");
-	TYPE_CHECK_OPT(info[1], IsNumber, "read_quota must be a number");
-	TYPE_CHECK_OPT(info[2], IsNumber, "write_quota must be a number");
+	TYPE_CHECK_OPT(info[1], IsNumber, "read quota must be a number");
+	TYPE_CHECK_OPT(info[2], IsNumber, "write quota must be a number");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
 
@@ -75,7 +75,7 @@ NAN_METHOD(AerospikeClient::RoleSetQuotas)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Setting quota for role=%s", role);
 	status = aerospike_set_quotas(client->as, &cmd->err, &policy, role, read_quota, write_quota);
 
 	if (status != AEROSPIKE_OK) {
