@@ -55,6 +55,12 @@
                     '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
             }
+          ],
+          "libraries": [
+            "C:/Program Files/OpenSSL/lib/libcrypto.lib"
+          ],
+          "include_dirs": [
+            "C:/Program Files/OpenSSL/include"
           ]
         }],
       ]
@@ -130,10 +136,12 @@
         'src/main/commands/scan_background.cc',
         'src/main/commands/scan_pages.cc',
         'src/main/commands/select_async.cc',
+        'src/main/commands/set_password.cc',
         'src/main/commands/transaction_abort.cc',
         'src/main/commands/transaction_commit.cc',
         'src/main/commands/truncate.cc',
         'src/main/commands/user_create.cc',
+        'src/main/commands/user_create_pki.cc',
         'src/main/commands/user_drop.cc',
         'src/main/commands/udf_register.cc',
         'src/main/commands/udf_remove.cc',
@@ -217,7 +225,7 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib',
+            '../aerospike-client-c-output/lib/pthreadVC2.lib'
           ],
           'defines': [
             'AS_USE_LIBUV',

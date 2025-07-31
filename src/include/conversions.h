@@ -217,9 +217,9 @@ int map_from_jsmap(as_map **map, v8::Local<v8::Map> obj,
 					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);
-int string_from_jsarray(char*** roles, int roles_size, v8::Local<v8::Array> role_array, const LogInfo *log);
+int string_from_jsarray(char*** strings, int* strings_size, v8::Local<v8::Array> string_array, const LogInfo *log);
 
-int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 
+int privileges_from_jsarray(as_privilege*** privileges, int* privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 
 
 //clone functions for record and key
 bool record_clone(const as_record *src, as_record **dest, const LogInfo *log);

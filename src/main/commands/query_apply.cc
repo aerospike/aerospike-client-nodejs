@@ -41,7 +41,7 @@ class QueryApplyCommand : public AerospikeCommand {
 
 	~QueryApplyCommand()
 	{
-		free_query(&query, policy);
+		free_query(&query, policy, exp);
 		if (policy != NULL)
 			cf_free(policy);
 		if (val != NULL)
@@ -51,6 +51,8 @@ class QueryApplyCommand : public AerospikeCommand {
 		}
 	}
 
+
+	as_exp *exp = NULL;
 	as_policy_query *policy = NULL;
 	as_query query;
 	as_val *val = NULL;
@@ -76,7 +78,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 		new QueryApplyCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
-	setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context, &cmd->with_context, log);
+	setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context, &cmd->with_context, &cmd->exp, log);
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query *)cf_malloc(sizeof(as_policy_query));

@@ -56,7 +56,7 @@ NAN_METHOD(AerospikeClient::QueryRoles)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Querying all roles");
 	status = aerospike_query_roles(client->as, &cmd->err, &policy, &roles, &roles_size);
 
 	if (status != AEROSPIKE_OK) {
@@ -70,10 +70,10 @@ NAN_METHOD(AerospikeClient::QueryRoles)
 
 Cleanup:
 	delete cmd;
-	for(int i = 0; i < roles_size; i++){
-		as_role_destroy(roles[i]);
-	}
 	if(roles){
+		for(int i = 0; i < roles_size; i++){
+			as_role_destroy(roles[i]);
+		}
 		free(roles);
 	}
 

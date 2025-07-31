@@ -40,7 +40,7 @@ NAN_METHOD(AerospikeClient::UserDrop)
 
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
-	AsyncCommand *cmd = new AsyncCommand("UserCreate", client, info[2].As<Function>());
+	AsyncCommand *cmd = new AsyncCommand("UserDrop", client, info[2].As<Function>());
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
@@ -63,14 +63,15 @@ NAN_METHOD(AerospikeClient::UserDrop)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Droping user=%s", user_name);
 	status = aerospike_drop_user(client->as, &cmd->err, &policy, user_name);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 Cleanup:
 	delete cmd;

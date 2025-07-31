@@ -30,13 +30,14 @@ struct query_udata {
     AsyncCommand* cmd;
     uint32_t count;
     uint32_t max_records;
+    as_exp* exp;
 };
 
 void setup_query(as_query *query, v8::Local<v8::Value> ns,
 				 v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options,
-				 as_cdt_ctx* context, bool* with_context, LogInfo *log);
-void setup_options(as_query *query, v8::Local<v8::Object> options, as_cdt_ctx* context, bool* with_context, LogInfo *log);
+				 as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
+void setup_options(as_query *query, v8::Local<v8::Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
 void setup_query_pages(as_query ** query, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
                        v8::Local<v8::Value>maybe_options, uint8_t* bytes, uint32_t bytes_size,
-                       as_cdt_ctx* context, bool* with_context, LogInfo *log);
-void free_query(as_query *query, as_policy_query *policy);
+                       as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
+void free_query(as_query *query, as_policy_query *policy, as_exp *exp);
