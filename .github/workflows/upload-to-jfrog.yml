@@ -79,7 +79,9 @@ jobs:
 
     - name: list version info
       run: 
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
         npm install
+      VERSION: ${{ inputs.new_version }} 
 
     - name: list version info
       run: |
@@ -90,13 +92,12 @@ jobs:
     - name: list version info
       run: 
         ls lib/binding;
-      env:
-        VERSION: ${{ inputs.new_version }} 
 
     - name: list version info
       run: 
         npm pack
-
+        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
+        # write script to change version number
 
     - name: delete versions
       run: rm -rf aerospike/
