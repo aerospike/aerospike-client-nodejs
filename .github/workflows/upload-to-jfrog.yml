@@ -83,7 +83,6 @@ jobs:
 
     - name: list version info
       run: |
-        mkdir lib/binding;
         cp -r aerospike/${{ env.VERSION }}/* lib/binding
       env:
         VERSION: ${{ inputs.new_version }} 
@@ -93,7 +92,7 @@ jobs:
         ls lib/binding;
       env:
         VERSION: ${{ inputs.new_version }} 
-        
+
     - name: list version info
       run: 
         npm pack
