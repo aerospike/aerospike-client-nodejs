@@ -58,10 +58,10 @@ jobs:
 
     - name: list version info
       run: 
-        ls
-        ls clients-npm-dev-local/
-        ls clients-npm-dev-local/aerospike/
-        ls clients-npm-dev-local/aerospike/${{ env.VERSION }}/
+        ls;
+        ls clients-npm-dev-local/;
+        ls clients-npm-dev-local/aerospike/;
+        ls clients-npm-dev-local/aerospike/${{ env.VERSION }}/;
 
       env:
         VERSION: ${{ inputs.new_version }} 
