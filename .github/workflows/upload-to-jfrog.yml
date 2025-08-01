@@ -58,23 +58,26 @@ jobs:
 
     - name: list version info
       run: 
-        ls;
-        ls clients-npm-dev-local/;
-        ls clients-npm-dev-local/aerospike/;
-        ls clients-npm-dev-local/aerospike/${{ env.VERSION }}/;
-
+        ls aerospike/;
+        ls aerospike/${{ env.VERSION }}/;
       env:
         VERSION: ${{ inputs.new_version }} 
 
     - name: list version info
       run: |
         mkdir lib/binding
-        cp -r clients-npm-dev-local/aerospike/${{ env.VERSION }}/* lib/binding/*
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding/*
       env:
         VERSION: ${{ inputs.new_version }} 
 
     - name: delete versions
-      run: rm -rf clients-npm-dev-local/aerospike/${{ env.VERSION }}/*
+      run: rm -rf aerospike/
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
       env:
         VERSION: ${{ inputs.new_version }} 
 
