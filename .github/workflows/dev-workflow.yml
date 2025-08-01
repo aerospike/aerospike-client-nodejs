@@ -36,7 +36,6 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      build-bindings
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
