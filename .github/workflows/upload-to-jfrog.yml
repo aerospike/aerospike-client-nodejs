@@ -65,7 +65,7 @@ jobs:
 
     - name: list version info
       run: |
-        mkdir lib/binding
+        mkdir lib/binding;
         cp -r aerospike/${{ env.VERSION }}/* lib/binding/*
       env:
         VERSION: ${{ inputs.new_version }} 
