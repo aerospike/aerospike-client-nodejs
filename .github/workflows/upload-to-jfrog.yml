@@ -81,7 +81,8 @@ jobs:
       run: 
         jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
         npm install
-      VERSION: ${{ inputs.new_version }} 
+      env:
+        VERSION: ${{ inputs.new_version }} 
 
     - name: list version info
       run: |
