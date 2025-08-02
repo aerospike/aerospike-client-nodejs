@@ -184,7 +184,6 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* .
         tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
@@ -351,7 +350,6 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
         cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* .
         tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
