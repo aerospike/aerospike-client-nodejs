@@ -160,12 +160,39 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        # We need the last tag before the ref, so we can relabel the version if needed
-        fetch-depth: 0
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        mkdir lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* .
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: check binding
+      run:
+        ls lib/binding;
 
     - uses: actions/setup-node@v4
       with: 
@@ -231,41 +258,6 @@ jobs:
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
-
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
-
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
-
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-
-    - name: check binding
-      run:
-        ls lib/binding;
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
@@ -335,12 +327,39 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        # We need the last tag before the ref, so we can relabel the version if needed
-        fetch-depth: 0
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        mkdir lib/binding
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* .
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: check binding
+      run:
+        ls lib/binding;
 
     - uses: actions/setup-node@v4
       with: 
@@ -378,35 +397,6 @@ jobs:
 
     - name: list cluster
       run: aerolab cluster list
-
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
-
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
-
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
 
 
     - name: check binding

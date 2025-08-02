@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/bump-stage-version.yml
     needs: [
       get-jfrog-dev-version,
-      #test-with-server-release,
+      test-with-server-release,
     ]
     secrets: inherit
 
@@ -48,7 +48,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
-      #test-with-server-release,
+      test-with-server-release,
       bump-dev-number
     ]
     uses: ./.github/workflows/reupload-to-jfrog.yml
