@@ -22,24 +22,24 @@ jobs:
     uses: ./.github/workflows/bump-dev-version.yml
     secrets: inherit
 
-  #build-bindings:
-  #  uses: ./.github/workflows/build-artifacts.yml
-  #  needs: [
-  #    bump-dev-number
-  #  ]
-  #  with:
-  #    version: ${{ needs.bump-dev-number.outputs.dev_version }}
-  #    run_tests: false
-  #  secrets: inherit
+  build-bindings:
+    uses: ./.github/workflows/build-artifacts.yml
+    needs: [
+      bump-dev-number
+    ]
+    with:
+      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      run_tests: false
+    secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      #build-bindings
+      build-bindings
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      #new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      new_version: 6.2.1-dev.61
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      #new_version: 6.2.1-dev.61
     secrets: inherit
