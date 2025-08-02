@@ -312,19 +312,16 @@ Aerospike.setDefaultLogging(config.log ?? {})
   }
 
   export function skipUnlessMRT(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
+    skipUnless(ctx, () => options.testMRT, 'MRT tests disabled')
   }
 
-  export function skipUnlessMRT(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
-  }
 
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')
   }
 
   export function skipUnlessMetricsKeyBusy(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMetricsKeyBusy, 'Prefer rack tests disabled')
+    skipUnless(ctx, () => options.testMetricsKeyBusy, 'Metrics key busy test disabled')
   }
 
   if (process.env.GLOBAL_CLIENT !== 'false') {
