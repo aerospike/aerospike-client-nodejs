@@ -129,7 +129,9 @@ Aerospike.setDefaultLogging(config.log ?? {})
             return;
           }
           if (attempt === retries - 1) {
-            throw new Error(`IndexHelper.createIndex function failed with the following error: ${error}`, { cause: error });
+            let e: any = new Error('IndexHelper.remove function failed with the following error: ');
+            e.cause = error
+            throw e
           }
         }
       }
@@ -147,7 +149,9 @@ Aerospike.setDefaultLogging(config.log ?? {})
         if (error.code === Aerospike.status.ERR_INDEX_NOT_FOUND) {
           // ignore - index does not exist
         } else {
-          throw new Error('IndexHelper.remove function failed with the following error: ', { cause: error });
+          let e: any = new Error('IndexHelper.remove function failed with the following error: ');
+          e.cause = error
+          throw e
         }
       }
     }
@@ -312,11 +316,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
   }
 
   export function skipUnlessMRT(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
-  }
-
-  export function skipUnlessMRT(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMRT, 'Prefer rack tests disabled')
+    skipUnless(ctx, () => options.testMRT, 'MRT tests disabled')
   }
 
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
@@ -324,7 +324,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
   }
 
   export function skipUnlessMetricsKeyBusy(this: any, ctx: Suite) {
-    skipUnless(ctx, () => options.testMetricsKeyBusy, 'Prefer rack tests disabled')
+    skipUnless(ctx, () => options.testMetricsKeyBusy, 'Metrics key busy test disabled')
   }
 
   if (process.env.GLOBAL_CLIENT !== 'false') {
