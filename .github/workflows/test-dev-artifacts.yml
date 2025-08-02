@@ -256,13 +256,11 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* .
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
 
     - name: check binding
       run:
