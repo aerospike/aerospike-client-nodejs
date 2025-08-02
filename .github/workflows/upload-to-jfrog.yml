@@ -66,7 +66,7 @@ jobs:
     - name: list version info
       run: |
         mkdir lib/binding;
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
       env:
         VERSION: ${{ inputs.new_version }} 
 
@@ -79,14 +79,14 @@ jobs:
 
     - name: list version info
       run: 
-        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
-        npm install
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
       env:
         VERSION: ${{ inputs.new_version }} 
 
     - name: list version info
       run: |
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
       env:
         VERSION: ${{ inputs.new_version }} 
 
@@ -96,12 +96,12 @@ jobs:
 
     - name: list version info
       run: 
-        npm pack
+        npm pack;
         # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
         # write script to change version number
 
     - name: delete versions
-      run: rm -rf aerospike/
+      run: rm -rf aerospike/;
       env:
         VERSION: ${{ inputs.new_version }} 
 
