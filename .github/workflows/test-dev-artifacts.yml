@@ -276,7 +276,10 @@ jobs:
         npm install;
         npx tsc;
         cd ..;
+        rm -rf ts-test/dist;
         npx tsc;
+        npm run test -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
@@ -289,7 +292,6 @@ jobs:
         npm install;
         npx tsc;
         cd ..;
-        rm -rf ts-test/dist;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000  --t 15000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
