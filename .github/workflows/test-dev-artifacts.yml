@@ -98,7 +98,7 @@ on:
       server-tag:
         required: false
         type: string
-        default: 'latest'
+        default: '8.1.0.0-rc4'
         description: 'Server docker image tag'
       test-file:
         required: false
