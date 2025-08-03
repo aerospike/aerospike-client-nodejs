@@ -35,7 +35,7 @@ function wait (ms: number) {
 
 context('admin commands', async function () {
 
-  if (!helper.config.user) {
+  if (helper.config.user != 'admin') {
     return
   }
 
