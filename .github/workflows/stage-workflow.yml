@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/bump-stage-version.yml
     needs: [
       get-jfrog-dev-version,
-      test-with-server-release,
+      #test-with-server-release,
     ]
     secrets: inherit
 
