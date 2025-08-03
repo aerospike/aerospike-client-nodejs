@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
+    - run: docker run --network=host -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
     - uses: ./.github/actions/run-ee-server-for-ext-container
       with:
