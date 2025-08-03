@@ -315,7 +315,6 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMRT, 'MRT tests disabled')
   }
 
-
   export function skipUnlessPreferRack(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testPreferRack, 'Prefer rack tests disabled')
   }
