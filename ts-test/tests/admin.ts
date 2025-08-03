@@ -1490,13 +1490,13 @@ context('admin commands', async function () {
   })  
 
 
-  client.dropRole(rolename3, null)
-  client.dropUser(username8, policy)
-  client.dropUser(username7, policy)
-  client.dropUser(username6, policy)
-  client.dropUser(username5, policy)
-  client.dropUser(username4, policy)
-  client.dropUser(username3, policy)
+  //client.dropRole(rolename3, null)
+  //client.dropUser(username8, policy)
+  //client.dropUser(username7, policy)
+  //client.dropUser(username6, policy)
+  //client.dropUser(username5, policy)
+  //client.dropUser(username4, policy)
+  //client.dropUser(username3, policy)
 
 
 })
