@@ -140,7 +140,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run server RC
-      run: docker run --network=host -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
