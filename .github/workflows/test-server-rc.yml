@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - run: docker run --network=host -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
+    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
     - uses: ./.github/actions/run-ee-server-for-ext-container
       with:
@@ -140,7 +140,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run server RC
-      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
+      run: docker run --network=host -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
