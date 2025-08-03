@@ -199,6 +199,7 @@ jobs:
           echo "No containers to remove."
         fi
 
+
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
       if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
