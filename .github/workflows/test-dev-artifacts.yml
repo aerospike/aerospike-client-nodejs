@@ -277,7 +277,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 0.0.0.0 --port 3000 --U superuser --P superuser;
+        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
