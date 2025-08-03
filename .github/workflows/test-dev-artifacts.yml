@@ -61,7 +61,7 @@ on:
         description: 'Test against server release candidate?'
       server-tag:
         required: true
-        default: 'latest'
+        default: '8.1.0.0-rc4'
         description: 'Server docker image tag'
       test-file:
         required: false
