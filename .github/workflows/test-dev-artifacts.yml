@@ -208,7 +208,6 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-
     # FIND NO SERVER TESTS AND RUN THEM
     #
     #- name: If not running tests against server, only run basic import test
@@ -291,7 +290,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000  --t 15000 --U superuser --P superuser;
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     #- name: Debug server
@@ -714,7 +713,7 @@ jobs:
       run: |
         docker ps;
         npx tsc;
-        npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
