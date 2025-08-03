@@ -996,7 +996,7 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server 
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0-rc4
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
