@@ -21,7 +21,7 @@ on:
       server-tag:
         type: string
         required: true
-        default: 'latest'
+        default: '8.1.0.0-rc4'
         description: 'Server docker image tag (e.g to test a client backport version)'
 
   workflow_call:
@@ -49,7 +49,7 @@ on:
       server-tag:
         type: string
         required: false
-        default: 'latest'
+        default: '8.1.0.0-rc4'
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true
