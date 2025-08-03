@@ -86,7 +86,7 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run --network=host -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
