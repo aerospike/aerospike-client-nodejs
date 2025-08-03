@@ -10,6 +10,9 @@ on:
       new_version:
         type: string
         required: false
+      pipeline-stage:
+        type: boolean
+        required: true
       jfrog-repo-name:
         type: string
         required: false
@@ -36,9 +39,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
       env:
@@ -47,61 +47,28 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-    - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+    - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeilne-stage == 'stage' }}
+      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        VERSION: ${{ inputs.new_version }}
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
 
-    - name: list version info
-      run: 
-        ls aerospike/;
-        ls aerospike/${{ env.VERSION }}/;
+    - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeilne-stage == 'master' }}
+      run: jf rt dl "clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        VERSION: ${{ inputs.new_version }} 
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
 
-    - name: list version info
+    - name: list Artifacts
       run: |
-        mkdir lib/binding;
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
       env:
-        VERSION: ${{ inputs.new_version }} 
+        NEW_VERSION: ${{ inputs.version }}
 
-    - name: list version info
-      run: 
-        ls lib/binding;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
-      run: 
-        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
-      run: |
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
-      run: 
-        ls lib/binding;
-
-    - name: list version info
-      run: 
-        npm pack;
-        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
-        # write script to change version number
-
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeilne-stage == 'dev' }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeilne-stage == 'stage' }}
@@ -110,6 +77,7 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeilne-stage == 'master' }}
@@ -118,6 +86,7 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Publish build info
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
@@ -139,17 +108,12 @@ jobs:
       run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
       working-directory: .github/workflows
 
-    - name: Promote release bundle to DEV stage
-      if: ${{ inputs.pipeilne-stage == 'dev' }}
-      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
-      working-directory: .github/workflows
-
     - name: Promote release bundle to STAGE stage
       if: ${{ inputs.pipeilne-stage == 'stage' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} STAGE
       working-directory: .github/workflows
 
-    - name: Promote release bundle to STAGE stage
+    - name: Promote release bundle to PROD stage
       if: ${{ inputs.pipeilne-stage == 'master' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} PROD
       working-directory: .github/workflows
