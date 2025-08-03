@@ -209,6 +209,10 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+        
     # FIND NO SERVER TESTS AND RUN THEM
     #
     #- name: If not running tests against server, only run basic import test
