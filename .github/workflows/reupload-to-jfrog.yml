@@ -51,14 +51,14 @@ jobs:
       if: ${{ inputs.pipeline-stage == 'stage' }}
       run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
         PACKAGE_MANAGER: npm
 
     - name: Download Artifacts from Jfrog
       if: ${{ inputs.pipeline-stage == 'master' }}
       run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -67,7 +67,7 @@ jobs:
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeline-stage == 'stage' }}
@@ -76,7 +76,7 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeline-stage == 'master' }}
@@ -85,7 +85,7 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
     - name: Publish build info
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
