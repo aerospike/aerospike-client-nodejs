@@ -11,7 +11,7 @@ on:
         type: string
         required: false
       pipeline-stage:
-        type: boolean
+        type: string
         required: true
       jfrog-repo-name:
         type: string
