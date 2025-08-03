@@ -126,17 +126,18 @@ jobs:
       run: |
         npm pack aerospike
 
-    - name: Sign npm tarball
-      uses: sslcom/esigner-codesign@develop
-      with:
-          command: sign
-          username: ${{ secrets.ES_USERNAME }}
-          password: ${{ secrets.ES_PASSWORD }}
-          totp_secret: ${{ secrets.ES_TOTP_SECRET }}
-          credential_id: ${{ secrets.ES_CREDENTIAL_ID }}
-          file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.0-dev.4.tgz
-          output_path: ${GITHUB_WORKSPACE}/artifacts
-          malware_block: true
+    # Not possible to sign tarball with esigner at this time
+    # - name: Sign npm tarball
+    #   uses: sslcom/esigner-codesign@develop
+    #   with:
+    #       command: sign
+    #       username: ${{ secrets.ES_USERNAME }}
+    #       password: ${{ secrets.ES_PASSWORD }}
+    #       totp_secret: ${{ secrets.ES_TOTP_SECRET }}
+    #       credential_id: ${{ secrets.ES_CREDENTIAL_ID }}
+    #       file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.0-dev.4.tgz
+    #       output_path: ${GITHUB_WORKSPACE}/artifacts
+    #       malware_block: true
 
     - name: Move artifacts
       run: |

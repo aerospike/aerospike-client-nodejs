@@ -51,9 +51,9 @@ jobs:
       test-with-server-release,
       bump-dev-number
     ]
-    uses: ./.github/workflows/reupload-to-jfrog.yml
+    uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       old_version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
       new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
-      stage: true
+      pipeline-stage: 'stage'
     secrets: inherit

@@ -10,10 +10,9 @@ on:
       new_version:
         type: string
         required: false
-      stage:
+      pipeline-stage:
         type: boolean
-        required: false
-        default: false
+        required: true
       jfrog-repo-name:
         type: string
         required: false
@@ -76,7 +75,6 @@ jobs:
       env:
         VERSION: ${{ inputs.new_version }} 
 
-
     - name: list version info
       run: 
         jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
@@ -106,15 +104,30 @@ jobs:
         VERSION: ${{ inputs.new_version }} 
 
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
+      if: ${{ inputs.pipeilne-stage == 'dev' }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
-#
+
+    - name: Upload passing builds to JFrog Nodejs repo
+      if: ${{ inputs.pipeilne-stage == 'stage' }}
+    # Source path must be in quotes if it contains an asterisk
+      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+
+    - name: Upload passing builds to JFrog Nodejs repo
+      if: ${{ inputs.pipeilne-stage == 'master' }}
+    # Source path must be in quotes if it contains an asterisk
+      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+
     - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
     # Required to run sponge
@@ -126,7 +139,6 @@ jobs:
       working-directory: .github/workflows
       shell: bash
 
-
     - name: Create release bundle from JFrog build
       # Not the same name as in proxy/pom.xml
       # But that name doesn't specify the language,
@@ -136,5 +148,16 @@ jobs:
       working-directory: .github/workflows
 
     - name: Promote release bundle to DEV stage
+      if: ${{ inputs.pipeilne-stage == 'dev' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
+      working-directory: .github/workflows
+
+    - name: Promote release bundle to STAGE stage
+      if: ${{ inputs.pipeilne-stage == 'stage' }}
+      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} STAGE
+      working-directory: .github/workflows
+
+    - name: Promote release bundle to STAGE stage
+      if: ${{ inputs.pipeilne-stage == 'master' }}
+      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} PROD
       working-directory: .github/workflows
