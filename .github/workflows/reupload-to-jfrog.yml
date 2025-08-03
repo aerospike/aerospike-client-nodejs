@@ -48,14 +48,14 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download Artifacts from Jfrog
-      if: ${{ inputs.pipeilne-stage == 'stage' }}
+      if: ${{ inputs.pipeline-stage == 'stage' }}
       run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
         NEW_VERSION: ${{ inputs.version }}
         PACKAGE_MANAGER: npm
 
     - name: Download Artifacts from Jfrog
-      if: ${{ inputs.pipeilne-stage == 'master' }}
+      if: ${{ inputs.pipeline-stage == 'master' }}
       run: jf rt dl "clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
         NEW_VERSION: ${{ inputs.version }}
@@ -69,9 +69,8 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
-
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeilne-stage == 'stage' }}
+      if: ${{ inputs.pipeline-stage == 'stage' }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
@@ -80,7 +79,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeilne-stage == 'master' }}
+      if: ${{ inputs.pipeline-stage == 'master' }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
@@ -109,11 +108,11 @@ jobs:
       working-directory: .github/workflows
 
     - name: Promote release bundle to STAGE stage
-      if: ${{ inputs.pipeilne-stage == 'stage' }}
+      if: ${{ inputs.pipeline-stage == 'stage' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} STAGE
       working-directory: .github/workflows
 
     - name: Promote release bundle to PROD stage
-      if: ${{ inputs.pipeilne-stage == 'master' }}
+      if: ${{ inputs.pipeline-stage == 'master' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} PROD
       working-directory: .github/workflows
