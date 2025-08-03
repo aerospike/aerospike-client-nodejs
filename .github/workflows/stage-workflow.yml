@@ -58,12 +58,13 @@ jobs:
       pipeline-stage: 'stage'
     secrets: inherit
 
-  reupload-stage-to-jfrog:
+  reupload-stage-to-jfrog-npm-repo:
     name: Upload artifacts to JFrog
     needs: [
       get-jfrog-dev-version,
       test-with-server-release,
-      bump-dev-number
+      bump-dev-number,
+      reupload-stage-to-jfrog
     ]
     uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
     with:
