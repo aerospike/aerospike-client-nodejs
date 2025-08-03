@@ -26,6 +26,7 @@
     "@types/tmp": "^0.2.6",
     "@types/yargs": "^17.0.33",
     "mocha": "^10.7.3",
+    "rimraf": "^5.0.10",
     "ts-node": "^10.9.2",
     "typedoc": "^0.26.7",
     "typescript": "^5.5.4"

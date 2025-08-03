@@ -45,7 +45,7 @@
     "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
-    "lint": "standard",
+    "lint": "standard --ignore ts-test/dist/",
     "posttest": "npm run lint",
     "coverage": "nyc npm test && nyc --reporter=lcov report",
     "codecov": "codecov",
