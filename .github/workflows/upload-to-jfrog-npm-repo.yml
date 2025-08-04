@@ -94,6 +94,6 @@ jobs:
 
     - name: list version info
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/ --auth-type=web
+        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
         npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
