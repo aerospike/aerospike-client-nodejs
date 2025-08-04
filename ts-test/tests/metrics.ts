@@ -44,7 +44,7 @@ describe('Metrics tests', function () {
   this.timeout(40000)
   const client: Cli = helper.client
 
-  helper.skipUnlessAdvancedMetrics(this)
+  //helper.skipUnlessAdvancedMetrics(this)
 
 
   const blank_policy: MetricsPolicy = new Aerospike.MetricsPolicy()
@@ -231,10 +231,13 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportDir/metrics-*');
 
+          await execAsync('mkdir  metrics_sub_dir/reportDir/metrics-*');
+
           let result = await execAsync('find metrics_sub_dir/reportDir/ -type f | wc -l');
 
 
           expect(Number(result.stdout.trim())).to.eql(0)
+
 
           let policy: MetricsPolicy = new MetricsPolicy({
               reportDir: './metrics_sub_dir/reportDir',
@@ -262,6 +265,8 @@ describe('Metrics tests', function () {
         it('Default interval is overridden and only one report is written', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/interval/metrics-*');
+
+          await execAsync('mkdir metrics_sub_dir/interval/metrics-*');
 
           let result = await execAsync('find metrics_sub_dir/interval/ -type f | wc -l');
 
@@ -292,6 +297,8 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportSizeLimit/metrics-*');
 
+          await execAsync('mkdir metrics_sub_dir/reportSizeLimit/metrics-*');
+
           let result = await execAsync('find metrics_sub_dir/reportSizeLimit/ -type f | wc -l');
 
           expect(Number(result.stdout.trim())).to.eql(0)
@@ -315,6 +322,8 @@ describe('Metrics tests', function () {
         it('Ensures correct column value in metrics file header', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/latencyColumns/metrics-*');
+
+          await execAsync('mkdir metrics_sub_dir/reportSizeLimit/metrics-*');
 
           let result = await execAsync('find metrics_sub_dir/latencyColumns/ -type f | wc -l');
 
@@ -343,6 +352,8 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/latencyShift/metrics-*');
 
+          await execAsync('mkdir metrics_sub_dir/latencyShift/metrics-*');
+
           let result = await execAsync('find metrics_sub_dir/latencyShift/ -type f | wc -l');
 
           expect(Number(result.stdout.trim())).to.eql(0)
@@ -369,6 +380,8 @@ describe('Metrics tests', function () {
         it('Ensures correct labels in metrics file first report', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/labels/metrics-*');
+
+          await execAsync('mkdir metrics_sub_dir/labels/metrics-*');
 
           let result = await execAsync('find metrics_sub_dir/labels/ -type f | wc -l');
 
@@ -876,7 +889,6 @@ describe('Metrics tests', function () {
       context('nodes', function () { 
         context('name', function () { 
           it('Ensures name is correct', async function () {
-            console.log(helper.config.hosts)
             const config: any = {
                 hosts: helper.config.hosts,
                 user: helper.config.user,
@@ -916,9 +928,7 @@ describe('Metrics tests', function () {
             await new Promise(r => setTimeout(r, 0));
 
             for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-              console.log(cluster)
               for (const node of cluster.nodes) {
-                console.log(node)
                 expect(node.name).to.eql('A1')
               }
             }
