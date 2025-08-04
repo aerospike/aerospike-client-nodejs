@@ -44,3 +44,18 @@ jobs:
       pipeline-stage: 'dev'
       #new_version: 6.2.1-dev.61
     secrets: inherit
+
+  reupload-stage-to-jfrog-npm-repo:
+    name: Upload artifacts to JFrog
+    needs: [
+      get-jfrog-dev-version,
+      #test-with-server-release,
+      bump-dev-number,
+      reupload-stage-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
+    with:
+      #new_version: 6.2.1-rc.20
+      new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      stage: 'dev'
+    secrets: inherit

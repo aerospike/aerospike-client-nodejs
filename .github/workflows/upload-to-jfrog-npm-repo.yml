@@ -10,7 +10,7 @@ on:
       new_version:
         type: string
         required: false
-      stage:
+      pipeline-stage:
         type: string
         required: false
       jfrog-repo-name:
