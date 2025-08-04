@@ -23,7 +23,6 @@ if(version.major === jfrogVersion.major &&
       version.prerelease = ['dev', 1];
       console.log(version.format())
    }
-  throw new Error('No new JFrog version exists yet. Please update version in package.json to reflect the next release version.')
 }
 else if(version.major > jfrogVersion.major ||
    version.minor > jfrogVersion.minor ||
