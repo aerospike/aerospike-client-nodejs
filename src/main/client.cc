@@ -131,8 +131,7 @@ NAN_METHOD(AerospikeClient::Close)
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 
-	free(client->as);
-	free(client->log);
+	cf_free(client->log);
 
 	client->closed = true;
 }
