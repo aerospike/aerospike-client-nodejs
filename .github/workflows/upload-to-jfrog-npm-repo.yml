@@ -93,6 +93,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
-      run: 
-        npm install --registry=https://aerospike.jfrog.io/artifactory/api/npm/dev-npm/ --auth-type=web
+      run: |
+        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/ --auth-type=web
+        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
