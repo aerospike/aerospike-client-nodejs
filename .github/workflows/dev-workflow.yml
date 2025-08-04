@@ -41,7 +41,6 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      pipeline-stage: 'dev'
       #new_version: 6.2.1-dev.61
     secrets: inherit
 
