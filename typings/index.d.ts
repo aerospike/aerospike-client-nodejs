@@ -3261,28 +3261,44 @@ export namespace policy {
      */
     export enum replica {
         /**
-         * Ensures this client will only see an increasing sequence
-         * of record versions. Server only reads from master. This is the default.
+         * Use node containing key's master partition.
+         *
          */
         MASTER,
         /**
-         * Ensures ALL clients will only see an increasing
-         * sequence of record versions. Server only reads from master.
+         * Distribute reads across nodes containing key's master and replicated partition
+         * in round-robin fashion.
          */
         ANY,
         /**
-         * Server may read from master or any full
-         * (non-migrating) replica. Increasing sequence of record versions is not
-         * guaranteed.
+         * Try node containing master partition first.
+         * If connection fails, all commands try nodes containing replicated partitions.
+         * If socketTimeout is reached, reads also try nodes containing replicated partitions,
+         * but writes remain on master node.
          */
         SEQUENCE,
         /**
-         * Server may read from master or any full
-         * (non-migrating) replica or from unavailable partitions. Increasing sequence
-         * of record versions is not guaranteed.
+         * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
+         * use SEQUENCE instead. Also use SEQUENCE for writes.
+         *
+         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
+         * configuration must also be set to enable this functionality.
          */
-        PREFER_RACK
+        PREFER_RACK,
+        /**
+         * Distribute reads and writes across all nodes in cluster in round-robin fashion.
+         *
+         * This option is useful on reads when the replication factor equals the number
+         * of nodes in the cluster and the overhead of requesting proles is not desired.
+         *
+         * This option could temporarily be useful on writes when the client can't connect
+         * to a node, but that node is reachable via a proxy from a different node.
+         *
+         * This option can also be used to test server proxies.
+         */
+        RANDOM
     }
+
 
     /**
      * Read policy for AP (availability) namespaces.

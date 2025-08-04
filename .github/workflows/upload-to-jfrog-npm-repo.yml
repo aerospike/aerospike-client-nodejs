@@ -9,7 +9,7 @@ on:
     inputs:
       new_version:
         type: string
-        required: false
+        required: true
       pipeline-stage:
         type: string
         required: false
