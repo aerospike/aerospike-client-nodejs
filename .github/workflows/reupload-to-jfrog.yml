@@ -133,7 +133,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Publish build info
-      run: jf rt build-publish --project clients nodejs-client ${{ inputs.old_version }}
+      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
     # Required to run sponge
     - run: sudo apt install -y moreutils
