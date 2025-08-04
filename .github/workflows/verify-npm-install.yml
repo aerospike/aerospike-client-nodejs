@@ -7,14 +7,14 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
 
 jobs:
   run-npm-install-and-require-test:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, 22.04A, 20.04, 20.04A, macos-13-large, SMA, windows-2022]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-13-large, SMA2, windows-2022]
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install xyzparbart --omit-dev;
-          node -e "console.log(require('xyzparbart').Transaction.commitStatus)";
+          npm install darkcartpale@6.0.5 --omit-dev;
+          node -e "const { BatchWritePolicy } = require('darkcartpale'); console.log(new BatchWritePolicy({onLockingOnly: true}));"

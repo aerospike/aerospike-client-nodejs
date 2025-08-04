@@ -64,7 +64,10 @@ The following are the included examples:
     performing aggregation using UDFs
   - scan - Run a scan on an entire namespace or set
   - sindex - Manage secondary indexes (create/remove index)
+  - Connect- Connect to aerospike
   - udf - Manage User-Defined Functions (create/remove module)
+  - metrics - Enable metrics with custom settings.
+  - dynamicConfig - Connect with a dynamic configuration.
 - **Complex Examples**
   - geospatialMonteCarlo - Performs a Monte Carlo simulation to approximate PI
     using Aerospike's geospatial indexing and query functionality

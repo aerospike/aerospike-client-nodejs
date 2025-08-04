@@ -115,6 +115,30 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     auth: {
       type: 'number',
       describe: 'Specify client authentication mode'
+    },
+    testMetrics: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
+    },
+    testDynamicConfig: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
+    },
+    testMetricsKeyBusy: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
+    },
+    testPreferRack: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing. Requires two datacenter XDR configuration.'
+    },
+    testMRT: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced MRT.'
+    },
+    testXDR: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.'
     }
   });
 
@@ -139,7 +163,12 @@ function testDir (): string {
   return path.resolve( __dirname , '..');
 }
 
-options.getConfig = function (): ConfigOptions {
+options.getConfig = function (): any {
+  let omitHelperClient = true;
+  if(options.testMetrics){
+    omitHelperClient = false
+  }
+  
   const defaultPolicy: BasePolicyOptions = {
     totalTimeout: options.totalTimeout,
     maxRetries: 6
@@ -163,7 +192,7 @@ options.getConfig = function (): ConfigOptions {
     modlua: {
       userPath: testDir()
     }
-  } as ConfigOptions;
+  } as any;
 
   if (options.host !== null) {
     const host = {
@@ -199,9 +228,12 @@ options.getConfig = function (): ConfigOptions {
   if (options.auth) {
     config.authMode = options.auth
   }
-  // Disable maxErrorRate
-  config.maxErrorRate = 0
-  return config
+  // Create a very large error threshold to disable circut breaker
+  // Ratio must be 50/1 at most
+  config.maxErrorRate = 100000
+  config.errorRateWindow = 10000
+
+  return {config, omitHelperClient: omitHelperClient}
 }
 
 export default options;

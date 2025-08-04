@@ -64,7 +64,7 @@ NAN_METHOD(AerospikeClient::QueryUser)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Querying for user=%s", user_name);
 	status = aerospike_query_user(client->as, &cmd->err, &policy, user_name, &user);
 
 	if (status != AEROSPIKE_OK) {

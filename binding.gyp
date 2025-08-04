@@ -55,7 +55,7 @@
                     '-NodeLibFile', "<(node_root_dir)/<(target_arch)/node.lib"
               ]
             }
-          ]
+          ],
         }],
       ]
     },
@@ -84,6 +84,9 @@
         'src/main/expressions.cc',
         'src/main/async.cc',
         'src/main/command.cc',
+        'src/main/commands/set_xdr_filter.cc',
+        'src/main/commands/disable_metrics.cc',
+        'src/main/commands/enable_metrics.cc',
         'src/main/commands/apply_async.cc',
         'src/main/commands/batch_exists.cc',
         'src/main/commands/batch_get.cc',
@@ -126,10 +129,12 @@
         'src/main/commands/scan_background.cc',
         'src/main/commands/scan_pages.cc',
         'src/main/commands/select_async.cc',
+        'src/main/commands/set_password.cc',
         'src/main/commands/transaction_abort.cc',
         'src/main/commands/transaction_commit.cc',
         'src/main/commands/truncate.cc',
         'src/main/commands/user_create.cc',
+        'src/main/commands/user_create_pki.cc',
         'src/main/commands/user_drop.cc',
         'src/main/commands/udf_register.cc',
         'src/main/commands/udf_remove.cc',
@@ -177,7 +182,8 @@
         ['OS=="linux"',{
           'libraries': [
             '../aerospike-client-c/target/Linux-<(build_arch)/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lyaml'
           ],
           'defines': [
             'AS_USE_LIBUV'
@@ -193,7 +199,8 @@
         ['OS=="mac"',{
           'libraries': [
             '../aerospike-client-c/target/Darwin-<(build_arch)/lib/libaerospike.a',
-            '-lz'
+            '-lz',
+            '-lyaml'
           ],
           'defines': [
             'AS_USE_LIBUV'

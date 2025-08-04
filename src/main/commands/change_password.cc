@@ -83,21 +83,16 @@ NAN_METHOD(AerospikeClient::ChangePassword)
 		goto Cleanup;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	if(strcmp(current_user, "admin")){
-		status = aerospike_change_password(client->as, &cmd->err, &policy, user_name,
-					   password);
-	}
-	else{
-		status = aerospike_set_password(client->as, &cmd->err, &policy, user_name,
-					   password);
-	}
+	as_v8_debug(log, "Changing password for user_name=%s", user_name);
+	status = aerospike_change_password(client->as, &cmd->err, &policy, user_name,
+					password);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:

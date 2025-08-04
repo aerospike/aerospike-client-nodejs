@@ -24,6 +24,7 @@
 extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_event.h>
+#include <aerospike/as_metrics_writer.h>
 }
 
 using namespace v8;
@@ -192,6 +193,11 @@ int writepolicy_from_jsobject(as_policy_write *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	as_v8_detail(log, "Parsing write policy: success");
 	return AS_NODE_PARAM_OK;
 }
@@ -225,6 +231,11 @@ int applypolicy_from_jsobject(as_policy_apply *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -485,6 +496,11 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	return rc;
 }
 
@@ -521,6 +537,11 @@ int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
 	}
 	if ((rc = get_optional_bool_property(&policy->durable_delete, NULL, obj,
 										 "durableDelete", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->on_locking_only, NULL, obj,
+										 "onLockingOnly", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -691,6 +712,85 @@ int adminpolicy_from_jsobject(as_policy_admin *policy, Local<Object> obj,
 	as_policy_admin_init(policy);
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
 										   "timeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	as_v8_detail(log, "Parsing info policy: success");
+	return AS_NODE_PARAM_OK;
+}
+
+int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<Object> obj,
+							 as_metrics_listeners* listeners, char** report_dir, const LogInfo *log)
+{
+	if (obj->IsUndefined() || obj->IsNull()) {
+		return AS_NODE_PARAM_ERR;
+	}
+	int rc = 0;
+	as_metrics_policy_init(policy);
+
+	bool defined = false;
+
+	int report_dir_size = 256;
+
+	if(listeners != NULL){
+		policy->metrics_listeners = *listeners;
+	}
+
+
+	Local<Value> v8_labels = Nan::Get(obj, Nan::New("labels").ToLocalChecked()).ToLocalChecked();
+
+	if (v8_labels->IsObject()) {
+		Local<Object> labels = Local<Array>::Cast(v8_labels);
+		const Local<Array> props =
+			Nan::GetOwnPropertyNames(labels).ToLocalChecked();
+
+		for (uint32_t i = 0; i < props->Length(); i++) {
+
+			const Local<Value> name = Nan::Get(props, i).ToLocalChecked();
+			const Local<Value> value = Nan::Get(labels, name).ToLocalChecked();
+
+			if(name->IsString() && value->IsString()){
+				as_metrics_policy_add_label(policy, *Nan::Utf8String(name.As<String>()), *Nan::Utf8String(value.As<String>()));
+			}
+			else{
+				as_v8_error(log, "labels must be an object with string key pairs.");
+				return AS_NODE_PARAM_ERR;
+			}
+
+		}
+	}
+	else if (((!v8_labels->IsNull()) && (!v8_labels->IsUndefined()))) {
+		as_v8_error(log, "labels must be an object with string key pairs.");
+		return AS_NODE_PARAM_ERR;
+	}
+
+
+	if ((rc = get_optional_report_dir_property(report_dir, &defined, &report_dir_size, obj,
+										   "reportDir", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	else if (defined) {
+		as_metrics_policy_set_report_dir(policy, *report_dir);
+	}
+
+	if ((rc = get_optional_uint64_property(&policy->report_size_limit, NULL, obj,
+										   "reportSizeLimit", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->interval, NULL, obj,
+										   "interval", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint8_property(&policy->latency_columns, NULL, obj,
+										   "latencyColumns", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint8_property(&policy->latency_shift, NULL, obj,
+										   "latencyShift", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}

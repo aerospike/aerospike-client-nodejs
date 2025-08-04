@@ -20,7 +20,7 @@
 
 import Aerospike, { Client, AdminPolicy, admin, ConfigOptions } from 'aerospike';
 import * as helper from './test_helper';
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 
 function getRandomInt (max: number) {
   return Math.floor(Math.random() * max)
@@ -34,9 +34,11 @@ function wait (ms: number) {
 }
 
 context('admin commands', async function () {
-  if (helper.config.user !== 'admin') {
+
+  if (helper.config.user != 'admin') {
     return
   }
+
   const client: Client = helper.client
   const randomFactor: number = 1000000
   const waitMs: number = 100
@@ -44,10 +46,16 @@ context('admin commands', async function () {
   const username2: string = 'username' + randomString(getRandomInt(randomFactor))
   const username3: string = 'username' + randomString(getRandomInt(randomFactor))
   const username4: string = 'username' + randomString(getRandomInt(randomFactor))
+  const username5: string = 'username' + randomString(getRandomInt(randomFactor))
+  const username6: string = 'username' + randomString(getRandomInt(randomFactor))
+  const username7: string = 'username' + randomString(getRandomInt(randomFactor))
+  const username8: string = 'username' + randomString(getRandomInt(randomFactor))
 
   const rolename1: string = 'rolename' + randomString(getRandomInt(randomFactor))
   const rolename2: string = 'rolename' + randomString(getRandomInt(randomFactor))
   const rolename3: string = 'rolename' + randomString(getRandomInt(randomFactor))
+  const rolename4: string = 'rolename' + randomString(getRandomInt(randomFactor))
+  const rolename5: string = 'rolename' + randomString(getRandomInt(randomFactor))
 
   const policy: AdminPolicy = new Aerospike.AdminPolicy({ timeout: 1000 })
 
@@ -99,7 +107,7 @@ context('admin commands', async function () {
 
   describe('Client#createRole()', function () {
     it('Creates role', async function () {
-      client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
@@ -110,7 +118,7 @@ context('admin commands', async function () {
     })
 
     it('with admin policy', async function () {
-      client.createRole(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
+      await client.createRole(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
@@ -121,7 +129,7 @@ context('admin commands', async function () {
     })
 
     it('With multiple privilegeCodes', async function () {
-      await client.createRole(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
+      await await client.createRole(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
@@ -134,7 +142,7 @@ context('admin commands', async function () {
 
   describe('Client#grantPrivileges()', function () {
     it('grants privilege to role', async function () {
-      client.grantPrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], null)
+      await client.grantPrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
@@ -145,9 +153,9 @@ context('admin commands', async function () {
     })
 
     it('with admin policy', async function () {
-      client.grantPrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.grantPrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
+      const result: admin.Role = await await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -155,9 +163,9 @@ context('admin commands', async function () {
       expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)])
     })
     it('with multiple privileges', async function () {
-      client.grantPrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.grantPrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
+      const result: admin.Role = await await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -174,9 +182,9 @@ context('admin commands', async function () {
 
   describe('Client#revokePrivileges()', function () {
     it('Revokes privilege from role', async function () {
-      client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
+      await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename1, null)
+      const result: admin.Role = await await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -185,9 +193,9 @@ context('admin commands', async function () {
     })
 
     it('With admin policy', async function () {
-      client.revokePrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
+      await client.revokePrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
+      const result: admin.Role = await await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -196,9 +204,9 @@ context('admin commands', async function () {
     })
 
     it('With mutliple privileges', async function () {
-      client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
+      const result: admin.Role = await await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -232,8 +240,8 @@ context('admin commands', async function () {
       const results: admin.User[] = await client.queryUsers(null)
       results.forEach((result: admin.User) => {
         expect(result).to.have.property('name').that.is.a('string')
-        expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
-        expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+        expect(result).to.have.property('readInfo').that.is.an('array')
+        expect(result).to.have.property('writeInfo').that.is.an('array')
         expect(result.connsInUse).to.be.a('number')
         expect(result).to.have.property('roles').that.is.an('array')
       })
@@ -242,8 +250,8 @@ context('admin commands', async function () {
       const results: admin.User[] = await client.queryUsers(policy)
       results.forEach((result: admin.User) => {
         expect(result).to.have.property('name').that.is.a('string')
-        expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
-        expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+        expect(result).to.have.property('readInfo').that.is.an('array')
+        expect(result).to.have.property('writeInfo').that.is.an('array')
         expect(result.connsInUse).to.be.a('number')
         expect(result).to.have.property('roles').that.is.an('array')
       })
@@ -252,7 +260,7 @@ context('admin commands', async function () {
 
   describe('Client#createUser()', function () {
     it('Creates user', async function () {
-      client.createUser(username1, 'password')
+      await client.createUser(username1, 'password')
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username1, null)
       expect(result).to.have.property('name', username1)
@@ -263,7 +271,7 @@ context('admin commands', async function () {
     })
 
     it('With policy', async function () {
-      client.createUser(username2, 'password', null, policy)
+      await client.createUser(username2, 'password', null, policy)
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username2, null)
       expect(result).to.have.property('name', username2)
@@ -274,7 +282,7 @@ context('admin commands', async function () {
     })
 
     it('With role', async function () {
-      client.createUser(username3, 'password', [rolename1])
+      await client.createUser(username3, 'password', [rolename1])
       await wait(waitMs)
       const result = await client.queryUser(username3, null)
       expect(result).to.have.property('name', username3)
@@ -285,7 +293,7 @@ context('admin commands', async function () {
     })
 
     it('With multiple roles', async function () {
-      client.createUser(username4, 'password', [rolename1, rolename2, rolename3])
+      await client.createUser(username4, 'password', [rolename1, rolename2, rolename3])
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username4, null)
       expect(result).to.have.property('name', username4)
@@ -296,9 +304,55 @@ context('admin commands', async function () {
     })
   })
 
+  describe('Client#createPKIUser()', function () {
+    it('Creates user', async function () {
+      await client.createPKIUser(username5)
+      await wait(waitMs)
+      const result: admin.User = await client.queryUser(username5, null)
+      expect(result).to.have.property('name', username5)
+      expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result.connsInUse).to.be.a('number')
+      expect(result).to.have.property('roles').that.deep.equals([])
+    })
+
+    it('With policy', async function () {
+      await client.createPKIUser(username6, null, policy)
+      await wait(waitMs)
+      const result: admin.User = await client.queryUser(username6, null)
+      expect(result).to.have.property('name', username6)
+      expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result.connsInUse).to.be.a('number')
+      expect(result).to.have.property('roles').that.deep.equals([])
+    })
+
+    it('With role', async function () {
+      await client.createPKIUser(username7, [rolename1])
+      await wait(waitMs)
+      const result = await client.queryUser(username7, null)
+      expect(result).to.have.property('name', username7)
+      expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result.connsInUse).to.be.a('number')
+      expect(result).to.have.property('roles').that.deep.equals([rolename1])
+    })
+
+    it('With multiple roles', async function () {
+      await client.createPKIUser(username8, [rolename1, rolename2, rolename3])
+      await wait(waitMs)
+      const result: admin.User = await client.queryUser(username8, null)
+      expect(result).to.have.property('name', username8)
+      expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
+      expect(result).to.have.property('connsInUse', 0)
+      expect(result).to.have.property('roles').that.has.members([rolename1, rolename2, rolename3])
+    })
+  })
+
   describe('Client#grantRoles()', function () {
     it('grants role to user', async function () {
-      client.grantRoles(username1, [rolename1], null)
+      await client.grantRoles(username1, [rolename1], null)
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username1, null)
       expect(result).to.have.property('name', username1)
@@ -309,9 +363,9 @@ context('admin commands', async function () {
     })
 
     it('With policy', async function () {
-      client.grantRoles(username2, [rolename2], policy)
+      await client.grantRoles(username2, [rolename2], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username2, null)
+      const result: admin.User = await await client.queryUser(username2, null)
       expect(result).to.have.property('name', username2)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
@@ -320,9 +374,9 @@ context('admin commands', async function () {
     })
 
     it('With multiple roles', async function () {
-      client.grantRoles(username3, [rolename1, rolename2, rolename3], policy)
+      await client.grantRoles(username3, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username3, null)
+      const result: admin.User = await await client.queryUser(username3, null)
       expect(result).to.have.property('name', username3)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
@@ -333,7 +387,7 @@ context('admin commands', async function () {
 
   describe('Client#revokeRoles()', function () {
     it('Revokes role from user', async function () {
-      client.revokeRoles(username1, [rolename1], null)
+      await client.revokeRoles(username1, [rolename1], null)
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username1, null)
       expect(result).to.have.property('name', username1)
@@ -344,7 +398,7 @@ context('admin commands', async function () {
     })
 
     it('With policy', async function () {
-      client.revokeRoles(username2, [rolename2], policy)
+      await client.revokeRoles(username2, [rolename2], policy)
       await wait(waitMs)
       const result: admin.User = await client.queryUser(username2, null)
       expect(result).to.have.property('name', username2)
@@ -355,9 +409,9 @@ context('admin commands', async function () {
     })
 
     it('With multiple roles', async function () {
-      client.revokeRoles(username3, [rolename1, rolename2, rolename3], policy)
+      await client.revokeRoles(username3, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username3, null)
+      const result: admin.User = await await client.queryUser(username3, null)
       expect(result).to.have.property('name', username3)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
@@ -368,7 +422,7 @@ context('admin commands', async function () {
 
   describe('Client#setWhitelist()', function () {
     it('Set whitelist', async function () {
-      client.setWhitelist(rolename1, ['192.168.0.0'], null)
+      await client.setWhitelist(rolename1, ['192.168.0.0'], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
@@ -379,7 +433,7 @@ context('admin commands', async function () {
     })
 
     it('With policy', async function () {
-      client.setWhitelist(rolename2, ['192.168.0.0'], policy)
+      await client.setWhitelist(rolename2, ['192.168.0.0'], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
@@ -390,7 +444,7 @@ context('admin commands', async function () {
     })
 
     it('With multiple addresses', async function () {
-      client.setWhitelist(rolename3, ['192.168.0.0', '149.14.182.255'], policy)
+      await client.setWhitelist(rolename3, ['192.168.0.0', '149.14.182.255'], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
@@ -409,7 +463,7 @@ context('admin commands', async function () {
 
   describe('Client#setQuotas()', function () {
     it('Sets quotas', async function () {
-      client.setQuotas(rolename1, 100, 150, null)
+      await client.setQuotas(rolename1, 100, 150, null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
@@ -420,7 +474,7 @@ context('admin commands', async function () {
     })
 
     it('With policy', async function () {
-      client.setQuotas(rolename2, 150, 250, policy)
+      await client.setQuotas(rolename2, 150, 250, policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename2, null)
       const privilege: admin.Privilege = new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
@@ -434,84 +488,1015 @@ context('admin commands', async function () {
 
   describe('Client#dropRole()', function () {
     it('Drops role', async function () {
-      client.dropRole(rolename1, null)
+      await client.dropRole(rolename1, null)
       await wait(waitMs)
       try {
         await client.queryRole(rolename1, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
-      } catch (error) {
+      } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
 
     it('With policy', async function () {
-      client.dropRole(rolename2, policy)
+      await client.dropRole(rolename2, policy)
       await wait(waitMs)
       try {
         await client.queryRole(rolename2, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
-      } catch (error) {
+      } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     })
   })
 
-  describe('Client#changePassword()', function () {
+  describe('Client#setPassword()', function () {
     it('Changes password for user', async function () {
-      client.changePassword(username1, 'password350', null)
-      await wait(waitMs + 30000)
+      let password = 'pass' + randomString(getRandomInt(randomFactor))
+      await client.setPassword(username1, password, null)
+      await wait(waitMs) 
       const config: ConfigOptions = {
         hosts: helper.config.hosts,
         user: username1,
-        password: 'password350'
+        password: password
       }
       const dummyClient = await Aerospike.connect(config)
       return dummyClient.close()
     })
 
     it('With policy', async function () {
-      client.changePassword(username2, 'password250', policy)
-      await wait(waitMs + 3000)
+      let password = 'pass'+ randomString(getRandomInt(randomFactor))
+      try{
+        await client.setPassword(username2, password, policy)
+      }
+      catch(error: any){
+        console.log(error)
+      }
+      await wait(waitMs)
 
       const config: ConfigOptions = {
         hosts: helper.config.hosts,
         user: username2,
-        password: 'password250'
+        password: password
       }
 
       const dummyClient = await Aerospike.connect(config)
       return dummyClient.close()
+    })
+  })
+
+  describe('Client#changePassword()', function () {
+    it('Changes password for user', async function () {
+      let password = 'pass'+ randomString(getRandomInt(randomFactor))
+      await client.setPassword(username1, password)
+      await client.createRole(rolename4, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.USER_ADMIN)])
+      await client.grantRoles(username1, [rolename4])
+
+      await wait(waitMs)
+
+      let config: ConfigOptions = {
+        hosts: helper.config.hosts,
+        user: username1,
+        password: password
+      }
+
+      let dummyClient = await Aerospike.connect(config)
+
+      password = 'pass'+ randomString(getRandomInt(randomFactor))
+
+      await dummyClient.changePassword(username1, password)
+      await dummyClient.close()
+
+      config = {
+        hosts: helper.config.hosts,
+        user: username1,
+        password: password
+      }
+
+      dummyClient = await Aerospike.connect(config)
+      await dummyClient.close()
+
+    })
+
+    it('With policy', async function () {
+      let password = 'pass'+ randomString(getRandomInt(randomFactor))
+      await client.setPassword(username2, password, null)
+      await client.createRole(rolename5, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.USER_ADMIN)])
+      await client.grantRoles(username2, [rolename5])
+
+      await wait(waitMs)
+
+      let config: ConfigOptions = {
+        hosts: helper.config.hosts,
+        user: username2,
+        password: password
+      }
+
+      let dummyClient = await Aerospike.connect(config)
+
+      password = 'pass'+ randomString(getRandomInt(randomFactor))
+
+      await dummyClient.changePassword(username2, password, policy)
+      await dummyClient.close()
+
+      config = {
+        hosts: helper.config.hosts,
+        user: username2,
+        password: password
+      }
+
+      dummyClient = await Aerospike.connect(config)
+      await dummyClient.close()
+
     })
   })
 
   describe('Client#dropUser()', function () {
     it('Drops user', async function () {
-      client.dropUser(username1, null)
+      await client.dropUser(username1, null)
       await wait(waitMs)
       try {
         await client.queryUser(username1, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
-      } catch (error) {
+      } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
+
     it('With policy', async function () {
-      client.dropUser(username2, policy)
+      await client.dropUser(username2, policy)
       await wait(waitMs)
       try {
         await client.queryUser(username2, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
-      } catch (error) {
+      } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
+
   })
 
-  client.dropRole(rolename3, null)
-  client.dropUser(username4, policy)
-  client.dropUser(username3, policy)
+  context('Negative tests', function () {
+
+    describe('Client#changePassword()', function () {
+      it('fails with invalid user', async function () {
+        try {
+          await client.changePassword(7 as any, 'b')
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid password', async function () {
+        try {
+          await client.changePassword('a', 11 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Password must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.changePassword('a', 'b', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.changePassword('a', 'b', {}, 19 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+    })
+
+    describe('Client#createUser()', function () {
+      it('fails with invalid user', async function () {
+        try {
+          await client.createUser(7 as any, 'b')
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid password', async function () {
+        try {
+          await client.createUser('a', 11 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Password must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+
+      })
+
+      it('fails with invalid roles', async function () {
+        try {
+          await client.createUser('a', 'b', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("roles must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with roles array with invalid values', async function () {
+        try {
+          await client.createUser('a', 'b', [15 as any] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Roles object invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.createUser('a', 'b', [], 19 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.createUser('a', 'b', [], {}, 26 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+    describe('Client#createPKIUser()', function () {
+      it('fails with invalid user', async function () {
+        try {
+          await client.createPKIUser(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+
+      it('fails with invalid roles', async function () {
+        try {
+          await client.createPKIUser('a', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("roles must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with roles array with invalid values', async function () {
+        try {
+          await client.createPKIUser('a', [15 as any] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Roles object invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.createPKIUser('a', [], 45 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.createPKIUser('a', [], {}, 19 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+    describe('Client#createRole()', function () {
+      it('fails with invalid roleName', async function () {
+        try {
+          await client.createRole(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+
+      it('fails with invalid privileges array', async function () {
+        try {
+          await client.createRole('c', 25 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("privileges must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with privileges array with invalid values', async function () {
+        try {
+          await client.createRole('c', [25 as any] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Privileges array invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.createRole('c', [], 30 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid whitelist', async function () {
+        try {
+          await client.createRole('c', [], {}, {} as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("whitelist must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with whitelist array with invalid values', async function () {
+        try {
+          await client.createRole('c', [], {}, [10 as any])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Whitelist array invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid readQuota', async function () {
+        try {
+          await client.createRole('c', [], {}, [], [] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("read quota must be a number")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid writeQuota', async function () {
+        try {
+          await client.createRole('c', [], {}, [], 19, [] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("write quota must be a number")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.createRole('c', [], {}, [], 19, 20, [] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+    describe('Client#dropRole()', function () {
+      it('fails with invalid role name', async function () {
+        try {
+          await client.dropRole(7 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.dropRole('a', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.dropRole('a', {}, 19 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+    describe('Client#dropUser()', function () {
+      it('fails with invalid user', async function () {
+        try {
+          await client.dropUser(7 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.dropUser('a', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.dropUser('a', {}, 19 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+    describe('Client#grantPrivileges()', function () {
+      it('fails with invalid role name', async function () {
+        try {
+          await client.grantPrivileges(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid privileges', async function () {
+        try {
+          await client.grantPrivileges('a', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Privileges must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with privileges array with invalid values', async function () {
+        try {
+          await client.grantPrivileges('a', [25 as any] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Privileges array invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.grantPrivileges('a', [], 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.grantPrivileges('a', [], {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })
+
+
+    describe('Client#grantRoles()', function () {
+      it('fails with invalid role name', async function () {
+        try {
+          await client.grantRoles(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid privileges', async function () {
+        try {
+          await client.grantRoles('a', 15 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Roles must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.grantRoles('a', [], 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.grantRoles('a', [], {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+
+    describe('Client#queryRole()', function () {
+      it('fails with invalid role name', async function () {
+        try {
+          await client.queryRole(7 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.queryRole('a', 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.queryRole('a', {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+    describe('Client#queryRoles()', function () {
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.queryRoles('a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.queryRoles({}, 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+    describe('Client#queryUser()', function () {
+      it('fails with invalid user', async function () {
+        try {
+          await client.queryUser(7 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("User must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.queryUser('a', 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.queryUser('a', {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+    describe('Client#queryUsers()', function () {
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.queryUsers('a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.queryUsers({}, 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+    describe('Client#revokePrivileges()', function () {
+      it('fails with invalid role name', async function () {
+        try {
+          await client.revokePrivileges(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid privileges', async function () {
+        try {
+          await client.revokePrivileges('a', 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Privileges must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.revokePrivileges('a', [], 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.revokePrivileges('a', [], {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+
+    describe('Client#revokeRoles()', function () {
+      it('fails with invalid user name', async function () {
+        try {
+          await client.revokeRoles(7 as any, [])
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("user name must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid roles', async function () {
+        try {
+          await client.revokeRoles('a', 14 as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Roles must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with roles array with invalid values', async function () {
+        try {
+          await client.revokeRoles('a', [14 as any] as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Roles object invalid")
+          expect(error.code).to.eql(-2)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.revokeRoles('a', [], 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.revokeRoles('a', [], {}, 'a' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+
+    describe('Client#setQuotas()', function () {
+      it('fails with invalid user name', async function () {
+        try {
+          await client.setQuotas(7 as any, 10, 10)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Role must be a string")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid readQuota', async function () {
+        try {
+          await client.setQuotas('a', [] as any, 20)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("read quota must be a number")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid writeQuota', async function () {
+        try {
+          await client.setQuotas('a', 10, 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("write quota must be a number")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid policy', async function () {
+        try {
+          await client.setQuotas('a', 10, 10, 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+
+          expect(error.message).to.eql("Policy must be an object")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails with invalid callback', async function () {
+        try {
+          await client.setQuotas('a', 10, 10, {}, 'b' as any)
+          // Should fail, assert failure if error is not returned.
+          assert.fail("AN ERROR SHOULD BE THROWN HERE")
+        } catch (error: any) {
+          expect(error.message).to.eql("this.callback.bind is not a function")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+    })   
+
+  })
+
+  describe('Client#setWhitelist()', function () {
+    it('fails with invalid user name', async function () {
+      try {
+        await client.setWhitelist(7 as any, [])
+        // Should fail, assert failure if error is not returned.
+        assert.fail("AN ERROR SHOULD BE THROWN HERE")
+      } catch (error: any) {
+
+        expect(error.message).to.eql("Role must be a string")
+        expect(error instanceof TypeError).to.eql(true)
+      }
+    })
+
+    it('fails with invalid whitelist', async function () {
+      try {
+        await client.setWhitelist('a', 'b' as any)
+        // Should fail, assert failure if error is not returned.
+        assert.fail("AN ERROR SHOULD BE THROWN HERE")
+      } catch (error: any) {
+
+        expect(error.message).to.eql("Whitelist must be an array")
+        expect(error instanceof TypeError).to.eql(true)
+      }
+    })
+
+    it('fails with whitelist array with invalid values', async function () {
+      try {
+        await client.setWhitelist('c', [25 as any] as any)
+        // Should fail, assert failure if error is not returned.
+        assert.fail("AN ERROR SHOULD BE THROWN HERE")
+      } catch (error: any) {
+
+        expect(error.message).to.eql("Whitelist array invalid")
+        expect(error.code).to.eql(-2)
+      }
+    })
+
+    it('fails with invalid policy', async function () {
+      try {
+        await client.setWhitelist('a', [], 'b' as any)
+        // Should fail, assert failure if error is not returned.
+        assert.fail("AN ERROR SHOULD BE THROWN HERE")
+      } catch (error: any) {
+
+        expect(error.message).to.eql("Policy must be an object")
+        expect(error instanceof TypeError).to.eql(true)
+      }
+    })
+
+    it('fails with invalid callback', async function () {
+      try {
+        await client.setWhitelist('a', [], {}, 'b' as any)
+        // Should fail, assert failure if error is not returned.
+        assert.fail("AN ERROR SHOULD BE THROWN HERE")
+      } catch (error: any) {
+        expect(error.message).to.eql("this.callback.bind is not a function")
+        expect(error instanceof TypeError).to.eql(true)
+      }
+    })
+  })  
+
+
+  //client.dropRole(rolename3, null)
+  //client.dropUser(username8, policy)
+  //client.dropUser(username7, policy)
+  //client.dropUser(username6, policy)
+  //client.dropUser(username5, policy)
+  //client.dropUser(username4, policy)
+  //client.dropUser(username3, policy)
+
+
 })

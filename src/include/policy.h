@@ -23,6 +23,8 @@ extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_event.h>
+#include <aerospike/as_metrics_writer.h>
+#include <aerospike/as_metrics.h>
 }
 
 // Functions to convert v8 policies to C structures
@@ -54,6 +56,8 @@ int infopolicy_from_jsobject(as_policy_info *policy, v8::Local<v8::Object> obj,
 							 const LogInfo *log);
 int adminpolicy_from_jsobject(as_policy_admin *policy, v8::Local<v8::Object> obj,
 							 const LogInfo *log);
+int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, v8::Local<v8::Object> obj,
+							 as_metrics_listeners* listeners, char** report_dir, const LogInfo *log);
 int applypolicy_from_jsobject(as_policy_apply *policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
 int scanpolicy_from_jsobject(as_policy_scan *policy, v8::Local<v8::Object> obj,

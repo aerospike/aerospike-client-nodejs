@@ -58,10 +58,12 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	as_status status;
 	as_cdt_ctx context;
 	bool with_context = false;
+	as_exp *exp = NULL;
 
 	struct query_udata* qu = (query_udata*) cf_malloc(sizeof(struct query_udata));
 	qu->cmd = cmd;
 	qu->count = 0;
+	qu->exp = exp;
 
 	if (info[6]->IsObject()) {
 		if (get_optional_cdt_context(&context, &with_context, info[6].As<Object>(), "context", log) !=
@@ -76,11 +78,11 @@ NAN_METHOD(AerospikeClient::QueryPages)
 		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
 		uint8_t* bytes = new uint8_t[bytes_size];
 		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
-		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, &context, &with_context, log);
+		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, &context, &with_context, &exp, log);
 		delete [] bytes;
 	}
 	else{
-		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, &context, &with_context, log);
+		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, &context, &with_context, &exp, log);
 	}
 
 	if(with_context) {

@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "6.0.2",
+  "version": "6.3.0",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -42,10 +42,10 @@
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build",
     "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
-    "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; mocha dist/${npm_config_testfile:-} ",
+    "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
-    "lint": "standard",
+    "lint": "standard --ignore ts-test/dist/",
     "posttest": "npm run lint",
     "coverage": "nyc npm test && nyc --reporter=lcov report",
     "codecov": "codecov",
@@ -54,6 +54,7 @@
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/index.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
     "valgrind": "cd ts-test; valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
+    "gdb": "cd ts-test; gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },

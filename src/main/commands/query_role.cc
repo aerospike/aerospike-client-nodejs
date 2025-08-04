@@ -64,7 +64,7 @@ NAN_METHOD(AerospikeClient::QueryRole)
 		}
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
+	as_v8_debug(log, "Querying for role=%s", role);
 	status = aerospike_query_role(client->as, &cmd->err, &policy, role_name, &role);
 
 	if (status != AEROSPIKE_OK) {
