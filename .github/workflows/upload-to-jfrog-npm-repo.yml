@@ -38,7 +38,7 @@ jobs:
 
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
       env:
@@ -50,7 +50,7 @@ jobs:
     - name: Download Artifacts from Jfrog
       run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
@@ -59,21 +59,21 @@ jobs:
         ls downloaded-artifacts/aerospike
         ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Move artifacts
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
     - name: check binding
       run:
         ls ${{ env.NEW_VERSION }}/lib/binding;
         cp -r ${{ env.NEW_VERSION }}/lib/binding;
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
@@ -82,17 +82,17 @@ jobs:
         npm install;
       env:
         VERSION: ${{ inputs.new_version }} 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
     - name: check binding
       run:
         ls ${{ env.NEW_VERSION }}/lib/binding;
         cp -r ${{ env.NEW_VERSION }}/lib/binding;
       env:
-        NEW_VERSION: ${{ inputs.version }}
+        NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
       run: 
         npm install --registry=https://aerospike.jfrog.io/artifactory/api/npm/dev-npm/ --auth-type=web
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
