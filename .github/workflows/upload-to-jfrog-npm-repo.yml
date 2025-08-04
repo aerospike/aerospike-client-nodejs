@@ -51,6 +51,14 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeline-stage == 'dev' }}
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+        PACKAGE_MANAGER: npm
+
+    - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeline-stage == 'stage' }}
       run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
       env:
         NEW_VERSION: ${{ inputs.new_version }}
