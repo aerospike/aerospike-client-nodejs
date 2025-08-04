@@ -130,9 +130,10 @@ jobs:
     #  env:
     #    NEW_VERSION: ${{ inputs.new_version }}
 
-    - run: npm publish --provenance --access public
+    - run: npm publish --provenance
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
 #    - name: npm rc
 #      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
@@ -149,29 +150,6 @@ jobs:
     #  run: |
     #    npm install aerospike@6.2.1-dev.4
 
-    #- name: npm pack
-    #  run: |
-    #    npm pack aerospike
-
-    # Not possible to sign tarball with esigner at this time
-    # - name: Sign npm tarball
-    #   uses: sslcom/esigner-codesign@develop
-    #   with:
-    #       command: sign
-    #       username: ${{ secrets.ES_USERNAME }}
-    #       password: ${{ secrets.ES_PASSWORD }}
-    #       totp_secret: ${{ secrets.ES_TOTP_SECRET }}
-    #       credential_id: ${{ secrets.ES_CREDENTIAL_ID }}
-    #       file_path: ${GITHUB_WORKSPACE}/aerospike-6.2.0-dev.4.tgz
-    #       output_path: ${GITHUB_WORKSPACE}/artifacts
-    #       malware_block: true
-
-    - name: Move artifacts
+    - name: npm pack
       run: |
-        ls ${GITHUB_WORKSPACE}/artifacts
-
-
-    #- run: npm ci
-    #- run: npm publish --provenance --access public
-    #  env:
-    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        npm pack aerospike
