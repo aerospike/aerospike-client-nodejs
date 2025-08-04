@@ -14,7 +14,15 @@ if (!version || !jfrogVersion) {
 if(version.major === jfrogVersion.major &&
    version.minor === jfrogVersion.minor &&
    version.patch === jfrogVersion.patch){
-  throw new Error('No new JFrog version exists yet. Please update version in package.json to reflect the next release version.')
+   if(jfrogVersion.prerelease){
+      jfrogVersion.inc('prerelease', 'dev')
+      console.log(jfrogVersion.format())
+
+   }
+   else{
+      version.prerelease = ['dev', 1];
+      console.log(version.format())
+   }
 }
 else if(version.major > jfrogVersion.major ||
    version.minor > jfrogVersion.minor ||

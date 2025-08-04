@@ -252,16 +252,9 @@ describe('Queries', function () {
   describe('query.whereWithIndexName()', function () {
     it('adds a filter predicate to the query', function () {
       const query: Query = client.query(helper.namespace, helper.set)
-      query.where(Aerospike.filter.equal('a', 9))
+      query.whereWithIndexName(Aerospike.filter.equal('a', 9), 'indexName')
       expect(query.filters.length).to.equal(1)
-    })
-  })
-
-  describe('query.whereWithExp()', function () {
-    it('adds a filter predicate to the query', function () {
-      const query: Query = client.query(helper.namespace, helper.set)
-      query.where(Aerospike.filter.equal('a', 9))
-      expect(query.filters.length).to.equal(1)
+      expect(query.filters[0].indexName).to.equal('indexName')
     })
   })
 
@@ -278,7 +271,7 @@ describe('Queries', function () {
       })
     })
     context('expectedDuration', function () {
-      // helper.skipUnlessVersion('>= 7.1.0', this)
+      helper.skipUnlessVersion('>= 7.1.0', this)
 
       it('Should run a regular primary index query with expectedDuration=LONG', function (done) {
         const query: Query = client.query(helper.namespace, testSet)
@@ -360,7 +353,7 @@ describe('Queries', function () {
     })
 
     describe('index with cdt context', function () {
-      // helper.skipUnlessVersion('>= 6.1.0', this)
+      helper.skipUnlessVersion('>= 6.1.0', this)
       it('should apply a stream UDF to the nested context', function (done) {
         const args: QueryOptions = {
           filters: [filter.contains('name', 'value', MAPKEYS, new Context().addMapKey('nested'))]
@@ -472,7 +465,7 @@ describe('Queries', function () {
       })
 
       describe('index with cdt context', function () {
-        // helper.skipUnlessVersion('>= 6.1.0', this)
+        helper.skipUnlessVersion('>= 6.1.0', this)
         it('Paginates correctly using query.results() on an index with a cdt context', async function () {
           let recordTotal = 0
           let recordsReceived = 0
@@ -672,6 +665,17 @@ describe('Queries', function () {
       })
     })
 
+    it('returns a Promise that resolves into the query results using whereWithIndexName', function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.whereWithIndexName(filter.equal(null, 5), 'qidxInt')
+
+      return query.results().then(records => {
+        expect(records.length).to.eq(1)
+        expect(records[0].bins.name).to.eq('int match')
+      })
+    })
+
+
     context('with QueryPolicy', function () {
       context('with deserialize: false', function () {
         const policy = new Aerospike.QueryPolicy({
@@ -705,7 +709,7 @@ describe('Queries', function () {
       })
     })
     describe('index with cdt context', function () {
-      // helper.skipUnlessVersion('>= 6.1.0', this)
+      helper.skipUnlessVersion('>= 6.1.0', this)
       it('should apply a user defined function and aggregate the results from a map', function (done) {
         const args: QueryOptions = {
           filters: [filter.contains('nested', 'value', MAPKEYS)]
@@ -720,7 +724,7 @@ describe('Queries', function () {
     })
 
     describe('index with cdt context', function () {
-      // helper.skipUnlessVersion('>= 6.1.0', this)
+      helper.skipUnlessVersion('>= 6.1.0', this)
       it('should apply a user defined function and aggregate the results from a nested map', function (done) {
         const args: QueryOptions = {
           filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
@@ -782,7 +786,7 @@ describe('Queries', function () {
         })
     })
     describe('index with cdt context', function () {
-      // helper.skipUnlessVersion('>= 6.1.0', this)
+      helper.skipUnlessVersion('>= 6.1.0', this)
       it('returns a Promise that resolves to a Job with a filter containing a CDT context', function () {
         const args: QueryOptions = {
           filters: [filter.contains('nested', 'value', MAPKEYS, new Context().addMapKey('doubleNested'))]
@@ -797,7 +801,6 @@ describe('Queries', function () {
   })
 
   describe('query.operate()', function () {
-    // helper.skipUnlessVersion('>= 4.7.0', this)
 
     it('should perform a background query that executes the operations #slow', async function () {
       const query: Query = client.query(helper.namespace, testSet)

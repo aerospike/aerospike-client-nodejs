@@ -198,7 +198,7 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      promises.push(helper.index.createExprIndex(idx[0], testSet, idx[1], idx[2], idx[3], idx[4]))
+      promises.push(helper.index.createExpIndex(idx[0], testSet, idx[1], idx[2], idx[3]))
 
     }
 
@@ -222,11 +222,31 @@ describe('Queries', function () {
     //await new Promise(r => setTimeout(r, 3000));
   })
 
+  describe('query.whereWithExp()', function () {
+    it('adds a filter predicate to the query', function () {
+      const query: Query = client.query(helper.namespace, helper.set)
+      query.whereWithExp(Aerospike.filter.equal('a', 9), exp.binInt('a'))
+      expect(query.filters.length).to.equal(1)
+      expect(query.filters[0].exp).to.eql(exp.binInt('a'))
+    })
+
+    it('returns a Promise that resolves into the query results using whereWithExp', function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.whereWithExp(filter.equal(null, 5), exp.binInt('i'))
+
+      return query.results().then(records => {
+        expect(records.length).to.eq(1)
+        expect(records[0].bins.name).to.eq('int match')
+      })
+    })
+  })
+
+
   context('filter predicates', function () {
     describe('filter.equal()', function () {
 
       it('should match equal integer values', function (done) {
-        const args: QueryOptions = { filters: [filter.equal(null as any, 5)] }
+        const args: QueryOptions = { filters: [filter.equal(null, 5)] }
         args.filters![0].exp = exp.binInt('i')
         verifyQueryResults(args, 'int match', done)
       })
@@ -235,19 +255,19 @@ describe('Queries', function () {
 
     describe('filter.range()', function () {
       it('should match integers within a range', function (done) {
-        const args: QueryOptions = { filters: [filter.range(null as any, 3, 7)] }
+        const args: QueryOptions = { filters: [filter.range(null, 3, 7)] }
         args.filters![0].exp = exp.binInt('i')
         verifyQueryResults(args, 'int match', done)
       })
 
       it('should match integers in a list within a range', function (done) {
-        const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, LIST)] }
+        const args: QueryOptions = { filters: [filter.range(null, 3, 7, LIST)] }
         args.filters![0].exp = exp.binList('li')
         verifyQueryResults(args, 'int list match', done)
       })
 
       it('should match integers in a map within a range', function (done) {
-        const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.range(null, 3, 7, MAPVALUES)] }
         args.filters![0].exp = exp.binMap('mi')
         verifyQueryResults(args, 'int map match', done)
       })
@@ -256,13 +276,13 @@ describe('Queries', function () {
 
     describe('filter.contains()', function () {
       it('should match lists containing an integer', function (done) {
-        const args: QueryOptions = { filters: [filter.contains(null as any, 5, LIST)] }
+        const args: QueryOptions = { filters: [filter.contains(null, 5, LIST)] }
         args.filters![0].exp = exp.binList('li')
         verifyQueryResults(args, 'int list match', done)
       })
 
       it('should match maps containing an integer value', function (done) {
-        const args: QueryOptions = { filters: [filter.contains(null as any, 5, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.contains(null, 5, MAPVALUES)] }
         args.filters![0].exp = exp.binMap('mi')
         verifyQueryResults(args, 'int map match', done)
       })

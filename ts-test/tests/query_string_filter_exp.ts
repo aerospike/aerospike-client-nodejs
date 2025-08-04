@@ -197,7 +197,7 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      promises.push(helper.index.createExprIndex(idx[0], testSet, idx[1], idx[2], idx[3], idx[4]))
+      promises.push(helper.index.createExpIndex(idx[0], testSet, idx[1], idx[2], idx[3]))
 
     }
 
@@ -226,7 +226,7 @@ describe('Queries', function () {
     describe('filter.equal()', function () {
 
       it('should match equal string values', function (done) {
-        const args: QueryOptions = { filters: [filter.equal(null as any, 'banana')] }
+        const args: QueryOptions = { filters: [filter.equal(null, 'banana')] }
         args.filters![0].exp = exp.binStr('s')
         verifyQueryResults(args, 'string match', done)
       })
@@ -237,20 +237,20 @@ describe('Queries', function () {
     describe('filter.contains()', function () {
 
       it('should match lists containing a string', function (done) {
-        const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', LIST)] }
+        const args: QueryOptions = { filters: [filter.contains(null, 'banana', LIST)] }
         args.filters![0].exp = exp.binList('ls')
         verifyQueryResults(args, 'string list match', done)
       })
 
       it('should match maps containing a string value', function (done) {
-        const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPVALUES)] }
 
         args.filters![0].exp = exp.binMap('ms')
         verifyQueryResults(args, 'string map match', done)
       })
 
       it('should match maps containing a string key', function (done) {
-        const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPKEYS)] }
+        const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPKEYS)] }
         args.filters![0].exp = exp.binMap('mks')
         verifyQueryResults(args, 'string mapkeys match', done)
       })

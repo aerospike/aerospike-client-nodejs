@@ -156,9 +156,9 @@ describe('Queries', function () {
     //['qidxStrList', 'ls', STRING, LIST],
     //['qidxStrMap', 'ms', STRING, MAPVALUES],
     //['qidxStrMapKeys', 'mks', STRING, MAPKEYS],
-    ['qidxGeo', 'g', GEO2DSPHERE],
-    ['qidxGeoList', 'lg', GEO2DSPHERE, LIST],
-    ['qidxGeoMap', 'mg', GEO2DSPHERE, MAPVALUES],
+    ['qidxGeo', exp.binGeo('g'), GEO2DSPHERE],
+    ['qidxGeoList', exp.binList('lg'), GEO2DSPHERE, LIST],
+    ['qidxGeoMap', exp.binMap('mg'), GEO2DSPHERE, MAPVALUES],
 
     //['qidxNameNested', 'name', STRING, MAPKEYS, new Context().addMapKey('nested')],
     //['qidxIntListNested', 'li', NUMERIC, LIST, new Context().addMapKey('nested')],
@@ -166,8 +166,8 @@ describe('Queries', function () {
     //['qidxStrListNested', 'ls', STRING, LIST, new Context().addMapKey('nested')],
     //['qidxStrMapNested', 'ms', STRING, MAPVALUES, new Context().addMapKey('nested')],
     //['qidxStrMapKeysNested', 'mks', STRING, MAPKEYS, new Context().addMapKey('nested')],
-    ['qidxGeoListNested', 'lg', GEO2DSPHERE, LIST, new Context().addMapKey('nested')],
-    ['qidxGeoMapNested', 'mg', GEO2DSPHERE, MAPVALUES, new Context().addMapKey('nested')],
+    //['qidxGeoListNested', exp.binList('lg'), GEO2DSPHERE, LIST, new Context().addMapKey('nested')],
+    //['qidxGeoMapNested', exp.binMap('mg'), GEO2DSPHERE, MAPVALUES, new Context().addMapKey('nested')],
     //['qidxAggregateMapNested', 'nested', STRING, MAPKEYS],
     //['qidxAggregateMapDoubleNested', 'nested', STRING, MAPKEYS, new Context().addMapKey('doubleNested')],
 
@@ -229,7 +229,7 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      promises.push(helper.index.create(idx[0], testSet, idx[1], idx[2], idx[3], idx[4]))
+      promises.push(helper.index.createExpIndex(idx[0], testSet, idx[1], idx[2], idx[3]))
 
     }
 
@@ -249,7 +249,6 @@ describe('Queries', function () {
     }
 
     let result = await Promise.all(promises)
-    //await new Promise(r => setTimeout(r, 3000));
   })
 
 
@@ -259,42 +258,29 @@ describe('Queries', function () {
     describe('filter.geoWithinGeoJSONRegion()', function () {
       it('should match locations within a GeoJSON region', function (done) {
         const region: GJ = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion(null, region)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'point match', done)
       })
 
       it('should match locations in a list within a GeoJSON region', function (done) {
         const region: GJ = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST)] }
+        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion(null, region, LIST)] }
+        args.filters![0].exp = exp.binList('lg')
         verifyQueryResults(args, 'point list match', done)
-      })
-
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match locations in a list within a GeoJSON region in a nested context', function (done) {
-          const region: GJ = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('lg', region, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point list match', done)
-        })
       })
 
       it('should match locations in a map within a GeoJSON region', function (done) {
         const region: GJ = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion(null, region, MAPVALUES)] }
+        args.filters![0].exp = exp.binMap('mg')
         verifyQueryResults(args, 'point map match', done)
-      })
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match locations in a map within a GeoJSON region in a nested context', function (done) {
-          const region: GJ = new GeoJSON({ type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] })
-          const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('mg', region, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point map match', done)
-        })
       })
 
       it('accepts a plain object as GeoJSON', function (done) {
         const region: GeoJSONType = { type: 'Polygon', coordinates: [[[103, 1.3], [104, 1.3], [104, 1.4], [103, 1.4], [103, 1.3]]] }
-        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion('g', region)] }
+        const args: QueryOptions = { filters: [filter.geoWithinGeoJSONRegion(null, region)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'point match', done)
       })
 
@@ -302,35 +288,23 @@ describe('Queries', function () {
 
     describe('filter.geoWithinRadius()', function () {
       it('should match locations within a radius from another location', function (done) {
-        const args: QueryOptions = { filters: [filter.geoWithinRadius('g', 103.9135, 1.3085, 15000)] }
+        const args: QueryOptions = { filters: [filter.geoWithinRadius(null, 103.9135, 1.3085, 15000)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'point match', done)
       })
 
       it('should match locations in a list within a radius from another location', function (done) {
-        const args: QueryOptions = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST)] }
+        const args: QueryOptions = { filters: [filter.geoWithinRadius(null, 103.9135, 1.3085, 15000, LIST)] }
+        args.filters![0].exp = exp.binList('lg')
         verifyQueryResults(args, 'point list match', done)
       })
 
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match locations in a list within a radius from another location in a nested context', function (done) {
-          const args: QueryOptions = { filters: [filter.geoWithinRadius('lg', 103.9135, 1.3085, 15000, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point list match', done)
-        })
-      })
-
       it('should match locations in a map within a radius from another location', function (done) {
-        const args: QueryOptions = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.geoWithinRadius(null, 103.9135, 1.3085, 15000, MAPVALUES)] }
+        args.filters![0].exp = exp.binMap('mg')
         verifyQueryResults(args, 'point map match', done)
       })
 
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match locations in a map within a radius from another location in a nested context', function (done) {
-          const args: QueryOptions = { filters: [filter.geoWithinRadius('mg', 103.9135, 1.3085, 15000, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested point map match', done)
-        })
-      })
 
     })
 
@@ -338,43 +312,30 @@ describe('Queries', function () {
 
       it('should match regions that contain a GeoJSON point', function (done) {
         const point: GJ = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint(null, point)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'region match', done)
       })
 
       it('should match regions in a list that contain a GeoJSON point', function (done) {
         const point: GJ = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST)] }
+        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint(null, point, LIST)] }
+        args.filters![0].exp = exp.binList('lg')
         verifyQueryResults(args, 'region list match', done)
       })
 
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match regions in a list that contain a GeoJSON point in a nested context', function (done) {
-          const point: GJ = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('lg', point, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region list match', done)
-        })
-      })
 
       it('should match regions in a map that contain a GeoJSON point', function (done) {
         const point: GJ = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint(null, point, MAPVALUES)] }
+        args.filters![0].exp = exp.binMap('mg')
         verifyQueryResults(args, 'region map match', done)
-      })
-
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match regions in a map that contain a GeoJSON point in a nested context', function (done) {
-          const point: GJ = new GeoJSON({ type: 'Point', coordinates: [103.913, 1.308] })
-          const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('mg', point, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region map match', done)
-        })
       })
 
       it('accepts a plain object as GeoJSON', function (done) {
         const point: GeoJSONType = { type: 'Point', coordinates: [103.913, 1.308] }
-        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint('g', point)] }
+        const args: QueryOptions = { filters: [filter.geoContainsGeoJSONPoint(null, point)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'region match', done)
       })
 
@@ -383,35 +344,24 @@ describe('Queries', function () {
     describe('filter.geoContainsPoint()', function () {
 
       it('should match regions that contain a lng/lat coordinate pair', function (done) {
-        const args: QueryOptions = { filters: [filter.geoContainsPoint('g', 103.913, 1.308)] }
+        const args: QueryOptions = { filters: [filter.geoContainsPoint(null, 103.913, 1.308)] }
+        args.filters![0].exp = exp.binGeo('g')
         verifyQueryResults(args, 'region match', done)
       })
 
       it('should match regions in a list that contain a lng/lat coordinate pair', function (done) {
-        const args: QueryOptions = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST)] }
+        const args: QueryOptions = { filters: [filter.geoContainsPoint(null, 103.913, 1.308, LIST)] }
+        args.filters![0].exp = exp.binList('lg')
         verifyQueryResults(args, 'region list match', done)
       })
 
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match regions in a list that contain a lng/lat coordinate pair in a nested context', function (done) {
-          const args: QueryOptions = { filters: [filter.geoContainsPoint('lg', 103.913, 1.308, LIST, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region list match', done)
-        })
-      })
-
       it('should match regions in a map that contain a lng/lat coordinate pair', function (done) {
-        const args: QueryOptions = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES)] }
+        const args: QueryOptions = { filters: [filter.geoContainsPoint(null, 103.913, 1.308, MAPVALUES)] }
+        args.filters![0].exp = exp.binMap('mg')
         verifyQueryResults(args, 'region map match', done)
       })
 
-      describe('index with cdt context', function () {
-        helper.skipUnlessVersion('>= 6.1.0', this)
-        it('should match regions in a map that contain a lng/lat coordinate pair in a nested context', function (done) {
-          const args: QueryOptions = { filters: [filter.geoContainsPoint('mg', 103.913, 1.308, MAPVALUES, new Context().addMapKey('nested'))] }
-          verifyQueryResults(args, 'nested region map match', done)
-        })
-      })
+
 
     })
   })

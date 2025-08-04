@@ -26,9 +26,9 @@ const status: typeof stat = Aerospike.status
 
 describe('Aerospike.status #noserver', function () {
   it('AEROSPIKE_TXN_ALREADY_ABORTED', function () {
-    expect(status.AEROSPIKE_TXN_ALREADY_ABORTED).to.equal(-19)
-    expect(status.TXN_ALREADY_ABORTED).to.equal(-19)
-    expect(status.getMessage(status.TXN_ALREADY_ABORTED)).to.equal('Transaction commit called, but the transaction was already aborted.')
+    expect(status.AEROSPIKE_METRICS_CONFLICT).to.equal(-20)
+    expect(status.METRICS_CONFLICT).to.equal(-20)
+    expect(status.getMessage(status.METRICS_CONFLICT)).to.equal('There is a conflict between metrics enable/disable and dynamic configuration metrics.')
   })
   
   it('AEROSPIKE_TXN_ALREADY_ABORTED', function () {

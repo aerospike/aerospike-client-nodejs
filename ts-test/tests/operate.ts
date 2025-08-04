@@ -57,6 +57,10 @@ context('Operations', function () {
     return client.put(key, bins, meta, policy)
   })
 
+  afterEach(() =>
+    client.remove(key)
+      .catch((error: any) => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_NOT_FOUND))
+  )
 
   describe('Client#operate()', function () {
     describe('operations.write()', function () {

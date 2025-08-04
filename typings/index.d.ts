@@ -1268,6 +1268,68 @@ export class Query {
      * @see {@link filter} to create SI filters.
      */
     public where(predicate: filter.SindexFilterPredicate): void;
+    /**
+     * Applies a SI on expression to the query.
+     *
+     * Use a SI to limit the results returned by the query.
+     * This method takes SI created using the {@link
+     * filter | filter module} as argument.
+     *
+     * @param predicate - The index filter to
+     * apply to the function.
+     * @param expression - aerospike expression
+     * 
+     * @example <caption>Applying a SI filter to find all records
+     * where the 'tags' list bin contains the value 'blue':</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * Aerospike.connect().then(client => {
+     *   let query = client.query('test', 'demo')
+     *
+     *   let tagsFilter = Aerospike.filter.contains('tags', 'blue', Aerospike.indexType.LIST)
+     *   query.whereWithExp(tagsFilter, Aerospike.exp.binList('tags'))
+     *
+     *   let stream = query.foreach()
+     *   stream.on('data', record => { console.info(record.bins.tags) })
+     *   stream.on('error', error => { throw error })
+     *   stream.on('end', () => client.close())
+     * })
+     *
+     * @see {@link filter} to create SI filters.
+     */
+    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp): void;
+    /**
+     * Applies a SI on expression to the query.
+     *
+     * Use a SI to limit the results returned by the query.
+     * This method takes SI created using the {@link
+     * filter | filter module} as argument.
+     *
+     * @param predicate - The index filter to
+     * apply to the function.
+     * @param index name - Name of the Secondary Index
+     * 
+     * @example <caption>Applying a SI filter to find all records
+     * where the 'tags' list bin contains the value 'blue':</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * Aerospike.connect().then(client => {
+     *   let query = client.query('test', 'demo')
+     *
+     *   let tagsFilter = Aerospike.filter.contains('tags', 'blue', Aerospike.indexType.LIST)
+     *   query.whereWithIndexName(tagsFilter, 'SI_for_tags')
+     *
+     *   let stream = query.foreach()
+     *   stream.on('data', record => { console.info(record.bins.tags) })
+     *   stream.on('error', error => { throw error })
+     *   stream.on('end', () => client.close())
+     * })
+     *
+     * @see {@link filter} to create SI filters.
+     */
+    public whereWithIndexName(predicate: filter.SindexFilterPredicate, indexName: string): void;
     private setSindexFilter(sindexFilter: filter.SindexFilterPredicate): void;
     /**
      *
@@ -2540,12 +2602,13 @@ export namespace policy {
         public MetricsListeners?: MetricsListeners;
         /**
          * Directory path to write metrics log files for listeners that write logs.
+         * Maximum path size is 256 characters.
          */
         public reportDir?: string;
         /**
-         * Metrics file size soft limit in bytes for listeners that write logs. When report_size_limit is reached or exceeded,
-         * the current metrics file is closed and a new metrics file is created with a new timestamp. If report_size_limit is
-         * zero, the metrics file size is unbounded and the file will only be closed when disable_metrics() or close() is called.
+         * Metrics file size soft limit in bytes for listeners that write logs. When reportSizeLimit is reached or exceeded,
+         * the current metrics file is closed and a new metrics file is created with a new timestamp. If reportSizeLimit is
+         * zero, the metrics file size is unbounded and the file will only be closed when disableMetrics() or close() is called.
          */
         public reportSizeLimit?: number;
         /**
@@ -3198,28 +3261,44 @@ export namespace policy {
      */
     export enum replica {
         /**
-         * Ensures this client will only see an increasing sequence
-         * of record versions. Server only reads from master. This is the default.
+         * Use node containing key's master partition.
+         *
          */
         MASTER,
         /**
-         * Ensures ALL clients will only see an increasing
-         * sequence of record versions. Server only reads from master.
+         * Distribute reads across nodes containing key's master and replicated partition
+         * in round-robin fashion.
          */
         ANY,
         /**
-         * Server may read from master or any full
-         * (non-migrating) replica. Increasing sequence of record versions is not
-         * guaranteed.
+         * Try node containing master partition first.
+         * If connection fails, all commands try nodes containing replicated partitions.
+         * If socketTimeout is reached, reads also try nodes containing replicated partitions,
+         * but writes remain on master node.
          */
         SEQUENCE,
         /**
-         * Server may read from master or any full
-         * (non-migrating) replica or from unavailable partitions. Increasing sequence
-         * of record versions is not guaranteed.
+         * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
+         * use SEQUENCE instead. Also use SEQUENCE for writes.
+         *
+         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
+         * configuration must also be set to enable this functionality.
          */
-        PREFER_RACK
+        PREFER_RACK,
+        /**
+         * Distribute reads and writes across all nodes in cluster in round-robin fashion.
+         *
+         * This option is useful on reads when the replication factor equals the number
+         * of nodes in the cluster and the overhead of requesting proles is not desired.
+         *
+         * This option could temporarily be useful on writes when the client can't connect
+         * to a node, but that node is reachable via a proxy from a different node.
+         *
+         * This option can also be used to test server proxies.
+         */
+        RANDOM
     }
+
 
     /**
      * Read policy for AP (availability) namespaces.
@@ -4164,7 +4243,7 @@ export class Client extends EventEmitter {
      */
     public contextToBase64(context: cdt.Context): string;
     /**
-     * Creates a blob secondary index index.
+     * Creates a blob secondary index.
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4213,13 +4292,287 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the command completes.
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
-
-    public createExprIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
-    public createExprIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
-
-
-    public createExprIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
-
+    /**
+     * Creates a blob secondary index on an expression.
+     *
+     * This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'location'
+     *   var exp = Aerospike.exp.binBlob(binName)
+     *   var indexName = 'locationIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createBlobIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpBlobIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpBlobIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     *
+     * Creates a secondary index (SI) on an expression.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link createIndex} for more info on secondary indexes.
+     * 
+     * @see {@link indexType} for enumeration of supported index types.
+     * @see {@link indexDataType} for enumeration of supported data types.
+     * @see {@link IndexJob}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Context = Aerospike.cdt.Context
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   // create index over user's recent locations
+     *   let namespace = 'test'
+     *   let set = 'demo'
+     *   let binName = 'rloc' // recent locations
+     *   let exp = Aerospike.exp.binList(binName)
+     *   let indexName = 'recentLocationsIdx'
+     *   let indexType = Aerospike.indexType.LIST
+     *   let dataType = Aerospike.indexDataType.GEO2DSPHERE
+     *   let options = { ns: namespace,
+     *                   set: set,
+     *                   exp: exp,
+     *                   index: indexName,
+     *                   type: indexType,
+     *                   datatype: dataType,
+     *                   context: context }
+     *
+     *   let policy = new Aerospike.InfoPolicy({ timeout: 100 })
+     *
+     *   client.createIndex(options, policy, (error, job) => {
+     *     if (error) throw error
+     *
+     *     // wait for index creation to complete
+     *     var pollInterval = 100
+     *     job.waitUntilDone(pollInterval, (error) => {
+     *       if (error) throw error
+     *       console.info('SI %s on %s was created successfully', indexName, binName)
+     *       client.close()
+     *     })
+     *   })
+     * })
+     */
+    public createExpIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a SI of type Integer on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'age'
+     *   var exp = Aerospike.exp.binInt(binName)
+     *   var indexName = 'ageIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createIntegerIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpIntegerIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     */
+    public createExpIntegerIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     */
+    public createExpIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a SI of type String on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'name'
+     *   var exp = Aerospike.exp.binStr(binName)
+     *   var indexName = 'nameIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createStringIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpStringIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpStringIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a geospatial secondary secondary index on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'location'
+     *   var exp = Aerospike.exp.binGeo(binName)
+     *   var indexName = 'locationIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   bin: binName,
+     *                   index: indexName }
+     *
+     *   client.createGeo2DSphereIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
      *
      * Creates a secondary index (SI).
@@ -6050,6 +6403,8 @@ export class Client extends EventEmitter {
      * @param password - User password in clear-text format.
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6072,7 +6427,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // User must be created before password is changed. See {@link Client#createUser} for an example.
-     *     client.changePassword("khob", "TryTiger7!", ["Engineer"])
+     *     await client.changePassword("khob", "TryTiger7!", ["Engineer"])
      *   } catch (error) {
      *     console.error('Error:', error)
      *     process.exit(1)
@@ -6082,8 +6437,19 @@ export class Client extends EventEmitter {
      * })()
      */
     public changePassword(user: string, password: string, policy?: policy.AdminPolicy | null): Promise<void>;
-    public changePassword(user: string, password: string, policy: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
-
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param callback - The function to call when the command has completed.
+     */
+    public changePassword(user: string, password: string, callback?: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public changePassword(user: string, password: string, policy: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
      *
@@ -6091,6 +6457,8 @@ export class Client extends EventEmitter {
      * @param password - User password in clear-text format.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link policy.AdminPolicy}.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6113,7 +6481,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *
-     *     client.createUser("khob", "MightyMice55!", ["Engineer"])
+     *     await client.createUser("khob", "MightyMice55!", ["Engineer"])
      *     // Must wait a short length of time of the user to be fully created.
      *     await wait(5)
      *     const user = await client.queryUser("khob", null)
@@ -6127,7 +6495,23 @@ export class Client extends EventEmitter {
      * })()
      */    
     public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
-    public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     *
+     * @param user - User name for the new user.
+     * @param password - User password in clear-text format.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public createUser(user: string, password: string, roles?: Array<string> | null, callback?: TypedCallback<void>): void;
+    /**
+     *
+     * @param user - User name for the new user.
+     * @param password - User password in clear-text format.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param policy - Optional {@link policy.AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
      *
@@ -6135,6 +6519,8 @@ export class Client extends EventEmitter {
      * @param password - User password in clear-text format.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link policy.AdminPolicy}.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6157,7 +6543,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *
-     *     client.createPKIUser("khob", "MightyMice55!", ["Engineer"])
+     *     await client.createPKIUser("khob", ["Engineer"])
      *     // Must wait a short length of time of the user to be fully created.
      *     await wait(5)
      *     const user = await client.queryUser("khob", null)
@@ -6171,7 +6557,21 @@ export class Client extends EventEmitter {
      * })()
      */    
     public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
-    public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the new user.
+     * @param password - User password in clear-text format.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public createPKIUser(user: string, roles?: Array<string> | null, callback?: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the new user.
+     * @param password - User password in clear-text format.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param policy - Optional {@link policy.AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Create user defined role with optional privileges, whitelist and read/write quotas.
      * Quotas require server security configuration "enable-quotas" to be set to true.
@@ -6182,6 +6582,8 @@ export class Client extends EventEmitter {
      * @param  whitelist - Optional list of allowable IP addresses assigned to role. IP addresses can contain wildcards (ie. 10.1.2.0/24).
      * @param readQuota - Optional maximum reads per second limit, pass in zero for no limit.
      * @param writeQuota - Optional maximum writes per second limit, pass in zero for no limit.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6204,7 +6606,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *
-     *     client.createRole("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], null)
+     *     await client.createRole("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], null)
      *     // Must wait a short length of time of the role to be fully created.
      *     await wait(5)
      *     const role = await client.queryRole("Engineer", null)
@@ -6218,13 +6620,24 @@ export class Client extends EventEmitter {
      * })()
      */
     public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null): Promise<void>;
-    public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null, callback: TypedCallback<void>): void;
+    /**
+     * @param roleName - role name
+     * @param privileges - List of privileges assigned to a role.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param  whitelist - Optional list of allowable IP addresses assigned to role. IP addresses can contain wildcards (ie. 10.1.2.0/24).
+     * @param readQuota - Optional maximum reads per second limit, pass in zero for no limit.
+     * @param writeQuota - Optional maximum writes per second limit, pass in zero for no limit.
+     * @param callback - The function to call when the command has completed.
+     */
+    public createRole(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, whitelist?: Array<string> | null, readQuota?: number | null, writeQuota?: number | null, callback?: TypedCallback<void>): void;
     /**
      * Drop user defined role.
      *
      * @param roleName - role name
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6247,7 +6660,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // A role must be created before a role can be dropped. See {@link Client#createRole} for an example.
-     *     client.dropRole("Engineer")
+     *     await client.dropRole("Engineer")
      *     // Must wait a short length of time of the role to be fully dropped.
      *     await wait(5)
      *     let roles = await client.queryRoles()
@@ -6262,13 +6675,28 @@ export class Client extends EventEmitter {
      * })()
      */
     public dropRole(roleName: string, policy?: policy.AdminPolicy | null): Promise<void>;
-    public dropRole(roleName: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     *
+     * @param roleName - role name
+     * @param callback - The function to call when the command has completed.
+     * 
+     */
+    public dropRole(roleName: string, callback?: TypedCallback<void>): void;
+    /**
+     *
+     * @param roleName - role name
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public dropRole(roleName: string, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      *
      * Remove a User from cluster
      *
      * @param user - User name to be dropped.
      * @param policy - Optional {@link AdminPolicy}.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6292,7 +6720,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // A user must be created before a user can be dropped. See {@link Client#createUser} for an example.
-     *     client.dropUser("khob")
+     *     await client.dropUser("khob")
      *     // Must wait a short length of time of the role to be fully dropped.
      *     await wait(5)
      *     let users = await client.queryUsers()
@@ -6307,7 +6735,19 @@ export class Client extends EventEmitter {
      * })()
      */
     public dropUser(user: string, policy?: policy.AdminPolicy | null): Promise<void>;
-    public dropUser(user: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
+    /**
+     *
+     * @param user - User name to be dropped.
+     * @param callback - The function to call when the command has completed.
+     */
+    public dropUser(user: string, callback?: TypedCallback<void> ): void;
+    /**
+     *
+     * @param user - User name to be dropped.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public dropUser(user: string, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void> ): void;
     /**
      * Grant privileges to an user defined role.
      *
@@ -6315,6 +6755,8 @@ export class Client extends EventEmitter {
      * @param privileges - list of privileges assigned to a role.
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6337,7 +6779,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // A role must be created before privileges can be granted. See {@link Client#createUser} for an example.
-     *     client.grantPrivileges("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
+     *     await client.grantPrivileges("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
      *     // Must wait a short length of time for the privilege to be granted.
      *     await wait(5)
      *     let role = await client.queryRole("Engineer")
@@ -6351,14 +6793,30 @@ export class Client extends EventEmitter {
      * })()
      */
     public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): Promise<void>;
-    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
     /**
      *
-     * Drop user defined role.
+     * @param roleName - role name
+     * @param privileges - list of privileges assigned to a role.
+     * @param callback - The function to call when the command has completed.
+     */
+    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, callback?: TypedCallback<void> ): void;
+    /**
+     *
+     * @param roleName - role name
+     * @param privileges - list of privileges assigned to a role.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public grantPrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void> ): void;
+    /**
+     *
+     * Grant user defined role.
      *
      * @param user - User name for granted roles
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link AdminPolicy}.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6382,7 +6840,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // A user must be created before roles can be granted. See {@link Client#createUser} for an example.
-     *     client.grantRoles("khob", ["Engineer"])
+     *     await client.grantRoles("khob", ["Engineer"])
      *     // Must wait a short length of time for the role to be granted
      *     await wait(5)
      *     let user = await client.queryUser("khob")
@@ -6397,7 +6855,21 @@ export class Client extends EventEmitter {
      *
      */
     public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): Promise<void>;
-    public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void> ): void;
+    /**
+     *
+     * @param user - User name for granted roles
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public grantRoles(user: string, roles: Array<string>, callback?: TypedCallback<void> ): void;
+    /**
+     *
+     * @param user - User name for granted roles
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public grantRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void> ): void;
     /**
      *
      * Retrieves an {@link admin.Role} from the database.
@@ -6405,7 +6877,7 @@ export class Client extends EventEmitter {
      * @param {String} roleName - role name filter.
      * @param {Object} policy - Optional {@link AdminPolicy}.
      *
-     * @returns An instance of {@link admin.Role}. For more information on roles, see {@link admin.Role}.
+     * @returns A promise which resolves to an instance of {@link admin.Role} upon success. For more information on roles, see {@link admin.Role}.
      *
      * @example
      *
@@ -6440,15 +6912,30 @@ export class Client extends EventEmitter {
      * })()
      */
     public queryRole(roleName: string, policy?: policy.AdminPolicy | null): Promise<admin.Role>;
-
-    public queryRole(roleName: string, policy?: policy.AdminPolicy | null, callback: TypedCallback<admin.Role>): void;
+    /**
+     *
+     * Retrieves an {@link admin.Role} from the database.
+     *
+     * @param {String} roleName - role name filter.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryRole(roleName: string, callback?: TypedCallback<admin.Role>): void;
+    /**
+     *
+     * Retrieves an {@link admin.Role} from the database.
+     *
+     * @param {String} roleName - role name filter.
+     * @param {Object} policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryRole(roleName: string, policy?: policy.AdminPolicy | null, callback?: TypedCallback<admin.Role>): void;
     /**
      *
      * Retrieve all roles and role information from the database.
      *
      * @param policy - Optional {@link AdminPolicy}.
      *
-     * @returns An list of {@link admin.Role} instances. For more information on roles, see {@link admin.Role}.
+     * @returns A promise which resolve to a list of {@link admin.Role} instances upon sucess. For more information on roles, see {@link admin.Role}.
      *
      * @example
      *
@@ -6482,14 +6969,22 @@ export class Client extends EventEmitter {
      * })()
      */        
     public queryRoles(policy?: policy.AdminPolicy | null): Promise<Array<admin.Role>>;
-    public queryRoles(policy?: policy.AdminPolicy | null, callback: TypedCallback<Array<admin.Role>>): void;
+    /**     
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryRoles(callback?: TypedCallback<Array<admin.Role>>): void;
+    /**
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryRoles(policy?: policy.AdminPolicy | null, callback?: TypedCallback<Array<admin.Role>>): void;
     /**
      * Retrieves an {@link admin.User} from the database.
      *
      * @param user - User name filter.
      * @param policy - Optional {@link AdminPolicy}.
      *
-     * @returns An instance of {@link admin.User}. For more information on roles, see {@link admin.User}.
+     * @returns A promise which resolves to an instance of {@link admin.User} upon sucess. For more information on roles, see {@link admin.User}.
      *
      * @example
      *
@@ -6524,14 +7019,24 @@ export class Client extends EventEmitter {
      * })()
      */
     public queryUser(user: string, policy?: policy.AdminPolicy | null): Promise<admin.User>;
-    public queryUser(user: string, policy: policy.AdminPolicy | null, callback: TypedCallback<Admin.User>): void;
+    /**     *
+     * @param user - User name filter.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryUser(user: string, callback?: TypedCallback<admin.User>): void;
+    /**
+     * @param user - User name filter.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryUser(user: string, policy: policy.AdminPolicy | null, callback?: TypedCallback<admin.User>): void;
     /**
      *
      * Retrieves All user and user information from the database.
      *
      * @param policy - Optional {@link AdminPolicy}.
      *
-     * @returns An list of {@link admin.User} instances. For more information on roles, see {@link admin.User}.
+     * @returns A promise which resolve to a list of {@link admin.User} instances upon success. For more information on roles, see {@link admin.User}.
      *
      * @example
      *
@@ -6565,7 +7070,17 @@ export class Client extends EventEmitter {
      * })()
      */
     public queryUsers(policy?: policy.AdminPolicy | null): Promise<Array<admin.User>>;
-    public queryUsers(policy: policy.AdminPolicy | null, callback: TypedCallback<Array<admin.User>>): void;
+    /**
+     *
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryUsers(callback?: TypedCallback<Array<admin.User>>): void;
+    /**
+     *
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public queryUsers(policy: policy.AdminPolicy | null, callback?: TypedCallback<Array<admin.User>>): void;
     /**
      *
      * Revoke privileges from an user defined role.
@@ -6574,6 +7089,8 @@ export class Client extends EventEmitter {
      * @param privileges - List of privileges assigned to a role.
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6595,7 +7112,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *     // A role must be created before privileges can be revoked. See {@link Client#createRole} for an example.
-     *     client.revokePrivileges("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
+     *     await client.revokePrivileges("Engineer", [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
      *     // Must wait a short length of time for the privilege to be granted.
      *     await wait(5)
      *     let users = await client.queryRole("Engineer")
@@ -6609,13 +7126,27 @@ export class Client extends EventEmitter {
      * })()
      */    
     public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): Promise<void>;
-    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * @param roleName - role name
+     * @param privileges - List of privileges assigned to a role.
+     * @param callback - The function to call when the command has completed.
+     */
+    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, callback?: TypedCallback<void>): void;
+    /**
+     * @param roleName - role name
+     * @param privileges - List of privileges assigned to a role.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Remove roles from user's list of roles.
      *
      * @param user - User name for revoked roles.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link AdminPolicy}.
+     *
+     * @returns A promise that resolves to void upon success.
      *
      * @example
      *
@@ -6638,7 +7169,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *     // A user must be created before roles can be revoked. See {@link Client#createUser} for an example.
-     *     client.revokeRoles("khob", ["Engineer"])
+     *     await client.revokeRoles("khob", ["Engineer"])
      *     // Must wait a short length of time for the privilege to be granted.
      *     await wait(5)
      *     let user = await client.queryUser("khob")
@@ -6652,7 +7183,21 @@ export class Client extends EventEmitter {
      * })()
      */    
     public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): Promise<void>;
-    public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     *
+     * @param user - User name for revoked roles.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public revokeRoles(user: string, roles: Array<string>, callback?: TypedCallback<void>): void;
+    /**
+     *
+     * @param user - User name for revoked roles.
+     * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Client#setPassword
      *
@@ -6663,6 +7208,8 @@ export class Client extends EventEmitter {
      * @param password - User password in clear-text format.
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6685,7 +7232,7 @@ export class Client extends EventEmitter {
      *     })
      *
      *     // User must be created before password is changed. See {@link Client#createUser} for an example.
-     *     client.setPassword("khob", "TryTiger7!", ["Engineer"])
+     *     await client.setPassword("khob", "TryTiger7!", ["Engineer"])
      *   } catch (error) {
      *     console.error('Error:', error)
      *     process.exit(1)
@@ -6695,7 +7242,19 @@ export class Client extends EventEmitter {
      * })()
      */
     public setPassword(user: string, password: string, policy?: policy.AdminPolicy | null): Promise<void>;
-    public setPassword(user: string, password: string, policy: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param callback - The function to call when the command has completed.
+     */
+    public setPassword(user: string, password: string, callback?: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public setPassword(user: string, password: string, policy: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
      * Quotas require server security configuration "enable-quotas" to be set to true.
@@ -6705,6 +7264,8 @@ export class Client extends EventEmitter {
      * @param writeQuota - maximum writes per second limit, pass in zero for no limit.
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6726,7 +7287,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *     // Quotas must be enabled in the server configurations for quotas to be set.
-     *     client.setQuotas("Engineer", 200, 300)
+     *     await client.setQuotas("Engineer", 200, 300)
      *     // Must wait a short length of time for the privilegee to be granted.
      *     await wait(5)
      *     let role = await client.queryRole("Engineer")
@@ -6741,7 +7302,27 @@ export class Client extends EventEmitter {
      *
      */    
     public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null): Promise<void>;
-    public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
+     * Quotas require server security configuration "enable-quotas" to be set to true.
+     *
+     * @param roleName - role name
+     * @param readQuota - maximum reads per second limit, pass in zero for no limit.
+     * @param writeQuota - maximum writes per second limit, pass in zero for no limit.
+     * @param callback - The function to call when the command has completed.
+     */
+    public setQuotas(roleName: string, readQuota: number, writeQuota: number, callback?: TypedCallback<void>): void;
+    /**
+     * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
+     * Quotas require server security configuration "enable-quotas" to be set to true.
+     *
+     * @param roleName - role name
+     * @param readQuota - maximum reads per second limit, pass in zero for no limit.
+     * @param writeQuota - maximum writes per second limit, pass in zero for no limit.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
      * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
      *
@@ -6750,6 +7331,8 @@ export class Client extends EventEmitter {
      * IP addresses can contain wildcards (ie. 10.1.2.0/24).
      * @param policy - Optional {@link AdminPolicy}.
      *
+     * @returns A promise that resolves to void upon success.
+     * 
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6771,7 +7354,7 @@ export class Client extends EventEmitter {
      *         password: 'admin'
      *     })
      *     // Quotas must be enabled in the server configurations for quotas to be set.
-     *     client.setWhitelist("Engineer", ["172.17.0.2"])
+     *     await client.setWhitelist("Engineer", ["172.17.0.2"])
      *     // Must wait a short length of time for the privilegee to be granted.
      *     await wait(5)
      *     let role = await client.queryRole("Engineer")
@@ -6786,7 +7369,25 @@ export class Client extends EventEmitter {
      *
      */   
     public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
-    public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null, callback: TypedCallback<void>): void;
+    /**
+     * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
+     *
+     * @param  roleName - role name
+     * @param whitelist - Optional list of allowable IP addresses assigned to role.
+     * IP addresses can contain wildcards (ie. 10.1.2.0/24).
+     * @param callback - The function to call when the command has completed.
+     */
+    public setWhitelist(roleName: string, whitelist: Array<string> | null, callback?: TypedCallback<void>): void;
+    /**
+     * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
+     *
+     * @param  roleName - role name
+     * @param whitelist - Optional list of allowable IP addresses assigned to role.
+     * IP addresses can contain wildcards (ie. 10.1.2.0/24).
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
 }
 
 /**
@@ -9289,6 +9890,10 @@ export interface ConfigOptions {
      */
     authMode?: auth;
     /**
+    * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    */
+    configProvider?: ConfigProvider;
+    /**
      * Initial host connection timeout in milliseconds.
      * 
      * The client observes this timeout when opening a connection to
@@ -9921,6 +10526,9 @@ export interface IndexOptions {
      * The name of the index which values are to be indexed.
      */
     indexName?: string;
+    /**
+     * The expression on which values are to be indexed.
+     */
     exp?: AerospikeExp;
     /**
      * The namespace on which the index is to be created.
@@ -16756,7 +17364,7 @@ export namespace filter {
      * Filter predicated returned by {@link contains} and {@link equal} for use in Secondary Index queries.
      */
     class EqualPredicate extends SindexFilterPredicate {
-        constructor(bin: string, value: string | number, dataType: indexDataType, indexType: indexType);
+        constructor(bin: string | null, value: string | number, dataType: indexDataType, indexType: indexType);
         public val: string | number;
     }
 
@@ -16764,7 +17372,7 @@ export namespace filter {
      * Filter predicate returned by {@link geoWithinGeoJSONRegion}, {@link geoContainsGeoJSONPoint}, {@link geoWithinRadius}, and {@link geoContainsPoint} for use in Secondary Index queries.
      */
     class RangePredicate extends SindexFilterPredicate {
-        constructor(bin: string, min: number, max: number, dataType: indexDataType, indexType: indexType);
+        constructor(bin: string | null, min: number, max: number, dataType: indexDataType, indexType: indexType);
         public min: number;
         public max: number;
     }
@@ -16772,7 +17380,7 @@ export namespace filter {
      * Filter predicate returned by {@link range} for use in Secondary Index queries.
      */
     class GeoPredicate extends SindexFilterPredicate {
-        constructor (bin: string, value: GeoJSON, indexType: indexType);
+        constructor (bin: string | null, value: GeoJSON, indexType: indexType);
         public val: GeoJSON;
     }
 
@@ -16793,7 +17401,7 @@ export namespace filter {
      *
      * @since v2.0
      */
-    export function contains(bin: string, value: AerospikeBinValue, indexType?: indexType, ctx?: cdt.Context): filter.EqualPredicate;
+    export function contains(bin: string | null, value: AerospikeBinValue, indexType?: indexType, ctx?: cdt.Context): filter.EqualPredicate;
     /**
      * String/integer equality filter.
      *
@@ -16805,7 +17413,7 @@ export namespace filter {
      * @param ctx - The {@link cdt.Context} of the index.
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      */
-    export function equal(bin: string, value: AerospikeBinValue, ctx?: cdt.Context): filter.EqualPredicate;
+    export function equal(bin: string | null, value: AerospikeBinValue, ctx?: cdt.Context): filter.EqualPredicate;
     /**
      * Geospatial filter that matches points within a given GeoJSON
      * region.
@@ -16823,7 +17431,7 @@ export namespace filter {
      *
      * @since v2.0
      */
-    export function geoWithinGeoJSONRegion(bin: string, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
+    export function geoWithinGeoJSONRegion(bin: string | null, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches regions that contain a given GeoJSON point.
      * 
@@ -16840,7 +17448,7 @@ export namespace filter {
      *
      * @since v2.0
      */
-    export function geoContainsGeoJSONPoint(bin: string, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
+    export function geoContainsGeoJSONPoint(bin: string | null, value: GeoJSON | GeoJSONType, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches points within a radius from a given point.
      * 
@@ -16859,7 +17467,7 @@ export namespace filter {
      *
      * @since v2.0
      */
-    export function geoWithinRadius(bin: string, lng: number, lat: number, radius: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
+    export function geoWithinRadius(bin: string | null, lng: number, lat: number, radius: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Geospatial filter that matches regions that contain a given lng/lat coordinate.
      * 
@@ -16877,7 +17485,7 @@ export namespace filter {
      *
      * @since v2.0
      */
-    export function geoContainsPoint(bin: string, lng: number, lat: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
+    export function geoContainsPoint(bin: string | null, lng: number, lat: number, indexType?: indexType, ctx?: cdt.Context): filter.GeoPredicate;
     /**
      * Integer range filter.
      * 
@@ -16894,7 +17502,7 @@ export namespace filter {
      * 
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
      */
-    export function range(bin: string, min: number, max: number, indexType?: indexType, ctx?: cdt.Context): filter.RangePredicate;
+    export function range(bin: string | null, min: number, max: number, indexType?: indexType, ctx?: cdt.Context): filter.RangePredicate;
 }
 
 /**

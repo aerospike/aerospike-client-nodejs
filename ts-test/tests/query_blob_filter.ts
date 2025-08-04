@@ -165,16 +165,11 @@ describe('Queries', function () {
         context('Query using index name', function () {
 
           it('should match equal blob values using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.equal(null as any, Buffer.from('guava'))] }
+            const args: QueryOptions = { filters: [filter.equal(null, Buffer.from('guava'))] }
             args.filters![0].indexName = 'qidxBlob'
             verifyQueryResults(args, 'blob match', done)
           })
         })
-        //it('should match equal blob values', function (done) {
-        //  const args: QueryOptions = { filters: [filter.equal(null as any, Buffer.from('guava'))] }
-        //  args.filters![0].exp = exp.binStr('value')
-        //  verifyQueryResults(args, 'blob match', done)
-        //})
       })
 
 
@@ -215,37 +210,37 @@ describe('Queries', function () {
         context('Query using index name', function () {
 
           it('should match lists containing a blob using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), LIST)] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), LIST)] }
             args.filters![0].indexName = 'qidxBlobList'
             verifyQueryResults(args, 'blob list match', done)
           })
 
           it('should match lists containing a blob in a nested context using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), LIST, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), LIST, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxBlobListNested'
             verifyQueryResults(args, 'nested blob list match', done)
           })
 
           it('should match maps containing a blob value using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPVALUES)] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPVALUES)] }
             args.filters![0].indexName = 'qidxBlobMap'
             verifyQueryResults(args, 'blob map match', done)
           })
 
           it('should match maps containing a blob value in a nested context using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPVALUES, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPVALUES, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxBlobMapNested'
             verifyQueryResults(args, 'nested blob map match', done)
           })
 
           it('should match maps containing a blob key using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPKEYS)] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPKEYS)] }
             args.filters![0].indexName = 'qidxBlobMapKeys'
             verifyQueryResults(args, 'blob mapkeys match', done)
           })
 
           it('should match maps containing a blob key in a nested context using an index name', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPKEYS, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPKEYS, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxBlobMapKeysNested'
             verifyQueryResults(args, 'nested blob mapkeys match', done)
           })

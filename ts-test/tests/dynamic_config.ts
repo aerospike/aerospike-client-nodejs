@@ -36,10 +36,9 @@ const status: typeof statusModule = Aerospike.status
 
 describe('Dynamic Config tests', async function () {
 
-  helper.skipUnlessDynamicConfig(this)
+  //helper.skipUnlessDynamicConfig(this)
   this.timeout(40000)
 
-  helper.skipUnlessDynamicConfig(this)
 
   let key: K = new Aerospike.Key(helper.namespace, helper.set, 'test/dynamic_config/1')
 
@@ -635,7 +634,7 @@ describe('Dynamic Config tests', async function () {
       })
     })
   })
-  context('API and Functionality tests', async function () { 
+  context('Typescript defintion tests', async function () { 
     let configProvider: ConfigProvider = {
       path: 'b',
       interval: 10000

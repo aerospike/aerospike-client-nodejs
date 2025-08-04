@@ -58,6 +58,10 @@ describe('Config #noserver', function () {
         password: 'sekret',
         port: 3333,
         appId: "ForeverSoup",
+        configProvider: {
+          path: 'string',
+          interval: 2,
+        },
         policies: {
           apply: new Aerospike.ApplyPolicy({ totalTimeout: 1000 }),
           batch: new Aerospike.BatchPolicy({ totalTimeout: 1000 }),
@@ -84,6 +88,7 @@ describe('Config #noserver', function () {
       const config: Conf = new Config(settings)
       expect(config).to.have.property('authMode')
       expect(config).to.have.property('appId')
+      expect(config).to.have.property('configProvider')
       expect(config).to.have.property('clusterName')
       expect(config).to.have.property('connTimeoutMs')
       expect(config).to.have.property('maxErrorRate')

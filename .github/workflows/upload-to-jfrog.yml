@@ -10,10 +10,6 @@ on:
       new_version:
         type: string
         required: false
-      stage:
-        type: boolean
-        required: false
-        default: false
       jfrog-repo-name:
         type: string
         required: false
@@ -56,16 +52,57 @@ jobs:
       env:
         VERSION: ${{ inputs.new_version }}
 
+    - name: list version info
+      run: 
+        ls aerospike/;
+        ls aerospike/${{ env.VERSION }}/;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        mkdir lib/binding;
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+
+    - name: list version info
+      run: 
+        npm pack;
+        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
+        # write script to change version number
+
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
+      # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./aerospike/${{ env.NEW_VERSION }}/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
     # Required to run sponge
@@ -76,7 +113,6 @@ jobs:
       run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ inputs.new_version }}"' | sponge releasebundle-filespec.json
       working-directory: .github/workflows
       shell: bash
-
 
     - name: Create release bundle from JFrog build
       # Not the same name as in proxy/pom.xml

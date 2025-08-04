@@ -232,7 +232,7 @@ describe('Queries', function () {
 
       context('Query using index name', function () {
         it('should match equal integer values', function (done) {
-          const args: QueryOptions = { filters: [filter.equal(null as any, 5)] }
+          const args: QueryOptions = { filters: [filter.equal(null, 5)] }
         args.filters![0].indexName = 'qidxInt'
           verifyQueryResults(args, 'int match', done)
         })
@@ -277,13 +277,13 @@ describe('Queries', function () {
       context('Query using index name', function () {
 
         it('should match integers within a range', function (done) {
-          const args: QueryOptions = { filters: [filter.range(null as any, 3, 7)] }
+          const args: QueryOptions = { filters: [filter.range(null, 3, 7)] }
           args.filters![0].indexName = 'qidxInt'
           verifyQueryResults(args, 'int match', done)
         })
 
         it('should match integers in a list within a range using an index name', function (done) {
-          const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, LIST)] }
+          const args: QueryOptions = { filters: [filter.range(null, 3, 7, LIST)] }
           args.filters![0].indexName = 'qidxIntList'
           verifyQueryResults(args, 'int list match', done)
         })
@@ -291,14 +291,14 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match integers in a list within a range in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, LIST, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.range(null, 3, 7, LIST, new Context().addMapKey('nested'))] }
           args.filters![0].indexName = 'qidxIntListNested'
             verifyQueryResults(args, 'nested int list match', done)
           })
         })
 
         it('should match integers in a map within a range', function (done) {
-          const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, MAPVALUES)] }
+          const args: QueryOptions = { filters: [filter.range(null, 3, 7, MAPVALUES)] }
           args.filters![0].indexName = 'qidxIntMap'
           verifyQueryResults(args, 'int map match', done)
         })
@@ -306,7 +306,7 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match integers in a map within a range in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.range(null as any, 3, 7, MAPVALUES, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.range(null, 3, 7, MAPVALUES, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxIntMapNested'
             verifyQueryResults(args, 'nested int map match', done)
           })
@@ -345,7 +345,7 @@ describe('Queries', function () {
 
       context('Query using index name', function () {
         it('should match lists containing an integer', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, 5, LIST)] }
+          const args: QueryOptions = { filters: [filter.contains(null, 5, LIST)] }
           args.filters![0].indexName = 'qidxIntList'
           verifyQueryResults(args, 'int list match', done)
         })
@@ -353,14 +353,14 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match lists containing an integer in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, 5, LIST, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, 5, LIST, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxIntListNested'
             verifyQueryResults(args, 'nested int list match', done)
           })
         })
 
         it('should match maps containing an integer value', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, 5, MAPVALUES)] }
+          const args: QueryOptions = { filters: [filter.contains(null, 5, MAPVALUES)] }
           args.filters![0].indexName = 'qidxIntMap'
           verifyQueryResults(args, 'int map match', done)
         })
@@ -368,7 +368,7 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match maps containing an integer value in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, 5, MAPVALUES, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, 5, MAPVALUES, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxIntMapNested'
             verifyQueryResults(args, 'nested int map match', done)
           })
