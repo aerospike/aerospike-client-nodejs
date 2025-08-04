@@ -70,10 +70,10 @@ jobs:
 
     - name: check binding
       run:
-        ls ${{ env.OLD_VERSION }}/lib/binding;
-        cp -r ${{ env.OLD_VERSION }}/lib/binding temp;
+        ls ${{ env.NEW_VERSION }}/lib/binding;
+        cp -r ${{ env.NEW_VERSION }}/lib/binding temp;
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
+        NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
@@ -82,14 +82,14 @@ jobs:
         npm install;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
     - name: check binding
       run:
-        cp -r temp ${{ env.OLD_VERSION }}/lib/binding;
-        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r temp ${{ env.NEW_VERSION }}/lib/binding;
+        ls ${{ env.NEW_VERSION }}/lib/binding;
       env:
-        OLD_VERSION: ${{ inputs.old_version }}
+        NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
