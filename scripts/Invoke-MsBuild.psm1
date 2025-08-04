@@ -251,7 +251,7 @@ function Invoke-MsBuild
 
         [parameter(Mandatory=$false)]
         [ValidateSet('q','quiet','m','minimal','n','normal','d','detailed','diag','diagnostic')]
-        [string] $LogVerbosityLevel = 'diagnostic',
+        [string] $LogVerbosityLevel = 'normal',
 
         [parameter(Mandatory=$false,ParameterSetName="Wait")]
         [ValidateNotNullOrEmpty()]

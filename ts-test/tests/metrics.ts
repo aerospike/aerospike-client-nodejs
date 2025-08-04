@@ -1436,7 +1436,7 @@ describe('Metrics tests', function () {
 
         let totalConnLatency = 0
 
-        function listenerWriteLatency(cluster: Cluster) {
+        function listenerConnLatency(cluster: Cluster) {
           for (const node of cluster.nodes) {
             let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
             for (const index of NamespaceMetrics) {
@@ -1462,9 +1462,9 @@ describe('Metrics tests', function () {
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
             {
               enableListener: emptyListener,
-              disableListener: listenerWriteLatency,
+              disableListener: listenerConnLatency,
               nodeCloseListener: emptyNodeListener,
-              snapshotListener: listenerWriteLatency
+              snapshotListener: listenerConnLatency
             }
           )
 
@@ -1637,10 +1637,6 @@ describe('Metrics tests', function () {
 
       context('batchLatency', function () {
 
-        it('Ensures histogram matches the histogram settings', async function () { 
-          
-        })
-
         let totalBatchLatency = 0
 
         function listenerBatchLatency(cluster: Cluster) {
@@ -1717,9 +1713,6 @@ describe('Metrics tests', function () {
 
       context('queryLatency', function () {
 
-        it('Ensures histogram matches the histogram settings', async function () { 
-          
-        })
 
         let totalQueryLatency = 0
 

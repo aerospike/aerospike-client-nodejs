@@ -97,7 +97,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
       await this.createIndex(index, false)
     }
 
-    async createExprIndex(indexName: string, setName: string, exp: AerospikeExp, dataType: indexDataType, indexType: indexType, context: any) {
+    async createExpIndex(indexName: string, setName: string, exp: AerospikeExp, dataType: indexDataType, indexType: indexType) {
       const index = {
         ns: options.namespace,
         set: setName,
@@ -116,7 +116,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
         try {
           let job: IndexJob;
           if(has_exp){
-            job = await this.client.createExprIndex(index)
+            job = await this.client.createExpIndex(index)
           }
           else{
             job = await this.client.createIndex(index)

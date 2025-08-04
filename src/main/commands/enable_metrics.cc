@@ -95,7 +95,7 @@ class MetricsCommand : public AerospikeCommand {
 	char* report_dir = NULL;
 	
 	as_vector* labels = NULL;
-  as_metrics_listeners* listeners = NULL;
+	as_metrics_listeners* listeners = NULL;
 	as_metrics_policy* policy = NULL;
 	as_cluster* cluster = NULL;
 	as_node* node = NULL;
@@ -549,12 +549,12 @@ static void respond(uv_work_t *req, int status)
 	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(req->data);
 	LogInfo *log = cmd->log;
 
-  if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
-    as_v8_warn(log, cmd->err.message);
-    as_error_reset(&cmd->err);
-  }
+	if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
+		as_v8_warn(log, cmd->err.message);
+		as_error_reset(&cmd->err);
+	}
 
-  Local<Value> argv[] = {Nan::Null(), Nan::Null()};
+	Local<Value> argv[] = {Nan::Null(), Nan::Null()};
 
 	if (!(cmd->IsError())){
 		cmd->Callback(2, argv);

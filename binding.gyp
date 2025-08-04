@@ -56,12 +56,6 @@
               ]
             }
           ],
-          "libraries": [
-            "C:/Program Files/OpenSSL/lib/libcrypto.lib"
-          ],
-          "include_dirs": [
-            "C:/Program Files/OpenSSL/include"
-          ]
         }],
       ]
     },
@@ -77,7 +71,6 @@
         'src/main/config.cc',
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',
-        'src/main/util/conversions.cc',
         'src/main/operations.cc',
         'src/main/exp_operations.cc',
         'src/main/scalar_operations.cc',
@@ -168,6 +161,7 @@
         'src/main/enums/exp_read_flags.cc',
         'src/main/enums/exp_write_flags.cc',
         'src/main/stats.cc',
+        'src/main/util/conversions.cc',
         'src/main/util/conversions_batch.cc',
         'src/main/util/log.cc',
       ],
@@ -225,7 +219,7 @@
         ['OS=="win"', {
           'libraries': [
             '../aerospike-client-c-output/lib/aerospike.lib',
-            '../aerospike-client-c-output/lib/pthreadVC2.lib'
+            '../aerospike-client-c-output/lib/pthreadVC2.lib',
           ],
           'defines': [
             'AS_USE_LIBUV',

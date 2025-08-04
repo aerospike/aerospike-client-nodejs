@@ -235,7 +235,7 @@ describe('Queries', function () {
 
       context('Query using index name', function () {
         it('should match equal string values', function (done) {
-          const args: QueryOptions = { filters: [filter.equal(null as any, 'banana')] }
+          const args: QueryOptions = { filters: [filter.equal(null, 'banana')] }
           args.filters![0].indexName = 'qidxStr'
           verifyQueryResults(args, 'string match', done)
         })
@@ -291,7 +291,7 @@ describe('Queries', function () {
       context('Query using index name', function () {
 
         it('should match lists containing a string', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', LIST)] }
+          const args: QueryOptions = { filters: [filter.contains(null, 'banana', LIST)] }
           args.filters![0].indexName = 'qidxStrList'
           verifyQueryResults(args, 'string list match', done)
         })
@@ -299,14 +299,14 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match lists containing a string in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', LIST, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, 'banana', LIST, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxStrListNested'
             verifyQueryResults(args, 'nested string list match', done)
           })
         })
 
         it('should match maps containing a string value', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPVALUES)] }
+          const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPVALUES)] }
           args.filters![0].indexName = 'qidxStrMap'
           verifyQueryResults(args, 'string map match', done)
         })
@@ -314,14 +314,14 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match maps containing a string value in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPVALUES, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPVALUES, new Context().addMapKey('nested'))] }
           args.filters![0].indexName = 'qidxStrMapNested'
             verifyQueryResults(args, 'nested string map match', done)
           })
         })
 
         it('should match maps containing a string key', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPKEYS)] }
+          const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPKEYS)] }
           args.filters![0].indexName = 'qidxStrMapKeys'
           verifyQueryResults(args, 'string mapkeys match', done)
         })
@@ -329,7 +329,7 @@ describe('Queries', function () {
         describe('index with cdt context', function () {
           helper.skipUnlessVersion('>= 6.1.0', this)
           it('should match maps containing a string key in a nested context', function (done) {
-            const args: QueryOptions = { filters: [filter.contains(null as any, 'banana', MAPKEYS, new Context().addMapKey('nested'))] }
+            const args: QueryOptions = { filters: [filter.contains(null, 'banana', MAPKEYS, new Context().addMapKey('nested'))] }
             args.filters![0].indexName = 'qidxStrMapKeysNested'
             verifyQueryResults(args, 'nested string mapkeys match', done)
           })

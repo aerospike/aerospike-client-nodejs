@@ -134,7 +134,7 @@ describe('Queries', function () {
 
     for (let i in indexes){
       let idx: any = indexes[i]
-      promises.push(helper.index.createExprIndex(idx[0], testSet, idx[1], idx[2], idx[3], idx[4]))
+      promises.push(helper.index.createExpIndex(idx[0], testSet, idx[1], idx[2], idx[3]))
 
     }
 
@@ -164,7 +164,7 @@ describe('Queries', function () {
         helper.skipUnlessVersion('>= 7.0.0', this)
 
         it('should match equal blob values using an expression', function (done) {
-          const args: QueryOptions = { filters: [filter.equal(null as any, Buffer.from('guava'))] }
+          const args: QueryOptions = { filters: [filter.equal(null, Buffer.from('guava'))] }
           args.filters![0].exp = exp.binBlob('blob')
           verifyQueryResults(args, 'blob match', done)
         })
@@ -176,21 +176,21 @@ describe('Queries', function () {
 
 
         it('should match lists containing a blob', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), LIST)] }
+          const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), LIST)] }
           args.filters![0].exp = exp.binList('lblob')
           verifyQueryResults(args, 'blob list match', done)
         })
 
 
         it('should match maps containing a blob value', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPVALUES)] }
+          const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPVALUES)] }
           args.filters![0].exp = exp.binMap('mblob')
           verifyQueryResults(args, 'blob map match', done)
         })
 
 
         it('should match maps containing a blob key', function (done) {
-          const args: QueryOptions = { filters: [filter.contains(null as any, Buffer.from('guava'), MAPKEYS)] }
+          const args: QueryOptions = { filters: [filter.contains(null, Buffer.from('guava'), MAPKEYS)] }
           args.filters![0].exp = exp.binMap('mkblob')
           verifyQueryResults(args, 'blob mapkeys match', done)
         })

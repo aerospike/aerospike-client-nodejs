@@ -1650,7 +1650,6 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 	}
 	else{
 		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::Null());
-
 	}
 
 	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(), Nan::New(cluster_name).ToLocalChecked());
