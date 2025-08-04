@@ -70,30 +70,29 @@ jobs:
 
     - name: check binding
       run:
-        ls ${{ env.NEW_VERSION }}/lib/binding;
-        cp -r ${{ env.NEW_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r ${{ env.OLD_VERSION }}/lib/binding temp;
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
       run: 
-        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm install;
       env:
-        VERSION: ${{ inputs.new_version }} 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: check binding
       run:
-        ls ${{ env.NEW_VERSION }}/lib/binding;
-        cp -r ${{ env.NEW_VERSION }}/lib/binding;
+        cp -r temp ${{ env.OLD_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
       run: 
         npm install --registry=https://aerospike.jfrog.io/artifactory/api/npm/dev-npm/ --auth-type=web
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
-      
