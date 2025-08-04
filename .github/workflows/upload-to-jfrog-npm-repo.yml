@@ -96,14 +96,14 @@ jobs:
       working-directory: downloaded-artifacts/aerospike
 
     - name: npmrc dev
-      if: ${{ inputs.pipeline-stage == 'dev' }}
+      if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
         echo "$NPMRC" | base64 --decode > ~/.npmrc  
       env:
         NPMRC: ${{ secrets.NPMRC }}
 
     - name: npmrc stage
-      if: ${{ inputs.pipeline-stage == 'stage' }}
+      if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
         echo "$NPMRC" | base64 --decode > ~/.npmrc  
       env:
@@ -117,7 +117,7 @@ jobs:
     #    NPMRC: ${{ secrets.NPMRC }}
 
     - name: list version info
-      if: ${{ inputs.pipeline-stage == 'dev' }}
+      if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
         npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
@@ -125,7 +125,7 @@ jobs:
 
 
     - name: list version info
-      if: ${{ inputs.pipeline-stage == 'stage' }}
+      if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
         npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
