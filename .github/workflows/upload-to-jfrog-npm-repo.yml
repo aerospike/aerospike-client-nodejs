@@ -10,6 +10,9 @@ on:
       new_version:
         type: string
         required: false
+      stage:
+        type: string
+        required: false
       jfrog-repo-name:
         type: string
         required: false
@@ -92,14 +95,39 @@ jobs:
         NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike
 
-    - name: npm rc 2
+    - name: npmrc dev
+      if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
         echo "$NPMRC" | base64 --decode > ~/.npmrc  
       env:
         NPMRC: ${{ secrets.NPMRC }}
 
+    - name: npmrc stage
+      if: ${{ inputs.pipeline-stage == 'stage' }}
+      run: |
+        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC_STAGE }}
+
+    #- name: npmrc master
+    #  if: ${{ inputs.pipeline-stage == 'dev' }}
+    #  run: |
+    #    echo "$NPMRC" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC: ${{ secrets.NPMRC }}
+
     - name: list version info
+      if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
         npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+
+
+    - name: list version info
+      if: ${{ inputs.pipeline-stage == 'stage' }}
+      run: |
+        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
+        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+

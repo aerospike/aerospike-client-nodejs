@@ -71,4 +71,5 @@ jobs:
     with:
       #new_version: 6.2.1-rc.20
       new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      stage: 'stage'
     secrets: inherit
