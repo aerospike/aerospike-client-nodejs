@@ -40,6 +40,7 @@ describe('REPLICA_RANDOM', function () {
 
   it('should write and validate records', async function () {
     expect(Aerospike.policy.replica.RANDOM).to.be.a('number')
+    expect(Aerospike.policy.replica.RANDOM).to.eql(4)
     const config: any = new Aerospike.Config({
       hosts: helper.config.hosts,
       user: helper.config.user,
