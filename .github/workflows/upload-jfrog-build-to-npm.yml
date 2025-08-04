@@ -64,27 +64,65 @@ jobs:
     #  run: |
     #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
 
-    - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+
+
+
+
+
+
+
+    - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeline-stage == 'master' }}
+      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
       env:
-        VERSION: ${{ inputs.old_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
+        PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
-        ls aerospike/${{ env.OLD_VERSION }}/
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}
       env:
         OLD_VERSION: ${{ inputs.old_version }}
+
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
+        tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz
       env:
         OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: change verison
-      run: |
-       npm version 6.2.1-dev.4 --no-git-tag-version
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r ${{ env.OLD_VERSION }}/lib/binding temp;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm ci;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        echo "======================================";
+        cp -r temp ${{ env.OLD_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
 
     #- name: change verison
     #  run: |
@@ -92,25 +130,14 @@ jobs:
     #  env:
     #    NEW_VERSION: ${{ inputs.new_version }}
 
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
+    - run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 #    - name: npm rc
 #      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
 #      env:
 #        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
-
-    - name: npm install
-      run: npm install
-
-    - name: Move artifacts
-      run: |
-        rm -rf lib/binding
-        mkdir lib/binding
-        cp -r aerospike/${{ env.OLD_VERSION }}/lib/binding/* lib/binding/
-        ls lib/binding
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
 
     #- name: npm publish
     #  run: |
@@ -122,9 +149,9 @@ jobs:
     #  run: |
     #    npm install aerospike@6.2.1-dev.4
 
-    - name: npm pack
-      run: |
-        npm pack aerospike
+    #- name: npm pack
+    #  run: |
+    #    npm pack aerospike
 
     # Not possible to sign tarball with esigner at this time
     # - name: Sign npm tarball

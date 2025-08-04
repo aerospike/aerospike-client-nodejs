@@ -33,28 +33,12 @@ jobs:
     ]
     secrets: inherit
 
-
-  reupload-stage-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/reupload-to-jfrog.yml
-    with:
-      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-      #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
-      new_version: 6.1.0.dev.9
-      stage: false
-    secrets: inherit
-
   publish-to-npm:
     name: Publish to npm
-    #needs: [
-    #  get-jfrog-stage-version,
-    #  bump-dev-number,
-    #  reupload-stage-to-jfrog
-    #]
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+    ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
       #old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
