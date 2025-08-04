@@ -111,9 +111,9 @@ context('secondary indexes', function () {
         datatype: Aerospike.indexDataType.NUMERIC
       }
 
-      return client.createIndex(options)
+      return client.createExpIndex(options)
         .then((job: IJ) => job.wait(10))
-        .then(() => client.createIndex(options)
+        .then(() => client.createExpIndex(options)
           .catch((error: any) => {
             if (error.code === Aerospike.status.ERR_INDEX_FOUND ||
               error.code === Aerospike.status.AEROSPIKE_OK) {
@@ -178,7 +178,7 @@ context('secondary indexes', function () {
         index: testIndex.name
       }
 
-      return client.createBlobIndex(args)
+      return client.createExpBlobIndex(args)
         .then(() => verifyIndexExists(helper.namespace, testIndex.name))
     })
   })

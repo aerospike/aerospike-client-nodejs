@@ -40,6 +40,7 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	char *password = NULL;
 	char *user_path = NULL;
 	char* app_id = NULL;
+	char* config_provider_path = NULL;
 
 	Local<Value> v8_config_provider =
 		Nan::Get(configObj, Nan::New("configProvider").ToLocalChecked())
@@ -64,10 +65,14 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 
 		Local<Object> config_provider = v8_config_provider.As<Object>();
 
-		if ((rc = get_optional_string_property(&config->config_provider.path, &defined, config_provider,
+		if ((rc = get_optional_string_property(&config_provider_path, &defined, config_provider,
 											   "path", log)) !=
 			AS_NODE_PARAM_OK) {
+
 			goto Cleanup;
+		}
+		else if (defined) {
+			as_config_provider_set_path(config, config_provider_path);
 		}
 
 		if ((rc = get_optional_uint32_property(&config->config_provider.interval, &defined, config_provider,
@@ -545,7 +550,6 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	else if (defined){
 		as_config_set_app_id(config, app_id);
 		cf_free(app_id);
-
 	}
 
 
@@ -558,6 +562,8 @@ Cleanup:
 		free(password);
 	if (user_path)
 		free(user_path);
+	if (config_provider_path)
+		free(config_provider_path);
 
 	as_v8_debug(log, "Built as_config instance from JS config object");
 	return rc;
