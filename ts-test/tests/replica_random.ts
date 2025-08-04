@@ -39,6 +39,7 @@ describe('REPLICA_RANDOM', function () {
   //Aerospike.setDefaultLogging({level: Aerospike.log.TRACE})
 
   it('should write and validate records', async function () {
+    expect(Aerospike.policy.replica.RANDOM).to.be.a('number')
     const config: any = new Aerospike.Config({
       hosts: helper.config.hosts,
       user: helper.config.user,
@@ -52,7 +53,7 @@ describe('REPLICA_RANDOM', function () {
         }
       },
     })
-    console.log(Aerospike.policy.replica.RANDOM)
+
     const dummyClient: Cli = await Aerospike.connect(config)
 
     for (var i = 0; i < 20; i++) {
