@@ -96,8 +96,7 @@ jobs:
         # write script to change version number
 
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeline-stage == 'dev' }}
-    # Source path must be in quotes if it contains an asterisk
+      # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
@@ -124,6 +123,5 @@ jobs:
       working-directory: .github/workflows
 
     - name: Promote release bundle to DEV stage
-      if: ${{ inputs.pipeline-stage == 'dev' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
       working-directory: .github/workflows
