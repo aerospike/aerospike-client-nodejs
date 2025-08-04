@@ -7,6 +7,9 @@ permissions:
 on:
   workflow_call:
     inputs:
+      old_version:
+        type: string
+        required: false
       new_version:
         type: string
         required: false
@@ -49,25 +52,64 @@ jobs:
 
     - name: Download Artifacts from Jfrog
       if: ${{ inputs.pipeline-stage == 'stage' }}
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
         PACKAGE_MANAGER: npm
 
     - name: Download Artifacts from Jfrog
       if: ${{ inputs.pipeline-stage == 'master' }}
-      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
         PACKAGE_MANAGER: npm
 
     - name: list Artifacts
       run: |
         ls downloaded-artifacts
         ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        OLD_VERSION: ${{ inputs.old_version }}
+
+
+    - name: Move artifacts
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    - name: list version info
+      run: 
+        npm pack;
+        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
+        # write script to change version number
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeline-stage == 'stage' }}
@@ -76,7 +118,7 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo
       if: ${{ inputs.pipeline-stage == 'master' }}
@@ -85,10 +127,10 @@ jobs:
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Publish build info
-      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
+      run: jf rt build-publish --project clients nodejs-client ${{ inputs.old_version }}
 
     # Required to run sponge
     - run: sudo apt install -y moreutils
