@@ -1342,7 +1342,7 @@ context('admin commands', async function () {
 
       it('fails with roles array with invalid values', async function () {
         try {
-          await client.revokeRoles('a', [14 as any] as any)
+          await client.revokeRoles('a', ["valid_role", 14 as any] as any)
           // Should fail, assert failure if error is not returned.
           assert.fail("AN ERROR SHOULD BE THROWN HERE")
         } catch (error: any) {

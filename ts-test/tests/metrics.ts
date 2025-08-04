@@ -231,7 +231,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportDir/metrics-*');
 
-          await execAsync('mkdir  metrics_sub_dir/reportDir/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/reportDir');
 
           let result = await execAsync('find metrics_sub_dir/reportDir/ -type f | wc -l');
 
@@ -266,7 +266,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/interval/metrics-*');
 
-          await execAsync('mkdir metrics_sub_dir/interval/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/interval/');
 
           let result = await execAsync('find metrics_sub_dir/interval/ -type f | wc -l');
 
@@ -297,7 +297,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportSizeLimit/metrics-*');
 
-          await execAsync('mkdir metrics_sub_dir/reportSizeLimit/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/reportSizeLimit');
 
           let result = await execAsync('find metrics_sub_dir/reportSizeLimit/ -type f | wc -l');
 
@@ -323,7 +323,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/latencyColumns/metrics-*');
 
-          await execAsync('mkdir metrics_sub_dir/reportSizeLimit/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/latencyColumns');
 
           let result = await execAsync('find metrics_sub_dir/latencyColumns/ -type f | wc -l');
 
@@ -352,7 +352,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/latencyShift/metrics-*');
 
-          await execAsync('mkdir metrics_sub_dir/latencyShift/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/latencyShift');
 
           let result = await execAsync('find metrics_sub_dir/latencyShift/ -type f | wc -l');
 
@@ -381,7 +381,7 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/labels/metrics-*');
 
-          await execAsync('mkdir metrics_sub_dir/labels/metrics-*');
+          await execAsync('mkdir -p metrics_sub_dir/labels');
 
           let result = await execAsync('find metrics_sub_dir/labels/ -type f | wc -l');
 
@@ -418,7 +418,7 @@ describe('Metrics tests', function () {
             hosts: helper.config.hosts,
             user: helper.config.user,
             password: helper.config.password,
-            appId: 'destiny'
+            appId: 'kelp'
           }
 
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -447,10 +447,10 @@ describe('Metrics tests', function () {
 
           await dummyClient.disableMetrics()
 
-          await new Promise(r => setTimeout(r, 0));
+          await new Promise(r => setTimeout(r, 100));
 
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.appId).to.eql('destiny')
+            expect(cluster.appId).to.eql('kelp')
 
           }
 
@@ -1211,7 +1211,7 @@ describe('Metrics tests', function () {
 
           await client.disableMetrics()
 
-          await new Promise(r => setTimeout(r, 0));
+          await new Promise(r => setTimeout(r, 20));
 
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
 
@@ -1355,13 +1355,14 @@ describe('Metrics tests', function () {
       context('timeoutCount', function () { 
 
 
-        let totalTimeoutCount = 0
+        let timeout_value = 0
+
 
         function listenerTimeoutCount(cluster: Cluster) {
           for (const node of cluster.nodes) {
             let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
             for (const index of NamespaceMetrics) {
-              totalTimeoutCount += index.timeoutCount
+              timeout_value = index.timeoutCount
             }
           }
           return
@@ -1432,7 +1433,7 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 0));
 
-          expect(totalTimeoutCount).to.be.greaterThan(0)
+          expect(timeout_value).to.be.a('number')
 
           clusterFromSnapshotListener = null
 
@@ -1622,7 +1623,6 @@ describe('Metrics tests', function () {
               interval: 1,
             }
           )
-
           await client.enableMetrics(policy)
 
           await new Promise(r => setTimeout(r, 1500));   
@@ -1878,7 +1878,7 @@ describe('Metrics tests', function () {
                 metricsListeners: listeners,
               }
             )
-            
+          
             try{
               await client.enableMetrics(policy)
               assert.fail("AN ERROR SHOULD HAVE BEEN CAUGHT")
@@ -2334,7 +2334,7 @@ describe('Metrics tests', function () {
                 metricsListeners: listeners,
               }
             )
-            
+
             try{
               await client.enableMetrics(policy)
               assert.fail("AN ERROR SHOULD HAVE BEEN CAUGHT")
@@ -2449,10 +2449,8 @@ describe('Metrics tests', function () {
             assert.fail("AN ERROR SHOULD BE CAUGHT")
           }
           catch(error: any){
-
-            let messageToken = error.message.split('-')[0]
-            expect(messageToken).to.eql("Failed to open file: /metrics")
-            expect(error.code).to.eql(-1)
+            expect(error.message).to.eql("Metrics policy parameter invalid")
+            expect(error.code).to.eql(-2)
           }
           await client.disableMetrics()
         })

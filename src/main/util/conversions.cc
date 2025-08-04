@@ -616,7 +616,12 @@ int get_optional_report_dir_property(char **report_dir, bool *defined, int* size
 	if (v8value->IsString()) {
 		Local<String> v8_string_report_dir = v8value.As<String>();
 		if((v8_string_report_dir->Length() + 1) > 256){
-			as_v8_error(log, "Property error: %s report_dir must be less than 255 characters",
+			as_v8_error(log, "Property error: %s must be less than 255 characters",
+					prop);
+			return AS_NODE_PARAM_ERR;
+		}
+		else if(v8_string_report_dir->Length() <= 0){
+			as_v8_error(log, "Property error: %s must not be empty",
 					prop);
 			return AS_NODE_PARAM_ERR;
 		}

@@ -3,9 +3,6 @@ metadata:
   generation: 2
   version: 0.0.1
 
-static:
-  client:
-    config_interval: 10000
 dynamic:
   write:
     send_key: true
