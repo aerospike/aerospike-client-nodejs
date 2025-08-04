@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::PrivilegeRevoke)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;	
 	char * role = NULL;
 	as_privilege** privileges = NULL;
 	int privileges_size = 0;
@@ -76,10 +77,11 @@ NAN_METHOD(AerospikeClient::PrivilegeRevoke)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Revoking privileges for role role=%s", role);
-	status = aerospike_revoke_privileges(client->as, &cmd->err, &policy, role,
+	status = aerospike_revoke_privileges(client->as, &cmd->err, p_policy, role,
 					   privileges, privileges_size);
 
 	if (status != AEROSPIKE_OK) {

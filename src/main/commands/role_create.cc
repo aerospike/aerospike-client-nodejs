@@ -48,6 +48,7 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char * role = NULL;
 	as_privilege** privileges = NULL;
 	int privileges_size = 0;
@@ -83,6 +84,7 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	if(info[3]->IsArray()){
@@ -106,7 +108,7 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 	}
 
 	as_v8_debug(log, "Adding role=%s", role);
-	status = aerospike_create_role_quotas(client->as, &cmd->err, &policy, role,
+	status = aerospike_create_role_quotas(client->as, &cmd->err, p_policy, role,
 					   privileges, privileges_size, const_cast<const char**>(whitelist),
 					   whitelist_size, read_quota, write_quota);
 
@@ -134,7 +136,7 @@ Cleanup:
 		for(i = 0; i < whitelist_size; i++){
 			free(whitelist[i]);
 		}
-		free(whitelist);
+		delete [] whitelist;
 	}
 
 

@@ -50,7 +50,7 @@ describe('REPLICA_RANDOM', function () {
           replica: Aerospike.policy.replica.RANDOM,
         },
         read: {
-          replica: (Aerospike.policy.replica as any).band,
+          replica: Aerospike.policy.replica.RANDOM,
         }
       },
     })
@@ -59,7 +59,6 @@ describe('REPLICA_RANDOM', function () {
 
     for (var i = 0; i < 20; i++) {
       let key = new Aerospike.Key('test', 'demo', i)
-      console.log(key)
       await dummyClient.put(key, {a: 1})
       await dummyClient.get(key)
       // This must be verified manually, not yet automated.

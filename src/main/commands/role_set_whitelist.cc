@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::RoleSetWhitelist)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char * role = NULL;
 	char ** whitelist = NULL;
 	int whitelist_size = 0;
@@ -76,11 +77,12 @@ NAN_METHOD(AerospikeClient::RoleSetWhitelist)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Setting whitelist for role=%s", role);
 
-	status = aerospike_set_whitelist(client->as, &cmd->err, &policy, role, const_cast<const char**>(whitelist), whitelist_size);
+	status = aerospike_set_whitelist(client->as, &cmd->err, p_policy, role, const_cast<const char**>(whitelist), whitelist_size);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
@@ -99,7 +101,7 @@ Cleanup:
 		for(int i = 0; i < whitelist_size; i++) {
 			free(whitelist[i]);
 		}
-		free(whitelist);
+		delete [] whitelist;
 	}
 
 }

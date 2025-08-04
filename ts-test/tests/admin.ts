@@ -35,8 +35,8 @@ function wait (ms: number) {
 
 context('admin commands', async function () {
 
-  if (helper.config.user != 'admin') {
-    return
+  if (helper.config.user != 'superuser') {
+    helper.skip(this, "Requires RBAC to be enabled.")
   }
 
   const client: Client = helper.client
@@ -129,7 +129,7 @@ context('admin commands', async function () {
     })
 
     it('With multiple privilegeCodes', async function () {
-      await await client.createRole(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
+      await client.createRole(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
@@ -155,7 +155,7 @@ context('admin commands', async function () {
     it('with admin policy', async function () {
       await client.grantPrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await await client.queryRole(rolename2, null)
+      const result: admin.Role = await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -165,7 +165,7 @@ context('admin commands', async function () {
     it('with multiple privileges', async function () {
       await client.grantPrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await await client.queryRole(rolename3, null)
+      const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -184,7 +184,7 @@ context('admin commands', async function () {
     it('Revokes privilege from role', async function () {
       await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
       await wait(waitMs)
-      const result: admin.Role = await await client.queryRole(rolename1, null)
+      const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -195,7 +195,7 @@ context('admin commands', async function () {
     it('With admin policy', async function () {
       await client.revokePrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
-      const result: admin.Role = await await client.queryRole(rolename2, null)
+      const result: admin.Role = await client.queryRole(rolename2, null)
       expect(result).to.have.property('name', rolename2)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -206,7 +206,7 @@ context('admin commands', async function () {
     it('With mutliple privileges', async function () {
       await client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await await client.queryRole(rolename3, null)
+      const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
@@ -240,8 +240,14 @@ context('admin commands', async function () {
       const results: admin.User[] = await client.queryUsers(null)
       results.forEach((result: admin.User) => {
         expect(result).to.have.property('name').that.is.a('string')
-        expect(result).to.have.property('readInfo').that.is.an('array')
-        expect(result).to.have.property('writeInfo').that.is.an('array')
+        expect(result).to.have.property('readInfo').that.is.an('array').of.length(4)
+        for (var i = 0; i < 4; i++) {
+          expect(result.readInfo[i]).to.be.a('number')
+        }
+        expect(result).to.have.property('writeInfo').that.is.an('array').of.length(4)
+        for (var i = 0; i < 4; i++) {
+          expect(result.writeInfo[i]).to.be.a('number')
+        }
         expect(result.connsInUse).to.be.a('number')
         expect(result).to.have.property('roles').that.is.an('array')
       })
@@ -250,8 +256,14 @@ context('admin commands', async function () {
       const results: admin.User[] = await client.queryUsers(policy)
       results.forEach((result: admin.User) => {
         expect(result).to.have.property('name').that.is.a('string')
-        expect(result).to.have.property('readInfo').that.is.an('array')
-        expect(result).to.have.property('writeInfo').that.is.an('array')
+        expect(result).to.have.property('readInfo').that.is.an('array').of.length(4)
+        for (var i = 0; i < 4; i++) {
+          expect(result.readInfo[i]).to.be.a('number')
+        }
+        expect(result).to.have.property('writeInfo').that.is.an('array').of.length(4)
+        for (var i = 0; i < 4; i++) {
+          expect(result.writeInfo[i]).to.be.a('number')
+        }
         expect(result.connsInUse).to.be.a('number')
         expect(result).to.have.property('roles').that.is.an('array')
       })
@@ -365,7 +377,7 @@ context('admin commands', async function () {
     it('With policy', async function () {
       await client.grantRoles(username2, [rolename2], policy)
       await wait(waitMs)
-      const result: admin.User = await await client.queryUser(username2, null)
+      const result: admin.User = await client.queryUser(username2, null)
       expect(result).to.have.property('name', username2)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
@@ -376,7 +388,7 @@ context('admin commands', async function () {
     it('With multiple roles', async function () {
       await client.grantRoles(username3, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await await client.queryUser(username3, null)
+      const result: admin.User = await client.queryUser(username3, null)
       expect(result).to.have.property('name', username3)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
@@ -411,7 +423,7 @@ context('admin commands', async function () {
     it('With multiple roles', async function () {
       await client.revokeRoles(username3, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await await client.queryUser(username3, null)
+      const result: admin.User = await client.queryUser(username3, null)
       expect(result).to.have.property('name', username3)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])

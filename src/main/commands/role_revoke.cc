@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::RoleRevoke)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char ** roles = NULL;
 	int roles_size = 0;
 	char* user_name = NULL;
@@ -77,10 +78,11 @@ NAN_METHOD(AerospikeClient::RoleRevoke)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Revoking roles from user=%s", user_name);
-	status = aerospike_revoke_roles(client->as, &cmd->err, &policy, user_name, const_cast<const char**>(roles), roles_size);
+	status = aerospike_revoke_roles(client->as, &cmd->err, p_policy, user_name, const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
@@ -97,7 +99,7 @@ Cleanup:
 		for(int i = 0; i < roles_size; i++) {
 			free(roles[i]);
 		}
-		free(roles);
+		delete [] roles;
 	}
 	if(user_name){
 		free(user_name);

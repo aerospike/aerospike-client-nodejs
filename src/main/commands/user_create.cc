@@ -46,6 +46,7 @@ NAN_METHOD(AerospikeClient::UserCreate)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char *user_name = NULL;
 	char *password = NULL;
 	char ** roles = NULL;
@@ -86,10 +87,11 @@ NAN_METHOD(AerospikeClient::UserCreate)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Creating user=%s", user_name);
-	status = aerospike_create_user(client->as, &cmd->err, &policy, user_name,
+	status = aerospike_create_user(client->as, &cmd->err, p_policy, user_name,
 					   password, const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
@@ -112,7 +114,7 @@ Cleanup:
 		for(int i = 0; i < roles_size; i++) {
 			free(roles[i]);
 		}
-		free(roles);
+		delete [] roles;
 	}
 
 }
