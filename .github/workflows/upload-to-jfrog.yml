@@ -103,22 +103,6 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeline-stage == 'stage' }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-stage-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
-    - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.pipeline-stage == 'master' }}
-    # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
     - name: Publish build info
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
@@ -142,14 +126,4 @@ jobs:
     - name: Promote release bundle to DEV stage
       if: ${{ inputs.pipeline-stage == 'dev' }}
       run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
-      working-directory: .github/workflows
-
-    - name: Promote release bundle to STAGE stage
-      if: ${{ inputs.pipeline-stage == 'stage' }}
-      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} STAGE
-      working-directory: .github/workflows
-
-    - name: Promote release bundle to STAGE stage
-      if: ${{ inputs.pipeline-stage == 'master' }}
-      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} PROD
       working-directory: .github/workflows
