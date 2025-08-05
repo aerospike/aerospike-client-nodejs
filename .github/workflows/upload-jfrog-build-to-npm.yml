@@ -60,15 +60,9 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    #- name: change package name
-    #  run: |
-    #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
-
-
-
-
-
-
+    - name: change package name
+      run: |
+        sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
 
 
     - name: Download Artifacts from Jfrog

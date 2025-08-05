@@ -41,10 +41,10 @@ jobs:
     ]
     uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
     with:
-      #old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-      old_version: 6.2.1-dev.4
-      #new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
-      new_version: 6.2.1-dev.4
+      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      #old_version: 6.2.1-dev.4
+      new_version: ${{ needs.get-jfrog-stage-version.outputs.new_master_version }}
+      #new_version: 6.2.1-dev.4
     secrets: inherit
 
 #  verify-npm-install:
