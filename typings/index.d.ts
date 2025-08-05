@@ -1308,7 +1308,7 @@ export class Query {
      *
      * @param predicate - The index filter to
      * apply to the function.
-     * @param index name - Name of the Secondary Index
+     * @param indexName - Name of the Secondary Index
      * 
      * @example <caption>Applying a SI filter to find all records
      * where the 'tags' list bin contains the value 'blue':</caption>
@@ -6516,7 +6516,6 @@ export class Client extends EventEmitter {
      * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
      *
      * @param user - User name for the new user.
-     * @param password - User password in clear-text format.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link policy.AdminPolicy}.
      *
@@ -6559,14 +6558,12 @@ export class Client extends EventEmitter {
     public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      * @param user - User name for the new user.
-     * @param password - User password in clear-text format.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param callback - The function to call when the command has completed.
      */
     public createPKIUser(user: string, roles?: Array<string> | null, callback?: TypedCallback<void>): void;
     /**
      * @param user - User name for the new user.
-     * @param password - User password in clear-text format.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
      * @param policy - Optional {@link policy.AdminPolicy}.
      * @param callback - The function to call when the command has completed.

@@ -84,14 +84,3 @@ jobs:
 #      base_branch: stage
 #    secrets: inherit
 #
-#  publish-release-notes:
-#    uses: ./.github/workflows/publish-release-notes.yml
-#    needs: [
-#      get-jfrog-stage-version,
-#      bump-dev-number,
-#      reupload-stage-to-jfrog,
-#      publish-to-npm
-#    ]
-#    with:
-#      version: ${{ needs.bump-dev-number.outputs.new_master_version }}
-#    secrets: inherit
