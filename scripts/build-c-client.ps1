@@ -5,7 +5,15 @@ param (
   [string]$Platform = "x64",
   [string]$CClientIni = "..\aerospike-client-c.ini",
   [string]$FileHashesIni = "..\aerospike-client-c.sha256"
+  [string]$OpenSSLIni = "..\openssl-native.ini",
+  [string]$OpenSSLHashesIni = "..\openssl-native.sha256"
+  [string]LuaIni = "..\lua.ini",
+  [string]LuaHashesIni = "..\lua.sha256"
+  [string]$LibYamlIni = "..\libyaml.ini",
+  [string]$LibYamlHashesIni = "..\libyaml.sha256"
 )
+# LUA hash
+#D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034
 
 Write-Host "NodeLibFile: $NodeLibFile"
 
@@ -127,7 +135,14 @@ function Build-Project {
 
 $CClientCfg = Parse-IniFile $CClientIni
 Write-Debug ($CClientCfg | Out-String)
+$OpenSSLCfg = Parse-IniFile $OpenSSLIni
+$LuaCfg = Parse-IniFile $LuaIni
+$LibYamlCfg = Parse-IniFile $LibYamlIni
+
 $FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
+$OpenSSlHashes = Parse-IniFile $OpenSSLIni -sep "  " -swap
+$LuaHashes = Parse-IniFile $LuaIni -sep "  " -swap
+$LibYamlHashes = Parse-IniFile $LibYamlIni -sep "  " -swap
 Write-Debug ($FileHashes | Out-String)
 
 # C client path
@@ -146,20 +161,20 @@ Install-Package -uri $CClientDepsUrl -archive $CClientDepsArchive -outpath $CCli
 # Install C openssl package
 Write-Host "Installing Aerospike C client dependencies"
 $OpenSSLVersion = "3.0.16"
-$OpenSSLSrcPath = "openssl-native.${OpenSSLVersion}"
+$OpenSSLSrcPath = $OpenSSLCfg["OPENSSL_DEPS_VERSION"]
 $OpenSSLArchive = "${OpenSSLSrcPath}.zip"
 $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVersion}"
-$OpenSSLArchiveHash = $FileHashes[$OpenSSLArchive]
-Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
+$OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
+Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash $OpenSSLArchiveHash -createdir
 
-Install LUA package
-Write-Host "Installing lua"
-$LuaVersion = "5.4.6"
-$LuaSrcPath = "lua.${LuaVersion}"
-$LuaArchive = "${LuaSrcPath}.zip"
-$LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
-$LuaArchiveHash = $FileHashes[$LuaArchive]
-Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
+# Install LUA package
+# Write-Host "Installing lua"
+# $LuaVersion = "5.4.6"
+# $LuaSrcPath = "lua.${LuaVersion}"
+# $LuaArchive = "${LuaSrcPath}.zip"
+# $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
+# $LuaArchiveHash = $FileHashes[$LuaArchive]
+# Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
 
 Install libyaml package
 Write-Host "Installing libyaml"
