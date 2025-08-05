@@ -1,4 +1,4 @@
 [submodule "aerospike-client-c"]
 	path = aerospike-client-c
 	url = https://github.com/aerospike/aerospike-client-c.git
-	branch = CLIENT-3642-stage
+	branch = stage
