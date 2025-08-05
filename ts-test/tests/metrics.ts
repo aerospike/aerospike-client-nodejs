@@ -464,6 +464,65 @@ describe('Metrics tests', function () {
         })
       })
 
+      context('labels', function () { 
+        it('Ensures labels are correct', async function () { 
+          const config: any = {
+            hosts: helper.config.hosts,
+            user: helper.config.user,
+            password: helper.config.password,
+            appId: 'kelp'
+          }
+
+          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
+            {
+              enableListener: emptyListener,
+              disableListener: disableSaveListener,
+              nodeCloseListener: emptyNodeListener,
+              snapshotListener: snapshotSaveListener
+            }
+          )
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              metricsListeners: listeners,
+              interval: 1,
+              labels: {
+                "size": "large",
+                "discount": "normal"
+              }
+            }
+          )
+
+
+          let dummyClient = null;
+          dummyClient = await Aerospike.connect(config)
+
+          await dummyClient.enableMetrics(policy)
+
+
+          await new Promise(r => setTimeout(r, 1500));
+
+          await dummyClient.disableMetrics()
+
+          await new Promise(r => setTimeout(r, 100));
+
+          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
+            expect(cluster.labels).to.eql({
+              "size": "large",
+              "discount": "normal"
+            })
+
+          }
+
+          await new Promise(r => setTimeout(r, 3000));
+
+          await dummyClient.close()
+
+
+
+
+        })
+      })
+
       context('clusterName', function () { 
         it('Ensures clusterName is correct', async function () { 
           const config: any = {
@@ -2670,7 +2729,6 @@ describe('Metrics tests', function () {
           readLatency: [1, 2],
           batchLatency: [1, 2],
           queryLatency: [1, 2],
-          labels: {'label1': 'label2'},
           ns: 'test',
           bytesIn: 174,
           bytesOut: 153,
@@ -2685,6 +2743,7 @@ describe('Metrics tests', function () {
         address: '127.0.0.1',
         port: 3000,
         conns: { inUse: 0, inPool: 0, opened: 0, closed: 0 },
+        labels: {'label1': 'label2'},
         metrics
       }
 
