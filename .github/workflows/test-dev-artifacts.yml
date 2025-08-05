@@ -402,22 +402,24 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
-
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: add in debug string for test
       run: |
         awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -430,6 +432,7 @@ jobs:
         npx tsc;
         npm run test --testfile=prefer_rack.js -- --testPreferRack true --h  0.0.0.0 --port 3100 --t 40000;
         npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100 --t 40000;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy
@@ -526,17 +529,19 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -548,6 +553,7 @@ jobs:
         cd ..;
         npx tsc;
         npm run test --testfile=set_xdr_filter.js -- --testXDR true --h 172.17.0.2 --port 3100;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy --name dc1
@@ -681,18 +687,19 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
-
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: install valgrind
       run: |
@@ -708,12 +715,14 @@ jobs:
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
         cd ..;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run Valgrind
       run: |
         docker ps;
         npx tsc;
         npm run valgrind -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -805,18 +814,19 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -827,6 +837,7 @@ jobs:
         cd ..;
         npx tsc;
         npx tsc typings/index.d.ts; 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -837,6 +848,7 @@ jobs:
         cd ..;
         npx tsc;
         npx tsc typings/index.d.ts;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -906,22 +918,24 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -936,6 +950,7 @@ jobs:
         docker pull aerospike/aerospike-server:latest;
         npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
         npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -1027,18 +1042,19 @@ jobs:
 
     - name: Move artifacts
       run: |
-        mkdir lib/binding
-        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
-
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
       env:
         NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1376,20 +1392,24 @@ jobs:
           ls downloaded-artifacts
           ls downloaded-artifacts/aerospike
           ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-
-      - name: Move artifacts
-        run: |
-          mkdir lib/binding
-          cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/* lib/binding/
         env:
           NEW_VERSION: ${{ inputs.version }}
 
-      - name: check binding
+      - name: Move artifacts
         run: |
-          ls lib/binding;
+          tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+        env:
+          NEW_VERSION: ${{ inputs.version }}
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-      #- name: Change install command for release
-      #  run: node ./scripts/change-install-command.js
+      - name: check binding
+        run:
+          ls lib/binding;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+      - name: Change install command for release
+        run: node ./scripts/change-install-command.js
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       #- name: npm install
       #  run: npm install
@@ -1398,7 +1418,6 @@ jobs:
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
 
       # REUSABLE SECTION 
 
@@ -1411,6 +1430,7 @@ jobs:
           cd ts-test;
           npm install;
           npx tsc;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1421,6 +1441,7 @@ jobs:
           cd ts-test;
           npm install;
           npx tsc;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
 
       - name: Show job status for commit
