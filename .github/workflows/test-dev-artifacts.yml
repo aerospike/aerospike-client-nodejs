@@ -925,6 +925,7 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cd ts-test;
@@ -938,6 +939,7 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cd ts-test;
@@ -1040,6 +1042,7 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         docker logs aerospike;
