@@ -3,7 +3,7 @@ param (
   [Parameter(Mandatory=$true)][string]$NodeLibFile,
   [string]$Configuration = "Release",
   [string]$Platform = "x64",
-  [string]$CClientIni = "..\aerospike-client-c.ini",,
+  [string]$CClientIni = "..\aerospike-client-c.ini",
   [string]$FileHashesIni = "..\aerospike-client-c.sha256",
   [string]$OpenSSLIni = "..\openssl-native.ini",
   [string]$OpenSSLHashesIni = "..\openssl-native.sha256",
