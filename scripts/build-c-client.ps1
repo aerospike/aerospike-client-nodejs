@@ -259,6 +259,6 @@ Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libcrypto-3-x64.dll $Configuration
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libssl-3-x64.dll $Configuration
 
-Copy-Item $LibYamlSrcPath\build\native\lib\v142\$Platform\Release\lua.dll $Configuration
+Copy-Item $LuaSrcPath\build\native\lib\v142\$Platform\Release\lua.dll $Configuration
 
 Write-Verbose "Successfully build aerospike-client-c dependency"
