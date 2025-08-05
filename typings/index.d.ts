@@ -10814,6 +10814,10 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
+     * Object containing name/value labels applied when exporting metrics.
+     */ 
+    labels?: { [key: string]: string };
+    /**
      * Namespace Metrics
      */
     metrics: Array<NamespaceMetrics>;
@@ -10851,10 +10855,6 @@ export interface NamespaceMetrics {
      * Command key busy error count since node was initialized.
      */
     keyBusyCount: number;
-    /**
-     * List of name/value labels that is applied when exporting metrics.
-     */
-    labels?: { [key: string]: string };
     /**
       * Connection latency histogram for a command group.
       * Latency histogram counts are cumulative and not reset on each metrics snapshot interval
