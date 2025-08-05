@@ -96,10 +96,10 @@ jobs:
       run: node ./scripts/change-install-command.js
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
+    #  working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: list version info
       run: |
@@ -121,7 +121,7 @@ jobs:
 
     - name: list version info
       run:
-        jq --arg v "6.3.4" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm ci;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
@@ -149,7 +149,7 @@ jobs:
         NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
     - run: |
-        npm publish;
+        npm publish --provenance;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
