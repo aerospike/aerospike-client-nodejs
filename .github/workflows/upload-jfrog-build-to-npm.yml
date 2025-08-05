@@ -96,6 +96,11 @@ jobs:
       run: node ./scripts/change-install-command.js
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
+    - name: change package name
+      run: |
+        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
     - name: list version info
       run: 
         jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
@@ -138,11 +143,6 @@ jobs:
     #  env:
     #    NEW_VERSION: ${{ inputs.new_version }}
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
-
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
       env:
@@ -150,8 +150,8 @@ jobs:
 
     - run: |
         npm publish;
-      #env:
-      #  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     #- name: npm rc
