@@ -152,14 +152,23 @@ $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVers
 $OpenSSLArchiveHash = $FileHashes[$OpenSSLArchive]
 Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
-# Install C client dependencies package
-# Write-Host "Installing libyaml"
-# $LibYamlVersion = "0.2.5.12"
-# $LibYamlSrcPath = "libyaml.${LibYamlVersion}"
-# $LibYamlArchive = "${LibYamlSrcPath}.zip"
-# $LibYamlUrl = "https://www.nuget.org/api/v2/package/aerospike-client-c-dependencies/${LibYamlVersion}"
-# $LibYamlArchiveHash = $FileHashes[$LibYamlArchive]
-# Install-Package -uri $LibYamlUrl -archive $CClientDepsArchive -outpath $CClientDepsSrcPath -hash $CClientDepsArchiveHash -createdir
+Install LUA package
+Write-Host "Installing lua"
+$LuaVersion = "5.4.6"
+$LuaSrcPath = "lua.${LuaVersion}"
+$LuaArchive = "${LuaSrcPath}.zip"
+$LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
+$LuaArchiveHash = $FileHashes[$LuaArchive]
+Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
+
+Install libyaml package
+Write-Host "Installing libyaml"
+$LibYamlVersion = "0.2.5.12"
+$LibYamlSrcPath = "libyaml.${LibYamlVersion}"
+$LibYamlArchive = "${LibYamlSrcPath}.zip"
+$LibYamlUrl = "https://www.nuget.org/api/v2/package/libyaml/${LibYamlVersion}"
+$LibYamlArchiveHash = $FileHashes[$LibYamlArchive]
+Install-Package -uri $LibYamlUrl -archive $LibYamlArchive -outpath $LibYamlSrcPath -hash $LibYamlArchiveHash -createdir
 
 $ProjectFile = Resolve-Path (Join-Path $CClientSrcPath "vs\aerospike\aerospike.vcxproj")
 $NodePath = Split-Path $NodeLibFile -Parent
@@ -185,6 +194,9 @@ Copy-Item $CClientSrcPath\modules\common\src\include\citrusleaf\*.h $TargetPath\
 New-Item -Path $TargetPath/lib -ItemType "directory" -Force | out-null
 Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\$Configuration\*.lib $TargetPath\lib
 Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike.lib $TargetPath\lib
+Copy-Item $OpenSSLSrcPath\lib\win-$Platform\native\libcrypto.lib $TargetPath\lib
+Copy-Item $OpenSSLSrcPath\lib\win-$Platform\native\libssl.lib $TargetPath\lib
+
 
 # Copy dlls
 New-Item -Path $Configuration -ItemType "directory" -Force | out-null
@@ -192,5 +204,7 @@ Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\$Configuration\*.dll $C
 # Need pthreadVC2.dll (Release) even for Debug configuration!
 Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\Release\pthreadVC2.dll $Configuration
 Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike.dll $Configuration
+Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libcrypto-3-x64.dll $Configuration
+Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libssl-3-x64.dll $Configuration
 
 Write-Verbose "Successfully build aerospike-client-c dependency"
