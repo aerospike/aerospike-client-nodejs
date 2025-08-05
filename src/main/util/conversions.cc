@@ -1669,6 +1669,19 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 
 	Nan::Set(v8_cluster, Nan::New("delayQueueTimeoutCount").ToLocalChecked(), Nan::New((double)as_cluster_get_delay_queue_timeout_count(cluster)));
 
+
+	Local<Object> v8_labels = Nan::New<Object>();
+	if(policy->labels){
+		for (uint32_t i = 0; i < policy->labels->size; ++i)
+		{
+			as_metrics_label* label = (as_metrics_label *) as_vector_get(policy->labels, i);
+
+			Nan::Set(v8_labels, Nan::New(label->name).ToLocalChecked(), Nan::New(label->value).ToLocalChecked());
+
+		}	
+	}
+			
+	Nan::Set(v8_cluster, Nan::New("labels").ToLocalChecked(), v8_labels);
 	Local<Object> v8_event_loop = Nan::New<Object>();
 
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
@@ -1771,17 +1784,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 		Local<Object> v8_ns_metrics = Nan::New<Object>();
 
 		if(!latency){
-
-			Local<Object> v8_labels = Nan::New<Object>();
-			if(policy->labels){
-				for (uint32_t i = 0; i < policy->labels->size; ++i)
-				{
-					as_metrics_label* label = (as_metrics_label *) as_vector_get(policy->labels, i);
-
-					Nan::Set(v8_labels, Nan::New(label->name).ToLocalChecked(), Nan::New(label->value).ToLocalChecked());
-
-				}	
-			}
 
 
 
@@ -1891,7 +1893,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
 			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
 
-			Nan::Set(v8_ns_metrics, Nan::New("labels").ToLocalChecked(), v8_labels);
 			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
@@ -1902,18 +1903,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			Nan::Set(v8_ns_metrics_array, j, v8_ns_metrics);
 		}
 		else{
-
-			Local<Object> v8_labels = Nan::New<Object>();
-			if(policy->labels){
-
-				for (uint32_t i = 0; i < labels->size; ++i)
-				{
-					as_metrics_label* label = (as_metrics_label *) as_vector_get(labels, i);
-
-					Nan::Set(v8_labels, Nan::New(label->name).ToLocalChecked(), Nan::New(label->value).ToLocalChecked());
-
-				}
-			}
 
 
 
@@ -2004,7 +1993,6 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
 			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
 
-			Nan::Set(v8_ns_metrics, Nan::New("labels").ToLocalChecked(), v8_labels);
 			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
 			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
