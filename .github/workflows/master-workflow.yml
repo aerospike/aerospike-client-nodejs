@@ -91,18 +91,18 @@ jobs:
 
 
 #
-##  ff-master-to-stage:
-##    uses: ./.github/workflows/fast-forward-merge.yml
-##    needs: [
-##      get-jfrog-stage-version,
-##      bump-dev-number,
-##      reupload-stage-to-jfrog,
-##      publish-to-npm
-##    ]
-##    with:
-##      ref_to_merge: origin/stage-CICD
-##      base_branch: master-test
-##    secrets: inherit
+#  ff-master-to-stage:
+#    uses: ./.github/workflows/fast-forward-merge.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    with:
+#      ref_to_merge: origin/stage-CICD
+#      base_branch: master-test
+#    secrets: inherit
 #
 #  ff-stage-to-dev:
 #    uses: ./.github/workflows/fast-forward-merge.yml

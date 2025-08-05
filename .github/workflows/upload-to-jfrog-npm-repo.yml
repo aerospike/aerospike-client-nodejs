@@ -104,7 +104,7 @@ jobs:
 
     - name: check binding
       run:
-        cp -r temp ${{ env.NEW_VERSION }}/lib/binding;
+        cp -r temp/* ${{ env.NEW_VERSION }}/lib/binding;
         ls ${{ env.NEW_VERSION }}/lib/binding;
       env:
         NEW_VERSION: ${{ inputs.new_version }}
