@@ -259,6 +259,7 @@ jobs:
         npm install;
         ls lib/binding;
 
+
     #- name: Debug server
     #  run: |
     #    docker ps;
@@ -331,6 +332,8 @@ jobs:
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       shell: pwsh
       run: |
+        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libssl.lib" -Destination "build\Release\libssl.lib" -Force
+        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libcrypto.lib" -Destination "build\Release\libcrypto.lib" -Force
         Remove-Item -Recurse -Force .\build\release\obj
         Remove-Item -Force .\build\release\aerospike.pdb
         Remove-Item -Force .\build\release\aerospike.ipdb
