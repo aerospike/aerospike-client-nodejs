@@ -31,7 +31,7 @@ on:
         type: string
         description: Valid JSON list of Nodejs tags to build the client for
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       version:
         type: string
         required: true
@@ -76,7 +76,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       version:
         type: string
         required: true

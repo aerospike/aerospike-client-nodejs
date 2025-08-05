@@ -7,7 +7,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
 
 jobs:
   run-npm-install-and-require-test:
@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install darkcartpale@6.3.2 --omit-dev;
+          npm install darkcartpale@6.3.3 --omit-dev;
           node -e "const Aerospike = require('darkcartpale'); console.log(Aerospike.policy.replica);"

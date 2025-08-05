@@ -55,11 +55,11 @@ Remove-Item .\lib\binding\node-v127-win32-x64\aerospike.pdb
 Remove-Item .\lib\binding\node-v127-win32-x64\aerospike.ipdb
 Remove-Item .\lib\binding\node-v127-win32-x64\aerospike.iobj
 
-build_nodejs_client v23
-Copy-Item -Recurse build\release\* lib\binding\node-v131-win32-x64
-Remove-Item -Recurse .\lib\binding\node-v131-win32-x64\obj
-Remove-Item .\lib\binding\node-v131-win32-x64\aerospike.pdb
-Remove-Item .\lib\binding\node-v131-win32-x64\aerospike.ipdb
-Remove-Item .\lib\binding\node-v131-win32-x64\aerospike.iobj
+build_nodejs_client v24
+Copy-Item -Recurse build\release\* lib\binding\node-v137-win32-x64
+Remove-Item -Recurse .\lib\binding\node-v137-win32-x64\obj
+Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.pdb
+Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.ipdb
+Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.iobj
 
-nvm use v23.0.0
+nvm use v24.0.0
