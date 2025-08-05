@@ -183,7 +183,7 @@ $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVers
 
 Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
-Install LUA package
+# Install LUA package
 Write-Host "Installing lua"
 
 # Add ini file implementation later
@@ -199,7 +199,7 @@ $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
 
 Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash "D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034"	 -createdir
 
-Install libyaml package
+#Install libyaml package
 Write-Host "Installing libyaml"
 
 # Add ini file implementation later
@@ -259,6 +259,6 @@ Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libcrypto-3-x64.dll $Configuration
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libssl-3-x64.dll $Configuration
 
-Copy-Item $LuaSrcPath\build\native\lib\v142\$Platform\Release\lua.dll $Configuration
+Copy-Item $LuaSrcPath\build\native\bin\$Platform\v143\Release\lua.dll $Configuration
 
 Write-Verbose "Successfully build aerospike-client-c dependency"

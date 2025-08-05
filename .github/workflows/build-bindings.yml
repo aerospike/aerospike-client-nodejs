@@ -235,23 +235,23 @@ jobs:
       run: |
         brew install libyaml
 
-    - name: Replace AdditionalLibraryDirectories line in props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        $path = "props\nodejs.props"
-        $content = Get-Content $path -Raw
-        $pattern = '<AdditionalLibraryDirectories>.*?</AdditionalLibraryDirectories>'
-        $basePath = (Resolve-Path .).Path
-        $replacement = "<AdditionalLibraryDirectories>`$(NodejsPath);$basePath\packages\openssl-native.3.0.16\lib\win-x64\native;`%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>"
-        $updated = [System.Text.RegularExpressions.Regex]::Replace($content, $pattern, $replacement, 'Singleline')
-        Set-Content $path $updated
-      working-directory: aerospike-client-c/vs
-
-    - name: Print modified .props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        Get-Content "props\nodejs.props"
-      working-directory: aerospike-client-c/vs
+    #- name: Replace AdditionalLibraryDirectories line in props file
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    $path = "props\nodejs.props"
+    #    $content = Get-Content $path -Raw
+    #    $pattern = '<AdditionalLibraryDirectories>.*?</AdditionalLibraryDirectories>'
+    #    $basePath = (Resolve-Path .).Path
+    #    $replacement = "<AdditionalLibraryDirectories>`$(NodejsPath);$basePath\packages\openssl-native.3.0.16\lib\win-x64\native;`%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>"
+    #    $updated = [System.Text.RegularExpressions.Regex]::Replace($content, $pattern, $replacement, 'Singleline')
+    #    Set-Content $path $updated
+    #  working-directory: aerospike-client-c/vs
+    #
+    #- name: Print modified .props file
+    #  if: ${{ inputs.platform-tag == 'win_amd64' }}
+    #  run: |
+    #    Get-Content "props\nodejs.props"
+    #  working-directory: aerospike-client-c/vs
 
     - name: Build Binding
       run: |
