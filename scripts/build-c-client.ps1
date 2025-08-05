@@ -133,13 +133,22 @@ function Build-Project {
 
 $CClientCfg = Parse-IniFile $CClientIni
 Write-Debug ($CClientCfg | Out-String)
+
 $OpenSSLCfg = Parse-IniFile $OpenSSLIni
+Write-Debug ($OpenSSLCfg | Out-String)
+
 $LuaCfg = Parse-IniFile $LuaIni
+Write-Debug ($LuaCfg | Out-String)
+
 $LibYamlCfg = Parse-IniFile $LibYamlIni
+Write-Debug ($LibYamlCfg | Out-String)
 
 $FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
+Write-Debug ($FileHashes | Out-String)
 $OpenSSlHashes = Parse-IniFile $OpenSSLIni -sep "  " -swap
+Write-Debug ($OpenSSlHashes | Out-String)
 $LuaHashes = Parse-IniFile $LuaIni -sep "  " -swap
+Write-Debug ($LibYamlHashes | Out-String)
 $LibYamlHashes = Parse-IniFile $LibYamlIni -sep "  " -swap
 Write-Debug ($FileHashes | Out-String)
 
@@ -159,7 +168,7 @@ Install-Package -uri $CClientDepsUrl -archive $CClientDepsArchive -outpath $CCli
 # Install C openssl package
 Write-Host "Installing Aerospike C client dependencies"
 $OpenSSLVersion = "3.0.16"
-$OpenSSLSrcPath = $OpenSSLCfg["OPENSSL_DEPS_VERSION"]
+$OpenSSLSrcPath = $OpenSSLCfg["OPENSSL_VERSION"]
 $OpenSSLArchive = "${OpenSSLSrcPath}.zip"
 $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVersion}"
 $OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
@@ -168,7 +177,7 @@ Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPa
 Install LUA package
 Write-Host "Installing lua"
 $LuaVersion = "5.4.6"
-$LuaSrcPath = "lua.${LuaVersion}"
+$LuaSrcPath = $LuaCfg["LUA_VERSION"]
 $LuaArchive = "${LuaSrcPath}.zip"
 $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
 $LuaArchiveHash = $LuaHashes[$LuaArchive]
@@ -177,7 +186,7 @@ Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $Lu
 Install libyaml package
 Write-Host "Installing libyaml"
 $LibYamlVersion = "0.2.5.12"
-$LibYamlSrcPath = "libyaml.${LibYamlVersion}"
+$LibYamlSrcPath = $LibYamlCfg["LIBYAML_VERSION"]
 $LibYamlArchive = "${LibYamlSrcPath}.zip"
 $LibYamlUrl = "https://www.nuget.org/api/v2/package/libyaml/${LibYamlVersion}"
 $LibYamlArchiveHash = $LibYamlHashes[$LibYamlArchive]
