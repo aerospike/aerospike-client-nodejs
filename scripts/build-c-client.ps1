@@ -170,29 +170,49 @@ Install-Package -uri $CClientDepsUrl -archive $CClientDepsArchive -outpath $CCli
 
 # Install C openssl package
 Write-Host "Installing Aerospike C client dependencies"
-$OpenSSLVersion = $OpenSSLCfg["OPENSSL_VERSION"]
+
+# Add ini file implementation later
+#$OpenSSLVersion = $OpenSSLCfg["OPENSSL_VERSION"]
+$OpenSSLVersion = "3.0.16"
 $OpenSSLSrcPath = "openssl-native.${OpenSSLVersion}"
 $OpenSSLArchive = "${OpenSSLSrcPath}.zip"
 $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVersion}"
-$OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
+
+# Add hash file implementation later
+# $OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
+
 Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
-Install LUA package
+# Install LUA package
 Write-Host "Installing lua"
-$LuaVersion = $LuaCfg["OPENSSL_VERSION"]
+
+# Add ini file implementation later
+# $LuaVersion = $LuaCfg["OPENSSL_VERSION"]
+
+$LuaVersion = "5.4.6"
 $LuaSrcPath = "lua.${LuaVersion}"
 $LuaArchive = "${LuaSrcPath}.zip"
 $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
-$LuaArchiveHash = $LuaHashes[$LuaArchive]
+
+# Add hash file implementation later
+# $LuaArchiveHash = $LuaHashes[$LuaArchive]
+
 Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash "D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034"	 -createdir
 
-Install libyaml package
+#Install libyaml package
 Write-Host "Installing libyaml"
-$LibYamlVersion = $LibYamlCfg["LIBYAML_VERSION"]
+
+# Add ini file implementation later
+# $LibYamlVersion = $LibYamlCfg["LIBYAML_VERSION"]
+
+$LibYamlVersion = "0.2.5.12"
 $LibYamlSrcPath = "libyaml.${LibYamlVersion}"
 $LibYamlArchive = "${LibYamlSrcPath}.zip"
 $LibYamlUrl = "https://www.nuget.org/api/v2/package/libyaml/${LibYamlVersion}"
-$LibYamlArchiveHash = $LibYamlHashes[$LibYamlArchive]
+
+# Add hash file implementation later
+# #$LibYamlArchiveHash = $LibYamlHashes[$LibYamlArchive]
+
 Install-Package -uri $LibYamlUrl -archive $LibYamlArchive -outpath $LibYamlSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
 $ProjectFile = Resolve-Path (Join-Path $CClientSrcPath "vs\aerospike\aerospike.vcxproj")
@@ -239,6 +259,6 @@ Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libcrypto-3-x64.dll $Configuration
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libssl-3-x64.dll $Configuration
 
-Copy-Item $LibYamlSrcPath\build\native\lib\v142\$Platform\Release\lua.dll $Configuration
+Copy-Item $LuaSrcPath\build\native\bin\$Platform\v143\Release\lua.dll $Configuration
 
 Write-Verbose "Successfully build aerospike-client-c dependency"
