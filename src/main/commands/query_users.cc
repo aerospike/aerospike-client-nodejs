@@ -43,6 +43,7 @@ NAN_METHOD(AerospikeClient::QueryUsers)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;	
 	as_status status;
 	as_user** users = NULL;
 	int users_size = 0;
@@ -54,10 +55,11 @@ NAN_METHOD(AerospikeClient::QueryUsers)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	status = aerospike_query_users(client->as, &cmd->err, &policy, &users, &users_size);
+	as_v8_debug(log, "Querying all users");
+	status = aerospike_query_users(client->as, &cmd->err, p_policy, &users, &users_size);
 	
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

@@ -38,8 +38,8 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 	TYPE_CHECK_REQ(info[1], IsArray, "privileges must be an array");
 	TYPE_CHECK_OPT(info[2], IsObject, "Policy must be an object");
 	TYPE_CHECK_OPT(info[3], IsArray, "whitelist must be an array");
-	TYPE_CHECK_OPT(info[4], IsNumber, "read_quota must be a number");
-	TYPE_CHECK_OPT(info[5], IsNumber, "write_quota must be a number");
+	TYPE_CHECK_OPT(info[4], IsNumber, "read quota must be a number");
+	TYPE_CHECK_OPT(info[5], IsNumber, "write quota must be a number");
 	TYPE_CHECK_REQ(info[6], IsFunction, "Callback must be a function");
 
 	AerospikeClient *client =
@@ -48,6 +48,7 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char * role = NULL;
 	as_privilege** privileges = NULL;
 	int privileges_size = 0;
@@ -69,13 +70,13 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 		Local<Array> privilege_array = info[1].As<Array>();
 		privileges_size = privilege_array->Length();
 		if(privileges_size != 0){
-			if (privileges_from_jsarray(&privileges, privileges_size, privilege_array, log) !=
+			if (privileges_from_jsarray(&privileges, &privileges_size, privilege_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Privileges array invalid");
 				goto Cleanup;
 			}
 		}
-	}
+	}	
 
 	if (info[2]->IsObject()) {
 		if (adminpolicy_from_jsobject(&policy, info[2].As<Object>(), log) !=
@@ -83,15 +84,16 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	if(info[3]->IsArray()){
 		Local<Array> whitelist_array = info[3].As<Array>();
 		whitelist_size = whitelist_array->Length();
 		if(whitelist_size != 0){
-			if (string_from_jsarray(&whitelist, whitelist_size, whitelist_array, log) !=
+			if (string_from_jsarray(&whitelist, &whitelist_size, whitelist_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Whitelist array invalid");
 				goto Cleanup;
 			}
 		}
@@ -105,8 +107,8 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 		write_quota = Nan::To<int>(info[5]).FromJust();
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	status = aerospike_create_role_quotas(client->as, &cmd->err, &policy, role,
+	as_v8_debug(log, "Adding role=%s", role);
+	status = aerospike_create_role_quotas(client->as, &cmd->err, p_policy, role,
 					   privileges, privileges_size, const_cast<const char**>(whitelist),
 					   whitelist_size, read_quota, write_quota);
 
@@ -114,7 +116,8 @@ NAN_METHOD(AerospikeClient::RoleCreate)
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:
@@ -123,17 +126,17 @@ Cleanup:
 		free(role);
 	}
 	int i;
-	for(i = 0; i < privileges_size; i++) {
-		delete privileges[i];
-	}
 	if(privileges){
+		for(i = 0; i < privileges_size; i++) {
+			delete privileges[i];
+		}
 		delete [] privileges;
 	}
-	for(i = 0; i < whitelist_size; i++){
-		free(whitelist[i]);
-	}
 	if(whitelist){
-		free(whitelist);
+		for(i = 0; i < whitelist_size; i++){
+			free(whitelist[i]);
+		}
+		delete [] whitelist;
 	}
 
 

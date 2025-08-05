@@ -1,0 +1,127 @@
+name: Upload to JFrog
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      new_version:
+        type: string
+        required: false
+      jfrog-repo-name:
+        type: string
+        required: false
+        default: ${{ vars.JFROG_REPO_NAME }}
+      #oidc-provider:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: gh-aerospike-clients
+      #oidc-audience:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: aerospike/clients
+    #secrets:
+    #  JFROG_PLATFORM_URL:
+    #    required: true
+
+jobs:
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    env:
+      JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
+    runs-on: ubuntu-22.04
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download from JFrog
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+      env:
+        VERSION: ${{ inputs.new_version }}
+
+    - name: list version info
+      run: 
+        ls aerospike/;
+        ls aerospike/${{ env.VERSION }}/;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        mkdir lib/binding;
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+
+    - name: list version info
+      run: 
+        npm pack;
+        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
+        # write script to change version number
+
+    - name: Upload passing builds to JFrog Nodejs repo
+      # Source path must be in quotes if it contains an asterisk
+      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+
+    - name: Publish build info
+      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
+
+    # Required to run sponge
+    - run: sudo apt install -y moreutils
+
+    # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
+    - name: Create file spec for release bundle
+      run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ inputs.new_version }}"' | sponge releasebundle-filespec.json
+      working-directory: .github/workflows
+      shell: bash
+
+    - name: Create release bundle from JFrog build
+      # Not the same name as in proxy/pom.xml
+      # But that name doesn't specify the language,
+      # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
+      # Signing key only signs release bundle and not the artifacts associated with it
+      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
+      working-directory: .github/workflows
+
+    - name: Promote release bundle to DEV stage
+      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
+      working-directory: .github/workflows

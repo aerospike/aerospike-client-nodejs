@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { BasePolicy as BP, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from 'aerospike';
+import Aerospike, { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from 'aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';
@@ -47,6 +47,18 @@ context('Client Policies #noserver', function () {
     })
   })
 
+  describe('AdminPolicy', function () {
+    describe('new AdminPolicy', function () {
+      it('sets the policy values from a value object', function () {
+        const subject: AdminPolicy = new Aerospike.AdminPolicy({
+          timeout: 1400,
+        })
+
+        expect(subject.timeout).to.equal(1400)
+      })
+    })
+  })
+  
   describe('ApplyPolicy', function () {
     describe('new ApplyPolicy', function () {
       it('sets the policy values from a value object', function () {

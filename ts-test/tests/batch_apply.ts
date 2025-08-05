@@ -79,7 +79,7 @@ describe('client.batchApply()', function () {
       client.batchApply(batchRecords, udf, policy, function (err?: Error, results?: BatchResult[]) {
         expect(err).not.to.be.ok
         expect(results?.length).to.equal(5)
-        results?.forEach(function (result: BatchResult) {
+        results?.forEach(function (result: any) {
           // console.log(util.inspect(result, true, 10, true))
           expect(result.status).to.equal(Aerospike.status.OK)
           expect(result.record.bins.SUCCESS).to.eql([1, 2, 3])

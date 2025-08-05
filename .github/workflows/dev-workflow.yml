@@ -35,10 +35,25 @@ jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
-      test-with-server-release,
-      bump-dev-number
+      bump-dev-number,
+      build-bindings
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      #new_version: 6.2.1-dev.61
+    secrets: inherit
+
+  reupload-stage-to-jfrog-npm-repo:
+    name: Reupload package to JFrog NPM
+    needs: [
+      bump-dev-number,
+      build-bindings,
+      upload-to-jfrog,
+    ]
+    uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
+    with:
+      #new_version: 6.2.1-rc.20
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      pipeline-stage: 'dev'
     secrets: inherit

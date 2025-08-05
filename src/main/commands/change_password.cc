@@ -46,6 +46,7 @@ NAN_METHOD(AerospikeClient::ChangePassword)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;	
 	char *user_name = NULL;
 	char *password = NULL;
 	char *current_user = NULL;
@@ -73,6 +74,7 @@ NAN_METHOD(AerospikeClient::ChangePassword)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	if(info[3]->IsString()){
@@ -83,21 +85,16 @@ NAN_METHOD(AerospikeClient::ChangePassword)
 		goto Cleanup;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	if(strcmp(current_user, "admin")){
-		status = aerospike_change_password(client->as, &cmd->err, &policy, user_name,
-					   password);
-	}
-	else{
-		status = aerospike_set_password(client->as, &cmd->err, &policy, user_name,
-					   password);
-	}
+	as_v8_debug(log, "Changing password for user_name=%s", user_name);
+	status = aerospike_change_password(client->as, &cmd->err, p_policy, user_name,
+					password);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:

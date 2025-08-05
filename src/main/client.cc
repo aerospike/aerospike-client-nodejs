@@ -52,6 +52,9 @@ AerospikeClient::~AerospikeClient() {}
  */
 NAN_METHOD(AerospikeClient::New)
 {
+	
+
+
 	AerospikeClient *client = new AerospikeClient();
 	client->as = (aerospike *)cf_malloc(sizeof(aerospike));
 	client->log = (LogInfo *)cf_malloc(sizeof(LogInfo));
@@ -65,6 +68,7 @@ NAN_METHOD(AerospikeClient::New)
 	as_config config;
 	as_config_init(&config);
 
+
 	Local<Object> v8Config = info[0].As<Object>();
 
 	Local<Value> v8LogInfo =
@@ -75,7 +79,11 @@ NAN_METHOD(AerospikeClient::New)
 
 	int result = config_from_jsobject(&config, v8Config, client->log);
 	if (result != AS_NODE_PARAM_OK) {
+		cf_free(client->as);
+		cf_free(client->log);
+		delete client;
 		Nan::ThrowError("Invalid client configuration");
+		return;
 	}
 
 	aerospike_init(client->as, &config);
@@ -120,11 +128,11 @@ NAN_METHOD(AerospikeClient::Close)
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
 	events_callback_close(&client->as->config);
+	
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 
-	free(client->as);
-	free(client->log);
+	cf_free(client->log);
 
 	client->closed = true;
 }
@@ -264,7 +272,8 @@ Local<Value> AerospikeClient::NewInstance(Local<Object> config)
 	Nan::TryCatch try_catch;
 	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
 	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
+		Nan::ThrowError("Error instantiating Client in C++ addon");
+		return Nan::Null();
 	}
 	return scope.Escape(instance.ToLocalChecked());
 }
@@ -337,6 +346,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "scanPages", ScanPages);
 	Nan::SetPrototypeMethod(tpl, "scanBackground", ScanBackground);
 	Nan::SetPrototypeMethod(tpl, "selectAsync", SelectAsync);
+	Nan::SetPrototypeMethod(tpl, "setPassword", SetPassword);
 	Nan::SetPrototypeMethod(tpl, "setupEventCb", SetupEventCb);
 	Nan::SetPrototypeMethod(tpl, "setXDRFilter", SetXDRFilter);
 	Nan::SetPrototypeMethod(tpl, "transactionAbort", TransactionAbort);
@@ -346,6 +356,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "udfRemove", UDFRemove);
 	Nan::SetPrototypeMethod(tpl, "updateLogging", SetLogLevel);
 	Nan::SetPrototypeMethod(tpl, "userCreate", UserCreate);
+	Nan::SetPrototypeMethod(tpl, "userCreatePKI", UserCreatePKI);
 	Nan::SetPrototypeMethod(tpl, "userDrop", UserDrop);
 
 	constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());

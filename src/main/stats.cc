@@ -106,6 +106,14 @@ static Local<Object> build_node_stats(as_node_stats *node)
 			 build_conn_stats(&node->sync));
 	Nan::Set(stats, Nan::New("asyncConnections").ToLocalChecked(),
 			 build_conn_stats(&node->async));
+	Nan::Set(stats, Nan::New("pipelineConnections").ToLocalChecked(),
+			 build_conn_stats(&node->pipeline));
+	Nan::Set(stats, Nan::New("errorCount").ToLocalChecked(),
+			 Nan::New(static_cast<double>(node->error_count)));
+	Nan::Set(stats, Nan::New("timeoutCount").ToLocalChecked(),
+			 Nan::New(static_cast<double>(node->timeout_count)));
+	Nan::Set(stats, Nan::New("keyBusyCount").ToLocalChecked(),
+			 Nan::New(static_cast<double>(node->key_busy_count)));
 	return stats;
 }
 

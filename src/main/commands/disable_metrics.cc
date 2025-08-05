@@ -21,6 +21,7 @@
 
 extern "C" {
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_status.h>
 }
 
 using namespace v8;
@@ -34,7 +35,16 @@ NAN_METHOD(AerospikeClient::DisableMetrics)
 	AsyncCommand *cmd =
 		new AsyncCommand("DisableMetrics", client, info[0].As<Function>());
 
-	if (aerospike_disable_metrics(client->as, &cmd->err) != AEROSPIKE_OK) {
+	LogInfo *log = cmd->log;
+
+	aerospike_disable_metrics(client->as, &cmd->err);
+
+	if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
+		as_v8_warn(log, cmd->err.message);
+		as_error_reset(&cmd->err);
+	}
+
+	if (cmd->err.code != AEROSPIKE_OK) {
 		cmd->ErrorCallback(&cmd->err);
 		goto Cleanup;
 	}
