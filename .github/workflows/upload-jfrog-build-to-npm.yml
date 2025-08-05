@@ -121,7 +121,7 @@ jobs:
 
     - name: list version info
       run: 
-        jq --arg v "6.3.2s" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        jq --arg v "6.3.2" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm ci;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
