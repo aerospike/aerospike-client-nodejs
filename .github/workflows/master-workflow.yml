@@ -49,11 +49,11 @@ jobs:
 
   verify-npm-install:
     name: verify npm install works correctly
-    #needs: [
-    #  get-jfrog-stage-version,
-    #  bump-dev-number,
-    #  publish-to-npm
-    #]
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+      publish-to-npm
+    ]
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
