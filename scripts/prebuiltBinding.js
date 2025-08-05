@@ -10,61 +10,61 @@ const rm = util.promisify(fs.rm)
 
   if (platform === 'darwin') {
     console.log('Darwin binaries')
-    await rm('lib/binding/node-v131-win32-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-win32-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-win32-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-win32-x64', { recursive: true, force: true })
 
     if (arch === 'x64') {
-      await rm('lib/binding/node-v131-darwin-arm64', { recursive: true, force: true })
+      await rm('lib/binding/node-v137-darwin-arm64', { recursive: true, force: true })
       await rm('lib/binding/node-v127-darwin-arm64', { recursive: true, force: true })
       await rm('lib/binding/node-v115-darwin-arm64', { recursive: true, force: true })
     } else {
-      await rm('lib/binding/node-v131-darwin-x64', { recursive: true, force: true })
+      await rm('lib/binding/node-v137-darwin-x64', { recursive: true, force: true })
       await rm('lib/binding/node-v127-darwin-x64', { recursive: true, force: true })
       await rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
     }
 
-    await rm('lib/binding/node-v131-linux-arm64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-linux-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-arm64', { recursive: true, force: true })
-    await rm('lib/binding/node-v131-linux-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-x64', { recursive: true, force: true })
   } else if (platform === 'win32') {
     console.log('Windows binaries')
-    await rm('lib/binding/node-v131-darwin-arm64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-darwin-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-darwin-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-darwin-arm64', { recursive: true, force: true })
-    await rm('lib/binding/node-v131-darwin-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-darwin-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-darwin-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
 
-    await rm('lib/binding/node-v131-linux-arm64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-linux-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-arm64', { recursive: true, force: true })
-    await rm('lib/binding/node-v131-linux-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-linux-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-linux-x64', { recursive: true, force: true })
   } else {
     console.log('Linux binaries')
-    await rm('lib/binding/node-v131-win32-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-win32-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-win32-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-win32-x64', { recursive: true, force: true })
 
     if (arch === 'x64') {
-      await rm('lib/binding/node-v131-linux-arm64', { recursive: true, force: true })
+      await rm('lib/binding/node-v137-linux-arm64', { recursive: true, force: true })
       await rm('lib/binding/node-v127-linux-arm64', { recursive: true, force: true })
       await rm('lib/binding/node-v115-linux-arm64', { recursive: true, force: true })
     } else {
-      await rm('lib/binding/node-v131-linux-x64', { recursive: true, force: true })
+      await rm('lib/binding/node-v137-linux-x64', { recursive: true, force: true })
       await rm('lib/binding/node-v127-linux-x64', { recursive: true, force: true })
       await rm('lib/binding/node-v115-linux-x64', { recursive: true, force: true })
     }
 
-    await rm('lib/binding/node-v131-darwin-arm64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-darwin-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-darwin-arm64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-darwin-arm64', { recursive: true, force: true })
-    await rm('lib/binding/node-v131-darwin-x64', { recursive: true, force: true })
+    await rm('lib/binding/node-v137-darwin-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v127-darwin-x64', { recursive: true, force: true })
     await rm('lib/binding/node-v115-darwin-x64', { recursive: true, force: true })
   }
