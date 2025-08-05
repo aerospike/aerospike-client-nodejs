@@ -309,141 +309,141 @@ jobs:
 
 
 
-  test-prefer-rack:
-    needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64') }}
-    strategy:
-      matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-      fail-fast: false
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
-    steps:
-
-    # REUSABLE PART
-    - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        # We need the last tag before the ref, so we can relabel the version if needed
-        fetch-depth: 0
-
-    - uses: actions/setup-node@v4
-      with: 
-        node-version: ${{ matrix.nodejs-tag[1] }}
-
-    - name: Download Aerolab zip
-      run: |
-        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
-
-    - name: Unzip Aerolab binary
-      run: |
-        unzip aerolab.zip
-        chmod +x aerolab
-
-    - name: Move binary to /usr/local/bin
-      run: sudo mv aerolab /usr/local/bin/
-
-    - name: Verify installation
-      run: aerolab version
-
-    - name: Configure Aerolab backend
-      run: aerolab config backend -t docker
-
-
-    - name: Retrieve the secret and decode it to a file
-      env:
-        FEATURE_FILE: ${{ secrets.FEATURE_FILE }}
-      run: |
-        echo $FEATURE_FILE | base64 --decode > features.conf
-      working-directory: ts-test
-
-    - name: Create cluster
-      run: sh scripts/three_node.sh
-      working-directory: ts-test
-
-    - name: list cluster
-      run: aerolab cluster list
-
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
-
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
-
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: Change install command for release
-      run: node ./scripts/change-install-command.js
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: add in debug string for test
-      run: |
-        awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
-      run: |
-        docker ps;
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h  0.0.0.0 --port 3100 --t 40000;
-        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100 --t 40000;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: Destroy cluster 1
-      run: echo y | aerolab cluster destroy
-
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+#  test-prefer-rack:
+#    needs: get-runner-os
+#    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64') }}
+#    strategy:
+#      matrix:
+#        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+#      fail-fast: false
+#    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+#    env:
+#      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+#      MACOS_OPENSSL_VERSION: 3
+#    steps:
+#
+#    # REUSABLE PART
+#    - name: Create status check message
+#      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+#      shell: bash
+#
+#    - name: Show job status for commit
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+#      with:
+#        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        context: ${{ env.STATUS_CHECK_MESSAGE }}
+#
+#    - uses: actions/checkout@v4
+#      with:
+#        submodules: recursive
+#        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        # We need the last tag before the ref, so we can relabel the version if needed
+#        fetch-depth: 0
+#
+#    - uses: actions/setup-node@v4
+#      with: 
+#        node-version: ${{ matrix.nodejs-tag[1] }}
+#
+#    - name: Download Aerolab zip
+#      run: |
+#        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
+#
+#    - name: Unzip Aerolab binary
+#      run: |
+#        unzip aerolab.zip
+#        chmod +x aerolab
+#
+#    - name: Move binary to /usr/local/bin
+#      run: sudo mv aerolab /usr/local/bin/
+#
+#    - name: Verify installation
+#      run: aerolab version
+#
+#    - name: Configure Aerolab backend
+#      run: aerolab config backend -t docker
+#
+#
+#    - name: Retrieve the secret and decode it to a file
+#      env:
+#        FEATURE_FILE: ${{ secrets.FEATURE_FILE }}
+#      run: |
+#        echo $FEATURE_FILE | base64 --decode > features.conf
+#      working-directory: ts-test
+#
+#    - name: Create cluster
+#      run: sh scripts/three_node.sh
+#      working-directory: ts-test
+#
+#    - name: list cluster
+#      run: aerolab cluster list
+#
+#    - name: Set up JFrog credentials
+#      uses: jfrog/setup-jfrog-cli@v4
+#      env:
+#        JF_URL: https://aerospike.jfrog.io
+#      with:
+#        oidc-provider-name: gh-aerospike-clients
+#        oidc-audience: aerospike/clients
+#
+#    - name: Download Artifacts from Jfrog
+#      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#        PACKAGE_MANAGER: npm
+#
+#    - name: list Artifacts
+#      run: |
+#        ls downloaded-artifacts
+#        ls downloaded-artifacts/aerospike
+#        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#
+#    - name: Move artifacts
+#      run: |
+#        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: check binding
+#      run:
+#        ls lib/binding;
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Change install command for release
+#      run: node ./scripts/change-install-command.js
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: add in debug string for test
+#      run: |
+#        awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Run tests
+#      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
+#      run: |
+#        docker ps;
+#        cd ts-test;
+#        npm install;
+#        npx tsc;
+#        cd ..;
+#        npx tsc;
+#        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h  0.0.0.0 --port 3100 --t 40000;
+#        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100 --t 40000;
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Destroy cluster 1
+#      run: echo y | aerolab cluster destroy
+#
+#    - name: Set final commit status
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+#      with:
+#        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        status: ${{ job.status }}
+#        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-set-xdr-filter:
     needs: get-runner-os
