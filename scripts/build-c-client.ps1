@@ -132,25 +132,28 @@ function Build-Project {
 }
 
 $CClientCfg = Parse-IniFile $CClientIni
-Write-Debug ($CClientCfg | Out-String)
+Write-Host ($CClientCfg | Out-String)
 
 $OpenSSLCfg = Parse-IniFile $OpenSSLIni
-Write-Debug ($OpenSSLCfg | Out-String)
+Write-Host ($OpenSSLCfg | Out-String)
 
 $LuaCfg = Parse-IniFile $LuaIni
-Write-Debug ($LuaCfg | Out-String)
+Write-Host ($LuaCfg | Out-String)
 
 $LibYamlCfg = Parse-IniFile $LibYamlIni
-Write-Debug ($LibYamlCfg | Out-String)
+Write-Host ($LibYamlCfg | Out-String)
 
 $FileHashes = Parse-IniFile $FileHashesIni -sep "  " -swap
-Write-Debug ($FileHashes | Out-String)
+Write-Host ($FileHashes | Out-String)
+
 $OpenSSlHashes = Parse-IniFile $OpenSSLIni -sep "  " -swap
-Write-Debug ($OpenSSlHashes | Out-String)
+Write-Host ($OpenSSlHashes | Out-String)
+
 $LuaHashes = Parse-IniFile $LuaIni -sep "  " -swap
-Write-Debug ($LibYamlHashes | Out-String)
+Write-Host ($LibYamlHashes | Out-String)
+
 $LibYamlHashes = Parse-IniFile $LibYamlIni -sep "  " -swap
-Write-Debug ($FileHashes | Out-String)
+Write-Host ($FileHashes | Out-String)
 
 # C client path
 Write-Host "Setting Aerospike C client source path"
