@@ -137,10 +137,10 @@ describe('client.batchRead()', function () {
       { key: new Key(helper.namespace, helper.set, 'test/batch_read/5'), readAllBins: false }
     ]
 
-    client.batchRead(batchRecords, function (err?: AerospikeError, results?: BatchResult[]) {
+    client.batchRead(batchRecords, function (err?: AerospikeError, results?: any) {
       expect(err).not.to.be.ok
       expect(results?.length).to.equal(3)
-      results?.forEach(function (result: BatchResult) {
+      results?.forEach(function (result: any) {
         const record = result.record
         switch (record.key.key) {
           case 'test/batch_read/1':
@@ -174,7 +174,7 @@ describe('client.batchRead()', function () {
 
         return client.batchRead(batch, policy)
           .then(results => {
-            const bins = results[0].record.bins
+            const bins: any = results[0].record.bins
             expect(bins.i).to.be.a('number')
             expect(bins.s).to.be.a('string')
             expect(bins.l).to.be.instanceof(Buffer)

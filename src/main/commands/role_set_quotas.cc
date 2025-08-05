@@ -46,6 +46,7 @@ NAN_METHOD(AerospikeClient::RoleSetQuotas)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char * role = NULL;
 	int read_quota = 0;
 	int write_quota = 0;
@@ -73,10 +74,11 @@ NAN_METHOD(AerospikeClient::RoleSetQuotas)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Setting quota for role=%s", role);
-	status = aerospike_set_quotas(client->as, &cmd->err, &policy, role, read_quota, write_quota);
+	status = aerospike_set_quotas(client->as, &cmd->err, p_policy, role, read_quota, write_quota);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

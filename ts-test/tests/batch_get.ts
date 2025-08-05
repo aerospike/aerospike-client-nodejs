@@ -45,8 +45,8 @@ describe('client.batchGet()', function () {
         return client.batchGet(keys)
           .then((results: BatchResult[]) => {
             expect(results.length).to.equal(numberOfRecords)
-            results.forEach((result?: BatchResult) => {
-              const putRecord: AerospikeRecord | undefined = records.find((record: AerospikeRecord) => record.key.key === result?.record.key.key)
+            results.forEach((result?: any) => {
+              const putRecord: any = records.find((record: AerospikeRecord) => record.key.key === result?.record.key?.key)
               expect(result?.status).to.equal(Aerospike.status.OK)
               expect(result?.record.bins).to.eql(putRecord?.bins)
             })

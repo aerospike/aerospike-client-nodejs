@@ -44,6 +44,7 @@ NAN_METHOD(AerospikeClient::UserDrop)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char *user_name = NULL;
 	as_status status;
 	
@@ -61,10 +62,11 @@ NAN_METHOD(AerospikeClient::UserDrop)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Droping user=%s", user_name);
-	status = aerospike_drop_user(client->as, &cmd->err, &policy, user_name);
+	status = aerospike_drop_user(client->as, &cmd->err, p_policy, user_name);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

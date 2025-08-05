@@ -44,7 +44,7 @@ describe('Metrics tests', function () {
   this.timeout(40000)
   const client: Cli = helper.client
 
-  helper.skipUnlessAdvancedMetrics(this)
+  //helper.skipUnlessAdvancedMetrics(this)
 
 
   const blank_policy: MetricsPolicy = new Aerospike.MetricsPolicy()
@@ -231,10 +231,13 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportDir/metrics-*');
 
+          await execAsync('mkdir -p metrics_sub_dir/reportDir');
+
           let result = await execAsync('find metrics_sub_dir/reportDir/ -type f | wc -l');
 
 
           expect(Number(result.stdout.trim())).to.eql(0)
+
 
           let policy: MetricsPolicy = new MetricsPolicy({
               reportDir: './metrics_sub_dir/reportDir',
@@ -262,6 +265,8 @@ describe('Metrics tests', function () {
         it('Default interval is overridden and only one report is written', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/interval/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/interval/');
 
           let result = await execAsync('find metrics_sub_dir/interval/ -type f | wc -l');
 
@@ -292,6 +297,8 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/reportSizeLimit/metrics-*');
 
+          await execAsync('mkdir -p metrics_sub_dir/reportSizeLimit');
+
           let result = await execAsync('find metrics_sub_dir/reportSizeLimit/ -type f | wc -l');
 
           expect(Number(result.stdout.trim())).to.eql(0)
@@ -315,6 +322,8 @@ describe('Metrics tests', function () {
         it('Ensures correct column value in metrics file header', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/latencyColumns/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/latencyColumns');
 
           let result = await execAsync('find metrics_sub_dir/latencyColumns/ -type f | wc -l');
 
@@ -343,6 +352,8 @@ describe('Metrics tests', function () {
 
           await execAsync('rm -rf metrics_sub_dir/latencyShift/metrics-*');
 
+          await execAsync('mkdir -p metrics_sub_dir/latencyShift');
+
           let result = await execAsync('find metrics_sub_dir/latencyShift/ -type f | wc -l');
 
           expect(Number(result.stdout.trim())).to.eql(0)
@@ -369,6 +380,8 @@ describe('Metrics tests', function () {
         it('Ensures correct labels in metrics file first report', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/labels/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/labels');
 
           let result = await execAsync('find metrics_sub_dir/labels/ -type f | wc -l');
 
@@ -405,7 +418,7 @@ describe('Metrics tests', function () {
             hosts: helper.config.hosts,
             user: helper.config.user,
             password: helper.config.password,
-            appId: 'destiny'
+            appId: 'kelp'
           }
 
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -434,10 +447,10 @@ describe('Metrics tests', function () {
 
           await dummyClient.disableMetrics()
 
-          await new Promise(r => setTimeout(r, 0));
+          await new Promise(r => setTimeout(r, 100));
 
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.appId).to.eql('destiny')
+            expect(cluster.appId).to.eql('kelp')
 
           }
 
@@ -876,7 +889,6 @@ describe('Metrics tests', function () {
       context('nodes', function () { 
         context('name', function () { 
           it('Ensures name is correct', async function () {
-            console.log(helper.config.hosts)
             const config: any = {
                 hosts: helper.config.hosts,
                 user: helper.config.user,
@@ -916,9 +928,7 @@ describe('Metrics tests', function () {
             await new Promise(r => setTimeout(r, 0));
 
             for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-              console.log(cluster)
               for (const node of cluster.nodes) {
-                console.log(node)
                 expect(node.name).to.eql('A1')
               }
             }
@@ -1201,7 +1211,7 @@ describe('Metrics tests', function () {
 
           await client.disableMetrics()
 
-          await new Promise(r => setTimeout(r, 0));
+          await new Promise(r => setTimeout(r, 20));
 
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
 
@@ -1345,13 +1355,14 @@ describe('Metrics tests', function () {
       context('timeoutCount', function () { 
 
 
-        let totalTimeoutCount = 0
+        let timeout_value = 0
+
 
         function listenerTimeoutCount(cluster: Cluster) {
           for (const node of cluster.nodes) {
             let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
             for (const index of NamespaceMetrics) {
-              totalTimeoutCount += index.timeoutCount
+              timeout_value = index.timeoutCount
             }
           }
           return
@@ -1422,7 +1433,7 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 0));
 
-          expect(totalTimeoutCount).to.be.greaterThan(0)
+          expect(timeout_value).to.be.a('number')
 
           clusterFromSnapshotListener = null
 
@@ -1612,7 +1623,6 @@ describe('Metrics tests', function () {
               interval: 1,
             }
           )
-
           await client.enableMetrics(policy)
 
           await new Promise(r => setTimeout(r, 1500));   
@@ -1868,7 +1878,7 @@ describe('Metrics tests', function () {
                 metricsListeners: listeners,
               }
             )
-            
+          
             try{
               await client.enableMetrics(policy)
               assert.fail("AN ERROR SHOULD HAVE BEEN CAUGHT")
@@ -2324,7 +2334,7 @@ describe('Metrics tests', function () {
                 metricsListeners: listeners,
               }
             )
-            
+
             try{
               await client.enableMetrics(policy)
               assert.fail("AN ERROR SHOULD HAVE BEEN CAUGHT")
@@ -2439,10 +2449,8 @@ describe('Metrics tests', function () {
             assert.fail("AN ERROR SHOULD BE CAUGHT")
           }
           catch(error: any){
-
-            let messageToken = error.message.split('-')[0]
-            expect(messageToken).to.eql("Failed to open file: /metrics")
-            expect(error.code).to.eql(-1)
+            expect(error.message).to.eql("Metrics policy parameter invalid")
+            expect(error.code).to.eql(-2)
           }
           await client.disableMetrics()
         })

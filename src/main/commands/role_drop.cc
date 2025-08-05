@@ -44,6 +44,7 @@ NAN_METHOD(AerospikeClient::RoleDrop)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char * role = NULL;
 	as_status status;
 	
@@ -62,11 +63,12 @@ NAN_METHOD(AerospikeClient::RoleDrop)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 
 	as_v8_debug(log, "Droping quota for role=%s", role);
-	status = aerospike_drop_role(client->as, &cmd->err, &policy, role);
+	status = aerospike_drop_role(client->as, &cmd->err, p_policy, role);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

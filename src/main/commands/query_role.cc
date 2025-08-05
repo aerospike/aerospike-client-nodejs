@@ -44,6 +44,7 @@ NAN_METHOD(AerospikeClient::QueryRole)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;	
 	char* role_name = NULL;
 	as_role* role = NULL;
 	as_status status;
@@ -62,10 +63,11 @@ NAN_METHOD(AerospikeClient::QueryRole)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Querying for role=%s", role);
-	status = aerospike_query_role(client->as, &cmd->err, &policy, role_name, &role);
+	status = aerospike_query_role(client->as, &cmd->err, p_policy, role_name, &role);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();

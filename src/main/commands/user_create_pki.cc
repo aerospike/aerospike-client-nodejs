@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::UserCreatePKI)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char *user_name = NULL;
 	char ** roles = NULL;
 	int roles_size = 0;
@@ -77,10 +78,11 @@ NAN_METHOD(AerospikeClient::UserCreatePKI)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
 	as_v8_debug(log, "Creating PKI user=%s", user_name);
-	status = aerospike_create_pki_user(client->as, &cmd->err, &policy, user_name,
+	status = aerospike_create_pki_user(client->as, &cmd->err, p_policy, user_name,
 					   const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
@@ -100,7 +102,7 @@ Cleanup:
 		for(int i = 0; i < roles_size; i++) {
 			free(roles[i]);
 		}
-		free(roles);
+		delete [] roles;
 	}
 
 }

@@ -555,15 +555,15 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 
 Cleanup:
 	if (cluster_name)
-		free(cluster_name);
+		cf_free(cluster_name);
 	if (user)
-		free(user);
+		cf_free(user);
 	if (password)
-		free(password);
+		cf_free(password);
 	if (user_path)
-		free(user_path);
+		cf_free(user_path);
 	if (config_provider_path)
-		free(config_provider_path);
+		cf_free(config_provider_path);
 
 	as_v8_debug(log, "Built as_config instance from JS config object");
 	return rc;
