@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.3.0]
+* **New Features**
+  - [CLIENT-3407] - Added support for metrics improvements: deeper granularity and additional metrics.
+  - [CLIENT-3408] - Added support for Dynamic Client Configuration
+  - [CLIENT-3266] - Added support for preventing password use for Public Key Infrastructure (PKI) users.
+  - [CLIENT-3396] - Added support for Expression Indexes.
+  - [CLIENT-3645] - Added support for policy.replica.RANDOM
+* **Bug Fixes**
+  - [CLIENT-3507] - Fixed metrics_policy.reportDir passing an invalid string when enabling metrics.
+  - [CLIENT-3635] - Fixed Segmentation fault when parsing invalid privilege, roles, and whitelist to admin functions.
+  - [CLIENT-3636] - Added missing function client.setPassword()
+  - [CLIENT-3637] - Fixed issue with error objects are not being returned by Role based Authentication Control (RBAC) functions.  All RBAC functions are also now awaitable.
+  - [CLIENT-3643] - Fixed bug where adminPolicy is uninitialized during Role Based Authentication Commands.
+  - [CLIENT-3644] - Fixed issue with error not being returned when the client configuration is invalid.
+* **Documentation**
+ - [CLIENT-1865] - Clarified Filter Documentation.
+ - [CLIENT-3234] - Documented that compression is an Enterprise Feature.
+* **Improvements**
+ - [CLIENT-3409] - Added generics to some typescript defintions (Thanks @bit0r1n!)
+
+## [6.2.0]
+* **New Features**
+  - [CLIENT-1595] - Added config.rackIds. Accepts list of preferred racks. Used when replica policy is PREFER_RACK.
+  - [CLIENT-2152] - Added client.setXDRFilter.
+  - [CLIENT-3266] - Added onLockingOnly parameter to apply, write, batchApply, and batchWrite policies.
+  - [CLIENT-3396] - Added txnRoll and txnVerify policies to config policies.
+* **Bug Fixes**
+  * [CLIENT-3388] - Added Replica field for operate, read, and apply policy classes.
+  * [CLIENT-3389] - Fixed issue with BATCH_APPLY and BATCH_REMOVE records not being configured correctly for writes.
+  * [CLIENT-3390] - Fixed issue with batchWrite failing to parse the UDF parameter in BATCH_APPLY records.
+  * [CLIENT-3391] - Fixed issue with batchWrite failing when writing a single record and using a Transaction.
+
 ## [6.1.0]
 * **New Features**
   * [CLIENT-2700] - Added support for client metrics.
