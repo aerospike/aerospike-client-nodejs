@@ -103,7 +103,8 @@ jobs:
 
     - name: list version info
       run: 
-        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        jq --arg v "6.3.1" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        #jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm install;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
