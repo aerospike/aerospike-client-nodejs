@@ -10779,6 +10779,10 @@ export interface Cluster {
      */
     invalidNodeCount: number;
     /**
+     * Object containing name/value labels applied when exporting metrics.
+     */ 
+    labels?: { [key: string]: string };
+    /**
      * Transaction count. The value is cumulative and not reset per metrics interval.
      */
     transactionCount: number;
@@ -10813,10 +10817,6 @@ export interface Node {
      * Asynchronous connection stats on this node.
      */
     conns: ConnectionStats;
-    /**
-     * Object containing name/value labels applied when exporting metrics.
-     */ 
-    labels?: { [key: string]: string };
     /**
      * Namespace Metrics
      */

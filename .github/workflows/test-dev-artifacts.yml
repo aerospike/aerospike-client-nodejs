@@ -32,7 +32,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -61,7 +61,7 @@ on:
         description: 'Test against server release candidate?'
       server-tag:
         required: true
-        default: '8.1.0.0-rc4'
+        default: '8.1.0.0-rc5'
         description: 'Server docker image tag'
       test-file:
         required: false
@@ -78,7 +78,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       platform-tag:
         type: string
         required: true  
@@ -98,7 +98,7 @@ on:
       server-tag:
         required: false
         type: string
-        default: '8.1.0.0-rc4'
+        default: '8.1.0.0-rc5'
         description: 'Server docker image tag'
       test-file:
         required: false
@@ -1010,7 +1010,7 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0-rc4
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0-rc5
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:

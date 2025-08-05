@@ -7,7 +7,7 @@ inputs:
     default: false
   server-tag:
     required: true
-    default: '8.1.0.0-rc4'
+    default: '8.1.0.0-rc5'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
