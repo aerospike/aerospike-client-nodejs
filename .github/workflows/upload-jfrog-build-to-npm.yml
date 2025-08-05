@@ -60,13 +60,9 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
 
 
     - name: Download Artifacts from Jfrog
-      if: ${{ inputs.pipeline-stage == 'master' }}
       run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
       env:
         OLD_VERSION: ${{ inputs.old_version }}
@@ -102,8 +98,26 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        echo "======================================";
+        cp -r temp/* ${{ env.OLD_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
       run: 
@@ -129,15 +143,21 @@ jobs:
     #  env:
     #    NEW_VERSION: ${{ inputs.new_version }}
 
-    - run: npm publish --provenance
+    - name: npm rc
+      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NPMRC: ${{ secrets.NPMRC_RELEASE }}
+
+    - run: |
+        npm publish;
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-#    - name: npm rc
-#      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-#      env:
-#        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+    #- name: npm rc
+    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
     #- name: npm publish
     #  run: |
