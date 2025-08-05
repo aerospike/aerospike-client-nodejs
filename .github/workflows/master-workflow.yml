@@ -21,39 +21,39 @@ on:
         default: false
 
 jobs:
-  get-jfrog-stage-version:
-    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
-    uses: ./.github/workflows/get-jfrog-stage-version.yml
-    secrets: inherit
-
-  bump-dev-number:
-    uses: ./.github/workflows/bump-master-version.yml
-    needs: [
-      get-jfrog-stage-version,
-    ]
-    secrets: inherit
-
-  publish-to-npm:
-    name: Publish to npm
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-    ]
-    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
-    with:
-      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
-      #old_version: 6.2.1-dev.4
-      new_version: ${{ needs.bump-dev-number.outputs.new_master_version }}
-      #new_version: 6.2.1-dev.4
-    secrets: inherit
+#  get-jfrog-stage-version:
+#    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+#    uses: ./.github/workflows/get-jfrog-stage-version.yml
+#    secrets: inherit
+#
+#  bump-dev-number:
+#    uses: ./.github/workflows/bump-master-version.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#    ]
+#    secrets: inherit
+#
+#  publish-to-npm:
+#    name: Publish to npm
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#    ]
+#    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+#    with:
+#      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+#      #old_version: 6.2.1-dev.4
+#      new_version: ${{ needs.bump-dev-number.outputs.new_master_version }}
+#      #new_version: 6.2.1-dev.4
+#    secrets: inherit
 
   verify-npm-install:
     name: verify npm install works correctly
-    needs: [
-      get-jfrog-stage-version,
-      bump-dev-number,
-      publish-to-npm
-    ]
+    #needs: [
+    #  get-jfrog-stage-version,
+    #  bump-dev-number,
+    #  publish-to-npm
+    #]
     uses: ./.github/workflows/verify-npm-install.yml
     secrets: inherit
 
