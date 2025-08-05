@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::PrivilegeGrant)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;	
 	char * role = NULL;
 	as_privilege** privileges = NULL;
 	int privileges_size = 0;
@@ -62,9 +63,9 @@ NAN_METHOD(AerospikeClient::PrivilegeGrant)
 		Local<Array> privilege_array = info[1].As<Array>();
 		privileges_size = privilege_array->Length();
 		if(privileges_size != 0){
-			if (privileges_from_jsarray(&privileges, privileges_size, privilege_array, log) !=
+			if (privileges_from_jsarray(&privileges, &privileges_size, privilege_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Privileges array invalid");
 				goto Cleanup;
 			}
 		}
@@ -76,17 +77,19 @@ NAN_METHOD(AerospikeClient::PrivilegeGrant)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	status = aerospike_grant_privileges(client->as, &cmd->err, &policy, role,
+	as_v8_debug(log, "Granting privileges for role role=%s", role);
+	status = aerospike_grant_privileges(client->as, &cmd->err, p_policy, role,
 					   privileges, privileges_size);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:
@@ -94,10 +97,10 @@ Cleanup:
 	if(role){
 		free(role);
 	}
-	for(int i = 0; i < privileges_size; i++) {
-		delete privileges[i];
-	}
 	if(privileges){
+		for(int i = 0; i < privileges_size; i++) {
+			delete privileges[i];
+		}
 		delete [] privileges;
 	}
 

@@ -39,7 +39,12 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	char *user = NULL;
 	char *password = NULL;
 	char *user_path = NULL;
+	char* app_id = NULL;
+	char* config_provider_path = NULL;
 
+	Local<Value> v8_config_provider =
+		Nan::Get(configObj, Nan::New("configProvider").ToLocalChecked())
+			.ToLocalChecked();
 	Local<Value> v8_hosts =
 		Nan::Get(configObj, Nan::New("hosts").ToLocalChecked())
 			.ToLocalChecked();
@@ -54,6 +59,29 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	Local<Value> v8_sharedMemory =
 		Nan::Get(configObj, Nan::New("sharedMemory").ToLocalChecked())
 			.ToLocalChecked();
+
+
+	if (v8_config_provider->IsObject()) {
+
+		Local<Object> config_provider = v8_config_provider.As<Object>();
+
+		if ((rc = get_optional_string_property(&config_provider_path, &defined, config_provider,
+											   "path", log)) !=
+			AS_NODE_PARAM_OK) {
+
+			goto Cleanup;
+		}
+		else if (defined) {
+			as_config_provider_set_path(config, config_provider_path);
+		}
+
+		if ((rc = get_optional_uint32_property(&config->config_provider.interval, &defined, config_provider,
+										   	   "interval", log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+
+	}
+
 
 	if ((rc = get_optional_string_property(&cluster_name, &defined, configObj,
 										   "clusterName", log)) !=
@@ -468,7 +496,7 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 		goto Cleanup;
 	}
 	if ((rc = get_optional_uint32_property(&config->max_error_rate,
-										   NULL, configObj, "maxErrorRate",
+										   &defined, configObj, "maxErrorRate",
 										   log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
@@ -509,18 +537,34 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 	if ((rc = get_optional_rack_ids_property(config, NULL, configObj,
 										"rackIds", log)) != AS_NODE_PARAM_OK) {
 		goto Cleanup;
-	}	
+	}
+
+
+	if ((rc = get_optional_string_property(&app_id, &defined, configObj, 
+										   "appId", log)) != AS_NODE_PARAM_OK) {
+		if(app_id){
+			cf_free(app_id);
+		}
+		goto Cleanup;
+	}
+	else if (defined){
+		as_config_set_app_id(config, app_id);
+		cf_free(app_id);
+	}
 
 
 Cleanup:
 	if (cluster_name)
-		free(cluster_name);
+		cf_free(cluster_name);
 	if (user)
-		free(user);
+		cf_free(user);
 	if (password)
-		free(password);
+		cf_free(password);
 	if (user_path)
-		free(user_path);
+		cf_free(user_path);
+	if (config_provider_path)
+		cf_free(config_provider_path);
+
 	as_v8_debug(log, "Built as_config instance from JS config object");
 	return rc;
 }

@@ -1,0 +1,54 @@
+# Takes in how to bump version as input
+# Commits changes to bump version and outputs the new version and commit hash as output
+name: Bump version
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        description: Commit to bump off of
+        type: string
+      # See workflow call hack in update-version.ymls
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+    outputs:
+      stage_version:
+        value: ${{ jobs.get-jfrog-stage-version.outputs.stage_version }}
+      bump_sha:
+        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
+
+jobs:
+  get-jfrog-stage-version:
+    name: Get most recent JFrog version string
+    runs-on: ubuntu-22.04
+    outputs:
+      stage_version: ${{ steps.get-jfrog-stage-version.outputs.stage_version }}
+    steps:
+    # Checkout the branch where we want to bump the new version
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Get jfrog version
+      id: get-jfrog-stage-version
+      run: |
+        echo "stage_version=$(jfrog rt s "clients-npm-stage-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'dev' | tail -n1)" >> $GITHUB_OUTPUT
+
+    - name: Print jfrog version
+      run: echo "Jfrog version is ${{ steps.get-jfrog-stage-version.outputs.stage_version }}"

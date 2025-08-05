@@ -1,0 +1,59 @@
+name: Dev workflow
+
+# 1. When a PR review is requested, run tests on that PR
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+
+on:
+  pull_request:
+    branches:
+      - 'dev*'
+
+  # So we can test changes to the test-server-rc workflow
+  workflow_dispatch:
+    inputs:
+      run_server_release_tests:
+        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+        type: boolean
+        default: false
+
+jobs:
+  bump-dev-number:
+    uses: ./.github/workflows/bump-dev-version.yml
+    secrets: inherit
+
+  build-bindings:
+    uses: ./.github/workflows/build-artifacts.yml
+    needs: [
+      bump-dev-number
+    ]
+    with:
+      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      run_tests: false
+    secrets: inherit
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      bump-dev-number,
+      build-bindings
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      #new_version: 6.2.1-dev.61
+    secrets: inherit
+
+  reupload-stage-to-jfrog-npm-repo:
+    name: Reupload package to JFrog NPM
+    needs: [
+      bump-dev-number,
+      build-bindings,
+      upload-to-jfrog,
+    ]
+    uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
+    with:
+      #new_version: 6.2.1-rc.20
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      pipeline-stage: 'dev'
+    secrets: inherit

@@ -45,6 +45,7 @@ NAN_METHOD(AerospikeClient::RoleRevoke)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char ** roles = NULL;
 	int roles_size = 0;
 	char* user_name = NULL;
@@ -63,9 +64,9 @@ NAN_METHOD(AerospikeClient::RoleRevoke)
 		Local<Array> role_array = info[1].As<Array>();
 		roles_size = role_array->Length();
 		if(roles_size != 0){
-			if (string_from_jsarray(&roles, roles_size, role_array, log) !=
+			if (string_from_jsarray(&roles, &roles_size, role_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Roles object invalid");
 				goto Cleanup;
 			}
 		}
@@ -77,25 +78,28 @@ NAN_METHOD(AerospikeClient::RoleRevoke)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	status = aerospike_revoke_roles(client->as, &cmd->err, &policy, user_name, const_cast<const char**>(roles), roles_size);
+	as_v8_debug(log, "Revoking roles from user=%s", user_name);
+	status = aerospike_revoke_roles(client->as, &cmd->err, p_policy, user_name, const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:
 	delete cmd;
-	for(int i = 0; i < roles_size; i++) {
-		free(roles[i]);
-	}
+
 	if(roles){
-		free(roles);
+		for(int i = 0; i < roles_size; i++) {
+			free(roles[i]);
+		}
+		delete [] roles;
 	}
 	if(user_name){
 		free(user_name);

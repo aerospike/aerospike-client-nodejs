@@ -1,0 +1,15 @@
+metadata:
+  app_name: configurationExample
+  generation: 2
+  version: 0.0.1
+
+static:
+  client:
+    config_interval: 2000
+dynamic:
+  read:
+    send_key: true
+  write:
+    send_key: true
+  query:
+    send_key: true

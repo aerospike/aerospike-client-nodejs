@@ -121,13 +121,16 @@ int get_optional_uint32_property(uint32_t *intp, bool *defined,
 int get_optional_uint16_property(uint16_t *intp, bool *defined,
 								 v8::Local<v8::Object> obj, char const *prop,
 								 const LogInfo *log);
+int get_optional_uint8_property(uint8_t *intp, bool *defined,
+								 v8::Local<v8::Object> obj, char const *prop,
+								 const LogInfo *log);
 int get_float_property(double *floatp, v8::Local<v8::Object> obj,
 					   char const *prop, const LogInfo *log);
 bool get_optional_list_policy(as_list_policy *policy, bool *has_policy,
 							  v8::Local<v8::Object> obj, const LogInfo *log);
 bool get_map_policy(as_map_policy *policy, v8::Local<v8::Object> obj,
 					const LogInfo *log);
-int get_optional_report_dir_property(char **report_dir, bool *defined,
+int get_optional_report_dir_property(char **report_dir, bool *defined, int* size,
 								v8::Local<v8::Object> obj, const char *prop,
 								const LogInfo *log);
 
@@ -202,8 +205,8 @@ typedef struct {
     uint32_t *query;
 } latency;
 
-void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint32_t bucket_max);
-void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint32_t bucket_max);
+void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
+void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,
@@ -214,9 +217,9 @@ int map_from_jsmap(as_map **map, v8::Local<v8::Map> obj,
 					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);
-int string_from_jsarray(char*** roles, int roles_size, v8::Local<v8::Array> role_array, const LogInfo *log);
+int string_from_jsarray(char*** strings, int* strings_size, v8::Local<v8::Array> string_array, const LogInfo *log);
 
-int privileges_from_jsarray(as_privilege*** privileges, int privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 
+int privileges_from_jsarray(as_privilege*** privileges, int* privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 
 
 //clone functions for record and key
 bool record_clone(const as_record *src, as_record **dest, const LogInfo *log);

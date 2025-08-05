@@ -120,9 +120,21 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
     },
+    testDynamicConfig: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run dynamic configuration tests.'
+    },
+    testMetricsKeyBusy: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run metrics key busy tests.'
+    },
     testPreferRack: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing. Requires two datacenter XDR configuration.'
+    },
+    testMRT: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced MRT tests.'
     },
     testXDR: {
       type: 'boolean',
@@ -216,8 +228,11 @@ options.getConfig = function (): any {
   if (options.auth) {
     config.authMode = options.auth
   }
-  // Disable maxErrorRate
-  config.maxErrorRate = 0
+  // Create a very large error threshold to disable circuit breaker
+  // Ratio between the following must be 50/1 at most
+  config.maxErrorRate = 100000
+  config.errorRateWindow = 10000
+
   return {config, omitHelperClient: omitHelperClient}
 }
 

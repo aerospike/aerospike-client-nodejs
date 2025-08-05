@@ -1,0 +1,56 @@
+name: Upload to JFrog
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      stage:
+        type: boolean
+        required: false
+        default: false
+      jfrog-repo-name:
+        type: string
+        required: false
+        default: ${{ vars.JFROG_REPO_NAME }}
+      #oidc-provider:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: gh-aerospike-clients
+      #oidc-audience:
+      #  type: string
+      #  description: ""
+      #  required: false
+      #  default: aerospike/clients
+    #secrets:
+    #  JFROG_PLATFORM_URL:
+    #    required: true
+
+jobs:
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    runs-on: ubuntu-22.04
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Publish build info
+      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
+      run: jf rt build-publish nodejs-client ${{ inputs.version }}
+
+

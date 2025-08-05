@@ -1,0 +1,118 @@
+name: Master workflow
+
+# 1. When a PR review is requested, run tests on that PR
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+
+on:
+  pull_request:
+    branches:
+      - 'master-test'
+    paths-ignore:
+      - 'docs/**'
+      - 'aerospike-stubs/**'
+
+  # So we can test changes to the test-server-rc workflow
+  workflow_dispatch:
+    inputs:
+      run_server_release_tests:
+        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+        type: boolean
+        default: false
+
+jobs:
+  get-jfrog-stage-version:
+    #if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/get-jfrog-stage-version.yml
+    secrets: inherit
+
+  bump-dev-number:
+    uses: ./.github/workflows/bump-master-version.yml
+    needs: [
+      get-jfrog-stage-version,
+    ]
+    secrets: inherit
+
+  publish-to-npm:
+    name: Publish to npm
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+    ]
+    uses: ./.github/workflows/upload-jfrog-build-to-npm.yml
+    with:
+      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      #old_version: 6.2.1-dev.4
+      new_version: ${{ needs.bump-dev-number.outputs.new_master_version }}
+      #new_version: 6.2.1-dev.4
+    secrets: inherit
+
+  verify-npm-install:
+    name: verify npm install works correctly
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+      publish-to-npm
+    ]
+    uses: ./.github/workflows/verify-npm-install.yml
+    secrets: inherit
+
+  reupload-master-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+      publish-to-npm,
+      verify-npm-install
+    ]
+    uses: ./.github/workflows/reupload-to-jfrog.yml
+    with:
+      old_version: ${{ needs.get-jfrog-stage-version.outputs.stage_version }}
+      #new_version: 6.2.1-rc.20
+      new_version: ${{ needs.bump-dev-number.outputs.new_master_version }}
+      pipeline-stage: 'master'
+    secrets: inherit
+
+  reupload-master-to-jfrog-npm-repo:
+    name: Upload artifacts to JFrog
+    needs: [
+      get-jfrog-stage-version,
+      bump-dev-number,
+      publish-to-npm,
+      verify-npm-install,
+      reupload-master-to-jfrog
+    ]
+    uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
+    with:
+      #new_version: 6.2.1-rc.20
+      new_version: ${{ needs.bump-dev-number.outputs.new_master_version }}
+      pipeline-stage: 'master'
+    secrets: inherit
+
+#
+#  ff-master-to-stage:
+#    uses: ./.github/workflows/fast-forward-merge.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    with:
+#      ref_to_merge: origin/stage-CICD
+#      base_branch: master-test
+#    secrets: inherit
+#
+#  ff-stage-to-dev:
+#    uses: ./.github/workflows/fast-forward-merge.yml
+#    needs: [
+#      get-jfrog-stage-version,
+#      bump-dev-number,
+#      reupload-stage-to-jfrog,
+#      publish-to-npm
+#    ]
+#    with:
+#      ref_to_merge: origin/dev
+#      base_branch: stage
+#    secrets: inherit
+

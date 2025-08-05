@@ -12,7 +12,7 @@ inputs:
     required: true
     description: Specify Docker tag
 
-    default: 'latest'
+    default: '8.1.0.0-rc5'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -62,7 +62,7 @@ runs:
 
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
-    
+
   - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
     shell: bash
 
@@ -86,7 +86,7 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run --network=host -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start

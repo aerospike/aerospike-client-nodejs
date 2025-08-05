@@ -7,13 +7,9 @@ permissions:
 on:
   workflow_call:
     inputs:
-      version:
+      new_version:
         type: string
         required: false
-      stage:
-        type: boolean
-        required: false
-        default: false
       jfrog-repo-name:
         type: string
         required: false
@@ -35,47 +31,13 @@ on:
 jobs:
   upload-to-jfrog:
     name: Upload artifacts to JFrog
+    env:
+      JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
     runs-on: ubuntu-22.04
     steps:
 
     - name: Checkout repository
       uses: actions/checkout@v4
-
-    - name: Create multiple directories
-      run: mkdir -p ./lib/binding ./lib/binding/glibc@2.35/ ./lib/binding/glibc@2.31/
-
-    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
-
-    - name: Download Artifacts
-      if: ${{ !inputs.stage }}
-      uses: ./.github/actions/download-github-artifacts/
-
-    - name: Download artifacts
-      if: ${{ inputs.stage }}
-      uses: actions/download-artifact@v4
-      with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
-
-    - name: list Artifacts first
-      if: ${{ inputs.stage }}
-      run: |
-        ls downloaded-artifacts/
-
-    - name: Move artifacts
-      if: ${{ inputs.stage }}
-      run: |
-        cp -r downloaded-artifacts/ lib/binding/
-
-    - name: check binding
-      if: ${{ inputs.stage }}
-      run:
-        ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
-
-    - name: print artifacts
-      run: ls ./lib/binding
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v4
@@ -85,25 +47,81 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-    #- name: Upload manylinux builds from arbitrary branches to JFrog generic repo
-    #  if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
-    #  run: jf rt upload "*manylinux*" jfrog-pipelines-nodejs
-    #  working-directory: artifacts
+    - name: Download from JFrog
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+      env:
+        VERSION: ${{ inputs.new_version }}
 
-    - name: WHOAMI REALLY
-      run: jf config show
+    - name: list version info
+      run: 
+        ls aerospike/;
+        ls aerospike/${{ env.VERSION }}/;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        mkdir lib/binding;
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: |
+        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: list version info
+      run: 
+        ls lib/binding;
+
+    - name: list version info
+      run: 
+        npm pack;
+        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
+        # write script to change version number
 
     - name: Upload passing builds to JFrog Nodejs repo
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-    # Source path must be in quotes if it contains an asterisk
+      # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }}/ "./lib/binding/*" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
-        NEW_VERSION: ${{ inputs.version }}
-
+        NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Publish build info
-      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
-      run: jf rt build-publish nodejs-client ${{ inputs.version }}
+      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
+    # Required to run sponge
+    - run: sudo apt install -y moreutils
 
+    # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
+    - name: Create file spec for release bundle
+      run: cat releasebundle-filespec.json | jq '.files[0].build = "nodejs-client/${{ inputs.new_version }}"' | sponge releasebundle-filespec.json
+      working-directory: .github/workflows
+      shell: bash
+
+    - name: Create release bundle from JFrog build
+      # Not the same name as in proxy/pom.xml
+      # But that name doesn't specify the language,
+      # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
+      # Signing key only signs release bundle and not the artifacts associated with it
+      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
+      working-directory: .github/workflows
+
+    - name: Promote release bundle to DEV stage
+      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
+      working-directory: .github/workflows

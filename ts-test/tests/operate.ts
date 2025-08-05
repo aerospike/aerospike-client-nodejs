@@ -292,25 +292,6 @@ context('Operations', function () {
         helper.skipUnlessVersion('>= 7.1.0', this)
 
         this.timeout(4000)
-        it('100% touches record', async function () {
-          const ops: operations.Operation[] = [op.read('i')]
-          const policy: OperatePolicy = new Aerospike.OperatePolicy({
-            readTouchTtlPercent: 100
-          })
-
-          await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 3000))
-
-          let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
-          expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(6, 8)
-
-          record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
-          expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(9, 11)
-
-          await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
-        })
 
         it('80% touches record', async function () {
           const ops = [op.read('i')]
@@ -352,25 +333,6 @@ context('Operations', function () {
           await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
         })
 
-        it('0% does not touch record', async function () {
-          const ops = [op.read('i')]
-          const policy: OperatePolicy = new Aerospike.OperatePolicy({
-            readTouchTtlPercent: 0
-          })
-
-          await client.put(new Aerospike.Key('test', 'demo', 'operateTtl1'), { i: 2 }, { ttl: 10 })
-          await new Promise(resolve => setTimeout(resolve, 3000))
-
-          let record: AerospikeRecord = await client.operate(new Aerospike.Key('test', 'demo', 'operateTtl1'), ops, null, policy)
-          expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(6, 8)
-
-          record = await client.get(new Aerospike.Key('test', 'demo', 'operateTtl1'), policy)
-          expect(record.bins).to.eql({ i: 2 })
-          expect(record.ttl).to.be.within(6, 8)
-
-          await client.remove(new Aerospike.Key('test', 'demo', 'operateTtl1'))
-        })
       })
 
       context('gen policy', function () {

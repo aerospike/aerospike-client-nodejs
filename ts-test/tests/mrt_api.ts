@@ -32,12 +32,11 @@ const status: typeof statusModule = Aerospike.status
 
 describe('MRT API Tests', function () {
   helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
-
+  
   context('Test the MRT specific API', function () { 
     const client: Cli = helper.client
 
     it('Reaps completed transactions', async function () {
-      let mrt: Transaction = new Aerospike.Transaction();
 
       for (let i = 0; i < 129; i++) {
         let mrt: Transaction = new Aerospike.Transaction()

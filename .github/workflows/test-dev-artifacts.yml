@@ -3,6 +3,11 @@ run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
@@ -27,7 +32,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -35,13 +40,15 @@ on:
         options:
         - manylinux_x86_64
         - manylinux_aarch64
-        - manylinux_20_x86_64
-        - manylinux_20_aarch64
         - macosx_x86_64
         - macosx_arm64
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
+      version:
+        type: string
+        description: Build version
+        required: true
       run_tests:
         description: 'Run Aerospike server and run tests using built wheels?'
         type: boolean
@@ -54,7 +61,7 @@ on:
         description: 'Test against server release candidate?'
       server-tag:
         required: true
-        default: 'latest'
+        default: '8.1.0.0-rc5'
         description: 'Server docker image tag'
       test-file:
         required: false
@@ -71,9 +78,13 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v108", "18"], ["v115", "20"], ["v127", "22"], ["v131", "23"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
       platform-tag:
         type: string
+        required: true  
+      version:
+        type: string
+        description: Build version
         required: true
       run_tests:
         type: boolean
@@ -87,7 +98,7 @@ on:
       server-tag:
         required: false
         type: string
-        default: 'latest'
+        default: '8.1.0.0-rc5'
         description: 'Server docker image tag'
       test-file:
         required: false
@@ -117,8 +128,6 @@ jobs:
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[manylinux_20_x86_64]="ubuntu-20.04"
-        hashmap[manylinux_20_aarch64]="ubuntu-22.04"
         hashmap[macosx_x86_64]="macos-13-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
@@ -128,7 +137,7 @@ jobs:
 
   test-ee:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -162,14 +171,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
@@ -189,7 +190,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -199,17 +200,13 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - uses: ./.github/actions/wait-for-as-server-to-start
-      with:
-        container-name: aerospike
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -231,41 +228,46 @@ jobs:
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
     #  shell: bash
 
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
         docker ps;
         docker logs aerospike;
@@ -273,8 +275,10 @@ jobs:
         npm install;
         npx tsc;
         cd ..;
+        rm -rf ts-test/dist;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser;
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -286,63 +290,14 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
-    - name: upgrade to gcc++ 10
-      if: ${{ inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: 
-        sudo apt install g++-10;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40;
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60;
-        sudo update-alternatives --set g++ /usr/bin/g++-10;
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     #- name: Debug server
     #  run: |
     #    docker ps;
     #    docker logs aerospike;
 
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - name: Run distro container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker run --name bullseye --platform linux/arm64 --network host --detach node:${{ matrix.nodejs-tag[1] }}-bullseye tail -f /dev/null
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: docker cp . bullseye:/aerospike-client-nodejs
-
-    #- name: Make sure npm is installed
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: docker exec bullseye node -v && docker exec bullseye npm -v
-
-    #- name: build c client
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: docker exec --workdir /aerospike-client-nodejs/ bullseye ./scripts/build-c-client.sh;
-
-    #- name: build binding
-    #  if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-    #  run: 
-    #    docker exec --workdir /aerospike-client-nodejs/ bullseye npm install;
-    #    docker exec --workdir /aerospike-client-nodejs/ bullseye ls lib/binding;
-
-    - name: Run tests
-      id: test
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_20_aarch64' && matrix.nodejs-tag[1] != '18' }}
-      run: |
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npm install
-        docker exec --workdir /aerospike-client-nodejs/ts-test bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npx tsc
-        docker exec --workdir /aerospike-client-nodejs bullseye npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000 --U superuser --P superuser
-
-    - name: Copy repo to container
-      if: ${{ inputs.platform-tag == 'manylinux_20_aarch64'}}
-      run: 
-        docker cp bullseye:/aerospike-client-nodejs/lib/binding ./lib/binding;
-        ls lib/binding;
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -354,116 +309,141 @@ jobs:
 
 
 
-  test-prefer-rack:
-    needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64') }}
-    strategy:
-      matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-      fail-fast: false
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
-    steps:
-
-    # REUSABLE PART
-    - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        # We need the last tag before the ref, so we can relabel the version if needed
-        fetch-depth: 0
-
-    - uses: actions/setup-node@v4
-      with: 
-        node-version: ${{ matrix.nodejs-tag[1] }}
-
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
-    - name: Download Aerolab zip
-      run: |
-        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
-
-    - name: Unzip Aerolab binary
-      run: |
-        unzip aerolab.zip
-        chmod +x aerolab
-
-    - name: Move binary to /usr/local/bin
-      run: sudo mv aerolab /usr/local/bin/
-
-    - name: Verify installation
-      run: aerolab version
-
-    - name: Configure Aerolab backend
-      run: aerolab config backend -t docker
-
-
-    - name: Retrieve the secret and decode it to a file
-      env:
-        FEATURE_FILE: ${{ secrets.FEATURE_FILE }}
-      run: |
-        echo $FEATURE_FILE | base64 --decode > features.conf
-      working-directory: ts-test
-
-    - name: Create cluster
-      run: sh scripts/three_node.sh
-      working-directory: ts-test
-
-    - name: list cluster
-      run: aerolab cluster list
-
-    #- name: Change install command for release
-    #  run: node ./scripts/change-install-command.js
-
-    - name: add in debug string for test
-      run: |
-        awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
-
-    - name: compile binding
-      run: |
-        ./scripts/build-c-client.sh;
-        npm install;
-
-    - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
-      run: |
-        docker ps;
-        cd ts-test;
-        npm install;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h 0.0.0.0 --port 3100;
-
-    - name: Destroy cluster 1
-      run: echo y | aerolab cluster destroy
-
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+#  test-prefer-rack:
+#    needs: get-runner-os
+#    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64') }}
+#    strategy:
+#      matrix:
+#        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+#      fail-fast: false
+#    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+#    env:
+#      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+#      MACOS_OPENSSL_VERSION: 3
+#    steps:
+#
+#    # REUSABLE PART
+#    - name: Create status check message
+#      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+#      shell: bash
+#
+#    - name: Show job status for commit
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+#      with:
+#        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        context: ${{ env.STATUS_CHECK_MESSAGE }}
+#
+#    - uses: actions/checkout@v4
+#      with:
+#        submodules: recursive
+#        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        # We need the last tag before the ref, so we can relabel the version if needed
+#        fetch-depth: 0
+#
+#    - uses: actions/setup-node@v4
+#      with: 
+#        node-version: ${{ matrix.nodejs-tag[1] }}
+#
+#    - name: Download Aerolab zip
+#      run: |
+#        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
+#
+#    - name: Unzip Aerolab binary
+#      run: |
+#        unzip aerolab.zip
+#        chmod +x aerolab
+#
+#    - name: Move binary to /usr/local/bin
+#      run: sudo mv aerolab /usr/local/bin/
+#
+#    - name: Verify installation
+#      run: aerolab version
+#
+#    - name: Configure Aerolab backend
+#      run: aerolab config backend -t docker
+#
+#
+#    - name: Retrieve the secret and decode it to a file
+#      env:
+#        FEATURE_FILE: ${{ secrets.FEATURE_FILE }}
+#      run: |
+#        echo $FEATURE_FILE | base64 --decode > features.conf
+#      working-directory: ts-test
+#
+#    - name: Create cluster
+#      run: sh scripts/three_node.sh
+#      working-directory: ts-test
+#
+#    - name: list cluster
+#      run: aerolab cluster list
+#
+#    - name: Set up JFrog credentials
+#      uses: jfrog/setup-jfrog-cli@v4
+#      env:
+#        JF_URL: https://aerospike.jfrog.io
+#      with:
+#        oidc-provider-name: gh-aerospike-clients
+#        oidc-audience: aerospike/clients
+#
+#    - name: Download Artifacts from Jfrog
+#      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#        PACKAGE_MANAGER: npm
+#
+#    - name: list Artifacts
+#      run: |
+#        ls downloaded-artifacts
+#        ls downloaded-artifacts/aerospike
+#        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#
+#    - name: Move artifacts
+#      run: |
+#        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+#      env:
+#        NEW_VERSION: ${{ inputs.version }}
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: check binding
+#      run:
+#        ls lib/binding;
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Change install command for release
+#      run: node ./scripts/change-install-command.js
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: add in debug string for test
+#      run: |
+#        awk 'NR==613{print "\t\tprintf(\"Node=%s\\n\", as_node_get_address_string(cmd->node));"}1' aerospike-client-c/src/main/aerospike/as_event.c  > temp && mv temp aerospike-client-c/src/main/aerospike/as_event.c 
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Run tests
+#      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
+#      run: |
+#        docker ps;
+#        cd ts-test;
+#        npm install;
+#        npx tsc;
+#        cd ..;
+#        npx tsc;
+#        npm run test --testfile=prefer_rack.js -- --testPreferRack true --h  0.0.0.0 --port 3100 --t 40000;
+#        npm run test --testfile=metrics_key_busy.js -- --testMetricsKeyBusy true --h 0.0.0.0 --port 3100 --t 40000;
+#      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+#
+#    - name: Destroy cluster 1
+#      run: echo y | aerolab cluster destroy
+#
+#    - name: Set final commit status
+#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+#      with:
+#        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#        status: ${{ job.status }}
+#        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-set-xdr-filter:
     needs: get-runner-os
@@ -501,14 +481,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: Download Aerolab zip
       run: |
         curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
@@ -533,40 +505,46 @@ jobs:
     - name: list cluster
       run: aerolab cluster list
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') &&  inputs.platform-tag != 'manylinux_20_aarch64'}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
         cd ts-test;
@@ -575,6 +553,7 @@ jobs:
         cd ..;
         npx tsc;
         npm run test --testfile=set_xdr_filter.js -- --testXDR true --h 172.17.0.2 --port 3100;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Destroy cluster 1
       run: echo y | aerolab cluster destroy --name dc1
@@ -626,14 +605,6 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
@@ -653,7 +624,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -663,17 +634,13 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - uses: ./.github/actions/wait-for-as-server-to-start
-      with:
-        container-name: aerospike
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -696,37 +663,43 @@ jobs:
     #  shell: bash
 
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: install valgrind
       run: |
@@ -742,12 +715,14 @@ jobs:
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
         cd ..;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run Valgrind
       run: |
         docker ps;
         npx tsc;
-        npm run valgrind -- --t 40000 --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run valgrind -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -759,7 +734,7 @@ jobs:
 
   test-tsc-compile:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -815,37 +790,43 @@ jobs:
     #  shell: bash
 
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -856,6 +837,7 @@ jobs:
         cd ..;
         npx tsc;
         npx tsc typings/index.d.ts; 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -866,6 +848,7 @@ jobs:
         cd ..;
         npx tsc;
         npx tsc typings/index.d.ts;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -882,7 +865,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{(inputs.platform-tag != 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && ( inputs.platform-tag != 'macosx_x86_64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
@@ -911,49 +894,51 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: print conditional values
-      run: |
-        echo "Platform tag: '${{ inputs.platform-tag }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'win_amd64' }}'"
-        echo "Platform conditional: 'if: ${{ inputs.platform-tag == 'macosx_x86_64' }}'"
-        echo "Platform conditional: 'runs-on: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-        echo "Platform conditional: '${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}'"
-
-
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: 'macOS x86: Setup Docker using colima for testing'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cd ts-test;
@@ -967,6 +952,7 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cd ts-test;
@@ -992,7 +978,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' || inputs.platform-tag == 'macosx_arm64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1022,57 +1008,55 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
-      run: |
-        if docker ps -aq | grep -q .; then
-          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-        else
-          echo "No containers to remove."
-        fi
-
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0-rc5
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
 
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
       with:
-        name: nodejs-client-artifacts
-        path: ./downloaded-artifacts
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
 
-    - name: list Artifacts first
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
       run: |
-        ls ./downloaded-artifacts
-        ls ./downloaded-artifacts/glibc@2.31
-        ls ./downloaded-artifacts/glibc@2.35
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Move artifacts
       run: |
-        mkdir -p lib/binding
-        cp -r downloaded-artifacts/* lib/binding
-
-
-    - name: Delete leftover artifacts
-      if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-      run: |
-        rm -rf downloaded-artifacts/
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: check binding
       run:
         ls lib/binding;
-        ls lib/binding/glibc@2.35;
-        ls lib/binding/glibc@2.31;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Change install command for release
       run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         docker logs aerospike;
@@ -1097,7 +1081,7 @@ jobs:
 #      matrix:
 #        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
 #      fail-fast: false
-#    #if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_20_x86_64' }}
+#    #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
 #    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1128,7 +1112,7 @@ jobs:
 #        node-version: ${{ matrix.nodejs-tag[1] }}
 #
 #    - name: Remove aerospike docker image
-#      if: ${{ inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'manylinux_20_x86_64' || inputs.platform-tag == 'manylinux_20_aarch64' }}
+#      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
 #      run: |
 #        if docker ps -aq | grep -q .; then
 #          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -1171,8 +1155,6 @@ jobs:
 #    - name: list Artifacts first
 #      run: |
 #        ls ./downloaded-artifacts
-#        ls ./downloaded-artifacts/glibc@2.31
-#        ls ./downloaded-artifacts/glibc@2.35
 #
 #    - name: Move artifacts
 #      run: |
@@ -1188,8 +1170,6 @@ jobs:
 #    - name: check binding
 #      run:
 #        ls lib/binding;
-#        ls lib/binding/glibc@2.35;
-#        ls lib/binding/glibc@2.31;
 #
 #    - name: Change install command for release
 #      run: node ./scripts/change-install-command.js
@@ -1215,160 +1195,158 @@ jobs:
 #        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 
-  test-self-hosted-ee:
-    # There's a top-level env variable for this but we can't use it here, unfortunately
-    strategy:
-      fail-fast: false
-      matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-    env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-    steps:
-
-      # REUSABLE SECTION
-      - name: Create status check message
-        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-
-      # Need to be able to save Docker Hub credentials to keychain
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-
-      - name: Remove aerospike docker image
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          if docker ps -aq | grep -q .; then
-            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-          else
-            echo "No containers to remove."
-          fi
-
-      - name: Remove aerospike docker image
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        run: |
-          if (docker ps -aq) {
-              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
-          }
-          else {
-              Write-Host "No containers to remove."
-          }
-
-      - uses: ./.github/actions/run-ee-server
-        with:
-          use-server-rc: ${{ inputs.use-server-rc }}
-          server-tag: ${{ inputs.server-tag }}
-          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nodejs-client-artifacts
-          path: ./downloaded-artifacts
-
-      - name: list Artifacts first
-        run: |
-          ls ./downloaded-artifacts
-          ls ./downloaded-artifacts/glibc@2.31
-          ls ./downloaded-artifacts/glibc@2.35
-
-      - name: Move artifacts
-        run: |
-          mkdir -p lib/binding
-          cp -r downloaded-artifacts/* lib/binding
-
-
-      - name: Delete leftover artifacts
-        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-        run: |
-          rm -rf downloaded-artifacts/
-
-      - name: check binding
-        run: |
-          ls lib/binding;
-          ls lib/binding/glibc@2.35;
-          ls lib/binding/glibc@2.31;
-
-          
-      #- name: Change install command for release
-      #  run: node ./scripts/change-install-command.js
-
-      #- name: npm install
-      #  run: npm install
-
-      - uses: actions/setup-node@v4
-        #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        with:
-          node-version: ${{ matrix.nodejs-tag[1] }}
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-
-
-      - name: Connect to Docker container on remote machine with Docker daemon
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        # DOCKER_HOST contains the IP address of the remote machine
-        run: |
-          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: .github\workflows
-
-      # REUSABLE SECTION 
-
-      - name: Run tests
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        run: |
-          docker ps;
-          docker logs aerospike;
-          cd ts-test;
-          npm install;
-          npx tsc;
-          cp tests\udf.lua dist\udf.lua;
-          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
-          cd ..; 
-          npx tsc;
-
-      - name: Run tests
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          docker ps;
-          docker logs aerospike;
-          cd ts-test;
-          npm install;
-          npx tsc;
-          cd ..;
-          npx tsc;
-          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
-
-      - name: Show job status for commit
-        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          status: ${{ job.status }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
+#  test-self-hosted-ee:
+#    # There's a top-level env variable for this but we can't use it here, unfortunately
+#    needs: get-runner-os
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+#    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+#    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+#    env:
+#      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+#    steps:
+#
+#      # REUSABLE SECTION
+#      - name: Create status check message
+#        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+#        shell: bash
+#
+#      - name: Show job status for commit
+#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+#        with:
+#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#          context: ${{ env.STATUS_CHECK_MESSAGE }}
+#
+#      - uses: actions/checkout@v4
+#        with:
+#          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#
+#      # Need to be able to save Docker Hub credentials to keychain
+#      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+#        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#
+#      - name: Remove aerospike docker image
+#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        run: |
+#          if docker ps -aq | grep -q .; then
+#            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+#          else
+#            echo "No containers to remove."
+#          fi
+#
+#      - name: Remove aerospike docker image
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        run: |
+#          if (docker ps -aq) {
+#              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
+#          }
+#          else {
+#              Write-Host "No containers to remove."
+#          }
+#
+#      - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+#        uses: ./.github/actions/run-ee-server-for-ext-container
+#        with:
+#          use-server-rc: ${{ inputs.use-server-rc }}
+#          server-tag: ${{ inputs.server-tag }}
+#          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+#          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: nodejs-client-artifacts
+#          path: ./downloaded-artifacts
+#
+#      - name: list Artifacts first
+#        run: |
+#          ls ./downloaded-artifacts
+#
+#      - name: Move artifacts
+#        run: |
+#          mkdir -p lib/binding
+#          cp -r downloaded-artifacts/* lib/binding
+#
+#
+#      - name: Delete leftover artifacts
+#        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+#        run: |
+#          rm -rf downloaded-artifacts/
+#
+#      - name: check binding
+#        run: |
+#          ls lib/binding;
+#
+#          
+#      #- name: Change install command for release
+#      #  run: node ./scripts/change-install-command.js
+#
+#      #- name: npm install
+#      #  run: npm install
+#
+#      - uses: actions/setup-node@v4
+#        #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        with:
+#          node-version: ${{ matrix.nodejs-tag[1] }}
+#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
+#
+#
+#      - name: Connect to Docker container on remote machine with Docker daemon
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        # DOCKER_HOST contains the IP address of the remote machine
+#        run: |
+#          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
+#          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+#        working-directory: .github\workflows
+#
+#      # REUSABLE SECTION 
+#
+#      - name: Run tests
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        run: |
+#          docker ps;
+#          docker logs aerospike;
+#          cd ts-test;
+#          npm install;
+#          npx tsc;
+#          cp tests\udf.lua dist\udf.lua;
+#          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
+#          cd ..; 
+#          npx tsc;
+#
+#      - name: Run tests
+#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        run: |
+#          docker ps;
+#          docker logs aerospike;
+#          cd ts-test;
+#          npm install;
+#          npx tsc;
+#          cd ..;
+#          npx tsc;
+#          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
+#
+#
+#      - name: Show job status for commit
+#        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        with:
+#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#          status: ${{ job.status }}
+#          context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-tsc-compile-self-hosted:
     # There's a top-level env variable for this but we can't use it here, unfortunately
+    needs: get-runner-os
     strategy:
       fail-fast: false
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1393,37 +1371,43 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - name: Set up JFrog credentials
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: https://aerospike.jfrog.io
         with:
-          name: nodejs-client-artifacts
-          path: ./downloaded-artifacts
+          oidc-provider-name: gh-aerospike-clients
+          oidc-audience: aerospike/clients
 
-      - name: list Artifacts first
+      - name: Download Artifacts from Jfrog
+        run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+        env:
+          NEW_VERSION: ${{ inputs.version }}
+          PACKAGE_MANAGER: npm
+
+      - name: list Artifacts
         run: |
-          ls ./downloaded-artifacts
-          ls ./downloaded-artifacts/glibc@2.31
-          ls ./downloaded-artifacts/glibc@2.35
+          ls downloaded-artifacts
+          ls downloaded-artifacts/aerospike
+          ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+        env:
+          NEW_VERSION: ${{ inputs.version }}
 
       - name: Move artifacts
         run: |
-          mkdir -p lib/binding
-          cp -r downloaded-artifacts/* lib/binding
-
-
-      - name: Delete leftover artifacts
-        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-        run: |
-          rm -rf downloaded-artifacts/
+          tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+        env:
+          NEW_VERSION: ${{ inputs.version }}
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: check binding
-        run: |
+        run:
           ls lib/binding;
-          ls lib/binding/glibc@2.35;
-          ls lib/binding/glibc@2.31;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-      #- name: Change install command for release
-      #  run: node ./scripts/change-install-command.js
+      - name: Change install command for release
+        run: node ./scripts/change-install-command.js
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       #- name: npm install
       #  run: npm install
@@ -1432,7 +1416,6 @@ jobs:
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
 
       # REUSABLE SECTION 
 
@@ -1445,6 +1428,7 @@ jobs:
           cd ts-test;
           npm install;
           npx tsc;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1455,6 +1439,7 @@ jobs:
           cd ts-test;
           npm install;
           npx tsc;
+        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
 
       - name: Show job status for commit
@@ -1466,146 +1451,144 @@ jobs:
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 
-
-  test-ce-self-hosted:
-    # There's a top-level env variable for this but we can't use it here, unfortunately
-    strategy:
-      fail-fast: false
-      matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
-    env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-    steps:
-
-      # REUSABLE SECTION
-      - name: Create status check message
-        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-
-      # Need to be able to save Docker Hub credentials to keychain
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-
-      - name: Remove aerospike docker image
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          if docker ps -aq | grep -q .; then
-            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-          else
-            echo "No containers to remove."
-          fi
-
-      - name: Remove aerospike docker image
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        run: |
-          if (docker ps -aq) {
-              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
-          }
-          else {
-              Write-Host "No containers to remove."
-          }
-
-      - name: Run latest Community edition Aerospike server
-        run: docker run -d --network=host --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nodejs-client-artifacts
-          path: ./downloaded-artifacts
-
-      - name: list Artifacts first
-        run: |
-          ls ./downloaded-artifacts
-          ls ./downloaded-artifacts/glibc@2.31
-          ls ./downloaded-artifacts/glibc@2.35
-
-      - name: Move artifacts
-        run: |
-          mkdir -p lib/binding
-          cp -r downloaded-artifacts/* lib/binding
-
-
-      - name: Delete leftover artifacts
-        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
-        run: |
-          rm -rf downloaded-artifacts/
-
-      - name: check binding
-        run: |
-          ls lib/binding;
-          ls lib/binding/glibc@2.35;
-          ls lib/binding/glibc@2.31;
-
-          
-      #- name: Change install command for release
-      #  run: node ./scripts/change-install-command.js
-
-      #- name: npm install
-      #  run: npm install
-
-      - uses: actions/setup-node@v4
-      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        with:
-          node-version: ${{ matrix.nodejs-tag[1] }}
-          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
-
-
-      - name: Connect to Docker container on remote machine with Docker daemon
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        # DOCKER_HOST contains the IP address of the remote machine
-        run: |
-          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: .github\workflows
-
-      # REUSABLE SECTION 
-
-      - name: Run tests
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        run: |
-          docker ps;
-          docker logs aerospike;
-          cd ts-test;
-          npm install;
-          npx tsc;
-          cp tests\udf.lua dist\udf.lua;
-          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000;
-          cd ..; 
-          npx tsc;
-
-      - name: Run tests
-        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        run: |
-          docker ps;
-          docker logs aerospike;
-          cd ts-test;
-          npm install;
-          npx tsc;
-          cd ..;
-          npx tsc;
-          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000;
-
-
-      - name: Show job status for commit
-        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          status: ${{ job.status }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-
+#
+#  test-ce-self-hosted:
+#    needs: get-runner-os
+#    # There's a top-level env variable for this but we can't use it here, unfortunately
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+#    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+#    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64') }}
+#    env:
+#      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+#    steps:
+#
+#      # REUSABLE SECTION
+#      - name: Create status check message
+#        run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+#        shell: bash
+#
+#      - name: Show job status for commit
+#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+#        with:
+#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#          context: ${{ env.STATUS_CHECK_MESSAGE }}
+#
+#      - uses: actions/checkout@v4
+#        with:
+#          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#
+#      # Need to be able to save Docker Hub credentials to keychain
+#      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+#        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#
+#      - name: Remove aerospike docker image
+#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        run: |
+#          if docker ps -aq | grep -q .; then
+#            docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+#          else
+#            echo "No containers to remove."
+#          fi
+#
+#      - name: Remove aerospike docker image
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        run: |
+#          if (docker ps -aq) {
+#              docker ps -aq | ForEach-Object { docker rm -f $_ } || Write-Host "Failed to remove one or more containers."
+#          }
+#          else {
+#              Write-Host "No containers to remove."
+#          }
+#
+#      - name: Run latest Community edition Aerospike server
+#        run: docker run -d --network=host --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+#
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: nodejs-client-artifacts
+#          path: ./downloaded-artifacts
+#
+#      - name: list Artifacts first
+#        run: |
+#          ls ./downloaded-artifacts
+#
+#      - name: Move artifacts
+#        run: |
+#          mkdir -p lib/binding
+#          cp -r downloaded-artifacts/* lib/binding
+#
+#
+#      - name: Delete leftover artifacts
+#        if: ${{ !(inputs.platform-tag == 'win_amd64') }}
+#        run: |
+#          rm -rf downloaded-artifacts/
+#
+#      - name: check binding
+#        run: |
+#          ls lib/binding;
+#
+#          
+#      #- name: Change install command for release
+#      #  run: node ./scripts/change-install-command.js
+#
+#      #- name: npm install
+#      #  run: npm install
+#
+#      - uses: actions/setup-node@v4
+#      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        with:
+#          node-version: ${{ matrix.nodejs-tag[1] }}
+#          path: ./lib/binding/node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/
+#
+#
+#      - name: Connect to Docker container on remote machine with Docker daemon
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        # DOCKER_HOST contains the IP address of the remote machine
+#        run: |
+#          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
+#          crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
+#        working-directory: .github\workflows
+#
+#      # REUSABLE SECTION 
+#
+#      - name: Run tests
+#        if: ${{ inputs.platform-tag == 'win_amd64' }}
+#        run: |
+#          docker ps;
+#          docker logs aerospike;
+#          cd ts-test;
+#          npm install;
+#          npx tsc;
+#          cp tests\udf.lua dist\udf.lua;
+#          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000;
+#          cd ..; 
+#          npx tsc;
+#
+#      - name: Run tests
+#        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+#        run: |
+#          docker ps;
+#          docker logs aerospike;
+#          cd ts-test;
+#          npm install;
+#          npx tsc;
+#          cd ..;
+#          npx tsc;
+#          npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000;
+#
+#
+#      - name: Show job status for commit
+#        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        with:
+#          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+#          status: ${{ job.status }}
+#          context: ${{ env.STATUS_CHECK_MESSAGE }}
+#
+#
+#

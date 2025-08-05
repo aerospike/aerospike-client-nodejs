@@ -35,7 +35,7 @@ using namespace v8;
 NAN_METHOD(AerospikeClient::UserCreate)
 {
 	TYPE_CHECK_REQ(info[0], IsString, "User name must be a string");
-	TYPE_CHECK_REQ(info[1], IsString, "password must be a string");
+	TYPE_CHECK_REQ(info[1], IsString, "Password must be a string");
 	TYPE_CHECK_OPT(info[2], IsArray, "roles must be an array");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
 	TYPE_CHECK_REQ(info[4], IsFunction, "Callback must be a function");
@@ -46,6 +46,7 @@ NAN_METHOD(AerospikeClient::UserCreate)
 	LogInfo *log = client->log;
 
 	as_policy_admin policy;
+	as_policy_admin* p_policy = NULL;
 	char *user_name = NULL;
 	char *password = NULL;
 	char ** roles = NULL;
@@ -72,9 +73,9 @@ NAN_METHOD(AerospikeClient::UserCreate)
 		Local<Array> role_array = info[2].As<Array>();
 		roles_size = role_array->Length();
 		if(roles_size != 0){
-			if (string_from_jsarray(&roles, roles_size, role_array, log) !=
+			if (string_from_jsarray(&roles, &roles_size, role_array, log) !=
 				AS_NODE_PARAM_OK) {
-				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
+				CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Roles object invalid");
 				goto Cleanup;
 			}
 		}
@@ -86,17 +87,19 @@ NAN_METHOD(AerospikeClient::UserCreate)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Policy object invalid");
 			goto Cleanup;
 		}
+		p_policy = &policy;
 	}
 
-	as_v8_debug(log, "WRITE THIS DEBUG MESSAGE");
-	status = aerospike_create_user(client->as, &cmd->err, &policy, user_name,
+	as_v8_debug(log, "Creating user=%s", user_name);
+	status = aerospike_create_user(client->as, &cmd->err, p_policy, user_name,
 					   password, const_cast<const char**>(roles), roles_size);
 
 	if (status != AEROSPIKE_OK) {
 		cmd->ErrorCallback();
 	}
 	else{
-		cmd->Callback(0, {});
+		Local<Value> argv[] = { Nan::Null(), Nan::Null()};
+		cmd->Callback(2, argv);
 	}
 
 Cleanup:
@@ -107,11 +110,11 @@ Cleanup:
 	if(password){
 		free(password);		
 	}
-	for(int i = 0; i < roles_size; i++) {
-		free(roles[i]);
-	}
 	if(roles){
-		free(roles);
+		for(int i = 0; i < roles_size; i++) {
+			free(roles[i]);
+		}
+		delete [] roles;
 	}
 
 }

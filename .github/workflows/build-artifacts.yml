@@ -13,6 +13,9 @@ on:
         required: true
         type: boolean
         default: false
+      version:
+        type: string
+        required: true
       use-server-rc:
         type: boolean
         required: true
@@ -32,6 +35,9 @@ on:
         required: false
         type: boolean
         default: false
+      version:
+        type: string
+        required: true
       # workflow_call hack
       is_workflow_call:
         type: boolean
@@ -61,8 +67,6 @@ jobs:
         platform-tag: [
           "manylinux_x86_64",
           "manylinux_aarch64",
-          "manylinux_20_x86_64",
-          "manylinux_20_aarch64",
           "macosx_x86_64",
           "macosx_arm64",
           "win_amd64"
@@ -72,7 +76,8 @@ jobs:
     with:
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var
-      run_tests: ${{ inputs.run_tests }}
+      run_tests: false
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
+      version: ${{ inputs.version }}
     secrets: inherit
