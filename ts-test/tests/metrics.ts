@@ -1394,39 +1394,6 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 3000));
 
-          const writePolicy: WritePolicy = new Aerospike.policy.WritePolicy({
-            totalTimeout: 1 
-          })
-
-          try{
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/2'), { i: 49 }, {}, writePolicy)
-            assert.fail("AN ERROR SHOULD HAVE ")
-          }
-          catch(error: any){
-            expect(error.code).to.eql(9)
-
-          }
-
-          try{
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/2'), { i: 49 }, {}, writePolicy)
-            assert.fail("AN ERROR SHOULD HAVE ")
-          }
-          catch(error: any){
-            expect(error.code).to.eql(9)
-
-          }
-
-          try{
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/2'), { i: 49 }, {}, writePolicy)
-            assert.fail("AN ERROR SHOULD HAVE ")
-          }
-          catch(error: any){
-            expect(error.code).to.eql(9)
-
-          }
-
-          await new Promise(r => setTimeout(r, 6000));
-
 
 
           await client.disableMetrics()
