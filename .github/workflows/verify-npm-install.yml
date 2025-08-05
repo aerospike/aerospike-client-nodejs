@@ -28,5 +28,5 @@ jobs:
 
       - name: verify runs and is aligned
         run: |
-          npm install darkcartpale@6.3.1 --omit-dev;
+          npm install darkcartpale@6.3.2 --omit-dev;
           node -e "const Aerospike = require('darkcartpale'); console.log(Aerospike.policy.replica);"
