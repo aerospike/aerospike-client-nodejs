@@ -7,15 +7,11 @@ param (
   [string]$FileHashesIni = "..\aerospike-client-c.sha256",
   [string]$OpenSSLIni = "..\openssl-native.ini",
   [string]$OpenSSLHashesIni = "..\openssl-native.sha256",
-  [string]LuaIni = "..\lua.ini",
-  [string]LuaHashesIni = "..\lua.sha256",
+  [string]$LuaIni = "..\lua.ini",
+  [string]$LuaHashesIni = "..\lua.sha256",
   [string]$LibYamlIni = "..\libyaml.ini",
-  [string]$LibYamlHashesIni = "..\libyaml.sha256",
+  [string]$LibYamlHashesIni = "..\libyaml.sha256"
 )
-# OPENSSL hash 
-DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC
-# LUA hash
-#D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034
 
 Write-Host "NodeLibFile: $NodeLibFile"
 
@@ -210,9 +206,15 @@ Copy-Item $CClientSrcPath\modules\common\src\include\citrusleaf\*.h $TargetPath\
 # Copy library files
 New-Item -Path $TargetPath/lib -ItemType "directory" -Force | out-null
 Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\$Configuration\*.lib $TargetPath\lib
+
 Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike.lib $TargetPath\lib
-Copy-Item $OpenSSLSrcPath\lib\win-$Platform\native\libcrypto.lib $TargetPath\lib
+
 Copy-Item $OpenSSLSrcPath\lib\win-$Platform\native\libssl.lib $TargetPath\lib
+Copy-Item $OpenSSLSrcPath\lib\win-$Platform\native\libcrypto.lib $TargetPath\lib
+
+Copy-Item $LuaSrcPath\build\native\lib\$Platform\v143\Release\lua.lib $TargetPath\lib
+
+Copy-Item $LibYamlSrcPath\build\native\lib\v142\$Platform\Release\yaml.lib $TargetPath\lib
 
 
 # Copy dlls
@@ -221,7 +223,10 @@ Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\$Configuration\*.dll $C
 # Need pthreadVC2.dll (Release) even for Debug configuration!
 Copy-Item $CClientDepsSrcPath\build\native\lib\$Platform\Release\pthreadVC2.dll $Configuration
 Copy-Item $CClientSrcPath\vs\aerospike\$Platform\$CClientConfiguration\aerospike.dll $Configuration
+
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libcrypto-3-x64.dll $Configuration
 Copy-Item $OpenSSLSrcPath\runtimes\win-$Platform\native\libssl-3-x64.dll $Configuration
+
+Copy-Item $LibYamlSrcPath\build\native\lib\v142\$Platform\Release\lua.dll $Configuration
 
 Write-Verbose "Successfully build aerospike-client-c dependency"
