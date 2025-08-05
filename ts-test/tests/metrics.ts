@@ -2743,12 +2743,12 @@ describe('Metrics tests', function () {
         address: '127.0.0.1',
         port: 3000,
         conns: { inUse: 0, inPool: 0, opened: 0, closed: 0 },
-        labels: {'label1': 'label2'},
         metrics
       }
 
       let cluster: Cluster = {
         appId: 'example',
+        labels: {'label1': 'label2'},
         clusterName: 'cluster',
         commandCount: 11,
         invalidNodeCount: 15,
