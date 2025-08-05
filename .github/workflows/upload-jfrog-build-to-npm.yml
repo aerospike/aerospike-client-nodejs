@@ -62,7 +62,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
 
 
     - name: Download Artifacts from Jfrog
@@ -143,7 +143,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: npm rc
