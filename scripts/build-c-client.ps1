@@ -175,7 +175,7 @@ $OpenSSLSrcPath = "openssl-native.${OpenSSLVersion}"
 $OpenSSLArchive = "${OpenSSLSrcPath}.zip"
 $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVersion}"
 $OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
-Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash $OpenSSLArchiveHash -createdir
+Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
 Install LUA package
 Write-Host "Installing lua"
@@ -184,7 +184,7 @@ $LuaSrcPath = "lua.${LuaVersion}"
 $LuaArchive = "${LuaSrcPath}.zip"
 $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
 $LuaArchiveHash = $LuaHashes[$LuaArchive]
-Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
+Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash "D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034"	 -createdir
 
 Install libyaml package
 Write-Host "Installing libyaml"
@@ -193,7 +193,7 @@ $LibYamlSrcPath = "libyaml.${LibYamlVersion}"
 $LibYamlArchive = "${LibYamlSrcPath}.zip"
 $LibYamlUrl = "https://www.nuget.org/api/v2/package/libyaml/${LibYamlVersion}"
 $LibYamlArchiveHash = $LibYamlHashes[$LibYamlArchive]
-Install-Package -uri $LibYamlUrl -archive $LibYamlArchive -outpath $LibYamlSrcPath -hash $LibYamlArchiveHash -createdir
+Install-Package -uri $LibYamlUrl -archive $LibYamlArchive -outpath $LibYamlSrcPath -hash "DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC" -createdir
 
 $ProjectFile = Resolve-Path (Join-Path $CClientSrcPath "vs\aerospike\aerospike.vcxproj")
 $NodePath = Split-Path $NodeLibFile -Parent
