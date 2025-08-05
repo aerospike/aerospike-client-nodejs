@@ -120,7 +120,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike
 
     - name: list version info
-      run: 
+      run:
         jq --arg v "6.3.3" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm ci;
       env:
