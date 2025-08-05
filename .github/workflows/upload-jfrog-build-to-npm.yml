@@ -146,7 +146,8 @@ jobs:
         sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - run: npm publish --provenance --access public
+    - run: |
+      npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
