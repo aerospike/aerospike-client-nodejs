@@ -64,6 +64,13 @@ jobs:
         NEW_VERSION: ${{ inputs.new_version }}
         PACKAGE_MANAGER: npm
 
+    - name: Download Artifacts from Jfrog
+      if: ${{ inputs.pipeline-stage == 'master' }}
+      run: jf rt dl "clients-npm-prod-public-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+        PACKAGE_MANAGER: npm
+
     - name: list Artifacts
       run: |
         ls downloaded-artifacts
@@ -117,12 +124,12 @@ jobs:
       env:
         NPMRC: ${{ secrets.NPMRC_STAGE }}
 
-    #- name: npmrc master
-    #  if: ${{ inputs.pipeline-stage == 'dev' }}
-    #  run: |
-    #    echo "$NPMRC" | base64 --decode > ~/.npmrc  
-    #  env:
-    #    NPMRC: ${{ secrets.NPMRC }}
+    - name: npmrc master
+      if: ${{ inputs.pipeline-stage == 'master' }}
+      run: |
+        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC_MASTER }}
 
     - name: list version info
       if: ${{ inputs.pipeline-stage == 'dev' }}
@@ -137,4 +144,11 @@ jobs:
       run: |
         npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
         npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+
+    - name: list version info
+      if: ${{ inputs.pipeline-stage == 'master' }}
+      run: |
+        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
+        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}

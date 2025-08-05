@@ -279,6 +279,12 @@ To run a specific tests, use:
 
     npm test --testfile=filename.js
 
+Various options can be provided, such as host, port, and password information
+
+    npm run test --testfile=metrics.js    --   -h localhost --port 3000 -t 60000 -U superuser -P superuser
+
+To see the options, see `ts-test/test/util/options.ts` for a full list.
+
 Note: make sure your server has TTL enabled for the `test` namespace ([Namespace Retention Configuration](https://docs.aerospike.com/server/operations/configure/namespace/retention)) to allow all tests to run correctly.
 
 To run the tests and also report on test coverage:
