@@ -171,7 +171,7 @@ $LuaVersion = "5.4.6"
 $LuaSrcPath = "lua.${LuaVersion}"
 $LuaArchive = "${LuaSrcPath}.zip"
 $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
-$LuaArchiveHash = $FileHashes[$LuaArchive]
+$LuaArchiveHash = $LuaHashes[$LuaArchive]
 Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
 
 Install libyaml package
@@ -180,7 +180,7 @@ $LibYamlVersion = "0.2.5.12"
 $LibYamlSrcPath = "libyaml.${LibYamlVersion}"
 $LibYamlArchive = "${LibYamlSrcPath}.zip"
 $LibYamlUrl = "https://www.nuget.org/api/v2/package/libyaml/${LibYamlVersion}"
-$LibYamlArchiveHash = $FileHashes[$LibYamlArchive]
+$LibYamlArchiveHash = $LibYamlHashes[$LibYamlArchive]
 Install-Package -uri $LibYamlUrl -archive $LibYamlArchive -outpath $LibYamlSrcPath -hash $LibYamlArchiveHash -createdir
 
 $ProjectFile = Resolve-Path (Join-Path $CClientSrcPath "vs\aerospike\aerospike.vcxproj")
