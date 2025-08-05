@@ -62,3 +62,9 @@ The following command should allow you to build with Python 3.12:
     python3 -m pip install packaging
 
 For more information on this topic, see [here.](https://github.com/nodejs/node-gyp/issues/2869)
+
+#### I'm receiving a linking error such as: LINK : fatal error LNK1181: cannot open input file 'libcrypto.lib'
+
+The Windows build uses msbuild and visual studio to control the build and manage dependencies.
+
+If you receive a message like this, you can add an additional path to `AdditionalLibraryDirectories` on the file `aerospike-client-c\vs\"props\nodejs.props"`

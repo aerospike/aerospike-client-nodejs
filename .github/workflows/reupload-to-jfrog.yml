@@ -127,7 +127,7 @@ jobs:
       if: ${{ inputs.pipeline-stage == 'master' }}
     # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-internal-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-prod-public-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
