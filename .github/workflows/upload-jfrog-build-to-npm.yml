@@ -152,9 +152,10 @@ jobs:
         NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
     - run: |
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        npm whoami;
+        npm publish;
+      #env:
+      #  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     #- name: npm rc
