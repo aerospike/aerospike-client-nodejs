@@ -79,7 +79,7 @@ jobs:
       get-jfrog-stage-version,
       bump-dev-number,
       publish-to-npm,
-      verify-npm-install
+      verify-npm-install,
       reupload-master-to-jfrog
     ]
     uses: ./.github/workflows/upload-to-jfrog-npm-repo.yml
