@@ -3,15 +3,17 @@ param (
   [Parameter(Mandatory=$true)][string]$NodeLibFile,
   [string]$Configuration = "Release",
   [string]$Platform = "x64",
-  [string]$CClientIni = "..\aerospike-client-c.ini",
-  [string]$FileHashesIni = "..\aerospike-client-c.sha256"
+  [string]$CClientIni = "..\aerospike-client-c.ini",,
+  [string]$FileHashesIni = "..\aerospike-client-c.sha256",
   [string]$OpenSSLIni = "..\openssl-native.ini",
-  [string]$OpenSSLHashesIni = "..\openssl-native.sha256"
+  [string]$OpenSSLHashesIni = "..\openssl-native.sha256",
   [string]LuaIni = "..\lua.ini",
-  [string]LuaHashesIni = "..\lua.sha256"
+  [string]LuaHashesIni = "..\lua.sha256",
   [string]$LibYamlIni = "..\libyaml.ini",
-  [string]$LibYamlHashesIni = "..\libyaml.sha256"
+  [string]$LibYamlHashesIni = "..\libyaml.sha256",
 )
+# OPENSSL hash 
+DA3A142BD072B0FFEBA67FE0C178D152EF8276A6469D6F80D6FE497C905C48EC
 # LUA hash
 #D8D6B5CCA02B3E11C38DD9A4373CAC62E968C35DFAD750C7CDDD88EAA9223034
 
