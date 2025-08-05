@@ -146,17 +146,21 @@ jobs:
         sed -i 's/"name": "[^"]*"/"name": "callmapartney"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
+    - name: npm rc
+      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC_RELEASE }}
+
     - run: |
-        npm whoami;
         npm publish --access public;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-#    - name: npm rc
-#      run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
-#      env:
-#        NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+    #- name: npm rc
+    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
 
     #- name: npm publish
     #  run: |
