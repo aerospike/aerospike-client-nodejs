@@ -165,14 +165,14 @@ $OpenSSLUrl = "https://www.nuget.org/api/v2/package/openssl-native/${OpenSSLVers
 $OpenSSLArchiveHash = $OpenSSlHashes[$OpenSSLArchive]
 Install-Package -uri $OpenSSLUrl -archive $OpenSSLArchive -outpath $OpenSSLSrcPath -hash $OpenSSLArchiveHash -createdir
 
-# Install LUA package
-# Write-Host "Installing lua"
-# $LuaVersion = "5.4.6"
-# $LuaSrcPath = "lua.${LuaVersion}"
-# $LuaArchive = "${LuaSrcPath}.zip"
-# $LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
-# $LuaArchiveHash = $FileHashes[$LuaArchive]
-# Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
+Install LUA package
+Write-Host "Installing lua"
+$LuaVersion = "5.4.6"
+$LuaSrcPath = "lua.${LuaVersion}"
+$LuaArchive = "${LuaSrcPath}.zip"
+$LuaUrl = "https://www.nuget.org/api/v2/package/lua/${LuaVersion}"
+$LuaArchiveHash = $FileHashes[$LuaArchive]
+Install-Package -uri $LuaUrl -archive $LuaArchive -outpath $LuaSrcPath -hash $LuaArchiveHash	 -createdir
 
 Install libyaml package
 Write-Host "Installing libyaml"
