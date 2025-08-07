@@ -832,7 +832,7 @@ export class BatchResult<B extends AerospikeBins = AerospikeBins> {
      * Record result for the requested key. This record will only be populated when the result is
      * {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK} or {@link statusNamespace.AEROSPIKE_ERR_UDF|AEROSPIKE_ERR_UDF}.
      */
-    record: B;
+    record: AerospikeRecord<B>;
     /**
      * It is possible that a write command completed even though the client
      * returned this error. This may be the case when a client error occurs
@@ -1278,7 +1278,7 @@ export class Query {
      * @param predicate - The index filter to
      * apply to the function.
      * @param expression - aerospike expression
-     * 
+     *
      * @example <caption>Applying a SI filter to find all records
      * where the 'tags' list bin contains the value 'blue':</caption>
      *
@@ -1309,7 +1309,7 @@ export class Query {
      * @param predicate - The index filter to
      * apply to the function.
      * @param indexName - Name of the Secondary Index
-     * 
+     *
      * @example <caption>Applying a SI filter to find all records
      * where the 'tags' list bin contains the value 'blue':</caption>
      *
@@ -1880,13 +1880,13 @@ export namespace policy {
          * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
          *
          * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-         * 
+         *
          * Default: false.
          */
         public onLockingOnly?: boolean;
         /**
          * Algorithm used to determine target node.
-         * 
+         *
          * @default {@link policy.replica.MASTER}
          * @see {@link policy.replica} for supported policy values.
          */
@@ -2053,7 +2053,7 @@ export namespace policy {
          * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
          *
          * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-         * 
+         *
          * Default: false.
          */
         public onLockingOnly?: boolean;
@@ -2329,7 +2329,7 @@ export namespace policy {
          * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
          *
          * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-         * 
+         *
          * Default: false.
          */
         public onLockingOnly?: boolean;
@@ -2595,7 +2595,7 @@ export namespace policy {
     export class MetricsPolicy {
         /**
          * Listeners that handles metrics notification events. If set to None, the default listener implementation
-         * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+         * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to
          * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
          * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
          */
@@ -2626,7 +2626,7 @@ export namespace policy {
         public latencyShift?: number;
         /**
          * Object containing name/value labels applied when exporting metrics.
-         */ 
+         */
         public labels?: { [key: string]: string };
 
         /**
@@ -2913,13 +2913,13 @@ export namespace policy {
          * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
          *
          * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-         * 
+         *
          * Default: false.
          */
         public onLockingOnly?: boolean;
         /**
          * Algorithm used to determine target node.
-         * 
+         *
          * @default {@link policy.replica.MASTER}
          * @see {@link policy.replica} for supported policy values.
          */
@@ -3054,13 +3054,13 @@ export namespace policy {
          * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
          *
          * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-         * 
+         *
          * Default: false.
          */
         public onLockingOnly?: boolean;
         /**
          * Algorithm used to determine target node.
-         * 
+         *
          * @default {@link policy.replica.MASTER}
          * @see {@link policy.replica} for supported policy values.
          */
@@ -3281,7 +3281,7 @@ export namespace policy {
          * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
          * use SEQUENCE instead. Also use SEQUENCE for writes.
          *
-         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
+         * config.rackAware, config.rackId or as_config.rackIds, and server rack
          * configuration must also be set to enable this functionality.
          */
         PREFER_RACK,
@@ -3515,7 +3515,7 @@ export class Client extends EventEmitter {
      *   return binValue
      * end
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult[]>;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult<B>[]>;
 
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
@@ -3524,7 +3524,7 @@ export class Client extends EventEmitter {
      * the command completes. Includes the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3533,7 +3533,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3543,7 +3543,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      * Checks the existence of a batch of records from the database cluster.
@@ -3700,20 +3700,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Reads a batch of records from the database cluster.
@@ -3775,14 +3775,14 @@ export class Client extends EventEmitter {
      * })();
      *
      */
-    public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
@@ -3790,7 +3790,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * Remove multiple records.
      *
@@ -3945,14 +3945,14 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord[]>;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
@@ -3960,7 +3960,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchResult<B>[]>): void;
     /**
     * Read/Write multiple records for specified batch keys in one batch call.
     *
@@ -4077,18 +4077,18 @@ export class Client extends EventEmitter {
     *     await client.close();
     * })();
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param policy - The Batch Policy to use for this command.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Closes the client connection to the cluster.
@@ -4353,7 +4353,7 @@ export class Client extends EventEmitter {
      * @returns A Promise that will resolve to an {@link IndexJob} instance.
      *
      * @see {@link createIndex} for more info on secondary indexes.
-     * 
+     *
      * @see {@link indexType} for enumeration of supported index types.
      * @see {@link indexDataType} for enumeration of supported data types.
      * @see {@link IndexJob}
@@ -4838,7 +4838,7 @@ export class Client extends EventEmitter {
     /**
      *
      * Applies a User Defined Function (UDF) on a record in the database.
-     * 
+     *
      * @remarks Use this function to apply a
      * <a href="http://www.aerospike.com/docs/guide/record_udf.html">&uArr;Record UDF</a>
      * on a single record and return the result of the UDF function call. Record
@@ -5036,9 +5036,9 @@ export class Client extends EventEmitter {
     public commit(transaction: Transaction): Promise< typeof Transaction.commitStatus[keyof typeof Transaction.commitStatus]>;
     /**
      * Disable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @returns A Promise that resolves to void.
-     * 
+     *
      * @example <caption>disabling metrics</caption>
      *
      * const Aerospike = require('aerospike')
@@ -5047,23 +5047,23 @@ export class Client extends EventEmitter {
      * var config = {
      *   hosts: '192.168.33.10:3000',
      * }
-     * 
-     * 
+     *
+     *
      * ;(async () => {
      *    let client = await Aerospike.connect(config)
      *
      *    await client.enableMetrics()
-     * 
+     *
      *    await client.disableMetrics()
-     * 
-     *    
+     *
+     *
      *    await client.close()
      * })();
      */
     public disableMetrics(): Promise<void>;
     /**
      * Disable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @param callback - This function will be called with the
      * result returned by the disableMetrics call.
      */
@@ -5071,7 +5071,7 @@ export class Client extends EventEmitter {
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @returns A Promise that resolves to void.
      *
      * @example <caption>using the default metrics writer</caption>
@@ -5082,16 +5082,16 @@ export class Client extends EventEmitter {
      * var config = {
      *   hosts: '192.168.33.10:3000',
      * }
-     * 
-     * 
+     *
+     *
      * ;(async () => {
      *    let client = await Aerospike.connect(config)
      *
      *    client.enableMetrics()
-     * 
+     *
      *    client.disableMetrics()
-     * 
-     *    
+     *
+     *
      *    await client.close()
      * })();
      *
@@ -5103,28 +5103,28 @@ export class Client extends EventEmitter {
      * var config = {
      *   hosts: '192.168.33.10:3000',
      * }
-     * 
-     * 
+     *
+     *
      * function enableListener() {
      *   console.log("Metrics Enabled")
      *   return
      * }
-     * 
+     *
      * function snapshotListener(cluster: Cluster) {
      *   console.log(Cluster.clusterName)
      *   return
      * }
-     * 
+     *
      * function nodeCloseListener(node: Node) {
      *   console.log(node.conns)
      *   return
      * }
-     * 
+     *
      * function disableListener(cluster: Cluster) {
      *   console.log("Metrics Disabled")
      *   return
      * }
-     * 
+     *
      * ;(async () => {
      *    let client = await Aerospike.connect(config)
      *
@@ -5148,34 +5148,34 @@ export class Client extends EventEmitter {
      *        labels: {"size": "large", "fit": "regular"}
      *      }
      *    )
-     * 
+     *
      *    await client.enableMetrics(policy)
      *
-     * 
+     *
      *    await client.disableMetrics()
-     * 
+     *
      *    // All listeners are fired asynchronously
      *    // If you need the enableListener or disableListener to fire immediately, yield control of the event loop.
      *    await new Promise(r => setTimeout(r, 0));
-     *    
+     *
      *    await client.close()
      */
     public enableMetrics(): Promise<void>;
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @param callback - This function will be called with the
      * result returned by the enableMetrics call.
-     * 
+     *
      */
     public enableMetrics(callback: Function): void;
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @param policy - {@link policy.MetricsPolicy} instance.
-     * 
+     *
      * @returns A Promise that resolves to void.
      *
      */
@@ -5183,11 +5183,11 @@ export class Client extends EventEmitter {
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
-     * 
+     *
      * @param policy - {@link policy.MetricsPolicy} instance.
      * @param callback - This function will be called with the
      * result returned by the abort function call.
-     * 
+     *
      */
     public enableMetrics(policy: MetricsPolicy, callback: Function): void;
     /**
@@ -6130,7 +6130,7 @@ export class Client extends EventEmitter {
      * @param policy - The Info Policy to use for this command.
      *
      * @returns A <code>Promise</code> that resolves to void.
-     * 
+     *
      */
     public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
 
@@ -6144,7 +6144,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
-     * 
+     *
      */
     public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
 
@@ -6404,7 +6404,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6493,7 +6493,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      *
@@ -6554,7 +6554,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public createPKIUser(user: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      * @param user - User name for the new user.
@@ -6634,7 +6634,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6676,7 +6676,7 @@ export class Client extends EventEmitter {
      *
      * @param roleName - role name
      * @param callback - The function to call when the command has completed.
-     * 
+     *
      */
     public dropRole(roleName: string, callback?: TypedCallback<void>): void;
     /**
@@ -6753,7 +6753,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -6964,9 +6964,9 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */        
+     */
     public queryRoles(policy?: policy.AdminPolicy | null): Promise<Array<admin.Role>>;
-    /**     
+    /**
      * @param callback - The function to call when the command has completed.
      */
     public queryRoles(callback?: TypedCallback<Array<admin.Role>>): void;
@@ -7087,7 +7087,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -7121,7 +7121,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public revokePrivileges(roleName: string, privileges: Array<admin.Privilege>, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      * @param roleName - role name
@@ -7178,7 +7178,7 @@ export class Client extends EventEmitter {
      *     if (client) client.close()
      *   }
      * })()
-     */    
+     */
     public revokeRoles(user: string, roles: Array<string>, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      *
@@ -7206,7 +7206,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -7262,7 +7262,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -7297,7 +7297,7 @@ export class Client extends EventEmitter {
      *   }
      * })()
      *
-     */    
+     */
     public setQuotas(roleName: string, readQuota: number, writeQuota: number, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      * Set maximum reads/writes per second limits for a role. If a quota is zero, the limit is removed.
@@ -7329,7 +7329,7 @@ export class Client extends EventEmitter {
      * @param policy - Optional {@link AdminPolicy}.
      *
      * @returns A promise that resolves to void upon success.
-     * 
+     *
      * @example
      *
      * const Aerospike = require('aerospike')
@@ -7364,7 +7364,7 @@ export class Client extends EventEmitter {
      *   }
      * })()
      *
-     */   
+     */
     public setWhitelist(roleName: string, whitelist: Array<string> | null, policy?: policy.AdminPolicy | null): Promise<void>;
     /**
      * Set IP address whitelist for a role. If whitelist is null or empty, remove existing whitelist from role.
@@ -9327,13 +9327,13 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
      * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
      *
      * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-     * 
+     *
      * Default: false.
      */
     onLockingOnly?: boolean;
     /**
      * Algorithm used to determine target node.
-     * 
+     *
      * @default {@link policy.replica.MASTER}
      * @see {@link policy.replica} for supported policy values.
      */
@@ -9478,7 +9478,7 @@ export interface BatchApplyPolicyOptions {
      * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
      *
      * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-     * 
+     *
      * Default: false.
      */
     onLockingOnly?: boolean;
@@ -9761,7 +9761,7 @@ export interface BatchWritePolicyOptions extends BasePolicyOptions {
      * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
      *
      * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-     * 
+     *
      * Default: false.
      */
     onLockingOnly?: boolean;
@@ -10161,7 +10161,7 @@ export interface ConfigOptions {
     rackAware?: boolean;
     /**
      * Rack where this client instance resides. If rack_ids is set, rack_id is ignored..
-     * 
+     *
      * {@link rackAware} config, {@link policy.replica.PREFER_RACK} replica policy, and server
      * rack configuration must also be set to enable this functionality.
      *
@@ -10174,7 +10174,7 @@ export interface ConfigOptions {
      * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
      *
       @default null
-     * 
+     *
      * @since 3.8.0
      */
     rackIds?: number[];
@@ -10382,7 +10382,7 @@ export interface ConfigProvider {
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
-    * 
+    *
     * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
     * will take precedence over the command-level policy
     */
@@ -10694,7 +10694,7 @@ export interface MapPolicyOptions extends BasePolicyOptions {
 export interface MetricsPolicyOptions {
     /**
      * Listeners that handles metrics notification events. If set to None, the default listener implementation
-     * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to 
+     * will be used, which writes the metrics snapshot to a file which can later be read and forwarded to
      * OpenTelemetry by a separate offline application. Otherwise, use all listeners set in the class instance.
      * The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
      */
@@ -10780,7 +10780,7 @@ export interface Cluster {
     invalidNodeCount: number;
     /**
      * Object containing name/value labels applied when exporting metrics.
-     */ 
+     */
     labels?: { [key: string]: string };
     /**
      * Transaction count. The value is cumulative and not reset per metrics interval.
@@ -10825,7 +10825,7 @@ export interface Node {
 
 /**
  * Each type of latency has a list of latency buckets.
- * 
+ *
  * Latency buckets counts are cumulative and not reset on each metrics snapshot interval.
  */
 export interface NamespaceMetrics {
@@ -11350,7 +11350,7 @@ export interface RemovePolicyOptions extends BasePolicyOptions {
     key?: policy.key;
     /**
      * Algorithm used to determine target node.
-     * 
+     *
      * @default {@link policy.replica.MASTER}
      * @see {@link policy.replica} for supported policy values.
      */
@@ -11701,13 +11701,13 @@ export interface WritePolicyOptions extends BasePolicyOptions {
      * If this field is true and the record is already locked by this transaction, the command will return {@link statusNamespace.MRT_ALREADY_LOCKED|MRT_ALREADY_LOCKED}.
      *
      * This field is useful for safely retrying non-idempotent writes as an alternative to simply aborting the transaction.
-     * 
+     *
      * Default: false.
      */
     onLockingOnly?: boolean;
     /**
      * Algorithm used to determine target node.
-     * 
+     *
      * @default {@link policy.replica.MASTER}
      * @see {@link policy.replica} for supported policy values.
      */
@@ -12164,7 +12164,7 @@ export interface MetricsListenersOptions {
 
 /**
  * Metrics listener callbacks.
- * 
+ *
  * All callbacks must be set.
  */
 export class MetricsListeners {
@@ -12189,7 +12189,7 @@ export class MetricsListeners {
      */
     disableListener: disableListener;
 
-}   
+}
 /**
  * Bitwise write flags.
  *
@@ -14223,18 +14223,18 @@ export namespace maps {
 
     /**
      * Map storage order.
-     * 
-     * 
+     *
+     *
      * @remarks
-     * 
-     * Default map storage order has changed over time. 
-     * 
+     *
+     * Default map storage order has changed over time.
+     *
      * Storage order has little effect on the node.js client. However, when using other Aerospike Clients, storage order can change the expected returntype and cause type mismatches.
-     * 
+     *
      * See the compatibility matrix below to determne the default map type based on the aerospike operations and the Node.js Client version.
-     * 
+     *
      * ## Default map ordering
-     * 
+     *
      * |                         | {@link Client#put}                      | {@link maps} operations (ex. {@link maps.put}, {@link maps.putItems}, {@link maps.increment}, etc.) |
      * |-------------------------|------------------------------------------------------------------|----------------------------------------------------------------------------|
      * | Version 5.4.0 and above | {@link order.KEY_ORDERED | KEY_ORDERED} | {@link order.UNORDERED | UNORDERED}                                                                 |
@@ -17304,7 +17304,7 @@ export namespace operations {
 /**
  * This namespace provides functions to create secondary index (SI) filter
  * predicates for use in query commands via the {@link Client#query} command.
- * For more info see: 
+ * For more info see:
  * <a href="https://aerospike.com/docs/develop/learn/queries/secondary-index/#index-filters" title="Index Filter Documentation.">Index Filter Documentation/a>
  *
  * @see {@link Query}
@@ -17504,13 +17504,13 @@ export namespace filter {
 
 /**
  * Database operation error codes.
- * 
+ *
  * @see {@link Query}
- * 
+ *
  * Status codes used as return values as AerospikeErro.code values.
- * 
+ *
  * See the table below to match each status code with its corresponding status.
- * 
+ *
  * | Status                                            | Status (without prefix)                 | Status Code |
  * |---------------------------------------------------|-----------------------------------------|-------------|
  * | {@link AEROSPIKE_METRICS_CONFLICT}                | {@link METRICS_CONFLICT}                |    -20      |
