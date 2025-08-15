@@ -1269,7 +1269,7 @@ export class Query {
      */
     public where(predicate: filter.SindexFilterPredicate): void;
     /**
-     * Applies a SI on expression to the query.
+     * Applies an expression index to the query.
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -1300,7 +1300,7 @@ export class Query {
      */
     public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp): void;
     /**
-     * Applies a SI on expression to the query.
+     * Applies a SI to the query using the index name.
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -2613,7 +2613,7 @@ export namespace policy {
         public reportSizeLimit?: number;
         /**
          * Number of cluster tend iterations between metrics notification events. One tend iteration
-         * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+         * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
          */
         public interval?: number;
         /**
@@ -3281,7 +3281,7 @@ export namespace policy {
          * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
          * use SEQUENCE instead. Also use SEQUENCE for writes.
          *
-         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
+         * {@link Config.rackAware}, {@link Config.rackId} or {@link Config.rackIds}, and server rack 
          * configuration must also be set to enable this functionality.
          */
         PREFER_RACK,
@@ -4243,7 +4243,7 @@ export class Client extends EventEmitter {
      */
     public contextToBase64(context: cdt.Context): string;
     /**
-     * Creates a blob secondary index.
+     * Creates a secondary index on blob data.
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4293,7 +4293,7 @@ export class Client extends EventEmitter {
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a blob secondary index on an expression.
+     * Creates an expression index on blob data.
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4345,7 +4345,7 @@ export class Client extends EventEmitter {
     public createExpBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
      *
-     * Creates a secondary index (SI) on an expression.
+     * Creates an expression index.
      *
      * @param options - Options for creating the index.
      * @param policy - The Info Policy to use for this command.
@@ -4384,8 +4384,7 @@ export class Client extends EventEmitter {
      *                   exp: exp,
      *                   index: indexName,
      *                   type: indexType,
-     *                   datatype: dataType,
-     *                   context: context }
+     *                   datatype: dataType }
      *
      *   let policy = new Aerospike.InfoPolicy({ timeout: 100 })
      *
@@ -4415,7 +4414,7 @@ export class Client extends EventEmitter {
      */
     public createExpIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type Integer on an expression.
+     * Creates an expression index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
@@ -4471,7 +4470,7 @@ export class Client extends EventEmitter {
      */
     public createExpIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type String on an expression.
+     * Creates an expression index on string data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
@@ -4523,7 +4522,7 @@ export class Client extends EventEmitter {
      */
     public createExpStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a geospatial secondary secondary index on an expression.
+     * Creates an expression index on geospatial data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
@@ -4584,8 +4583,7 @@ export class Client extends EventEmitter {
      * verify that the index has been created and populated with all the data use
      * the {@link IndexJob} instance returned by the callback.
      *
-     * Aerospike currently supports indexing of strings, integers and geospatial
-     * information in GeoJSON format.
+     * See {@link indexDataType} for supported index data types.
      *
      * ##### String Indexes
      *
@@ -4680,7 +4678,7 @@ export class Client extends EventEmitter {
      */
     public createIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type Integer.
+     * Creates an secondary index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
@@ -4735,7 +4733,7 @@ export class Client extends EventEmitter {
      */
     public createIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type String.
+     * Creates an secondary index on string data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
@@ -4786,7 +4784,7 @@ export class Client extends EventEmitter {
      */
     public createStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a geospatial secondary secondary index.
+     * Creates an secondary index on geospatial data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
@@ -6409,9 +6407,6 @@ export class Client extends EventEmitter {
      *
      * const Aerospike = require('aerospike')
      *
-     * function wait (ms) {
-     *     return new Promise(resolve => setTimeout(resolve, ms))
-     * }
      *
      * ;(async function () {
      *   let client
@@ -6513,7 +6508,7 @@ export class Client extends EventEmitter {
      */
     public createUser(user: string, password: string, roles?: Array<string> | null, policy?: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
-     * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
+     * Create user with roles. PKI users are authenticated via TLS and a certificate instead of a password.
      *
      * @param user - User name for the new user.
      * @param roles - Optional array of role names. For more information on roles, see {@link admin.Role}.
@@ -7211,9 +7206,6 @@ export class Client extends EventEmitter {
      *
      * const Aerospike = require('aerospike')
      *
-     * function wait (ms) {
-     *     return new Promise(resolve => setTimeout(resolve, ms))
-     * }
      *
      * ;(async function () {
      *   let client
@@ -7439,6 +7431,8 @@ export class Config {
     public authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    * 
+    * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.x
     */
     public configProvider?: ConfigProvider;
     /**
@@ -9888,6 +9882,8 @@ export interface ConfigOptions {
     authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    * 
+    * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.x
     */
     configProvider?: ConfigProvider;
     /**
@@ -10378,17 +10374,16 @@ export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
     * initialization and whenever the file changes. The policies fields in the file
-    * override all command policies.
+    * override all command policies as well as all policies specified in the Node.js Client {@link Config}.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
     * 
-    * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
-    * will take precedence over the command-level policy
     */
     path?: string;
     /**
-     * Check dynamic configuration file for changes after this number of cluster tend iterations.
+     * Interval in milliseconds between dynamic configuration check for file modifications.
+     * The value must be greater than or equal to the {Config.tenderInterval}.
      */
     interval?: number;
 }
@@ -10711,7 +10706,7 @@ export interface MetricsPolicyOptions {
     reportSizeLimit?: number;
     /**
      * Number of cluster tend iterations between metrics notification events. One tend iteration
-     * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+     * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
      */
     interval?: number;
     /**
@@ -17358,7 +17353,7 @@ export namespace filter {
     }
 
     /**
-     * Filter predicated returned by {@link contains} and {@link equal} for use in Secondary Index queries.
+     * Filter predicate returned by {@link contains} and {@link equal} for use in Secondary Index queries.
      */
     class EqualPredicate extends SindexFilterPredicate {
         constructor(bin: string | null, value: string | number, dataType: indexDataType, indexType: indexType);
@@ -17400,7 +17395,7 @@ export namespace filter {
      */
     export function contains(bin: string | null, value: AerospikeBinValue, indexType?: indexType, ctx?: cdt.Context): filter.EqualPredicate;
     /**
-     * String/integer equality filter.
+     * String/integer/blob equality filter.
      *
      * The filter matches records with a bin that matches a specified
      * string or integer value.
