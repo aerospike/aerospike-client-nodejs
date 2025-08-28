@@ -40,7 +40,7 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "npm run build",
-    "build": "node-pre-gyp install --fallback-to-build",
+    "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
     "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
     "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",

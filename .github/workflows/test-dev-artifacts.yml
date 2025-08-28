@@ -1451,6 +1451,122 @@ jobs:
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
 
+  test-user-agent:
+    needs: get-runner-os
+    strategy:
+      fail-fast: false
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' || inputs.platform-tag != 'win_amd64') }}
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.nodejs-tag[1] }}
+        architecture: 'x64'
+
+# ----------------------------------------------------------------------------------------
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: check binding
+      run:
+        ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+# ----------------------------------------------------------------------------------------
+
+    - uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY_NAME }}
+        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - name: Run tests
+      run: |
+        npm install --only=dev;
+        npx tsc;
+        npx tsc typings/index.d.ts;
+        cd ts-test;
+        npm install;
+        npx tsc;
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
+      run: |
+        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        major_num=$(echo $server_version | cut -d '.' -f 1)
+        minor_num=$(echo $server_version | cut -d '.' -f 2)
+        if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
+          exit 0
+        fi
+        info_cmd_response_full=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents")
+        echo "Info command response: $info_cmd_response_full"
+
+
+        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        echo "Info command response: $info_cmd_response"
+        # Response format: user-agent=<base64 encoded string>:...
+        user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
+        echo $user_agent_base64_encoded
+        user_agent=$(echo $user_agent_base64_encoded | base64 -d)
+        echo $user_agent
+        # User agent format: <format-version>,<client language>-<version>,...
+        client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
+        client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
+        echo $client_language
+        echo $client_version
+
+        test "$client_language" = "nodejs"
+
+        # Client version from user agent
+        expected_client_version=$(node -p 'require("./package.json").version')
+        test "$client_version" = "$expected_client_version"
+      shell: bash
+      env:
+        CONTAINER_NAME: aerospike
+
 #
 #  test-ce-self-hosted:
 #    needs: get-runner-os

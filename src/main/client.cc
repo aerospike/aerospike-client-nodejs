@@ -33,6 +33,9 @@ extern "C" {
 #include <aerospike/as_record.h>
 }
 
+AS_EXTERN extern char* aerospike_client_language;
+AS_EXTERN extern char* aerospike_client_version;
+
 using namespace v8;
 
 /*******************************************************************************
@@ -86,9 +89,13 @@ NAN_METHOD(AerospikeClient::New)
 		return;
 	}
 
+	aerospike_client_version = (char *)ADDON_VERSION;
+	aerospike_client_language = (char*)"nodejs";
+
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
+
 	info.GetReturnValue().Set(info.This());
 }
 
