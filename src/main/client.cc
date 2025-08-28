@@ -26,6 +26,7 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_async_proto.h>
+#include <aerospike/as_node.h>
 #include <aerospike/as_cluster.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_key.h>
