@@ -34,8 +34,8 @@ extern "C" {
 #include <aerospike/as_record.h>
 }
 
-AS_EXTERN extern char* aerospike_client_language;
-AS_EXTERN extern char* aerospike_client_version;
+extern char* aerospike_client_language;
+extern char* aerospike_client_version;
 
 using namespace v8;
 
