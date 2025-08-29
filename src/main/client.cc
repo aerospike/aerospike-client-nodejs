@@ -22,14 +22,6 @@
 #include "events.h"
 #include "log.h"
 
-// On Windows, prevent __declspec(dllimport) since we're linking a static library
-#ifdef _MSC_VER
-#undef AS_SHARED_IMPORT
-#undef AS_EXTERN
-#define AS_EXTERN
-#endif
-
-
 extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
@@ -40,8 +32,6 @@ extern "C" {
 #include <aerospike/as_key.h>
 #include <aerospike/as_log.h>
 #include <aerospike/as_record.h>
-char* aerospike_client_language;
-char* aerospike_client_version;
 }
 
 
