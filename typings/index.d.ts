@@ -7463,8 +7463,10 @@ export class Config {
     public clusterName?: string;
     /**
      *
-     * The number of cluster tend iterations that defines the window for {@link maxErrorRate} to be surpassed. One tend iteration is defined
-     * as {@link tenderInterval} plus the time to tend all nodes. At the end of the window, the error count is reset to zero and backoff state is removed on all nodes.
+     * The number of cluster tend iterations that defines the window for {@link maxErrorRate}.
+     * One tend iteration is defined as {@link tenderInterval} plus the time to tend all nodes.
+     * At the end of the window, the error count is reset to zero and backoff state is removed
+     * on all nodes.
      *
      * @type {number}
      *
@@ -7559,16 +7561,15 @@ export class Config {
      */
     public maxConnsPerNode?: number;
     /**
-     * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
-     * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
-     * server device overload and server timeouts.
+     * Maximum number of errors allowed per node per error_rate_window before backoff
+     * algorithm returns {@link statusNamespace.MAX_ERROR_RATE|MAX_ERROR_RATE}. for database commands to that node.
+     * If max_error_rate is zero, there is no error limit.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The counted error types are any error that causes the connection to close (socket errors
+     * and client timeouts), server device overload and server timeouts.
      *
-     * If the backoff algorithm has been activated, commands will fail with {@link
-     * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
-     * error count has been reset.
+     * The application should backoff or reduce the command load until {@link statusNamespace.MAX_ERROR_RATE|MAX_ERROR_RATE}
+     * stops being returned.
      *
      * @default 100
      */
