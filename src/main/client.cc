@@ -34,8 +34,6 @@ extern "C" {
 #include <aerospike/as_record.h>
 }
 
-
-
 using namespace v8;
 
 /*******************************************************************************
