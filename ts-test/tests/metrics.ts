@@ -1158,6 +1158,8 @@ describe('Metrics tests', function () {
                 expect(node.conns.inPool).to.be.a('number')
                 expect(node.conns.opened).to.be.a('number')
                 expect(node.conns.closed).to.be.a('number')
+                expect(node.conns.recovered).to.be.a('number')
+                expect(node.conns.aborted).to.be.a('number')
               }
             }
 
@@ -2742,7 +2744,7 @@ describe('Metrics tests', function () {
         name: 'A1',
         address: '127.0.0.1',
         port: 3000,
-        conns: { inUse: 0, inPool: 0, opened: 0, closed: 0 },
+        conns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
         metrics
       }
 

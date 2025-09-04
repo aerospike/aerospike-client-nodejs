@@ -146,7 +146,7 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
 let options: any
 if (process.env.OPTIONS) {
   const rawOptions: string[] = process.env.OPTIONS.trim().split(' ')
-  options = parser.parse(options)
+  options = parser.parse(rawOptions)
 } else {
   options = parser.argv
 }

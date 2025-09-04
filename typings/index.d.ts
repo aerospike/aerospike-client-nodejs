@@ -1978,6 +1978,25 @@ export namespace policy {
          */
         public socketTimeout?: number;
         /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
+        /**
          * Total command timeout in milliseconds.
          *
          * The <code>totalTimeout</code> is tracked on the client and sent to the
@@ -2500,6 +2519,25 @@ export namespace policy {
          * Maximum time in milliseconds to wait for the command to complete.
          */
         public timeout?: number
+        /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
         /**
          * Initializes a new InfoPolicy from the provided policy values.
          *
@@ -9014,6 +9052,26 @@ export class Scan {
     public operate(operations: operations.Operation[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
      *
+     * Executes the Scan and collects the results into an array. On paginated queries,
+     * preparing the next page is also handled automatically.
+     *
+     * @remarks This method returns a Promise that contains the scan results
+     * as an array of records, when fulfilled. It should only be used if the scan
+     * is expected to return only few records; otherwise it is recommended to use
+     * {@link Scan#foreach}, which returns the results as a {@link RecordStream}
+     * instead.
+     *
+     * If pagination is enabled, the data emitted from the {@link RecordStream#event:error}
+     * event will automatically be assigned to {@link Scan#scanState}, allowing the next page
+     * of records to be queried if {@link Scan#foreach} or {@link Scan#results} is called.
+     *
+     * @param {ScanPolicy} [policy] - The Scan Policy to use for this operation.
+     *
+     * @returns {Promise<RecordObject[]>}
+     */
+    public results( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
+    /**
+     *
      * Performs a read-only scan on each node in the cluster. As the scan
      * iterates through each partition, it returns the current version of each
      * record to the client.
@@ -9411,6 +9469,25 @@ export interface BasePolicyOptions {
      * @default 0 (no socket idle time limit).
      */
     socketTimeout?: number;
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
     /**
      * Total command timeout in milliseconds.
      *
@@ -10414,6 +10491,21 @@ export interface ConnectionStats {
      * Total number of node connections closed since node creation.
      */
     closed: number;
+    /**
+     * Total number of recovered connections since node creation. A recovered connecton is a
+     * connection that timed out on a socket read and then independently drained (read all incoming
+     * data) so the connection can be put back into the connection pool. The recovery process is
+     * attempted when the `timeout_delay` policy is greater than zero.
+     */
+    recovered: number;
+
+    /**
+     * Total number of aborted connections since node creation. An aborted connecton is a connection
+     * that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
+     * mostly likely due a downed node and results in the connection being closed. The recovery process
+     * is attempted when the `timeout_delay` policy is greater than zero.
+     */
+    aborted: number;
 }
 /**
  * Event loop metrics.
@@ -10609,6 +10701,25 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
      * Maximum time in milliseconds to wait for the command to complete.
      */
     timeout?: number
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
 }
 
 /**

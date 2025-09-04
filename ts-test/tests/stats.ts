@@ -59,6 +59,8 @@ describe('Client#stats', function () {
       expect(connStats.inUse).to.be.at.least(0)
       expect(connStats.opened).to.be.at.least(1)
       expect(connStats.closed).to.be.at.least(0)
+      expect(connStats.recovered).to.be.at.least(0)
+      expect(connStats.aborted).to.be.at.least(0)
     }
   })
 })

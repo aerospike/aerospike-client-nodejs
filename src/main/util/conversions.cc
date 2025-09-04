@@ -1736,6 +1736,8 @@ as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 	stats->in_use += tmp;
 	stats->opened += pool->opened;
 	stats->closed += pool->closed;
+	stats->recovered += pool->recovered;
+	stats->aborted += pool->aborted;
 }
 
 void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log) {
@@ -1764,6 +1766,8 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 	Nan::Set(v8_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(async.in_pool));
 	Nan::Set(v8_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(async.opened));
 	Nan::Set(v8_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(async.closed));
+	Nan::Set(v8_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(async.recovered));
+	Nan::Set(v8_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(async.aborted));
 
 	Nan::Set(v8_node, Nan::New("conns").ToLocalChecked(), v8_conn_stats);
 	
