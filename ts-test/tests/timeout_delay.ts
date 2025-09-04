@@ -41,7 +41,7 @@ async function checkTimeoutErrorQuery (dummyClient: Client, error: any, retries:
   expect(error.code).to.eql(9)
 }
 
-async function checkTimeoutErrorQuery (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutErrorTxnVerify (dummyClient: Client, error: any, retries: number){
   let tokens = error.message.split('=')
   let message = tokens[0] + '=' + tokens[1]
   expect(message).to.eql(`Txn aborted:\nVerify failed: Client timeout: iterations=${retries + 1} lastNode`)
