@@ -87,7 +87,6 @@ async function checkTimeoutErrorAndConnectionsInfoDisable (dummyClient: Client, 
 
 
   let result = await dummyClient.stats()
-  console.log(result.nodes[0].asyncConnections)
 
   expect(result.nodes[0].syncConnections.recovered).to.eql(0)
   expect(result.nodes[0].syncConnections.aborted).to.eql(0)
@@ -100,7 +99,6 @@ async function checkTimeoutErrorAndConnectionsInfoEnable (dummyClient: Client, e
 
 
   let result = await dummyClient.stats()
-  console.log(result.nodes[0].asyncConnections)
 
   expect(result.nodes[0].syncConnections.recovered).to.eql(1)
   expect(result.nodes[0].syncConnections.aborted).to.eql(retries)
@@ -113,7 +111,6 @@ async function checkTimeoutErrorAndConnectionsQueryDisable (dummyClient: Client,
   await wait(1500)
 
   let result = await dummyClient.stats()
-  console.log(result.nodes[0].asyncConnections)
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
   expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
@@ -124,7 +121,6 @@ async function checkTimeoutErrorAndConnectionsQueryEnable (dummyClient: Client, 
   await wait(1500)
 
   let result = await dummyClient.stats()
-  console.log(result.nodes[0].asyncConnections)
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
   expect(result.nodes[0].asyncConnections.aborted).to.eql(retries + 1)
 }
@@ -135,7 +131,6 @@ async function checkTimeoutErrorAndConnectionsTxnVerifyDisabled (dummyClient: Cl
   await wait(1500)
 
   let result = await dummyClient.stats()
-  console.log(result.nodes[0].asyncConnections)
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
   expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
