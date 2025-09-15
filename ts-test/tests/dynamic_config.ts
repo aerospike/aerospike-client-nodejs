@@ -95,18 +95,11 @@ describe('Dynamic Config tests', async function () {
               }
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
 
-            try{
-              dummyClient = await Aerospike.connect(config)
+            await dummyClient.close()
+            
 
-              await dummyClient.close()
-            }
-            finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
-            }
           })
 
           it('Uses the specified interval rather than default', async function () {
@@ -120,10 +113,10 @@ describe('Dynamic Config tests', async function () {
               }
             }
 
-            let dummyClient = null;
+            
+            let dummyClient = await Aerospike.connect(config)
 
             try{
-              dummyClient = await Aerospike.connect(config)
               await new Promise(r => setTimeout(r, 3000));
 
               try{
@@ -167,12 +160,10 @@ describe('Dynamic Config tests', async function () {
               lines[lineNumber] = newLine;
               fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
 
-              await dummyClient.close()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+              
             }
 
           })
@@ -194,9 +185,8 @@ describe('Dynamic Config tests', async function () {
               }
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
 
               await new Promise(r => setTimeout(r, 3000));
 
@@ -209,12 +199,10 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.not.be.undefined
 
-              await dummyClient.close()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+              
             }
           })
         })
@@ -233,15 +221,13 @@ describe('Dynamic Config tests', async function () {
               interval: 1000
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
               await dummyClient.enableMetrics()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+              
             }
 
           })
@@ -260,15 +246,13 @@ describe('Dynamic Config tests', async function () {
               interval: 1000
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
               await dummyClient.disableMetrics()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+              
             }
 
 
@@ -294,9 +278,8 @@ describe('Dynamic Config tests', async function () {
               })
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
 
               try{
                 await dummyClient.remove(key)
@@ -314,12 +297,9 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.be.undefined
 
-              await dummyClient.close()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
             }
 
 
@@ -344,9 +324,9 @@ describe('Dynamic Config tests', async function () {
               })
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
+
             try{
-              dummyClient = await Aerospike.connect(config)
               await new Promise(r => setTimeout(r, 3000));
 
               try{
@@ -366,9 +346,8 @@ describe('Dynamic Config tests', async function () {
               expect(records[0].key.key).to.be.undefined
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+              
               process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
             }
 
@@ -396,9 +375,8 @@ describe('Dynamic Config tests', async function () {
             //   })
             // }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
               await new Promise(r => setTimeout(r, 6000));
 
               try{
@@ -415,12 +393,10 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.be.undefined
 
-              await dummyClient.close()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+
             }
 
           })
@@ -448,9 +424,8 @@ describe('Dynamic Config tests', async function () {
               })
             }
 
-            let dummyClient = null;
+            let dummyClient = await Aerospike.connect(config)
             try{
-              dummyClient = await Aerospike.connect(config)
               await new Promise(r => setTimeout(r, 3000));
 
               try{
@@ -469,12 +444,10 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.be.undefined
 
-              await dummyClient.close()
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+
             }
 
           })
@@ -500,10 +473,9 @@ describe('Dynamic Config tests', async function () {
               path: 10,
             }
 
-            let dummyClient = null;
-
             try{
-              dummyClient = await Aerospike.connect(config)
+              let dummyClient = await Aerospike.connect(config)
+              await dummyClient.close()
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
@@ -553,6 +525,7 @@ describe('Dynamic Config tests', async function () {
 
             try{
               dummyClient = await Aerospike.connect(config)
+              await dummyClient.close()
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
@@ -574,13 +547,11 @@ describe('Dynamic Config tests', async function () {
               interval: 1,
             }
 
-            let dummyClient: any = null;
+            let dummyClient = await Aerospike.connect(config)
 
             try{
-              dummyClient = await Aerospike.connect(config)
-              let record = await dummyClient.put(key, {"a": 1})
-
-
+              let dummyClient = await Aerospike.connect(config)
+              await dummyClient.close()
 
               await new Promise(r => setTimeout(r, 3000));
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
@@ -589,9 +560,8 @@ describe('Dynamic Config tests', async function () {
               expect(error.message).to.eql('Dynamic config interval 1 must be greater or equal to the tend interval 1000')
             }
             finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
+              await dummyClient.close()
+
             }
           })
 
@@ -604,28 +574,20 @@ describe('Dynamic Config tests', async function () {
             }
 
             config.configProvider = {
-              path: dyn_config_path_send_key_true,
+              path: dyn_config_path,
               interval: 0.20,
             }
 
-            let dummyClient: any = null;
 
             try{
-              dummyClient = await Aerospike.connect(config)
-
-              let record = await dummyClient.put(key, {"a": 1})
-
-
+              let dummyClient = await Aerospike.connect(config)
+              await dummyClient.close()
+              
               await new Promise(r => setTimeout(r, 3000));
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
               expect(error.message).to.eql('Dynamic config interval 0 must be greater or equal to the tend interval 1000')
-            }
-            finally{
-              if(dummyClient){
-                await dummyClient.close()
-              }
             }
 
           })
