@@ -547,8 +547,6 @@ describe('Dynamic Config tests', async function () {
               interval: 1,
             }
 
-            let dummyClient = await Aerospike.connect(config)
-
             try{
               let dummyClient = await Aerospike.connect(config)
               await dummyClient.close()
@@ -558,10 +556,6 @@ describe('Dynamic Config tests', async function () {
             }
             catch(error: any) {
               expect(error.message).to.eql('Dynamic config interval 1 must be greater or equal to the tend interval 1000')
-            }
-            finally{
-              await dummyClient.close()
-
             }
           })
 

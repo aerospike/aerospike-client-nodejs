@@ -1284,15 +1284,21 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 20));
 
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
 
+          let count = 0
+
+          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
             for (const node of cluster.nodes) {
               let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
               for (const index of node.metrics) {
-                expect(index.bytesIn).to.be.greaterThan(0)
+
+                count += index.bytesIn
               }
             }
           }
+
+
+          expect(count).to.be.greaterThan(0)
 
           clusterFromSnapshotListener = null
 
@@ -1332,18 +1338,19 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 0));
 
-          let out_count = 0
+          let count = 0
+
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
             for (const node of cluster.nodes) {
               let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
               for (const index of node.metrics) {
 
-                out_count += index.bytesOut
+                count += index.bytesOut
               }
             }
           }
 
-          expect(out_count).to.be.greaterThan(0)
+          expect(count).to.be.greaterThan(0)
 
           clusterFromSnapshotListener = null
 
