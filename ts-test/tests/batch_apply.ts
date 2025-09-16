@@ -37,7 +37,7 @@ const Key: typeof K = Aerospike.Key
 describe('client.batchApply()', function () {
   const client = helper.client
 
-  before(function () {
+  before(async function () {
     const nrecords: number = 10
     const generators: any = {
       keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_apply/', random: false }),
@@ -50,8 +50,9 @@ describe('client.batchApply()', function () {
       }),
       metagen: metagen.constant({ ttl: 1000 })
     }
-    helper.udf.register('udf.lua')
-    return putgen.put(nrecords, generators, {})
+    await helper.udf.register('udf.lua')
+    await putgen.put(nrecords, generators, {})
+    return
   })
 
 
