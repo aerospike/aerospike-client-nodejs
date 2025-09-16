@@ -188,14 +188,14 @@ describe('Dynamic Config tests', async function () {
             let dummyClient = await Aerospike.connect(config)
             try{
 
-              await new Promise(r => setTimeout(r, 3000));
+              //await new Promise(r => setTimeout(r, 3000));
 
               await dummyClient.put(key, {"a": 1})
 
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              await new Promise(r => setTimeout(r, 3000));
+              //await new Promise(r => setTimeout(r, 3000));
 
               expect(records[0].key.key).to.not.be.undefined
 
@@ -300,6 +300,8 @@ describe('Dynamic Config tests', async function () {
             }
             finally{
               await dummyClient.close()
+
+              process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
             }
 
 
@@ -448,6 +450,7 @@ describe('Dynamic Config tests', async function () {
             finally{
               await dummyClient.close()
 
+              process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
             }
 
           })
