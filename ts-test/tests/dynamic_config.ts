@@ -57,7 +57,7 @@ describe('Dynamic Config tests', async function () {
 
 
 
-  context('API and Functionality tests', async function () { 
+  describe('API and Functionality tests', async function () { 
 
 
 
@@ -77,13 +77,17 @@ describe('Dynamic Config tests', async function () {
 
       }
       catch(error: any){
-        return
+          return
       }
     })
 
     context('Positive tests', function () {
       context('configProvider', async function () {
+
+
         context('interval', async function () {
+
+
           it('Can accept a valid interval value', async function () {
             const config: any = {
               hosts: helper.config.hosts,
@@ -103,21 +107,21 @@ describe('Dynamic Config tests', async function () {
           })
 
           it('Uses the specified interval rather than default', async function () {
+
             const config: any = {
               hosts: helper.config.hosts,
               user: helper.config.user,
               password: helper.config.password,
               configProvider: {
                 path: dyn_config_path_edit,
-                interval: 1000
-              }
+                interval: 250
+              },
+              tenderInterval: 250
             }
 
-            
             let dummyClient = await Aerospike.connect(config)
 
             try{
-              await new Promise(r => setTimeout(r, 3000));
 
               try{
                 await dummyClient.remove(key)
@@ -141,18 +145,16 @@ describe('Dynamic Config tests', async function () {
               lines[lineNumber] = newLine;
               fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
 
-
-              await new Promise(r => setTimeout(r, 5000));
+              await new Promise(r => setTimeout(r, 260));
 
               await dummyClient.remove(key)
               await dummyClient.put(key, {"a": 1})
 
               query = dummyClient.query(helper.namespace, helper.set)
               records = await query.results()
-
+              
               expect(records[0].key.key).to.be.undefined
 
-              await new Promise(r => setTimeout(r, 3000));
 
               newLine = '    send_key: true';
 
@@ -175,6 +177,8 @@ describe('Dynamic Config tests', async function () {
 
         context('path', async function () {
           it('Loads dynamic config from configProvider', async function () {
+
+
             const config: any = {
               hosts: helper.config.hosts,
               user: helper.config.user,
@@ -184,19 +188,18 @@ describe('Dynamic Config tests', async function () {
                 interval: 1000
               }
             }
+            console.log(config)
 
             let dummyClient = await Aerospike.connect(config)
             try{
 
-              //await new Promise(r => setTimeout(r, 3000));
+              await dummyClient.put(key, {"b": 2})
 
-              await dummyClient.put(key, {"a": 1})
 
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              //await new Promise(r => setTimeout(r, 3000));
-
+              console.log(records)
               expect(records[0].key.key).to.not.be.undefined
 
             }
@@ -206,6 +209,7 @@ describe('Dynamic Config tests', async function () {
             }
           })
         })
+
         context('metrics', async function () {
           it('enableMetrics does not override the dynamic config and no error is thrown', async function () {
 
@@ -293,7 +297,6 @@ describe('Dynamic Config tests', async function () {
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              await new Promise(r => setTimeout(r, 2000));
 
               expect(records[0].key.key).to.be.undefined
 
@@ -301,7 +304,7 @@ describe('Dynamic Config tests', async function () {
             finally{
               await dummyClient.close()
 
-              process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
+              delete process.env.AEROSPIKE_CLIENT_CONFIG_URL
             }
 
 
@@ -329,7 +332,6 @@ describe('Dynamic Config tests', async function () {
             let dummyClient = await Aerospike.connect(config)
 
             try{
-              await new Promise(r => setTimeout(r, 3000));
 
               try{
                 await dummyClient.remove(key)
@@ -343,14 +345,13 @@ describe('Dynamic Config tests', async function () {
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              await new Promise(r => setTimeout(r, 3000));
 
               expect(records[0].key.key).to.be.undefined
             }
             finally{
               await dummyClient.close()
               
-              process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
+              delete process.env.AEROSPIKE_CLIENT_CONFIG_URL
             }
 
 
@@ -379,7 +380,6 @@ describe('Dynamic Config tests', async function () {
 
             let dummyClient = await Aerospike.connect(config)
             try{
-              await new Promise(r => setTimeout(r, 6000));
 
               try{
                 await dummyClient.remove(key)
@@ -428,7 +428,6 @@ describe('Dynamic Config tests', async function () {
 
             let dummyClient = await Aerospike.connect(config)
             try{
-              await new Promise(r => setTimeout(r, 3000));
 
               try{
                 await dummyClient.remove(key)
@@ -442,7 +441,6 @@ describe('Dynamic Config tests', async function () {
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              await new Promise(r => setTimeout(r, 3000));
 
               expect(records[0].key.key).to.be.undefined
 
@@ -450,7 +448,7 @@ describe('Dynamic Config tests', async function () {
             finally{
               await dummyClient.close()
 
-              process.env.AEROSPIKE_CLIENT_CONFIG_URL = '';
+              delete process.env.AEROSPIKE_CLIENT_CONFIG_URL
             }
 
           })
@@ -554,7 +552,6 @@ describe('Dynamic Config tests', async function () {
               let dummyClient = await Aerospike.connect(config)
               await dummyClient.close()
 
-              await new Promise(r => setTimeout(r, 3000));
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
@@ -580,7 +577,6 @@ describe('Dynamic Config tests', async function () {
               let dummyClient = await Aerospike.connect(config)
               await dummyClient.close()
               
-              await new Promise(r => setTimeout(r, 3000));
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
