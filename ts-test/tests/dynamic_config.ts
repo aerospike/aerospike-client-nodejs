@@ -152,7 +152,7 @@ describe('Dynamic Config tests', async function () {
 
               query = dummyClient.query(helper.namespace, helper.set)
               records = await query.results()
-              
+
               expect(records[0].key.key).to.be.undefined
 
 
@@ -188,7 +188,6 @@ describe('Dynamic Config tests', async function () {
                 interval: 1000
               }
             }
-            console.log(config)
 
             let dummyClient = await Aerospike.connect(config)
             try{
@@ -199,7 +198,6 @@ describe('Dynamic Config tests', async function () {
               let query: any = dummyClient.query(helper.namespace, helper.set)
               let records: any = await query.results()
 
-              console.log(records)
               expect(records[0].key.key).to.not.be.undefined
 
             }
