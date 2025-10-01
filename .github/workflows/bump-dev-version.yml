@@ -32,6 +32,8 @@ on:
     secrets:
       desk_mood:
         required: true
+      king_health:
+        required: true
     outputs:
       dev_version:
         value: ${{ jobs.get-new-version.outputs.dev_version }}
@@ -46,7 +48,7 @@ jobs:
       current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
@@ -66,15 +68,15 @@ jobs:
       jfrog_version: ${{ steps.get-jfrog-version.outputs.jfrog_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -98,7 +100,7 @@ jobs:
     steps:
 
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}

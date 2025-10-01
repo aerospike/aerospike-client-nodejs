@@ -27,9 +27,9 @@ on:
       #  description: ""
       #  required: false
       #  default: aerospike/clients
-    #secrets:
-    #  king_health:
-    #    required: true
+    secrets:
+      king_health:
+        required: true
 
 jobs:
   upload-to-jfrog:
@@ -40,12 +40,12 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -134,21 +134,26 @@ jobs:
     - name: list version info
       if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
+        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
-
+      env:
+        JF_URL: ${{ secrets.king_health }}
 
     - name: list version info
       if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
+        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
+        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      env:
+        JF_URL: ${{ secrets.king_health }}
 
     - name: list version info
       if: ${{ inputs.pipeline-stage == 'master' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
+        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
+        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      env:
+        JF_URL: ${{ secrets.king_health }}

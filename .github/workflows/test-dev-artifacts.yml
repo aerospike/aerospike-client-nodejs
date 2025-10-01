@@ -112,6 +112,8 @@ on:
         required: true
       song_loss:
         required: true
+      king_health:
+        required: true
 
 jobs:
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
@@ -154,20 +156,20 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -229,9 +231,9 @@ jobs:
     #  shell: bash
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -300,7 +302,7 @@ jobs:
 
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -328,20 +330,20 @@ jobs:
 #      shell: bash
 #
 #    - name: Show job status for commit
-#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
 #      with:
 #        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #        context: ${{ env.STATUS_CHECK_MESSAGE }}
 #
-#    - uses: actions/checkout@v4
+#    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 #      with:
 #        submodules: recursive
 #        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #        # We need the last tag before the ref, so we can relabel the version if needed
 #        fetch-depth: 0
 #
-#    - uses: actions/setup-node@v4
+#    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
 #      with: 
 #        node-version: ${{ matrix.nodejs-tag[1] }}
 #
@@ -379,9 +381,9 @@ jobs:
 #      run: aerolab cluster list
 #
 #    - name: Set up JFrog credentials
-#      uses: jfrog/setup-jfrog-cli@v4
+#      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
 #      env:
-#        JF_URL: https://aerospike.jfrog.io
+#        JF_URL: ${{ secrets.king_health }}
 #      with:
 #        oidc-provider-name: gh-aerospike-clients
 #        oidc-audience: aerospike/clients
@@ -438,7 +440,7 @@ jobs:
 #      run: echo y | aerolab cluster destroy
 #
 #    - name: Set final commit status
-#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
 #      with:
 #        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -464,20 +466,20 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -506,9 +508,9 @@ jobs:
       run: aerolab cluster list
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -562,7 +564,7 @@ jobs:
       run: echo y | aerolab cluster destroy --name dc2
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -588,20 +590,20 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -664,9 +666,9 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -725,7 +727,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -752,20 +754,20 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -791,9 +793,9 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -851,7 +853,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -877,27 +879,27 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -965,7 +967,7 @@ jobs:
         npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -991,20 +993,20 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -1017,9 +1019,9 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -1068,7 +1070,7 @@ jobs:
         npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000;
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -1094,20 +1096,20 @@ jobs:
 #      shell: bash
 #
 #    - name: Show job status for commit
-#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
 #      with:
 #        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #        context: ${{ env.STATUS_CHECK_MESSAGE }}
 #
-#    - uses: actions/checkout@v4
+#    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 #      with:
 #        submodules: recursive
 #        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #        # We need the last tag before the ref, so we can relabel the version if needed
 #        fetch-depth: 0
 #
-#    - uses: actions/setup-node@v4
+#    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
 #      with:
 #        node-version: ${{ matrix.nodejs-tag[1] }}
 #
@@ -1187,7 +1189,7 @@ jobs:
 #        npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000;
 #
 #    - name: Set final commit status
-#      uses: myrotvorets/set-commit-status-action@v2.0.0
+#      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
 #      with:
 #        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -1214,13 +1216,13 @@ jobs:
 #        shell: bash
 #
 #      - name: Show job status for commit
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
 #        with:
 #          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #          context: ${{ env.STATUS_CHECK_MESSAGE }}
 #
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 #        with:
 #          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #
@@ -1287,7 +1289,7 @@ jobs:
 #      #- name: npm ci
 #      #  run: npm ci
 #
-#      - uses: actions/setup-node@v4
+#      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
 #        #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
 #        with:
 #          node-version: ${{ matrix.nodejs-tag[1] }}
@@ -1332,7 +1334,7 @@ jobs:
 #
 #      - name: Show job status for commit
 #        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #        with:
 #          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #          status: ${{ job.status }}
@@ -1357,13 +1359,13 @@ jobs:
         shell: bash
 
       - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
         if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
@@ -1372,9 +1374,9 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
-        uses: jfrog/setup-jfrog-cli@v4
+        uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
         env:
-          JF_URL: https://aerospike.jfrog.io
+          JF_URL: ${{ secrets.king_health }}
         with:
           oidc-provider-name: gh-aerospike-clients
           oidc-audience: aerospike/clients
@@ -1412,7 +1414,7 @@ jobs:
       #- name: npm ci
       #  run: npm ci
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
@@ -1444,7 +1446,7 @@ jobs:
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@v2.0.0
+        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           status: ${{ job.status }}
@@ -1471,13 +1473,13 @@ jobs:
 #        shell: bash
 #
 #      - name: Show job status for commit
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
 #        with:
 #          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #          context: ${{ env.STATUS_CHECK_MESSAGE }}
 #
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 #        with:
 #          ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #
@@ -1539,7 +1541,7 @@ jobs:
 #      #- name: npm ci
 #      #  run: npm ci
 #
-#      - uses: actions/setup-node@v4
+#      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
 #      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
 #        with:
 #          node-version: ${{ matrix.nodejs-tag[1] }}
@@ -1584,7 +1586,7 @@ jobs:
 #
 #      - name: Show job status for commit
 #        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-#        uses: myrotvorets/set-commit-status-action@v2.0.0
+#        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
 #        with:
 #          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 #          status: ${{ job.status }}
