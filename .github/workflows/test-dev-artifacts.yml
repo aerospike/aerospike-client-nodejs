@@ -108,9 +108,9 @@ on:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
         required: true
-      DOCKER_HUB_BOT_PW:
+      cell_girl:
         required: true
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
+      song_loss:
         required: true
 
 jobs:
@@ -186,8 +186,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
@@ -205,8 +205,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -222,7 +222,7 @@ jobs:
     #- name: Otherwise, enable integration tests
     #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
     #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm install typescript --save-dev;
+    #    npm ci typescript --save-dev;
     #    npx tsc;
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
@@ -272,7 +272,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         rm -rf ts-test/dist;
@@ -286,7 +286,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -366,9 +366,9 @@ jobs:
 #
 #    - name: Retrieve the secret and decode it to a file
 #      env:
-#        FEATURE_FILE: ${{ secrets.FEATURE_FILE }}
+#        tale_breath: ${{ secrets.tale_breath }}
 #      run: |
-#        echo $FEATURE_FILE | base64 --decode > features.conf
+#        echo $tale_breath | base64 --decode > features.conf
 #      working-directory: ts-test
 #
 #    - name: Create cluster
@@ -426,7 +426,7 @@ jobs:
 #      run: |
 #        docker ps;
 #        cd ts-test;
-#        npm install;
+#        npm ci;
 #        npx tsc;
 #        cd ..;
 #        npx tsc;
@@ -548,7 +548,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -620,8 +620,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
@@ -639,8 +639,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -656,7 +656,7 @@ jobs:
     #- name: Otherwise, enable integration tests
     #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
     #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm install typescript --save-dev;
+    #    npm ci typescript --save-dev;
     #    npx tsc;
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
@@ -711,7 +711,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
         cd ..;
@@ -783,7 +783,7 @@ jobs:
     #- name: Otherwise, enable integration tests
     #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
     #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm install typescript --save-dev;
+    #    npm ci typescript --save-dev;
     #    npx tsc;
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
@@ -832,7 +832,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -843,7 +843,7 @@ jobs:
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -942,7 +942,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -956,7 +956,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -1061,7 +1061,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -1139,7 +1139,7 @@ jobs:
 #    #- name: Otherwise, enable integration tests
 #    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
 #    #  run: echo "TEST_COMMAND=cd ts-test;
-#    #    npm install typescript --save-dev;
+#    #    npm ci typescript --save-dev;
 #    #    npx tsc;
 #    #    cd ..;
 #    #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
@@ -1180,7 +1180,7 @@ jobs:
 #        docker ps;
 #        docker logs aerospike;
 #        cd ts-test;
-#        npm install;
+#        npm ci;
 #        npx tsc;
 #        cd ..;
 #        npx tsc;
@@ -1226,7 +1226,7 @@ jobs:
 #
 #      # Need to be able to save Docker Hub credentials to keychain
 #      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-#        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#        run: security unlock-keychain -p ${{ secrets.song_loss }}
 #
 #      - name: Remove aerospike docker image
 #        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1252,8 +1252,8 @@ jobs:
 #        with:
 #          use-server-rc: ${{ inputs.use-server-rc }}
 #          server-tag: ${{ inputs.server-tag }}
-#          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-#          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+#          docker-hub-username: ${{ secrets.soup_hat }}
+#          docker-hub-password: ${{ secrets.cell_girl }}
 #
 #      - name: Download artifacts
 #        uses: actions/download-artifact@v4
@@ -1284,8 +1284,8 @@ jobs:
 #      #- name: Change install command for release
 #      #  run: node ./scripts/change-install-command.js
 #
-#      #- name: npm install
-#      #  run: npm install
+#      #- name: npm ci
+#      #  run: npm ci
 #
 #      - uses: actions/setup-node@v4
 #        #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1310,7 +1310,7 @@ jobs:
 #          docker ps;
 #          docker logs aerospike;
 #          cd ts-test;
-#          npm install;
+#          npm ci;
 #          npx tsc;
 #          cp tests\udf.lua dist\udf.lua;
 #          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000 --U superuser --P superuser;
@@ -1323,7 +1323,7 @@ jobs:
 #          docker ps;
 #          docker logs aerospike;
 #          cd ts-test;
-#          npm install;
+#          npm ci;
 #          npx tsc;
 #          cd ..;
 #          npx tsc;
@@ -1369,7 +1369,7 @@ jobs:
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+        run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
         uses: jfrog/setup-jfrog-cli@v4
@@ -1409,8 +1409,8 @@ jobs:
         run: node ./scripts/change-install-command.js
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-      #- name: npm install
-      #  run: npm install
+      #- name: npm ci
+      #  run: npm ci
 
       - uses: actions/setup-node@v4
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1422,22 +1422,22 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
-          npm install --only=dev;
+          npm ci --only=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm install;
+          npm ci;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          npm install --only=dev;
+          npm ci --only=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm install;
+          npm ci;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
@@ -1483,7 +1483,7 @@ jobs:
 #
 #      # Need to be able to save Docker Hub credentials to keychain
 #      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
-#        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+#        run: security unlock-keychain -p ${{ secrets.song_loss }}
 #
 #      - name: Remove aerospike docker image
 #        if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1536,8 +1536,8 @@ jobs:
 #      #- name: Change install command for release
 #      #  run: node ./scripts/change-install-command.js
 #
-#      #- name: npm install
-#      #  run: npm install
+#      #- name: npm ci
+#      #  run: npm ci
 #
 #      - uses: actions/setup-node@v4
 #      #  if: ${{ inputs.platform-tag == 'macosx_arm64' }}
@@ -1562,7 +1562,7 @@ jobs:
 #          docker ps;
 #          docker logs aerospike;
 #          cd ts-test;
-#          npm install;
+#          npm ci;
 #          npx tsc;
 #          cp tests\udf.lua dist\udf.lua;
 #          npx mocha dist -- --h ${env:DOCKER_HOST_IP} --port 3000;
@@ -1575,7 +1575,7 @@ jobs:
 #          docker ps;
 #          docker logs aerospike;
 #          cd ts-test;
-#          npm install;
+#          npm ci;
 #          npx tsc;
 #          cd ..;
 #          npx tsc;

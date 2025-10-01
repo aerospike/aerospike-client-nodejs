@@ -16,7 +16,7 @@ on:
         type: string
       # See workflow call hack in update-version.ymls
     secrets:
-      CLIENT_BOT_PAT:
+      desk_mood:
         required: true
     outputs:
       stage_version:
@@ -34,7 +34,7 @@ jobs:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
+        token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials

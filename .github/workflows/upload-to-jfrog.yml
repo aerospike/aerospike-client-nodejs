@@ -25,7 +25,7 @@ on:
       #  required: false
       #  default: aerospike/clients
     #secrets:
-    #  JFROG_PLATFORM_URL:
+    #  king_health:
     #    required: true
 
 jobs:
@@ -75,7 +75,7 @@ jobs:
     - name: list version info
       run: 
         jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install;
+        npm ci;
       env:
         VERSION: ${{ inputs.new_version }} 
 

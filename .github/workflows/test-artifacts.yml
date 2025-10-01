@@ -53,9 +53,9 @@ on:
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true
-      DOCKER_HUB_BOT_PW:
+      cell_girl:
         required: true
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
+      song_loss:
         required: true
 
 jobs:

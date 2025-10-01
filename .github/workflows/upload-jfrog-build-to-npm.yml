@@ -104,7 +104,7 @@ jobs:
     - name: list version info
       run: |
         jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install;
+        npm ci;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
@@ -165,9 +165,9 @@ jobs:
     #  env:
     #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
 
-    #- name: npm install
+    #- name: npm ci
     #  run: |
-    #    npm install aerospike@6.2.1-dev.4
+    #    npm ci aerospike@6.2.1-dev.4
 
     - name: npm pack
       run: |

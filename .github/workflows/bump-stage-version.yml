@@ -21,7 +21,7 @@ on:
         default: true
         required: false
     secrets:
-      CLIENT_BOT_PAT:
+      desk_mood:
         required: true
     outputs:
       new_dev_version:
@@ -41,7 +41,7 @@ jobs:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
+        token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
@@ -69,7 +69,7 @@ jobs:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
+        token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
@@ -101,12 +101,12 @@ jobs:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
+        token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm install semver
+      run: npm ci semver
       working-directory: .github/workflows
 
     - name: Get new version
@@ -134,12 +134,12 @@ jobs:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
+        token: ${{ secrets.desk_mood }}
         ref: ${{ inputs.ref }}
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm install semver
+      run: npm ci semver
       working-directory: .github/workflows
 
 
