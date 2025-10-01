@@ -5,7 +5,7 @@ run-name: Test cibuildwheel artifacts against server RC
 on:
   workflow_call:
     secrets:
-      DOCKER_HUB_BOT_USERNAME:
+      soup_hat:
         required: true
       cell_girl:
         required: true

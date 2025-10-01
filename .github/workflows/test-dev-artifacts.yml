@@ -106,7 +106,7 @@ on:
         default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
-      DOCKER_HUB_BOT_USERNAME:
+      soup_hat:
         required: true
       cell_girl:
         required: true

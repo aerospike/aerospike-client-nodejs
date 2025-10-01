@@ -53,7 +53,7 @@ on:
         required: false
         default: 'latest'
     secrets:
-      DOCKER_HUB_BOT_USERNAME:
+      soup_hat:
         required: true
       cell_girl:
         required: true
