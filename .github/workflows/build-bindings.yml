@@ -223,7 +223,7 @@ jobs:
     #- name: Otherwise, enable integration tests
     #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
     #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm ci typescript --save-dev;
+    #    npm install typescript --ignore-scripts --save-dev;
     #    npx tsc;
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV

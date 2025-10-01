@@ -106,7 +106,7 @@ jobs:
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm ci semver
+      run: npm install semver --ignore-scripts
       working-directory: .github/workflows
 
     - name: Get new version
@@ -139,7 +139,7 @@ jobs:
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm ci semver
+      run: npm install semver --ignore-scripts
       working-directory: .github/workflows
 
 
