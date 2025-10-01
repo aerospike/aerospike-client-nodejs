@@ -8,63 +8,6 @@ permissions:
   id-token: write
 
 on:
-  workflow_dispatch:
-    inputs:
-      # These are the usual cases for building wheels:
-      #
-      # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
-      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
-      # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
-      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
-      # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
-      #
-      # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
-      # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
-      #
-      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
-      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
-      # We want each platform to be tested independently of each other,
-      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
-      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
-      nodejs-tags:
-        type: string
-        description: Valid JSON list of Nodejs tags to build the client for
-        required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
-      version:
-        type: string
-        required: true
-      platform-tag:
-        description: Platform to build the client for.
-        type: choice
-        required: true
-        options:
-        - manylinux_x86_64
-        - manylinux_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
-        # Makes debugging via gh cli easier.
-        default: manylinux_x86_64
-      run_tests:
-        description: 'Run Aerospike server and run tests using built wheels?'
-        type: boolean
-        required: false
-        default: false
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate?'
-      server-tag:
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag'
-      test-file:
-        required: false
-        default: ''
-        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:

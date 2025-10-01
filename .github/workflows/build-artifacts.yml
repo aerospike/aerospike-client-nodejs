@@ -6,26 +6,6 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ 
 # Then upload artifacts to Github
 
 on:
-  workflow_dispatch:
-    inputs:
-      run_tests:
-        description: "Run integration tests with the wheels after building them"
-        required: true
-        type: boolean
-        default: false
-      version:
-        type: string
-        required: true
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate? (e.g to test new server features)'
-      server-tag:
-        type: string
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag (e.g to test a client backport version)'
 
   workflow_call:
     inputs:
@@ -68,7 +48,7 @@ jobs:
           "manylinux_x86_64",
           "manylinux_aarch64",
           "macosx_x86_64",
-          "macosx_arm64",
+          #"macosx_arm64",
           "win_amd64"
         ]
       fail-fast: false
