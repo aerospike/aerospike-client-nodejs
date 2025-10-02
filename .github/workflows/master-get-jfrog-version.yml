@@ -20,16 +20,14 @@ on:
         required: true
     outputs:
       stage_version:
-        value: ${{ jobs.get-jfrog-stage-version.outputs.stage_version }}
-      bump_sha:
-        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
+        value: ${{ jobs.master-get-jfrog-version.outputs.stage_version }}
 
 jobs:
-  get-jfrog-stage-version:
+  master-get-jfrog-version:
     name: Get most recent JFrog version string
     runs-on: ubuntu-22.04
     outputs:
-      stage_version: ${{ steps.get-jfrog-stage-version.outputs.stage_version }}
+      stage_version: ${{ steps.master-get-jfrog-version.outputs.stage_version }}
     steps:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
