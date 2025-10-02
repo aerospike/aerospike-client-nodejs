@@ -36,7 +36,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      build-bindings
+      build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev/upload-addons-to-jfrog.yml
     with:
@@ -47,8 +47,8 @@ jobs:
     name: Reupload package to JFrog NPM
     needs: [
       bump-dev-number,
-      build-bindings,
-      upload-to-jfrog,
+      build-node-cpp-addons,
+      upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared/upload-npm-package-to-jfrog.yml
     with:
