@@ -1,5 +1,10 @@
 name: Master workflow
 
+on:
+  pull_request:
+    branches:
+      - master-test
+
 jobs:
   master-get-jfrog-version:
     uses: ./.github/workflows/master-get-jfrog-version.yml
