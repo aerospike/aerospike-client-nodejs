@@ -1,5 +1,5 @@
-name: 'Build wheels'
-run-name: 'Build wheels (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+name: 'Build node cpp bindings'
+run-name: 'Build node cpp bindings (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -8,63 +8,6 @@ permissions:
   id-token: write
 
 on:
-  workflow_dispatch:
-    inputs:
-      # These are the usual cases for building wheels:
-      #
-      # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
-      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
-      # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
-      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
-      # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
-      #
-      # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
-      # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
-      #
-      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
-      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
-      # We want each platform to be tested independently of each other,
-      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
-      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
-      nodejs-tags:
-        type: string
-        description: Valid JSON list of Nodejs tags to build the client for
-        required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
-      version:
-        type: string
-        required: true
-      platform-tag:
-        description: Platform to build the client for.
-        type: choice
-        required: true
-        options:
-        - manylinux_x86_64
-        - manylinux_aarch64
-        - macosx_x86_64
-        - macosx_arm64
-        - win_amd64
-        # Makes debugging via gh cli easier.
-        default: manylinux_x86_64
-      run_tests:
-        description: 'Run Aerospike server and run tests using built wheels?'
-        type: boolean
-        required: false
-        default: false
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate?'
-      server-tag:
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag'
-      test-file:
-        required: false
-        default: ''
-        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:
@@ -103,11 +46,13 @@ on:
         default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
-      DOCKER_HUB_BOT_USERNAME:
+      soup_hat:
         required: true
-      DOCKER_HUB_BOT_PW:
+      cell_girl:
         required: true
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
+      song_loss:
+        required: true
+      king_health:
         required: true
 
 jobs:
@@ -149,7 +94,7 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
@@ -160,15 +105,14 @@ jobs:
       run: rm -rf ${{ github.workspace }}/*
 
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -187,8 +131,8 @@ jobs:
     #  with:
     #    use-server-rc: ${{ inputs.use-server-rc }}
     #    server-tag: ${{ inputs.server-tag }}
-    #    docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #    docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    #    docker-hub-username: ${{ secrets.soup_hat }}
+    #    docker-hub-password: ${{ secrets.cell_girl }}
 
     #- name: Remove aerospike docker image
     #  if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
@@ -206,8 +150,8 @@ jobs:
     #  with:
     #    use-server-rc: ${{ inputs.use-server-rc }}
     #    server-tag: ${{ inputs.server-tag }}
-    #    docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #    docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    #    docker-hub-username: ${{ secrets.soup_hat }}
+    #    docker-hub-password: ${{ secrets.cell_girl }}
 
     # FIND NO SERVER TESTS AND RUN THEM
     #
@@ -223,7 +167,7 @@ jobs:
     #- name: Otherwise, enable integration tests
     #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
     #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm install typescript --save-dev;
+    #    npm install typescript --ignore-scripts --save-dev;
     #    npx tsc;
     #    cd ..;
     #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
@@ -256,7 +200,7 @@ jobs:
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
-        npm install;
+        npm ci;
         ls lib/binding;
 
 
@@ -269,7 +213,7 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: |
         cd ts-test;
-        npm install;
+        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
@@ -282,16 +226,16 @@ jobs:
     #    docker ps;
     #    docker logs aerospike;
     #    cd ts-test;
-    #    npm install;
+    #    npm ci;
     #    npx tsc;
     #    cd ..;
     #    npx tsc;
     #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -348,7 +292,7 @@ jobs:
       working-directory: build/Release/
 
     - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}

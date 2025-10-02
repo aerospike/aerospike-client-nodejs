@@ -27,9 +27,15 @@ on:
       #  description: ""
       #  required: false
       #  default: aerospike/clients
-    #secrets:
-    #  JFROG_PLATFORM_URL:
-    #    required: true
+    secrets:
+      king_health:
+        required: true
+      plane_grass:
+        required: true
+      aisle_thank:
+        required: true
+      room_lane:
+        required: true
 
 jobs:
   upload-to-jfrog:
@@ -40,12 +46,12 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: https://aerospike.jfrog.io
+        JF_URL: ${{ secrets.king_health }}
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -71,14 +77,6 @@ jobs:
         NEW_VERSION: ${{ inputs.new_version }}
         PACKAGE_MANAGER: npm
 
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
     - name: Move artifacts
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
@@ -86,69 +84,60 @@ jobs:
         NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
 
-    - name: check binding
-      run:
-        ls ${{ env.NEW_VERSION }}/lib/binding;
-        cp -r ${{ env.NEW_VERSION }}/lib/binding temp;
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike
-
-    - name: list version info
+    - name: Update version in package.json
       run: 
-        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install;
+        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
       env:
-        NEW_VERSION: ${{ inputs.new_version }} 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+        VERSION: ${{ inputs.new_version }} 
 
-    - name: check binding
+    - name: Install dependencies and test install
       run:
-        cp -r temp/* ${{ env.NEW_VERSION }}/lib/binding;
-        ls ${{ env.NEW_VERSION }}/lib/binding;
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-      working-directory: downloaded-artifacts/aerospike
+        npm ci --ignore-scripts;
 
-    - name: npmrc dev
+    - name: prepare to publish dev npm package to Jfrog
       if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        echo "$plane_grass" | base64 --decode > ~/.npmrc  
       env:
-        NPMRC: ${{ secrets.NPMRC }}
+        plane_grass: ${{ secrets.plane_grass }}
 
-    - name: npmrc stage
+    - name: prepare to publish stage npm package to Jfrog
       if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        echo "$aisle_thank" | base64 --decode > ~/.npmrc  
       env:
-        NPMRC: ${{ secrets.NPMRC_STAGE }}
+        aisle_thank: ${{ secrets.aisle_thank }}
 
-    - name: npmrc master
+    - name: prepare to publish master npm package to Jfrog
       if: ${{ inputs.pipeline-stage == 'master' }}
       run: |
-        echo "$NPMRC" | base64 --decode > ~/.npmrc  
+        echo "$room_lane" | base64 --decode > ~/.npmrc  
       env:
-        NPMRC: ${{ secrets.NPMRC_MASTER }}
+        room_lane: ${{ secrets.room_lane }}
 
-    - name: list version info
+    - name: publish npm package to Jfrog dev repository
       if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      env:
+        JF_URL: ${{ secrets.king_health }}
 
-
-    - name: list version info
+    - name: publish npm package to Jfrog stage repository
       if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-stage-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      env:
+        JF_URL: ${{ secrets.king_health }}
 
-    - name: list version info
+    - name: publish npm package to Jfrog prod repository
       if: ${{ inputs.pipeline-stage == 'master' }}
       run: |
-        npm login --registry=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
-        npm publish --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-prod-public-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
+      env:
+        JF_URL: ${{ secrets.king_health }}

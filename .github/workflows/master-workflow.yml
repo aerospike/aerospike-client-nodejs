@@ -48,7 +48,7 @@ jobs:
     secrets: inherit
 
   verify-npm-install:
-    name: verify npm install works correctly
+    name: verify npm ci works correctly
     needs: [
       get-jfrog-stage-version,
       bump-dev-number,
