@@ -72,7 +72,7 @@ jobs:
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
     - name: install moreutils
-    - run: sudo apt install -y moreutils
+      run: sudo apt install -y moreutils
 
     # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
     - name: Create file spec for release bundle
