@@ -8,27 +8,7 @@ permissions:
   contents: read
 
 on:
-  workflow_dispatch:
-    inputs:
-      change:
-        type: choice
-        description: Python script name to update the version
-        required: true
-        options:
-        - bump-dev-num
-        - promote-dev-build-to-rc
-        - promote-rc-build-to-release
   workflow_call:
-    inputs:
-      ref:
-        required: false
-        description: Commit to bump off of
-        type: string
-      # See workflow call hack in update-version.yml
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
     secrets:
       desk_mood:
         required: true
@@ -51,7 +31,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
-        ref: ${{ inputs.ref }}
 
     - name: Get current version
       id: get-current-version
@@ -71,7 +50,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
-        ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
@@ -103,7 +81,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
-        ref: ${{ inputs.ref }}
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
@@ -114,7 +91,7 @@ jobs:
       id: get-new-version
       run: |
         set -e
-        dev_version=$(node bump-dev-version-and-increment-number.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-jfrog-version.outputs.jfrog_version }})
+        dev_version=$(node bump-version.js ${{ needs.get-current-version.outputs.current_version }} ${{ needs.get-jfrog-version.outputs.jfrog_version }})
         echo "dev_version=$dev_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 

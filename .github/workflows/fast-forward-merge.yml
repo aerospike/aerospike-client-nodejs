@@ -33,7 +33,6 @@ jobs:
         with:
           # Fetch the whole history to prevent unrelated history errors
           fetch-depth: '0'
-          ref: ${{ inputs.base_branch }}
           token: ${{ secrets.desk_mood }}
 
       - name: Fast forward

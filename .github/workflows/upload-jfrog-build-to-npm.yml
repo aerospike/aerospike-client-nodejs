@@ -6,19 +6,6 @@ permissions:
   contents: read
 
 on:
-  workflow_dispatch:
-    inputs:
-      old_version:
-        type: string
-        required: false
-      new_version:
-        type: string
-        required: false
-      #use-test-pypi:
-      #  type: boolean
-      #  description: 'DEBUG: upload to test.pypi.org?'
-      #  required: true
-      #  default: false
   workflow_call:
     inputs:
       old_version:
@@ -45,7 +32,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 

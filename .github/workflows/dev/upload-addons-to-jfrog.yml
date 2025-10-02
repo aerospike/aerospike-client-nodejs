@@ -14,16 +14,6 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-      #oidc-provider:
-      #  type: string
-      #  description: ""
-      #  required: false
-      #  default: gh-aerospike-clients
-      #oidc-audience:
-      #  type: string
-      #  description: ""
-      #  required: false
-      #  default: aerospike/clients
     secrets:
       king_health:
         required: true
@@ -52,60 +42,36 @@ jobs:
       env:
         VERSION: ${{ inputs.new_version }}
 
-    - name: list version info
-      run: 
-        ls aerospike/;
-        ls aerospike/${{ env.VERSION }}/;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
+    - name: Move bindings to lib/binding
       run: |
         mkdir lib/binding;
         cp -r aerospike/${{ env.VERSION }}/* lib/binding;
       env:
         VERSION: ${{ inputs.new_version }} 
 
-    - name: list version info
-      run: 
-        ls lib/binding;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
+    - name: Update version in package.json
       run: 
         jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+      env:
+        VERSION: ${{ inputs.new_version }} 
+
+    - name: Install dependencies and test install
+      run:
         npm ci;
-      env:
-        VERSION: ${{ inputs.new_version }} 
 
-    - name: list version info
-      run: |
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: list version info
-      run: 
-        ls lib/binding;
-
-    - name: list version info
+    - name: Create package tarball
       run: 
         npm pack;
-        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
-        # write script to change version number
 
-    - name: Upload passing builds to JFrog Nodejs repo
-      # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+    - name: Upload tarball to JFrog Nodejs repo
       run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
-    - name: Publish build info
+    - name: Publish build info to JFrog Nodejs repo
       run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
 
-    # Required to run sponge
+    - name: install moreutils
     - run: sudo apt install -y moreutils
 
     # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to

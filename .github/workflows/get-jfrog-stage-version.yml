@@ -9,12 +9,6 @@ permissions:
 
 on:
   workflow_call:
-    inputs:
-      ref:
-        required: false
-        description: Commit to bump off of
-        type: string
-      # See workflow call hack in update-version.ymls
     secrets:
       desk_mood:
         required: true
@@ -37,7 +31,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
-        ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
