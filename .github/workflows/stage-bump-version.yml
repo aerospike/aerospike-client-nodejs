@@ -54,7 +54,6 @@ jobs:
   get-new-stage-version:
     runs-on: ubuntu-22.04
     needs: [
-      get-next-dev-jfrog-version,
       get-next-stage-jfrog-version
     ]
     outputs:
