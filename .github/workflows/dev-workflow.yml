@@ -44,7 +44,7 @@ jobs:
     secrets: inherit
 
   upload-npm-package-to-jfrog:
-    name: Reupload package to JFrog NPM
+    name: upload package to JFrog NPM
     needs: [
       bump-dev-number,
       build-node-cpp-addons,

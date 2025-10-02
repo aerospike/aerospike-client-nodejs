@@ -1,9 +1,6 @@
-# Takes in how to bump version as input
-# Commits changes to bump version and outputs the new version and commit hash as output
 name: Bump version
 
 permissions:
-  # This is required for requesting the OIDC token
   id-token: write
   contents: read
 
@@ -27,7 +24,6 @@ jobs:
     outputs:
       dev_version: ${{ steps.get-jfrog-dev-version.outputs.dev_version }}
     steps:
-    # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}

@@ -92,7 +92,7 @@ jobs:
 
     - name: Install dependencies and test install
       run:
-        npm ci;
+        npm ci --ignore-scripts;
 
     - name: prepare to publish dev npm package to Jfrog
       if: ${{ inputs.pipeline-stage == 'dev' }}
