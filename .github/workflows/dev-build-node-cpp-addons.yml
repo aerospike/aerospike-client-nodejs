@@ -6,7 +6,6 @@ run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-r
 # Then upload artifacts to Github
 
 on:
-
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server
