@@ -118,8 +118,8 @@ jobs:
     - name: publish npm package to Jfrog dev repository
       if: ${{ inputs.pipeline-stage == 'dev' }}
       run: |
-        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
-        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-dev-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
       env:
         JF_URL: ${{ secrets.king_health }}
@@ -127,8 +127,8 @@ jobs:
     - name: publish npm package to Jfrog stage repository
       if: ${{ inputs.pipeline-stage == 'stage' }}
       run: |
-        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
-        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-stage-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
       env:
         JF_URL: ${{ secrets.king_health }}
@@ -136,8 +136,8 @@ jobs:
     - name: publish npm package to Jfrog prod repository
       if: ${{ inputs.pipeline-stage == 'master' }}
       run: |
-        npm login --registry=https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
-        npm publish --registry https://${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
+        npm login --registry=${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
+        npm publish --registry ${{ env.JF_URL }}/artifactory/api/npm/clients-npm-prod-public-local/
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
       env:
         JF_URL: ${{ secrets.king_health }}
