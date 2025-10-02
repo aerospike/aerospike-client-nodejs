@@ -7,7 +7,6 @@ permissions:
   contents: read
 
 on:
-
   workflow_call:
     inputs:
       nodejs-tags:
@@ -89,7 +88,7 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: Windows: Install C client deps
+    - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
       working-directory: aerospike-client-c/vs
