@@ -141,4 +141,3 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.new_version }}
       env:
         JF_URL: ${{ secrets.king_health }}
-
