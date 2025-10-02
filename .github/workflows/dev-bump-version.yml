@@ -17,8 +17,6 @@ on:
     outputs:
       dev_version:
         value: ${{ jobs.get-new-version.outputs.dev_version }}
-      bump_sha:
-        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
 
 jobs:
   get-current-version:
