@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
-      comprehensive-test,
+      comprehensive-tests,
     ]
     secrets: inherit
 
@@ -62,7 +62,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       stage-get-jfrog-version,
-      comprehensive-tests,
+      comprehensive-testss,
       bump-stage-number,
       stage-reupload-addons-to-jfrog
     ]
