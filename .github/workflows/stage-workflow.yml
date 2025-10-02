@@ -1,4 +1,4 @@
-name: Stage workflow
+ name: Stage workflow
 
 # 1. When a PR review is requested, run tests on that PR
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
@@ -13,14 +13,6 @@ on:
       - 'docs/**'
       - 'aerospike-stubs/**'
 
-  # So we can test changes to the test-server-rc workflow
-  workflow_dispatch:
-    inputs:
-      run_server_release_tests:
-        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-        type: boolean
-        default: false
-
 jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
@@ -29,7 +21,7 @@ jobs:
   comprehensive-tests:
     uses: ./.github/workflows/stage-tests.yml
     with:
-      version: ${{ needs.stage-get-jfrog-version.dev_version }}
+      version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
       run_tests: true
     needs: [
       stage-get-jfrog-version,
