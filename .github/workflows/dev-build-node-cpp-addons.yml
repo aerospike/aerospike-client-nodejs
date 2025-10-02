@@ -52,7 +52,7 @@ jobs:
           "win_amd64"
         ]
       fail-fast: false
-    uses: ./.github/workflows/dev/build-node-cpp-bindings.yml
+    uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var

@@ -19,11 +19,11 @@ on:
 
 jobs:
   bump-dev-number:
-    uses: ./.github/workflows/dev/bump-version.yml
+    uses: ./.github/workflows/dev-bump-version.yml
     secrets: inherit
 
   build-node-cpp-addons:
-    uses: ./.github/workflows/dev/build-node-cpp-addons.yml
+    uses: ./.github/workflows/dev-build-node-cpp-addons.yml
     needs: [
       bump-dev-number
     ]
@@ -38,7 +38,7 @@ jobs:
       bump-dev-number,
       build-node-cpp-addons
     ]
-    uses: ./.github/workflows/dev/upload-addons-to-jfrog.yml
+    uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
     secrets: inherit
@@ -50,7 +50,7 @@ jobs:
       build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
-    uses: ./.github/workflows/shared/upload-npm-package-to-jfrog.yml
+    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
       pipeline-stage: 'dev'

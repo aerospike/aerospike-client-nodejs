@@ -27,7 +27,7 @@ jobs:
     secrets: inherit
 
   bump-dev-number:
-    uses: ./.github/workflows/master/bump-version.yml
+    uses: ./.github/workflows/bump-master-version.yml
     needs: [
       get-jfrog-stage-version,
     ]
