@@ -10,10 +10,18 @@ permissions:
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        required: false
+        description: Commit to bump off of
+        type: string
+      # See workflow call hack in update-version.yml
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
     secrets:
-      desk_mood:
-        required: true
-      king_health:
+      CLIENT_BOT_PAT:
         required: true
     outputs:
       new_master_version:
@@ -29,14 +37,15 @@ jobs:
       master_version: ${{ steps.get-next-master-jfrog-version.outputs.master_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.desk_mood }}
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@v4
       env:
-        JF_URL: ${{ secrets.king_health }}
+        JF_URL: https://aerospike.jfrog.io
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -59,19 +68,21 @@ jobs:
     steps:
 
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.desk_mood }}
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.ref }}
 
     - name: Install library that parses nodejs versions
-      run: npm install semver --ignore-scripts
+    # NEED TO CHANGE THIS TO WORK WITH NODEJS
+      run: npm install semver
       working-directory: .github/workflows
 
     - name: Get new version
       id: get-new-version
       run: |
         set -e
-        new_master_version=$( node bump-master-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
+        new_master_version=$( node master-bump-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
         echo "new_master_version=$new_master_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
