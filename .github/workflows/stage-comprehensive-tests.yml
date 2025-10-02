@@ -28,7 +28,7 @@ on:
       server-tag:
         required: false
         type: string
-        default: '8.1.0.0-rc5'
+        default: '8.1.0.0'
         description: 'Server docker image tag'
     secrets:
       soup_hat:
@@ -67,10 +67,8 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
-    # REUSABLE PART
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
@@ -85,14 +83,13 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
-        # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: 'Windows: Install C client deps'
+    - name: Windows: Install C client deps
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
       working-directory: aerospike-client-c/vs
@@ -240,7 +237,6 @@ jobs:
 #    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-#      MACOS_OPENSSL_VERSION: 3
 #    steps:
 #
 #    # REUSABLE PART
@@ -375,7 +371,6 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
     # REUSABLE PART
@@ -498,7 +493,6 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
     # REUSABLE PART
@@ -660,7 +654,6 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
 
@@ -785,7 +778,6 @@ jobs:
     if: ${{ inputs.run_tests && ( inputs.platform-tag != 'macosx_x86_64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
     # REUSABLE PART
@@ -898,7 +890,6 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
     steps:
 
     # REUSABLE PART
@@ -1000,7 +991,6 @@ jobs:
 #    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
 #    env:
 #      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-#      MACOS_OPENSSL_VERSION: 3
 #    steps:
 #
 #    # REUSABLE PART

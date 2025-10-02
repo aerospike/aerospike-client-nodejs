@@ -29,7 +29,7 @@ jobs:
   comprehensive-tests:
     uses: ./.github/workflows/stage-tests.yml
     with:
-      version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
+      version: ${{ needs.stage-get-jfrog-version.dev_version }}
       run_tests: true
     needs: [
       stage-get-jfrog-version,
@@ -37,7 +37,7 @@ jobs:
     secrets: inherit
 
   bump-stage-number:
-    uses: ./.github/workflows/bump-stage-version.yml
+    uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
       comprehensive-test,
@@ -53,8 +53,8 @@ jobs:
     ]
     uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
     with:
-      old_version: ${{ needs.get-jfrog-dev-version.outputs.dev_version }}
-      new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
       pipeline-stage: 'stage'
     secrets: inherit
 
@@ -68,6 +68,6 @@ jobs:
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.new_stage_version }}
+      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
       pipeline-stage: 'stage'
     secrets: inherit
