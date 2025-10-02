@@ -5,12 +5,6 @@ name: Master workflow
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
 on:
-  pull_request:
-    branches:
-      - 'master-test'
-    paths-ignore:
-      - 'docs/**'
-      - 'aerospike-stubs/**'
 
 jobs:
   master-get-jfrog-version:
