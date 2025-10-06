@@ -139,9 +139,9 @@ jobs:
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
+        npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts
         node-pre-gyp install --fallback-to-build;
-        npm ci --ignore-scripts;
         ls lib/binding;
 
     - name: Run tests
