@@ -1,8 +1,9 @@
-# Set update schedule for GitHub Actions
+# Set update schedule for GitHub Actions and npm dependencies
 
 version: 2
 updates:
 
+  # GitHub Actions security updates
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -11,3 +12,35 @@ updates:
     cooldown:
       default-days: 2
     target-branch: "dev"
+
+  # Main npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+    open-pull-requests-limit: 10
+
+  # Examples npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/examples"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+    open-pull-requests-limit: 5
+
+  # Benchmarks npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/benchmarks"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+    open-pull-requests-limit: 5
+
+  # TypeScript test npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/ts-test"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+    open-pull-requests-limit: 5
