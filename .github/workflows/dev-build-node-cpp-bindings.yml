@@ -141,7 +141,7 @@ jobs:
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts
-        node-pre-gyp install --fallback-to-build;
+        npx node-pre-gyp install --fallback-to-build;
         ls lib/binding;
 
     - name: Run tests
