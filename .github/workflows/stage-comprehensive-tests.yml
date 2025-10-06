@@ -166,8 +166,10 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         rm -rf ts-test/dist;
@@ -180,8 +182,10 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -298,8 +302,10 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -435,8 +441,10 @@ jobs:
     - name: Install pre-reqs
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
         cd ..;
@@ -532,8 +540,10 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -543,8 +553,10 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -638,8 +650,10 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -652,8 +666,10 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
-        cd ts-test;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -745,16 +761,17 @@ jobs:
         ls lib/binding;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         docker logs aerospike;
-        cd ts-test;
+        ls .;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -846,22 +863,24 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
-          npm ci --ignore-scripts --omit=dev;
+          cp ../../../package-lock.json package-lock.json;
+          npm ci --ignore-scripts;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm ci --ignore-scripts;
+          npm ci .. --ignore-scripts;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          npm ci --ignore-scripts --omit=dev;
+          cp ../../../package-lock.json package-lock.json;
+          npm ci --ignore-scripts;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm ci --ignore-scripts;
+          npm ci .. --ignore-scripts;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
@@ -873,3 +892,169 @@ jobs:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           status: ${{ job.status }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+  test-user-agent-ce:
+    needs: get-runner-os
+    strategy:
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+      fail-fast: false
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+    steps:
+
+    # REUSABLE PART
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        submodules: recursive
+        # We need the last tag before the ref, so we can relabel the version if needed
+        fetch-depth: 0
+
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+
+    - name: Run latest Community edition Aerospike server
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0-rc5
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: check binding
+      run:
+        ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: Run tests
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      run: |
+        docker ps;
+        docker logs aerospike;
+        ls .;
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci .. --ignore-scripts;
+        npx tsc;
+        cd ..;
+        npx tsc;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+
+
+
+      # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
+    - name: Run client in background
+      run: |
+        cat <<'EOF' > run-client-in-bg.js
+        const Aerospike = require('./lib/aerospike');
+
+        const main = async () => {
+          let client;
+          try {
+            client = await Aerospike.connect({ hosts: '127.0.0.1:3000' });
+            while (true) {
+              await new Promise(r => setTimeout(r, 1000));
+            }
+          } catch (e) {
+            console.error(e);
+            process.exit(1);
+          } finally {
+            client && client.close();
+          }
+
+
+
+        };
+
+        main();
+        EOF
+
+        # This shell will be closed once this step completes
+        nohup node run-client-in-bg.js &
+        # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
+        # When background processes fail, this step won't fail.
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
+      run: |
+        server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
+        major_num=$(echo $server_version | cut -d '.' -f 1)
+        minor_num=$(echo $server_version | cut -d '.' -f 2)
+        if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
+          exit 0
+        fi
+        info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
+        echo "Info command response: $info_cmd_response"
+        # Response format: user-agent=<base64 encoded string>:...
+        user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
+        echo $user_agent_base64_encoded
+        user_agent=$(echo $user_agent_base64_encoded | base64 -d)
+        echo $user_agent
+        # TODO: combine into one regex
+        # User agent format: <format-version>,<client language>-<version>,...
+        client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
+        client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
+        echo $client_language
+        echo $client_version
+        test "$client_language" = "node"
+        # Client version from user agent
+        expected_client_version=$(node -p "require('aerospike/package.json').version")
+        test "$client_version" = "$expected_client_version"
+      shell: bash
+      env:
+        CONTAINER_NAME: aerospike
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}

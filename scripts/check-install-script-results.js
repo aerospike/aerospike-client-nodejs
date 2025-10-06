@@ -1,7 +1,6 @@
 import fs from 'fs'
-import path from 'path'
 
-const folder = '/your/folder/path'
+const folder = './lib/binding'
 
 const count = fs.readdirSync(folder, { withFileTypes: true })
   .filter(dirent => dirent.isDirectory()).length

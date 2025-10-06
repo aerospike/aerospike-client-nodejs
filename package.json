@@ -59,6 +59,7 @@
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
   "dependencies": {
+    "aerospike": "^6.3.0",
     "bindings": "^1.5.0",
     "minimatch": "^3.1.2",
     "nan": "^2.22.0",
@@ -67,6 +68,7 @@
   },
   "devDependencies": {
     "@mapbox/node-pre-gyp": "^1.0.11",
+    "@types/node": "^24.7.0",
     "chai": "^4.4.1",
     "choma": "^1.2.1",
     "codecov": "^3.8.3",
