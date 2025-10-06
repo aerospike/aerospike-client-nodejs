@@ -167,7 +167,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         rm -rf ts-test/dist;
@@ -181,7 +181,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -299,7 +299,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -436,7 +436,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cp tests/udf.lua dist/udf.lua;
         cd ..;
@@ -533,7 +533,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -544,7 +544,7 @@ jobs:
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -639,7 +639,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -653,7 +653,7 @@ jobs:
       run: |
         docker ps;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -754,7 +754,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         cd ts-test;
-        npm ci --ignore-scripts;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
@@ -846,22 +846,22 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
-          npm ci --ignore-scripts --omit=dev;
+          npm ci .. --ignore-scripts --omit=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm ci --ignore-scripts;
+          npm ci .. --ignore-scripts;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
-          npm ci --ignore-scripts --omit=dev;
+          npm ci .. --ignore-scripts --omit=dev;
           npx tsc;
           npx tsc typings/index.d.ts;
           cd ts-test;
-          npm ci --ignore-scripts;
+          npm ci .. --ignore-scripts;
           npx tsc;
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
