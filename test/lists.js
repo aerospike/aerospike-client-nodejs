@@ -29,8 +29,6 @@ const ops = Aerospike.operations
 const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
-const eql = require('deep-eql')
-
 const {
   assertError,
   assertRecordEql,
@@ -801,7 +799,7 @@ describe('client.operate() - CDT List operations', function () {
         return initState()
           .then(createRecord({ list: [3, 1, 2, 5, 4] }))
           .then(operate(lists.removeByRankRange('list', 1, 3).andReturn(lists.returnType.VALUE)))
-          .then(assertResultSatisfy(result => expect(result.list.sort()).to.eql( [2, 3, 4])))
+          .then(assertResultSatisfy(result => expect(result.list.sort()).to.eql([2, 3, 4])))
           .then(assertRecordEql({ list: [1, 5] }))
           .then(cleanup)
       })
@@ -1313,7 +1311,7 @@ describe('client.operate() - CDT List operations', function () {
         return initState()
           .then(createRecord({ list: [3, 1, 2, 5, 4] }))
           .then(operate(lists.getByRankRange('list', 1, 3).andReturn(lists.returnType.VALUE)))
-          .then(assertResultSatisfy(result => expect(result.list.sort()).to.eql( [2, 3, 4])))
+          .then(assertResultSatisfy(result => expect(result.list.sort()).to.eql([2, 3, 4])))
           .then(cleanup)
       })
 

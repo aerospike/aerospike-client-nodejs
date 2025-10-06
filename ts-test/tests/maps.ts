@@ -28,8 +28,6 @@ const op: typeof operations = Aerospike.operations
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 const status: typeof statusModule = Aerospike.status
 
-const eql = require('deep-eql')
-
 const {
   assertError,
   assertRecordEql,
@@ -545,7 +543,8 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)))
-        .then(assertResultSatisfy((result: AerospikeBins) => eql((result.map as number[]).sort(), [1, 3])))
+        .then(assertResultSatisfy(result => expect(result.list.sort()).to.eql([2, 3, 4])))
+        .then(assertResultSatisfy((result: AerospikeBins) => expect((result.map as number[]).sort()).to.eql([1, 3])))
         .then(assertRecordEql({ map: { b: 2 } }))
         .then(cleanup())
     })
@@ -554,7 +553,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.removeByKeyList('map', ['a', 'x', 'y', 'z', 'c'], maps.returnType.VALUE)))
-        .then(assertResultSatisfy((result: AerospikeBins) => eql((result.map as number[]).sort(), [1, 3])))
+        .then(assertResultSatisfy((result: AerospikeBins) => expect((result.map as number[]).sort()).to.eql([1, 3])))
         .then(assertRecordEql({ map: { b: 2 } }))
         .then(cleanup())
     })
@@ -1154,7 +1153,7 @@ describe('client.operate() - CDT Map operations', function () {
               .withContext((ctx: cdt.Context) => ctx.addMapKey('nested'))
               .andReturn(maps.returnType.KEY)
           ))
-          .then(assertResultSatisfy((result: AerospikeBins) => eql((result.map as number[]).sort(), ['b', 'c'])))
+          .then(assertResultSatisfy((result: AerospikeBins) => expect((result.map as number[]).sort()).to.eql(['b', 'c'])))
           .then(cleanup())
       })
     })
@@ -1216,7 +1215,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.getByValueRange('map', 2, null, maps.returnType.VALUE)))
-        .then(assertResultSatisfy((result: AerospikeBins) => eql((result.map as number[]).sort(), [2, 3])))
+        .then(assertResultSatisfy((result: AerospikeBins) => expect((result.map as number[]).sort()).to.eql([2, 3])))
         .then(cleanup())
     })
 
