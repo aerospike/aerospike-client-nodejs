@@ -543,7 +543,6 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)))
-        .then(assertResultSatisfy((result: any) => expect(result.list.sort()).to.eql([2, 3, 4])))
         .then(assertResultSatisfy((result: AerospikeBins) => expect((result.map as number[]).sort()).to.eql([1, 3])))
         .then(assertRecordEql({ map: { b: 2 } }))
         .then(cleanup())

@@ -1051,7 +1051,6 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
 
-
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
