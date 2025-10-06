@@ -653,7 +653,6 @@ jobs:
         docker pull aerospike/aerospike-server:latest;
         npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
         npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
@@ -669,7 +668,6 @@ jobs:
         docker pull aerospike/aerospike-server:latest;
         npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
         npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -770,7 +768,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/ -- --h localhost --port 3000;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
