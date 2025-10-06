@@ -59,6 +59,7 @@
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
   "dependencies": {
+    "aerospike": "^6.3.0",
     "bindings": "^1.5.0",
     "minimatch": "^3.1.2",
     "nan": "^2.22.0",

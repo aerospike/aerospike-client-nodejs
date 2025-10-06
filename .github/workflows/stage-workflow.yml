@@ -9,6 +9,7 @@ on:
       - 'docs/**'
       - 'aerospike-stubs/**'
 
+
 jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
