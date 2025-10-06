@@ -139,6 +139,7 @@ jobs:
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
+        npm run install;
         node-pre-gyp install --fallback-to-build;
         npm ci --ignore-scripts;
         ls lib/binding;
