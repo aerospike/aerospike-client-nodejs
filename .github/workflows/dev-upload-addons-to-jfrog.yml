@@ -14,9 +14,6 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-    secrets:
-      king_health:
-        required: true
 
 jobs:
   upload-to-jfrog:
@@ -32,7 +29,7 @@ jobs:
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: ${{ secrets.king_health }}
+        JF_URL: https://aerospike.jfrog.io
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -46,6 +43,7 @@ jobs:
       run: |
         mkdir lib/binding;
         cp -r aerospike/${{ env.VERSION }}/* lib/binding;
+        rm -rf aerospike;
       env:
         VERSION: ${{ inputs.new_version }} 
 
@@ -57,7 +55,7 @@ jobs:
 
     - name: Install dependencies and test install
       run:
-        npm ci;
+        npm ci --ignore-scripts;
 
     - name: Create package tarball
       run: 

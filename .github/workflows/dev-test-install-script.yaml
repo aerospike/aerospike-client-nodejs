@@ -24,7 +24,7 @@ on:
         required: true
 
 jobs:
-  publish-jfrog-build-to-npm:
+  test-install-script:
     runs-on: ubuntu-22.04
     steps:
 
@@ -47,34 +47,12 @@ jobs:
         OLD_VERSION: ${{ inputs.old_version }}
         PACKAGE_MANAGER: npm
 
-    - name: Move artifacts
+    - name: Test install script for npm
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz;
-        node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js;
-        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm ci --ignore-scripts;
+        npm-run-all removeExtraBinaries build;
+        check-install-script-results.js;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
-
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "disableupload"/' package.json
-
-    - name: change verison
-      run: |
-       npm version ${{ env.NEW_VERSION }} --no-git-tag-version
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
-    - name: npm rc
-      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC: ${{ secrets.NPMRC_RELEASE }}
-
-    - run: |
-        npm publish --provenance;
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}

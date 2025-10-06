@@ -75,7 +75,7 @@ jobs:
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm install semver
+      run: npm install semver@7.7.2
       working-directory: .github/workflows
 
     - name: Get new version

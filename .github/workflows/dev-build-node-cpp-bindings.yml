@@ -52,20 +52,14 @@ on:
         required: true
       song_loss:
         required: true
-      king_health:
-        required: true
 
 jobs:
-  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
-  # This uses up more billing minutes (rounded up to 1 minute for each job run),
-  # but this should be ok based on the minutes usage data for the aerospike organization
   get-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
     runs-on: ubuntu-22.04
     steps:
     - id: get-runner-os
-      # Single source of truth for which runner OS to use for each platform tag
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
@@ -74,7 +68,6 @@ jobs:
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
-      # Bash >= 4 supports hashmaps
       shell: bash
 
 
@@ -89,6 +82,9 @@ jobs:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
     steps:
+
+    # SETUP
+
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
@@ -97,20 +93,16 @@ jobs:
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - name: Delete workspace
       if: ${{ inputs.platform-tag != 'win_amd64' }}
       run: rm -rf ${{ github.workspace }}/*
 
-
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         submodules: recursive
-        # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
-
 
     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
       with:
@@ -121,61 +113,8 @@ jobs:
       run: nuget restore
       working-directory: aerospike-client-c/vs
 
-    #- name: 'macOS x86: Setup Docker using colima for testing'
-    #  if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-    #  uses: ./.github/actions/setup-docker-on-macos
-
-    #- name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-    #  if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-    #  uses: ./.github/actions/run-ee-server-for-ext-container
-    #  with:
-    #    use-server-rc: ${{ inputs.use-server-rc }}
-    #    server-tag: ${{ inputs.server-tag }}
-    #    docker-hub-username: ${{ secrets.soup_hat }}
-    #    docker-hub-password: ${{ secrets.cell_girl }}
-
-    #- name: Remove aerospike docker image
-    #  if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
-    #  run: |
-    #    if docker ps -aq | grep -q .; then
-    #      docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-    #    else
-    #      echo "No containers to remove."
-    #    fi
-
-    ## TODO: combine this composite action and the above into one
-    #- name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-    #  if: ${{ inputs.run_tests && inputs.platform-tag == 'manylinux_x86_64'}}
-    #  uses: ./.github/actions/run-ee-server-for-ext-container
-    #  with:
-    #    use-server-rc: ${{ inputs.use-server-rc }}
-    #    server-tag: ${{ inputs.server-tag }}
-    #    docker-hub-username: ${{ secrets.soup_hat }}
-    #    docker-hub-password: ${{ secrets.cell_girl }}
-
-    # FIND NO SERVER TESTS AND RUN THEM
-    #
-    #- name: If not running tests against server, only run basic import test
-    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
-    #  # Use double quotes otherwise Windows will throw this error in cibuildwheel
-    #  # 'import
-    #  #       ^
-    #  # SyntaxError: EOL while scanning string literal
-    #  run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
-    #  shell: bash
-
-    #- name: Otherwise, enable integration tests
-    #  if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
-    #  run: echo "TEST_COMMAND=cd ts-test;
-    #    npm install typescript --ignore-scripts --save-dev;
-    #    npx tsc;
-    #    cd ..;
-    #    npm run test dist/ -- --h 127.0.0.1 --port 3000" >> $GITHUB_ENV
-    #  shell: bash
-
     - name: 'Install libyaml'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-      #if: ${{ inputs.platform-tag == 'macosx_x86_64' || inputs.platform-tag == 'macosx_arm64' }}
       run: |
         brew install libyaml
 
@@ -200,42 +139,23 @@ jobs:
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
-        npm ci;
+        node-pre-gyp install --fallback-to-build;
+        npm ci --ignore-scripts;
         ls lib/binding;
-
-
-    #- name: Debug server
-    #  run: |
-    #    docker ps;
-    #    docker logs aerospike;
 
     - name: Run tests
       if: ${{ inputs.run_tests }}
       run: |
         cd ts-test;
-        npm ci;
         npx tsc;
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
-
-    #- name: Run tests
-    #  if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
-    #  run: |
-    #    docker ps;
-    #    docker logs aerospike;
-    #    cd ts-test;
-    #    npm ci;
-    #    npx tsc;
-    #    cd ..;
-    #    npx tsc;
-    #    npm run test dist/${{ inputs.test-file }} -- --h localhost --port 3000  --t 15000 --U superuser --P superuser;
-
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
-        JF_URL: ${{ secrets.king_health }}
+        JF_URL: https://aerospike.jfrog.io
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
@@ -295,6 +215,5 @@ jobs:
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}

@@ -44,9 +44,9 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Get jfrog version
-      id: get-jfrog-stage-version
+      id: master-get-jfrog-version
       run: |
         echo "stage_version=$(jfrog rt s "clients-npm-stage-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'dev' | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
-      run: echo "Jfrog version is ${{ steps.get-jfrog-stage-version.outputs.stage_version }}"
+      run: echo "Jfrog version is ${{ steps.master-get-jfrog-version.outputs.stage_version }}"
