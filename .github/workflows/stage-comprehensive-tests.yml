@@ -761,6 +761,7 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
+        ls .;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
