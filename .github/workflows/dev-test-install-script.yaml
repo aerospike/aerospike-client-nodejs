@@ -23,6 +23,7 @@ on:
       NPM_TOKEN_OFF:
         required: true
 
+
 jobs:
   test-install-script:
     runs-on: ubuntu-22.04
