@@ -166,6 +166,7 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -181,6 +182,7 @@ jobs:
       run: |
         docker ps;
         docker logs aerospike;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -300,6 +302,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         docker ps;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -438,6 +441,7 @@ jobs:
     - name: Install pre-reqs
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -536,6 +540,7 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -548,6 +553,7 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -644,6 +650,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -659,6 +666,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -753,8 +761,6 @@ jobs:
         ls lib/binding;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-
-
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
@@ -762,6 +768,7 @@ jobs:
         docker ps;
         docker logs aerospike;
         ls .;
+        cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         cd ts-test;
         npm ci .. --ignore-scripts;
@@ -856,6 +863,7 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
+          cp ../../../package-lock.json package-lock.json;
           npm ci --ignore-scripts;
           npx tsc;
           npx tsc typings/index.d.ts;
@@ -867,6 +875,7 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
+          cp ../../../package-lock.json package-lock.json;
           npm ci --ignore-scripts;
           npx tsc;
           npx tsc typings/index.d.ts;
