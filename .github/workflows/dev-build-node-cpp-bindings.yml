@@ -136,9 +136,24 @@ jobs:
         Get-Content "props\nodejs.props"
       working-directory: aerospike-client-c/vs
 
-    - name: Build Binding
+    - name: Change version in package.json
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: |
+        $v = "${{ env.NEW_VERSION }}"
+        Get-Content package.json | jq --arg v $v '.version = $v' | Set-Content package.json
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Change version in package.json
+      if: ${{ inputs.platform-tag != 'win_amd64' }}
       run: |
         jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+
+    - name: Build Binding
+      run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts;
