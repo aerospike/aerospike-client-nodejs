@@ -27,146 +27,177 @@ function wait (ms: number) {
 }
 
 // Error Checking functions
-async function checkTimeoutError (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutError (dummyClient: Client, error: any){
   let tokens = error.message.split('=')
   let message = tokens[0] + '=' + tokens[1]
-  expect(message).to.eql(`Client timeout: iterations=${retries + 1} lastNode`)
+  expect(message).to.eql(`Client timeout: iterations=1 lastNode`)
   expect(error.code).to.eql(9)
 }
 
-async function checkTimeoutErrorQuery (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutErrorQuery (dummyClient: Client, error: any){
   let tokens = error.message.split('.')
   let message = tokens[0] + '.' + tokens[1]
   expect(message).to.eql(`Request timed out. Can be triggered by client or server`)
   expect(error.code).to.eql(9)
 }
 
-async function checkTimeoutErrorTxnVerify (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutErrorTxnVerify (dummyClient: Client, error: any){
   let tokens = error.message.split('=')
   let message = tokens[0] + '=' + tokens[1]
-  expect(message).to.eql(`Txn aborted:\nVerify failed: Client timeout: iterations=${retries + 1} lastNode`)
+  expect(message).to.eql(`Txn aborted:\nVerify failed: Client timeout: iterations=1 lastNode`)
   expect(error.code).to.eql(9)
 }
 
 // Error and connection checking functions
 
-async function checkTimeoutErrorAndConnectionsDisable (dummyClient: Client, error: any, retries: number){
-  checkTimeoutError(dummyClient, error, retries)
+async function checkTimeoutErrorAndConnectionsDisable (dummyClient: Client, error: any){
+  checkTimeoutError(dummyClient, error)
 
-  await wait(1500)
+  await wait(300)
 
   let result = await dummyClient.stats()
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
   expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
 
-async function checkTimeoutErrorAndConnectionsEnable (dummyClient: Client, error: any, retries: number){
-  checkTimeoutError(dummyClient, error, retries)
+async function checkTimeoutErrorAndConnectionsEnable (dummyClient: Client, error: any){
+  checkTimeoutError(dummyClient, error)
 
-  await wait(1500)
+  await wait(300)
 
   let result = await dummyClient.stats()
   expect(result.nodes[0].asyncConnections.recovered).to.eql(1)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(retries)
+  expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
 
-async function checkTimeoutErrorAndConnectionsEnableWrite (dummyClient: Client, error: any, retries: number){
-  checkTimeoutError(dummyClient, error, retries)
+async function checkTimeoutErrorAndConnectionsAbort (dummyClient: Client, error: any){
+  checkTimeoutError(dummyClient, error)
 
-  await wait(1500)
+  await wait(300)
 
   let result = await dummyClient.stats()
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(retries + 1)
+  expect(result.nodes[0].asyncConnections.aborted).to.eql(1)
 }
 
-async function checkTimeoutErrorAndConnectionsInfoDisable (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutErrorAndConnectionsEnableWriteAbort(dummyClient: Client, error: any){
+  checkTimeoutError(dummyClient, error)
+
+  await wait(300)
+
+  let result = await dummyClient.stats()
+  expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
+  expect(result.nodes[0].asyncConnections.aborted).to.eql(1)
+}
+
+async function checkTimeoutErrorAndConnectionsInfoDisable (dummyClient: Client, error: any){
   expect(error.code).to.eql(9)
 
-  await wait(1500)
+  await wait(300)
 
 
   let result = await dummyClient.stats()
-
   expect(result.nodes[0].syncConnections.recovered).to.eql(0)
   expect(result.nodes[0].syncConnections.aborted).to.eql(0)
 }
 
-async function checkTimeoutErrorAndConnectionsInfoEnable (dummyClient: Client, error: any, retries: number){
+async function checkTimeoutErrorAndConnectionsInfoEnable (dummyClient: Client, error: any){
   expect(error.code).to.eql(9)
 
-  await wait(1500)
+  await wait(300)
 
 
   let result = await dummyClient.stats()
 
   expect(result.nodes[0].syncConnections.recovered).to.eql(1)
-  expect(result.nodes[0].syncConnections.aborted).to.eql(retries)
+  expect(result.nodes[0].syncConnections.aborted).to.eql(0)
+}
+
+async function checkTimeoutErrorAndConnectionsInfoEnableAbort (dummyClient: Client, error: any){
+  expect(error.code).to.eql(9)
+
+  await wait(300)
+
+
+  let result = await dummyClient.stats()
+
+  expect(result.nodes[0].syncConnections.recovered).to.eql(0)
+  expect(result.nodes[0].syncConnections.aborted).to.eql(1)
 }
 
 
-async function checkTimeoutErrorAndConnectionsQueryDisable (dummyClient: Client, error: any, retries: number){
-  checkTimeoutErrorQuery(dummyClient, error, retries)
+async function checkTimeoutErrorAndConnectionsQueryDisable (dummyClient: Client, error: any){
+  checkTimeoutErrorQuery(dummyClient, error)
 
-  await wait(1500)
+  await wait(300)
+
+  let result = await dummyClient.stats()
+
+  expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
+  expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
+}
+
+async function checkTimeoutErrorAndConnectionsQueryEnableAbort (dummyClient: Client, error: any){
+  checkTimeoutErrorQuery(dummyClient, error)
+
+  await wait(300)
+
+  let result = await dummyClient.stats()
+
+  expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
+  expect(result.nodes[0].asyncConnections.aborted).to.be.at.least(1)
+}
+
+async function checkTimeoutErrorAndConnectionsTxnVerifyDisabled (dummyClient: Client, error: any){
+  checkTimeoutErrorTxnVerify(dummyClient, error)
+
+  await wait(300)
 
   let result = await dummyClient.stats()
   expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
   expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
 
-async function checkTimeoutErrorAndConnectionsQueryEnable (dummyClient: Client, error: any, retries: number){
-  checkTimeoutErrorQuery(dummyClient, error, retries)
-
-  await wait(1500)
-
-  let result = await dummyClient.stats()
-  expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(retries + 1)
-}
-
-async function checkTimeoutErrorAndConnectionsTxnVerifyDisabled (dummyClient: Client, error: any, retries: number){
-  checkTimeoutErrorTxnVerify(dummyClient, error, retries)
-
-  await wait(1500)
-
-  let result = await dummyClient.stats()
-  expect(result.nodes[0].asyncConnections.recovered).to.eql(0)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
-}
-
-async function checkTimeoutErrorAndConnectionsTxnVerifyEnabled (dummyClient: Client, error: any, retries: number){
-  checkTimeoutErrorTxnVerify(dummyClient, error, retries)
+async function checkTimeoutErrorAndConnectionsTxnVerifyEnabled (dummyClient: Client, error: any){
+  checkTimeoutErrorTxnVerify(dummyClient, error)
 
 
   let result = await dummyClient.stats()
   expect(result.nodes[0].asyncConnections.recovered).to.eql(1)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(retries)
+  expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
+
 
 describe('timeoutDelay', function () {
 
   const client: Client = helper.client
 
-  let maxRetriesDisable = 5
-  let maxRetriesEnable = 3
+
+
+  helper.skipUnlessTimeoutDelay(this)
+
   before(() => helper.udf.register('udf.lua'))
 
   context('Positive tests', function () {
     // Standardize retries for each test
     let disableTimeoutDelayPolicy = {
-      totalTimeout: 0,  
+      totalTimeout: 1,  
       socketTimeout: 1,
       timeoutDelay: 0,
-      maxRetries: maxRetriesDisable
     }
 
     let enableTimeoutDelayPolicy = {
-      totalTimeout: 0,
+      totalTimeout: 1,
       socketTimeout: 1,
-      timeoutDelay: 15000,
-      maxRetries: maxRetriesEnable
+      timeoutDelay: 3000,
     }
+
+    let forceAbortPolicy = {
+      totalTimeout: 1,
+      socketTimeout: 1,
+      timeoutDelay: 1,
+    }
+
 
     let disableInfoTimeoutDelayPolicy = {
       timeout: 1,
@@ -174,8 +205,13 @@ describe('timeoutDelay', function () {
     }
 
     let enableInfoTimeoutDelayPolicy = {
+      timeout: 80,
+      timeoutDelay: 3000,
+    }
+
+    let enableInfoTimeoutDelayAbortPolicy = {
       timeout: 1,
-      timeoutDelay: 15000,
+      timeoutDelay: 1,
     }
 
     context('ReadPolicy', function () {
@@ -186,7 +222,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           read: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -195,7 +232,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           read: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -209,7 +247,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.get should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         }
         finally{
           
@@ -228,12 +266,32 @@ describe('timeoutDelay', function () {
           assert.fail("client.get should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error)
         }
         finally{
           await dummyClient.close()
         }
       })
+
+      it('Aborts socket connection after timeout delay period', async function () {
+
+
+
+        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
+        await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/1'), {a: 1})
+
+        try{
+          await dummyClient.get(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/1'), forceAbortPolicy)
+          assert.fail("client.get should throw an error")
+        }
+        catch(error: any){
+          await checkTimeoutErrorAndConnectionsAbort(dummyClient, error)
+        }
+        finally{
+          await dummyClient.close()
+        }
+      })
+
     })
 
     context('WritePolicy', function () {
@@ -244,7 +302,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           write: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -253,7 +312,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           write: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -266,7 +326,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.put should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         }
         finally{
           
@@ -283,7 +343,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.put should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnableWrite(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnableWriteAbort(dummyClient, error)
         }
         finally{
           
@@ -300,7 +360,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           apply: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -309,7 +370,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           apply: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
 
@@ -325,7 +387,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.apply should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         }
         finally{
           
@@ -345,13 +407,34 @@ describe('timeoutDelay', function () {
           assert.fail("client.apply should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error)
         }
         finally{
           
           await dummyClient.close()
         }
       })
+
+      it('Aborts socket connection after timeout delay period', async function () {
+
+        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
+        await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/4'), {a: 1})
+
+        try{
+          const udfArgs: UDF = { module: 'udf', funcname: 'withoutArguments' }
+
+          await dummyClient.apply(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/4'), udfArgs, forceAbortPolicy)
+          assert.fail("client.apply should throw an error")
+        }
+        catch(error: any){
+          await checkTimeoutErrorAndConnectionsAbort(dummyClient, error)
+        }
+        finally{
+          
+          await dummyClient.close()
+        }
+      })
+
     })
 
     context('OperatePolicy', function () {
@@ -362,7 +445,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           operate: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -371,7 +455,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           operate: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -388,7 +473,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.operate should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         
         }
         finally{
@@ -413,7 +498,30 @@ describe('timeoutDelay', function () {
           assert.fail("client.operate should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error)
+        }
+        finally{
+          
+          await dummyClient.close()
+        }
+      })
+
+      it('Aborts socket connection after timeout delay period', async function () {
+
+
+        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
+        await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/4'), {a: 1})
+
+        try{
+          const ops: operations.Operation[] = [
+            Aerospike.operations.add('int', 432)
+          ]
+
+          await dummyClient.operate(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/6'), ops, null, forceAbortPolicy)
+          assert.fail("client.operate should throw an error")
+        }
+        catch(error: any){
+          await checkTimeoutErrorAndConnectionsAbort(dummyClient, error)
         }
         finally{
           
@@ -430,7 +538,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           remove: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -439,21 +548,11 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           remove: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
-        const config: ConfigOptions = {
-          hosts: helper.config.hosts,
-          user: helper.config.user,
-          password: helper.config.password,
-          policies : {
-            remove: {
-              timeoutDelay: 0,
-              socketTimeout: 1,
-            }
-          }
-        }
 
         const dummyClient = await Aerospike.connect(disableTimeoutDelayConfig)
         await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/6'), {a: 1})
@@ -463,7 +562,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.remove should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         }
         finally{
           
@@ -472,19 +571,6 @@ describe('timeoutDelay', function () {
       })
 
       it('Fails to recover timeout', async function () {
-        const config: ConfigOptions = {
-          hosts: helper.config.hosts,
-          user: helper.config.user,
-          password: helper.config.password,
-          policies : {
-            remove: {
-              totalTimeout: 0,
-              socketTimeout: 1,
-              timeoutDelay: 3000,
-              maxRetries: 1
-            }
-          }
-        }
 
         const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
         await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/10'), {a: 1})
@@ -493,7 +579,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.remove should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error)
         }
         finally{
           
@@ -510,7 +596,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           batch: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -519,7 +606,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           batch: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -538,7 +626,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.batchRead should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsDisable(dummyClient, error)
         }
         finally{
           
@@ -563,7 +651,32 @@ describe('timeoutDelay', function () {
           assert.fail("client.batchRead should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsEnable(dummyClient, error)
+        }
+        finally{
+          
+          await dummyClient.close()
+        }
+      })
+
+      it('Aborts socket connection after timeout delay period', async function () {
+
+        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
+        await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'timeoutDelay/4'), {a: 1})
+
+        try{
+          const batch = []
+          for (let i = 2; i <= 20000; i++) {
+            batch.push({
+              key: new Aerospike.Key('test', 'demo', `timeoutDelay/${i}`),
+              readAllBins: true
+            })
+          }
+          const batchResult = await dummyClient.batchRead(batch, forceAbortPolicy)
+          assert.fail("client.batchRead should throw an error")
+        }
+        catch(error: any){
+          await checkTimeoutErrorAndConnectionsAbort(dummyClient, error)
         }
         finally{
           
@@ -581,7 +694,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           query: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -590,7 +704,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           query: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -602,7 +717,7 @@ describe('timeoutDelay', function () {
           assert.fail("query.results should throw an error")
         }
         catch(error: any) {
-          await checkTimeoutErrorAndConnectionsQueryDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsQueryDisable(dummyClient, error)
         }
         finally{
           
@@ -610,16 +725,17 @@ describe('timeoutDelay', function () {
         }
       })
 
-      it('Recovers socket connection during timeout delay period', async function () {
+
+      it('Aborts socket connection after timeout delay period', async function () {
 
         const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
         const query: Query = await dummyClient.query(helper.namespace, helper.set)
         try{
-          await query.results()
+          await query.results(forceAbortPolicy)
           assert.fail("query.results should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsQueryEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsQueryEnableAbort(dummyClient, error)
         }
         finally{
           
@@ -638,7 +754,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           scan: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -647,7 +764,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           scan: enableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       it('Disables timeout delay', async function () {
@@ -659,7 +777,7 @@ describe('timeoutDelay', function () {
           assert.fail("scan.results should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsQueryDisable(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsQueryDisable(dummyClient, error)
         }
         finally{
           
@@ -667,23 +785,22 @@ describe('timeoutDelay', function () {
         }
       })
 
-      it('Recovers socket connection during timeout delay period', async function () {
+      it('Aborts socket connection after timeout delay period', async function () {
 
         const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
         const scan: Scan = await dummyClient.scan(helper.namespace, helper.set)
         try{
-          await scan.results()
+          await scan.results(forceAbortPolicy)
           assert.fail("scan.results should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsQueryEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsQueryEnableAbort(dummyClient, error)
         }
         finally{
           
           await dummyClient.close()
         }
       })
-
     })
 
     context('InfoPolicy', function () {
@@ -694,7 +811,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           info: disableInfoTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -703,7 +821,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           info: enableInfoTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
 
@@ -713,32 +832,11 @@ describe('timeoutDelay', function () {
         const dummyClient = await Aerospike.connect(disableTimeoutDelayConfig)
         try{
           let nodes = await dummyClient.getNodes()
-          let result = await dummyClient.infoAll()
-          assert.fail("client.infoNode should throw an error")
-        }
-        catch(error: any){
-          await checkTimeoutErrorAndConnectionsInfoDisable(dummyClient, error, maxRetriesDisable)
-        }
-        finally{
-          
-          await dummyClient.close()
-        }
-      })
-
-
-
-
-      it('Recovers socket connection during timeout delay period', async function () {
-
-        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
-        try{
-          let nodes = await dummyClient.getNodes()
           let result = await dummyClient.infoNode('status', nodes[0])
           assert.fail("client.infoNode should throw an error")
         }
         catch(error: any){
-          console.log(error)
-          await checkTimeoutErrorAndConnectionsInfoEnable(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsInfoDisable(dummyClient, error)
         }
         finally{
           
@@ -756,7 +854,8 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           txnVerify: disableTimeoutDelayPolicy
-        }
+        },
+        tenderInterval: 250
       }
 
       let enableTimeoutDelayConfig = {
@@ -765,6 +864,16 @@ describe('timeoutDelay', function () {
         password: helper.config.password,
         policies : {
           txnVerify: enableTimeoutDelayPolicy
+        },
+        tenderInterval: 250
+      }
+
+      let abortTimeoutDelayConfig = {
+        hosts: helper.config.hosts,
+        user: helper.config.user,
+        password: helper.config.password,
+        policies : {
+          txnVerify: forceAbortPolicy
         }
       }
 
@@ -793,7 +902,7 @@ describe('timeoutDelay', function () {
           assert.fail("client.commit should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsTxnVerifyDisabled(dummyClient, error, maxRetriesDisable)
+          await checkTimeoutErrorAndConnectionsTxnVerifyDisabled(dummyClient, error)
         }
         finally{
           
@@ -825,13 +934,14 @@ describe('timeoutDelay', function () {
           assert.fail("client.commit should throw an error")
         }
         catch(error: any){
-          await checkTimeoutErrorAndConnectionsTxnVerifyEnabled(dummyClient, error, maxRetriesEnable)
+          await checkTimeoutErrorAndConnectionsTxnVerifyEnabled(dummyClient, error)
         }
         finally{
           
           await dummyClient.close()
         }
       })
+
 
     })
 
@@ -1461,6 +1571,7 @@ describe('timeoutDelay', function () {
           expect(error.code).to.eql(-1)
         }
       })
+
     })
 
     context('InfoPolicy', function () {

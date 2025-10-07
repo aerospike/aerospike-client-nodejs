@@ -327,6 +327,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetricsKeyBusy, 'Metrics key busy test disabled')
   }
 
+  export function skipUnlessTimeoutDelay(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
+  }
+
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => {
