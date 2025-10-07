@@ -75,14 +75,14 @@ jobs:
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS
-      run: npm install semver
+      run: npm install semver@7.7.2
       working-directory: .github/workflows
 
     - name: Get new version
       id: get-new-version
       run: |
         set -e
-        new_master_version=$( node bump-master-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
+        new_master_version=$( node master-bump-version.js ${{ needs.get-next-master-jfrog-version.outputs.master_version }} )
         echo "new_master_version=$new_master_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 

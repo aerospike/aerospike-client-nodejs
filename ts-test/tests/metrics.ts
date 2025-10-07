@@ -38,7 +38,8 @@ import * as helper from './test_helper';
 
 import * as fs from 'fs';
 
-
+const aerospikeClientVersion = require('../../package.json').version
+const aerospikeClientLanguage = "nodejs"
 
 describe('Metrics tests', function () {
   this.timeout(40000)
@@ -411,6 +412,80 @@ describe('Metrics tests', function () {
     })
 
     context('cluster', function () {
+
+      context('clientLanguage', function () { 
+
+        it('Writes to a valid sub directory', async function () { 
+
+          await execAsync('rm -rf metrics_sub_dir/clientLanguage/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/clientLanguage');
+
+          let result = await execAsync('find metrics_sub_dir/clientLanguage/ -type f | wc -l');
+
+
+          expect(Number(result.stdout.trim())).to.eql(0)
+
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              reportDir: './metrics_sub_dir/clientLanguage',
+              interval: 1
+            }
+          )
+
+
+          await client.enableMetrics(policy)
+
+
+          await client.disableMetrics()
+
+
+          result = await execAsync('find metrics_sub_dir/clientLanguage -type f | wc -l');
+
+          expect(Number(result.stdout.trim())).to.eql(1)
+          result = await execAsync('cat metrics_sub_dir/clientLanguage/metrics-2*');
+
+          expect(result.stdout.trim().split('\n')[1].split(',')[1]).to.eql(aerospikeClientLanguage)
+
+        })
+      })
+
+      context('clientVersion', function () { 
+
+        it('Writes to a valid sub directory', async function () { 
+
+          await execAsync('rm -rf metrics_sub_dir/clientVersion/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/clientVersion');
+
+          let result = await execAsync('find metrics_sub_dir/clientVersion/ -type f | wc -l');
+
+
+          expect(Number(result.stdout.trim())).to.eql(0)
+
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              reportDir: './metrics_sub_dir/clientVersion',
+              interval: 1
+            }
+          )
+
+
+          await client.enableMetrics(policy)
+
+
+          await client.disableMetrics()
+
+
+          result = await execAsync('find metrics_sub_dir/clientVersion -type f | wc -l');
+
+          expect(Number(result.stdout.trim())).to.eql(1)
+          result = await execAsync('cat metrics_sub_dir/clientVersion/metrics-2*');
+
+          expect(result.stdout.trim().split('\n')[1].split(',')[2]).to.eql(aerospikeClientVersion)
+
+        })
+      })
 
       context('appId', function () { 
         it('Ensures appId is correct', async function () { 
@@ -1175,9 +1250,10 @@ describe('Metrics tests', function () {
                   expect(node.conns.inPool).to.be.a('number')
                   expect(node.conns.opened).to.be.a('number')
                   expect(node.conns.closed).to.be.a('number')
+                  expect(node.conns.recovered).to.be.a('number')
+                  expect(node.conns.aborted).to.be.a('number')
                 }
               }
-
               await new Promise(r => setTimeout(r, 3000));
             }
             finally{
@@ -2772,7 +2848,7 @@ describe('Metrics tests', function () {
         name: 'A1',
         address: '127.0.0.1',
         port: 3000,
-        conns: { inUse: 0, inPool: 0, opened: 0, closed: 0 },
+        conns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
         metrics
       }
 

@@ -295,7 +295,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: B;
+    public bins: AerospikeRecord<B>;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -1978,6 +1978,25 @@ export namespace policy {
          */
         public socketTimeout?: number;
         /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
+        /**
          * Total command timeout in milliseconds.
          *
          * The <code>totalTimeout</code> is tracked on the client and sent to the
@@ -2500,6 +2519,25 @@ export namespace policy {
          * Maximum time in milliseconds to wait for the command to complete.
          */
         public timeout?: number
+        /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
         /**
          * Initializes a new InfoPolicy from the provided policy values.
          *
@@ -3515,7 +3553,7 @@ export class Client extends EventEmitter {
      *   return binValue
      * end
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult[]>;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult<B>[]>;
 
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
@@ -3524,7 +3562,7 @@ export class Client extends EventEmitter {
      * the command completes. Includes the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3533,7 +3571,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3543,7 +3581,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      * Checks the existence of a batch of records from the database cluster.
@@ -3606,20 +3644,20 @@ export class Client extends EventEmitter {
      *
      *
      */
-    public batchExists(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3700,20 +3738,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Reads a batch of records from the database cluster.
@@ -3775,14 +3813,14 @@ export class Client extends EventEmitter {
      * })();
      *
      */
-    public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
@@ -3790,7 +3828,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * Remove multiple records.
      *
@@ -3856,20 +3894,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult[]>;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
@@ -3877,7 +3915,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3945,14 +3983,14 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord[]>;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord<B>[]>;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
@@ -3960,7 +3998,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
     * Read/Write multiple records for specified batch keys in one batch call.
     *
@@ -4077,18 +4115,18 @@ export class Client extends EventEmitter {
     *     await client.close();
     * })();
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param policy - The Batch Policy to use for this command.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Closes the client connection to the cluster.
@@ -7463,8 +7501,10 @@ export class Config {
     public clusterName?: string;
     /**
      *
-     * The number of cluster tend iterations that defines the window for {@link maxErrorRate} to be surpassed. One tend iteration is defined
-     * as {@link tenderInterval} plus the time to tend all nodes. At the end of the window, the error count is reset to zero and backoff state is removed on all nodes.
+     * The number of cluster tend iterations that defines the window for {@link maxErrorRate}.
+     * One tend iteration is defined as {@link tenderInterval} plus the time to tend all nodes.
+     * At the end of the window, the error count is reset to zero and backoff state is removed
+     * on all nodes.
      *
      * @type {number}
      *
@@ -7559,16 +7599,15 @@ export class Config {
      */
     public maxConnsPerNode?: number;
     /**
-     * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
-     * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
-     * server device overload and server timeouts.
+     * Maximum number of errors allowed per node per error_rate_window before backoff
+     * algorithm returns {@link statusNamespace.MAX_ERROR_RATE|MAX_ERROR_RATE}. for database commands to that node.
+     * If max_error_rate is zero, there is no error limit.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The counted error types are any error that causes the connection to close (socket errors
+     * and client timeouts), server device overload and server timeouts.
      *
-     * If the backoff algorithm has been activated, commands will fail with {@link
-     * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
-     * error count has been reset.
+     * The application should backoff or reduce the command load until {@link statusNamespace.MAX_ERROR_RATE|MAX_ERROR_RATE}
+     * stops being returned.
      *
      * @default 100
      */
@@ -9014,6 +9053,26 @@ export class Scan {
     public operate(operations: operations.Operation[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
      *
+     * Executes the Scan and collects the results into an array. On paginated queries,
+     * preparing the next page is also handled automatically.
+     *
+     * @remarks This method returns a Promise that contains the scan results
+     * as an array of records, when fulfilled. It should only be used if the scan
+     * is expected to return only few records; otherwise it is recommended to use
+     * {@link Scan#foreach}, which returns the results as a {@link RecordStream}
+     * instead.
+     *
+     * If pagination is enabled, the data emitted from the {@link RecordStream#event:error}
+     * event will automatically be assigned to {@link Scan#scanState}, allowing the next page
+     * of records to be queried if {@link Scan#foreach} or {@link Scan#results} is called.
+     *
+     * @param {ScanPolicy} [policy] - The Scan Policy to use for this operation.
+     *
+     * @returns {Promise<RecordObject[]>}
+     */
+    public results<B extends AerospikeBins = AerospikeBins>( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
+    /**
+     *
      * Performs a read-only scan on each node in the cluster. As the scan
      * iterates through each partition, it returns the current version of each
      * record to the client.
@@ -9411,6 +9470,25 @@ export interface BasePolicyOptions {
      * @default 0 (no socket idle time limit).
      */
     socketTimeout?: number;
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
     /**
      * Total command timeout in milliseconds.
      *
@@ -10414,6 +10492,21 @@ export interface ConnectionStats {
      * Total number of node connections closed since node creation.
      */
     closed: number;
+    /**
+     * Total number of recovered connections since node creation. A recovered connecton is a
+     * connection that timed out on a socket read and then independently drained (read all incoming
+     * data) so the connection can be put back into the connection pool. The recovery process is
+     * attempted when the `timeout_delay` policy is greater than zero.
+     */
+    recovered: number;
+
+    /**
+     * Total number of aborted connections since node creation. An aborted connecton is a connection
+     * that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
+     * mostly likely due a downed node and results in the connection being closed. The recovery process
+     * is attempted when the `timeout_delay` policy is greater than zero.
+     */
+    aborted: number;
 }
 /**
  * Event loop metrics.
@@ -10609,6 +10702,25 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
      * Maximum time in milliseconds to wait for the command to complete.
      */
     timeout?: number
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
 }
 
 /**

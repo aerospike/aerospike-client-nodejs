@@ -68,6 +68,8 @@ describe('Metrics node close test', async function () {
         expect(node.conns.inPool).to.be.a("number");
         expect(node.conns.opened).to.be.a("number");
         expect(node.conns.closed).to.be.a("number");
+        expect(node.conns.recovered).to.be.a("number");
+        expect(node.conns.aborted).to.be.a("number");
         // Check NamespaceMetrics
 
         const metrics: NamespaceMetrics = node.metrics;

@@ -1,9 +1,6 @@
-# Takes in how to bump version as input
-# Commits changes to bump version and outputs the new version and commit hash as output
 name: Bump version
 
 permissions:
-  # This is required for requesting the OIDC token
   id-token: write
   contents: read
 
@@ -13,19 +10,18 @@ on:
       desk_mood:
         required: true
     outputs:
-      stage_version:
-        value: ${{ jobs.get-jfrog-stage-version.outputs.stage_version }}
+      dev_version:
+        value: ${{ jobs.stage-get-jfrog-version.outputs.dev_version }}
       bump_sha:
         value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
 
 jobs:
-  get-jfrog-stage-version:
+  stage-get-jfrog-version:
     name: Get most recent JFrog version string
     runs-on: ubuntu-22.04
     outputs:
-      stage_version: ${{ steps.get-jfrog-stage-version.outputs.stage_version }}
+      dev_version: ${{ steps.stage-get-jfrog-version.outputs.dev_version }}
     steps:
-    # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
@@ -39,9 +35,9 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Get jfrog version
-      id: get-jfrog-stage-version
+      id: stage-get-jfrog-version
       run: |
-        echo "stage_version=$(jfrog rt s "clients-npm-stage-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'dev' | tail -n1)" >> $GITHUB_OUTPUT
+        echo "dev_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
-      run: echo "Jfrog version is ${{ steps.get-jfrog-stage-version.outputs.stage_version }}"
+      run: echo "Jfrog version is ${{ steps.stage-get-jfrog-version.outputs.dev_version }}"
