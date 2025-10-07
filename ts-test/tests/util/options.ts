@@ -23,7 +23,6 @@ import { ConfigOptions, Host, TLSInfo, BasePolicyOptions } from 'aerospike';
 import yargs, {Argv} from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-
 import * as fs from 'fs'; // semver is likely the default export, but it may have named exports as well
 import * as path from 'path'; // semver is likely the default export, but it may have named exports as well
 
@@ -119,6 +118,11 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
     testMetrics: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
+    },
+    testStrongConsistency: {
+      type: 'boolean',
+      describe: 'Specify whether or not to run advanced testing.',
+      default: false
     },
     testDynamicConfig: {
       type: 'boolean',

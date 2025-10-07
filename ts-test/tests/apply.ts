@@ -56,6 +56,7 @@ describe('client.apply()', function () {
 
   context('with ApplyPolicy', function () {
     helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+    helper.skipUnlessStrongConsistency(this)
     it('onLockingOnly should fail when writing to a locked record', async function () {
       let mrt: any = new Aerospike.Transaction()
 

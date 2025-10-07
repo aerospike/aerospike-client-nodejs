@@ -112,14 +112,20 @@ describe('Test metrics cluster name', async function () {
     )
 
     console.log("Enabling metrics...")
+    
+    try{
 
-    await dummyClient.enableMetrics(policy)
+      await dummyClient.enableMetrics(policy)
+
+      await dummyClient.disableMetrics()
+
+    }
+    finally{
+      await dummyClient.close()
+    }
 
 
 
-    await dummyClient.disableMetrics()
-
-    await dummyClient.close()
     expect(disableTriggered).to.eql(false)
     await container.stop();
     return await container.remove();

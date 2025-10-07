@@ -31,24 +31,35 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT API Tests', function () {
-  helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
   
   context('Test the MRT specific API', function () { 
     const client: Cli = helper.client
 
+    //helper.skipUnlessVersionAndEnterprise('>=8.0.0', this)
+    it('Expands the pool size', async function () {
+
+      for (let i = 0; i < 150; i++) {
+        let mrt: Transaction = new Aerospike.Transaction()
+      }
+
+      let pool: any = _transactionPool
+      pool.tendTransactions()
+      expect(pool.getLength()).to.be.greaterThan(140);
+      expect(pool.getCapacity()).to.eql(256)
+      pool.removeAllTransactions()
+      console.log(pool)
+    })
+
     it('Reaps completed transactions', async function () {
 
-      for (let i = 0; i < 129; i++) {
+      let pool: any = _transactionPool
+
+      for (let i = 0; i < pool.getCapacity() + 1; i++) {
         let mrt: Transaction = new Aerospike.Transaction()
         await client.abort(mrt)
       }
-      
-      // await new Promise(r => setTimeout(r, 1000));
-      
-      let pool: any = _transactionPool
 
       expect(pool.getLength()).to.be.lessThan(10);
-
 
 
 
@@ -255,16 +266,5 @@ describe('MRT API Tests', function () {
 
     })
 
-    it('Expands the pool size', async function () {
-
-      for (let i = 0; i < 150; i++) {
-        let mrt: Transaction = new Aerospike.Transaction()
-      }
-
-      let pool: any = _transactionPool
-      pool.tendTransactions()
-      expect(pool.getLength()).to.be.greaterThan(140);
-      expect(pool.getCapacity()).to.eql(256)
-    })
   })
 })
