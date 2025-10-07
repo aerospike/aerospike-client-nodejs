@@ -295,7 +295,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: B;
+    public bins: AerospikeRecord<B>;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -3553,7 +3553,7 @@ export class Client extends EventEmitter {
      *   return binValue
      * end
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult[]>;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult<B>[]>;
 
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
@@ -3562,7 +3562,7 @@ export class Client extends EventEmitter {
      * the command completes. Includes the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3571,7 +3571,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3581,7 +3581,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      * Checks the existence of a batch of records from the database cluster.
@@ -3644,20 +3644,20 @@ export class Client extends EventEmitter {
      *
      *
      */
-    public batchExists(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3738,20 +3738,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Reads a batch of records from the database cluster.
@@ -3813,14 +3813,14 @@ export class Client extends EventEmitter {
      * })();
      *
      */
-    public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
@@ -3828,7 +3828,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * Remove multiple records.
      *
@@ -3894,20 +3894,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult[]>;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
@@ -3915,7 +3915,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3983,14 +3983,14 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord[]>;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord<B>[]>;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
@@ -3998,7 +3998,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
     * Read/Write multiple records for specified batch keys in one batch call.
     *
@@ -4115,18 +4115,18 @@ export class Client extends EventEmitter {
     *     await client.close();
     * })();
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param policy - The Batch Policy to use for this command.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Closes the client connection to the cluster.
@@ -9070,7 +9070,7 @@ export class Scan {
      *
      * @returns {Promise<RecordObject[]>}
      */
-    public results( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
+    public results<B extends AerospikeBins = AerospikeBins>( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
     /**
      *
      * Performs a read-only scan on each node in the cluster. As the scan
