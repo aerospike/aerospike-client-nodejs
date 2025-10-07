@@ -143,8 +143,6 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 	Local<Value> result;
 	if (err) {
 		result = cmd->ErrorCallback(err);
-		delete cmd;
-		return false;
 	}
 	else if (record) {
 		Local<Value> argv[] = {Nan::Null(),
@@ -180,8 +178,6 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 	Local<Value> result;
 	if (err) {
 		result = cmd->ErrorCallback(err);
-		delete cmd;
-		return false;
 	}
 	else if (su->count >= su->max_records) {
 		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
@@ -241,8 +237,6 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 	Local<Value> result;
 	if (err) {
 		result = cmd->ErrorCallback(err);
-		delete cmd;
-		return false;
 	}
 	else if (qu->count >= qu->max_records) {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
