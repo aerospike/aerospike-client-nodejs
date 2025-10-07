@@ -571,7 +571,7 @@ describe('client.batchWrite()', function () {
       await client.batchWrite(batch)
       return client.get(new Key(helper.namespace, helper.set, 'test/batch_write/19'))
         .then((result: AerospikeRecord) => {
-          const bins = result.bins
+          const bins: AerospikeBins = result.bins
           expect(bins.example).to.be.a('number')
           expect(bins.blob).to.be.a('array')
           expect(result.ttl).to.be.within(1366, 1367)

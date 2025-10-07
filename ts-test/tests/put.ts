@@ -393,27 +393,37 @@ describe('client.put()', function () {
 
       client.get(key1!, function (err?: ASError, record2?: AerospikeRecord) {
         if (err) throw err
-        expect(record2?.key).to.eql(key)
-        expect(record2?.bins).to.eql(bins)
+        if(record2){
 
-        record2!.bins.i = (record2!.bins.i as number) + 1;
+          const result_bins: AerospikeBins = record2.bins
 
-        client.put(record2?.key!, record2?.bins!, meta, function (err?: ASError, key3?: Key) {
-          if (err) throw err
-          expect(key3).to.eql(key)
+          expect(record2.key).to.eql(key)
+          expect(result_bins).to.eql(bins)
 
-          client.get(key3!, function (err?: ASError, record4?: AerospikeRecord) {
+          result_bins.i = result_bins.i + 1;
+
+          client.put(record2.key, result_bins, meta, function (err?: ASError, key3?: Key) {
             if (err) throw err
-            expect(record4?.key).to.eql(key)
-            expect(record4?.bins).to.eql(record2?.bins)
-            expect(record4?.gen!).to.equal(record2?.gen! + 1)
+            expect(key3).to.eql(key)
 
-            client.remove(key, function (err?: ASError) {
+            client.get(key3!, function (err?: ASError, record4?: AerospikeRecord) {
               if (err) throw err
-              done()
+              expect(record4?.key).to.eql(key)
+              expect(record4?.bins).to.eql(record2?.bins)
+              expect(record4?.gen!).to.equal(record2?.gen! + 1)
+
+              client.remove(key, function (err?: ASError) {
+                if (err) throw err
+                done()
+              })
             })
           })
-        })
+
+        }
+        else{
+          assert.fail("no record was returned")
+        }
+
       })
     })
   })
@@ -555,8 +565,16 @@ describe('client.put()', function () {
 
       client.get(key, function (err?: ASError, record?: AerospikeRecord) {
         if (err) throw err
-        expect(record?.bins.map).to.eql({ a: 1, b: 2, c: null })
-        expect(record?.bins.list).to.eql([1, 2, 3, null])
+
+        if(record){
+          const result_bins: AerospikeBins = record.bins
+
+          expect(result_bins.map).to.eql({ a: 1, b: 2, c: null })
+          expect(result_bins.list).to.eql([1, 2, 3, null])
+        }
+        else{
+          assert.fail('no record was returned')
+        }
 
         client.remove(key, function (err?: ASError) {
           if (err) throw err
@@ -592,7 +610,11 @@ describe('client.put()', function () {
           .then(() => client.put(key, { i: 50 }, {}, policy))
           .catch((error: any) => expect(error).to.be.instanceof(AerospikeError).with.property('code', status.ERR_RECORD_EXISTS))
           .then(() => client.get(key))
-          .then((record: AerospikeRecord) => expect(record.bins.i).to.equal(49))
+          .then((record: AerospikeRecord) => {
+            const bins: AerospikeBins = record.bins
+            expect(bins.i).to.equal(49)
+
+          })
       })
     })
   })

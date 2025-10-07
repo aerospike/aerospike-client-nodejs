@@ -236,7 +236,8 @@ describe('Queries', function () {
 
       return query.results().then(records => {
         expect(records.length).to.eq(1)
-        expect(records[0].bins.name).to.eq('int match')
+        const bins: AerospikeBins = records[0].bins
+        expect(bins.name).to.eq('int match')
       })
     })
   })

@@ -21,7 +21,7 @@
 
 import Aerospike, { GeoJSON as GJ, Key as K, Client as Cli, RecordMetadata,  WritePolicy, AerospikeBins, AerospikeRecord, AerospikeError } from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
 
 const Key: typeof K = Aerospike.Key
@@ -108,7 +108,13 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err?: AerospikeError, record?: AerospikeRecord) {
           if (err) throw err
-          expect(record?.bins.location).to.equal(point)
+          if(record){
+            const bins: AerospikeBins = record.bins
+            expect(bins.location).to.equal(point)
+          }
+          else{
+            assert.fail('no record returned')
+          }
           done()
         })
       })
@@ -121,7 +127,13 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err?: AerospikeError, record?: AerospikeRecord) {
           if (err) throw err
-          expect(record?.bins.locations).to.eql([point, point])
+          if(record){
+            const bins: AerospikeBins = record.bins
+            expect(bins.locations).to.eql([point, point])
+          }
+          else{
+            assert.fail('no record returned')
+          }
           done()
         })
       })
@@ -134,7 +146,13 @@ describe('Aerospike.GeoJSON', function () {
 
         client.get(key, function (err?: AerospikeError, record?: AerospikeRecord) {
           if (err) throw err
-          expect((record?.bins.map as { location: GJ }).location as GJ).to.equal(point)
+          if(record){
+            const bins: AerospikeBins = record.bins
+            expect((bins.map as { location: GJ }).location as GJ).to.equal(point)
+          }
+          else{
+            assert.fail('no record returned')
+          }
           done()
         })
       })

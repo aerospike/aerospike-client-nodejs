@@ -45,7 +45,7 @@ export type PartialAerospikeBinValue = null | undefined | boolean | string | num
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
-    [key: string]: AerospikeBinValue
+    [key: string]: any
 };
 
 export const _transactionPool: any;

@@ -17,7 +17,7 @@
     "dockerode": "^4.0.4",
     "mocha": "^11.1.0",
     "typescript": "^5.7.3",
-    "p-throttle": "^3.1.0",
+    "p-throttle": "^8.0.0",
     "tmp": "^0.2.3"
   },
   "devDependencies": {
