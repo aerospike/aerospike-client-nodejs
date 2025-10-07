@@ -1925,6 +1925,22 @@ export namespace policy {
          */
         public compress?: boolean;
         /**
+         * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
+         * be applied to creating a connection plus optional user authentication. Otherwise,
+         * socket_timeout or total_timeout will be used depending on their values.
+         *
+         * If connect, socket and total timeouts are zero, the actual socket connect timeout
+         * is hard-coded to 2000ms.
+         *
+         * connect_timeout is useful when new connection creation is expensive (ie TLS connections)
+         * and it's acceptable to allow extra time to create a new connection compared to using an
+         * existing connection from the pool.
+         *
+         * @default: 0
+         * @since v6.4.0
+         */
+        public connectTimeout?: number;
+        /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
@@ -9417,6 +9433,22 @@ export interface BasePolicyOptions {
      * @since v3.14.0
      */
     compress?: boolean;
+    /**
+     * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
+     * be applied to creating a connection plus optional user authentication. Otherwise,
+     * socket_timeout or total_timeout will be used depending on their values.
+     *
+     * If connect, socket and total timeouts are zero, the actual socket connect timeout
+     * is hard-coded to 2000ms.
+     *
+     * connect_timeout is useful when new connection creation is expensive (ie TLS connections)
+     * and it's acceptable to allow extra time to create a new connection compared to using an
+     * existing connection from the pool.
+     *
+     * @default: 0
+     * @since v6.4.0
+     */
+    connectTimeout?: number;
     /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
      * command is ignored. This can be used to eliminate a client/server roundtrip

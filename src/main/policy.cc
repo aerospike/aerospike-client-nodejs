@@ -60,6 +60,11 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 							 const LogInfo *log)
 {
 	int rc = 0;
+	if ((rc = get_optional_uint32_property(&policy->connect_timeout, NULL, obj,
+										   "connectTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj,
 										   "socketTimeout", log)) !=
 		AS_NODE_PARAM_OK) {
