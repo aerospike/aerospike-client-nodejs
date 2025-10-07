@@ -9070,7 +9070,7 @@ export class Scan {
      *
      * @returns {Promise<RecordObject[]>}
      */
-    public results( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
+    public results<B extends AerospikeBins = AerospikeBins>( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
     /**
      *
      * Performs a read-only scan on each node in the cluster. As the scan
