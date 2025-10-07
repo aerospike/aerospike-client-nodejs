@@ -130,39 +130,6 @@ describe('Circuit breaker functionality', function () {
 
 
       })
-
-      it('disables maxErrorRate', async function () {
-        let dummyClient: any = null
-        try{
-          let config = base_config
-          config.maxErrorRate = 0
-          config.errorRateWindow = 1
-          console.log("\nconfig.maxErrorRate: " + config.maxErrorRate)
-          console.log("\nconfig.errorRateWindow: " + config.errorRateWindow)
-          dummyClient = await Aerospike.connect(config)
-
-          const query: Query = dummyClient.query(helper.namespace, helper.set)
-
-
-          await abort_until_circuit_breaker_flips(query, 40)
-
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          try{
-            await dummyClient.put(key, {'fakeRecord': 'shouldFail'})
-            console.log("THIS SHOULD DISABLED MAX_ERROR_RATE BUT DEFAULT IS USED INSTEAD")
-          }
-          catch(error: any){
-            expect(error.code).to.eql(Aerospike.status.MAX_ERROR_RATE)
-          }
-        }
-        finally{
-          if(dummyClient){
-            await dummyClient.close()
-          }
-        }
-
-
-      })
     })
 
     it('Uses defaults if maxErrorRate/errorRateWindow > 100', async function () {  

@@ -138,11 +138,14 @@ jobs:
 
     - name: Build Binding
       run: |
+        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts;
         npx node-pre-gyp install --fallback-to-build;
         ls lib/binding;
+      env:
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests }}
