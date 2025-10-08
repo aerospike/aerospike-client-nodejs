@@ -17,6 +17,7 @@
 #include "async.h"
 #include "metrics.h"
 #include "conversions.h"
+#include <cstdint>
 
 //#include <node.h>
 //#include <nan.h>
