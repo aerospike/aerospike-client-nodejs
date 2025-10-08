@@ -98,7 +98,7 @@ describe('Dynamic Config tests', async function () {
                 interval: 10000
               }
             }
-
+            let dummyClient = null
             try{
               dummyClient = await Aerospike.connect(config)
             }
