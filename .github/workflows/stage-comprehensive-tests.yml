@@ -881,7 +881,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
+        npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root
 
     - name: Set final commit status

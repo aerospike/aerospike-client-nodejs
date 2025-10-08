@@ -149,7 +149,7 @@ jobs:
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts;
-        npx node-pre-gyp install --fallback-to-build;
+        npx node-pre-gyp install --fallback-to-build  --addon_version=$(node -p \"require('./package.json').version\")";
         ls lib/binding;
       env:
         NEW_VERSION: ${{ inputs.version }}
