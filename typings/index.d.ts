@@ -1298,7 +1298,7 @@ export class Query {
      *
      * @see {@link filter} to create SI filters.
      */
-    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp): void;
+    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp | string): void;
     /**
      * Applies a SI on expression to the query.
      *
@@ -1958,7 +1958,7 @@ export namespace policy {
          * * {@link Client.remove}
          * * {@link Client.select}
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Maximum number of retries before aborting the current command.
          * The initial attempt is not counted as a retry.
@@ -2071,7 +2071,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the key.
          *
@@ -2224,7 +2224,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Read policy for AP (availability) namespaces.
          *
@@ -2283,7 +2283,7 @@ export namespace policy {
          * in some cases.
          *
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the generation value.
          *
@@ -2342,7 +2342,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the generation value.
          *
@@ -5347,6 +5347,23 @@ export class Client extends EventEmitter {
      */
     public existsWithMetadata(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
     /**
+     * Returns a serialized expression
+     *
+     * @param expression - {@link AerospikeExp}
+     *
+     * @return serialized expression - base64 representation of the expression
+     *
+     * @since v6.4.0
+     *
+     * @example
+     * 
+     * const expression = Aerospike.exp.eq(exp.binInt('i'), exp.int(37))
+     * 
+     * const base64_expression = client.expressionToBase64(expression)
+     *
+     */
+    public expressionToBase64(expression: AerospikeExp): string;
+    /**
      * Using the key provided, reads a record from the database cluster.
      *
      * @param key - The key used to locate the record in the cluster.
@@ -6186,7 +6203,7 @@ export class Client extends EventEmitter {
      * @returns A <code>Promise</code> that resolves to void.
      * 
      */
-    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
+    public setXDRFilter(expression: AerospikeExp | string | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
 
     /**
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
@@ -6200,7 +6217,7 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      * 
      */
-    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
+    public setXDRFilter(expression: AerospikeExp | string | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
 
     /**
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
@@ -6215,7 +6232,7 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      *
      */
-    public setXDRFilter(expression: AerospikeExp, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
+    public setXDRFilter(expression: AerospikeExp | string, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
 
     /**
      * Removes records in specified namespace/set efficiently.
@@ -9465,7 +9482,7 @@ export interface BasePolicyOptions {
      * * {@link Client.remove}
      * * {@link Client.select}
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Maximum number of retries before aborting the current command.
      * The initial attempt is not counted as a retry.
@@ -9569,7 +9586,7 @@ export interface BatchApplyPolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the key.
      *
@@ -9711,7 +9728,7 @@ export interface BatchReadPolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Read policy for AP (availability) namespaces.
      *
@@ -9797,7 +9814,7 @@ export interface BatchRemovePolicyOptions {
      * in some cases.
      *
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the generation value.
      *
@@ -9847,7 +9864,7 @@ export interface BatchWritePolicyOptions extends BasePolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the generation value.
      *
@@ -10649,7 +10666,7 @@ export interface IndexOptions {
     /**
      * The expression on which values are to be indexed.
      */
-    exp?: AerospikeExp;
+    exp?: AerospikeExp | string;
     /**
      * The namespace on which the index is to be created.
      */
@@ -16447,13 +16464,13 @@ export namespace exp {
             /**
              * Aerospike Expression to be evaluated by this operation.
              */
-            public exp: AerospikeExp;
+            public exp: AerospikeExp | string;
             /**
              * @param Expression read flags or write flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} or {@link exp.expWriteFlags} for more information.
 
              */
             public flags: number;
-            constructor(op: ExpOperations, bin: string, exp: AerospikeExp, flags: number, props?: Record<string, AerospikeBinValue>);
+            constructor(op: ExpOperations, bin: string, exp: AerospikeExp | string, flags: number, props?: Record<string, AerospikeBinValue>);
         }
         /**
          * Read the value of the bin.
@@ -16463,7 +16480,7 @@ export namespace exp {
          * @param flags - Expression read flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} for more information.
          * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
          */
-        export const read: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        export const read: (bin: string, exp: AerospikeExp | string, flags?: number) => ExpOperation;
         /**
          * Update the value of the bin.
          *
@@ -16472,7 +16489,7 @@ export namespace exp {
          * @param flags - Expression write flags. <code>flags</code> must be an integer. See {@link exp.expWriteFlags} for more information.
          * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
          */
-        export const write: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        export const write: (bin: string, exp: AerospikeExp | string, flags?: number) => ExpOperation;
     }
 
     export {mapsExp as maps, listsExp as lists, operationsExp as operations}
@@ -17501,7 +17518,7 @@ export namespace filter {
         public datatype: indexDataType;
         public type: indexType;
         public indexName?: string;
-        public exp?: AerospikeExp;
+        public exp?: AerospikeExp | string;
     }
 
     /**

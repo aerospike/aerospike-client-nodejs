@@ -340,6 +340,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "existsAsync", ExistsAsync);
 	Nan::SetPrototypeMethod(tpl, "disableMetrics", DisableMetrics);
 	Nan::SetPrototypeMethod(tpl, "enableMetrics", EnableMetrics);
+	Nan::SetPrototypeMethod(tpl, "expressionToBase64", ExpressionToBase64);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);

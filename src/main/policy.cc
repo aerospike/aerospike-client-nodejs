@@ -97,6 +97,10 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 			return rc;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
 	else if (exp_val->IsNull() || exp_val->IsUndefined()) {
 		// no-op
 	}
@@ -437,6 +441,10 @@ int batchread_policy_from_jsobject(as_policy_batch_read *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
 
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
 										   NULL, obj, "readModeAP", log)) !=
@@ -474,6 +482,11 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
+
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
@@ -533,6 +546,10 @@ int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
@@ -577,6 +594,10 @@ int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
 			AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
+	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {

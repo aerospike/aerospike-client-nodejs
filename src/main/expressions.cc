@@ -28,6 +28,35 @@ extern "C" {
 
 using namespace v8;
 
+NAN_METHOD(AerospikeClient::ExpressionToBase64)
+{
+	TYPE_CHECK_REQ(info[0], IsArray, "Expression must be an array");
+	Nan::HandleScope scope;
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+
+	as_exp *exp = NULL;
+
+	if (info[0]->IsArray()) {
+
+		Local<Array> exp_ary = Local<Array>::Cast(info[0].As<Array>());
+
+		if (compile_expression(exp_ary, &exp, client->log) != AS_NODE_PARAM_OK) {
+			info.GetReturnValue().Set(Nan::Undefined());
+			return Nan::ThrowError("Expressions could not be compiled, cannot serialize");
+		}
+
+		info.GetReturnValue().Set(Nan::New<String>(as_exp_to_base64(exp)).ToLocalChecked());
+	}
+	else{
+
+		info.GetReturnValue().Set(Nan::Undefined());
+		return Nan::ThrowError("Expressions must be an array, cannot serialize");
+	}
+
+}
+
 int free_entries(Local<Array> entries_ary, as_exp_entry *entries,
 				 const LogInfo *log)
 {

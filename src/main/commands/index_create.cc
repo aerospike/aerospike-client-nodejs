@@ -108,6 +108,10 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 							   "Compiling expressions failed");
 		}
 	}
+	else if (info[3]->IsString()) {
+		Nan::Utf8String exp_b64(info[3].As<String>());
+		cmd->exp = as_exp_from_base64(*exp_b64);
+	}
 
 	cmd->index = strdup(*Nan::Utf8String(info[4].As<String>()));
 	cmd->itype = (as_index_type)Nan::To<int>(info[5]).FromJust();
@@ -195,7 +199,8 @@ NAN_METHOD(AerospikeClient::IndexCreate)
 	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
 	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
 	TYPE_CHECK_OPT(info[2], IsString, "Bin must be a string");
-	TYPE_CHECK_OPT(info[3], IsArray, "Exp must be an array");
+	// Removed check because Exp can be string or array
+	// TYPE_CHECK_OPT(info[3], IsArray, "Exp must be an array");
 	TYPE_CHECK_REQ(info[4], IsString, "Index name must be a string");
 	TYPE_CHECK_REQ(info[5], IsNumber, "Index type must be an integer");
 	TYPE_CHECK_REQ(info[6], IsNumber, "Index datatype must be an integer");
