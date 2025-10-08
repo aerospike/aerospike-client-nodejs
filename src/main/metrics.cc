@@ -14,10 +14,11 @@
  * limitations under the License.
  ******************************************************************************/
 
+
+#include <cstdint>
 #include "async.h"
 #include "metrics.h"
 #include "conversions.h"
-#include <cstdint>
 
 //#include <node.h>
 //#include <nan.h>
