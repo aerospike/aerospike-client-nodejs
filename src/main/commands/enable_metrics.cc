@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
+#include <cstdint>
 #include "async.h"
 #include "client.h"
 #include "metrics.h"
