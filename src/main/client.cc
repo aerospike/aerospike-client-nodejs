@@ -161,7 +161,6 @@ NAN_METHOD(AerospikeClient::Close)
 	}
 	if(client->log){
 		cf_free(client->log);
-		client->log = NULL;
 	}
 	if(client->report_dir){
 		cf_free(client->report_dir);
