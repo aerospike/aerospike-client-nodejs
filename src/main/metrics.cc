@@ -20,20 +20,6 @@
 #include "metrics.h"
 #include "conversions.h"
 
-//#include <node.h>
-//#include <nan.h>
-//#include <uv.h>
-
-
-//extern "C" {
-//#include <aerospike/aerospike.h>
-//#include <aerospike/aerospike_key.h>
-//#include <aerospike/as_config.h>
-//#include <aerospike/as_status.h>
-//#include <aerospike/as_key.h>
-//#include <aerospike/as_record.h>
-//}
-
 using namespace v8;
 using MetricsInvoker = std::function<void(MetricsCommand*)>;
 
