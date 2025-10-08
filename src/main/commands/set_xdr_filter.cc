@@ -31,7 +31,7 @@ using namespace v8;
 
 NAN_METHOD(AerospikeClient::SetXDRFilter)
 {
-	TYPE_CHECK_OPT(info[0], IsArray, "Expression must be an array");
+	//TYPE_CHECK_OPT(info[0], IsArray, "Expression must be an array");
 	TYPE_CHECK_REQ(info[1], IsString, "dataCenter must be an object");
 	TYPE_CHECK_REQ(info[2], IsString, "Namespace must be an object");
 	TYPE_CHECK_OPT(info[3], IsObject, "Policy must be an object");
@@ -72,6 +72,10 @@ NAN_METHOD(AerospikeClient::SetXDRFilter)
 			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "unable to compile expression, expression was invalid");
 			goto Cleanup;
 		}
+	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		filter_exp = as_exp_from_base64(*exp_b64);
 	}
 	else if (exp_val->IsNull() || exp_val->IsUndefined()) {
 		// no-op

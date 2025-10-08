@@ -17,7 +17,6 @@ on:
         type: boolean
         default: false
 
-
 jobs:
   bump-dev-number:
     uses: ./.github/workflows/dev-bump-version.yml
