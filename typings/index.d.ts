@@ -7716,6 +7716,12 @@ export class Config {
      */
     public rackId?: number;
     /**
+     * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
+     *
+     * @default null
+     */
+    public rackIds?: number[];
+    /**
      * Shared memory configuration.
      *
      * This allows multiple client instances running in separate
@@ -10169,9 +10175,7 @@ export interface ConfigOptions {
     /**
      * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
      *
-      @default null
-     * 
-     * @since 3.8.0
+     * @default null
      */
     rackIds?: number[];
     /**
