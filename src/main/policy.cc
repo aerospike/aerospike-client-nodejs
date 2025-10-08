@@ -61,6 +61,11 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 							 const LogInfo *log)
 {
 	int rc = 0;
+	if ((rc = get_optional_uint32_property(&policy->connect_timeout, NULL, obj,
+										   "connectTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj,
 										   "socketTimeout", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -68,6 +73,11 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj,
 										   "totalTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->timeout_delay, NULL, obj,
+										   "timeoutDelay", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -686,6 +696,11 @@ int infopolicy_from_jsobject(as_policy_info *policy, Local<Object> obj,
 	as_policy_info_init(policy);
 	if ((rc = get_optional_uint32_property(&policy->timeout, NULL, obj,
 										   "timeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->timeout_delay, NULL, obj,
+										   "timeoutDelay", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}

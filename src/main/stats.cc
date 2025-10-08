@@ -94,6 +94,10 @@ static Local<Object> build_conn_stats(as_conn_stats *conn)
 			 Nan::New<Int32>(conn->opened));
 	Nan::Set(stats, Nan::New("closed").ToLocalChecked(),
 			 Nan::New<Int32>(conn->closed));
+	Nan::Set(stats, Nan::New("recovered").ToLocalChecked(),
+			 Nan::New<Int32>(conn->recovered));
+	Nan::Set(stats, Nan::New("aborted").ToLocalChecked(),
+			 Nan::New<Int32>(conn->aborted));
 	return stats;
 }
 

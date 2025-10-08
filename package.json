@@ -40,7 +40,7 @@
   "scripts": {
     "preinstall": "npm install @mapbox/node-pre-gyp",
     "install": "npm run build",
-    "build": "node-pre-gyp install --fallback-to-build",
+    "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
     "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
     "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
@@ -59,7 +59,7 @@
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
   "dependencies": {
-    "ansi-colors": "^4.1.3",
+    "aerospike": "^6.3.0",
     "bindings": "^1.5.0",
     "minimatch": "^3.1.2",
     "nan": "^2.22.0",
@@ -67,28 +67,20 @@
     "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.12.0",
     "@mapbox/node-pre-gyp": "^1.0.11",
-    "@types/node": "^22.7.4",
+    "@types/node": "^24.7.0",
     "chai": "^4.4.1",
     "choma": "^1.2.1",
     "codecov": "^3.8.3",
-    "deep-eql": "^4.1.3",
     "eslint": "^8.57.1",
     "globals": "^15.11.0",
     "husky": "^9.0.11",
     "mocha": "^10.4.0",
-    "mocha-clean": "^1.0.0",
-    "nyc": "^15.1.0",
-    "p-throttle": "^3.1.0",
-    "semver": "^7.6.0",
     "standard": "^17.1.0",
-    "tmp": "^0.2.3",
     "typedoc": "^0.26.7",
     "typedoc-plugin-rename-defaults": "^0.7.1",
     "typescript": "^5.6.2",
-    "typescript-eslint": "^8.8.1",
-    "yargs": "^17.7.2"
+    "typescript-eslint": "^8.8.1"
   },
   "standard": {
     "ignore": [

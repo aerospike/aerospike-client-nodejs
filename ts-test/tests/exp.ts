@@ -326,10 +326,11 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.intVal).to.eql(2)
-        expect(result.bins.ExpVar).to.eql(4)
+        const bins: AerospikeBins = result.bins
+        expect(bins.intVal).to.eql(2)
+        expect(bins.ExpVar).to.eql(4)
       })
       it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
@@ -339,9 +340,10 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const bins: AerospikeBins = result.bins
         // console.log(result)
-        expect(result.bins.intVal).to.eql(4)
+        expect(bins.intVal).to.eql(4)
       })
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
@@ -351,10 +353,11 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.intVal).to.eql(2)
-        expect(result.bins.ExpVar).to.eql(4)
+        const bins: AerospikeBins = result.bins
+        expect(bins.intVal).to.eql(2)
+        expect(bins.ExpVar).to.eql(4)
       })
     })
   })

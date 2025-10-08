@@ -167,7 +167,11 @@ describe('client.get()', function () {
         const digest: Buffer = key.digest!;
         const key2: K = new Aerospike.Key(helper.namespace, undefined, null, digest)
         return client.get(key2)
-          .then((record: AerospikeRecord) => expect(record.bins.foo).to.equal('bar'))
+          .then((record: AerospikeRecord) => {
+            const bins: AerospikeBins = record.bins
+            expect(bins.foo).to.equal('bar')
+          })
+          
       })
   })
 })

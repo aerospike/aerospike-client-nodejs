@@ -21,7 +21,7 @@ on:
         type: string
         required: true
     secrets:
-      CLIENT_BOT_PAT:
+      desk_mood:
         required: true
 
 jobs:
@@ -29,12 +29,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           # Fetch the whole history to prevent unrelated history errors
           fetch-depth: '0'
-          ref: ${{ inputs.base_branch }}
-          token: ${{ secrets.CLIENT_BOT_PAT }}
+          token: ${{ secrets.desk_mood }}
 
       - name: Fast forward
         run: git merge --ff-only ${{ inputs.ref_to_merge }}

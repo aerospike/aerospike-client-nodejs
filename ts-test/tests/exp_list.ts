@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { exp as expModule, operations, lists as listsModule, Client as Cli, Key, RemovePolicyOptions, AerospikeExp, AerospikeRecord, cdt} from 'aerospike';
+import Aerospike, { exp as expModule, operations, lists as listsModule, Client as Cli, Key, RemovePolicyOptions, AerospikeExp, AerospikeRecord, cdt, AerospikeBins} from 'aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';
@@ -724,8 +724,9 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
 
-        expect(result.bins.list).to.eql([2, 3, 4, 5])
-        expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 6])
+        const bins: AerospikeBins = result.bins
+        expect(bins.list).to.eql([2, 3, 4, 5])
+        expect(bins.ExpVar).to.eql([2, 3, 4, 5, 6])
       })
 
       it('appends integer value to a list within a nested context', async function () {
@@ -739,8 +740,9 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
 
-        expect(result.bins.list).to.eql([2, 3, 4, 5, [4]])
-        expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [4, 6]])
+        const bins: AerospikeBins = result.bins
+        expect(bins.list).to.eql([2, 3, 4, 5, [4]])
+        expect(bins.ExpVar).to.eql([2, 3, 4, 5, [4, 6]])
       })
     })
 
@@ -755,8 +757,9 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
 
-        expect(result.bins.list).to.eql([2, 3, 4, 5])
-        expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, 2, 3, 4, 5])
+        const bins: AerospikeBins = result.bins
+        expect(bins.list).to.eql([2, 3, 4, 5])
+        expect(bins.ExpVar).to.eql([2, 3, 4, 5, 2, 3, 4, 5])
       })
 
       it('appends list to a list within a nested context', async function () {
@@ -770,8 +773,9 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
 
-        expect(result.bins.list).to.eql([2, 3, 4, 5, [80, 90, 100]])
-        expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [80, 90, 100, 2, 3, 4, 5, [80, 90, 100]]])
+        const bins: AerospikeBins = result.bins
+        expect(bins.list).to.eql([2, 3, 4, 5, [80, 90, 100]])
+        expect(bins.ExpVar).to.eql([2, 3, 4, 5, [80, 90, 100, 2, 3, 4, 5, [80, 90, 100]]])
       })
     })
   })
@@ -786,8 +790,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.list).to.eql([2, 3, 4, 5])
-      expect(result.bins.ExpVar).to.eql([2, 3, 6, 4, 5])
+      const bins: AerospikeBins = result.bins
+      expect(bins.list).to.eql([2, 3, 4, 5])
+      expect(bins.ExpVar).to.eql([2, 3, 6, 4, 5])
     })
 
     it('inserts value at specified index within a nested context', async function () {
@@ -801,8 +806,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.list).to.eql([2, 3, 4, 5, [4, 1, 9]])
-      expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [4, 1, 7, 9]])
+      const bins: AerospikeBins = result.bins
+      expect(bins.list).to.eql([2, 3, 4, 5, [4, 1, 9]])
+      expect(bins.ExpVar).to.eql([2, 3, 4, 5, [4, 1, 7, 9]])
     })
   })
   describe('list bin insertItems expression', function () {
@@ -816,8 +822,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.list).to.eql([2, 3, 4, 5])
-      expect(result.bins.ExpVar).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
+      const bins: AerospikeBins = result.bins
+      expect(bins.list).to.eql([2, 3, 4, 5])
+      expect(bins.ExpVar).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
     })
 
     it('inserts values at specified index within a nested context', async function () {
@@ -831,8 +838,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.list).to.eql([2, 3, [9, 9]])
-      expect(result.bins.ExpVar).to.eql([2, 3, [9, 2, 3, [9, 9], 9]])
+      const bins: AerospikeBins = result.bins
+      expect(bins.list).to.eql([2, 3, [9, 9]])
+      expect(bins.ExpVar).to.eql([2, 3, [9, 2, 3, [9, 9], 9]])
     })
   })
 
@@ -850,8 +858,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.ExpVar).to.eql([5, 5, 4, 4, 3, 3, 2, 2])
-      expect(result.bins.list).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
+      const bins: AerospikeBins = result.bins
+      expect(bins.ExpVar).to.eql([5, 5, 4, 4, 3, 3, 2, 2])
+      expect(bins.list).to.eql([2, 2, 3, 4, 5, 3, 4, 5])
     })
 
     it('sorts specified nested list', async function () {
@@ -865,8 +874,9 @@ describe('Aerospike.exp_operations', function () {
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
 
-      expect(result.bins.ExpVar).to.eql([2, 3, 4, 5, [100, 9]])
-      expect(result.bins.list).to.eql([2, 3, 4, 5, [9, 100]])
+      const bins: AerospikeBins = result.bins
+      expect(bins.ExpVar).to.eql([2, 3, 4, 5, [100, 9]])
+      expect(bins.list).to.eql([2, 3, 4, 5, [9, 100]])
     })
   })
 })

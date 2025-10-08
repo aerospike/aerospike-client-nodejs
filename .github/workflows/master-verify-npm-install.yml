@@ -8,7 +8,9 @@ on:
         type: string
         required: false
         default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
-
+      new_version:
+        type: string
+        required: true
 jobs:
   run-npm-install-and-require-test:
     strategy:
@@ -26,7 +28,12 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
-      - name: verify runs and is aligned
+      - name: verify runs and is aligned with expect functionality
         run: |
-          npm install darkcartpale@6.3.3 --omit-dev;
-          node -e "const Aerospike = require('darkcartpale'); console.log(Aerospike.policy.replica);"
+          npm init -y;
+          jq '.dependencies.aerospike="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
+          npm ci --production --ignore-scripts;
+          npx --package aerospike npm run install --prefix ./node_modules/aerospike;
+          node -e "const Aerospike = require('disableupload'); console.log(Aerospike.policy.replica);"
+        env:
+          NEW_VERSION: ${{ inputs.new_version }}

@@ -538,13 +538,17 @@ describe('client.batchWrite()', function () {
       }
 
       const dummyClient = await Aerospike.connect(config)
-      const results: BatchResult[] = await dummyClient.batchWrite(batch)
-      const bins: any = results[0].record.bins
-      expect(bins.i).to.be.a('number')
-      expect(bins.s).to.be.a('string')
-      expect(bins.l).to.be.instanceof(Buffer)
-      expect(bins.m).to.be.instanceof(Buffer)
-      await dummyClient.close()
+      try{
+        const results: BatchResult[] = await dummyClient.batchWrite(batch)
+        const bins: any = results[0].record.bins
+        expect(bins.i).to.be.a('number')
+        expect(bins.s).to.be.a('string')
+        expect(bins.l).to.be.instanceof(Buffer)
+        expect(bins.m).to.be.instanceof(Buffer)        
+      }
+      finally{
+        await dummyClient.close()
+      }
     })
   })
 
@@ -567,7 +571,7 @@ describe('client.batchWrite()', function () {
       await client.batchWrite(batch)
       return client.get(new Key(helper.namespace, helper.set, 'test/batch_write/19'))
         .then((result: AerospikeRecord) => {
-          const bins = result.bins
+          const bins: AerospikeBins = result.bins
           expect(bins.example).to.be.a('number')
           expect(bins.blob).to.be.a('array')
           expect(result.ttl).to.be.within(1366, 1367)
@@ -577,6 +581,7 @@ describe('client.batchWrite()', function () {
   
   context('Transaction tests', function () {
     helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+    helper.skipUnlessStrongConsistency(this)
     it('onLockingOnly should fail when writing to a locked record using BATCH_WRITE', async function () {
       const key: any = new Key(helper.namespace, helper.set, 'test/batch_write/21')
       const key2: any = new Key(helper.namespace, helper.set, 'test/batch_write/22')
