@@ -34,7 +34,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: BP = new BasePolicy({
           connectTimeout: 4000,
-          timeoutDelay: 3500
+          timeoutDelay: 3500,
           socketTimeout: 200,
           totalTimeout: 0,
           maxRetries: 2,
@@ -180,7 +180,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: InfoPolicy = new Aerospike.InfoPolicy({
           timeout: 1000,
-          timeoutDelay: 3700
+          timeoutDelay: 3700,
           sendAsIs: true,
           checkBounds: false
         })
