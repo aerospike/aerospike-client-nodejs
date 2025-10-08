@@ -258,6 +258,61 @@ describe('Metrics tests', function () {
 
       context('reportDir', function () { 
 
+        it('Writes to a valid sub directory using MetricsPolicy in the config', async function () { 
+
+          await execAsync('rm -rf metrics_sub_dir/reportDir_config/metrics-*');
+
+          await execAsync('mkdir -p metrics_sub_dir/reportDir_config');
+
+          let result = await execAsync('find metrics_sub_dir/reportDir_config/ -type f | wc -l');
+
+
+          expect(Number(result.stdout.trim())).to.eql(0)
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              reportDir: './metrics_sub_dir/reportDir_config',
+              interval: 1
+            }
+          )
+
+          const config: any = {
+            hosts: helper.config.hosts,
+            user: helper.config.user,
+            password: helper.config.password,
+            appId: 'diff',
+            tenderInterval: 250,
+            policies: {
+              metrics: policy
+            }
+          }
+
+
+
+
+          let dummyClient = null;
+          try{
+            dummyClient = await Aerospike.connect(config)
+
+            await dummyClient.enableMetrics()
+
+            
+            await dummyClient.disableMetrics()
+
+          }
+          finally{
+            if(dummyClient){
+              await dummyClient.close()
+            }
+          }
+
+          result = await execAsync('find metrics_sub_dir/reportDir_config -type f | wc -l');
+
+          expect(Number(result.stdout.trim())).to.eql(1)
+
+
+        })
+
+
         it('Writes to a valid sub directory', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/reportDir/metrics-*');
