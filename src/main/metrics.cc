@@ -14,8 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-
-#include <cstdint>
 #include "async.h"
 #include "metrics.h"
 #include "conversions.h"

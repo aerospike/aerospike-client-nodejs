@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include "command.h"
 
 class MetricsCommand : public AerospikeCommand {
