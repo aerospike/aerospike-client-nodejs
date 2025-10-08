@@ -26,6 +26,7 @@
 #include "log.h"
 #include "scan.h"
 #include "query.h"
+#include "metrics.h"
 
 extern "C" {
 #include <aerospike/as_error.h>
@@ -61,6 +62,30 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 	// Return value for the function. Because we are async, we will
 	// return an `undefined`.
 	return Nan::Undefined();
+}
+
+
+/**
+ *  Setup an asynchronous invocation of a function using uv worker threads.
+ * 
+ *  Since the metrics operations will be firing in the background, queueing the work to run asynchronously is necessary to avoid segmentation faults.
+ */
+void
+async_invoke_metrics(MetricsCommand *cmd, void (*execute)(uv_work_t *req), void (*respond)(uv_work_t *req, int status))
+{
+
+	// Create an async work request and prepare the command
+	uv_work_t *req = new uv_work_t;
+	req->data = cmd;
+
+	// Pass the work request to libuv to be run when a
+	// worker-thread is available to process it.
+	uv_queue_work(uv_default_loop(), // event loop
+				  req,				 // work token
+				  execute,			 // execute work, nothing since no C Code must be executed
+				  respond			 // respond to callback by running the appropriate metrics callback
+	);
+
 }
 
 void async_record_listener(as_error *err, as_record *record, void *udata,

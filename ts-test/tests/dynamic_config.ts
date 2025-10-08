@@ -99,8 +99,6 @@ describe('Dynamic Config tests', async function () {
 
             try{
               dummyClient = await Aerospike.connect(config)
-
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -167,7 +165,6 @@ describe('Dynamic Config tests', async function () {
               lines[lineNumber] = newLine;
               fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
 
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -209,7 +206,6 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.not.be.undefined
 
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -314,7 +310,6 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.be.undefined
 
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -414,8 +409,6 @@ describe('Dynamic Config tests', async function () {
 
 
               expect(records[0].key.key).to.be.undefined
-
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -469,7 +462,6 @@ describe('Dynamic Config tests', async function () {
 
               expect(records[0].key.key).to.be.undefined
 
-              await dummyClient.close()
             }
             finally{
               if(dummyClient){
@@ -501,9 +493,12 @@ describe('Dynamic Config tests', async function () {
             }
 
             let dummyClient = null;
+            console.log("Here")
 
             try{
+              console.log("Here")
               dummyClient = await Aerospike.connect(config)
+              console.log("Here")
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {

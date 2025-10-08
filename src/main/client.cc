@@ -77,14 +77,27 @@ NAN_METHOD(AerospikeClient::New)
 		log_from_jsobject(client->log, v8LogInfo.As<Object>());
 	}
 
-	int result = config_from_jsobject(&config, v8Config, client->log);
+	int result = config_from_jsobject(&config, v8Config, client, client->log);
+
 	if (result != AS_NODE_PARAM_OK) {
-		cf_free(client->as);
-		cf_free(client->log);
+		if(client->log){
+			cf_free(client->log);
+		}
+		if(client->report_dir){
+			cf_free(client->report_dir);
+		}
+		if(!client->enable_callback.IsEmpty()){
+			client->enable_callback.Reset();
+			client->snapshot_callback.Reset();
+			client->node_close_callback.Reset();
+			client->disable_callback.Reset();
+		}
+
 		delete client;
-		Nan::ThrowError("Invalid client configuration");
-		return;
+		info.GetReturnValue().Set(Nan::Undefined());
+		return Nan::ThrowError("Invalid client configuration");
 	}
+
 
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
@@ -132,9 +145,21 @@ NAN_METHOD(AerospikeClient::Close)
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 
-	cf_free(client->log);
-
 	client->closed = true;
+
+	if(!client->enable_callback.IsEmpty()){
+		client->enable_callback.Reset();
+		client->snapshot_callback.Reset();
+		client->node_close_callback.Reset();
+		client->disable_callback.Reset();
+	}
+	if(client->log){
+		cf_free(client->log);
+	}
+	if(client->report_dir){
+		cf_free(client->report_dir);
+	}
+
 }
 
 /**

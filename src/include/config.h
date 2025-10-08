@@ -18,10 +18,11 @@
 
 #include <node.h>
 #include "log.h"
+#include "client.h"
 
 extern "C" {
 #include <aerospike/as_policy.h>
 }
 
-int config_from_jsobject(as_config *config, v8::Local<v8::Object> obj,
+int config_from_jsobject(as_config *config, v8::Local<v8::Object> obj, AerospikeClient *client,
 						 const LogInfo *log);

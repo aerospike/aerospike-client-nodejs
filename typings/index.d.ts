@@ -7560,11 +7560,11 @@ export class Config {
     public maxConnsPerNode?: number;
     /**
      * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
+     * {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} for database commands to that node.
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The application should backoff or reduce the command load until {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} stops being returned.
      *
      * If the backoff algorithm has been activated, commands will fail with {@link
      * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
@@ -10009,11 +10009,11 @@ export interface ConfigOptions {
     maxConnsPerNode?: number;
     /**
      * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
+     * {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} for database commands to that node.
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
+     * The application should backoff or reduce the command load until {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} stops being returned.
      *
      * If the backoff algorithm has been activated, commands will fail with {@link
      * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
@@ -10818,6 +10818,10 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
+     * Synchronous connection stats on this node.
+     */
+    syncConns: ConnectionStats;
+    /**
      * Namespace Metrics
      */
     metrics: Array<NamespaceMetrics>;
@@ -10893,7 +10897,6 @@ export interface NodeStats {
     /**
      * Connections stats for Synchronous Connections on this Node..
      *
-     * @remarks The Aerospike Node.js does not use synchronous connections.
      */
     syncConnections: ConnectionStats;
     /**
@@ -10902,6 +10905,8 @@ export interface NodeStats {
     asyncConnections: ConnectionStats;
     /**
      * Connection stats for Pipeline Connections on this Node.
+     * 
+     * @remarks The Aerospike Node.js client currently does not implement the pipelining feature.
      */
     pipelineConnections: ConnectionStats;
     /**
