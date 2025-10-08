@@ -99,11 +99,14 @@ describe('Dynamic Config tests', async function () {
               }
             }
 
-            let dummyClient = await Aerospike.connect(config)
-
-            await dummyClient.close()
-            
-
+            try{
+              dummyClient = await Aerospike.connect(config)
+            }
+            finally{
+              if(dummyClient){
+                await dummyClient.close()
+              }
+            }
           })
 
           it('Uses the specified interval rather than default', async function () {
@@ -392,7 +395,6 @@ describe('Dynamic Config tests', async function () {
 
 
               expect(records[0].key.key).to.be.undefined
-
             }
             finally{
               await dummyClient.close()
@@ -472,15 +474,20 @@ describe('Dynamic Config tests', async function () {
               path: 10,
             }
 
+            let dummyClient = null;
+
             try{
-              let dummyClient = await Aerospike.connect(config)
-              await dummyClient.close()
+              dummyClient = await Aerospike.connect(config)
               assert.fail('AN ERROR SHOULD HAVE BEEN THROWN')
             }
             catch(error: any) {
               expect(error.message).to.eql('Invalid client configuration')
             }
-
+            finally{
+              if(dummyClient){
+                await dummyClient.close()
+              }
+            }          
           })
           
 

@@ -54,6 +54,12 @@ class AerospikeClient : public Nan::ObjectWrap {
 	uv_async_t asyncEventCb;
 	bool closed = false;
 
+	char *report_dir = NULL;
+	Nan::Persistent<v8::Function> enable_callback;
+	Nan::Persistent<v8::Function> snapshot_callback;
+	Nan::Persistent<v8::Function> node_close_callback;
+	Nan::Persistent<v8::Function> disable_callback;
+
 	/***************************************************************************
 	 *  PRIVATE
 	 **************************************************************************/

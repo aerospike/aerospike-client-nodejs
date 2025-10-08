@@ -80,6 +80,7 @@
         'src/main/map_operations.cc',
         'src/main/bit_operations.cc',
         'src/main/hll_operations.cc',
+        'src/main/metrics.cc',
         'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',

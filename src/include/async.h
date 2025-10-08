@@ -29,6 +29,8 @@ extern "C" {
 #include "client.h"
 #include "command.h"
 
+class MetricsCommand; 
+
 /**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
  */
@@ -37,6 +39,9 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 			 void *(*prepare)(const Nan::FunctionCallbackInfo<v8::Value> &args),
 			 void (*execute)(uv_work_t *req),
 			 void (*respond)(uv_work_t *req, int status));
+
+void async_invoke_metrics(MetricsCommand *cmd, void (*execute)(uv_work_t *req), void (*respond)(uv_work_t *req, int status));
+
 
 // implements the as_async_record_listener interface
 void async_record_listener(as_error *err, as_record *record, void *udata,

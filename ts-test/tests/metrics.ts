@@ -111,6 +111,8 @@ describe('Metrics tests', function () {
   context('Positive Tests', function () { 
 
 
+
+
     context('MetricsPolicy', function () { 
       context('enableListner', function () {
 
@@ -139,7 +141,32 @@ describe('Metrics tests', function () {
           await client.disableMetrics()
 
         })
-        
+
+        it('Ensures custom listener is called', async function () { 
+          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
+            {
+              enableListener,
+              disableListener: emptyClusterListener,
+              nodeCloseListener: emptyNodeListener,
+              snapshotListener: emptyClusterListener
+            }
+          )
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              metricsListeners: listeners,
+            }
+          )
+
+
+          await client.enableMetrics(policy)
+
+
+          //await new Promise(r => setTimeout(r, 3000));
+
+
+          await client.disableMetrics()
+
+        })
       })
 
       context('nodeCloseListener', function () {
@@ -493,7 +520,8 @@ describe('Metrics tests', function () {
             hosts: helper.config.hosts,
             user: helper.config.user,
             password: helper.config.password,
-            appId: 'kelp'
+            appId: 'kelp',
+            tenderInterval: 250
           }
 
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -532,6 +560,60 @@ describe('Metrics tests', function () {
           finally{
             await dummyClient.close()
           }
+
+
+
+
+        })
+
+        it('Ensures appId is correct when using config policies', async function () { 
+
+
+          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
+            {
+              enableListener: emptyListener,
+              disableListener: disableSaveListener,
+              nodeCloseListener: emptyNodeListener,
+              snapshotListener: snapshotSaveListener
+            }
+          )
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              metricsListeners: listeners,
+              interval: 1,
+            }
+          )
+
+          const config: any = {
+            hosts: helper.config.hosts,
+            user: helper.config.user,
+            password: helper.config.password,
+            appId: 'diff',
+            tenderInterval: 250,
+            policies: {
+              metrics: policy
+            }
+          }
+
+          let dummyClient = null;
+          dummyClient = await Aerospike.connect(config)
+
+          await dummyClient.enableMetrics()
+
+
+          await new Promise(r => setTimeout(r, 1500));
+          await dummyClient.disableMetrics()
+
+          await new Promise(r => setTimeout(r, 100));
+
+          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
+            expect(cluster.appId).to.eql('diff')
+
+          }
+
+          await new Promise(r => setTimeout(r, 3000));
+
+          await dummyClient.close()
 
 
 
@@ -1265,6 +1347,65 @@ describe('Metrics tests', function () {
 
           })
         })
+
+        context('syncConns', function () { 
+          it('Ensures syncConns is correct', async function () {
+            const config: any = {
+                hosts: helper.config.hosts,
+                user: helper.config.user,
+                password: helper.config.password
+              }
+
+            let listeners: MetricsListeners = new Aerospike.MetricsListeners(
+              {
+                enableListener: emptyListener,
+                disableListener: disableSaveListener,
+                nodeCloseListener: emptyNodeListener,
+                snapshotListener: snapshotSaveListener
+              }
+            )
+
+            let policy: MetricsPolicy = new MetricsPolicy({
+                metricsListeners: listeners,
+                interval: 1,
+              }
+            )
+
+
+            let dummyClient: any = null;
+
+            dummyClient = await Aerospike.connect(config)
+
+            await dummyClient.enableMetrics(policy)
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
+
+            await new Promise(r => setTimeout(r, 1500));
+
+            await dummyClient.disableMetrics()
+
+            await new Promise(r => setTimeout(r, 0));
+
+            for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
+              for (const node of cluster.nodes) {
+                expect(node.syncConns.inUse).to.be.a('number')
+                expect(node.syncConns.inPool).to.be.a('number')
+                expect(node.syncConns.opened).to.be.a('number')
+                expect(node.syncConns.closed).to.be.a('number')
+              }
+            }
+
+            await new Promise(r => setTimeout(r, 3000));
+
+            await dummyClient.close()
+
+
+
+          })
+        })
+
       })
     })
 
@@ -1979,7 +2120,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2009,7 +2150,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
 
@@ -2040,7 +2181,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
 
@@ -2071,7 +2212,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
 
@@ -2106,7 +2247,7 @@ describe('Metrics tests', function () {
             catch(error: any){
 
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2134,7 +2275,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2162,7 +2303,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2191,7 +2332,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2219,7 +2360,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2247,7 +2388,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2280,7 +2421,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2309,7 +2450,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2337,7 +2478,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2366,7 +2507,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
+              expect(error.message).to.eql("Metrics policy parameter invalid")
             }
             await client.disableMetrics()
           })
@@ -2849,6 +2990,7 @@ describe('Metrics tests', function () {
         address: '127.0.0.1',
         port: 3000,
         conns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
+        syncConns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
         metrics
       }
 
