@@ -144,14 +144,6 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
-    - name: Change version in package.json
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
-      run: |
-        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;

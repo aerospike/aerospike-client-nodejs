@@ -39,6 +39,9 @@ import * as helper from './test_helper';
 import * as fs from 'fs';
 
 const aerospikeClientVersion = require('../../package.json').version
+
+const releaseVersion = aerospikeClientVersion.split('-')[0];
+
 const aerospikeClientLanguage = "nodejs"
 
 describe('Metrics tests', function () {
@@ -509,7 +512,7 @@ describe('Metrics tests', function () {
           expect(Number(result.stdout.trim())).to.eql(1)
           result = await execAsync('cat metrics_sub_dir/clientVersion/metrics-2*');
 
-          expect(result.stdout.trim().split('\n')[1].split(',')[2]).to.eql(aerospikeClientVersion)
+          expect(result.stdout.trim().split('\n')[1].split(',')[2]).to.eql(releaseVersion)
 
         })
       })

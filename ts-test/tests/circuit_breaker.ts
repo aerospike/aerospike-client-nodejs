@@ -39,14 +39,35 @@ import * as helper from './test_helper';
 
 import * as fs from 'fs';
 
-async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
+async function abort_until_circuit_breaker_flips_fast(query: any, iterations: any) {
   let error_result: any = null;
   let i = 0;
-  for (i; i < 120; i++) {
+  for (i; i < 400; i++) {
       let stream: any = query.foreach(null, undefined, (error: any) => { error_result = error })
       stream.abort()
 
       await new Promise(resolve => setTimeout(resolve, 5))
+      if(error_result){
+        break 
+      }
+
+  }
+
+
+  expect(i).to.be.at.least(iterations + 1)
+  expect(i).to.be.at.most(iterations + 20)
+
+  expect(error_result.code).to.eql(Aerospike.status.MAX_ERROR_RATE)
+}
+
+async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
+  let error_result: any = null;
+  let i = 0;
+  for (i; i < 400; i++) {
+      let stream: any = query.foreach(null, undefined, (error: any) => { error_result = error })
+      stream.abort()
+
+      await new Promise(resolve => setTimeout(resolve, 40))
       if(error_result){
         break 
       }
@@ -86,11 +107,13 @@ describe('Circuit breaker functionality', function () {
 
 
           await abort_until_circuit_breaker_flips(query, 4)
-          await new Promise(resolve => setTimeout(resolve, 1000))
 
         }
         finally{
-          await dummyClient.close()
+          if(dummyClient){
+            await new Promise(resolve => setTimeout(resolve, 500))
+            await dummyClient.close()
+          }
         }
 
       })
@@ -124,6 +147,7 @@ describe('Circuit breaker functionality', function () {
         }
         finally{
           if(dummyClient){
+            await new Promise(resolve => setTimeout(resolve, 500))
             await dummyClient.close()
           }
         }
@@ -139,12 +163,13 @@ describe('Circuit breaker functionality', function () {
         let config = base_config
         config.maxErrorRate = 200
 
-        console.log("\nconfig.maxErrorRate: " + config.maxErrorRate)
+        config.errorRateWindow = 1
+
         dummyClient = await Aerospike.connect(config)
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips(query, 100)
+        await abort_until_circuit_breaker_flips_fast(query, 100)
 
 
         await new Promise(resolve => setTimeout(resolve, 2000))
@@ -152,7 +177,11 @@ describe('Circuit breaker functionality', function () {
         await dummyClient.put(key, {a: 1})
       }
       finally{
-        await dummyClient.close()
+        if(dummyClient){
+          await new Promise(resolve => setTimeout(resolve, 500))
+          await dummyClient.close()
+
+        }
       }
 
     })
@@ -169,14 +198,17 @@ describe('Circuit breaker functionality', function () {
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips(query, 100)
+        await abort_until_circuit_breaker_flips_fast(query, 100)
 
         await new Promise(resolve => setTimeout(resolve, 2000))
 
         await dummyClient.put(key, {a: 1})
       }
       finally{
-        await dummyClient.close()
+        if(dummyClient){
+          await new Promise(resolve => setTimeout(resolve, 500))
+          await dummyClient.close()
+        }
       }
 
     })
@@ -191,10 +223,14 @@ describe('Circuit breaker functionality', function () {
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips(query, 100)
+        await abort_until_circuit_breaker_flips_fast(query, 100)
       }
       finally{
+        if(dummyClient){
+        await new Promise(resolve => setTimeout(resolve, 500))
         await dummyClient.close()
+
+        }
       }
 
     })
@@ -205,7 +241,7 @@ describe('Circuit breaker functionality', function () {
 
         let config = base_config
         config.maxErrorRate = 32
-        config.errorRateWindow = 1
+        config.errorRateWindow = 2
 
         dummyClient = await Aerospike.connect(config)
 
@@ -213,24 +249,27 @@ describe('Circuit breaker functionality', function () {
 
         await abort_until_circuit_breaker_flips(query, 32)
         
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 720))
 
         await abort_until_circuit_breaker_flips(query, 16)
 
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1360))
 
         await abort_until_circuit_breaker_flips(query, 8)
 
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1630))
 
         await abort_until_circuit_breaker_flips(query, 4)
 
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1865))
 
         await abort_until_circuit_breaker_flips(query, 2)
       }
       finally{
-        await dummyClient.close()
+        if(dummyClient){
+          await new Promise(resolve => setTimeout(resolve, 500))
+          await dummyClient.close()
+        }
       }
 
       
@@ -250,8 +289,12 @@ describe('Circuit breaker functionality', function () {
         config.maxErrorRate = 'a' as any
 
         let dummyClient = await Aerospike.connect(config)
-        expect(dummyClient.config.maxErrorRate).to.eql(undefined)
-        await dummyClient.close()
+        try{
+          expect(dummyClient.config.maxErrorRate).to.eql(undefined)
+        }
+        finally{
+          await dummyClient.close()
+        }
         
 
       })
@@ -265,8 +308,13 @@ describe('Circuit breaker functionality', function () {
         config.errorRateWindow = 'a' as any
 
         let dummyClient = await Aerospike.connect(config)
-        expect(dummyClient.config.errorRateWindow).to.eql(undefined)
-        await dummyClient.close()
+        try{
+          expect(dummyClient.config.errorRateWindow).to.eql(undefined)
+        }
+        finally{
+          await dummyClient.close()
+
+        }
         
 
       })
