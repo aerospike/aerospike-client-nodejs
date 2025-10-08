@@ -26,7 +26,6 @@ extern "C" {
 #include <aerospike/aerospike.h>
 #include <aerospike/aerospike_key.h>
 #include <aerospike/as_async_proto.h>
-#include <aerospike/as_node.h>
 #include <aerospike/as_cluster.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_key.h>
@@ -83,6 +82,9 @@ NAN_METHOD(AerospikeClient::New)
 	int result = config_from_jsobject(&config, v8Config, client, client->log);
 
 	if (result != AS_NODE_PARAM_OK) {
+		if(client->as){
+			cf_free(client->as);
+		}
 		if(client->log){
 			cf_free(client->log);
 		}
@@ -98,7 +100,8 @@ NAN_METHOD(AerospikeClient::New)
 
 		delete client;
 		info.GetReturnValue().Set(Nan::Undefined());
-		return Nan::ThrowError("Invalid client configuration");
+		Nan::ThrowError("Invalid client configuration");
+		return;
 	}
 
 	aerospike_client_version = (char *)ADDON_VERSION;

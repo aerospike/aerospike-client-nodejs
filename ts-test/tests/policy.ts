@@ -34,6 +34,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: BP = new BasePolicy({
           connectTimeout: 4000,
+          timeoutDelay: 3500
           socketTimeout: 200,
           totalTimeout: 0,
           maxRetries: 2,
@@ -41,6 +42,7 @@ context('Client Policies #noserver', function () {
         })
 
         expect(subject.connectTimeout).to.equal(4000)
+        expect(subject.timeoutDelay).to.equal(3500)
         expect(subject.socketTimeout).to.equal(200)
         expect(subject.totalTimeout).to.equal(0)
         expect(subject.maxRetries).to.equal(2)
@@ -178,11 +180,13 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: InfoPolicy = new Aerospike.InfoPolicy({
           timeout: 1000,
+          timeoutDelay: 3700
           sendAsIs: true,
           checkBounds: false
         })
 
         expect(subject.timeout).to.equal(1000)
+        expect(subject.timeoutDelay).to.equal(3700)
         expect(subject.sendAsIs).to.be.true
         expect(subject.checkBounds).to.be.false
       })

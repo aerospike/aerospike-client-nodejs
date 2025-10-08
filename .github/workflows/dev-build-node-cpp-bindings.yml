@@ -144,12 +144,19 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
+    - name: change verison
+      if: ${{ inputs.platform-tag != 'win_amd64' }}
+      run: |
+       npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+
     - name: Build Binding
       run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
         npm install @mapbox/node-pre-gyp --ignore-scripts;
-        npx node-pre-gyp install --fallback-to-build;
+        npm run build;
         ls lib/binding;
       env:
         NEW_VERSION: ${{ inputs.version }}

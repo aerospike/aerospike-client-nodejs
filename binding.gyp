@@ -8,7 +8,7 @@
         'build_arch%': 'aarch64'
       }]
     ],
-    "addon_version": "6.3.0"  # default value
+    "addon_version": "6.4.0"  # default value, real value supplied at build time
 
   },
   'targets': [

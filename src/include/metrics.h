@@ -70,8 +70,6 @@ as_status node_close_listener_config(as_error* err, struct as_node_s* node, void
 as_status disable_listener_config(as_error* err, struct as_cluster_s* cluster, void* udata);
 
 as_status run_metrics_listener(as_error* err, void* udata, void (*callback)(uv_work_t*, int),  struct as_cluster_s* cluster, struct as_node_s* node, bool is_disable, bool is_disable_config);
-//void prepare_disable(as_error* err, struct as_cluster_s* cluster, as_metrics_policy* policy,  void* udata);
-//void prepare_snapshot(as_error* err, struct as_cluster_s* cluster, as_metrics_policy* policy,  void* udata);
 
 v8::Local<v8::Value> prepare_disable_cluster_arg(MetricsCommand* cmd, as_metrics_policy* policy);
 v8::Local<v8::Value> prepare_cluster_arg(MetricsCommand* cmd, as_metrics_policy* policy);
