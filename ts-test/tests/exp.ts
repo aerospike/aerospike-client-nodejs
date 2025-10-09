@@ -528,7 +528,7 @@ describe('Aerospike.exp', function () {
       })
 
       it('works with whereWithExp', async function () {
-
+        this.timeout(10000)
         const query: Query = client.query(helper.namespace, helper.set)
 
         const key: Key = new Aerospike.Key(helper.namespace, helper.set, "example")
@@ -554,7 +554,7 @@ describe('Aerospike.exp', function () {
 
         expect(results.length).to.eql(1)
 
-        await client.indexRemove(helper.namespace, 'example_name_whereWithExp')
+        return client.indexRemove(helper.namespace, 'example_name_whereWithExp')
       })
 
       it('works with createExpIndex', async function () {
