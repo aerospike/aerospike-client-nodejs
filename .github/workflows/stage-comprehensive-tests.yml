@@ -58,12 +58,11 @@ jobs:
 
   test-ee:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
