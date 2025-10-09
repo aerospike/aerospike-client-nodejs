@@ -16,11 +16,9 @@ on:
         required: false
     secrets:
       # Just make all the secrets required to make things simpler...
-      NPMRC:
+      NPMRC_RELEASE:
         required: true
-      NPMRC_OFF:
-        required: true
-      NPM_TOKEN_OFF:
+      NPM_TOKEN_OTP:
         required: true
 
 jobs:
