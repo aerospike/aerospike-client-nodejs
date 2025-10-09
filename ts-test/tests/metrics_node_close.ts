@@ -68,11 +68,8 @@ describe('Metrics node close test', async function () {
         expect(node.conns.inPool).to.be.a("number");
         expect(node.conns.opened).to.be.a("number");
         expect(node.conns.closed).to.be.a("number");
-<<<<<<< HEAD
         expect(node.conns.recovered).to.be.a("number");
         expect(node.conns.aborted).to.be.a("number");
-=======
->>>>>>> master
         // Check NamespaceMetrics
 
         const metrics: NamespaceMetrics = node.metrics;
@@ -163,7 +160,6 @@ describe('Metrics node close test', async function () {
 
 
                     const dummyClient = await Aerospike.connect(config)
-<<<<<<< HEAD
                     try{
                         console.log("Waiting for client to collect all information about cluster nodes...")
 
@@ -219,60 +215,6 @@ describe('Metrics node close test', async function () {
                     finally{
                         await dummyClient.close()
                     }
-=======
-
-                    console.log("Waiting for client to collect all information about cluster nodes...")
-
-                    await new Promise(r => setTimeout(r, 15000));
-
-
-                    let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-                      {
-                        enableListener,
-                        disableListener,
-                        nodeCloseListener,
-                        snapshotListener
-                      }
-                    )
-
-                    let policy: MetricsPolicy = new MetricsPolicy({
-                        metricsListeners: listeners,
-                        interval: 1
-                      }
-                    )
-
-                    console.log("Enabling metrics...")
-
-                    await dummyClient.enableMetrics(policy)
-
-                    await new Promise(r => setTimeout(r, 3000));
-                    
-                    console.log("Closing node...")
-
-                    await container.stop();
-                    await container.remove();
-                  
-                    console.log("Giving client time to run the node_close listener...")
-
-                    let elapsed_secs = 0
-
-                    while (elapsed_secs < 25) {
-                        if(nodeCloseTriggered) {
-                            console.log("node_close_called is true. Passed")
-                            await dummyClient.disableMetrics()
-
-                            return await dummyClient.close()
-                        }
-                        elapsed_secs++;
-                        console.log("polling")
-                        await new Promise(r => setTimeout(r, 1000));
-                    }
-
-                    console.log("THIS FAILED")
-                    await dummyClient.close()
-
-                    assert.fail('nodeCloseListener was not called')
->>>>>>> master
                 })
             })
         })

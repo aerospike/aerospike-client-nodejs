@@ -575,7 +575,6 @@ context('admin commands', async function () {
       }
 
       let dummyClient = await Aerospike.connect(config)
-<<<<<<< HEAD
       try{
         password = 'pass'+ randomString(getRandomInt(randomFactor))
 
@@ -584,13 +583,6 @@ context('admin commands', async function () {
       finally{
         await dummyClient.close()
       }
-=======
-
-      password = 'pass'+ randomString(getRandomInt(randomFactor))
-
-      await dummyClient.changePassword(username1, password)
-      await dummyClient.close()
->>>>>>> master
 
       config = {
         hosts: helper.config.hosts,
@@ -600,10 +592,6 @@ context('admin commands', async function () {
 
       dummyClient = await Aerospike.connect(config)
       await dummyClient.close()
-<<<<<<< HEAD
-=======
-
->>>>>>> master
     })
 
     it('With policy', async function () {
@@ -622,7 +610,6 @@ context('admin commands', async function () {
 
       let dummyClient = await Aerospike.connect(config)
 
-<<<<<<< HEAD
       try{
 
         password = 'pass'+ randomString(getRandomInt(randomFactor))
@@ -632,12 +619,6 @@ context('admin commands', async function () {
       finally {
         await dummyClient.close()
       }
-=======
-      password = 'pass'+ randomString(getRandomInt(randomFactor))
-
-      await dummyClient.changePassword(username2, password, policy)
-      await dummyClient.close()
->>>>>>> master
 
       config = {
         hosts: helper.config.hosts,

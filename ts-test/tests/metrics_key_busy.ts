@@ -105,7 +105,6 @@ describe('Metrics Key Busy', function () {
 
 
     const dummyClient: Cli = await Aerospike.connect(config)
-<<<<<<< HEAD
     
     try{
       await dummyClient.enableMetrics(policy)
@@ -132,32 +131,6 @@ describe('Metrics Key Busy', function () {
       await dummyClient.close()
     }
 
-=======
-
-
-    await dummyClient.enableMetrics(policy)
-
-    let promiseList = []
-    for (var i = 0; i < 100; i++) {
-      let key = new Aerospike.Key('test', 'demo', 1)
-      promiseList.push(dummyClient.put(key, {a: 1}))
-      promiseList.push(dummyClient.get(key))
-
-
-    }
-    try{
-      const results = await Promise.all(promiseList)
-
-    }
-    catch(error: any){
-
-    }
-
-    await new Promise(r => setTimeout(r, 3000));
-
-    expect(totalKeyBusyCount).to.be.greaterThan(0)
-    await dummyClient.close()
->>>>>>> master
 
   })
 })

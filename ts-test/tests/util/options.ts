@@ -119,14 +119,11 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.'
     },
-<<<<<<< HEAD
     testStrongConsistency: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing.',
       default: false
     },
-=======
->>>>>>> master
     testDynamicConfig: {
       type: 'boolean',
       describe: 'Specify whether or not to run dynamic configuration tests.'
@@ -135,13 +132,10 @@ const parser: yargs.Argv = yargs(hideBin(process.argv))
       type: 'boolean',
       describe: 'Specify whether or not to run metrics key busy tests.'
     },
-<<<<<<< HEAD
     testTimeoutDelay: {
       type: 'boolean',
       describe: 'Specify whether or not to run timeout delay tests.'
     },
-=======
->>>>>>> master
     testPreferRack: {
       type: 'boolean',
       describe: 'Specify whether or not to run advanced testing. Requires two datacenter XDR configuration.'

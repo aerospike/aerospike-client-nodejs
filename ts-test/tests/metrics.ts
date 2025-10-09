@@ -114,52 +114,10 @@ describe('Metrics tests', function () {
   context('Positive Tests', function () { 
 
 
-    context('MetricsPolicy', function () { 
-      context('enableListner', function () {
 
-<<<<<<< HEAD
 
     context('MetricsPolicy', function () { 
       context('enableListner', function () {
-
-        it('Ensures custom listener is called', async function () { 
-          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-            {
-              enableListener,
-              disableListener: emptyClusterListener,
-              nodeCloseListener: emptyNodeListener,
-              snapshotListener: emptyClusterListener
-            }
-          )
-
-=======
-        it('Ensures custom listener is called', async function () { 
-          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-            {
-              enableListener,
-              disableListener: emptyClusterListener,
-              nodeCloseListener: emptyNodeListener,
-              snapshotListener: emptyClusterListener
-            }
-          )
-
->>>>>>> master
-          let policy: MetricsPolicy = new MetricsPolicy({
-              metricsListeners: listeners,
-            }
-          )
-
-
-          await client.enableMetrics(policy)
-
-
-          //await new Promise(r => setTimeout(r, 3000));
-
-
-          await client.disableMetrics()
-
-        })
-<<<<<<< HEAD
 
         it('Ensures custom listener is called', async function () { 
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -186,9 +144,32 @@ describe('Metrics tests', function () {
           await client.disableMetrics()
 
         })
-=======
-        
->>>>>>> master
+
+        it('Ensures custom listener is called', async function () { 
+          let listeners: MetricsListeners = new Aerospike.MetricsListeners(
+            {
+              enableListener,
+              disableListener: emptyClusterListener,
+              nodeCloseListener: emptyNodeListener,
+              snapshotListener: emptyClusterListener
+            }
+          )
+
+          let policy: MetricsPolicy = new MetricsPolicy({
+              metricsListeners: listeners,
+            }
+          )
+
+
+          await client.enableMetrics(policy)
+
+
+          //await new Promise(r => setTimeout(r, 3000));
+
+
+          await client.disableMetrics()
+
+        })
       })
 
       context('nodeCloseListener', function () {
@@ -277,7 +258,6 @@ describe('Metrics tests', function () {
 
       context('reportDir', function () { 
 
-<<<<<<< HEAD
         it('Writes to a valid sub directory using MetricsPolicy in the config', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/reportDir_config/metrics-*');
@@ -333,8 +313,6 @@ describe('Metrics tests', function () {
         })
 
 
-=======
->>>>>>> master
         it('Writes to a valid sub directory', async function () { 
 
           await execAsync('rm -rf metrics_sub_dir/reportDir/metrics-*');
@@ -520,7 +498,6 @@ describe('Metrics tests', function () {
 
     context('cluster', function () {
 
-<<<<<<< HEAD
       context('clientLanguage', function () { 
 
         it('Writes to a valid sub directory', async function () { 
@@ -595,20 +572,14 @@ describe('Metrics tests', function () {
         })
       })
 
-=======
->>>>>>> master
       context('appId', function () { 
         it('Ensures appId is correct', async function () { 
           const config: any = {
             hosts: helper.config.hosts,
             user: helper.config.user,
             password: helper.config.password,
-<<<<<<< HEAD
             appId: 'kelp',
             tenderInterval: 250
-=======
-            appId: 'kelp'
->>>>>>> master
           }
 
           let listeners: MetricsListeners = new Aerospike.MetricsListeners(
@@ -626,7 +597,6 @@ describe('Metrics tests', function () {
             }
           )
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
           try{
             await dummyClient.enableMetrics(policy)
@@ -682,34 +652,20 @@ describe('Metrics tests', function () {
               metrics: policy
             }
           }
-=======
->>>>>>> master
 
           let dummyClient = null;
           dummyClient = await Aerospike.connect(config)
 
-<<<<<<< HEAD
           await dummyClient.enableMetrics()
 
 
           await new Promise(r => setTimeout(r, 1500));
-=======
-          await dummyClient.enableMetrics(policy)
-
-
-          await new Promise(r => setTimeout(r, 1500));
-
->>>>>>> master
           await dummyClient.disableMetrics()
 
           await new Promise(r => setTimeout(r, 100));
 
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-<<<<<<< HEAD
             expect(cluster.appId).to.eql('diff')
-=======
-            expect(cluster.appId).to.eql('kelp')
->>>>>>> master
 
           }
 
@@ -752,7 +708,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
           try{
 
@@ -780,31 +735,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-          let dummyClient = null;
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 100));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.labels).to.eql({
-              "size": "large",
-              "discount": "normal"
-            })
-
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
->>>>>>> master
 
 
 
@@ -835,7 +765,6 @@ describe('Metrics tests', function () {
             }
           )
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
 
 
@@ -859,29 +788,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-
-          let dummyClient = null;
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-          await new Promise(r => setTimeout(r, 1500));
-
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.clusterName).to.eql('')
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
-
->>>>>>> master
 
 
 
@@ -1008,7 +914,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
           try{
             await dummyClient.enableMetrics(policy)
@@ -1034,33 +939,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-          let dummyClient: any = null;
-
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.transactionCount).to.be.greaterThan(0)
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
-
->>>>>>> master
 
 
 
@@ -1092,7 +970,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
           try{
             await dummyClient.enableMetrics(policy)
@@ -1117,31 +994,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-          let dummyClient: any = null;
-
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.delayQueueTimeoutCount).to.eql(0)
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
->>>>>>> master
 
 
 
@@ -1172,7 +1024,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
 
           let dummyClient = await Aerospike.connect(config)
           try{
@@ -1205,39 +1056,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-          let dummyClient: any = null;
-
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          let readPolicy = new Aerospike.ReadPolicy({
-            maxRetries: 6
-          })
-          try{
-            await dummyClient.get(new Aerospike.Key(helper.namespace, helper.set, 'metrics/51'), readPolicy)
-          }
-          catch(error: any){
-          }
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.retryCount).to.eql(0)
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
-
->>>>>>> master
 
 
         })
@@ -1267,7 +1085,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
 
           let dummyClient = await Aerospike.connect(config)
 
@@ -1294,32 +1111,6 @@ describe('Metrics tests', function () {
             await dummyClient.close()
           }
 
-=======
-          let dummyClient: any = null;
-
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.delayQueueTimeoutCount).to.eql(0)
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
-
->>>>>>> master
 
 
         })
@@ -1349,7 +1140,6 @@ describe('Metrics tests', function () {
           )
 
 
-<<<<<<< HEAD
           let dummyClient = await Aerospike.connect(config)
           try{
             await dummyClient.enableMetrics(policy)
@@ -1376,32 +1166,6 @@ describe('Metrics tests', function () {
           }
 
 
-=======
-          let dummyClient: any = null;
-
-          dummyClient = await Aerospike.connect(config)
-
-          await dummyClient.enableMetrics(policy)
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-          await new Promise(r => setTimeout(r, 1500));
-
-          await dummyClient.disableMetrics()
-
-          await new Promise(r => setTimeout(r, 0));
-
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-            expect(cluster.eventLoop.queueSize).to.eql(0)
-            expect(cluster.eventLoop.processSize).to.eql(0)
-          }
-
-          await new Promise(r => setTimeout(r, 3000));
-
-          await dummyClient.close()
->>>>>>> master
 
 
 
@@ -1433,7 +1197,6 @@ describe('Metrics tests', function () {
             )
 
 
-<<<<<<< HEAD
 
             let dummyClient = await Aerospike.connect(config)
             try{
@@ -1667,8 +1430,6 @@ describe('Metrics tests', function () {
             )
 
 
-=======
->>>>>>> master
             let dummyClient: any = null;
 
             dummyClient = await Aerospike.connect(config)
@@ -1687,14 +1448,10 @@ describe('Metrics tests', function () {
 
             for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
               for (const node of cluster.nodes) {
-<<<<<<< HEAD
                 expect(node.syncConns.inUse).to.be.a('number')
                 expect(node.syncConns.inPool).to.be.a('number')
                 expect(node.syncConns.opened).to.be.a('number')
                 expect(node.syncConns.closed).to.be.a('number')
-=======
-                expect(node.name).to.be.a('string')
->>>>>>> master
               }
             }
 
@@ -1707,177 +1464,6 @@ describe('Metrics tests', function () {
           })
         })
 
-<<<<<<< HEAD
-=======
-        context('address', function () { 
-          it('Ensures address is correct', async function () {
-            const config: any = {
-                hosts: helper.config.hosts,
-                user: helper.config.user,
-                password: helper.config.password
-              }
-
-            let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-              {
-                enableListener: emptyListener,
-                disableListener: disableSaveListener,
-                nodeCloseListener: emptyNodeListener,
-                snapshotListener: snapshotSaveListener
-              }
-            )
-
-            let policy: MetricsPolicy = new MetricsPolicy({
-                metricsListeners: listeners,
-                interval: 1,
-              }
-            )
-
-
-            let dummyClient: any = null;
-
-            dummyClient = await Aerospike.connect(config)
-
-            await dummyClient.enableMetrics(policy)
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await dummyClient.disableMetrics()
-
-            await new Promise(r => setTimeout(r, 0));
-
-            for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-              for (const node of cluster.nodes) {
-                expect(node.address).to.be.a('string').and.not.empty
-              }
-            }
-
-            await new Promise(r => setTimeout(r, 3000));
-
-            await dummyClient.close()
-
-
-
-          })
-        })
-
-        context('port', function () { 
-          it('Ensures port is correct', async function () {
-            const config: any = {
-                hosts: helper.config.hosts,
-                user: helper.config.user,
-                password: helper.config.password
-              }
-
-            let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-              {
-                enableListener: emptyListener,
-                disableListener: disableSaveListener,
-                nodeCloseListener: emptyNodeListener,
-                snapshotListener: snapshotSaveListener
-              }
-            )
-
-            let policy: MetricsPolicy = new MetricsPolicy({
-                metricsListeners: listeners,
-                interval: 1,
-              }
-            )
-
-
-            let dummyClient: any = null;
-
-            dummyClient = await Aerospike.connect(config)
-
-            await dummyClient.enableMetrics(policy)
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await dummyClient.disableMetrics()
-
-            await new Promise(r => setTimeout(r, 0));
-
-            for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-              for (const node of cluster.nodes) {
-                expect(node.port).to.eql(3000)
-                expect(node.port).to.eql((helper.config.hosts[0] as any).port)
-              }
-            }
-
-            await new Promise(r => setTimeout(r, 3000));
-
-            await dummyClient.close()
-
-
-
-          })
-        })
-
-        context('conns', function () { 
-          it('Ensures conns is correct', async function () {
-            const config: any = {
-                hosts: helper.config.hosts,
-                user: helper.config.user,
-                password: helper.config.password
-              }
-
-            let listeners: MetricsListeners = new Aerospike.MetricsListeners(
-              {
-                enableListener: emptyListener,
-                disableListener: disableSaveListener,
-                nodeCloseListener: emptyNodeListener,
-                snapshotListener: snapshotSaveListener
-              }
-            )
-
-            let policy: MetricsPolicy = new MetricsPolicy({
-                metricsListeners: listeners,
-                interval: 1,
-              }
-            )
-
-
-            let dummyClient: any = null;
-
-            dummyClient = await Aerospike.connect(config)
-
-            await dummyClient.enableMetrics(policy)
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await client.put(new Aerospike.Key(helper.namespace, helper.set, 'metrics/31'), {a: 1})
-
-            await new Promise(r => setTimeout(r, 1500));
-
-            await dummyClient.disableMetrics()
-
-            await new Promise(r => setTimeout(r, 0));
-
-            for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-              for (const node of cluster.nodes) {
-                expect(node.conns.inUse).to.be.a('number')
-                expect(node.conns.inPool).to.be.a('number')
-                expect(node.conns.opened).to.be.a('number')
-                expect(node.conns.closed).to.be.a('number')
-              }
-            }
-
-            await new Promise(r => setTimeout(r, 3000));
-
-            await dummyClient.close()
-
-
-
-          })
-        })
->>>>>>> master
       })
     })
 
@@ -1973,7 +1559,6 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 20));
 
-<<<<<<< HEAD
 
           let count = 0
 
@@ -1983,24 +1568,13 @@ describe('Metrics tests', function () {
               for (const index of node.metrics) {
 
                 count += index.bytesIn
-=======
-          for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
-
-            for (const node of cluster.nodes) {
-              let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
-              for (const index of node.metrics) {
-                expect(index.bytesIn).to.be.greaterThan(0)
->>>>>>> master
               }
             }
           }
 
-<<<<<<< HEAD
 
           expect(count).to.be.greaterThan(0)
 
-=======
->>>>>>> master
           clusterFromSnapshotListener = null
 
           clusterFromDisableListener = null
@@ -2039,30 +1613,20 @@ describe('Metrics tests', function () {
 
           await new Promise(r => setTimeout(r, 0));
 
-<<<<<<< HEAD
           let count = 0
 
-=======
->>>>>>> master
           for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
             for (const node of cluster.nodes) {
               let NamespaceMetrics: Array<NamespaceMetrics> = node.metrics
               for (const index of node.metrics) {
 
-<<<<<<< HEAD
                 count += index.bytesOut
-=======
-                expect(index.bytesOut).to.be.greaterThan(0)
->>>>>>> master
               }
             }
           }
 
-<<<<<<< HEAD
           expect(count).to.be.greaterThan(0)
 
-=======
->>>>>>> master
           clusterFromSnapshotListener = null
 
           clusterFromDisableListener = null          
@@ -2614,11 +2178,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2648,11 +2208,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
 
@@ -2683,11 +2239,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
 
@@ -2718,11 +2270,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
 
@@ -2757,11 +2305,7 @@ describe('Metrics tests', function () {
             catch(error: any){
 
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2789,11 +2333,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2821,11 +2361,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2854,11 +2390,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2886,11 +2418,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2918,11 +2446,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2955,11 +2479,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -2988,11 +2508,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -3020,11 +2536,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -3053,11 +2565,7 @@ describe('Metrics tests', function () {
             }
             catch(error: any){
               expect(error.code).to.eql(-2)
-<<<<<<< HEAD
               expect(error.message).to.eql("Metrics policy parameter invalid")
-=======
-              expect(error.message).to.eql("If one metrics callback is set, all metrics callbacks must be set")
->>>>>>> master
             }
             await client.disableMetrics()
           })
@@ -3539,12 +3047,8 @@ describe('Metrics tests', function () {
         name: 'A1',
         address: '127.0.0.1',
         port: 3000,
-<<<<<<< HEAD
         conns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
         syncConns: { inUse: 0, inPool: 0, opened: 0, closed: 0, recovered: 0, aborted: 0 },
-=======
-        conns: { inUse: 0, inPool: 0, opened: 0, closed: 0 },
->>>>>>> master
         metrics
       }
 

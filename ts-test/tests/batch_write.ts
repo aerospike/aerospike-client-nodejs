@@ -538,7 +538,6 @@ describe('client.batchWrite()', function () {
       }
 
       const dummyClient = await Aerospike.connect(config)
-<<<<<<< HEAD
       try{
         const results: BatchResult[] = await dummyClient.batchWrite(batch)
         const bins: any = results[0].record.bins
@@ -550,15 +549,6 @@ describe('client.batchWrite()', function () {
       finally{
         await dummyClient.close()
       }
-=======
-      const results: BatchResult[] = await dummyClient.batchWrite(batch)
-      const bins: any = results[0].record.bins
-      expect(bins.i).to.be.a('number')
-      expect(bins.s).to.be.a('string')
-      expect(bins.l).to.be.instanceof(Buffer)
-      expect(bins.m).to.be.instanceof(Buffer)
-      await dummyClient.close()
->>>>>>> master
     })
   })
 

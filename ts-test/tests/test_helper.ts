@@ -97,11 +97,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
       await this.createIndex(index, false)
     }
 
-<<<<<<< HEAD
     async createExpIndex(indexName: string, setName: string, exp: AerospikeExp | string, dataType: indexDataType, indexType: indexType) {
-=======
-    async createExpIndex(indexName: string, setName: string, exp: AerospikeExp, dataType: indexDataType, indexType: indexType) {
->>>>>>> master
       const index = {
         ns: options.namespace,
         set: setName,
@@ -311,13 +307,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
   }
 
-<<<<<<< HEAD
   export function skipUnlessStrongConsistency(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testStrongConsistency, 'Advanced metrics tests disabled')
   }
 
-=======
->>>>>>> master
   export function skipUnlessDynamicConfig(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testDynamicConfig, 'Dynamic config tests disabled')
   }
@@ -334,13 +327,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetricsKeyBusy, 'Metrics key busy test disabled')
   }
 
-<<<<<<< HEAD
   export function skipUnlessTimeoutDelay(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
   }
 
-=======
->>>>>>> master
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => {

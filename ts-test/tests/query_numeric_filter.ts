@@ -233,15 +233,9 @@ describe('Queries', function () {
       context('Query using index name', function () {
         it('should match equal integer values', function (done) {
           const args: QueryOptions = { filters: [filter.equal(null, 5)] }
-<<<<<<< HEAD
           args.filters![0].indexName = 'qidxInt'
             verifyQueryResults(args, 'int match', done)
           })
-=======
-        args.filters![0].indexName = 'qidxInt'
-          verifyQueryResults(args, 'int match', done)
-        })
->>>>>>> master
       })
     })
 
