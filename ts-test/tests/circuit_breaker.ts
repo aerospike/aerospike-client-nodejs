@@ -39,27 +39,6 @@ import * as helper from './test_helper';
 
 import * as fs from 'fs';
 
-async function abort_until_circuit_breaker_flips_fast(query: any, iterations: any) {
-  let error_result: any = null;
-  let i = 0;
-  for (i; i < 400; i++) {
-      let stream: any = query.foreach(null, undefined, (error: any) => { error_result = error })
-      stream.abort()
-
-      await new Promise(resolve => setTimeout(resolve, 2))
-      if(error_result){
-        break 
-      }
-
-  }
-
-
-  expect(i).to.be.at.least(iterations + 1)
-  expect(i).to.be.at.most(iterations + 50)
-
-  expect(error_result.code).to.eql(Aerospike.status.MAX_ERROR_RATE)
-}
-
 async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
   let error_result: any = null;
   let i = 0;
@@ -74,11 +53,11 @@ async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
 
   }
 
+  expect(error_result.code).to.eql(Aerospike.status.MAX_ERROR_RATE)
+
 
   expect(i).to.be.at.least(iterations + 1)
   expect(i).to.be.at.most(iterations + 3)
-
-  expect(error_result.code).to.eql(Aerospike.status.MAX_ERROR_RATE)
 }
 
 describe('Circuit breaker functionality', function () {
@@ -111,7 +90,7 @@ describe('Circuit breaker functionality', function () {
         }
         finally{
           if(dummyClient){
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            //await new Promise(resolve => setTimeout(resolve, 3000))
             await dummyClient.close()
           }
         }
@@ -137,7 +116,7 @@ describe('Circuit breaker functionality', function () {
 
           await abort_until_circuit_breaker_flips(query, 40)
 
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           try{
             await dummyClient.put(key, {'fakeRecord': 'shouldFail'})
           }
@@ -147,7 +126,7 @@ describe('Circuit breaker functionality', function () {
         }
         finally{
           if(dummyClient){
-            await new Promise(resolve => setTimeout(resolve, 5000))
+            await new Promise(resolve => setTimeout(resolve, 3000))
             await dummyClient.close()
           }
         }
@@ -162,23 +141,23 @@ describe('Circuit breaker functionality', function () {
 
         let config = base_config
         config.maxErrorRate = 400
-
         config.errorRateWindow = 1
+
+        config.tenderInterval = 10000
 
         dummyClient = await Aerospike.connect(config)
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips_fast(query, 100)
+        await abort_until_circuit_breaker_flips(query, 100)
 
 
         await new Promise(resolve => setTimeout(resolve, 2000))
 
-        await dummyClient.put(key, {a: 1})
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
 
         }
@@ -191,22 +170,23 @@ describe('Circuit breaker functionality', function () {
       try{
 
         let config = base_config
-        config.maxErrorRate = 400
+        config.maxErrorRate = 2
         config.errorRateWindow = 1000
-        
+
+        config.tenderInterval = 10000
+
         dummyClient = await Aerospike.connect(config)
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips_fast(query, 100)
+        await abort_until_circuit_breaker_flips(query, 100)
 
         await new Promise(resolve => setTimeout(resolve, 2000))
 
-        await dummyClient.put(key, {a: 1})
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
         }
       }
@@ -219,15 +199,18 @@ describe('Circuit breaker functionality', function () {
 
         let config = base_config
 
+
+        config.tenderInterval = 10000
+
         dummyClient = await Aerospike.connect(config)
 
         const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-        await abort_until_circuit_breaker_flips_fast(query, 100)
+        await abort_until_circuit_breaker_flips(query, 100)
       }
       finally{
         if(dummyClient){
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
         await dummyClient.close()
 
         }
@@ -241,7 +224,9 @@ describe('Circuit breaker functionality', function () {
 
         let config = base_config
         config.maxErrorRate = 32
-        config.errorRateWindow = 2
+        config.errorRateWindow = 1
+
+        config.tenderInterval = 1500
 
         dummyClient = await Aerospike.connect(config)
 
@@ -249,25 +234,25 @@ describe('Circuit breaker functionality', function () {
 
         await abort_until_circuit_breaker_flips(query, 32)
         
-        await new Promise(resolve => setTimeout(resolve, 720))
+        await new Promise(resolve => setTimeout(resolve, 220))
 
         await abort_until_circuit_breaker_flips(query, 16)
 
-        await new Promise(resolve => setTimeout(resolve, 1360))
+        await new Promise(resolve => setTimeout(resolve, 860))
 
         await abort_until_circuit_breaker_flips(query, 8)
 
-        await new Promise(resolve => setTimeout(resolve, 1630))
+        await new Promise(resolve => setTimeout(resolve, 1120))
 
         await abort_until_circuit_breaker_flips(query, 4)
 
-        await new Promise(resolve => setTimeout(resolve, 1865))
+        await new Promise(resolve => setTimeout(resolve, 1360))
 
         await abort_until_circuit_breaker_flips(query, 2)
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
         }
       }

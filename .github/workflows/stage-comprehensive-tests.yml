@@ -189,7 +189,7 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+        npm run valgrind -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     #- name: Debug server
@@ -1153,7 +1153,7 @@ jobs:
         test "$client_language" = "nodejs"
         echo $client_version
         echo $expected_client_version
-        expected_client_version=$(node -p "releaseVersion=$(node -p "require('../../package.json').version.split('-')[0]")")
+        expected_client_version=$(node -p "releaseVersion=$(node -p "require('./package.json').version.split('-')[0]")")
         test "$client_version" = "$expected_client_version"
         echo $client_app_id
         echo "1234567"
