@@ -33,7 +33,8 @@ jobs:
           npm init -y;
           jq '.dependencies.aerospike="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
           npm ci --production --ignore-scripts;
+          node ./scripts/verify-aerospike-npm-scripts.js;
           npx --package aerospike npm run install --prefix ./node_modules/aerospike;
-          node -e "const Aerospike = require('disableupload'); console.log(Aerospike.policy.replica);"
+          node -e "const Aerospike = require('disableupload'); console.log(new BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
         env:
           NEW_VERSION: ${{ inputs.new_version }}

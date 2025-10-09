@@ -4,7 +4,7 @@ const { execSync } = require('child_process')
 const [pkg] = process.argv.slice(2)
 
 if (!pkg) {
-  console.error('Usage: node check-npm-script.js <package> <field>')
+  console.error('Usage: node check-npm-script.js <package> ')
   process.exit(1)
 }
 
