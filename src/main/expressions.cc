@@ -48,6 +48,7 @@ NAN_METHOD(AerospikeClient::ExpressionToBase64)
 		}
 
 		info.GetReturnValue().Set(Nan::New<String>(as_exp_to_base64(exp)).ToLocalChecked());
+		cf_free(exp);
 	}
 	else{
 

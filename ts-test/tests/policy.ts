@@ -68,6 +68,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: ApplyPolicy = new Aerospike.ApplyPolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -78,6 +79,7 @@ context('Client Policies #noserver', function () {
           onLockingOnly: true
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -96,6 +98,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: WritePolicy = new Aerospike.WritePolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -108,6 +111,7 @@ context('Client Policies #noserver', function () {
           onLockingOnly: true
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -128,6 +132,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: ReadPolicy = new Aerospike.ReadPolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -137,6 +142,7 @@ context('Client Policies #noserver', function () {
           readModeSC: Aerospike.policy.readModeSC.SESSION,
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -154,6 +160,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: BatchPolicy = new Aerospike.BatchPolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -163,6 +170,7 @@ context('Client Policies #noserver', function () {
           sendSetName: true
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -198,6 +206,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: RemovePolicy = new Aerospike.RemovePolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -208,6 +217,7 @@ context('Client Policies #noserver', function () {
           durableDelete: true
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -226,6 +236,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: OperatePolicy = new Aerospike.OperatePolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -237,6 +248,8 @@ context('Client Policies #noserver', function () {
           commitLevel: Aerospike.policy.commitLevel.MASTER,
           durableDelete: true
         })
+        
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -257,6 +270,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: ScanPolicy = new Aerospike.ScanPolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -264,6 +278,7 @@ context('Client Policies #noserver', function () {
           recordsPerSecond: 100
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
@@ -279,6 +294,7 @@ context('Client Policies #noserver', function () {
       it('sets the policy values from a value object', function () {
         const subject: QueryPolicy = new Aerospike.QueryPolicy({
           socketTimeout: 1000,
+          timeoutDelay: 4270,
           connectTimeout: 3000,
           totalTimeout: 2000,
           maxRetries: 1,
@@ -286,6 +302,7 @@ context('Client Policies #noserver', function () {
           infoTimeout: 5000
         })
 
+        expect(subject.timeoutDelay).to.equal(4270)
         expect(subject.socketTimeout).to.equal(1000)
         expect(subject.connectTimeout).to.equal(3000)
         expect(subject.totalTimeout).to.equal(2000)
